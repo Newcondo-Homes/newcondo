@@ -1,0 +1,130 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String          @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role            @default(RENTER)
+  accounts      Account[]
+  sessions      Session[]
+  properties    Property[]      @relation("PropertyOwner")
+  agentListings Property[]      @relation("PropertyAgent")
+  referrals     Referral[]      @relation("Referrer")
+  referredBy    Referral?       @relation("Referred")
+  authenticator Authenticator[]
+  events        EventLog[]      @relation("UserEvents")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  OWNER
+  AGENT
+  RENTER
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+model Authenticator {
+  credentialID         String  @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, credentialID])
+}
+
+model Property {
+  id             String    @id @default(cuid())
+  title          String
+  description    String
+  address        String
+  gpsCoordinates String?
+  ownerId        String
+  agentId        String?
+  media          String[]
+  approved       Boolean   @default(false)
+  verified       Boolean   @default(false)
+
+  owner User     @relation("PropertyOwner", fields: [ownerId], references: [id])
+  agent User?    @relation("PropertyAgent", fields: [agentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  referrerId String
+  referredId String @unique
+
+  referrer User @relation("Referrer", fields: [referrerId], references: [id])
+  referred User @relation("Referred", fields: [referredId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model EventLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  type       String   // e.g., 'LOGIN', 'PROPERTY_VIEWED', 'SIGNUP_COMPLETED'
+  metadata   Json?    // stores flexible data, like { propertyId: "abc123" }
+  timestamp  DateTime @default(now())
+  ipAddress  String?
+  userAgent  String?
+
+  user User? @relation("UserEvents", fields: [userId], references: [id])
+}

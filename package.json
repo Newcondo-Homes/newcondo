@@ -1,6 +1,11 @@
 {
   "name": "newcondo",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "backend/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -9,7 +14,9 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
+    "@types/node": "^22.15.29",
     "prettier": "^3.5.3",
+    "prisma": "^6.9.0",
     "turbo": "^2.5.4",
     "typescript": "5.8.2"
   },
