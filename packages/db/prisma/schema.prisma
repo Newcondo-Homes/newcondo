@@ -1,6 +1,12 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 generator client {
@@ -21,6 +27,8 @@ model User {
   referrals     Referral[]      @relation("Referrer")
   referredBy    Referral?       @relation("Referred")
   authenticator Authenticator[]
+  featureFlags FeatureFlag[]
+
   events        EventLog[]      @relation("UserEvents")
 
   createdAt DateTime @default(now())
@@ -127,4 +135,15 @@ model EventLog {
   userAgent  String?
 
   user User? @relation("UserEvents", fields: [userId], references: [id])
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String   // e.g., "newOnboardingFlow", "referralBonusTest"
+  value     Boolean  // true = feature enabled
+  context   Json?    // optional: details like {"variant": "B"} or {"group": "test"}
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

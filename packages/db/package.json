@@ -4,7 +4,15 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:migrate": "prisma migrate dev --name init --skip-generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx seed.ts",
+    "db:reset": "prisma migrate reset",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "prisma generate"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +21,8 @@
     "@prisma/client": "^6.9.0"
   },
   "devDependencies": {
-    "@types/node": "^22.15.29"
+    "@types/node": "^22.15.29",
+    "prisma": "^6.9.0",
+    "tsx": "^4.19.4"
   }
 }
