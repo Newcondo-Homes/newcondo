@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
 export async function GET() {
   try {
     // Test database connection
-    await prisma.$connect()
+    // await prisma.$connect()
     
     // Count records in each table
     const userCount = await prisma.user.count()
