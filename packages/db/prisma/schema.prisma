@@ -18,6 +18,7 @@ model User {
   name          String?
   email         String          @unique
   emailVerified DateTime?
+  passwordHash  String?   @unique
   image         String?
   role          Role            @default(RENTER)
   accounts      Account[]

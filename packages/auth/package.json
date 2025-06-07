@@ -1,0 +1,24 @@
+{
+  "name": "@newcondo/auth",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.19.4"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.9.1",
+    "@newcondo/db": "workspace:*",
+    "@types/bcryptjs": "^3.0.0",
+    "bcryptjs": "^3.0.2",
+    "next-auth": "5.0.0-beta.28",
+    "zod": "^3.25.55"
+  }
+}
