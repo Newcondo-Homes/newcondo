@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui"
 import { Input } from "@newcondo/ui"
 import { Label } from "@newcondo/ui"
 import { useRouter } from "next/navigation";
-import { signIn } from "@newcondo/auth"
+// import { signIn } from "@newcondo/auth"
+import { signIn } from "@newcondo/auth/client"
 import { Loader } from "lucide-react";
 
 export function SignUpForm({

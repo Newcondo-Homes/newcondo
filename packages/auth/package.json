@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.ts",
+  "exports": {
+    ".": "./index.ts",
+    "./client": "./client.ts",
+    "./server": "./auth.ts"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
