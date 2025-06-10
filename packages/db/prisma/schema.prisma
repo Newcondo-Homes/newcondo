@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 datasource db {
   provider = "postgresql"
   url       = env("DATABASE_URL")
@@ -14,32 +12,79 @@ generator client {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String?
-  email         String          @unique
-  emailVerified DateTime?
-  passwordHash  String?   @unique
-  image         String?
-  role          Role            @default(RENTER)
-  accounts      Account[]
-  sessions      Session[]
-  properties    Property[]      @relation("PropertyOwner")
-  agentListings Property[]      @relation("PropertyAgent")
-  referrals     Referral[]      @relation("Referrer")
-  referredBy    Referral?       @relation("Referred")
-  authenticator Authenticator[]
-  featureFlags FeatureFlag[]
-
-  events        EventLog[]      @relation("UserEvents")
-
+  id               String            @id @default(cuid())
+  name             String?
+  email            String            @unique
+  phone            String?           @unique
+  emailVerified    DateTime?
+  phoneVerified    DateTime?
+  passwordHash     String?
+  image            String?
+  role             Role              @default(RENTER)
+  
+  // Verification fields
+  verificationStatus VerificationStatus @default(PENDING)
+  idDocument         String?           // URL to uploaded ID document
+  idDocumentType     IdDocumentType?
+  selfieImage        String?           // URL to uploaded selfie
+  verificationRejectionReason String?
+  verifiedAt         DateTime?
+  verifiedBy         String?           // Admin user ID who verified
+  
+  // Profile fields
+  dateOfBirth      DateTime?
+  address          String?
+  city             String?
+  state            String?
+  country          String?           @default("Nigeria")
+  
+  // Premium status (for future phases)
+  isPremium        Boolean           @default(false)
+  premiumExpiresAt DateTime?
+  
+  // Referral tracking (Phase 4)
+  referralCode     String            @unique @default(cuid())
+  
+  // Relations
+  accounts         Account[]
+  sessions         Session[]
+  properties       Property[]        @relation("PropertyOwner")
+  agentListings    Property[]        @relation("PropertyAgent")
+  referrals        Referral[]        @relation("Referrer")
+  referredBy       Referral?         @relation("Referred")
+  authenticator    Authenticator[]
+  featureFlags     FeatureFlag[]
+  events           EventLog[]        @relation("UserEvents")
+  payments         Payment[]
+  rentals          Rental[]
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@index([phone])
+  @@index([verificationStatus])
 }
 
 enum Role {
   OWNER
   AGENT
   RENTER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum IdDocumentType {
+  NIN
+  BVN
+  PASSPORT
+  VOTERS_CARD
+  DRIVERS_LICENSE
 }
 
 model Account {
@@ -97,33 +142,207 @@ model Authenticator {
 }
 
 model Property {
-  id             String    @id @default(cuid())
-  title          String
-  description    String
-  address        String
-  gpsCoordinates String?
-  ownerId        String
-  agentId        String?
-  media          String[]
-  approved       Boolean   @default(false)
-  verified       Boolean   @default(false)
-
-  owner User     @relation("PropertyOwner", fields: [ownerId], references: [id])
-  agent User?    @relation("PropertyAgent", fields: [agentId], references: [id])
-
+  id               String            @id @default(cuid())
+  title            String
+  description      String
+  price            Decimal           @db.Decimal(10, 2)
+  currency         String            @default("NGN")
+  
+  // Location
+  address          String
+  city             String
+  state            String
+  country          String            @default("Nigeria")
+  gpsCoordinates   String?           // JSON string: {"lat": 6.5244, "lng": 3.3792}
+  
+  // Property details
+  propertyType     PropertyType      @default(APARTMENT)
+  bedrooms         Int?
+  bathrooms        Int?
+  area             String?           // e.g., "120 sqm"
+  features         String[]          // ["Parking", "Generator", "Security"]
+  
+  // Ownership & Agency
+  ownerId          String
+  agentId          String?
+  isOwnerListing   Boolean           @default(true)
+  
+  // Media
+  images           PropertyImage[]
+  
+  // Legal Documents (Phase 2)
+  ownershipDocument String?          // URL to proof of ownership
+  consentDocument   String?          // URL to consent document (for agents)
+  undertakingDocument String?        // URL to signed undertaking
+  
+  // Status & Approval
+  status           PropertyStatus    @default(DRAFT)
+  adminApprovalStatus AdminApprovalStatus @default(PENDING)
+  rejectionReason  String?
+  approvedAt       DateTime?
+  approvedBy       String?           // Admin user ID
+  
+  // Rental
+  isAvailable      Boolean           @default(true)
+  availableFrom    DateTime?
+  
+  // Relations
+  owner            User              @relation("PropertyOwner", fields: [ownerId], references: [id])
+  agent            User?             @relation("PropertyAgent", fields: [agentId], references: [id])
+  rentals          Rental[]
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  @@index([ownerId])
+  @@index([agentId])
+  @@index([status])
+  @@index([adminApprovalStatus])
+  @@index([city, state])
+  @@index([propertyType])
+  @@index([price])
+}
+
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  DUPLEX
+  ROOM
+  SHARED_APARTMENT
+  OFFICE
+  SHOP
+  WAREHOUSE
+}
+
+enum PropertyStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  RENTED
+  UNAVAILABLE
+}
+
+enum AdminApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  altText    String?
+  isPrimary  Boolean  @default(false)
+  order      Int      @default(0)
+  
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([propertyId])
+}
+
+model Rental {
+  id           String        @id @default(cuid())
+  propertyId   String
+  renterId     String
+  startDate    DateTime
+  endDate      DateTime?
+  monthlyRent  Decimal       @db.Decimal(10, 2)
+  status       RentalStatus  @default(ACTIVE)
+  
+  // Relations
+  property     Property      @relation(fields: [propertyId], references: [id])
+  renter       User          @relation(fields: [renterId], references: [id])
+  payments     Payment[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([propertyId])
+  @@index([renterId])
+  @@index([status])
+}
+
+enum RentalStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  rentalId          String?
+  amount            Decimal       @db.Decimal(10, 2)
+  currency          String        @default("NGN")
+  
+  // Payment details
+  paymentType       PaymentType
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?       // "card", "bank_transfer", etc.
+  
+  // Flutterwave integration
+  flutterwaveRef    String?       @unique
+  transactionId     String?       @unique
+  
+  // Commission split (for future phases)
+  agentCommission   Decimal?      @db.Decimal(10, 2)
+  platformFee       Decimal?      @db.Decimal(10, 2)
+  ownerAmount       Decimal?      @db.Decimal(10, 2)
+  
+  // Metadata
+  description       String?
+  failureReason     String?
+  paidAt            DateTime?
+  
+  // Relations
+  user              User          @relation(fields: [userId], references: [id])
+  rental            Rental?       @relation(fields: [rentalId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([rentalId])
+  @@index([status])
+  @@index([paymentType])
+}
+
+enum PaymentType {
+  RENT
+  DEPOSIT
+  AGENT_COMMISSION
+  PREMIUM_UPGRADE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  REFUNDED
 }
 
 model Referral {
-  id         String   @id @default(cuid())
-  referrerId String
-  referredId String @unique
-
+  id           String   @id @default(cuid())
+  referrerId   String
+  referredId   String   @unique
+  
+  // Referral tracking
+  referralCode String
+  isActive     Boolean  @default(true)
+  reward       Decimal? @db.Decimal(10, 2)
+  rewardPaid   Boolean  @default(false)
+  
   referrer User @relation("Referrer", fields: [referrerId], references: [id])
   referred User @relation("Referred", fields: [referredId], references: [id])
 
   createdAt DateTime @default(now())
+  
+  @@index([referrerId])
+  @@index([referralCode])
 }
 
 model EventLog {
@@ -136,6 +355,10 @@ model EventLog {
   userAgent  String?
 
   user User? @relation("UserEvents", fields: [userId], references: [id])
+  
+  @@index([userId])
+  @@index([type])
+  @@index([timestamp])
 }
 
 model FeatureFlag {
@@ -147,4 +370,31 @@ model FeatureFlag {
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([key])
+}
+
+// For storing OTP codes temporarily
+model OTPCode {
+  id          String   @id @default(cuid())
+  identifier  String   // email or phone
+  code        String
+  type        OTPType
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  verified    Boolean  @default(false)
+  expiresAt   DateTime
+  
+  createdAt DateTime @default(now())
+  
+  @@index([identifier, type])
+  @@index([expiresAt])
+}
+
+enum OTPType {
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  PASSWORD_RESET
+  LOGIN
 }
