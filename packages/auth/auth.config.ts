@@ -31,7 +31,15 @@ export default {
 
           if (!passwordMatch) throw new Error("Invalid Credentials");
 
-          return { id: user.id, email: user.email };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            image: user.image,
+            emailVerified: user.emailVerified,
+            verificationStatus: user.verificationStatus,
+          };
           //   const user = await getUserByEmail(email);
           //   if (!user || !user.password) return null;
 

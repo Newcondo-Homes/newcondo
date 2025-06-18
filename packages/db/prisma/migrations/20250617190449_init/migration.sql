@@ -17,16 +17,37 @@ CREATE TYPE "PropertyStatus" AS ENUM ('DRAFT', 'PENDING', 'PUBLISHED', 'RENTED',
 CREATE TYPE "AdminApprovalStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
 
 -- CreateEnum
-CREATE TYPE "RentalStatus" AS ENUM ('ACTIVE', 'EXPIRED', 'TERMINATED');
+CREATE TYPE "DuplicateStatus" AS ENUM ('PENDING', 'CONFIRMED_DUPLICATE', 'NOT_DUPLICATE', 'RESOLVED');
 
 -- CreateEnum
-CREATE TYPE "PaymentType" AS ENUM ('RENT', 'DEPOSIT', 'AGENT_COMMISSION', 'PREMIUM_UPGRADE');
+CREATE TYPE "MarkingJobStatus" AS ENUM ('QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED');
 
 -- CreateEnum
-CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED');
+CREATE TYPE "UrgencyLevel" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
+
+-- CreateEnum
+CREATE TYPE "RentalStatus" AS ENUM ('ACTIVE', 'EXPIRED', 'TERMINATED', 'PENDING_CONFIRMATION');
+
+-- CreateEnum
+CREATE TYPE "PaymentType" AS ENUM ('RENT', 'DEPOSIT', 'AGENT_COMMISSION', 'PREMIUM_UPGRADE', 'PROPERTY_MARKING');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED', 'HELD', 'RELEASED');
 
 -- CreateEnum
 CREATE TYPE "OTPType" AS ENUM ('EMAIL_VERIFICATION', 'PHONE_VERIFICATION', 'PASSWORD_RESET', 'LOGIN');
+
+-- CreateEnum
+CREATE TYPE "TicketCategory" AS ENUM ('TECHNICAL', 'BILLING', 'PROPERTY', 'VERIFICATION', 'GENERAL');
+
+-- CreateEnum
+CREATE TYPE "TicketPriority" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+
+-- CreateEnum
+CREATE TYPE "TicketStatus" AS ENUM ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED');
+
+-- CreateEnum
+CREATE TYPE "AdminActionType" AS ENUM ('USER_VERIFIED', 'USER_REJECTED', 'PROPERTY_APPROVED', 'PROPERTY_REJECTED', 'PAYMENT_REFUNDED', 'DUPLICATE_RESOLVED', 'BOUNDARY_DISPUTE_RESOLVED', 'TICKET_RESOLVED', 'AGENT_SUSPENDED');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -54,6 +75,11 @@ CREATE TABLE "User" (
     "isPremium" BOOLEAN NOT NULL DEFAULT false,
     "premiumExpiresAt" TIMESTAMP(3),
     "referralCode" TEXT NOT NULL,
+    "isAvailableForMarking" BOOLEAN NOT NULL DEFAULT false,
+    "agentServiceAreas" TEXT[],
+    "agentReliabilityScore" DECIMAL(3,2),
+    "totalMarkingJobs" INTEGER NOT NULL DEFAULT 0,
+    "completedMarkingJobs" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -123,6 +149,12 @@ CREATE TABLE "Property" (
     "state" TEXT NOT NULL,
     "country" TEXT NOT NULL DEFAULT 'Nigeria',
     "gpsCoordinates" TEXT,
+    "boundaryCoordinates" JSONB,
+    "boundaryVerified" BOOLEAN NOT NULL DEFAULT false,
+    "boundaryMarkedBy" TEXT,
+    "boundaryMarkedAt" TIMESTAMP(3),
+    "boundaryImages" TEXT[],
+    "buildingFingerprint" TEXT,
     "propertyType" "PropertyType" NOT NULL DEFAULT 'APARTMENT',
     "bedrooms" INTEGER,
     "bathrooms" INTEGER,
@@ -141,6 +173,11 @@ CREATE TABLE "Property" (
     "approvedBy" TEXT,
     "isAvailable" BOOLEAN NOT NULL DEFAULT true,
     "availableFrom" TIMESTAMP(3),
+    "isPaymentLocked" BOOLEAN NOT NULL DEFAULT false,
+    "paymentLockExpiry" TIMESTAMP(3),
+    "shareableLink" TEXT,
+    "viewCount" INTEGER NOT NULL DEFAULT 0,
+    "favoriteCount" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -161,6 +198,49 @@ CREATE TABLE "PropertyImage" (
 );
 
 -- CreateTable
+CREATE TABLE "PropertyDuplicate" (
+    "id" TEXT NOT NULL,
+    "originalPropertyId" TEXT NOT NULL,
+    "duplicatePropertyId" TEXT NOT NULL,
+    "reportedBy" TEXT,
+    "status" "DuplicateStatus" NOT NULL DEFAULT 'PENDING',
+    "resolution" TEXT,
+    "resolvedBy" TEXT,
+    "resolvedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PropertyDuplicate_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PropertyMarkingJob" (
+    "id" TEXT NOT NULL,
+    "propertyId" TEXT NOT NULL,
+    "requestedBy" TEXT NOT NULL,
+    "assignedAgentId" TEXT,
+    "contactPersonName" TEXT NOT NULL,
+    "contactPersonPhone" TEXT NOT NULL,
+    "accessInstructions" TEXT,
+    "preferredTime" TIMESTAMP(3),
+    "urgencyLevel" "UrgencyLevel" NOT NULL DEFAULT 'NORMAL',
+    "markingFee" DECIMAL(10,2) NOT NULL,
+    "paymentStatus" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "MarkingJobStatus" NOT NULL DEFAULT 'QUEUED',
+    "assignedAt" TIMESTAMP(3),
+    "completedAt" TIMESTAMP(3),
+    "timeSlotExpiry" TIMESTAMP(3),
+    "completionNotes" TEXT,
+    "completionImages" TEXT[],
+    "boundaryData" JSONB,
+    "queuePosition" INTEGER,
+    "maxCompletionTime" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PropertyMarkingJob_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Rental" (
     "id" TEXT NOT NULL,
     "propertyId" TEXT NOT NULL,
@@ -169,6 +249,9 @@ CREATE TABLE "Rental" (
     "endDate" TIMESTAMP(3),
     "monthlyRent" DECIMAL(10,2) NOT NULL,
     "status" "RentalStatus" NOT NULL DEFAULT 'ACTIVE',
+    "confirmationDeadline" TIMESTAMP(3),
+    "isConfirmed" BOOLEAN NOT NULL DEFAULT false,
+    "confirmedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -180,6 +263,7 @@ CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "rentalId" TEXT,
+    "markingJobId" TEXT,
     "amount" DECIMAL(10,2) NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'NGN',
     "paymentType" "PaymentType" NOT NULL,
@@ -190,6 +274,9 @@ CREATE TABLE "Payment" (
     "agentCommission" DECIMAL(10,2),
     "platformFee" DECIMAL(10,2),
     "ownerAmount" DECIMAL(10,2),
+    "confirmationPeriodEnd" TIMESTAMP(3),
+    "isReleased" BOOLEAN NOT NULL DEFAULT false,
+    "releasedAt" TIMESTAMP(3),
     "description" TEXT,
     "failureReason" TEXT,
     "paidAt" TIMESTAMP(3),
@@ -197,6 +284,24 @@ CREATE TABLE "Payment" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VirtualAccount" (
+    "id" TEXT NOT NULL,
+    "accountNumber" TEXT NOT NULL,
+    "accountName" TEXT NOT NULL,
+    "bankCode" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "propertyId" TEXT,
+    "balance" DECIMAL(15,2) NOT NULL DEFAULT 0,
+    "currency" TEXT NOT NULL DEFAULT 'NGN',
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "flutterwaveAccountId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "VirtualAccount_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -253,6 +358,38 @@ CREATE TABLE "OTPCode" (
     CONSTRAINT "OTPCode_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "SupportTicket" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "category" "TicketCategory" NOT NULL,
+    "priority" "TicketPriority" NOT NULL DEFAULT 'MEDIUM',
+    "status" "TicketStatus" NOT NULL DEFAULT 'OPEN',
+    "adminResponse" TEXT,
+    "resolvedBy" TEXT,
+    "resolvedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SupportTicket_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AdminAction" (
+    "id" TEXT NOT NULL,
+    "adminId" TEXT NOT NULL,
+    "action" "AdminActionType" NOT NULL,
+    "targetType" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "description" TEXT,
+    "metadata" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AdminAction_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -272,10 +409,19 @@ CREATE INDEX "User_phone_idx" ON "User"("phone");
 CREATE INDEX "User_verificationStatus_idx" ON "User"("verificationStatus");
 
 -- CreateIndex
+CREATE INDEX "User_role_idx" ON "User"("role");
+
+-- CreateIndex
+CREATE INDEX "User_isAvailableForMarking_idx" ON "User"("isAvailableForMarking");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Authenticator_credentialID_key" ON "Authenticator"("credentialID");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Property_shareableLink_key" ON "Property"("shareableLink");
 
 -- CreateIndex
 CREATE INDEX "Property_ownerId_idx" ON "Property"("ownerId");
@@ -299,7 +445,40 @@ CREATE INDEX "Property_propertyType_idx" ON "Property"("propertyType");
 CREATE INDEX "Property_price_idx" ON "Property"("price");
 
 -- CreateIndex
+CREATE INDEX "Property_isAvailable_idx" ON "Property"("isAvailable");
+
+-- CreateIndex
+CREATE INDEX "Property_buildingFingerprint_idx" ON "Property"("buildingFingerprint");
+
+-- CreateIndex
+CREATE INDEX "Property_boundaryVerified_idx" ON "Property"("boundaryVerified");
+
+-- CreateIndex
 CREATE INDEX "PropertyImage_propertyId_idx" ON "PropertyImage"("propertyId");
+
+-- CreateIndex
+CREATE INDEX "PropertyDuplicate_originalPropertyId_idx" ON "PropertyDuplicate"("originalPropertyId");
+
+-- CreateIndex
+CREATE INDEX "PropertyDuplicate_duplicatePropertyId_idx" ON "PropertyDuplicate"("duplicatePropertyId");
+
+-- CreateIndex
+CREATE INDEX "PropertyDuplicate_status_idx" ON "PropertyDuplicate"("status");
+
+-- CreateIndex
+CREATE INDEX "PropertyMarkingJob_propertyId_idx" ON "PropertyMarkingJob"("propertyId");
+
+-- CreateIndex
+CREATE INDEX "PropertyMarkingJob_requestedBy_idx" ON "PropertyMarkingJob"("requestedBy");
+
+-- CreateIndex
+CREATE INDEX "PropertyMarkingJob_assignedAgentId_idx" ON "PropertyMarkingJob"("assignedAgentId");
+
+-- CreateIndex
+CREATE INDEX "PropertyMarkingJob_status_idx" ON "PropertyMarkingJob"("status");
+
+-- CreateIndex
+CREATE INDEX "PropertyMarkingJob_queuePosition_idx" ON "PropertyMarkingJob"("queuePosition");
 
 -- CreateIndex
 CREATE INDEX "Rental_propertyId_idx" ON "Rental"("propertyId");
@@ -309,6 +488,9 @@ CREATE INDEX "Rental_renterId_idx" ON "Rental"("renterId");
 
 -- CreateIndex
 CREATE INDEX "Rental_status_idx" ON "Rental"("status");
+
+-- CreateIndex
+CREATE INDEX "Rental_confirmationDeadline_idx" ON "Rental"("confirmationDeadline");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_flutterwaveRef_key" ON "Payment"("flutterwaveRef");
@@ -323,10 +505,31 @@ CREATE INDEX "Payment_userId_idx" ON "Payment"("userId");
 CREATE INDEX "Payment_rentalId_idx" ON "Payment"("rentalId");
 
 -- CreateIndex
+CREATE INDEX "Payment_markingJobId_idx" ON "Payment"("markingJobId");
+
+-- CreateIndex
 CREATE INDEX "Payment_status_idx" ON "Payment"("status");
 
 -- CreateIndex
 CREATE INDEX "Payment_paymentType_idx" ON "Payment"("paymentType");
+
+-- CreateIndex
+CREATE INDEX "Payment_confirmationPeriodEnd_idx" ON "Payment"("confirmationPeriodEnd");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VirtualAccount_accountNumber_key" ON "VirtualAccount"("accountNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VirtualAccount_propertyId_key" ON "VirtualAccount"("propertyId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VirtualAccount_flutterwaveAccountId_key" ON "VirtualAccount"("flutterwaveAccountId");
+
+-- CreateIndex
+CREATE INDEX "VirtualAccount_userId_idx" ON "VirtualAccount"("userId");
+
+-- CreateIndex
+CREATE INDEX "VirtualAccount_accountNumber_idx" ON "VirtualAccount"("accountNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Referral_referredId_key" ON "Referral"("referredId");
@@ -358,6 +561,24 @@ CREATE INDEX "OTPCode_identifier_type_idx" ON "OTPCode"("identifier", "type");
 -- CreateIndex
 CREATE INDEX "OTPCode_expiresAt_idx" ON "OTPCode"("expiresAt");
 
+-- CreateIndex
+CREATE INDEX "SupportTicket_userId_idx" ON "SupportTicket"("userId");
+
+-- CreateIndex
+CREATE INDEX "SupportTicket_status_idx" ON "SupportTicket"("status");
+
+-- CreateIndex
+CREATE INDEX "SupportTicket_category_idx" ON "SupportTicket"("category");
+
+-- CreateIndex
+CREATE INDEX "AdminAction_adminId_idx" ON "AdminAction"("adminId");
+
+-- CreateIndex
+CREATE INDEX "AdminAction_action_idx" ON "AdminAction"("action");
+
+-- CreateIndex
+CREATE INDEX "AdminAction_targetType_targetId_idx" ON "AdminAction"("targetType", "targetId");
+
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -377,6 +598,18 @@ ALTER TABLE "Property" ADD CONSTRAINT "Property_agentId_fkey" FOREIGN KEY ("agen
 ALTER TABLE "PropertyImage" ADD CONSTRAINT "PropertyImage_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "PropertyDuplicate" ADD CONSTRAINT "PropertyDuplicate_originalPropertyId_fkey" FOREIGN KEY ("originalPropertyId") REFERENCES "Property"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PropertyMarkingJob" ADD CONSTRAINT "PropertyMarkingJob_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PropertyMarkingJob" ADD CONSTRAINT "PropertyMarkingJob_requestedBy_fkey" FOREIGN KEY ("requestedBy") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PropertyMarkingJob" ADD CONSTRAINT "PropertyMarkingJob_assignedAgentId_fkey" FOREIGN KEY ("assignedAgentId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Rental" ADD CONSTRAINT "Rental_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -389,6 +622,12 @@ ALTER TABLE "Payment" ADD CONSTRAINT "Payment_userId_fkey" FOREIGN KEY ("userId"
 ALTER TABLE "Payment" ADD CONSTRAINT "Payment_rentalId_fkey" FOREIGN KEY ("rentalId") REFERENCES "Rental"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE "VirtualAccount" ADD CONSTRAINT "VirtualAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "VirtualAccount" ADD CONSTRAINT "VirtualAccount_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Referral" ADD CONSTRAINT "Referral_referrerId_fkey" FOREIGN KEY ("referrerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -399,3 +638,9 @@ ALTER TABLE "EventLog" ADD CONSTRAINT "EventLog_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "FeatureFlag" ADD CONSTRAINT "FeatureFlag_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SupportTicket" ADD CONSTRAINT "SupportTicket_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AdminAction" ADD CONSTRAINT "AdminAction_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

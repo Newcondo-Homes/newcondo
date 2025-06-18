@@ -16,14 +16,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       // you can filter users who login/signup with google here
       return true;
     },
-    async jwt({ token, user, account, profile }) {
+    async jwt({ token, user, account, profile, trigger, session }) {
       if (user || account) {
         token.accessToken = account?.access_token;
+        // token.role = user.role as Role
+        // token.verificationStatus = user.verificationStatus
         token.id = account?.id_token;
         token.email = user.email; // Attach email to the JWT token
         token.picture = profile?.picture;
-        console.log("Account ✅", profile)
+        console.log("Account ✅", profile);
       }
+
+      // Handle session update
+      if (trigger === "update" && session) {
+        token = { ...token, ...session };
+      }
+
       return token;
 
       // if (!token.sub) return token;
@@ -39,9 +47,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
+
+        // role and verification Status
+        // session.user.role = token.role as Role
+        // session.user.verificationStatus = token.verificationStatus
         session.user.email = token.email as string;
         session.user.image = token.picture;
-        console.log("INside session ✅", session.user.image)
+        console.log("INside session ✅", session.user.image);
       }
 
       // if (token.role && session.user) {
@@ -52,6 +64,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   ...authConfig,
 });

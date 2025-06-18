@@ -45,6 +45,13 @@ model User {
   // Referral tracking (Phase 4)
   referralCode     String            @unique @default(cuid())
   
+  // Agent specific fields
+  isAvailableForMarking Boolean       @default(false) // For agents willing to do property marking
+  agentServiceAreas     String[]      // Cities/areas where agent operates
+  agentReliabilityScore Decimal?      @db.Decimal(3, 2) // 0.00 to 5.00 rating
+  totalMarkingJobs      Int           @default(0)
+  completedMarkingJobs  Int           @default(0)
+  
   // Relations
   accounts         Account[]
   sessions         Session[]
@@ -57,6 +64,11 @@ model User {
   events           EventLog[]        @relation("UserEvents")
   payments         Payment[]
   rentals          Rental[]
+  virtualAccounts  VirtualAccount[]
+  assignedMarkingJobs PropertyMarkingJob[] @relation("AssignedAgent")
+  requestedMarkingJobs PropertyMarkingJob[] @relation("RequestingUser")
+  supportTickets   SupportTicket[]
+  adminActions     AdminAction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -64,6 +76,8 @@ model User {
   @@index([email])
   @@index([phone])
   @@index([verificationStatus])
+  @@index([role])
+  @@index([isAvailableForMarking])
 }
 
 enum Role {
@@ -155,6 +169,14 @@ model Property {
   country          String            @default("Nigeria")
   gpsCoordinates   String?           // JSON string: {"lat": 6.5244, "lng": 3.3792}
   
+  // Property Boundary Information
+  boundaryCoordinates Json?          // Polygon coordinates for property boundaries
+  boundaryVerified    Boolean        @default(false)
+  boundaryMarkedBy    String?        // Agent ID who marked the boundary
+  boundaryMarkedAt    DateTime?
+  boundaryImages      String[]       // URLs to boundary marking photos
+  buildingFingerprint String?        // Unique identifier for duplicate detection
+  
   // Property details
   propertyType     PropertyType      @default(APARTMENT)
   bedrooms         Int?
@@ -182,14 +204,24 @@ model Property {
   approvedAt       DateTime?
   approvedBy       String?           // Admin user ID
   
-  // Rental
+  // Rental & Availability
   isAvailable      Boolean           @default(true)
   availableFrom    DateTime?
+  isPaymentLocked  Boolean           @default(false) // Prevent double booking
+  paymentLockExpiry DateTime?        // When payment lock expires
+  
+  // Sharing & Marketing
+  shareableLink    String?           @unique
+  viewCount        Int               @default(0)
+  favoriteCount    Int               @default(0)
   
   // Relations
   owner            User              @relation("PropertyOwner", fields: [ownerId], references: [id])
   agent            User?             @relation("PropertyAgent", fields: [agentId], references: [id])
   rentals          Rental[]
+  duplicateReports PropertyDuplicate[]
+  markingJobs      PropertyMarkingJob[]
+  virtualAccount   VirtualAccount?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -201,6 +233,9 @@ model Property {
   @@index([city, state])
   @@index([propertyType])
   @@index([price])
+  @@index([isAvailable])
+  @@index([buildingFingerprint])
+  @@index([boundaryVerified])
 }
 
 enum PropertyType {
@@ -243,6 +278,97 @@ model PropertyImage {
   @@index([propertyId])
 }
 
+// New model for tracking duplicate property reports
+model PropertyDuplicate {
+  id                String   @id @default(cuid())
+  originalPropertyId String
+  duplicatePropertyId String
+  reportedBy        String?  // User ID who reported
+  status            DuplicateStatus @default(PENDING)
+  resolution        String?  // Admin notes on resolution
+  resolvedBy        String?  // Admin ID who resolved
+  resolvedAt        DateTime?
+  
+  originalProperty  Property @relation(fields: [originalPropertyId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@index([originalPropertyId])
+  @@index([duplicatePropertyId])
+  @@index([status])
+}
+
+enum DuplicateStatus {
+  PENDING
+  CONFIRMED_DUPLICATE
+  NOT_DUPLICATE
+  RESOLVED
+}
+
+// Property Marking Service Models
+model PropertyMarkingJob {
+  id              String            @id @default(cuid())
+  propertyId      String
+  requestedBy     String
+  assignedAgentId String?
+  
+  // Job Details
+  contactPersonName  String
+  contactPersonPhone String
+  accessInstructions String?
+  preferredTime      DateTime?
+  urgencyLevel       UrgencyLevel   @default(NORMAL)
+  
+  // Pricing
+  markingFee         Decimal        @db.Decimal(10, 2)
+  paymentStatus      PaymentStatus  @default(PENDING)
+  
+  // Job Status
+  status             MarkingJobStatus @default(QUEUED)
+  assignedAt         DateTime?
+  completedAt        DateTime?
+  timeSlotExpiry     DateTime?       // 3-hour time slot limit
+  
+  // Completion Data
+  completionNotes    String?
+  completionImages   String[]        // URLs to completion photos
+  boundaryData       Json?           // Boundary coordinates marked
+  
+  // Queue Management
+  queuePosition      Int?
+  maxCompletionTime  DateTime?       // Max 3 days from request
+  
+  // Relations
+  property        Property @relation(fields: [propertyId], references: [id])
+  requestingUser  User     @relation("RequestingUser", fields: [requestedBy], references: [id])
+  assignedAgent   User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([propertyId])
+  @@index([requestedBy])
+  @@index([assignedAgentId])
+  @@index([status])
+  @@index([queuePosition])
+}
+
+enum MarkingJobStatus {
+  QUEUED
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum UrgencyLevel {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
 model Rental {
   id           String        @id @default(cuid())
   propertyId   String
@@ -251,6 +377,11 @@ model Rental {
   endDate      DateTime?
   monthlyRent  Decimal       @db.Decimal(10, 2)
   status       RentalStatus  @default(ACTIVE)
+  
+  // Confirmation System
+  confirmationDeadline DateTime?     // 7 days from payment
+  isConfirmed         Boolean       @default(false)
+  confirmedAt         DateTime?
   
   // Relations
   property     Property      @relation(fields: [propertyId], references: [id])
@@ -263,18 +394,21 @@ model Rental {
   @@index([propertyId])
   @@index([renterId])
   @@index([status])
+  @@index([confirmationDeadline])
 }
 
 enum RentalStatus {
   ACTIVE
   EXPIRED
   TERMINATED
+  PENDING_CONFIRMATION
 }
 
 model Payment {
   id                String        @id @default(cuid())
   userId            String
   rentalId          String?
+  markingJobId      String?       // For property marking payments
   amount            Decimal       @db.Decimal(10, 2)
   currency          String        @default("NGN")
   
@@ -292,6 +426,11 @@ model Payment {
   platformFee       Decimal?      @db.Decimal(10, 2)
   ownerAmount       Decimal?      @db.Decimal(10, 2)
   
+  // Payment confirmation system
+  confirmationPeriodEnd DateTime?
+  isReleased           Boolean    @default(false)
+  releasedAt           DateTime?
+  
   // Metadata
   description       String?
   failureReason     String?
@@ -306,8 +445,10 @@ model Payment {
   
   @@index([userId])
   @@index([rentalId])
+  @@index([markingJobId])
   @@index([status])
   @@index([paymentType])
+  @@index([confirmationPeriodEnd])
 }
 
 enum PaymentType {
@@ -315,6 +456,7 @@ enum PaymentType {
   DEPOSIT
   AGENT_COMMISSION
   PREMIUM_UPGRADE
+  PROPERTY_MARKING
 }
 
 enum PaymentStatus {
@@ -323,6 +465,36 @@ enum PaymentStatus {
   FAILED
   CANCELLED
   REFUNDED
+  HELD
+  RELEASED
+}
+
+// Virtual Account System
+model VirtualAccount {
+  id              String    @id @default(cuid())
+  accountNumber   String    @unique
+  accountName     String
+  bankCode        String
+  userId          String
+  propertyId      String?   @unique // One virtual account per property
+  
+  // Account Details
+  balance         Decimal   @db.Decimal(15, 2) @default(0)
+  currency        String    @default("NGN")
+  isActive        Boolean   @default(true)
+  
+  // Flutterwave Integration
+  flutterwaveAccountId String? @unique
+  
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([accountNumber])
 }
 
 model Referral {
@@ -397,4 +569,82 @@ enum OTPType {
   PHONE_VERIFICATION
   PASSWORD_RESET
   LOGIN
+}
+
+// Admin Dashboard Support
+model SupportTicket {
+  id          String        @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  category    TicketCategory
+  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(OPEN)
+  
+  // Admin Response
+  adminResponse String?
+  resolvedBy    String?       // Admin user ID
+  resolvedAt    DateTime?
+  
+  user User @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+}
+
+enum TicketCategory {
+  TECHNICAL
+  BILLING
+  PROPERTY
+  VERIFICATION
+  GENERAL
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+// Admin Actions Log
+model AdminAction {
+  id          String      @id @default(cuid())
+  adminId     String
+  action      AdminActionType
+  targetType  String      // "User", "Property", "Payment", etc.
+  targetId    String      // ID of the target entity
+  description String?
+  metadata    Json?       // Additional action details
+  
+  admin User @relation(fields: [adminId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@index([adminId])
+  @@index([action])
+  @@index([targetType, targetId])
+}
+
+enum AdminActionType {
+  USER_VERIFIED
+  USER_REJECTED
+  PROPERTY_APPROVED
+  PROPERTY_REJECTED
+  PAYMENT_REFUNDED
+  DUPLICATE_RESOLVED
+  BOUNDARY_DISPUTE_RESOLVED
+  TICKET_RESOLVED
+  AGENT_SUSPENDED
 }
