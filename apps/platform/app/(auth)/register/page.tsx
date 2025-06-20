@@ -2,8 +2,6 @@
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { auth } from '@newcondo/auth'
-// import { getServerSession } from 'next-auth'
-// import { authOptions } from '@newcondo/auth'
 import RegisterForm from '@/components/auth/RegisterForm'
 
 export const metadata: Metadata = {
@@ -12,7 +10,6 @@ export const metadata: Metadata = {
 }
 
 export default async function RegisterPage() {
-//   const session = await getServerSession(authOptions)
   const session = await auth();
 
   

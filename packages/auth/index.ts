@@ -3,6 +3,8 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import authConfig from "./auth.config";
 import NextAuth from "next-auth";
 import { prisma } from "@newcondo/db";
+import getServerSessions from "next-auth";
+
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
@@ -51,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // role and verification Status
         // session.user.role = token.role as Role
         // session.user.verificationStatus = token.verificationStatus
+        // session.user.phone = token.phone as string
         session.user.email = token.email as string;
         session.user.image = token.picture;
         console.log("INside session ✅", session.user.image);
@@ -67,6 +70,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  //   pages: {
+  //   signIn: "/login",
+  //   signUp: "/register",
+  //   error: "/login",
+  // },
+  events:{
+    async signIn({ user, account, isNewUser }) {
+
+      // Log sign-in event
+      if (user.id){
+        await prisma.eventLog.create({
+          data: {
+            userId: user.id,
+            type: "LOGIN",
+            metadata: {
+              provider: account?.provider || "credentials",
+              isNewUser
+            }
+          }
+        })
+      }
+    },
+
+    async signOut({ session }) {
+      // Log sign-out event
+      if ( session?.user?.id) {
+        await prisma.eventLog.create({
+          data: {
+            userId: session.user.id,
+            type: "LOGOUT",
+            metadata: {}
+          }
+        })
+      }
+    }
   },
   ...authConfig,
 });

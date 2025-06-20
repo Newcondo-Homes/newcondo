@@ -2,8 +2,7 @@
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { auth } from '@newcondo/auth'
-// import { getServerSession } from '@newcondo/auth'
-// import { authOptions } from '@newcondo/auth'
+import Link from "next/link"
 import LoginForm from '@/components/auth/LoginForm'
 
 export const metadata: Metadata = {
@@ -21,30 +20,33 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md space-y-8 px-4">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Sign in to your NewCondo account
-          </p>
-        </div>
-        
-        <LoginForm />
-        
-        <div className="text-center">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <a
-              href="/register"
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Sign up here
-            </a>
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h1>
+        <p className="text-gray-600">Sign in to your account to continue</p>
+      </div>
+
+      <LoginForm />
+
+      <div className="text-center">
+        <p className="text-sm text-gray-600">
+          Don't have an account?{" "}
+          <Link 
+            href="/register" 
+            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+          >
+            Sign up here
+          </Link>
+        </p>
+      </div>
+
+      <div className="text-center">
+        <Link 
+          href="/reset-password" 
+          className="text-sm text-blue-600 hover:text-blue-500 transition-colors"
+        >
+          Forgot your password?
+        </Link>
       </div>
     </div>
   )

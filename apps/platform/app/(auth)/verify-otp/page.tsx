@@ -2,7 +2,7 @@
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
-import OTPVerification from '@/components/auth/OTPVerification'
+import { OTPVerification } from '@/components/auth/OTPVerification'
 import LoadingSpinner from '@/components/shared/feedback/LoadingSpinner'
 
 export const metadata: Metadata = {
