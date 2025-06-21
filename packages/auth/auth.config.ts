@@ -7,9 +7,10 @@ import { LoginSchema } from "./schemas";
 import { prisma } from "@newcondo/db"
 import { Role } from "@newcondo/db"
 import bcrypt from "bcryptjs";
+import { AuthService } from "./src/services/authService"
 
 
-import getServerSessions from "next-auth";
+const authService = new AuthService()
 
 export default {
   providers: [
@@ -153,3 +154,124 @@ export default {
   ],
   // debug: true,
 } satisfies NextAuthConfig;
+
+
+// // packages/auth/src/providers.ts
+// import GoogleProvider from "next-auth/providers/google"
+// import FacebookProvider from "next-auth/providers/facebook"
+// import CredentialsProvider from "next-auth/providers/credentials"
+// import { AuthService } from "./services/authService"
+
+// const authService = new AuthService()
+
+// export const authProviders = [
+//   CredentialsProvider({
+//     id: "credentials",
+//     name: "Email & Password",
+//     credentials: {
+//       email: { 
+//         label: "Email", 
+//         type: "email", 
+//         placeholder: "Enter your email" 
+//       },
+//       password: { 
+//         label: "Password", 
+//         type: "password" 
+//       }
+//     },
+//     async authorize(credentials) {
+//       if (!credentials?.email || !credentials?.password) {
+//         throw new Error("Email and password are required")
+//       }
+
+//       try {
+//         const result = await authService.signIn({
+//           email: credentials.email,
+//           password: credentials.password
+//         })
+
+//         if (result.success && result.user) {
+//           return {
+//             id: result.user.id,
+//             email: result.user.email,
+//             name: result.user.name,
+//             role: result.user.role,
+//             emailVerified: result.user.emailVerified,
+//             verificationStatus: result.user.verificationStatus,
+//             image: result.user.image,
+//           }
+//         }
+        
+//         throw new Error(result.error || "Authentication failed")
+//       } catch (error) {
+//         console.error("Auth error:", error)
+//         throw new Error("Invalid credentials")
+//       }
+//     }
+//   }),
+
+//   CredentialsProvider({
+//     id: "otp",
+//     name: "OTP Verification",
+//     credentials: {
+//       email: { 
+//         label: "Email", 
+//         type: "email" 
+//       },
+//       otp: { 
+//         label: "OTP Code", 
+//         type: "text" 
+//       }
+//     },
+//     async authorize(credentials) {
+//       if (!credentials?.email || !credentials?.otp) {
+//         throw new Error("Email and OTP are required")
+//       }
+
+//       try {
+//         const result = await authService.verifyOTP({
+//           email: credentials.email,
+//           code: credentials.otp,
+//           type: 'LOGIN'
+//         })
+
+//         if (result.success && result.user) {
+//           return {
+//             id: result.user.id,
+//             email: result.user.email,
+//             name: result.user.name,
+//             role: result.user.role,
+//             emailVerified: result.user.emailVerified,
+//             verificationStatus: result.user.verificationStatus,
+//             image: result.user.image,
+//           }
+//         }
+        
+//         throw new Error(result.error || "OTP verification failed")
+//       } catch (error) {
+//         console.error("OTP verification error:", error)
+//         throw new Error("Invalid OTP")
+//       }
+//     }
+//   }),
+
+//   // Social providers (optional)
+//   ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
+//     GoogleProvider({
+//       clientId: process.env.GOOGLE_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//       authorization: {
+//         params: {
+//           scope: 'openid email profile'
+//         }
+//       }
+//     })
+//   ] : []),
+
+//   ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET ? [
+//     FacebookProvider({
+//       clientId: process.env.FACEBOOK_CLIENT_ID,
+//       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
+//     })
+//   ] : [])
+// ]

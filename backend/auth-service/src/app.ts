@@ -6,7 +6,7 @@ import rateLimit from 'express-rate-limit'
 import { errorHandler } from '../../shared/src/middleware/errorHandler'
 import { authRoutes } from './routes/auth'
 import { otpRoutes } from './routes/otp'
-import { profileRoutes } from './routes/profile'
+import  profileRoutes  from './routes/profile'
 
 const app = express()
 
