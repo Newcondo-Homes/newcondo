@@ -2,7 +2,7 @@
 import { Role, VerificationStatus } from "@newcondo/db"
 
 declare module "next-auth" {
-  interface User {
+    interface User {
     id: string
     email: string
     name?: string | null
@@ -10,9 +10,13 @@ declare module "next-auth" {
     image?: string | null
     phone?: string | null
     verificationStatus: VerificationStatus
+    accessToken?: string
+    refreshToken?: string
   }
 
-  interface Session {
+ interface Session {
+    accessToken?: string
+    refreshToken?: string
     user: {
       id: string
       email: string
@@ -25,13 +29,16 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
+declare module  "@auth/core/jwt" {
   interface JWT {
+    accessToken?: string
+    refreshToken?: string
     role: Role
     verificationStatus: VerificationStatus
     phone?: string | null
   }
 }
+
 
 export interface AuthError {
   type: string
@@ -67,3 +74,32 @@ export interface PasswordResetRequest {
   token?: string
   newPassword?: string
 }
+
+export interface AuthResponse {
+  success: boolean
+  message: string
+  data?: any
+  error?: AuthError
+  user?: {
+    id: string
+    email: string
+    name?: string | null
+    role: Role
+    image?: string | null
+    phone?: string | null
+    verificationStatus: VerificationStatus
+  }
+  tokens?: {
+    accessToken: string
+    refreshToken: string
+  }
+}
+
+export interface OTPVerification {
+  identifier: string // email or phone
+  otpCode: string
+  type: "email" | "phone"
+  purpose: "login" | "registration" | "password_reset"
+} 
+
+export { Role, VerificationStatus }

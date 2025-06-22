@@ -2,7 +2,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { User } from '@newcondo/auth';
+import { User } from '@newcondo/db';
 import { cn } from '@newcondo/ui/';
 import { Button } from '@newcondo/ui/';
 import { Badge } from '@newcondo/ui/';

@@ -1,11 +1,16 @@
 // apps/platform/lib/api/client.ts
 import { getSession } from '@newcondo/auth/client';
+import type { User } from '@/types/api'
 
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
+  user?: User;
+  token?: string;
+  refreshToken?: string;
+  expiresAt?: string;
 }
 
 export interface ApiError {

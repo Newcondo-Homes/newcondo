@@ -97,18 +97,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
     },
 
-    async signOut({ session }) {
-      // Log sign-out event
-      if ( session?.user?.id) {
-        await prisma.eventLog.create({
-          data: {
-            userId: session.user.id,
-            type: "LOGOUT",
-            metadata: {}
-          }
-        })
-      }
-    }
+    // async signOut({ session }) {
+    //   // Log sign-out event
+    //   if ( session?.user?.id) {
+    //     await prisma.eventLog.create({
+    //       data: {
+    //         userId: session.user.id,
+    //         type: "LOGOUT",
+    //         metadata: {}
+    //       }
+    //     })
+    //   }
+    // }
   },
   ...authConfig,
 });

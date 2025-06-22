@@ -1,10 +1,8 @@
 // backend/auth-service/src/services/emailOtpService.ts
-import { PrismaClient } from '@newcondo/db';
+import { prisma } from '@newcondo/db';
 import { generateOTP } from '../../../shared/src/utils/otp';
 import { sendEmail } from '../../../shared/src/utils/email';
 import { redis } from '../../../shared/src/config/redis';
-
-const prisma = new PrismaClient();
 
 interface OTPVerificationResult {
   success: boolean;

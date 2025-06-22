@@ -3,7 +3,6 @@ import Google from "next-auth/providers/google";
 import { getUserByEmail } from "@newcondo/db/src/utils";
 import type { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "./schemas";
-// import { prisma } from "./lib/db";
 import { prisma } from "@newcondo/db"
 import { Role } from "@newcondo/db"
 import bcrypt from "bcryptjs";

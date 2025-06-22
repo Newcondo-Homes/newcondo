@@ -1,6 +1,6 @@
 // apps/platform/lib/middleware-utils.ts
 import { NextRequest, NextResponse } from "next/server";
-import type { Session } from "@newcondo/auth";
+import type { Session } from "@newcondo/db";
 
 /**
  * User roles enum for type safety

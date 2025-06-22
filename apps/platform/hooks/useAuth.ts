@@ -10,7 +10,7 @@ import type {
   OTPVerificationData, 
   OTPResendData,
   AuthResponse,
-  User 
+  User
 } from '@/types/api'
 
 export function useAuth() {
