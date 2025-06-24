@@ -2,7 +2,9 @@
 'use client';
 
 import { useState } from 'react';
-import { User } from '@newcondo/auth';
+// import { User } from '@newcondo/auth';
+import type { User } from '@newcondo/db'
+
 import { useRouter } from 'next/navigation';
 import { cn } from '@newcondo/ui/lib/utils';
 import { Button } from '@newcondo/ui/';
@@ -30,9 +32,8 @@ import {
   MapPin,
   Briefcase
 } from 'lucide-react';
-import { signOut } from '@newcondo/auth';
+import { signOut } from '@newcondo/auth/client';
 import Sidebar from '@/components/shared/navigation/Sidebar';
-import Navbar from '@/components/shared/navigation/Navbar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -57,9 +58,9 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
   const getVerificationBadge = () => {
     switch (user.verificationStatus) {
       case 'VERIFIED':
-        return <Badge variant="success" className="text-xs">Verified</Badge>;
+        return <Badge variant="default" className="text-xs">Verified</Badge>;
       case 'PENDING':
-        return <Badge variant="warning" className="text-xs">Pending</Badge>;
+        return <Badge variant="secondary" className="text-xs">Pending</Badge>;
       case 'REJECTED':
         return <Badge variant="destructive" className="text-xs">Rejected</Badge>;
       default:
@@ -169,7 +170,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                       <MapPin className="mr-2 h-4 w-4" />
                       Agent Queue
                       {user.isAvailableForMarking && (
-                        <Badge variant="success" className="ml-auto text-xs">
+                        <Badge variant="default" className="ml-auto text-xs">
                           Available
                         </Badge>
                       )}

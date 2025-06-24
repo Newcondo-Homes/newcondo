@@ -1,7 +1,9 @@
+"use client";
 // apps/platform/hooks/useAuth.ts
 import { useState, useCallback } from 'react'
 import { useSession, signIn, signOut } from '@newcondo/auth/client'
 import { useRouter } from 'next/navigation'
+import { useMutation } from "@tanstack/react-query"
 import { useAuthStore } from '@/store/authStore'
 import { authApi } from '@/lib/api/auth'
 import type { 
@@ -286,5 +288,241 @@ export function useAuth() {
     requestPasswordReset,
     resetPassword,
     updateProfile
+  }
+}
+
+// Individual hooks for mutation-like behavior
+export function useRegister() {
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<{ message: string } | null>(null)
+  const [data, setData] = useState<AuthResponse | null>(null)
+  
+  const { register: registerFn } = useAuth()
+  
+  const mutate = useCallback(async (registerData: RegisterData,
+    options?: {
+      onSuccess?: (data: AuthResponse) => void
+      onError?: (error: { message: string }) => void
+    }
+  ) => {
+    setIsPending(true)
+    setError(null)
+    setData(null)
+    
+    try {
+      const response = await registerFn(registerData)
+      setData(response)
+      
+      if (!response.success) {
+        const errorObj = { message: response.error || 'Registration failed' }
+        setError( errorObj)
+        options?.onError?.(errorObj)
+      } else {
+        options?.onSuccess?.(response)
+      }
+      
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed'
+      const errorObj = { message: errorMessage }
+      setError( errorObj)
+      options?.onError?.(errorObj)
+      throw err
+    } finally {
+      setIsPending(false)
+    }
+  }, [registerFn])
+  
+  return {
+    mutate,
+    isPending,
+    error,
+    data,
+    isError: !!error,
+    isSuccess: !!data?.success
+  }
+}
+
+export function useLogin() {
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<{ message: string } | null>(null)
+  const [data, setData] = useState<AuthResponse | null>(null)
+  
+  const { login: loginFn } = useAuth()
+  
+  const mutate = useCallback(async (loginData: LoginData) => {
+    setIsPending(true)
+    setError(null)
+    setData(null)
+    
+    try {
+      const response = await loginFn(loginData)
+      setData(response)
+      
+      if (!response.success) {
+        setError({ message: response.error || 'Login failed' })
+      }
+      
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Login failed'
+      setError({ message: errorMessage })
+      throw err
+    } finally {
+      setIsPending(false)
+    }
+  }, [loginFn])
+  
+  return {
+    mutate,
+    isPending,
+    error,
+    data,
+    isError: !!error,
+    isSuccess: !!data?.success
+  }
+}
+
+export function useVerifyOTP() {
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<{ message: string } | null>(null)
+  const [data, setData] = useState<AuthResponse | null>(null)
+  
+  const { verifyOTP: verifyOTPFn } = useAuth()
+  
+  const mutate = useCallback(async (otpData: OTPVerificationData) => {
+    setIsPending(true)
+    setError(null)
+    setData(null)
+    
+    try {
+      const response = await verifyOTPFn(otpData)
+      setData(response)
+      
+      if (!response.success) {
+        setError({ message: response.error || 'Verification failed' })
+      }
+      
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Verification failed'
+      setError({ message: errorMessage })
+      throw err
+    } finally {
+      setIsPending(false)
+    }
+  }, [verifyOTPFn])
+  
+  return {
+    mutate,
+    isPending,
+    error,
+    data,
+    isError: !!error,
+    isSuccess: !!data?.success
+  }
+}
+
+export function useResendOTP() {
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<{ message: string } | null>(null)
+  const [data, setData] = useState<AuthResponse | null>(null)
+  
+  const { resendOTP: resendOTPFn } = useAuth()
+  
+  const mutate = useCallback(async (resendData: OTPResendData) => {
+    setIsPending(true)
+    setError(null)
+    setData(null)
+    
+    try {
+      const response = await resendOTPFn(resendData)
+      setData(response)
+      
+      if (!response.success) {
+        setError({ message: response.error || 'Failed to resend code' })
+      }
+      
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend code'
+      setError({ message: errorMessage })
+      throw err
+    } finally {
+      setIsPending(false)
+    }
+  }, [resendOTPFn])
+  
+  return {
+    mutate,
+    isPending,
+    error,
+    data,
+    isError: !!error,
+    isSuccess: !!data?.success
+  }
+}
+
+export function usePasswordReset() {
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<{ message: string } | null>(null)
+  const [data, setData] = useState<AuthResponse | null>(null)
+  
+  const { requestPasswordReset, resetPassword } = useAuth()
+  
+  const requestReset = useCallback(async (email: string) => {
+    setIsPending(true)
+    setError(null)
+    setData(null)
+    
+    try {
+      const response = await requestPasswordReset(email)
+      setData(response)
+      
+      if (!response.success) {
+        setError({ message: response.error || 'Failed to send reset email' })
+      }
+      
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send reset email'
+      setError({ message: errorMessage })
+      throw err
+    } finally {
+      setIsPending(false)
+    }
+  }, [requestPasswordReset])
+  
+  const confirmReset = useCallback(async (token: string, newPassword: string) => {
+    setIsPending(true)
+    setError(null)
+    setData(null)
+    
+    try {
+      const response = await resetPassword(token, newPassword)
+      setData(response)
+      
+      if (!response.success) {
+        setError({ message: response.error || 'Failed to reset password' })
+      }
+      
+      return response
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to reset password'
+      setError({ message: errorMessage })
+      throw err
+    } finally {
+      setIsPending(false)
+    }
+  }, [resetPassword])
+  
+  return {
+    requestReset,
+    confirmReset,
+    isPending,
+    error,
+    data,
+    isError: !!error,
+    isSuccess: !!data?.success
   }
 }

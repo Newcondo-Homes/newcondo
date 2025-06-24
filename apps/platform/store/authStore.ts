@@ -4,12 +4,12 @@ import { persist } from 'zustand/middleware'
 import type { User, Role, VerificationStatus } from '@newcondo/db'
 
 interface AuthState {
-  user: User | null
+  user: Partial<User> | null
   isLoading: boolean
   lastActivity: number
   
   // Actions
-  setUser: (user: User) => void
+  setUser: (user: Partial<User>) => void
   clearUser: () => void
   setLoading: (loading: boolean) => void
   updateUser: (updates: Partial<User>) => void

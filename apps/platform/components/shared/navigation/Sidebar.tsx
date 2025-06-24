@@ -161,13 +161,13 @@ export default function Sidebar({ user, onNavigate }: SidebarProps) {
           </div>
           <div>
             {user.verificationStatus === 'VERIFIED' && (
-              <Badge variant="success" className="text-xs">
+              <Badge variant="default" className="text-xs">
                 <UserCheck className="h-3 w-3 mr-1" />
                 Verified
               </Badge>
             )}
             {user.verificationStatus === 'PENDING' && (
-              <Badge variant="warning" className="text-xs">
+              <Badge variant="destructive" className="text-xs">
                 Pending
               </Badge>
             )}
@@ -206,7 +206,7 @@ export default function Sidebar({ user, onNavigate }: SidebarProps) {
                         <span className="truncate">{item.name}</span>
                         {item.badge && (
                           <Badge 
-                            variant={item.badge === 'Available' ? 'success' : 'secondary'} 
+                            variant={item.badge === 'Available' ? 'default' : 'secondary'} 
                             className="ml-auto text-xs"
                           >
                             {item.badge}
@@ -234,7 +234,7 @@ export default function Sidebar({ user, onNavigate }: SidebarProps) {
                   <Settings className="h-5 w-5 shrink-0" />
                   Profile & Settings
                   {user.verificationStatus === 'PENDING' && (
-                    <Badge variant="warning" className="ml-auto text-xs">
+                    <Badge variant="secondary" className="ml-auto text-xs">
                       !
                     </Badge>
                   )}

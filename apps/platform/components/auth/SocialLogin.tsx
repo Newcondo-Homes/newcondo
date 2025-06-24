@@ -1,26 +1,32 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { signIn, getSession } from '@newcondo/auth/client';
-import { Button } from '@newcondo/ui/';
-import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../store/authStore';
-import { Icons } from '@newcondo/ui/';
+import { useState } from "react";
+import { signIn, getSession } from "@newcondo/auth/client";
+import { Button } from "@newcondo/ui/";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "../../store/authStore";
+import { Loader2 } from "lucide-react";
+import { FcGoogle } from "react-icons/fc";
+import { FaFacebookF } from "react-icons/fa";
 
 interface SocialLoginProps {
   redirectTo?: string;
   disabled?: boolean;
 }
 
-export function SocialLogin({ redirectTo = '/dashboard', disabled = false }: SocialLoginProps) {
+export function SocialLogin({
+  redirectTo = "/dashboard",
+  disabled = false,
+}: SocialLoginProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
-  const { setUser, setIsAuthenticated } = useAuthStore();
+  const { setUser, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
-  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+  const handleSocialLogin = async (provider: "google" | "facebook") => {
     try {
-      const setLoading = provider === 'google' ? setIsGoogleLoading : setIsFacebookLoading;
+      const setLoading =
+        provider === "google" ? setIsGoogleLoading : setIsFacebookLoading;
       setLoading(true);
 
       const result = await signIn(provider, {
@@ -39,14 +45,15 @@ export function SocialLogin({ redirectTo = '/dashboard', disabled = false }: Soc
         const session = await getSession();
         if (session?.user) {
           setUser(session.user);
-          setIsAuthenticated(true);
+          // setIsAuthenticated(true);
           router.push(redirectTo);
         }
       }
     } catch (error) {
       console.error(`${provider} login error:`, error);
     } finally {
-      const setLoading = provider === 'google' ? setIsGoogleLoading : setIsFacebookLoading;
+      const setLoading =
+        provider === "google" ? setIsGoogleLoading : setIsFacebookLoading;
       setLoading(false);
     }
   };
@@ -67,28 +74,28 @@ export function SocialLogin({ redirectTo = '/dashboard', disabled = false }: Soc
       <div className="grid grid-cols-2 gap-3">
         <Button
           variant="outline"
-          onClick={() => handleSocialLogin('google')}
+          onClick={() => handleSocialLogin("google")}
           disabled={disabled || isGoogleLoading || isFacebookLoading}
           className="w-full"
         >
           {isGoogleLoading ? (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Icons.google className="mr-2 h-4 w-4" />
+            <FcGoogle className="mr-2 h-4 w-4" />
           )}
           Google
         </Button>
 
         <Button
           variant="outline"
-          onClick={() => handleSocialLogin('facebook')}
+          onClick={() => handleSocialLogin("facebook")}
           disabled={disabled || isGoogleLoading || isFacebookLoading}
           className="w-full"
         >
           {isFacebookLoading ? (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
-            <Icons.facebook className="mr-2 h-4 w-4" />
+            <FaFacebookF className="mr-2 h-4 w-4" />
           )}
           Facebook
         </Button>

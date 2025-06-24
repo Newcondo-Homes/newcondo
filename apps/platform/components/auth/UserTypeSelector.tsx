@@ -3,11 +3,10 @@
 //TODO: button was imported but not used here
 
 import { useState } from 'react'
-import { Button, Badge } from '@newcondo/ui'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@newcondo/ui'
 import { CheckCircle, Home, Building, Users } from 'lucide-react'
+import type { UserType } from '@/types/api'
 
-export type UserType = 'RENTER' | 'OWNER' | 'AGENT'
 
 interface UserTypeSelectorProps {
   selectedType: UserType | null

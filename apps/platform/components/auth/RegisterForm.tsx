@@ -18,9 +18,10 @@ import { Checkbox } from "@newcondo/ui";
 import { Separator } from "@newcondo/ui";
 import { Eye, EyeOff, Loader2, Mail, Phone } from "lucide-react";
 import { toast } from "@newcondo/ui";
-import UserTypeSelector, { UserType } from "./UserTypeSelector";
+import UserTypeSelector from "./UserTypeSelector";
 import { useRegister } from "../../hooks/useAuth";
 import { cn } from "@newcondo/ui/lib/utils";
+import { UserType } from "@/types/api"; 
 
 interface RegisterFormData {
   name: string;
@@ -38,7 +39,7 @@ const initialFormData: RegisterFormData = {
   phone: "",
   password: "",
   confirmPassword: "",
-  role: "RENTER",
+  role: UserType.RENTER,
   agreeToTerms: false,
 };
 
@@ -123,7 +124,7 @@ export default function RegisterForm() {
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.replace(/\s/g, ""), // Remove spaces
         password: formData.password,
-        role: formData.role,
+        userType: formData.role,
       },
       {
         onSuccess: () => {

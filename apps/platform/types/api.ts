@@ -79,18 +79,20 @@ export interface AuthResponse<T=any> {
   success: boolean;
   data?: T;
   error?: string;
+  requiresOTP?: boolean
+  requiresVerification?: boolean 
   message?: string;
 }
-
 export interface RegisterData {
+  name?: string;
   email: string;
   phone?: string;
   password: string;
-  confirmPassword: string;
-  firstName: string;
-  lastName: string;
+  confirmPassword?: string;
+  firstName?: string;
+  lastName?: string;
   userType: UserType;
-  acceptTerms: boolean;
+  acceptTerms?: boolean;
 }
 
 export interface LoginData {
@@ -100,13 +102,13 @@ export interface LoginData {
 }
 
 export interface OTPVerificationData {
-  email: string;
+  identifier: string
   code: string;
   type: OTPType;
 }
 
 export interface OTPResendData {
-  email: string;
+  identifier: string
   type: OTPType;
 }
 
@@ -341,15 +343,16 @@ export enum VerificationStatus {
   PENDING = 'PENDING',
   VERIFIED = 'VERIFIED',
   REJECTED = 'REJECTED',
-  EXPIRED = 'EXPIRED'
 }
 
-export enum OTPType {
-  EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
-  PHONE_VERIFICATION = 'PHONE_VERIFICATION',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-  LOGIN_VERIFICATION = 'LOGIN_VERIFICATION'
-}
+// export enum OTPType {
+//   EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
+//   PHONE_VERIFICATION = 'PHONE_VERIFICATION',
+//   PASSWORD_RESET = 'PASSWORD_RESET',
+//   LOGIN_VERIFICATION = 'LOGIN_VERIFICATION'
+// }
+
+export type OTPType = 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET'
 
 export enum PropertyType {
   APARTMENT = 'APARTMENT',

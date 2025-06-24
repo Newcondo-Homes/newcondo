@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Button } from '@newcondo/ui/';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@newcondo/ui/";
 import {
   Form,
   FormControl,
@@ -13,23 +13,43 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@newcondo/ui/';
-import { Input } from '@newcondo/ui/';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Alert, AlertDescription } from '@newcondo/ui/';
-import { Icons } from '@newcondo/ui/';
-import { resetPasswordSchema, newPasswordSchema } from '../../lib/validations/auth';
-import { useAuth } from '../../hooks/useAuth';
+} from "@newcondo/ui/";
+import { Input } from "@newcondo/ui/";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@newcondo/ui/";
+import { Alert, AlertDescription } from "@newcondo/ui/";
+import {
+  passwordResetSchema as resetPasswordSchema,
+  changePasswordSchema as newPasswordSchema,
+} from "../../lib/validations/auth";
+import { useAuth } from "../../hooks/useAuth";
+import {  
+  Mail, 
+  LoaderCircle,
+  Loader2,
+  AlertCircle,
+  CheckCircle 
+} from "lucide-react";
+
+import type { PasswordResetFormData } from "../../lib/validations/auth";
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
 
 interface PasswordResetFormProps {
   token?: string;
-  mode?: 'request' | 'reset';
+  mode?: "request" | "reset";
 }
 
-export function PasswordResetForm({ token, mode = 'request' }: PasswordResetFormProps) {
+export function PasswordResetForm({
+  token,
+  mode = "request",
+}: PasswordResetFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,60 +57,60 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
   const { requestPasswordReset, resetPassword } = useAuth();
 
   // Form for requesting password reset
-  const requestForm = useForm<ResetPasswordFormData>({
+  const requestForm = useForm<PasswordResetFormData>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
   // Form for setting new password
-  const resetForm = useForm<NewPasswordFormData>({
-    resolver: zodResolver(newPasswordSchema),
+  const resetForm = useForm<PasswordResetFormData>({
+    resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      password: '',
-      confirmPassword: '',
+      password: "",
+      confirmPassword: "",
     },
   });
 
-  const onRequestSubmit = async (data: ResetPasswordFormData) => {
+  const onRequestSubmit = async (data: PasswordResetFormData) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       await requestPasswordReset(data.email);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const onResetSubmit = async (data: NewPasswordFormData) => {
+  const onResetSubmit = async (data: PasswordResetFormData) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       if (!token) {
-        throw new Error('Invalid reset token');
+        throw new Error("Invalid reset token");
       }
 
       await resetPassword(token, data.password);
       setSuccess(true);
-      
+
       // Redirect to login after successful reset
       setTimeout(() => {
-        router.push('/login?message=Password reset successful');
+        router.push("/login?message=Password reset successful");
       }, 2000);
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
+      setError(err.message || "An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (success && mode === 'request') {
+  if (success && mode === "request") {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
@@ -101,16 +121,16 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
         </CardHeader>
         <CardContent>
           <Alert>
-            <Icons.mail className="h-4 w-4" />
+            <Mail className="h-4 w-4" />
             <AlertDescription>
-              Please check your email and click the reset link to set a new password.
-              The link will expire in 15 minutes.
+              Please check your email and click the reset link to set a new
+              password. The link will expire in 15 minutes.
             </AlertDescription>
           </Alert>
           <Button
             variant="outline"
             className="w-full mt-4"
-            onClick={() => router.push('/login')}
+            onClick={() => router.push("/login")}
           >
             Back to Login
           </Button>
@@ -119,18 +139,20 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
     );
   }
 
-  if (success && mode === 'reset') {
+  if (success && mode === "reset") {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
-          <CardTitle className="text-center">Password Reset Successful</CardTitle>
+          <CardTitle className="text-center">
+            Password Reset Successful
+          </CardTitle>
           <CardDescription className="text-center">
             Your password has been successfully reset.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Alert>
-            <Icons.checkCircle className="h-4 w-4" />
+            <CheckCircle className="h-4 w-4" />
             <AlertDescription>
               You can now log in with your new password.
             </AlertDescription>
@@ -144,26 +166,28 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-center">
-          {mode === 'request' ? 'Reset Password' : 'Set New Password'}
+          {mode === "request" ? "Reset Password" : "Set New Password"}
         </CardTitle>
         <CardDescription className="text-center">
-          {mode === 'request' 
-            ? 'Enter your email address and we\'ll send you a reset link'
-            : 'Enter your new password below'
-          }
+          {mode === "request"
+            ? "Enter your email address and we'll send you a reset link"
+            : "Enter your new password below"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <Icons.alertCircle className="h-4 w-4" />
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {mode === 'request' ? (
+        {mode === "request" ? (
           <Form {...requestForm}>
-            <form onSubmit={requestForm.handleSubmit(onRequestSubmit)} className="space-y-4">
+            <form
+              onSubmit={requestForm.handleSubmit(onRequestSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={requestForm.control}
                 name="email"
@@ -184,7 +208,9 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
               />
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Send Reset Link
               </Button>
 
@@ -192,7 +218,7 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => router.push('/login')}
+                onClick={() => router.push("/login")}
                 disabled={isLoading}
               >
                 Back to Login
@@ -201,7 +227,10 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
           </Form>
         ) : (
           <Form {...resetForm}>
-            <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-4">
+            <form
+              onSubmit={resetForm.handleSubmit(onResetSubmit)}
+              className="space-y-4"
+            >
               <FormField
                 control={resetForm.control}
                 name="password"
@@ -241,7 +270,9 @@ export function PasswordResetForm({ token, mode = 'request' }: PasswordResetForm
               />
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Reset Password
               </Button>
             </form>

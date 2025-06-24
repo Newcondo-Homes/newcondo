@@ -1,7 +1,8 @@
+"use client"
 // apps/platform/hooks/useErrorHandler.ts
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { signOut } from '@newcondo/auth'
+import { signOut } from '@newcondo/auth/client'
 
 interface ErrorState {
   message: string
