@@ -1,69 +1,80 @@
-import { Request, Response } from 'express';
-import { verificationService } from '../services/verificationService';
-import { AuthenticatedRequest } from '../types/auth';
+import { Request, Response } from "express";
+import { verificationService } from "../services/verificationService";
+import { AuthenticatedRequest } from "../types/auth";
 
 class VerificationController {
   async sendEmailVerification(req: AuthenticatedRequest, res: Response) {
     try {
       const { user } = req;
-      
-      if (user.isEmailVerified) {
+
+      if (!user) return;
+
+      if (user?.isEmailVerified) {
         return res.status(400).json({
           success: false,
-          message: 'Email is already verified',
-          code: 'EMAIL_ALREADY_VERIFIED'
+          message: "Email is already verified",
+          code: "EMAIL_ALREADY_VERIFIED",
         });
       }
 
-      const result = await verificationService.sendEmailVerification(user.id, user.email);
-      
+      const result = await verificationService.sendEmailVerification(
+        user.id,
+        user.email
+      );
+
       res.status(200).json({
         success: true,
-        message: 'Verification code sent to your email',
+        message: "Verification code sent to your email",
         data: {
           sentTo: user.email,
-          expiresIn: result.expiresIn
-        }
+          expiresIn: result.expiresIn,
+        },
       });
     } catch (error: any) {
-      console.error('Send email verification error:', error);
+      console.error("Send email verification error:", error);
       res.status(error.statusCode || 500).json({
         success: false,
-        message: error.message || 'Failed to send verification email',
-        code: error.code || 'VERIFICATION_SEND_FAILED'
+        message: error.message || "Failed to send verification email",
+        code: error.code || "VERIFICATION_SEND_FAILED",
       });
     }
   }
 
-  async verifyEmail(req: AuthenticatedRequest, res: Response) {
+  async verifyEmail(req: Request, res: Response) {
     try {
       const { code } = req.body;
       const { user } = req;
 
-      if (user.isEmailVerified) {
+      if (!user) return;
+
+      if (user?.emailVerified) {
         return res.status(400).json({
           success: false,
-          message: 'Email is already verified',
-          code: 'EMAIL_ALREADY_VERIFIED'
+          message: "Email is already verified",
+          code: "EMAIL_ALREADY_VERIFIED",
         });
       }
 
-      const result = await verificationService.verifyEmail(user.id, user.email, code);
-      
+      const result = await verificationService.verifyEmail(
+        user.id,
+        user.email,
+        code
+      );
+
       res.status(200).json({
         success: true,
-        message: 'Email verified successfully',
+        message: "Email verified successfully",
         data: {
           verifiedAt: result.verifiedAt,
-          user: result.user
-        }
+          user: result.user,
+        },
       });
     } catch (error: any) {
-      console.error('Email verification error:', error);
+      console.error("Email verification error:", error);
       res.status(error.statusCode || 400).json({
         success: false,
-        message: error.message || 'Email verification failed',
-        code: error.code || 'EMAIL_VERIFICATION_FAILED'
+        message: error.message || "Email verification failed",
+        code: error.code || "EMAIL_VERIFICATION_FAILED",
       });
     }
   }
@@ -71,32 +82,37 @@ class VerificationController {
   async resendEmailVerification(req: AuthenticatedRequest, res: Response) {
     try {
       const { user } = req;
-      
+
+      if (!user) return;
+
       if (user.isEmailVerified) {
         return res.status(400).json({
           success: false,
-          message: 'Email is already verified',
-          code: 'EMAIL_ALREADY_VERIFIED'
+          message: "Email is already verified",
+          code: "EMAIL_ALREADY_VERIFIED",
         });
       }
 
-      const result = await verificationService.resendEmailVerification(user.id, user.email);
-      
+      const result = await verificationService.resendEmailVerification(
+        user.id,
+        user.email
+      );
+
       res.status(200).json({
         success: true,
-        message: 'Verification code resent to your email',
+        message: "Verification code resent to your email",
         data: {
           sentTo: user.email,
           expiresIn: result.expiresIn,
-          canResendAt: result.canResendAt
-        }
+          canResendAt: result.canResendAt,
+        },
       });
     } catch (error: any) {
-      console.error('Resend email verification error:', error);
+      console.error("Resend email verification error:", error);
       res.status(error.statusCode || 500).json({
         success: false,
-        message: error.message || 'Failed to resend verification email',
-        code: error.code || 'VERIFICATION_RESEND_FAILED'
+        message: error.message || "Failed to resend verification email",
+        code: error.code || "VERIFICATION_RESEND_FAILED",
       });
     }
   }
@@ -104,20 +120,20 @@ class VerificationController {
   async getVerificationStatus(req: AuthenticatedRequest, res: Response) {
     try {
       const { user } = req;
-      
+
       const status = await verificationService.getVerificationStatus(user.id);
-      
+
       res.status(200).json({
         success: true,
-        message: 'Verification status retrieved',
-        data: status
+        message: "Verification status retrieved",
+        data: status,
       });
     } catch (error: any) {
-      console.error('Get verification status error:', error);
+      console.error("Get verification status error:", error);
       res.status(error.statusCode || 500).json({
         success: false,
-        message: error.message || 'Failed to get verification status',
-        code: error.code || 'VERIFICATION_STATUS_FAILED'
+        message: error.message || "Failed to get verification status",
+        code: error.code || "VERIFICATION_STATUS_FAILED",
       });
     }
   }

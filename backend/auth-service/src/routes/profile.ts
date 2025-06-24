@@ -1,5 +1,6 @@
 // backend/auth-service/src/routes/profile.ts
 import { Router } from "express";
+import multer from 'multer'
 import {
   getProfile,
   updateProfile,
@@ -17,10 +18,29 @@ import { rateLimiter } from "../../../shared/src/middleware/rateLimiter";
 
 const router = Router();
 
+// Configure multer for image uploads
+const upload = multer({
+  dest: 'uploads/',
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true)
+    } else {
+      cb(new Error('Only image files are allowed'))
+    }
+  }
+})
+
 // All profile routes require authentication
 router.use(authenticateToken);
 
-// GET /api/auth/profile - Get user profile
+/**
+ * @route   GET /api/profile
+ * @desc    Get user profile
+ * @access  Private
+ */
 router.get(
   "/",
   rateLimiter(30, 15), // 30 requests per 15 minutes

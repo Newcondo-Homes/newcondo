@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@newcondo/db'
 import { Role } from '@newcondo/db'
-import { sendResponse } from '../../../shared/src/utils/response'
+import { sendResponse, ApiResponse} from '../../../shared/src/utils/response'
 import { generateOTP } from '../../../shared/src/utils/otp'
 import { sendEmail } from '../../../shared/src/utils/email'
 import { AuthService } from '../services/authService'
@@ -11,7 +11,7 @@ import { AuthService } from '../services/authService'
 export class AuthController {
   private authService = new AuthService()
 
-  async register(req: Request, res: Response) {
+  async register(req: Request, res: Response): Promise<any> {
     try {
       const { email, password, name, role, phone } = req.body
 
@@ -87,7 +87,7 @@ export class AuthController {
         }
       })
 
-      sendResponse(res, 201, 'User registered successfully. Please check your email for verification code.', {
+      return sendResponse(res, 201, 'User registered successfully. Please check your email for verification code.', {
         user,
         requiresVerification: true
       })
