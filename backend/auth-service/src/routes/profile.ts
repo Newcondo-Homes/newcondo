@@ -10,6 +10,9 @@ import {
   updateEmail,
   updatePhone,
   getActivity,
+  uploadProfileImage,
+  deleteProfileImage,
+  getUploadLimits
 } from "../controllers/profileController";
 import { authenticateToken } from "../../../shared/src/middleware/auth";
 import { rateLimiter } from "../../../shared/src/middleware/rateLimiter";
@@ -25,7 +28,8 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (file.mimetype.startsWith('image/') && allowedTypes.includes(file.mimetype)) {
       cb(null, true)
     } else {
       cb(new Error('Only image files are allowed'))
@@ -83,5 +87,12 @@ router.get(
   rateLimiter(20, 15), // 20 requests per 15 minutes
   getUserStats
 );
+
+// Image upload routes
+router.post('/image', upload.single('image'), uploadProfileImage);
+router.delete('/image', deleteProfileImage);
+
+// Upload limits
+router.get('/upload-limits', getUploadLimits);
 
 export default router;

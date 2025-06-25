@@ -577,6 +577,30 @@ export const deleteProfileImage = async (
   }
 };
 
+
+export const getUploadLimits = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });
+      return;
+    }
+
+    const limits = await profileService.checkUploadLimits(userId);
+
+    sendResponse(res, 200, "Upload limits retrieved successfully", {
+      limits,
+    });
+  } catch (error) {
+    console.error("Get upload limits error:", error);
+    sendInternalError(res, "Failed to retrieve upload limits", error as Error);
+  }
+};
+
 /**
  * Get user preferences
  */

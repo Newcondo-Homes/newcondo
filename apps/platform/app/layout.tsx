@@ -4,6 +4,7 @@ import { Toaster } from "@newcondo/ui/";
 import { SessionProvider } from "@newcondo/auth/client";
 import "./globals.css";
 
+// TODO: Make sure to clean up expired OTP - code is in backend ( authservice - otpService.ts)
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

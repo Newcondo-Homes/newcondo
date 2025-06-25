@@ -11,7 +11,6 @@ router.post('/send-email-verification',
   otpLimiter,
   authMiddleware,
   verificationValidation.sendEmailVerification,
-  verificationController.sendEmailVerification
 );
 
 // Verify email with OTP
