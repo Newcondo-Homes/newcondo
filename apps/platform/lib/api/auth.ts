@@ -1,4 +1,5 @@
 // apps/platform/lib/api/auth.ts
+// import { UnknownKeysParam } from "zod";
 import { apiClient, ApiResponse } from "./client";
 import type {
   RegisterData,
@@ -40,10 +41,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Registration failed";
       return {
         success: false,
-        error: error.response?.data?.message || "Registration failed",
+        error: errorMessage,
       };
     }
   },
@@ -65,10 +69,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Login failed";
       return {
         success: false,
-        error: error.response?.data?.message || "Login failed",
+        error: errorMessage,
       };
     }
   },
@@ -87,10 +94,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Logout failed";
       return {
         success: false,
-        error: error.response?.data?.message || "Logout failed",
+        error: errorMessage,
       };
     }
   },
@@ -112,10 +122,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "OTP verification failed";
       return {
         success: false,
-        error: error.response?.data?.message || "OTP verification failed",
+        error: errorMessage,
       };
     }
   },
@@ -137,10 +150,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to resend OTP";
       return {
         success: false,
-        error: error.response?.data?.message || "Failed to resend OTP",
+        error: errorMessage,
       };
     }
   },
@@ -162,11 +178,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to request password reset";
       return {
         success: false,
-        error:
-          error.response?.data?.message || "Failed to request password reset",
+        error: errorMessage,
       };
     }
   },
@@ -174,7 +192,8 @@ export const authApi = {
   // Reset password with token
   resetPassword: async (
     token: string,
-    newPassword: string
+    newPassword: string,
+    confirmPassword: string
   ): Promise<AuthResponse> => {
     try {
       const response = await apiClient.post<ApiResponse>(
@@ -182,6 +201,7 @@ export const authApi = {
         {
           token,
           newPassword,
+          confirmPassword,
         }
       );
       // return response.data
@@ -194,10 +214,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to reset password";
       return {
         success: false,
-        error: error.response?.data?.message || "Failed to reset password",
+        error: errorMessage,
       };
     }
   },
@@ -219,10 +242,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to update profile";
       return {
         success: false,
-        error: error.response?.data?.message || "Failed to update profile",
+        error: errorMessage,
       };
     }
   },
@@ -243,10 +269,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to get profile";
       return {
         success: false,
-        error: error.response?.data?.message || "Failed to get profile",
+        error: errorMessage,
       };
     }
   },
@@ -267,10 +296,13 @@ export const authApi = {
         message: response.message,
         data: response.data,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+      ? error.message 
+      : "Failed to refresh token";
       return {
         success: false,
-        error: error.response?.data?.message || "Failed to refresh token",
+        error: errorMessage,
       };
     }
   },

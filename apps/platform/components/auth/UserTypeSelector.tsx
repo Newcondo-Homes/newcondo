@@ -1,8 +1,5 @@
 'use client'
 
-//TODO: button was imported but not used here
-
-import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@newcondo/ui'
 import { CheckCircle, Home, Building, Users } from 'lucide-react'
 import type { UserType } from '@/types/api'

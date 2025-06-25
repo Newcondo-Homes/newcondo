@@ -231,11 +231,11 @@ export function useAuth() {
   }, [])
 
   // Reset password with token
-  const resetPassword = useCallback(async (token: string, newPassword: string): Promise<AuthResponse> => {
+  const resetPassword = useCallback(async (token: string, newPassword: string, confirmPassword: string): Promise<AuthResponse> => {
     setIsLoading(true)
     
     try {
-      const response = await authApi.resetPassword(token, newPassword)
+      const response = await authApi.resetPassword(token, newPassword, confirmPassword)
       return response
     } catch (error) {
       console.error('Password reset error:', error)
@@ -493,13 +493,13 @@ export function usePasswordReset() {
     }
   }, [requestPasswordReset])
   
-  const confirmReset = useCallback(async (token: string, newPassword: string) => {
+  const confirmReset = useCallback(async (token: string, newPassword: string, confirmPassword: string) => {
     setIsPending(true)
     setError(null)
     setData(null)
     
     try {
-      const response = await resetPassword(token, newPassword)
+      const response = await resetPassword(token, newPassword, confirmPassword)
       setData(response)
       
       if (!response.success) {

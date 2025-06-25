@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import * as z from "zod";
+// import * as z from "zod";
 import { Button } from "@newcondo/ui/";
 import {
   Form,
@@ -25,12 +25,12 @@ import {
 import { Alert, AlertDescription } from "@newcondo/ui/";
 import {
   passwordResetSchema as resetPasswordSchema,
-  changePasswordSchema as newPasswordSchema,
+  // changePasswordSchema as newPasswordSchema,
 } from "../../lib/validations/auth";
 import { useAuth } from "../../hooks/useAuth";
 import {  
   Mail, 
-  LoaderCircle,
+  // LoaderCircle,
   Loader2,
   AlertCircle,
   CheckCircle 
@@ -38,8 +38,8 @@ import {
 
 import type { PasswordResetFormData } from "../../lib/validations/auth";
 
-type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
-type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
+// type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
+// type NewPasswordFormData = z.infer<typeof newPasswordSchema>;
 
 interface PasswordResetFormProps {
   token?: string;
@@ -80,8 +80,9 @@ export function PasswordResetForm({
 
       await requestPasswordReset(data.email);
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "An error occurred. Please try again.");
+    } catch (err) {
+      console.error(err)
+      setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -96,15 +97,16 @@ export function PasswordResetForm({
         throw new Error("Invalid reset token");
       }
 
-      await resetPassword(token, data.password);
+      await resetPassword(token, data.password, data.confirmPassword);
       setSuccess(true);
 
       // Redirect to login after successful reset
       setTimeout(() => {
         router.push("/login?message=Password reset successful");
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || "An error occurred. Please try again.");
+    } catch (err) {
+      console.error(err)
+      setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -116,7 +118,7 @@ export function PasswordResetForm({
         <CardHeader>
           <CardTitle className="text-center">Check Your Email</CardTitle>
           <CardDescription className="text-center">
-            We've sent a password reset link to your email address.
+            We&apos;ve sent a password reset link to your email address.
           </CardDescription>
         </CardHeader>
         <CardContent>

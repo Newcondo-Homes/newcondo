@@ -3,10 +3,9 @@
 
 import { useState } from 'react';
 // import { User } from '@newcondo/auth';
-import type { User } from '@newcondo/db'
+import type { Role, VerificationStatus } from '@newcondo/db'
 
 import { useRouter } from 'next/navigation';
-import { cn } from '@newcondo/ui/lib/utils';
 import { Button } from '@newcondo/ui/';
 import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/';
 import {
@@ -22,7 +21,7 @@ import { Badge } from '@newcondo/ui/';
 import { 
   Home, 
   Building, 
-  CreditCard, 
+  // CreditCard, 
   Users, 
   Settings, 
   LogOut, 
@@ -35,13 +34,38 @@ import {
 import { signOut } from '@newcondo/auth/client';
 import Sidebar from '@/components/shared/navigation/Sidebar';
 
+
+// The dashboard type below initially pulled alot of user data as the 'User' type from
+// the database suggest. the thing is, is it efficient to get all the 'User' data at once
+// when the user visits their dashboard or just get a handle-full of the user's data.
+
+// For now I'm getting a hand-full and will adjust it as need be until we get to a
+// situation where we need all the user data. for now we get what we need.
+
+// interface DashboardLayoutProps {
+//   children: React.ReactNode;
+//   user: User & {
+//     role: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
+//     verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
+//     isAvailableForMarking?: boolean;
+//   };
+// }
+
+// Minimal user type for layout purposes
+interface DashboardUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: Role;
+  image?: string | null;
+  phone?: string | null;
+  verificationStatus: VerificationStatus;
+  isAvailableForMarking?: boolean
+}
+
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  user: User & {
-    role: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
-    verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
-    isAvailableForMarking?: boolean;
-  };
+  user: DashboardUser;
 }
 
 export default function DashboardLayout({ children, user }: DashboardLayoutProps) {

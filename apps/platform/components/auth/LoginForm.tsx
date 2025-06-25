@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { signIn, getSession } from '@newcondo/auth/client'
 import { useRouter, useSearchParams  } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@newcondo/ui'
 import { Input } from '@newcondo/ui'
 import { Label } from '@newcondo/ui'
@@ -11,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newc
 import { Alert, AlertDescription } from '@newcondo/ui'
 import { Checkbox } from '@newcondo/ui'
 import { Separator } from '@newcondo/ui'
-import { Eye, EyeOff, Mail, AlertCircle, Loader2, Lock } from 'lucide-react'
+import { Eye, EyeOff, Mail, AlertCircle, Loader2 } from 'lucide-react'
 import { toast } from '@newcondo/ui'
 import { cn } from '@newcondo/ui/lib/utils'
 
@@ -93,6 +92,7 @@ export default function LoginForm() {
 
       if (result?.error) {
         setError('Invalid email or password')
+        console.log(error)
       } else {
         router.push('/dashboard')
       }
@@ -127,6 +127,7 @@ export default function LoginForm() {
         }
       }
     } catch (err) {
+      console.error(err)
       setLoginError('An unexpected error occurred. Please try again.')
     } finally {
       setIsLoading(false)
@@ -157,12 +158,12 @@ export default function LoginForm() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
-  }
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     [e.target.name]: e.target.value
+  //   }))
+  // }
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -339,7 +340,7 @@ export default function LoginForm() {
         </div>
 
         <div className="text-center text-sm">
-          <span className="text-muted-foreground">Don't have an account? </span>
+          <span className="text-muted-foreground">Don&apos;t have an account? </span>
           <Button
             type="button"
             variant="link"

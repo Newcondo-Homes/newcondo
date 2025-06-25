@@ -1,5 +1,5 @@
 import { PrismaClient } from '@newcondo/db';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { otpService } from './otpService';
 
 const prisma = new PrismaClient();

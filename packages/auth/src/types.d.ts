@@ -3,8 +3,8 @@ import { Role, VerificationStatus } from "@newcondo/db"
 
 declare module "next-auth" {
     interface User {
-    id: string
-    email: string
+    id?: string
+    email?: string | null | undefined
     name?: string | null
     role: Role
     image?: string | null

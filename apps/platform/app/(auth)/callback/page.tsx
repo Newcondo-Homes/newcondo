@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { signIn, getSession } from '@newcondo/auth/client'
+import {  getSession } from '@newcondo/auth/client'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { Alert, AlertDescription } from '@newcondo/ui'
 
@@ -15,7 +15,7 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     handleAuthCallback()
-  }, [])
+  })
 
   const handleAuthCallback = async () => {
     try {

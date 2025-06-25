@@ -264,7 +264,7 @@ export class AuthUtils {
   /**
    * Debounce function for input validation
    */
-  static debounce<T extends (...args: any[]) => void>(
+  static debounce<T extends (...args: unknown[]) => void>(
     func: T,
     wait: number
   ): (...args: Parameters<T>) => void {
@@ -278,7 +278,7 @@ export class AuthUtils {
   /**
    * Throttle function for API calls
    */
-  static throttle<T extends (...args: any[]) => void>(
+  static throttle<T extends (...args: unknown[]) => void>(
     func: T,
     limit: number
   ): (...args: Parameters<T>) => void {

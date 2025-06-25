@@ -17,10 +17,10 @@ import { Loader2, Eye, EyeOff, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 
-export const metadata = {
-  title: "Reset Password - NewCondo",
-  description: "Reset your NewCondo account password",
-};
+// export const metadata = {
+//   title: "Reset Password - NewCondo",
+//   description: "Reset your NewCondo account password",
+// };
 
 export default function ResetPasswordPage() {
   const [step, setStep] = useState<"request" | "reset">("request");
@@ -69,8 +69,11 @@ export default function ResetPasswordPage() {
       setSuccess("Password reset instructions have been sent to your email.");
       setStep("reset");
       setTimeLeft(60); // 1 minute cooldown
-    } catch (err: any) {
-      setError(err.message || "Failed to send password reset email");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error 
+      ? err.message 
+      : "Failed to send password reset email";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -101,20 +104,20 @@ export default function ResetPasswordPage() {
 
     try {
       const token = searchParams.get("token");
-      await resetPassword({
-        email,
-        otp,
-        password,
-        token: token || undefined,
-      });
+      if (token) {
+        await resetPassword(token, password, confirmPassword);
+      } else return;
 
       setSuccess("Password reset successfully! Redirecting to login...");
 
       setTimeout(() => {
         router.push("/login?message=Password reset successfully");
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || "Failed to reset password");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error 
+      ? err.message 
+      : "Failed to reset password";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -130,8 +133,11 @@ export default function ResetPasswordPage() {
       await requestPasswordReset(email);
       setSuccess("New reset code sent to your email");
       setTimeLeft(60);
-    } catch (err: any) {
-      setError(err.message || "Failed to resend code");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error 
+      ? err.message 
+      : "Failed to resend code";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -147,7 +153,7 @@ export default function ResetPasswordPage() {
                 Reset Password
               </CardTitle>
               <CardDescription>
-                Enter your email address and we'll send you instructions to
+                Enter your email address and we&apos;ll send you instructions to
                 reset your password.
               </CardDescription>
             </CardHeader>

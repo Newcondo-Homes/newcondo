@@ -2,7 +2,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { User } from '@newcondo/db';
+import { Role, VerificationStatus } from '@newcondo/db';
 import { cn } from '@newcondo/ui/';
 import { Button } from '@newcondo/ui/';
 import { Badge } from '@newcondo/ui/';
@@ -10,7 +10,7 @@ import {
   Home, 
   Building, 
   CreditCard, 
-  Users, 
+  // Users, 
   Settings, 
   Shield,
   MapPin,
@@ -18,15 +18,41 @@ import {
   UserCheck,
   Gift,
   PiggyBank,
-  BarChart3
+  // BarChart3
 } from 'lucide-react';
 
+
+// The sidebare type below initially pulled alot of user data as the 'User' type from
+// the database suggest. the thing is, is it efficient to get all the 'User' data at once
+// when the user visits their dashboard or just get a handle-full of the user's data.
+
+// For now I'm getting a hand-full and will adjust it as need be until we get to a
+// situation where we need all the user data. for now we get what we need.
+
+
+// interface SidebarProps {
+//   user: User & {
+//     role: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
+//     verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
+//     isAvailableForMarking?: boolean;
+//   };
+//   onNavigate?: () => void;
+// }
+
+// Minimal user type for layout purposes
+interface SidebarUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  role: Role;
+  image?: string | null;
+  phone?: string | null;
+  verificationStatus: VerificationStatus;
+  isAvailableForMarking?: boolean
+}
+
 interface SidebarProps {
-  user: User & {
-    role: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
-    verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
-    isAvailableForMarking?: boolean;
-  };
+  user: SidebarUser;
   onNavigate?: () => void;
 }
 

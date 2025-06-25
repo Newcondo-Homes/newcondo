@@ -8,6 +8,10 @@
 export const publicRoutes = [
   "/",
   "/about",
+  "/login",
+  "/register",
+  "/signup",
+  "/verify-otp",
   "/contact",
   "/privacy",
   "/terms",

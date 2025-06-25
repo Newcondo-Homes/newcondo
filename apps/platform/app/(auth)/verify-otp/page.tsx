@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { OTPVerification } from '@/components/auth/OTPVerification'
 import LoadingSpinner from '@/components/shared/feedback/LoadingSpinner'
+import type { OTPType } from '@/types/api'
 
 export const metadata: Metadata = {
   title: 'Verify Email | NewCondo',
@@ -11,12 +12,13 @@ export const metadata: Metadata = {
 }
 
 interface VerifyOTPPageProps {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
-export default function VerifyOTPPage({ searchParams }: VerifyOTPPageProps) {
-  const email = searchParams.email as string
-  const type = searchParams.type as string
+export default async function VerifyOTPPage({ searchParams }: VerifyOTPPageProps) {
+  const params = await searchParams
+  const email = params.email as string
+  const type = params.type as OTPType
   
   // Redirect if required params are missing
   if (!email || !type) {
@@ -31,7 +33,7 @@ export default function VerifyOTPPage({ searchParams }: VerifyOTPPageProps) {
             Verify your email
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            We've sent a verification code to{' '}
+            We&apos;ve sent a verification code to{' '}
             <span className="font-medium text-gray-900">{email}</span>
           </p>
         </div>
@@ -42,7 +44,7 @@ export default function VerifyOTPPage({ searchParams }: VerifyOTPPageProps) {
         
         <div className="text-center">
           <p className="text-sm text-gray-600">
-            Didn't receive the code?{' '}
+            Didn&apos;t receive the code?{' '}
             <button
               onClick={() => window.location.reload()}
               className="font-medium text-blue-600 hover:text-blue-500"

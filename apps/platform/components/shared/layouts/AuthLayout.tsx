@@ -1,27 +1,27 @@
+"use client"
 // apps/platform/app/(auth)/layout.tsx
 import { ReactNode } from "react";
-import { Metadata } from "next";
-import Image from "next/image";
+// import Image from "next/image";
 
 import { useSession } from "@newcondo/auth/client";
 import { redirect } from "next/navigation";
 import { useEffect } from "react";
-import Link from "next/link";
+// import Link from "next/link";
 
-export const metadata: Metadata = {
-  title: {
-    template: "%s | NewCondo",
-    default: "Authentication | NewCondo",
-  },
-  description: "Secure authentication for NewCondo platform",
-};
+// export const metadata: Metadata = {
+//   title: {
+//     template: "%s | NewCondo",
+//     default: "Authentication | NewCondo",
+//   },
+//   description: "Secure authentication for NewCondo platform",
+// };
 
 interface AuthLayoutProps {
   children: ReactNode;
 }
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
   useEffect(() => {
     if (status === "authenticated") {

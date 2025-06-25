@@ -117,6 +117,7 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
         inputRefs.current[0]?.focus()
       }
     } catch (error) {
+      console.error(error)
       setError('Verification failed. Please try again.')
       setOtp(['', '', '', '', '', ''])
       inputRefs.current[0]?.focus()
@@ -146,6 +147,7 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
         setError(result.error || 'Failed to resend code')
       }
     } catch (error) {
+      console.error(error)
       setError('Failed to resend code. Please try again.')
     } finally {
       setIsResending(false)
@@ -242,7 +244,7 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
 
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-2">
-              Didn't receive the code?
+              Didn&apos;t receive the code?
             </p>
             <Button
               variant="ghost"

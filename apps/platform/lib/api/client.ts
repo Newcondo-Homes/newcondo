@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // apps/platform/lib/api/client.ts
 import { getSession } from '@newcondo/auth/client';
 import type { User } from '@/types/api'
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -98,7 +100,7 @@ class ApiClient {
     }
   }
 
-  async get<T>(endpoint: string, params?: Record<string, any>): Promise<ApiResponse<T>> {
+  async get<T>(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> {
     let url = endpoint;
     if (params) {
       const searchParams = new URLSearchParams();
@@ -149,7 +151,7 @@ class ApiClient {
   async uploadFile<T>(
     endpoint: string,
     file: File,
-    additionalData?: Record<string, any>
+    additionalData?: Record<string, unknown>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
     formData.append('file', file);
@@ -174,7 +176,7 @@ class ApiClient {
   async uploadFiles<T>(
     endpoint: string,
     files: File[],
-    additionalData?: Record<string, any>
+    additionalData?: Record<string, unknown>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
     
@@ -251,8 +253,15 @@ export const createApiError = (message: string, status: number, code?: string): 
   code,
 });
 
-export const isApiError = (error: any): error is ApiError => {
-  return error && typeof error.message === 'string' && typeof error.status === 'number';
+export const isApiError = (error: unknown): error is ApiError => {
+
+      return (
+        error instanceof Error && 
+        typeof error.message === 'string' 
+        // Add more checks for other properties if needed
+    );
+  // return errorr && typeof errorr.message === 'string' && typeof error.status === 'number';
+
 };
 
 // Export types

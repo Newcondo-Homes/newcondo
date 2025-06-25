@@ -135,10 +135,11 @@ export default function RegisterForm() {
             "/verify-otp?email=" + encodeURIComponent(formData.email)
           );
         },
-        onError: (error: any) => {
+        onError: (error) => {
+          console.error(error)
           toast("Registration failed", {
             description:
-              error.message || "Something went wrong. Please try again.",
+            "Something went wrong. Please try again.",
           });
         },
       }
@@ -152,6 +153,7 @@ export default function RegisterForm() {
         redirect: true,
       });
     } catch (error) {
+      console.error(error)
       toast("Social login failed", {
         description: "Please try again or use email registration.",
       });

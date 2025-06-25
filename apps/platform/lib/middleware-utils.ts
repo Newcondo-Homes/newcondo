@@ -217,7 +217,8 @@ export function getUnauthorizedMessage(pathname: string, userRole?: string): str
     return 'You need to complete account verification to access this feature.';
   }
   
-  return 'You do not have permission to access this page.';
+  console.error(userRole, "does not have permission to this page")
+  return 'You do not have permission to access this page.' ;
 }
 
 /**
@@ -269,7 +270,7 @@ export function getClientIP(request: NextRequest): string {
  * @param event - The event type
  * @param data - Additional data to log
  */
-export function logMiddlewareEvent(event: string, data: Record<string, any>): void {
+export function logMiddlewareEvent(event: string, data: Record<string, unknown>): void {
   if (process.env.NODE_ENV === 'development') {
     console.log(`[Middleware] ${event}:`, data);
   }

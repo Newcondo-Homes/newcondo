@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn, getSession } from "@newcondo/auth/client";
 import { Button } from "@newcondo/ui/";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "../../store/authStore";
+// import { useAuthStore } from "../../store/authStore";
 import { Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import { FaFacebookF } from "react-icons/fa";
@@ -20,7 +20,7 @@ export function SocialLogin({
 }: SocialLoginProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isFacebookLoading, setIsFacebookLoading] = useState(false);
-  const { setUser, isAuthenticated } = useAuthStore();
+  // const { setUser, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   const handleSocialLogin = async (provider: "google" | "facebook") => {
@@ -44,8 +44,7 @@ export function SocialLogin({
         // Get the updated session
         const session = await getSession();
         if (session?.user) {
-          setUser(session.user);
-          // setIsAuthenticated(true);
+          // setUser(session.user);
           router.push(redirectTo);
         }
       }

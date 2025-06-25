@@ -1,12 +1,13 @@
 // apps/platform/middleware.ts
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// import type { NextRequest } from "next/server";
+import { Role } from "@newcondo/db";
 import { auth } from "@newcondo/auth";
 import {
   DEFAULT_LOGIN_REDIRECT,
   apiAuthPrefix,
   publicRoutes,
-  protectedRoutes,
+  // protectedRoutes,
   authRoutes,
   adminRoutes,
   agentRoutes,
@@ -26,8 +27,10 @@ export default auth((req) => {
   }
 
   // Check if it's a public route
-  const isPublicRoute = publicRoutes.some(route => 
-    route === pathname || (route.endsWith('*') && pathname.startsWith(route.slice(0, -1)))
+  const isPublicRoute = publicRoutes.some(
+    (route) =>
+      route === pathname ||
+      (route.endsWith("*") && pathname.startsWith(route.slice(0, -1)))
   );
 
   // Check if it's an auth route (login, register, etc.)
@@ -49,7 +52,7 @@ export default auth((req) => {
     if (nextUrl.search) {
       callbackUrl += nextUrl.search;
     }
-    
+
     const encodedCallbackUrl = encodeURIComponent(callbackUrl);
     return NextResponse.redirect(
       new URL(`/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
@@ -59,81 +62,92 @@ export default auth((req) => {
   // Role-based access control for logged-in users
   if (isLoggedIn && userRole) {
     // Admin routes - only accessible by ADMIN role
-    const isAdminRoute = adminRoutes.some(route => 
-      pathname.startsWith(route) || pathname === route
+    const isAdminRoute = adminRoutes.some(
+      (route) => pathname.startsWith(route) || pathname === route
     );
-    
-    if (isAdminRoute && userRole !== 'ADMIN') {
-      return NextResponse.redirect(new URL('/unauthorized', nextUrl));
+
+    if (isAdminRoute && userRole !== "ADMIN") {
+      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
     }
 
     // Agent-specific routes
-    const isAgentRoute = agentRoutes.some(route => 
-      pathname.startsWith(route) || pathname === route
+    const isAgentRoute = agentRoutes.some(
+      (route) => pathname.startsWith(route) || pathname === route
     );
-    
-    if (isAgentRoute && !['AGENT', 'ADMIN'].includes(userRole)) {
-      return NextResponse.redirect(new URL('/unauthorized', nextUrl));
+
+    if (isAgentRoute && !["AGENT", "ADMIN"].includes(userRole)) {
+      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
     }
 
     // Owner-specific routes
-    const isOwnerRoute = ownerRoutes.some(route => 
-      pathname.startsWith(route) || pathname === route
+    const isOwnerRoute = ownerRoutes.some(
+      (route) => pathname.startsWith(route) || pathname === route
     );
-    
-    if (isOwnerRoute && !['OWNER', 'ADMIN'].includes(userRole)) {
-      return NextResponse.redirect(new URL('/unauthorized', nextUrl));
+
+    if (isOwnerRoute && !["OWNER", "ADMIN"].includes(userRole)) {
+      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
     }
 
     // Check if user is verified for certain protected routes
     const requiresVerification = [
-      '/properties/create',
-      '/properties/my-listings',
-      '/marking-jobs/create',
-      '/virtual-accounts'
+      "/properties/create",
+      "/properties/my-listings",
+      "/marking-jobs/create",
+      "/virtual-accounts",
     ];
 
-    const requiresVerificationRoute = requiresVerification.some(route => 
+    const requiresVerificationRoute = requiresVerification.some((route) =>
       pathname.startsWith(route)
     );
 
-    if (requiresVerificationRoute && req.auth?.user?.verificationStatus !== 'VERIFIED') {
-      return NextResponse.redirect(new URL('/profile/verification', nextUrl));
+    if (
+      requiresVerificationRoute &&
+      req.auth?.user?.verificationStatus !== "VERIFIED"
+    ) {
+      return NextResponse.redirect(new URL("/profile/verification", nextUrl));
     }
   }
 
   // Handle specific property boundaries access
-  if (pathname.includes('/boundaries') || pathname.includes('/boundary-mapping')) {
+  if (
+    pathname.includes("/boundaries") ||
+    pathname.includes("/boundary-mapping")
+  ) {
     // Only allow access to users with OWNER, AGENT, or ADMIN roles
-    if (!['OWNER', 'AGENT', 'ADMIN'].includes(userRole)) {
-      return NextResponse.redirect(new URL('/unauthorized', nextUrl));
+    // Only allow access to users with OWNER, AGENT, or ADMIN roles
+    const allowedRoles: Role[] = ["OWNER", "AGENT", "ADMIN"];
+
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
     }
   }
 
   // Handle marking jobs queue - only for agents
-  if (pathname.includes('/marking-jobs/queue')) {
-    if (!['AGENT', 'ADMIN'].includes(userRole)) {
-      return NextResponse.redirect(new URL('/unauthorized', nextUrl));
+  if (pathname.includes("/marking-jobs/queue")) {
+    const allowedRoles: Role[] = ["AGENT", "ADMIN"];
+
+    if (!userRole || !allowedRoles.includes(userRole)) {
+      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
     }
   }
 
   // Handle virtual accounts - only for verified users
-  if (pathname.startsWith('/virtual-accounts')) {
-    if (req.auth?.user?.verificationStatus !== 'VERIFIED') {
-      return NextResponse.redirect(new URL('/profile/verification', nextUrl));
+  if (pathname.startsWith("/virtual-accounts")) {
+    if (req.auth?.user?.verificationStatus !== "VERIFIED") {
+      return NextResponse.redirect(new URL("/profile/verification", nextUrl));
     }
   }
 
   // Add security headers
   const response = NextResponse.next();
-  
+
   // Add security headers
-  response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-Content-Type-Options', 'nosniff');
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin');
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "origin-when-cross-origin");
   response.headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(self)'
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(self)"
   );
 
   return response;

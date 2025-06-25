@@ -1,19 +1,28 @@
 // apps/platform/app/unauthorized/page.tsx
 import Link from "next/link";
 import { Button } from "@newcondo/ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@newcondo/ui";
 import { AlertTriangle, ArrowLeft, Home, Shield } from "lucide-react";
 
 interface UnauthorizedPageProps {
-  searchParams: {
+  searchParams: Promise<{
     message?: string;
     returnUrl?: string;
-  };
+  }>;
 }
 
-export default function UnauthorizedPage({ searchParams }: UnauthorizedPageProps) {
-  const { message, returnUrl } = searchParams;
-  
+export default async function UnauthorizedPage({
+  searchParams,
+}: UnauthorizedPageProps) {
+  const params = await searchParams;
+  const { message, returnUrl } = params;
+
   const defaultMessage = "You don't have permission to access this page.";
   const displayMessage = message || defaultMessage;
   const backUrl = returnUrl || "/dashboard";
@@ -32,7 +41,7 @@ export default function UnauthorizedPage({ searchParams }: UnauthorizedPageProps
             {displayMessage}
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-start">
@@ -55,7 +64,7 @@ export default function UnauthorizedPage({ searchParams }: UnauthorizedPageProps
                 Go Back
               </Link>
             </Button>
-            
+
             <Button variant="outline" asChild className="w-full">
               <Link href="/dashboard">
                 <Home className="h-4 w-4 mr-2" />
@@ -76,9 +85,7 @@ export default function UnauthorizedPage({ searchParams }: UnauthorizedPageProps
               </Button>
               <br />
               <Button variant="link" asChild className="text-sm h-auto p-0">
-                <Link href="/contact">
-                  Contact Support
-                </Link>
+                <Link href="/contact">Contact Support</Link>
               </Button>
             </div>
           </div>
@@ -89,7 +96,15 @@ export default function UnauthorizedPage({ searchParams }: UnauthorizedPageProps
 }
 
 // Generate metadata for the page
-export function generateMetadata({ searchParams }: UnauthorizedPageProps) {
+// export function generateMetadata({ searchParams }: UnauthorizedPageProps) {
+//   return {
+//     title: "Access Denied - NewCondo",
+//     description: "You don't have permission to access this page.",
+//     robots: "noindex,nofollow",
+//   };
+// }
+
+export function generateMetadata() {
   return {
     title: "Access Denied - NewCondo",
     description: "You don't have permission to access this page.",
