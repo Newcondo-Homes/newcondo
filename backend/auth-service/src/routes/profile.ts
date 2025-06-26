@@ -1,6 +1,7 @@
 // backend/auth-service/src/routes/profile.ts
 import { Router } from "express";
-import multer from 'multer'
+import type { Router as ExpressRouter } from "express";
+import multer from "multer";
 import {
   getProfile,
   updateProfile,
@@ -12,30 +13,33 @@ import {
   getActivity,
   uploadProfileImage,
   deleteProfileImage,
-  getUploadLimits
+  getUploadLimits,
 } from "../controllers/profileController";
 import { authenticateToken } from "../../../shared/src/middleware/auth";
 import { rateLimiter } from "../../../shared/src/middleware/rateLimiter";
 // import { authMiddleware } from '../middleware/authMiddleware';
 // import { validateProfile } from '../validations/profileValidation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Configure multer for image uploads
 const upload = multer({
-  dest: 'uploads/',
+  dest: "uploads/",
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (file.mimetype.startsWith('image/') && allowedTypes.includes(file.mimetype)) {
-      cb(null, true)
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (
+      file.mimetype.startsWith("image/") &&
+      allowedTypes.includes(file.mimetype)
+    ) {
+      cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'))
+      cb(new Error("Only image files are allowed"));
     }
-  }
-})
+  },
+});
 
 // All profile routes require authentication
 router.use(authenticateToken);
@@ -89,10 +93,10 @@ router.get(
 );
 
 // Image upload routes
-router.post('/image', upload.single('image'), uploadProfileImage);
-router.delete('/image', deleteProfileImage);
+router.post("/image", upload.single("image"), uploadProfileImage);
+router.delete("/image", deleteProfileImage);
 
 // Upload limits
-router.get('/upload-limits', getUploadLimits);
+router.get("/upload-limits", getUploadLimits);
 
 export default router;

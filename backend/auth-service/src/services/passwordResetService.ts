@@ -1,8 +1,11 @@
 // backend/auth-service/src/services/passwordResetService.ts
-import { prisma } from '@newcondo/db';
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
-import { emailService } from '../../../shared/src/utils/email';
+import { prisma } from "@newcondo/db";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import {
+  sendPasswordResetEmail,
+  sendPasswordChangeConfirmation,
+} from "../../../shared/src/utils/email";
 
 // const prisma = new prisma();
 
@@ -11,7 +14,7 @@ export const passwordResetService = {
     try {
       // Check if user exists
       const user = await prisma.user.findUnique({
-        where: { email }
+        where: { email },
       });
 
       if (!user) {
@@ -20,7 +23,7 @@ export const passwordResetService = {
       }
 
       // Generate reset token
-      const resetToken = crypto.randomBytes(32).toString('hex');
+      const resetToken = crypto.randomBytes(32).toString("hex");
       const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
 
       // Store reset token in database (you might want to create a separate table for this)
@@ -29,37 +32,36 @@ export const passwordResetService = {
         where: {
           identifier_type: {
             identifier: email,
-            type: 'PASSWORD_RESET'
-          }
+            type: "PASSWORD_RESET",
+          },
         },
         create: {
           identifier: email,
           code: resetToken,
-          type: 'PASSWORD_RESET',
+          type: "PASSWORD_RESET",
           expiresAt: resetTokenExpiry,
           attempts: 0,
           maxAttempts: 1, // Only one reset attempt per token
-          verified: false
+          verified: false,
         },
         update: {
           code: resetToken,
           expiresAt: resetTokenExpiry,
           attempts: 0,
-          verified: false
-        }
+          verified: false,
+        },
       });
 
       // Send reset email
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-      
-      await emailService.sendPasswordResetEmail({
-        to: email,
-        name: user.name || 'User',
-        resetUrl
-      });
 
+      await sendPasswordResetEmail({
+        to: email,
+        name: user.name || "User",
+        resetUrl,
+      });
     } catch (error) {
-      console.error('Password reset request error:', error);
+      console.error("Password reset request error:", error);
       throw error;
     }
   },
@@ -69,51 +71,54 @@ export const passwordResetService = {
       const resetRecord = await prisma.oTPCode.findFirst({
         where: {
           code: token,
-          type: 'PASSWORD_RESET',
+          type: "PASSWORD_RESET",
           verified: false,
           expiresAt: {
-            gt: new Date()
-          }
-        }
+            gt: new Date(),
+          },
+        },
       });
 
       return !!resetRecord;
     } catch (error) {
-      console.error('Reset token verification error:', error);
+      console.error("Reset token verification error:", error);
       return false;
     }
   },
 
-  async resetPassword(token: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
+  async resetPassword(
+    token: string,
+    newPassword: string
+  ): Promise<{ success: boolean; message?: string }> {
     try {
       // Verify token again
       const resetRecord = await prisma.oTPCode.findFirst({
         where: {
           code: token,
-          type: 'PASSWORD_RESET',
+          type: "PASSWORD_RESET",
           verified: false,
           expiresAt: {
-            gt: new Date()
-          }
-        }
+            gt: new Date(),
+          },
+        },
       });
 
       if (!resetRecord) {
         return {
           success: false,
-          message: 'Invalid or expired reset token'
+          message: "Invalid or expired reset token",
         };
       }
 
       // Find user by email
       const user = await prisma.user.findUnique({
-        where: { email: resetRecord.identifier }
+        where: { email: resetRecord.identifier },
       });
 
       if (!user) {
         return {
           success: false,
-          message: 'User not found'
+          message: "User not found",
         };
       }
 
@@ -124,27 +129,27 @@ export const passwordResetService = {
       await prisma.$transaction([
         prisma.user.update({
           where: { id: user.id },
-          data: { passwordHash: hashedPassword }
+          data: { passwordHash: hashedPassword },
         }),
         prisma.oTPCode.update({
           where: { id: resetRecord.id },
-          data: { verified: true }
-        })
+          data: { verified: true },
+        }),
       ]);
 
       // Send confirmation email
-      await emailService.sendPasswordChangeConfirmation({
+      await sendPasswordChangeConfirmation({
         to: user.email,
-        name: user.name || 'User'
+        name: user.name || "User",
       });
 
       return { success: true };
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error("Password reset error:", error);
       return {
         success: false,
-        message: 'An error occurred while resetting your password'
+        message: "An error occurred while resetting your password",
       };
     }
-  }
+  },
 };

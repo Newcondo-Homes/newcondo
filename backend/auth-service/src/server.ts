@@ -1,5 +1,9 @@
 import app from './app'
 import { prisma } from '@newcondo/db'
+import dotenv from 'dotenv';
+
+// Configure dotenv to load .env file
+dotenv.config();
 
 const PORT = process.env.PORT || 3001
 

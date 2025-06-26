@@ -556,7 +556,7 @@ CREATE INDEX "FeatureFlag_userId_idx" ON "FeatureFlag"("userId");
 CREATE INDEX "FeatureFlag_key_idx" ON "FeatureFlag"("key");
 
 -- CreateIndex
-CREATE INDEX "OTPCode_identifier_type_idx" ON "OTPCode"("identifier", "type");
+CREATE INDEX "identifier_type" ON "OTPCode"("identifier", "type");
 
 -- CreateIndex
 CREATE INDEX "OTPCode_expiresAt_idx" ON "OTPCode"("expiresAt");

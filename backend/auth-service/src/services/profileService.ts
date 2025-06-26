@@ -131,13 +131,25 @@ class ProfileService {
       );
 
       // Upload to UploadThing
-      const uploadResult = await utapi.uploadFiles([fileForUpload], {
-        metadata: {
-          userId,
-          type: "profile_image",
-          originalSize: optimizedImage.size.toString(),
-        },
-      });
+      // const uploadResult = await utapi.uploadFiles([fileForUpload], {
+      //   metadata: {
+      //     userId,
+      //     type: "profile_image",
+      //     originalSize: optimizedImage.size.toString(),
+      //   },
+      // });
+      const uploadResult = await utapi.uploadFiles([fileForUpload]);
+
+      // TODO: store details of file uploaded by a user in the database
+      // uncomment the code below, and begin working on 'this.storeFileMetadata(uploadResult[0].data.key)
+
+      // Store metadata separately if needed (in your database)
+      // You can create a separate method to store file metadata:
+      // await this.storeFileMetadata(uploadResult[0].data.key, {
+      //   userId,
+      //   type: "profile_image",
+      //   originalSize: optimizedImage.size.toString(),
+      // });
 
       // Clean up temp file
       await fs.unlink(tempFilePath).catch(() => {}); // Ignore cleanup errors
@@ -152,6 +164,27 @@ class ProfileService {
       throw new Error("Failed to upload image to storage");
     }
   }
+
+  /**
+   * Store metadata of file uploaded on uploadthing in database
+   */
+
+  // private async storeFileMetadata(fileKey: string, metadata: {
+  //   userId: string;
+  //   type: string;
+  //   originalSize: string;
+  // }) {
+
+  //   await prisma.fileMetadata.create({
+  //     data: {
+  //       fileKey,
+  //       userId: metadata.userId,
+  //       type: metadata.type,
+  //       originalSize: parseInt(metadata.originalSize),
+  //       createdAt: new Date()
+  //     }
+  //   });
+  // }
 
   /**
    * Upload and optimize profile image
@@ -261,7 +294,7 @@ class ProfileService {
         where: {
           userId,
           type: "PROFILE_IMAGE_UPDATED",
-          createdAt: {
+          timestamp: {
             gte: today,
           },
         },

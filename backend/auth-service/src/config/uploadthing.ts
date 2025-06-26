@@ -1,6 +1,6 @@
 // backend/auth-service/src/config/uploadthing.ts
 
-import { createUploadthing, type FileRouter } from 'uploadthing/server';
+import { createUploadthing, type FileRouter } from "uploadthing/server";
 import { UploadThingError } from 'uploadthing/server';
 
 const f = createUploadthing();

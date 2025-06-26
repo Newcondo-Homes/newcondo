@@ -69,6 +69,7 @@ model User {
   requestedMarkingJobs PropertyMarkingJob[] @relation("RequestingUser")
   supportTickets   SupportTicket[]
   adminActions     AdminAction[]
+  refreshToken     RefreshToken[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -533,6 +534,19 @@ model EventLog {
   @@index([timestamp])
 }
 
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique // The JWT refresh token itself or a unique ID for it
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
 model FeatureFlag {
   id        String   @id @default(cuid())
   userId    String
@@ -560,7 +574,7 @@ model OTPCode {
   
   createdAt DateTime @default(now())
   
-  @@index([identifier, type])
+  @@unique([identifier, type], name: "identifier_type")
   @@index([expiresAt])
 }
 

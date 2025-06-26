@@ -9,7 +9,7 @@ class VerificationController {
 
       if (!user) return;
 
-      if (user?.isEmailVerified) {
+      if (user?.emailVerified) {
         return res.status(400).json({
           success: false,
           message: "Email is already verified",
@@ -85,7 +85,7 @@ class VerificationController {
 
       if (!user) return;
 
-      if (user.isEmailVerified) {
+      if (user.emailVerified) {
         return res.status(400).json({
           success: false,
           message: "Email is already verified",

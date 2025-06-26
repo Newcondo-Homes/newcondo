@@ -1,6 +1,61 @@
 // backend/auth-service/src/types/auth.ts
 
-import { Role, VerificationStatus  } from '@newcondo/db';
+import { Role, VerificationStatus, OTPType } from "@newcondo/db";
+
+export { OTPType };
+
+export interface RegisterUserData {
+  email: string;
+  phone?: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  // Optional additional fields
+  dateOfBirth?: Date;
+  address?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  referralCode?: string; // If user was referred
+}
+
+// Login User Data
+export interface LoginUserData {
+  email: string;
+  password: string;
+  rememberMe?: boolean; // Optional flag for longer token expiry
+}
+
+// OTP Verification Data
+export interface OTPVerificationData {
+  email?: string;
+  phone?: string;
+  otp: string;
+  type?: 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION' | 'PASSWORD_RESET' | 'LOGIN';
+}
+
+// Refresh Token Data
+export interface RefreshTokenData {
+  refreshToken: string;
+}
+
+// User Session Data
+export interface UserSession {
+  id: string;
+  email: string;
+  phone: string | null;
+  name: string | null;
+  role: Role;
+  emailVerified: Date | null;
+  phoneVerified: Date | null;
+  verificationStatus: VerificationStatus;
+  createdAt: Date;
+  // Additional optional fields that might be useful in session
+  image?: string | null;
+  isPremium?: boolean;
+  isAvailableForMarking?: boolean; // For agents
+}
 
 export interface RegisterRequest {
   name: string;
@@ -15,6 +70,12 @@ export interface RegisterRequest {
   deviceFingerprint?: string;
 }
 
+export interface PasswordResetData {
+  email: string;      // The user's email, which is the OTPCode 'identifier'
+  token: string;      // This will be the `code` from your OTPCode model
+  newPassword: string;
+}
+
 export interface LoginRequest {
   email?: string;
   phone?: string;
@@ -25,13 +86,21 @@ export interface LoginRequest {
 
 export interface OTPRequest {
   identifier: string; // email or phone
-  type: 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION' | 'PASSWORD_RESET' | 'LOGIN';
+  type:
+    | "EMAIL_VERIFICATION"
+    | "PHONE_VERIFICATION"
+    | "PASSWORD_RESET"
+    | "LOGIN";
 }
 
 export interface VerifyOTPRequest {
   identifier: string;
   code: string;
-  type: 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION' | 'PASSWORD_RESET' | 'LOGIN';
+  type:
+    | "EMAIL_VERIFICATION"
+    | "PHONE_VERIFICATION"
+    | "PASSWORD_RESET"
+    | "LOGIN";
 }
 
 export interface PasswordResetRequest {
@@ -60,13 +129,13 @@ export interface AuthResponse {
 
 export interface SafeUser {
   id: string;
-  name: string | null;
+  name?: string | null;
   email: string;
   phone: string | null;
   role: Role;
   verificationStatus: VerificationStatus;
-  isEmailVerified: boolean;
-  isPhoneVerified: boolean;
+  emailVerified: boolean;
+  phoneVerified: boolean;
   image: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -109,7 +178,6 @@ export interface LoginAttempt {
 //   deviceFingerprint?: string;
 // }
 
-
 export interface AccountLockout {
   email: string;
   attempts: number;
@@ -149,14 +217,22 @@ export interface JWTPayload {
 
 export interface OTPRequest {
   identifier: string; // email or phone
-  type: 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
+  type:
+    | "EMAIL_VERIFICATION"
+    | "PHONE_VERIFICATION"
+    | "LOGIN"
+    | "PASSWORD_RESET";
   purpose?: string;
 }
 
 export interface OTPVerifyRequest {
   identifier: string;
   code: string;
-  type: 'EMAIL_VERIFICATION' | 'PHONE_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET';
+  type:
+    | "EMAIL_VERIFICATION"
+    | "PHONE_VERIFICATION"
+    | "LOGIN"
+    | "PASSWORD_RESET";
 }
 
 export interface PasswordResetRequest {
@@ -176,7 +252,7 @@ export interface RefreshTokenRequest {
 
 // Social auth types
 export interface SocialAuthRequest {
-  provider: 'google' | 'facebook';
+  provider: "google" | "facebook";
   accessToken: string;
   role?: Role;
   referralCode?: string;

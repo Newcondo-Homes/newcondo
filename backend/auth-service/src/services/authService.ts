@@ -1,17 +1,17 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { prisma, User, UserRole, VerificationStatus, Role } from "@newcondo/db";
-import {
-  generateOTP,
-  verifyOTP,
-  generateOTPHash,
-} from "../../../shared/src/utils/otp";
+import jwt, { Secret, SignOptions } from "jsonwebtoken";
+import crypto from "crypto";
+import { prisma, VerificationStatus, Role } from "@newcondo/db";
+import { generateOTP, verifyOTP } from "../../../shared/src/utils/otp";
 import { sendEmail } from "../../../shared/src/utils/email";
-import { sendSMS } from "../../../shared/src/utils/sms";
+import { StringValue } from "ms";
+
+// import { sendSMS } from "../../../shared/src/utils/sms";
 import {
   RegisterUserData,
   LoginUserData,
   AuthResponse,
+  OTPType,
   OTPVerificationData,
   PasswordResetData,
   RefreshTokenData,
@@ -21,16 +21,16 @@ import {
 interface TokenPayload {
   userId: string;
   email: string;
-  role: UserRole;
+  role: Role;
   isEmailVerified: boolean;
   isPhoneVerified: boolean;
 }
 
 export class AuthService {
-  private readonly JWT_SECRET: string;
-  private readonly JWT_REFRESH_SECRET: string;
-  private readonly JWT_EXPIRES_IN: string;
-  private readonly JWT_REFRESH_EXPIRES_IN: string;
+  private readonly JWT_SECRET: Secret;
+  private readonly JWT_REFRESH_SECRET: Secret;
+  private readonly JWT_EXPIRES_IN: StringValue;
+  private readonly JWT_REFRESH_EXPIRES_IN: StringValue;
   private readonly OTP_EXPIRES_IN: number;
   private readonly MAX_LOGIN_ATTEMPTS: number;
   private readonly LOCKOUT_DURATION: number;
@@ -38,11 +38,15 @@ export class AuthService {
   constructor() {
     this.JWT_SECRET = process.env.JWT_SECRET!;
     this.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
-    this.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h";
-    this.JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || "7d";
-    this.OTP_EXPIRES_IN = parseInt(process.env.OTP_EXPIRES_IN || "300000"); // 5 minutes
-    this.MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || "5");
-    this.LOCKOUT_DURATION = parseInt(process.env.LOCKOUT_DURATION || "900000"); // 15 minutes
+    if (!this.JWT_SECRET || !this.JWT_REFRESH_SECRET) {
+      throw new Error("JWT secrets are not configured");
+    }
+    this.JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN! || "1h") as StringValue;
+    this.JWT_REFRESH_EXPIRES_IN = (process.env.JWT_REFRESH_EXPIRES_IN! ||
+      "7d") as StringValue;
+    this.OTP_EXPIRES_IN = parseInt(process.env.OTP_EXPIRES_IN! || "300000"); // 5 minutes
+    this.MAX_LOGIN_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS! || "5");
+    this.LOCKOUT_DURATION = parseInt(process.env.LOCKOUT_DURATION! || "900000"); // 15 minutes
   }
 
   async createUser(userData: {
@@ -100,22 +104,18 @@ export class AuthService {
 
     // Generate email OTP
     const emailOTP = generateOTP();
-    const emailOTPHash = generateOTPHash(emailOTP);
-    const emailOTPExpiry = new Date(Date.now() + this.OTP_EXPIRES_IN);
+
+    // save user name with firstName and lastName together and in this other
+    const name = firstName + lastName;
 
     // Create user
     const user = await prisma.user.create({
       data: {
         email,
         phone,
-        password: hashedPassword,
-        firstName,
-        lastName,
+        passwordHash: hashedPassword,
+        name,
         role,
-        emailOTP: emailOTPHash,
-        emailOTPExpiry,
-        emailVerified: false,
-        phoneVerified: false,
         verificationStatus: VerificationStatus.PENDING,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -130,29 +130,36 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role,
-      isEmailVerified: user.emailVerified,
-      isPhoneVerified: user.phoneVerified,
+      isEmailVerified: !!user.emailVerified,
+      isPhoneVerified: !!user.phoneVerified,
     });
 
     // Store refresh token
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        emailVerified: user.emailVerified,
-        phoneVerified: user.phoneVerified,
-        verificationStatus: user.verificationStatus,
-        createdAt: user.createdAt,
+      success: true,
+      message:
+        "User registered successfully. Please verify you email to continue",
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          name: name,
+          role: user.role,
+          emailVerified: !!user.emailVerified,
+          phoneVerified: !!user.phoneVerified,
+          verificationStatus: user.verificationStatus,
+          createdAt: user.createdAt,
+          image: user.image || null,
+          updatedAt: user.updatedAt,
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       },
-      tokens,
-      requiresEmailVerification: true,
-      requiresPhoneVerification: !!phone,
+      requiresOTP: true,
+      otpSentTo: email,
     };
   }
 
@@ -168,67 +175,73 @@ export class AuthService {
       throw new Error("Invalid credentials");
     }
 
+    // TODO: Create feature to be able to lock accounts
     // Check if account is locked
-    if (user.lockoutUntil && user.lockoutUntil > new Date()) {
-      const lockoutTime = Math.ceil(
-        (user.lockoutUntil.getTime() - Date.now()) / 60000
-      );
-      throw new Error(`Account locked. Try again in ${lockoutTime} minutes`);
-    }
+    // if (user.lockoutUntil && user.lockoutUntil > new Date()) {
+    //   const lockoutTime = Math.ceil(
+    //     (user.lockoutUntil.getTime() - Date.now()) / 60000
+    //   );
+    //   throw new Error(`Account locked. Try again in ${lockoutTime} minutes`);
+    // }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash!);
 
     if (!isPasswordValid) {
-      await this.handleFailedLogin(user.id);
+      // await this.handleFailedLogin(user.id);
       throw new Error("Invalid credentials");
     }
 
+    // TODO: Create feature to be able monitor login attempts
     // Reset failed login attempts on successful login
-    if (user.failedLoginAttempts > 0) {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: {
-          failedLoginAttempts: 0,
-          lockoutUntil: null,
-        },
-      });
-    }
+    // if (user.failedLoginAttempts > 0) {
+    //   await prisma.user.update({
+    //     where: { id: user.id },
+    //     data: {
+    //       failedLoginAttempts: 0,
+    //       lockoutUntil: null,
+    //     },
+    //   });
+    // }
 
     // Generate tokens
     const tokens = this.generateTokens({
       userId: user.id,
       email: user.email,
       role: user.role,
-      isEmailVerified: user.emailVerified,
-      isPhoneVerified: user.phoneVerified,
+      isEmailVerified: !!user.emailVerified,
+      isPhoneVerified: !!user.phoneVerified,
     });
 
     // Store refresh token
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
+    // TODO: Create feature to be able record lastlogin by user
     // Update last login
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { lastLoginAt: new Date() },
-    });
+    // await prisma.user.update({
+    //   where: { id: user.id },
+    //   data: { lastLoginAt: new Date() },
+    // });
 
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        emailVerified: user.emailVerified,
-        phoneVerified: user.phoneVerified,
-        verificationStatus: user.verificationStatus,
-        createdAt: user.createdAt,
+      success: true,
+      message: "User Login is successfull.",
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          emailVerified: !!user.emailVerified,
+          phoneVerified: !!user.phoneVerified,
+          verificationStatus: user.verificationStatus,
+          createdAt: user.createdAt,
+          image: user.image || null,
+          updatedAt: user.updatedAt,
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
       },
-      tokens,
-      requiresEmailVerification: !user.emailVerified,
-      requiresPhoneVerification: !!user.phone && !user.phoneVerified,
     };
   }
 
@@ -249,15 +262,7 @@ export class AuthService {
       return { success: true, message: "Email already verified" };
     }
 
-    if (!user.emailOTP || !user.emailOTPExpiry) {
-      throw new Error("No OTP found. Please request a new OTP");
-    }
-
-    if (user.emailOTPExpiry < new Date()) {
-      throw new Error("OTP has expired. Please request a new OTP");
-    }
-
-    const isOTPValid = verifyOTP(otp, user.emailOTP);
+    const isOTPValid = verifyOTP(email!, otp, OTPType.EMAIL_VERIFICATION);
     if (!isOTPValid) {
       throw new Error("Invalid OTP");
     }
@@ -266,11 +271,9 @@ export class AuthService {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        emailVerified: true,
-        emailOTP: null,
-        emailOTPExpiry: null,
+        emailVerified: new Date(),
         verificationStatus:
-          user.phoneVerified || !user.phone
+          !!user.phoneVerified || !!user.phone
             ? VerificationStatus.VERIFIED
             : VerificationStatus.PENDING,
       },
@@ -296,20 +299,41 @@ export class AuthService {
 
     // Generate new OTP
     const emailOTP = generateOTP();
-    const emailOTPHash = generateOTPHash(emailOTP);
+
+    // create expiration time for the otp
     const emailOTPExpiry = new Date(Date.now() + this.OTP_EXPIRES_IN);
 
-    // Update user with new OTP
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        emailOTP: emailOTPHash,
-        emailOTPExpiry,
+    // // Update to new OTP
+    await prisma.oTPCode.upsert({
+      where: {
+        identifier_type: {
+          identifier: email,
+          type: OTPType.EMAIL_VERIFICATION,
+        },
+      },
+      create: {
+        identifier: email,
+        code: emailOTP,
+        type: OTPType.EMAIL_VERIFICATION,
+        expiresAt: emailOTPExpiry,
+        attempts: 0,
+        verified: false,
+        maxAttempts: 3,
+      },
+      update: {
+        // Data to update if a matching record IS found
+        code: emailOTP,
+        expiresAt: emailOTPExpiry,
+        attempts: 0,
+        verified: false,
       },
     });
 
+    // I put "!"  because I am certain that a registered user must have a name
+    const firstName = user.name!.trim().split(" ")[0];
+
     // Send email OTP
-    await this.sendEmailOTP(email, emailOTP, user.firstName);
+    await this.sendEmailOTP(email, emailOTP, firstName);
 
     return { success: true, message: "OTP sent successfully" };
   }
@@ -323,6 +347,7 @@ export class AuthService {
 
     if (!user) {
       // Don't reveal if user exists or not
+      console.warn(`Password reset requested for non-existent email: ${email}`);
       return {
         success: true,
         message: "If the email exists, a reset link has been sent",
@@ -330,29 +355,55 @@ export class AuthService {
     }
 
     // Generate reset token
-    const resetToken = jwt.sign(
-      { userId: user.id, email: user.email, type: "password_reset" },
-      this.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    const length: number = 32;
+
+    const resetToken = crypto.randomBytes(length).toString("hex");
 
     // Store reset token
     const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        passwordResetToken: resetToken,
-        passwordResetExpiry: resetTokenExpiry,
-      },
-    });
 
-    // Send reset email
-    await this.sendPasswordResetEmail(user.email, resetToken, user.firstName);
+    try {
+      await prisma.oTPCode.upsert({
+        where: {
+          identifier_type: {
+            identifier: email,
+            type: OTPType.PASSWORD_RESET,
+          },
+        },
+        create: {
+          identifier: email,
+          code: resetToken,
+          type: OTPType.PASSWORD_RESET,
+          expiresAt: resetTokenExpiry,
+          attempts: 0,
+          verified: false,
+          maxAttempts: 3,
+        },
+        update: {
+          code: resetToken,
+          expiresAt: resetTokenExpiry,
+          attempts: 0,
+          verified: false,
+        },
+      });
 
-    return {
-      success: true,
-      message: "If the email exists, a reset link has been sent",
-    };
+      const firstName = user.name!.trim().split(" ")[0];
+
+      // Send the password reset email
+      await this.sendPasswordResetEmail(email, resetToken, firstName);
+
+      return {
+        success: true,
+        message:
+          "If an account with that email exists, a password reset link has been sent.",
+      };
+    } catch (error) {
+      console.error("Error requesting password reset:", error);
+      return {
+        success: false,
+        message: "An error occurred. Please try again later.",
+      };
+    }
   }
 
   async resetPassword(
@@ -360,52 +411,74 @@ export class AuthService {
   ): Promise<{ success: boolean; message: string }> {
     const { token, newPassword } = resetData;
 
+    // Basic validation for new password (add more robust rules as needed)
+    if (!newPassword || newPassword.length < 8) {
+      throw new Error("New password must be at least 8 characters long.");
+    }
+
     // Verify reset token
     let payload: any;
     try {
-      payload = jwt.verify(token, this.JWT_SECRET);
+      const otpCodeRecord = await prisma.oTPCode.findUnique({
+        where: {
+          identifier_type: {
+            identifier: resetData.email,
+            type: OTPType.PASSWORD_RESET, // Ensure it's for password reset
+          },
+        },
+      });
+
+      //Validate the OTPCode record
+      if (
+        !otpCodeRecord ||
+        otpCodeRecord.expiresAt < new Date() ||
+        otpCodeRecord.verified
+      ) {
+        throw new Error("Invalid or expired password reset token.");
+      }
+
+      // Find the user associated with this OTPCode
+      const user = await prisma.user.findUnique({
+        where: { email: otpCodeRecord.identifier },
+      });
+
+      if (!user) {
+        // Mark the token as used if the user somehow disappeared or email changed.
+        await prisma.oTPCode.update({
+          where: { id: otpCodeRecord.id },
+          data: { verified: true },
+        });
+        throw new Error("User not found for this reset token."); // Still generic for security
+      }
+
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      // Update password and invalidate the OTPCode in a transaction
+      await prisma.$transaction([
+        // Update user's password and reset login related counters
+        prisma.user.update({
+          where: { id: user.id },
+          data: {
+            passwordHash: hashedPassword,
+          },
+        }),
+
+        // Mark the specific OTPCode as verified (used) to prevent replay attacks
+        prisma.oTPCode.update({
+          where: { id: otpCodeRecord.id },
+          data: { verified: true },
+        }),
+        // Invalidate all existing refresh tokens (sessions) for the user for security
+        prisma.session.deleteMany({
+          where: { userId: user.id },
+        }),
+      ]);
+
+      return { success: true, message: "Password reset successfully" };
     } catch (error) {
       throw new Error("Invalid or expired reset token");
     }
-
-    if (payload.type !== "password_reset") {
-      throw new Error("Invalid token type");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
-    });
-
-    if (
-      !user ||
-      user.passwordResetToken !== token ||
-      !user.passwordResetExpiry ||
-      user.passwordResetExpiry < new Date()
-    ) {
-      throw new Error("Invalid or expired reset token");
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-    // Update password and clear reset token
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        password: hashedPassword,
-        passwordResetToken: null,
-        passwordResetExpiry: null,
-        failedLoginAttempts: 0, // Reset failed attempts
-        lockoutUntil: null,
-      },
-    });
-
-    // Invalidate all existing sessions
-    await prisma.refreshToken.deleteMany({
-      where: { userId: user.id },
-    });
-
-    return { success: true, message: "Password reset successfully" };
   }
 
   async refreshToken(
@@ -440,8 +513,8 @@ export class AuthService {
       userId: storedToken.user.id,
       email: storedToken.user.email,
       role: storedToken.user.role,
-      isEmailVerified: storedToken.user.emailVerified,
-      isPhoneVerified: storedToken.user.phoneVerified,
+      isEmailVerified: !!storedToken.user.emailVerified,
+      isPhoneVerified: !!storedToken.user.phoneVerified,
     });
 
     // Update refresh token in database
@@ -491,8 +564,7 @@ export class AuthService {
       id: user.id,
       email: user.email,
       phone: user.phone,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
       role: user.role,
       emailVerified: user.emailVerified,
       phoneVerified: user.phoneVerified,
@@ -505,6 +577,11 @@ export class AuthService {
     accessToken: string;
     refreshToken: string;
   } {
+    const options: SignOptions = {
+      expiresIn: this.JWT_EXPIRES_IN,
+      algorithm: "HS256",
+    };
+
     const accessToken = jwt.sign(payload, this.JWT_SECRET, {
       expiresIn: this.JWT_EXPIRES_IN,
     });
@@ -512,7 +589,7 @@ export class AuthService {
     const refreshToken = jwt.sign(
       { userId: payload.userId },
       this.JWT_REFRESH_SECRET,
-      { expiresIn: this.JWT_REFRESH_EXPIRES_IN }
+      options
     );
 
     return { accessToken, refreshToken };
@@ -533,27 +610,27 @@ export class AuthService {
     });
   }
 
-  private async handleFailedLogin(userId: string): Promise<void> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
+  // private async handleFailedLogin(userId: string): Promise<void> {
+  //   const user = await prisma.user.findUnique({
+  //     where: { id: userId },
+  //   });
 
-    if (!user) return;
+  //   if (!user) return;
 
-    const failedAttempts = (user.failedLoginAttempts || 0) + 1;
-    const updateData: any = {
-      failedLoginAttempts: failedAttempts,
-    };
+  //   const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+  //   const updateData: any = {
+  //     failedLoginAttempts: failedAttempts,
+  //   };
 
-    if (failedAttempts >= this.MAX_LOGIN_ATTEMPTS) {
-      updateData.lockoutUntil = new Date(Date.now() + this.LOCKOUT_DURATION);
-    }
+  //   if (failedAttempts >= this.MAX_LOGIN_ATTEMPTS) {
+  //     updateData.lockoutUntil = new Date(Date.now() + this.LOCKOUT_DURATION);
+  //   }
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: updateData,
-    });
-  }
+  //   await prisma.user.update({
+  //     where: { id: userId },
+  //     data: updateData,
+  //   });
+  // }
 
   private async sendEmailOTP(
     email: string,
@@ -642,16 +719,15 @@ export class AuthService {
     return userWithoutPassword;
   }
 
-  async updatePassword(userId: string, newPassword: string) {
-    const saltRounds = 12;
-    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+  // async updatePassword(userId: string, newPassword: string) {
+  //   const saltRounds = 12;
+  //   const passwordHash = await bcrypt.hash(newPassword, saltRounds);
 
-    return await prisma.user.update({
-      where: { id: userId },
-      data: { passwordHash },
-    });
-  }
+  //   return await prisma.user.update({
+  //     where: { id: userId },
+  //     data: { passwordHash },
+  //   });
+  // }
 }
-
 
 export const authService = new AuthService();

@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import type { Router as ExpressRouter } from 'express'
 import { AuthController } from '../controllers/authController'
 import { validateRequest } from '../middleware/authValidation'
 import { 
@@ -8,7 +9,7 @@ import {
   resetPasswordSchema 
 } from '../validations/authValidation'
 
-const router = Router()
+const router: ExpressRouter = Router()
 const authController = new AuthController()
 
 // Register

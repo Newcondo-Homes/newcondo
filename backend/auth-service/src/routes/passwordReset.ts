@@ -1,19 +1,20 @@
 // backend/auth-service/src/routes/passwordReset.ts
-import { Router } from 'express';
-import { body, param } from 'express-validator';
-import { validateRequest } from '../middleware/validation';
-import { passwordResetController } from '../controllers/passwordResetController';
+import { Router } from "express";
+import type { Router as ExpressRouter } from "express";
+import { body, param } from "express-validator";
+import { validateRequest } from "../middleware/validation";
+import { passwordResetController } from "../controllers/passwordResetController";
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Request password reset
 router.post(
-  '/request',
+  "/request",
   [
-    body('email')
+    body("email")
       .isEmail()
       .normalizeEmail()
-      .withMessage('Valid email is required'),
+      .withMessage("Valid email is required"),
   ],
   validateRequest,
   passwordResetController.requestReset
@@ -21,11 +22,11 @@ router.post(
 
 // Verify reset token
 router.get(
-  '/verify/:token',
+  "/verify/:token",
   [
-    param('token')
+    param("token")
       .isLength({ min: 32, max: 64 })
-      .withMessage('Invalid reset token'),
+      .withMessage("Invalid reset token"),
   ],
   validateRequest,
   passwordResetController.verifyResetToken
@@ -33,23 +34,26 @@ router.get(
 
 // Reset password
 router.post(
-  '/reset',
+  "/reset",
   [
-    body('token')
+    body("token")
       .isLength({ min: 32, max: 64 })
-      .withMessage('Invalid reset token'),
-    body('password')
+      .withMessage("Invalid reset token"),
+    body("password")
       .isLength({ min: 8 })
-      .withMessage('Password must be at least 8 characters long')
-      .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-      .withMessage('Password must contain uppercase, lowercase, number and special character'),
-    body('confirmPassword')
-      .custom((value, { req }) => {
-        if (value !== req.body.password) {
-          throw new Error('Password confirmation does not match password');
-        }
-        return true;
-      }),
+      .withMessage("Password must be at least 8 characters long")
+      .matches(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
+      )
+      .withMessage(
+        "Password must contain uppercase, lowercase, number and special character"
+      ),
+    body("confirmPassword").custom((value, { req }) => {
+      if (value !== req.body.password) {
+        throw new Error("Password confirmation does not match password");
+      }
+      return true;
+    }),
   ],
   validateRequest,
   passwordResetController.resetPassword

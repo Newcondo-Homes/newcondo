@@ -1,5 +1,5 @@
 // backend/shared/src/types/auth.ts
-import type { User} from '@newcondo/db'
+import type { User } from '@newcondo/db'
 
 export type OTPType = 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET'
 

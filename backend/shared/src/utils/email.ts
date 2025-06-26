@@ -1,17 +1,17 @@
 // backend/shared/src/utils/email.ts
-import formData from 'form-data';
-import Mailgun from 'mailgun.js';
+import formData from "form-data";
+import Mailgun from "mailgun.js";
 
 const mailgun = new Mailgun(formData);
 
 // Initialize Mailgun client
 const mg = mailgun.client({
-  username: 'api',
-  key: process.env.MAILGUN_API_KEY || '',
-  url: process.env.MAILGUN_URL || 'https://api.mailgun.net' // For EU: 'https://api.eu.mailgun.net'
+  username: "api",
+  key: process.env.MAILGUN_API_KEY || "",
+  url: process.env.MAILGUN_URL || "https://api.mailgun.net", // For EU: 'https://api.eu.mailgun.net'
 });
 
-const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || '';
+const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || "";
 
 export interface EmailTemplate {
   to: string;
@@ -20,27 +20,37 @@ export interface EmailTemplate {
   text?: string;
 }
 
+export interface PasswordResetEmail {
+  to: string;
+  name: string | null;
+  resetUrl?: string | null;
+}
+
 export const sendEmail = async (template: EmailTemplate) => {
   try {
     const messageData = {
-      from: process.env.FROM_EMAIL || 'NewCondo <noreply@newcondo.com>',
+      from: process.env.FROM_EMAIL || "NewCondo <noreply@newcondo.com>",
       to: template.to,
       subject: template.subject,
       html: template.html,
-      text: template.text || template.subject
+      text: template.text || template.subject,
     };
 
     const result = await mg.messages.create(MAILGUN_DOMAIN, messageData);
 
-    console.log('Email sent successfully:', result.id);
+    console.log("Email sent successfully:", result.id);
     return { success: true, data: result };
   } catch (error) {
-    console.error('Email sending failed:', error);
+    console.error("Email sending failed:", error);
     return { success: false, error };
   }
 };
 
-export const sendOTPEmail = async (email: string, otp: string, type: string) => {
+export const sendOTPEmail = async (
+  email: string,
+  otp: string,
+  type: string
+) => {
   const subject = getOTPEmailSubject(type);
   const html = generateOTPEmailHTML(otp, type);
   const text = generateOTPEmailText(otp, type);
@@ -49,12 +59,12 @@ export const sendOTPEmail = async (email: string, otp: string, type: string) => 
     to: email,
     subject,
     html,
-    text
+    text,
   });
 };
 
 export const sendWelcomeEmail = async (email: string, name: string) => {
-  const subject = 'Welcome to NewCondo!';
+  const subject = "Welcome to NewCondo!";
   const html = generateWelcomeEmailHTML(name);
   const text = generateWelcomeEmailText(name);
 
@@ -62,40 +72,59 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
     to: email,
     subject,
     html,
-    text
+    text,
   });
 };
 
-export const sendPasswordResetEmail = async (email: string, resetToken: string) => {
-  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-  const subject = 'Reset Your NewCondo Password';
-  const html = generatePasswordResetEmailHTML(resetUrl);
-  const text = generatePasswordResetEmailText(resetUrl);
+export const sendPasswordResetEmail = async (data: PasswordResetEmail) => {
+  const email = data.to;
+  const subject = "Reset Your NewCondo Password";
+  const html = generatePasswordResetEmailHTML(data.resetUrl!);
+  const text = generatePasswordResetEmailText(data.resetUrl!);
 
   return sendEmail({
     to: email,
     subject,
     html,
-    text
+    text,
+  });
+};
+
+export const sendPasswordChangeConfirmation = async (
+  data: PasswordResetEmail
+) => {
+  const subject = "Your NewCondo Password Has Been Changed";
+  const html = generatePasswordChangeConfirmationHTML(data.name || "User");
+  const text = generatePasswordChangeConfirmationText(data.name || "User");
+
+  return sendEmail({
+    to: data.to,
+    subject,
+    html,
+    text,
   });
 };
 
 export const sendBulkEmail = async (templates: EmailTemplate[]) => {
   try {
-    const promises = templates.map(template => sendEmail(template));
+    const promises = templates.map((template) => sendEmail(template));
     const results = await Promise.allSettled(promises);
-    
-    const successful = results.filter(result => result.status === 'fulfilled').length;
-    const failed = results.filter(result => result.status === 'rejected').length;
-    
+
+    const successful = results.filter(
+      (result) => result.status === "fulfilled"
+    ).length;
+    const failed = results.filter(
+      (result) => result.status === "rejected"
+    ).length;
+
     return {
       success: true,
       sent: successful,
       failed: failed,
-      total: templates.length
+      total: templates.length,
     };
   } catch (error) {
-    console.error('Bulk email sending failed:', error);
+    console.error("Bulk email sending failed:", error);
     return { success: false, error };
   }
 };
@@ -107,18 +136,18 @@ export const sendTemplatedEmail = async (
 ) => {
   try {
     const messageData = {
-      from: process.env.FROM_EMAIL || 'NewCondo <noreply@newcondo.com>',
+      from: process.env.FROM_EMAIL || "NewCondo <noreply@newcondo.com>",
       to: to,
       template: templateName,
-      'h:X-Mailgun-Variables': JSON.stringify(variables)
+      "h:X-Mailgun-Variables": JSON.stringify(variables),
     };
 
     const result = await mg.messages.create(MAILGUN_DOMAIN, messageData);
 
-    console.log('Templated email sent successfully:', result.id);
+    console.log("Templated email sent successfully:", result.id);
     return { success: true, data: result };
   } catch (error) {
-    console.error('Templated email sending failed:', error);
+    console.error("Templated email sending failed:", error);
     return { success: false, error };
   }
 };
@@ -126,21 +155,24 @@ export const sendTemplatedEmail = async (
 // Email template generators
 const getOTPEmailSubject = (type: string): string => {
   switch (type) {
-    case 'EMAIL_VERIFICATION':
-      return 'Verify Your NewCondo Account';
-    case 'LOGIN':
-      return 'Your NewCondo Login Code';
-    case 'PASSWORD_RESET':
-      return 'Reset Your NewCondo Password';
+    case "EMAIL_VERIFICATION":
+      return "Verify Your NewCondo Account";
+    case "LOGIN":
+      return "Your NewCondo Login Code";
+    case "PASSWORD_RESET":
+      return "Reset Your NewCondo Password";
     default:
-      return 'Your NewCondo Verification Code';
+      return "Your NewCondo Verification Code";
   }
 };
 
 const generateOTPEmailHTML = (otp: string, type: string): string => {
-  const purpose = type === 'EMAIL_VERIFICATION' ? 'verify your account' : 
-                  type === 'LOGIN' ? 'complete your login' : 
-                  'reset your password';
+  const purpose =
+    type === "EMAIL_VERIFICATION"
+      ? "verify your account"
+      : type === "LOGIN"
+        ? "complete your login"
+        : "reset your password";
 
   return `
     <!DOCTYPE html>
@@ -184,9 +216,12 @@ const generateOTPEmailHTML = (otp: string, type: string): string => {
 };
 
 const generateOTPEmailText = (otp: string, type: string): string => {
-  const purpose = type === 'EMAIL_VERIFICATION' ? 'verify your account' : 
-                  type === 'LOGIN' ? 'complete your login' : 
-                  'reset your password';
+  const purpose =
+    type === "EMAIL_VERIFICATION"
+      ? "verify your account"
+      : type === "LOGIN"
+        ? "complete your login"
+        : "reset your password";
 
   return `
 NewCondo - Verification Code
@@ -253,6 +288,82 @@ const generateWelcomeEmailHTML = (name: string): string => {
       </div>
     </body>
     </html>
+  `;
+};
+
+const generatePasswordChangeConfirmationHTML = (name: string): string => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Password Changed Successfully</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">Password Changed</h1>
+      </div>
+
+      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
+        <h2 style="color: #333; margin-top: 0;">Hello ${name}!</h2>
+
+        <div style="background: #d4edda; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin: 20px 0;">
+          <p style="margin: 0; color: #155724;"><strong>✓ Success!</strong> Your NewCondo account password has been successfully changed.</p>
+        </div>
+
+        <p>This email confirms that your password was changed on ${new Date().toLocaleString(
+          "en-US",
+          {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZoneName: "short",
+          }
+        )}.</p>
+
+        <p style="background: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin: 20px 0;">
+          <strong>Security Notice:</strong> If you didn't make this change, please contact our support team immediately and consider securing your account.
+        </p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/login" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Login to Your Account</a>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+          <p>Best regards,<br>The NewCondo Team</p>
+          <p style="margin-top: 10px;">
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+const generatePasswordChangeConfirmationText = (name: string): string => {
+  return `
+NewCondo - Password Changed Successfully
+
+Hello ${name}!
+
+✓ SUCCESS: Your NewCondo account password has been successfully changed.
+
+This email confirms that your password was changed on ${new Date().toLocaleString()}.
+
+SECURITY NOTICE: If you didn't make this change, please contact our support team immediately and consider securing your account.
+
+Login to your account: ${process.env.FRONTEND_URL}/login
+Support: ${process.env.FRONTEND_URL}/support
+
+Best regards,
+The NewCondo Team
+
+Visit NewCondo: ${process.env.FRONTEND_URL}
   `;
 };
 
@@ -360,12 +471,12 @@ export const isValidEmail = (email: string): boolean => {
 export const getEmailStatus = async (messageId: string) => {
   try {
     const events = await mg.events.get(MAILGUN_DOMAIN, {
-      'message-id': messageId
+      "message-id": messageId,
     });
-    
+
     return { success: true, events: events.items };
   } catch (error) {
-    console.error('Failed to get email status:', error);
+    console.error("Failed to get email status:", error);
     return { success: false, error };
   }
 };
