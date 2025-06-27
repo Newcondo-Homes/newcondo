@@ -1,5 +1,7 @@
 // backend/shared/src/middleware/auth.ts
 import { Request, Response, NextFunction } from "express";
+import { validationResult } from "express-validator";
+// import { validationResult, FieldValidationError, AlternativeValidationError, GroupedAlternativeValidationError, UnknownValidationError } from "express-validator";
 import jwt from "jsonwebtoken";
 import { prisma, Role } from "@newcondo/db";
 import {
@@ -81,7 +83,6 @@ export const authenticateToken = async (
   }
 };
 
-
 /**
  * Optional authentication middleware - adds user if token is valid, but doesn't require it
  */
@@ -91,12 +92,15 @@ export const authenticateOptional = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization
-    const token = authHeader && authHeader.split(' ')[1]
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
 
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload
+        const decoded = jwt.verify(
+          token,
+          process.env.JWT_SECRET!
+        ) as JWTPayload;
         req.user = {
           id: decoded.userId,
           email: decoded.email,
@@ -106,20 +110,20 @@ export const authenticateOptional = async (
           phoneVerified: decoded.phoneVerified,
           verificationStatus: decoded.verificationStatus,
           iat: decoded.iat,
-          exp: decoded.exp
-        }
+          exp: decoded.exp,
+        };
       } catch (error) {
         // Token is invalid, but we don't throw error for optional auth
-        console.warn('Invalid token in optional auth:', error)
+        console.warn("Invalid token in optional auth:", error);
       }
     }
 
-    next()
+    next();
   } catch (error) {
-    console.error('Optional auth middleware error:', error)
-    next() // Continue even if there's an error
+    console.error("Optional auth middleware error:", error);
+    next(); // Continue even if there's an error
   }
-}
+};
 
 export const requireRole = (roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -157,7 +161,6 @@ export const requireVerification = (
   next();
 };
 
-
 /**
  * Email verification requirement middleware
  */
@@ -167,17 +170,17 @@ export const requireEmailVerification = (
   next: NextFunction
 ): void => {
   if (!req.user) {
-    sendUnauthorized(res, 'Authentication required')
-    return
+    sendUnauthorized(res, "Authentication required");
+    return;
   }
 
   if (!req.user.emailVerified) {
-    sendForbidden(res, 'Email verification required')
-    return
+    sendForbidden(res, "Email verification required");
+    return;
   }
 
-  next()
-}
+  next();
+};
 
 /**
  * Account verification requirement middleware
@@ -188,34 +191,60 @@ export const requireAccountVerification = (
   next: NextFunction
 ): void => {
   if (!req.user) {
-    sendUnauthorized(res, 'Authentication required')
-    return
+    sendUnauthorized(res, "Authentication required");
+    return;
   }
 
-  if (req.user.verificationStatus !== 'VERIFIED') {
-    sendForbidden(res, 'Account verification required')
-    return
+  if (req.user.verificationStatus !== "VERIFIED") {
+    sendForbidden(res, "Account verification required");
+    return;
   }
 
-  next()
-}
+  next();
+};
+
+/**
+ * Account verification requirement middleware
+ */
+export const validateRequest = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors: errors.array(),
+    });
+  }
+
+  next();
+};
 
 /**
  * Admin role requirement middleware
  */
-export const requireAdmin = requireRole([Role.ADMIN, Role.ADMIN])
+export const requireAdmin = requireRole([Role.ADMIN, Role.ADMIN]);
 
 /**
- * Property owner/manager role requirement middleware  
+ * Property owner/manager role requirement middleware
  */
-export const requirePropertyOwner = requireRole([Role.OWNER, Role.AGENT, Role.ADMIN, Role.ADMIN])
+export const requirePropertyOwner = requireRole([
+  Role.OWNER,
+  Role.AGENT,
+  Role.ADMIN,
+  Role.ADMIN,
+]);
 
 /**
  * Agent role requirement middleware
  */
-export const requireAgent = requireRole([Role.AGENT, Role.ADMIN, Role.ADMIN])
+export const requireAgent = requireRole([Role.AGENT, Role.ADMIN, Role.ADMIN]);
 
 /**
  * Multiple roles requirement middleware
  */
-export const requireAnyRole = (...roles: Role[]) => requireRole(roles)
+export const requireAnyRole = (...roles: Role[]) => requireRole(roles);

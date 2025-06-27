@@ -1,7 +1,9 @@
 // backend/shared/src/types/auth.ts
-import type { User } from '@newcondo/db'
+import type { User, Role } from '@newcondo/db'
 
+export type { Role }
 export type OTPType = 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET'
+export type UserType = 'RENTER' | 'AGENT' | 'PROPERTY_OWNER' | 'PROPERTY_MANAGER'
 
 export interface OTPVerificationRequest {
   identifier: string // email or phone
@@ -56,7 +58,6 @@ export interface UserData {
   updatedAt: Date
 }
 
-export type UserType = 'RENTER' | 'AGENT' | 'PROPERTY_OWNER' | 'PROPERTY_MANAGER'
 
 export interface JWTPayload {
   userId: string

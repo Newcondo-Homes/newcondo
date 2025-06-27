@@ -2,7 +2,7 @@
 import { Router } from "express";
 import type { Router as ExpressRouter } from "express";
 import { body, param } from "express-validator";
-import { validateRequest } from "../middleware/validation";
+import { validateRequest } from "../../../shared/src/middleware/auth";
 import { passwordResetController } from "../controllers/passwordResetController";
 
 const router: ExpressRouter = Router();

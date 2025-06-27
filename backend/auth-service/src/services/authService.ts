@@ -22,8 +22,8 @@ interface TokenPayload {
   userId: string;
   email: string;
   role: Role;
-  isEmailVerified: boolean;
-  isPhoneVerified: boolean;
+  emailVerified: boolean;
+  phoneVerified: boolean;
 }
 
 export class AuthService {
@@ -130,8 +130,8 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role,
-      isEmailVerified: !!user.emailVerified,
-      isPhoneVerified: !!user.phoneVerified,
+      emailVerified: !!user.emailVerified,
+      phoneVerified: !!user.phoneVerified,
     });
 
     // Store refresh token
@@ -209,8 +209,8 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       role: user.role,
-      isEmailVerified: !!user.emailVerified,
-      isPhoneVerified: !!user.phoneVerified,
+      emailVerified: !!user.emailVerified,
+      phoneVerified: !!user.phoneVerified,
     });
 
     // Store refresh token
@@ -513,8 +513,8 @@ export class AuthService {
       userId: storedToken.user.id,
       email: storedToken.user.email,
       role: storedToken.user.role,
-      isEmailVerified: !!storedToken.user.emailVerified,
-      isPhoneVerified: !!storedToken.user.phoneVerified,
+      emailVerified: !!storedToken.user.emailVerified,
+      phoneVerified: !!storedToken.user.phoneVerified,
     });
 
     // Update refresh token in database
@@ -573,7 +573,7 @@ export class AuthService {
     };
   }
 
-  private generateTokens(payload: TokenPayload): {
+  public generateTokens(payload: TokenPayload): {
     accessToken: string;
     refreshToken: string;
   } {
@@ -595,7 +595,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private async storeRefreshToken(
+  public async storeRefreshToken(
     userId: string,
     refreshToken: string
   ): Promise<void> {

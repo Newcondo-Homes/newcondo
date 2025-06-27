@@ -11,6 +11,15 @@ interface SessionData {
   lastActivity: Date;
   ipAddress?: string;
   userAgent?: string;
+  expires?: Date;
+}
+
+interface TokenPayload {
+  userId: string;
+  email: string;
+  role: string;
+  isEmailVerified: boolean;
+  isPhoneVerified: boolean;
 }
 
 export const sessionService = {
@@ -61,7 +70,8 @@ export const sessionService = {
         userId: dbSession.userId,
         role: dbSession.user.role,
         email: dbSession.user.email,
-        lastActivity: new Date()
+        lastActivity: new Date(),
+        expires: dbSession.expires
       };
 
       // Restore to Redis
@@ -75,6 +85,32 @@ export const sessionService = {
     } catch (error) {
       console.error('Session retrieval error:', error);
       return null;
+    }
+  },
+
+  async updateSession(sessionId: string, updateData: { expires: Date }) {
+    try {
+      // Update database session
+      await prisma.session.update({
+        where: { sessionToken: sessionId },
+        data: updateData
+      });
+
+      // Update Redis if session exists there
+      const sessionData = await redis.get(`session:${sessionId}`);
+      if (sessionData) {
+        const parsed = JSON.parse(sessionData);
+        // Calculate new TTL based on the expires date
+        const ttl = Math.floor((updateData.expires.getTime() - Date.now()) / 1000);
+        if (ttl > 0) {
+          await redis.setex(`session:${sessionId}`, ttl, JSON.stringify(parsed));
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Session update error:', error);
+      return false;
     }
   },
 
@@ -136,6 +172,15 @@ export const sessionService = {
       return true;
     } catch (error) {
       console.error('All sessions deletion error:', error);
+      return false;
+    }
+  },
+
+   async revokeUserSessions(userId: string) {
+    try {
+      return await this.deleteAllUserSessions(userId);
+    } catch (error) {
+      console.error('Session revocation error:', error);
       return false;
     }
   },

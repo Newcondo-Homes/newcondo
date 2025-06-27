@@ -16,7 +16,7 @@ import {
   getUploadLimits,
 } from "../controllers/profileController";
 import { authenticateToken } from "../../../shared/src/middleware/auth";
-import { rateLimiter } from "../../../shared/src/middleware/rateLimiter";
+import { rateLimiter } from "../middleware/rateLimiter";
 // import { authMiddleware } from '../middleware/authMiddleware';
 // import { validateProfile } from '../validations/profileValidation';
 
