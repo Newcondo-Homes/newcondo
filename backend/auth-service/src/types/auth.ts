@@ -1,8 +1,45 @@
 // backend/auth-service/src/types/auth.ts
 
 import { Role, VerificationStatus, OTPType } from "@newcondo/db";
+import { Request } from "express";
+
 
 export { OTPType };
+
+// // Request with authenticated user
+// export interface AuthenticatedRequest extends Request {
+//   user: {
+//     id: string;
+//     email: string;
+//     role: Role;
+//     name?: string | null;
+//     emailVerified?: boolean;
+//     phoneVerified?: boolean;
+//     verificationStatus?: string;
+//     iat?: number;
+//     exp?: number;
+//   };
+//   sessionId?: string;
+//   deviceFingerprint?: string;
+// }
+
+export type AuthenticatedRequest = Request & {
+  user: NonNullable<Request['user']>; // Ensures user is not undefined
+};
+
+export interface SafeUser {
+  id: string;
+  name?: string | null;
+  email: string;
+  phone: string | null;
+  role: Role;
+  verificationStatus: VerificationStatus;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  image: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface RegisterUserData {
   email: string;
@@ -127,19 +164,7 @@ export interface AuthResponse {
   errors?: Record<string, string[]>;
 }
 
-export interface SafeUser {
-  id: string;
-  name?: string | null;
-  email: string;
-  phone: string | null;
-  role: Role;
-  verificationStatus: VerificationStatus;
-  emailVerified: boolean;
-  phoneVerified: boolean;
-  image: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+
 
 export interface SessionData {
   userId: string;
@@ -279,12 +304,7 @@ export interface AuthError extends Error {
   details?: any;
 }
 
-// Request with authenticated user
-export interface AuthenticatedRequest extends Request {
-  user: SafeUser;
-  sessionId: string;
-  deviceFingerprint?: string;
-}
+
 
 // Password policy interface
 export interface PasswordPolicy {

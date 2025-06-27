@@ -17,6 +17,8 @@ declare global {
         exp?: number;
       };
       rateLimit?: RateLimitInfo;
+      sessionId?: string;
+      deviceFingerprint?: string;
     }
   }
 }

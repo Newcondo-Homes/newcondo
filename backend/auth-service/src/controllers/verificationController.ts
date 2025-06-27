@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { verificationService } from "../services/verificationService";
-import { AuthenticatedRequest } from "../types/auth";
+// import { AuthenticatedRequest } from "../types/auth";
 
 class VerificationController {
-  async sendEmailVerification(req: AuthenticatedRequest, res: Response) {
+  async sendEmailVerification(req: Request, res: Response) {
     try {
       const { user } = req;
 
@@ -79,7 +79,7 @@ class VerificationController {
     }
   }
 
-  async resendEmailVerification(req: AuthenticatedRequest, res: Response) {
+  async resendEmailVerification(req: Request, res: Response) {
     try {
       const { user } = req;
 
@@ -117,9 +117,16 @@ class VerificationController {
     }
   }
 
-  async getVerificationStatus(req: AuthenticatedRequest, res: Response) {
+  async getVerificationStatus(req: Request, res: Response) {
     try {
       const { user } = req;
+      if (!user) {
+        res.status(500).json({
+          success: false,
+          message: "User does not exist",
+        });
+        return;
+      }
 
       const status = await verificationService.getVerificationStatus(user.id);
 

@@ -1,7 +1,7 @@
-import { Router } from "express";
+import { Router, Response, NextFunction } from "express";
 import type { Router as ExpressRouter } from "express";
 import { verificationController } from "../controllers/verificationController";
-import { authMiddleware } from "../middleware/authMiddleware";
+import { authMiddleware } from "../../../shared/src/middleware/auth";
 import { otpLimiter } from "../middleware/rateLimiter";
 import { verificationValidation } from "../validations/verificationValidation";
 
@@ -12,7 +12,8 @@ router.post(
   "/send-email-verification",
   otpLimiter,
   authMiddleware,
-  verificationValidation.sendEmailVerification
+  verificationValidation.sendEmailVerification,
+  verificationController.sendEmailVerification
 );
 
 // Verify email with OTP

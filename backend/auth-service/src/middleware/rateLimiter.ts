@@ -1,5 +1,31 @@
-import rateLimit, { RateLimitRequestHandler } from "express-rate-limit";
+import rateLimit from "express-rate-limit";
 import { Request, Response } from "express";
+
+// Generic rate limiter factory function
+export const rateLimiter = (max: number, windowMinutes: number) => {
+  return rateLimit({
+    windowMs: windowMinutes * 60 * 1000, // Convert minutes to milliseconds
+    max: max, // limit each IP to max requests per windowMs
+    message: {
+      error: `Too many requests, please try again later`,
+      code: "RATE_LIMIT_EXCEEDED",
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    handler: (req: Request, res: Response) => {
+      const resetTime = req.rateLimit?.resetTime;
+      const retryAfter = resetTime
+        ? Math.round((Number(resetTime) - Date.now()) / 1000)
+        : windowMinutes * 60;
+
+      res.status(429).json({
+        error: `Too many requests, please try again later`,
+        code: "RATE_LIMIT_EXCEEDED",
+        retryAfter: Math.max(retryAfter, 0),
+      });
+    },
+  });
+};
 
 // General auth rate limiter
 export const authLimiter = rateLimit({

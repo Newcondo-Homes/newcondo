@@ -84,6 +84,78 @@ export const authenticateToken = async (
 };
 
 /**
+ * Main authentication middleware - verifies JWT token and adds user to request
+ * This is the primary auth middleware that should be used in most cases
+ */
+export const authMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+
+    if (!token) {
+      sendUnauthorized(res, "Access token required");
+      return;
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+
+    // Verify user still exists and is active
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        emailVerified: true,
+        phoneVerified: true,
+        verificationStatus: true,
+      },
+    });
+
+    if (!user) {
+      sendUnauthorized(res, "Invalid or inactive user");
+      return;
+    }
+
+    // Add user to request object
+    req.user = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      name: user.name || undefined,
+      emailVerified: !!user.emailVerified,
+      phoneVerified: !!user.phoneVerified,
+      verificationStatus: user.verificationStatus || undefined,
+      iat: decoded.iat,
+      exp: decoded.exp,
+    };
+
+    next();
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      sendUnauthorized(res, "Token expired");
+      return;
+    }
+
+    if (error instanceof jwt.JsonWebTokenError) {
+      sendUnauthorized(res, "Invalid access token");
+      return;
+    }
+
+    console.error("Auth middleware error:", error);
+    sendResponse(res, 500, "Authentication error", null);
+    return;
+  }
+};
+
+/**
  * Optional authentication middleware - adds user if token is valid, but doesn't require it
  */
 export const authenticateOptional = async (

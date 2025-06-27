@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import helmet from 'helmet';
-import crypto from 'crypto';
+import { Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import crypto from "crypto";
 
 // Security headers middleware
 export const securityHeaders = helmet({
@@ -20,8 +20,8 @@ export const securityHeaders = helmet({
 // Request ID middleware for tracking
 export const requestId = (req: Request, res: Response, next: NextFunction) => {
   const requestId = crypto.randomUUID();
-  req.headers['x-request-id'] = requestId;
-  res.setHeader('X-Request-ID', requestId);
+  req.headers["x-request-id"] = requestId;
+  res.setHeader("X-Request-ID", requestId);
   next();
 };
 
@@ -30,24 +30,24 @@ const BLOCKED_IPS = new Set<string>();
 const ALLOWED_IPS = new Set<string>(); // Empty means all IPs allowed
 
 export const ipFilter = (req: Request, res: Response, next: NextFunction) => {
-  const clientIP = req.ip || req.connection.remoteAddress || '';
-  
+  const clientIP = req.ip || req.connection.remoteAddress || "";
+
   // Check if IP is blocked
   if (BLOCKED_IPS.has(clientIP)) {
     return res.status(403).json({
-      error: 'Access denied',
-      code: 'IP_BLOCKED'
+      error: "Access denied",
+      code: "IP_BLOCKED",
     });
   }
-  
+
   // Check if IP whitelist is enabled and IP is not in whitelist
   if (ALLOWED_IPS.size > 0 && !ALLOWED_IPS.has(clientIP)) {
     return res.status(403).json({
-      error: 'Access denied',
-      code: 'IP_NOT_WHITELISTED'
+      error: "Access denied",
+      code: "IP_NOT_WHITELISTED",
     });
   }
-  
+
   next();
 };
 
@@ -63,57 +63,56 @@ const SUSPICIOUS_PATTERNS = [
   /expression\(/i,
 ];
 
-export const suspiciousActivityDetector = (req: Request, res: Response, next: NextFunction) => {
+export const suspiciousActivityDetector = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const checkPayload = (obj: any): boolean => {
-    if (typeof obj === 'string') {
-      return SUSPICIOUS_PATTERNS.some(pattern => pattern.test(obj));
+    if (typeof obj === "string") {
+      return SUSPICIOUS_PATTERNS.some((pattern) => pattern.test(obj));
     }
-    
-    if (typeof obj === 'object' && obj !== null) {
-      return Object.values(obj).some(value => checkPayload(value));
+
+    if (typeof obj === "object" && obj !== null) {
+      return Object.values(obj).some((value) => checkPayload(value));
     }
-    
+
     return false;
   };
-  
+
   // Check request body for suspicious content
   if (req.body && checkPayload(req.body)) {
     console.warn(`Suspicious activity detected from IP: ${req.ip}`, {
       body: req.body,
       headers: req.headers,
-      url: req.url
+      url: req.url,
     });
-    
+
     return res.status(400).json({
-      error: 'Invalid request content',
-      code: 'SUSPICIOUS_ACTIVITY'
+      error: "Invalid request content",
+      code: "SUSPICIOUS_ACTIVITY",
     });
   }
-  
+
   next();
 };
 
 // Device fingerprinting middleware
-export const deviceFingerprint = (req: Request, res: Response, next: NextFunction) => {
-  const userAgent = req.headers['user-agent'] || '';
-  const acceptLanguage = req.headers['accept-language'] || '';
-  const acceptEncoding = req.headers['accept-encoding'] || '';
-  
+export const deviceFingerprint = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const userAgent = req.headers["user-agent"] || "";
+  const acceptLanguage = req.headers["accept-language"] || "";
+  const acceptEncoding = req.headers["accept-encoding"] || "";
+
   // Create a simple device fingerprint
   const fingerprint = crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(`${userAgent}${acceptLanguage}${acceptEncoding}`)
-    .digest('hex');
-  
+    .digest("hex");
+
   req.deviceFingerprint = fingerprint;
   next();
 };
-
-// Extend Request interface to include deviceFingerprint
-declare global {
-  namespace Express {
-    interface Request {
-      deviceFingerprint: string;
-    }
-  }
-}
