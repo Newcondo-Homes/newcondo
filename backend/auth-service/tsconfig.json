@@ -18,9 +18,9 @@
     "paths": {
       "@newcondo/db": ["../packages/db"],
       "@newcondo/auth": ["../packages/auth"],
-      "@shared/*": ["./shared/src/*"]
+      "@shared/*": ["../shared/src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../shared/src/**/*"],
   "exclude": ["dist", "node_modules"]
 }

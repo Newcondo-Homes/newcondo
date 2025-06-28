@@ -3,7 +3,7 @@
 // // Middleware exports
 // export { authMiddleware, verifyToken, requireAuth } from './middleware/auth';
 // export { corsMiddleware } from './middleware/cors';
-// export { errorHandler, AppError, createError } from './middleware/errorHandler';
+export { errorHandler, AppError } from './middleware/errorHandler';
 // export { validateRequest, validateBody, validateParams, validateQuery } from './middleware/validation';
 // export { rateLimiter, createRateLimiter } from './middleware/rateLimiter';
 // export { requestLogger, createLogger } from './middleware/logger';

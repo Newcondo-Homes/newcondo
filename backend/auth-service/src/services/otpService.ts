@@ -20,7 +20,12 @@ class OtpService {
   async generate_OTP(
     identifier: string,
     type: OTPType
-  ): Promise<{ success: boolean; otpCode?: string; message: string }> {
+  ): Promise<{
+    success: boolean;
+    otpCode?: string;
+    message: string;
+    expiresAt?: Date;
+  }> {
     try {
       const otpCode = this.generateOTP();
       const expiresAt = new Date(
@@ -50,6 +55,7 @@ class OtpService {
         success: true,
         otpCode,
         message: "OTP generated successfully",
+        expiresAt,
       };
     } catch (error) {
       console.error("Generate OTP error:", error);

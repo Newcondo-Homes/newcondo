@@ -20,10 +20,23 @@ export interface EmailTemplate {
   text?: string;
 }
 
+export interface AccountUnlockedEmail {
+  to: string;
+  name: string;
+  unlockedBy: "administrator" | "automatic";
+}
+
 export interface PasswordResetEmail {
   to: string;
   name: string | null;
   resetUrl?: string | null;
+}
+
+export interface AccountLockedEmail {
+  to: string;
+  name: string;
+  lockedUntil: Date;
+  unlockTime: string;
 }
 
 export const sendEmail = async (template: EmailTemplate) => {
@@ -46,22 +59,22 @@ export const sendEmail = async (template: EmailTemplate) => {
   }
 };
 
-export const sendOTPEmail = async (
-  email: string,
-  otp: string,
-  type: string
-) => {
-  const subject = getOTPEmailSubject(type);
-  const html = generateOTPEmailHTML(otp, type);
-  const text = generateOTPEmailText(otp, type);
+// export const sendOTPEmail = async (
+//   email: string,
+//   otp: string,
+//   type: string
+// ) => {
+//   const subject = getOTPEmailSubject(type);
+//   const html = generateOTPEmailHTML(otp, type);
+//   const text = generateOTPEmailText(otp, type);
 
-  return sendEmail({
-    to: email,
-    subject,
-    html,
-    text,
-  });
-};
+//   return sendEmail({
+//     to: email,
+//     subject,
+//     html,
+//     text,
+//   });
+// };
 
 export const sendWelcomeEmail = async (email: string, name: string) => {
   const subject = "Welcome to NewCondo!";
@@ -96,6 +109,40 @@ export const sendPasswordChangeConfirmation = async (
   const subject = "Your NewCondo Password Has Been Changed";
   const html = generatePasswordChangeConfirmationHTML(data.name || "User");
   const text = generatePasswordChangeConfirmationText(data.name || "User");
+
+  return sendEmail({
+    to: data.to,
+    subject,
+    html,
+    text,
+  });
+};
+
+export const sendAccountLockedEmail = async (data: AccountLockedEmail) => {
+  const subject = "Account Temporarily Locked - NewCondo";
+  const html = generateAccountLockedEmailHTML(
+    data.name,
+    data.lockedUntil,
+    data.unlockTime
+  );
+  const text = generateAccountLockedEmailText(
+    data.name,
+    data.lockedUntil,
+    data.unlockTime
+  );
+
+  return sendEmail({
+    to: data.to,
+    subject,
+    html,
+    text,
+  });
+};
+
+export const sendAccountUnlockedEmail = async (data: AccountUnlockedEmail) => {
+  const subject = "Account Unlocked - NewCondo";
+  const html = generateAccountUnlockedEmailHTML(data.name, data.unlockedBy);
+  const text = generateAccountUnlockedEmailText(data.name, data.unlockedBy);
 
   return sendEmail({
     to: data.to,
@@ -166,7 +213,325 @@ const getOTPEmailSubject = (type: string): string => {
   }
 };
 
-const generateOTPEmailHTML = (otp: string, type: string): string => {
+// Add this function to your email service
+export const sendVerificationEmail = async (
+  email: string,
+  otpCode: string,
+  name: string
+) => {
+  const subject = "Verify Your NewCondo Account";
+  const html = generateVerificationEmailHTML(otpCode, name);
+  const text = generateVerificationEmailText(otpCode, name);
+
+  return sendEmail({
+    to: email,
+    subject,
+    html,
+    text,
+  });
+};
+
+// HTML template generator
+const generateVerificationEmailHTML = (
+  otpCode: string,
+  name: string
+): string => {
+  const expireMinutes = 15; // Adjust based on your OTP expiration time
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Verify Your Account</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; line-height: 1.6;">
+      <div style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 40px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
+            NewCondo
+          </h1>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+
+          <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
+            Verify Your Account
+          </h2>
+          
+          <p style="color: #4b5563; margin: 16px 0; font-size: 16px;">
+            Hi ${name}!
+          </p>
+          
+          <p style="color: #4b5563; margin: 16px 0; font-size: 16px;">
+            Welcome to NewCondo! To complete your account setup and start exploring Nigeria's premier property rental platform, please verify your email address using the code below:
+          </p>
+          
+          <div style="text-align: center; margin: 32px 0;">
+            <div style="display: inline-block; background-color: #f3f4f6; border: 2px dashed #3b82f6; border-radius: 12px; padding: 24px 32px;">
+              <span style="font-family: 'Courier New', monospace; font-size: 32px; font-weight: 700; color: #1d4ed8; letter-spacing: 8px;">
+                ${otpCode}
+              </span>
+            </div>
+          </div>
+          
+          <p style="color: #ef4444; margin: 16px 0; font-size: 15px; text-align: center; font-weight: 600;">
+            This code will expire in ${expireMinutes} minutes for security reasons.
+          </p>
+
+          <div style="background-color: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; margin: 24px 0; border-radius: 6px;">
+            <h3 style="color: #1e40af; margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">
+              How to verify:
+            </h3>
+            <ol style="margin: 0; padding-left: 20px; color: #1e40af;">
+              <li style="margin: 6px 0;">Return to the NewCondo verification page</li>
+              <li style="margin: 6px 0;">Enter the 6-digit code above</li>
+              <li style="margin: 6px 0;">Click "Verify" to activate your account</li>
+            </ol>
+          </div>
+
+          <div style="background-color: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 18px;">
+              After verification, you can:
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+              <li style="margin: 8px 0;">🏠 Browse and search properties across Nigeria</li>
+              <li style="margin: 8px 0;">📋 List your own properties (for owners and agents)</li>
+              <li style="margin: 8px 0;">💰 Make secure rental payments</li>
+              <li style="margin: 8px 0;">🤝 Connect with verified property owners and agents</li>
+              <li style="margin: 8px 0;">📍 Access property marking services</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${process.env.FRONTEND_URL}/verify-email" style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+              Verify My Account
+            </a>
+          </div>
+
+          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 6px;">
+            <p style="color: #92400e; margin: 0; font-size: 14px;">
+              🛡️ Security Notice: If you didn't create a NewCondo account, please ignore this email or contact our support team if you have concerns.
+            </p>
+          </div>
+
+          <p style="color: #6b7280; margin: 16px 0; font-size: 14px;">
+            Having trouble? You can request a new verification code from the verification page, or contact our support team for assistance.
+          </p>
+
+          <div style="text-align: center; margin: 32px 0 0 0; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
+              Best regards,<br>
+              The NewCondo Team
+            </p>
+            
+            <p style="color: #9ca3af; margin: 8px 0 0 0; font-size: 14px;">
+              <a href="${process.env.FRONTEND_URL}" style="color: #3b82f6; text-decoration: none;">Visit NewCondo</a> | 
+              <a href="${process.env.FRONTEND_URL}/support" style="color: #3b82f6; text-decoration: none;">Support</a>
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// Text template generator
+const generateVerificationEmailText = (
+  otpCode: string,
+  name: string
+): string => {
+  const expireMinutes = 15; // Adjust based on your OTP expiration time
+
+  return `
+NewCondo - Verify Your Account
+
+Hi ${name}!
+
+Welcome to NewCondo! To complete your account setup and start exploring Nigeria's premier property rental platform, please verify your email address using the code below:
+
+VERIFICATION CODE: ${otpCode}
+
+This code will expire in ${expireMinutes} minutes for security reasons.
+
+HOW TO VERIFY:
+1. Return to the NewCondo verification page
+2. Enter the 6-digit code above  
+3. Click "Verify" to activate your account
+
+After verification, you can:
+- Browse and search properties across Nigeria
+- List your own properties (for owners and agents)
+- Make secure rental payments
+- Connect with verified property owners and agents
+- Access property marking services
+
+Verify your account: ${process.env.FRONTEND_URL}/verify-email
+
+SECURITY NOTICE: If you didn't create a NewCondo account, please ignore this email or contact our support team if you have concerns.
+
+Having trouble? You can request a new verification code from the verification page, or contact our support team for assistance.
+
+Support: ${process.env.FRONTEND_URL}/support
+
+Best regards,
+The NewCondo Team
+
+Visit NewCondo: ${process.env.FRONTEND_URL}
+  `;
+};
+
+const generateAccountUnlockedEmailHTML = (
+  name: string,
+  unlockedBy: "administrator" | "automatic"
+): string => {
+  const unlockedByText =
+    unlockedBy === "administrator" ? "by an administrator" : "automatically";
+
+  const unlockIcon = unlockedBy === "administrator" ? "🔓👨‍💼" : "🔓⏰";
+
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Account Unlocked</title>
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; line-height: 1.6;">
+      <div style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); overflow: hidden;">
+
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
+            ${unlockIcon} Account Unlocked
+          </h1>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 40px 30px;">
+
+          <h2 style="color: #1f2937; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
+            Hello ${name}!
+          </h2>
+          
+          <div style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 24px 0; border-radius: 6px;">
+            <p style="color: #065f46; margin: 0; font-weight: 600; font-size: 16px;">
+              ✅ Good news! Your NewCondo account has been successfully unlocked ${unlockedByText}.
+            </p>
+          </div>
+
+          <p style="color: #4b5563; margin: 16px 0; font-size: 16px;">
+            Account Status:
+          </p>
+
+          <ul style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; list-style: none;">
+            <li style="color: #374151; margin: 8px 0; font-size: 15px;">
+              <strong>Status:</strong> 🟢 Active and accessible
+            </li>
+            <li style="color: #374151; margin: 8px 0; font-size: 15px;">
+              <strong>Unlocked:</strong> ${new Date().toLocaleString()}
+            </li>
+            <li style="color: #374151; margin: 8px 0; font-size: 15px;">
+              <strong>Unlocked by:</strong> ${unlockedBy === "administrator" ? "Administrator action" : "Automatic system unlock"}
+            </li>
+          </ul>
+
+          <div style="background-color: #f3f4f6; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #1f2937; margin: 0 0 12px 0; font-size: 18px;">
+              You can now:
+            </h3>
+            <ul style="margin: 0; padding-left: 20px; color: #4b5563;">
+              <li style="margin: 8px 0;">🏠 Access your dashboard and browse properties</li>
+              <li style="margin: 8px 0;">💰 Make payments and manage bookings</li>
+              <li style="margin: 8px 0;">📋 List properties (for owners and agents)</li>
+              <li style="margin: 8px 0;">🔧 Use all NewCondo features normally</li>
+            </ul>
+          </div>
+
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${process.env.FRONTEND_URL}/login" style="display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+              Login to Your Account
+            </a>
+          </div>
+
+          <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 6px;">
+            <p style="color: #92400e; margin: 0; font-size: 14px;">
+              🛡️ Security Reminder: To keep your account secure, please use a strong password and enable two-factor authentication if available. If you suspect any unauthorized access, change your password immediately.
+            </p>
+          </div>
+
+          <div style="text-align: center; margin: 32px 0 0 0; padding: 20px 0; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
+              Best regards,<br>
+              The NewCondo Security Team
+            </p>
+            
+            <p style="color: #9ca3af; margin: 8px 0 0 0; font-size: 14px;">
+              <a href="${process.env.FRONTEND_URL}" style="color: #3b82f6; text-decoration: none;">Visit NewCondo</a> | 
+              <a href="${process.env.FRONTEND_URL}/support" style="color: #3b82f6; text-decoration: none;">Support</a>
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+// Text template generator
+const generateAccountUnlockedEmailText = (
+  name: string,
+  unlockedBy: "administrator" | "automatic"
+): string => {
+  const unlockedByText =
+    unlockedBy === "administrator" ? "by an administrator" : "automatically";
+
+  return `
+NewCondo - Account Unlocked
+
+Hello ${name}!
+
+✅ GOOD NEWS: Your NewCondo account has been successfully unlocked ${unlockedByText}.
+
+Account Status:
+- Status: Active and accessible
+- Unlocked: ${new Date().toLocaleString()}
+- Unlocked by: ${unlockedBy === "administrator" ? "Administrator action" : "Automatic system unlock"}
+
+You can now:
+- Access your dashboard and browse properties
+- Make payments and manage bookings
+- List properties (for owners and agents)
+- Use all NewCondo features normally
+
+Login to your account: ${process.env.FRONTEND_URL}/login
+
+SECURITY REMINDER: To keep your account secure, please use a strong password and enable two-factor authentication if available. If you suspect any unauthorized access, change your password immediately.
+
+Support: ${process.env.FRONTEND_URL}/support
+
+Best regards,
+The NewCondo Security Team
+
+Visit NewCondo: ${process.env.FRONTEND_URL}
+  `;
+};
+
+export const generateOTPEmailHTML = (
+  otp: string,
+  type: string,
+  expire: number
+): string => {
   const purpose =
     type === "EMAIL_VERIFICATION"
       ? "verify your account"
@@ -198,7 +563,7 @@ const generateOTPEmailHTML = (otp: string, type: string): string => {
           <span style="font-size: 32px; font-weight: bold; color: #667eea; letter-spacing: 8px;">${otp}</span>
         </div>
         
-        <p style="color: #666; font-size: 14px;">This code will expire in 10 minutes for security reasons.</p>
+        <p style="color: #666; font-size: 14px;">This code will expire in ${expire} minutes for security reasons.</p>
         
         <p>If you didn't request this code, please ignore this email or contact our support team.</p>
         
@@ -215,7 +580,11 @@ const generateOTPEmailHTML = (otp: string, type: string): string => {
   `;
 };
 
-const generateOTPEmailText = (otp: string, type: string): string => {
+export const generateOTPEmailText = (
+  otp: string,
+  type: string,
+  expire: number
+): string => {
   const purpose =
     type === "EMAIL_VERIFICATION"
       ? "verify your account"
@@ -230,7 +599,7 @@ Hi there!
 
 Use the following code to ${purpose}: ${otp}
 
-This code will expire in 10 minutes for security reasons.
+This code will expire in ${expire} minutes for security reasons.
 
 If you didn't request this code, please ignore this email or contact our support team.
 
@@ -456,6 +825,101 @@ Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
 The NewCondo Team
+
+Visit NewCondo: ${process.env.FRONTEND_URL}
+  `;
+};
+
+const generateAccountLockedEmailHTML = (
+  name: string,
+  lockedUntil: Date,
+  unlockTime: string
+): string => {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Account Temporarily Locked - NewCondo</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">⚠️ Account Locked</h1>
+      </div>
+      
+      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
+        <h2 style="color: #333; margin-top: 0;">Hello ${name}!</h2>
+        
+        <div style="background: #f8d7da; padding: 15px; border-radius: 6px; border-left: 4px solid #dc3545; margin: 20px 0;">
+          <p style="margin: 0; color: #721c24;"><strong>🔒 Security Alert:</strong> Your NewCondo account has been temporarily locked due to multiple failed login attempts.</p>
+        </div>
+        
+        <p><strong>Account Details:</strong></p>
+        <ul style="color: #666; padding-left: 20px;">
+          <li style="margin-bottom: 8px;">Locked at: ${new Date().toLocaleString()}</li>
+          <li style="margin-bottom: 8px;">Locked until: ${lockedUntil.toLocaleString()}</li>
+          <li style="margin-bottom: 8px;">Automatic unlock: ${unlockTime}</li>
+        </ul>
+        
+        <div style="background: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin: 20px 0;">
+          <p style="margin: 0; color: #856404;"><strong>What to do:</strong></p>
+          <ul style="margin: 10px 0 0 0; color: #856404; padding-left: 20px;">
+            <li>Wait for the automatic unlock time</li>
+            <li>If this wasn't you, change your password immediately after unlock</li>
+            <li>Contact support if you suspect unauthorized access</li>
+          </ul>
+        </div>
+        
+        <p style="background: #d1ecf1; padding: 15px; border-radius: 6px; border-left: 4px solid #bee5eb; margin: 20px 0; color: #0c5460;">
+          <strong>Security Tip:</strong> This lockout is a security measure to protect your account from unauthorized access attempts. Your account will automatically unlock at the specified time.
+        </p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.FRONTEND_URL}/support" style="background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Contact Support</a>
+        </div>
+        
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+          <p>Best regards,<br>The NewCondo Security Team</p>
+          <p style="margin-top: 10px;">
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a>
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+const generateAccountLockedEmailText = (
+  name: string,
+  lockedUntil: Date,
+  unlockTime: string
+): string => {
+  return `
+NewCondo - Account Temporarily Locked
+
+Hello ${name}!
+
+⚠️ SECURITY ALERT: Your NewCondo account has been temporarily locked due to multiple failed login attempts.
+
+Account Details:
+- Locked at: ${new Date().toLocaleString()}
+- Locked until: ${lockedUntil.toLocaleString()}
+- Automatic unlock: ${unlockTime}
+
+What to do:
+- Wait for the automatic unlock time
+- If this wasn't you, change your password immediately after unlock
+- Contact support if you suspect unauthorized access
+
+SECURITY TIP: This lockout is a security measure to protect your account from unauthorized access attempts. Your account will automatically unlock at the specified time.
+
+Contact Support: ${process.env.FRONTEND_URL}/support
+
+Best regards,
+The NewCondo Security Team
 
 Visit NewCondo: ${process.env.FRONTEND_URL}
   `;

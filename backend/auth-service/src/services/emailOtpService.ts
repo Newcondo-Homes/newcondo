@@ -1,8 +1,12 @@
 // backend/auth-service/src/services/emailOtpService.ts
-import { prisma } from '@newcondo/db';
-import { generateOTP } from '../../../shared/src/utils/otp';
-import { sendEmail } from '../../../shared/src/utils/email';
-import { redis } from '../../../shared/src/config/redis';
+import { prisma } from "@newcondo/db";
+import { generateOTP } from "@shared/utils/otp";
+import {
+  sendEmail,
+  generateOTPEmailHTML,
+  generateOTPEmailText,
+} from "../../../shared/src/utils/email";
+import { redis } from "../../../shared/src/config/redis";
 
 interface OTPVerificationResult {
   success: boolean;
@@ -25,50 +29,56 @@ export class EmailOTPService {
    * Generate and send OTP via email
    */
   static async generateAndSendOTP(
-    email: string, 
-    purpose: 'REGISTRATION' | 'LOGIN' | 'PASSWORD_RESET'
+    email: string,
+    purpose: "REGISTRATION" | "LOGIN" | "PASSWORD_RESET"
   ): Promise<OTPGenerationResult> {
     try {
       // Check cooldown period
       const cooldownKey = `otp_cooldown:${email}`;
       const cooldownExpiry = await redis.get(cooldownKey);
-      
+
       if (cooldownExpiry) {
         return {
           success: false,
-          message: 'Please wait before requesting another OTP'
+          message: "Please wait before requesting another OTP",
         };
       }
 
       // Generate OTP
       const otp = generateOTP(6);
-      const expiresAt = new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000);
+      const expiresAt = new Date(
+        Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000
+      );
 
       // Store OTP in Redis with expiry
       const otpKey = `otp:${email}:${purpose}`;
-      await redis.setex(otpKey, this.OTP_EXPIRY_MINUTES * 60, JSON.stringify({
-        otp,
-        attempts: 0,
-        createdAt: new Date(),
-        expiresAt
-      }));
+      await redis.setex(
+        otpKey,
+        this.OTP_EXPIRY_MINUTES * 60,
+        JSON.stringify({
+          otp,
+          attempts: 0,
+          createdAt: new Date(),
+          expiresAt,
+        })
+      );
 
       // Send OTP via email
       await this.sendOTPEmail(email, otp, purpose);
 
       // Set cooldown period
-      await redis.setex(cooldownKey, this.COOLDOWN_MINUTES * 60, 'true');
+      await redis.setex(cooldownKey, this.COOLDOWN_MINUTES * 60, "true");
 
       return {
         success: true,
-        message: 'OTP sent successfully',
-        expiresAt
+        message: "OTP sent successfully",
+        expiresAt,
       };
     } catch (error) {
-      console.error('Error generating OTP:', error);
+      console.error("Error generating OTP:", error);
       return {
         success: false,
-        message: 'Failed to generate OTP'
+        message: "Failed to generate OTP",
       };
     }
   }
@@ -77,9 +87,9 @@ export class EmailOTPService {
    * Verify OTP code
    */
   static async verifyOTP(
-    email: string, 
-    otp: string, 
-    purpose: 'REGISTRATION' | 'LOGIN' | 'PASSWORD_RESET'
+    email: string,
+    otp: string,
+    purpose: "REGISTRATION" | "LOGIN" | "PASSWORD_RESET"
   ): Promise<OTPVerificationResult> {
     try {
       const otpKey = `otp:${email}:${purpose}`;
@@ -88,7 +98,7 @@ export class EmailOTPService {
       if (!storedData) {
         return {
           success: false,
-          message: 'OTP expired or not found'
+          message: "OTP expired or not found",
         };
       }
 
@@ -99,7 +109,7 @@ export class EmailOTPService {
         await redis.del(otpKey);
         return {
           success: false,
-          message: 'OTP has expired'
+          message: "OTP has expired",
         };
       }
 
@@ -108,23 +118,27 @@ export class EmailOTPService {
         await redis.del(otpKey);
         return {
           success: false,
-          message: 'Maximum attempts exceeded'
+          message: "Maximum attempts exceeded",
         };
       }
 
       // Verify OTP
       if (otp !== storedOTP) {
         // Increment attempts
-        await redis.setex(otpKey, this.OTP_EXPIRY_MINUTES * 60, JSON.stringify({
-          otp: storedOTP,
-          attempts: attempts + 1,
-          createdAt: new Date(),
-          expiresAt
-        }));
+        await redis.setex(
+          otpKey,
+          this.OTP_EXPIRY_MINUTES * 60,
+          JSON.stringify({
+            otp: storedOTP,
+            attempts: attempts + 1,
+            createdAt: new Date(),
+            expiresAt,
+          })
+        );
 
         return {
           success: false,
-          message: `Invalid OTP. ${this.MAX_ATTEMPTS - attempts - 1} attempts remaining`
+          message: `Invalid OTP. ${this.MAX_ATTEMPTS - attempts - 1} attempts remaining`,
         };
       }
 
@@ -133,10 +147,10 @@ export class EmailOTPService {
 
       // Handle different purposes
       let userId: string | undefined;
-      if (purpose === 'REGISTRATION' || purpose === 'LOGIN') {
+      if (purpose === "REGISTRATION" || purpose === "LOGIN") {
         const user = await prisma.user.findUnique({
           where: { email },
-          select: { id: true }
+          select: { id: true },
         });
         userId = user?.id;
       }
@@ -144,13 +158,13 @@ export class EmailOTPService {
       return {
         success: true,
         userId,
-        message: 'OTP verified successfully'
+        message: "OTP verified successfully",
       };
     } catch (error) {
-      console.error('Error verifying OTP:', error);
+      console.error("Error verifying OTP:", error);
       return {
         success: false,
-        message: 'Failed to verify OTP'
+        message: "Failed to verify OTP",
       };
     }
   }
@@ -159,36 +173,70 @@ export class EmailOTPService {
    * Send OTP email based on purpose
    */
   private static async sendOTPEmail(
-    email: string, 
-    otp: string, 
-    purpose: 'REGISTRATION' | 'LOGIN' | 'PASSWORD_RESET'
+    email: string,
+    otp: string,
+    purpose: "REGISTRATION" | "LOGIN" | "PASSWORD_RESET"
   ): Promise<void> {
     const templates = {
       REGISTRATION: {
-        subject: 'Complete Your NewCondo Registration',
-        template: 'registration-otp'
+        subject: "Complete Your NewCondo Registration",
+        template: "registration-otp",
       },
       LOGIN: {
-        subject: 'Your NewCondo Login Code',
-        template: 'login-otp'
+        subject: "Your NewCondo Login Code",
+        template: "login-otp",
       },
       PASSWORD_RESET: {
-        subject: 'Reset Your NewCondo Password',
-        template: 'password-reset-otp'
-      }
+        subject: "Reset Your NewCondo Password",
+        template: "password-reset-otp",
+      },
     };
 
     const { subject, template } = templates[purpose];
 
+    // Generate HTML and text content
+    const html = generateOTPEmailHTML(otp, purpose, this.OTP_EXPIRY_MINUTES);
+    const text = generateOTPEmailText(otp, purpose, this.OTP_EXPIRY_MINUTES);
+
     await sendEmail({
       to: email,
       subject,
-      template,
-      data: {
-        otp,
-        expiryMinutes: this.OTP_EXPIRY_MINUTES
-      }
+      html,
+      text,
     });
+  }
+
+  /**
+   * Sends registration OTP
+   * @param email : contains email the OTP will be sent to
+   * @param otp : This is the OTP to be sent
+   */
+  public static async sendRegistrationOTP(
+    email: string,
+    otp: string
+  ): Promise<void> {
+    await this.sendOTPEmail(email, otp, "REGISTRATION");
+  }
+
+  /**
+   * Sends login OTP
+   * @param email : Email the OTP will be sent to
+   * @param otp : The OTP to be sent
+   */
+  public static async sendLoginOTP(email: string, otp: string): Promise<void> {
+    await this.sendOTPEmail(email, otp, "LOGIN");
+  }
+
+  /**
+   * Sends password OTP
+   * @param email : Email the OTP will be sent to
+   * @param otp : The OTP to be sent
+   */
+  public static async sendPasswordResetOTP(
+    email: string,
+    otp: string
+  ): Promise<void> {
+    await this.sendOTPEmail(email, otp, "PASSWORD_RESET");
   }
 
   /**
@@ -199,9 +247,9 @@ export class EmailOTPService {
       // This would be called by a scheduled job
       // Redis TTL will handle automatic cleanup, but we can implement
       // additional cleanup logic here if needed
-      console.log('OTP cleanup completed');
+      console.log("OTP cleanup completed");
     } catch (error) {
-      console.error('Error during OTP cleanup:', error);
+      console.error("Error during OTP cleanup:", error);
     }
   }
 
@@ -209,9 +257,13 @@ export class EmailOTPService {
    * Get OTP status without revealing the actual OTP
    */
   static async getOTPStatus(
-    email: string, 
-    purpose: 'REGISTRATION' | 'LOGIN' | 'PASSWORD_RESET'
-  ): Promise<{ exists: boolean; attemptsRemaining?: number; expiresAt?: Date }> {
+    email: string,
+    purpose: "REGISTRATION" | "LOGIN" | "PASSWORD_RESET"
+  ): Promise<{
+    exists: boolean;
+    attemptsRemaining?: number;
+    expiresAt?: Date;
+  }> {
     try {
       const otpKey = `otp:${email}:${purpose}`;
       const storedData = await redis.get(otpKey);
@@ -221,14 +273,14 @@ export class EmailOTPService {
       }
 
       const { attempts, expiresAt } = JSON.parse(storedData);
-      
+
       return {
         exists: true,
         attemptsRemaining: this.MAX_ATTEMPTS - attempts,
-        expiresAt: new Date(expiresAt)
+        expiresAt: new Date(expiresAt),
       };
     } catch (error) {
-      console.error('Error getting OTP status:', error);
+      console.error("Error getting OTP status:", error);
       return { exists: false };
     }
   }
