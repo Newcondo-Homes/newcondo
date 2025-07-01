@@ -1,0 +1,40 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/src/*"],
+      "@auth-service/*": ["../auth-service/src/*"],
+      "@property-service/*": ["../property-service/src/*"],
+      "@payment-service/*": ["../payment-service/src/*"],
+      "@booking-service/*": ["../booking-service/src/*"],
+      "@marking-service/*": ["../marking-service/src/*"],
+      "@admin-service/*": ["../admin-service/src/*"],
+      "@referral-service/*": ["../referral-service/src/*"],
+      "@notification-service/*": ["../notification-service/src/*"],
+      "@analytics-service/*": ["../analytics-service/src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "../shared/src/**/*",
+    "../auth-service/src/**/*",
+    "../property-service/src/**/*",
+    "../payment-service/src/**/*",
+    "../booking-service/src/**/*",
+    "../marking-service/src/**/*",
+    "../admin-service/src/**/*",
+    "../referral-service/src/**/*",
+    "../notification-service/src/**/*",
+    "../analytics-service/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}
