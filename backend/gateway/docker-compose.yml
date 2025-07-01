@@ -1,0 +1,56 @@
+# backend/gateway/docker-compose.yml
+
+version: '3.8'
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - REDIS_HOST=redis
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - PROPERTY_SERVICE_URL=http://property-service:3002
+      - PAYMENT_SERVICE_URL=http://payment-service:3003
+      - BOOKING_SERVICE_URL=http://booking-service:3004
+      - ADMIN_SERVICE_URL=http://admin-service:3005
+      - MARKING_SERVICE_URL=http://marking-service:3006
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3007
+      - REFERRAL_SERVICE_URL=http://referral-service:3008
+      - ANALYTICS_SERVICE_URL=http://analytics-service:3009
+    depends_on:
+      - redis
+    networks:
+      - newcondo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - newcondo-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+
+networks:
+  newcondo-network:
+    driver: bridge

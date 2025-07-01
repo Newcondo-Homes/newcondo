@@ -4,6 +4,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+
+// middleware imports
+import { corsMiddleware } from './middleware/cors';
+import { rateLimiterMiddleware } from './middleware/rateLimiter';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { authMiddleware, adminMiddleware } from './middleware/auth';
 import { loadBalancer } from './middleware/loadBalancer';
@@ -11,6 +15,10 @@ import { requestLogger } from './middleware/logger';
 import { errorHandler } from './middleware/errorHandler';
 import { healthCheck } from './middleware/healthCheck';
 import { config } from './config/environment';
+import { requestContextMiddleware } from './middleware/requestContext';
+import { validationMiddleware } from './middleware/validation';
+
+// routes imports
 import { serviceRoutes } from './routes';
 
 const app = express();
@@ -37,12 +45,20 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    return req.path === '/health' || req.path === '/api/health'
+  }
 });
 
 app.use(limiter);
 
 // Request parsing
-app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '10mb', verify: (req, res, buf) => {
+  // store raw ody for webhoot verification
+  if (req.originalUrl.includes('/webhooks')){
+    req.rawBody = buf;
+  }
+} }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Custom middleware
