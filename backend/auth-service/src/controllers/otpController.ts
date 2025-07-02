@@ -188,3 +188,5 @@ export class OTPController {
     }
   }
 }
+
+export {OTPController as otpController}

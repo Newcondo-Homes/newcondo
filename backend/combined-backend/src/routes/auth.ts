@@ -2,13 +2,13 @@
 import { Router } from 'express';
 
 // Import auth service controllers
-import { authController } from '@auth-service/controllers/authController';
-import { otpController } from '@auth-service/controllers/otpController';
-import { profileController } from '@auth-service/controllers/profileController';
-import { verificationController } from '@auth-service/controllers/verificationController';
+import { authController } from '@newcondo/auth-service/controllers';
+import { otpController } from '@newcondo/auth-service/controllers';
+import { profileController } from '@newcondo/auth-service/controllers';
+import { verificationController } from '@newcondo/auth-service/controllers';
 
 // Import auth service middleware
-import { authValidation } from '@auth-service/middleware/authValidation';
+import { authValidation } from '@newcondo/auth-service/validations';
 import { verificationValidation } from '@auth-service/middleware/verificationValidation';
 
 // Import shared middleware
@@ -18,7 +18,7 @@ import { validation } from '@shared/middleware/validation';
 const router = Router();
 
 // Auth routes
-router.post('/register', authValidation.register, authController.register);
+router.post('/register', authValidation.registerSchema, authController.register);
 router.post('/login', authValidation.login, authController.login);
 router.post('/logout', auth, authController.logout);
 router.post('/refresh-token', authController.refreshToken);

@@ -323,3 +323,5 @@ export class AuthController {
     }
   }
 }
+
+export { AuthController as authController}

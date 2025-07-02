@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",
+  "exports": {
+    ".": "./src/index.ts",
+    "./controllers": "./src/controllers/index.ts",
+    "./middleware": "./src/middleware/index.ts",
+    "./validations": "./src/validations/index.ts"
+  },
   "scripts": {
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",

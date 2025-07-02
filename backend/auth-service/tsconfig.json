@@ -16,11 +16,12 @@
     "emitDecoratorMetadata": true,
     "baseUrl": "./",
     "paths": {
+      "@/*": ["./*"],
       "@newcondo/db": ["../packages/db"],
       "@newcondo/auth": ["../packages/auth"],
       "@shared/*": ["../shared/src/*"]
     }
   },
-  "include": ["src/**/*", "../shared/src/**/*"],
+  "include": [".","src/**/*", "../shared/src/**/*"],
   "exclude": ["dist", "node_modules"]
 }
