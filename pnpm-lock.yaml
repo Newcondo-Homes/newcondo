@@ -250,6 +250,12 @@ importers:
       '@newcondo/auth-service':
         specifier: workspace:*
         version: link:../auth-service
+      '@newcondo/backend-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@newcondo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@prisma/client':
         specifier: ^5.0.0
         version: 5.22.0(prisma@5.22.0)

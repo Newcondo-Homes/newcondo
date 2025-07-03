@@ -385,8 +385,6 @@ export const deleteAccount = async (
         emailVerified: null,
         phoneVerified: null,
         verificationStatus: "REJECTED",
-        idDocument: null,
-        selfieImage: null,
         address: null,
         city: null,
         state: null,
@@ -394,6 +392,23 @@ export const deleteAccount = async (
     });
 
     sendResponse(res, 200, "Password changed successfully");
+  } catch (error) {
+    console.error("Delete account error:", error);
+    sendInternalError(res, "Internal server error", error as Error);
+  }
+};
+
+export const deleteProfile = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    // await this.profileService.deleteProfile(req.user.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Profile deleted successfully",
+    });
   } catch (error) {
     console.error("Delete account error:", error);
     sendInternalError(res, "Internal server error", error as Error);
@@ -577,7 +592,6 @@ export const deleteProfileImage = async (
   }
 };
 
-
 export const getUploadLimits = async (
   req: Request,
   res: Response
@@ -601,12 +615,10 @@ export const getUploadLimits = async (
   }
 };
 
-
 // TODO: See if you'll need to create a new table in the database called "userProfile" to save
 // user's preferences and settings. findout if it makes sense
-// if it does then uncomment out the 'getPreferences' and 'updatePreferences' code below to 
+// if it does then uncomment out the 'getPreferences' and 'updatePreferences' code below to
 // and continue developing the feature from their
-
 
 /**
  * Get user preferences

@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./controllers": "./src/controllers/index.ts",
+    "./middleware": "./src/middleware/index.ts",
+    "./validations": "./src/validations/index.ts"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --exec ts-node src/index.ts",

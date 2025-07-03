@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
@@ -12,72 +12,80 @@ generator client {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  name             String?
-  email            String            @unique
-  phone            String?           @unique
-  emailVerified    DateTime?
-  phoneVerified    DateTime?
-  passwordHash     String?
-  image            String?
-  role             Role              @default(RENTER)
-  
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  phone         String?   @unique
+  emailVerified DateTime?
+  phoneVerified DateTime?
+  passwordHash  String?
+  image         String?
+  role          Role      @default(RENTER)
+  userType      UserType?
+
   // Verification fields
-  verificationStatus VerificationStatus @default(PENDING)
-  idDocument         String?           // URL to uploaded ID document
-  idDocumentType     IdDocumentType?
-  selfieImage        String?           // URL to uploaded selfie
+  verificationStatus          VerificationStatus @default(PENDING)
+  // idDocument         String?           // URL to uploaded ID document
+  // idDocumentType     IdDocumentType?
+  // selfieImage        String?           // URL to uploaded selfie
   verificationRejectionReason String?
-  verifiedAt         DateTime?
-  verifiedBy         String?           // Admin user ID who verified
-  
+  verifiedAt                  DateTime?
+  verifiedBy                  String? // Admin user ID who verified
+
   // Profile fields
-  dateOfBirth      DateTime?
-  address          String?
-  city             String?
-  state            String?
-  country          String?           @default("Nigeria")
-  
+  dateOfBirth DateTime?
+  address     String?
+  city        String?
+  state       String?
+  country     String?   @default("Nigeria")
+
+  // B2B specific fields for property managers
+  companyName       String?
+  businessRegNumber String?
+  isB2BCustomer     Boolean @default(false)
+
   // Premium status (for future phases)
-  isPremium        Boolean           @default(false)
+  isPremium        Boolean   @default(false)
   premiumExpiresAt DateTime?
-  
+
   // Referral tracking (Phase 4)
-  referralCode     String            @unique @default(cuid())
-  
+  referralCode String @unique @default(cuid())
+
   // Agent specific fields
-  isAvailableForMarking Boolean       @default(false) // For agents willing to do property marking
-  agentServiceAreas     String[]      // Cities/areas where agent operates
-  agentReliabilityScore Decimal?      @db.Decimal(3, 2) // 0.00 to 5.00 rating
-  totalMarkingJobs      Int           @default(0)
-  completedMarkingJobs  Int           @default(0)
-  
+  isAvailableForMarking Boolean  @default(false) // For agents willing to do property marking
+  agentServiceAreas     String[] // Cities/areas where agent operates
+  agentReliabilityScore Decimal? @db.Decimal(3, 2) // 0.00 to 5.00 rating
+  totalMarkingJobs      Int      @default(0)
+  completedMarkingJobs  Int      @default(0)
+
   // Relations
-  accounts         Account[]
-  sessions         Session[]
-  properties       Property[]        @relation("PropertyOwner")
-  agentListings    Property[]        @relation("PropertyAgent")
-  referrals        Referral[]        @relation("Referrer")
-  referredBy       Referral?         @relation("Referred")
-  authenticator    Authenticator[]
-  featureFlags     FeatureFlag[]
-  events           EventLog[]        @relation("UserEvents")
-  payments         Payment[]
-  rentals          Rental[]
-  virtualAccounts  VirtualAccount[]
-  assignedMarkingJobs PropertyMarkingJob[] @relation("AssignedAgent")
+  accounts             Account[]
+  sessions             Session[]
+  properties           Property[]           @relation("PropertyOwner")
+  agentListings        Property[]           @relation("PropertyAgent")
+  referrals            Referral[]           @relation("Referrer")
+  referredBy           Referral?            @relation("Referred")
+  authenticator        Authenticator[]
+  featureFlags         FeatureFlag[]
+  events               EventLog[]           @relation("UserEvents")
+  payments             Payment[]
+  rentals              Rental[]
+  virtualAccounts      VirtualAccount[]
+  assignedMarkingJobs  PropertyMarkingJob[] @relation("AssignedAgent")
   requestedMarkingJobs PropertyMarkingJob[] @relation("RequestingUser")
-  supportTickets   SupportTicket[]
-  adminActions     AdminAction[]
-  refreshToken     RefreshToken[]
-  
+  supportTickets       SupportTicket[]
+  adminActions         AdminAction[]
+  refreshToken         RefreshToken[]
+  documents            Document[] // New relation to documents
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([email])
   @@index([phone])
   @@index([verificationStatus])
   @@index([role])
+  @@index([userType])
   @@index([isAvailableForMarking])
 }
 
@@ -123,6 +131,61 @@ model Account {
   @@id([provider, providerAccountId])
 }
 
+model Document {
+  id         String  @id @default(cuid())
+  userId     String
+  propertyId String? // Optional, for property-specific docs
+
+  // Document Classification
+  documentType DocumentType // NIN, PASSPORT, etc.
+  documentSide DocumentSide? // FRONT, BACK (for documents that have sides)
+  pageNumber   Int? // For multi-page documents
+
+  // Document ID/Number (for documents that only need ID)
+  documentNumber String? // NIN number, BVN, Passport number, etc.
+
+  // File Details (for documents that need file uploads)
+  fileName      String?
+  fileUrl       String?
+  fileSizeBytes Int?
+  mimeType      String? // image/jpeg, application/pdf, etc.
+
+  // Status & Verification
+  status            DocumentStatus @default(PENDING)
+  verificationNotes String?
+
+  // Metadata
+  isRequired Boolean   @default(true)
+  expiresAt  DateTime? // For documents with expiration dates
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property? @relation(fields: [propertyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, documentType, documentSide, pageNumber], name: "unique_document_variant")
+  @@index([userId])
+  @@index([propertyId])
+  @@index([documentType])
+  @@index([status])
+  @@index([documentNumber])
+}
+
+enum DocumentSide {
+  FRONT
+  BACK
+  SINGLE // For documents that don't have front/back
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
 model Session {
   sessionToken String   @unique
   userId       String
@@ -157,76 +220,77 @@ model Authenticator {
 }
 
 model Property {
-  id               String            @id @default(cuid())
-  title            String
-  description      String
-  price            Decimal           @db.Decimal(10, 2)
-  currency         String            @default("NGN")
-  
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  price       Decimal @db.Decimal(10, 2)
+  currency    String  @default("NGN")
+
   // Location
-  address          String
-  city             String
-  state            String
-  country          String            @default("Nigeria")
-  gpsCoordinates   String?           // JSON string: {"lat": 6.5244, "lng": 3.3792}
-  
+  address        String
+  city           String
+  state          String
+  country        String  @default("Nigeria")
+  gpsCoordinates String? // JSON string: {"lat": 6.5244, "lng": 3.3792}
+
   // Property Boundary Information
-  boundaryCoordinates Json?          // Polygon coordinates for property boundaries
-  boundaryVerified    Boolean        @default(false)
-  boundaryMarkedBy    String?        // Agent ID who marked the boundary
+  boundaryCoordinates Json? // Polygon coordinates for property boundaries
+  boundaryVerified    Boolean   @default(false)
+  boundaryMarkedBy    String? // Agent ID who marked the boundary
   boundaryMarkedAt    DateTime?
-  boundaryImages      String[]       // URLs to boundary marking photos
-  buildingFingerprint String?        // Unique identifier for duplicate detection
-  
+  boundaryImages      String[] // URLs to boundary marking photos
+  buildingFingerprint String? // Unique identifier for duplicate detection
+
   // Property details
-  propertyType     PropertyType      @default(APARTMENT)
-  bedrooms         Int?
-  bathrooms        Int?
-  area             String?           // e.g., "120 sqm"
-  features         String[]          // ["Parking", "Generator", "Security"]
-  
+  propertyType PropertyType @default(APARTMENT)
+  bedrooms     Int?
+  bathrooms    Int?
+  area         String? // e.g., "120 sqm"
+  features     String[] // ["Parking", "Generator", "Security"]
+
   // Ownership & Agency
-  ownerId          String
-  agentId          String?
-  isOwnerListing   Boolean           @default(true)
-  
+  ownerId        String
+  agentId        String?
+  isOwnerListing Boolean @default(true)
+
   // Media
-  images           PropertyImage[]
-  
+  images PropertyImage[]
+
   // Legal Documents (Phase 2)
-  ownershipDocument String?          // URL to proof of ownership
-  consentDocument   String?          // URL to consent document (for agents)
-  undertakingDocument String?        // URL to signed undertaking
-  
+  // ownershipDocument String?          // URL to proof of ownership (for landlords)
+  // consentDocument   String?          // URL to consent document (for agents)
+  // undertakingDocument String?        // URL to signed undertaking
+
   // Status & Approval
-  status           PropertyStatus    @default(DRAFT)
+  status              PropertyStatus      @default(DRAFT)
   adminApprovalStatus AdminApprovalStatus @default(PENDING)
-  rejectionReason  String?
-  approvedAt       DateTime?
-  approvedBy       String?           // Admin user ID
-  
+  rejectionReason     String?
+  approvedAt          DateTime?
+  approvedBy          String? // Admin user ID
+
   // Rental & Availability
-  isAvailable      Boolean           @default(true)
-  availableFrom    DateTime?
-  isPaymentLocked  Boolean           @default(false) // Prevent double booking
-  paymentLockExpiry DateTime?        // When payment lock expires
-  
+  isAvailable       Boolean   @default(true)
+  availableFrom     DateTime?
+  isPaymentLocked   Boolean   @default(false) // Prevent double booking
+  paymentLockExpiry DateTime? // When payment lock expires
+
   // Sharing & Marketing
-  shareableLink    String?           @unique
-  viewCount        Int               @default(0)
-  favoriteCount    Int               @default(0)
-  
+  shareableLink String? @unique
+  viewCount     Int     @default(0)
+  favoriteCount Int     @default(0)
+
   // Relations
-  owner            User              @relation("PropertyOwner", fields: [ownerId], references: [id])
-  agent            User?             @relation("PropertyAgent", fields: [agentId], references: [id])
+  owner            User                 @relation("PropertyOwner", fields: [ownerId], references: [id])
+  agent            User?                @relation("PropertyAgent", fields: [agentId], references: [id])
   rentals          Rental[]
   duplicateReports PropertyDuplicate[]
   markingJobs      PropertyMarkingJob[]
   virtualAccount   VirtualAccount?
-  
+  documents        Document[] // Property-specific documents
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([ownerId])
   @@index([agentId])
   @@index([status])
@@ -264,36 +328,72 @@ enum AdminApprovalStatus {
   REJECTED
 }
 
+enum UserType {
+  LANDLORD // Individual property owner
+  PROPERTY_MANAGER // B2B customer managing multiple properties
+  AGENT // Real estate agent
+  RENTER // Property renter
+  ADMIN // System admin
+}
+
+enum DocumentType {
+  // Identity Documents (can be ID-only or file upload)
+  NIN // Usually ID-only
+  BVN // Usually ID-only
+  PASSPORT // Can be ID-only or file upload
+  VOTERS_CARD // Usually file upload
+  DRIVERS_LICENSE // Usually file upload
+
+  // Selfie (always file upload)
+  SELFIE
+
+  // Property Documents (always file upload)
+  OWNERSHIP_DOCUMENT
+  CONSENT_DOCUMENT
+  UNDERTAKING_DOCUMENT
+
+  // Business Documents (usually file upload)
+  BUSINESS_REGISTRATION
+  TAX_CERTIFICATE
+
+  // Utility Documents (always file upload)
+  UTILITY_BILL
+  BANK_STATEMENT
+
+  // Other
+  OTHER
+}
+
 model PropertyImage {
-  id         String   @id @default(cuid())
+  id         String  @id @default(cuid())
   propertyId String
   url        String
   altText    String?
-  isPrimary  Boolean  @default(false)
-  order      Int      @default(0)
-  
+  isPrimary  Boolean @default(false)
+  order      Int     @default(0)
+
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  
+
   createdAt DateTime @default(now())
-  
+
   @@index([propertyId])
 }
 
 // New model for tracking duplicate property reports
 model PropertyDuplicate {
-  id                String   @id @default(cuid())
-  originalPropertyId String
+  id                  String          @id @default(cuid())
+  originalPropertyId  String
   duplicatePropertyId String
-  reportedBy        String?  // User ID who reported
-  status            DuplicateStatus @default(PENDING)
-  resolution        String?  // Admin notes on resolution
-  resolvedBy        String?  // Admin ID who resolved
-  resolvedAt        DateTime?
-  
-  originalProperty  Property @relation(fields: [originalPropertyId], references: [id])
-  
+  reportedBy          String? // User ID who reported
+  status              DuplicateStatus @default(PENDING)
+  resolution          String? // Admin notes on resolution
+  resolvedBy          String? // Admin ID who resolved
+  resolvedAt          DateTime?
+
+  originalProperty Property @relation(fields: [originalPropertyId], references: [id])
+
   createdAt DateTime @default(now())
-  
+
   @@index([originalPropertyId])
   @@index([duplicatePropertyId])
   @@index([status])
@@ -308,45 +408,45 @@ enum DuplicateStatus {
 
 // Property Marking Service Models
 model PropertyMarkingJob {
-  id              String            @id @default(cuid())
+  id              String  @id @default(cuid())
   propertyId      String
   requestedBy     String
   assignedAgentId String?
-  
+
   // Job Details
   contactPersonName  String
   contactPersonPhone String
   accessInstructions String?
   preferredTime      DateTime?
-  urgencyLevel       UrgencyLevel   @default(NORMAL)
-  
+  urgencyLevel       UrgencyLevel @default(NORMAL)
+
   // Pricing
-  markingFee         Decimal        @db.Decimal(10, 2)
-  paymentStatus      PaymentStatus  @default(PENDING)
-  
+  markingFee    Decimal       @db.Decimal(10, 2)
+  paymentStatus PaymentStatus @default(PENDING)
+
   // Job Status
-  status             MarkingJobStatus @default(QUEUED)
-  assignedAt         DateTime?
-  completedAt        DateTime?
-  timeSlotExpiry     DateTime?       // 3-hour time slot limit
-  
+  status         MarkingJobStatus @default(QUEUED)
+  assignedAt     DateTime?
+  completedAt    DateTime?
+  timeSlotExpiry DateTime? // 3-hour time slot limit
+
   // Completion Data
-  completionNotes    String?
-  completionImages   String[]        // URLs to completion photos
-  boundaryData       Json?           // Boundary coordinates marked
-  
+  completionNotes  String?
+  completionImages String[] // URLs to completion photos
+  boundaryData     Json? // Boundary coordinates marked
+
   // Queue Management
-  queuePosition      Int?
-  maxCompletionTime  DateTime?       // Max 3 days from request
-  
+  queuePosition     Int?
+  maxCompletionTime DateTime? // Max 3 days from request
+
   // Relations
-  property        Property @relation(fields: [propertyId], references: [id])
-  requestingUser  User     @relation("RequestingUser", fields: [requestedBy], references: [id])
-  assignedAgent   User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
-  
+  property       Property @relation(fields: [propertyId], references: [id])
+  requestingUser User     @relation("RequestingUser", fields: [requestedBy], references: [id])
+  assignedAgent  User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([propertyId])
   @@index([requestedBy])
   @@index([assignedAgentId])
@@ -371,27 +471,27 @@ enum UrgencyLevel {
 }
 
 model Rental {
-  id           String        @id @default(cuid())
-  propertyId   String
-  renterId     String
-  startDate    DateTime
-  endDate      DateTime?
-  monthlyRent  Decimal       @db.Decimal(10, 2)
-  status       RentalStatus  @default(ACTIVE)
-  
+  id          String       @id @default(cuid())
+  propertyId  String
+  renterId    String
+  startDate   DateTime
+  endDate     DateTime?
+  monthlyRent Decimal      @db.Decimal(10, 2)
+  status      RentalStatus @default(ACTIVE)
+
   // Confirmation System
-  confirmationDeadline DateTime?     // 7 days from payment
-  isConfirmed         Boolean       @default(false)
-  confirmedAt         DateTime?
-  
+  confirmationDeadline DateTime? // 7 days from payment
+  isConfirmed          Boolean   @default(false)
+  confirmedAt          DateTime?
+
   // Relations
-  property     Property      @relation(fields: [propertyId], references: [id])
-  renter       User          @relation(fields: [renterId], references: [id])
-  payments     Payment[]
-  
+  property Property  @relation(fields: [propertyId], references: [id])
+  renter   User      @relation(fields: [renterId], references: [id])
+  payments Payment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([propertyId])
   @@index([renterId])
   @@index([status])
@@ -406,44 +506,44 @@ enum RentalStatus {
 }
 
 model Payment {
-  id                String        @id @default(cuid())
-  userId            String
-  rentalId          String?
-  markingJobId      String?       // For property marking payments
-  amount            Decimal       @db.Decimal(10, 2)
-  currency          String        @default("NGN")
-  
+  id           String  @id @default(cuid())
+  userId       String
+  rentalId     String?
+  markingJobId String? // For property marking payments
+  amount       Decimal @db.Decimal(10, 2)
+  currency     String  @default("NGN")
+
   // Payment details
-  paymentType       PaymentType
-  status            PaymentStatus @default(PENDING)
-  paymentMethod     String?       // "card", "bank_transfer", etc.
-  
+  paymentType   PaymentType
+  status        PaymentStatus @default(PENDING)
+  paymentMethod String? // "card", "bank_transfer", etc.
+
   // Flutterwave integration
-  flutterwaveRef    String?       @unique
-  transactionId     String?       @unique
-  
+  flutterwaveRef String? @unique
+  transactionId  String? @unique
+
   // Commission split (for future phases)
-  agentCommission   Decimal?      @db.Decimal(10, 2)
-  platformFee       Decimal?      @db.Decimal(10, 2)
-  ownerAmount       Decimal?      @db.Decimal(10, 2)
-  
+  agentCommission Decimal? @db.Decimal(10, 2)
+  platformFee     Decimal? @db.Decimal(10, 2)
+  ownerAmount     Decimal? @db.Decimal(10, 2)
+
   // Payment confirmation system
   confirmationPeriodEnd DateTime?
-  isReleased           Boolean    @default(false)
-  releasedAt           DateTime?
-  
+  isReleased            Boolean   @default(false)
+  releasedAt            DateTime?
+
   // Metadata
-  description       String?
-  failureReason     String?
-  paidAt            DateTime?
-  
+  description   String?
+  failureReason String?
+  paidAt        DateTime?
+
   // Relations
-  user              User          @relation(fields: [userId], references: [id])
-  rental            Rental?       @relation(fields: [rentalId], references: [id])
-  
+  user   User    @relation(fields: [userId], references: [id])
+  rental Rental? @relation(fields: [rentalId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([rentalId])
   @@index([markingJobId])
@@ -472,63 +572,63 @@ enum PaymentStatus {
 
 // Virtual Account System
 model VirtualAccount {
-  id              String    @id @default(cuid())
-  accountNumber   String    @unique
-  accountName     String
-  bankCode        String
-  userId          String
-  propertyId      String?   @unique // One virtual account per property
-  
+  id            String  @id @default(cuid())
+  accountNumber String  @unique
+  accountName   String
+  bankCode      String
+  userId        String
+  propertyId    String? @unique // One virtual account per property
+
   // Account Details
-  balance         Decimal   @db.Decimal(15, 2) @default(0)
-  currency        String    @default("NGN")
-  isActive        Boolean   @default(true)
-  
+  balance  Decimal @default(0) @db.Decimal(15, 2)
+  currency String  @default("NGN")
+  isActive Boolean @default(true)
+
   // Flutterwave Integration
   flutterwaveAccountId String? @unique
-  
+
   // Relations
   user     User      @relation(fields: [userId], references: [id])
   property Property? @relation(fields: [propertyId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([accountNumber])
 }
 
 model Referral {
-  id           String   @id @default(cuid())
-  referrerId   String
-  referredId   String   @unique
-  
+  id         String @id @default(cuid())
+  referrerId String
+  referredId String @unique
+
   // Referral tracking
   referralCode String
   isActive     Boolean  @default(true)
   reward       Decimal? @db.Decimal(10, 2)
   rewardPaid   Boolean  @default(false)
-  
+
   referrer User @relation("Referrer", fields: [referrerId], references: [id])
   referred User @relation("Referred", fields: [referredId], references: [id])
 
   createdAt DateTime @default(now())
-  
+
   @@index([referrerId])
   @@index([referralCode])
 }
 
 model EventLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  type       String   // e.g., 'LOGIN', 'PROPERTY_VIEWED', 'SIGNUP_COMPLETED'
-  metadata   Json?    // stores flexible data, like { propertyId: "abc123" }
-  timestamp  DateTime @default(now())
-  ipAddress  String?
-  userAgent  String?
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String // e.g., 'LOGIN', 'PROPERTY_VIEWED', 'SIGNUP_COMPLETED'
+  metadata  Json? // stores flexible data, like { propertyId: "abc123" }
+  timestamp DateTime @default(now())
+  ipAddress String?
+  userAgent String?
 
   user User? @relation("UserEvents", fields: [userId], references: [id])
-  
+
   @@index([userId])
   @@index([type])
   @@index([timestamp])
@@ -541,7 +641,7 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -550,13 +650,13 @@ model RefreshToken {
 model FeatureFlag {
   id        String   @id @default(cuid())
   userId    String
-  key       String   // e.g., "newOnboardingFlow", "referralBonusTest"
-  value     Boolean  // true = feature enabled
-  context   Json?    // optional: details like {"variant": "B"} or {"group": "test"}
+  key       String // e.g., "newOnboardingFlow", "referralBonusTest"
+  value     Boolean // true = feature enabled
+  context   Json? // optional: details like {"variant": "B"} or {"group": "test"}
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   @@index([userId])
   @@index([key])
 }
@@ -564,16 +664,16 @@ model FeatureFlag {
 // For storing OTP codes temporarily
 model OTPCode {
   id          String   @id @default(cuid())
-  identifier  String   // email or phone
+  identifier  String // email or phone
   code        String
   type        OTPType
   attempts    Int      @default(0)
   maxAttempts Int      @default(3)
   verified    Boolean  @default(false)
   expiresAt   DateTime
-  
+
   createdAt DateTime @default(now())
-  
+
   @@unique([identifier, type], name: "identifier_type")
   @@index([expiresAt])
 }
@@ -587,24 +687,24 @@ enum OTPType {
 
 // Admin Dashboard Support
 model SupportTicket {
-  id          String        @id @default(cuid())
+  id          String         @id @default(cuid())
   userId      String
   title       String
   description String
   category    TicketCategory
   priority    TicketPriority @default(MEDIUM)
   status      TicketStatus   @default(OPEN)
-  
+
   // Admin Response
   adminResponse String?
-  resolvedBy    String?       // Admin user ID
+  resolvedBy    String? // Admin user ID
   resolvedAt    DateTime?
-  
+
   user User @relation(fields: [userId], references: [id])
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([userId])
   @@index([status])
   @@index([category])
@@ -634,18 +734,18 @@ enum TicketStatus {
 
 // Admin Actions Log
 model AdminAction {
-  id          String      @id @default(cuid())
+  id          String          @id @default(cuid())
   adminId     String
   action      AdminActionType
-  targetType  String      // "User", "Property", "Payment", etc.
-  targetId    String      // ID of the target entity
+  targetType  String // "User", "Property", "Payment", etc.
+  targetId    String // ID of the target entity
   description String?
-  metadata    Json?       // Additional action details
-  
+  metadata    Json? // Additional action details
+
   admin User @relation(fields: [adminId], references: [id])
-  
+
   createdAt DateTime @default(now())
-  
+
   @@index([adminId])
   @@index([action])
   @@index([targetType, targetId])
