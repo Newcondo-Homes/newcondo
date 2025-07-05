@@ -5,20 +5,18 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "declaration": true,
-    "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
       "@/*": ["./*"],
     }
   },
-  "include": ["."],
+  "include": ["*.ts", "src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

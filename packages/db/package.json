@@ -2,7 +2,11 @@
   "name": "@newcondo/db",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
   "scripts": {
     "db:migrate": "prisma migrate dev --name init --skip-generate",
     "db:generate": "prisma generate",
@@ -12,7 +16,9 @@
     "db:seed": "tsx seed.ts",
     "db:reset": "prisma migrate reset",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "build": "tsc",
+    "clean": "rimraf dist"
   },
   "keywords": [],
   "author": "",
@@ -23,6 +29,8 @@
   "devDependencies": {
     "@types/node": "^22.15.29",
     "prisma": "^6.9.0",
-    "tsx": "^4.19.4"
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

@@ -1,0 +1,7 @@
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2025-07-05 13:37:47:3747"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2025-07-05 13:37:47:3747"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 3001\u001b[39m","timestamp":"2025-07-05 13:37:48:3748"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:3001/health\u001b[39m","timestamp":"2025-07-05 13:37:48:3748"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:3001/api/docs\u001b[39m","timestamp":"2025-07-05 13:37:48:3748"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2025-07-05 13:37:48:3748"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2025-07-05 13:38:36:3836"}

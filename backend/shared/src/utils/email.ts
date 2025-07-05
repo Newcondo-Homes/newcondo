@@ -1,6 +1,10 @@
 // backend/shared/src/utils/email.ts
 import formData from "form-data";
 import Mailgun from "mailgun.js";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const mailgun = new Mailgun(formData);
 
@@ -8,7 +12,7 @@ const mailgun = new Mailgun(formData);
 const mg = mailgun.client({
   username: "api",
   key: process.env.MAILGUN_API_KEY || "",
-  url: process.env.MAILGUN_URL || "https://api.mailgun.net", // For EU: 'https://api.eu.mailgun.net'
+  url: process.env.MAILGUN_URL || "https://api.mailgun.net", // For EU customers: 'https://api.eu.mailgun.net'
 });
 
 const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || "";
