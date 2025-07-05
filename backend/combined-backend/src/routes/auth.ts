@@ -1,7 +1,6 @@
 // src/routes/auth.ts
 import { Router } from "express";
 import type { Router as ExpressRouter } from "express";
-
 // Import auth service controllers
 import { authController } from "@newcondo/auth-service/controllers";
 import { otpController } from "@newcondo/auth-service/controllers";

@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@newcondo/db';
-
-const prisma = new PrismaClient();
+import { prisma } from '@newcondo/db';
 
 interface HealthCheckResult {
   service: string;

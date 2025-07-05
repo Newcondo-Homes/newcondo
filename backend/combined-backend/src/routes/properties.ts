@@ -1,5 +1,7 @@
 // backend/combined-app/src/routes/properties.ts
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express'
+
 // import { propertyController } from '../../property-service/src/controllers/propertyController';
 // import { imageController } from '../../property-service/src/controllers/imageController';
 // import { searchController } from '../../property-service/src/controllers/searchController';
@@ -15,7 +17,7 @@ import { Router } from 'express';
 // import { authenticateToken } from '../../shared/src/middleware/auth';
 // import { validateRequest } from '../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Property CRUD routes
 // router.get('/', propertyController.getAllProperties);

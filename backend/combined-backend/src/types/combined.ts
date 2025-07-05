@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
+import { Role } from "@newcondo/db";
 
+
+export type AuthenticatedRequest = Request & {
+  user: NonNullable<Request['user']>; // Ensures user is not undefined
+};
 // Base API Response structure
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -208,14 +213,15 @@ export interface ServiceStatus {
   };
 }
 
+
+
 // Extended Express Request interface
 export interface ExtendedRequest extends Request {
   context?: RequestContext;
   user?: {
     id: string;
     email: string;
-    role: string;
-    verified: boolean;
+    role: Role;
   };
   pagination?: PaginationParams;
   filters?: FilterParams;

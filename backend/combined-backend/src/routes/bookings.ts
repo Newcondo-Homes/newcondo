@@ -1,5 +1,7 @@
 // backend/combined-app/src/routes/bookings.ts
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express'
+
 // import { bookingController } from '../../booking-service/src/controllers/bookingController';
 // import { availabilityController } from '../../booking-service/src/controllers/availabilityController';
 // import { lockingController } from '../../booking-service/src/controllers/lockingController';
@@ -12,7 +14,7 @@ import { Router } from 'express';
 // import { authenticateToken } from '../../shared/src/middleware/auth';
 // import { validateRequest } from '../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Booking CRUD routes
 // router.get('/',

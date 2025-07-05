@@ -186,7 +186,6 @@ export const serviceRateLimit = (serviceName: string, maxRequests: number = 100,
 export const serviceHealthCheck = (req: Request, res: Response, next: NextFunction) => {
   if (req.path === '/health') {
     const services = Array.from(serviceRegistry.entries()).map(([key, service]) => ({
-      name: key,
       ...service,
       healthy: service.status === 'active'
     }));

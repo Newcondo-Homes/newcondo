@@ -1,5 +1,6 @@
 // backend/combined-app/src/routes/admin.ts
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express'
 // import { adminController } from '../../admin-service/src/controllers/adminController';
 // import { verificationController } from '../../admin-service/src/controllers/verificationController';
 // import { userController } from '../../admin-service/src/controllers/userController';
@@ -18,7 +19,7 @@ import { Router } from 'express';
 // import { authenticateToken } from '../../shared/src/middleware/auth';
 // import { validateRequest } from '../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Admin authentication and profile
 // router.post('/login',

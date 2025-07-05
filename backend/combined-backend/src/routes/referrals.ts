@@ -1,6 +1,7 @@
 // backend/combined-app/src/routes/referrals.ts
 import { Router } from 'express';
 import { Request, Response, NextFunction } from 'express';
+import type { Router as ExpressRouter } from 'express'
 
 // Import referral service controllers
 // import {
@@ -16,7 +17,7 @@ import { Request, Response, NextFunction } from 'express';
 // import { authMiddleware } from '../../../shared/src/middleware/auth';
 // import { validationMiddleware } from '../../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Referral Management Routes
 // router.post(

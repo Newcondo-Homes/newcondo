@@ -74,7 +74,7 @@ const logger = winston.createLogger({
  * @param serviceName - Name of the service
  * @returns Winston logger instance with service context
  */
-export const createServiceLogger = (serviceName: string) => {
+const createServiceLogger = (serviceName: string) => {
   return {
     error: (message: string, meta?: any) => {
       logger.error(`[${serviceName.toUpperCase()}] ${message}`, meta);
@@ -98,7 +98,7 @@ export const createServiceLogger = (serviceName: string) => {
  * Request logging middleware
  * @param serviceName - Name of the service handling the request
  */
-export const requestLogger = (serviceName: string) => {
+const requestLogger = (serviceName: string) => {
   const serviceLogger = createServiceLogger(serviceName);
   
   return (req: any, res: any, next: any) => {
@@ -138,7 +138,7 @@ export const requestLogger = (serviceName: string) => {
  * @param context - Additional context information
  * @param serviceName - Name of the service where error occurred
  */
-export const logError = (error: Error, context: any = {}, serviceName: string = 'COMBINED') => {
+const logError = (error: Error, context: any = {}, serviceName: string = 'COMBINED') => {
   const serviceLogger = createServiceLogger(serviceName);
   
   serviceLogger.error(`Error: ${error.message}`, {
@@ -159,7 +159,7 @@ export const logError = (error: Error, context: any = {}, serviceName: string = 
  * @param duration - Operation duration
  * @param serviceName - Service performing the operation
  */
-export const logDatabaseOperation = (
+const logDatabaseOperation = (
   operation: string,
   table: string,
   duration: number,
@@ -183,7 +183,7 @@ export const logDatabaseOperation = (
  * @param duration - Request duration
  * @param serviceName - Service making the API call
  */
-export const logApiCall = (
+const logApiCall = (
   endpoint: string,
   method: string,
   statusCode: number,
@@ -206,7 +206,7 @@ export const logApiCall = (
  * @param operationName - Name of the operation being measured
  * @param serviceName - Service performing the operation
  */
-export const createPerformanceTimer = (operationName: string, serviceName: string) => {
+const createPerformanceTimer = (operationName: string, serviceName: string) => {
   const start = Date.now();
   const serviceLogger = createServiceLogger(serviceName);
   
@@ -231,7 +231,7 @@ export const createPerformanceTimer = (operationName: string, serviceName: strin
  * @param severity - Event severity (low, medium, high, critical)
  * @param serviceName - Service where event occurred
  */
-export const logSecurityEvent = (
+ const logSecurityEvent = (
   event: string,
   details: any,
   severity: 'low' | 'medium' | 'high' | 'critical',

@@ -1,5 +1,7 @@
 // backend/combined-app/src/routes/payments.ts
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express'
+
 // import { paymentController } from '../../payment-service/src/controllers/paymentController';
 // import { webhookController } from '../../payment-service/src/controllers/webhookController';
 // import { rentalController } from '../../payment-service/src/controllers/rentalController';
@@ -14,7 +16,7 @@ import { Router } from 'express';
 // import { authenticateToken } from '../../shared/src/middleware/auth';
 // import { validateRequest } from '../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Payment initialization routes
 // router.post('/initialize',

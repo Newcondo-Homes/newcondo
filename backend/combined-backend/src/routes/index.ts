@@ -1,6 +1,7 @@
 // src/routes/index.ts
 import { Router } from 'express';
 import { logger } from '../utils/logger';
+import type { Router as ExpressRouter } from 'express'
 
 // Import service routers
 import { authRouter } from './auth';
@@ -13,7 +14,7 @@ import { authRouter } from './auth';
 // import { notificationRouter } from './notifications';
 // import { analyticsRouter } from './analytics';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Service route mounting with error handling
 const mountRoute = (path: string, routerInstance: Router, serviceName: string) => {

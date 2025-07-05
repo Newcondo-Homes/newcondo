@@ -1,5 +1,7 @@
 // backend/combined-app/src/routes/marking.ts
 import { Router } from 'express';
+import type { Router as ExpressRouter } from 'express'
+
 // import { markingJobController } from '../../marking-service/src/controllers/markingJobController';
 // import { queueController } from '../../marking-service/src/controllers/queueController';
 // import { assignmentController } from '../../marking-service/src/controllers/assignmentController';
@@ -14,7 +16,7 @@ import { Router } from 'express';
 // import { authenticateToken } from '../../shared/src/middleware/auth';
 // import { validateRequest } from '../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Marking job CRUD routes
 // router.get('/jobs',

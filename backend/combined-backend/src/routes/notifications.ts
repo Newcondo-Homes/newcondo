@@ -1,6 +1,7 @@
 // backend/combined-app/src/routes/notifications.ts
 import { Router } from 'express';
 import { Request, Response, NextFunction } from 'express';
+import type { Router as ExpressRouter } from 'express'
 
 // Import notification service controllers
 // import {
@@ -16,7 +17,7 @@ import { Request, Response, NextFunction } from 'express';
 // import { authMiddleware } from '../../../shared/src/middleware/auth';
 // import { validationMiddleware } from '../../../shared/src/middleware/validation';
 
-const router = Router();
+const router: ExpressRouter = Router();
 
 // Email Notification Routes
 // router.post(

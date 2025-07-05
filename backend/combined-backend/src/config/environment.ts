@@ -98,3 +98,6 @@ const validateEnv = () => {
     throw error;
   }
 };
+
+// Export the validated configuration
+export const config = validateEnv();
