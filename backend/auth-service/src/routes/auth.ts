@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import type { Router as ExpressRouter } from 'express'
-import { AuthController } from '../controllers/authController'
+import { authController } from '../controllers/authController'
 import { validateRequest } from '../middleware/authValidation'
 import { 
   registerSchema, 
@@ -10,7 +10,7 @@ import {
 } from '../validations/authValidation'
 
 const router: ExpressRouter = Router()
-const authController = new AuthController()
+// const authController = new AuthController()
 
 // Register
 router.post('/register', 

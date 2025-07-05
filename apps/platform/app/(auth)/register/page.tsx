@@ -1,7 +1,7 @@
 // apps/platform/app/(auth)/register/page.tsx
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+// import { headers } from 'next/headers'
 import { auth } from '@newcondo/auth'
 import RegisterForm from '@/components/auth/RegisterForm'
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function RegisterPage() {
   // Await headers first to satisfy Next.js 15 requirements
-  const headersList = await headers()
+  // const headersList = await headers()
 
   
   const session = await auth();

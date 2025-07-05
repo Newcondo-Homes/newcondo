@@ -3,7 +3,10 @@ import { verificationService } from "../services/verificationService";
 import { AuthenticatedRequest } from "../types/auth";
 
 class VerificationController {
-  async sendEmailVerification(req: Request, res: Response) {
+  async sendEmailVerification(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
     try {
       const { user } = req;
 
@@ -40,7 +43,7 @@ class VerificationController {
     }
   }
 
-  async verifyEmail(req: Request, res: Response) {
+  async verifyEmail(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { code } = req.body;
       const { user } = req;
@@ -79,7 +82,10 @@ class VerificationController {
     }
   }
 
-  async resendEmailVerification(req: Request, res: Response) {
+  async resendEmailVerification(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
     try {
       const { user } = req;
 
@@ -117,7 +123,7 @@ class VerificationController {
     }
   }
 
-  async uploadDocuments(req: AuthenticatedRequest, res: Response) {
+  async uploadDocuments(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { documents } = req.body;
@@ -125,15 +131,15 @@ class VerificationController {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'User not authenticated',
-          code: 'NOT_AUTHENTICATED',
+          message: "User not authenticated",
+          code: "NOT_AUTHENTICATED",
         });
       }
 
       // const result = await verificationService.uploadDocuments(user.id, documents);
 
       // remove the "let result = null" below as its just a placeholder
-      let result = null
+      let result = null;
 
       res.status(200).json({
         success: true,
@@ -150,15 +156,18 @@ class VerificationController {
     }
   }
 
-  async getVerificationStatus(req: AuthenticatedRequest, res: Response) {
+  async getVerificationStatus(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
     try {
       const { user } = req;
 
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'User not authenticated',
-          code: 'NOT_AUTHENTICATED',
+          message: "User not authenticated",
+          code: "NOT_AUTHENTICATED",
         });
       }
 
@@ -179,7 +188,7 @@ class VerificationController {
     }
   }
 
-  async resubmitDocuments(req: AuthenticatedRequest, res: Response) {
+  async resubmitDocuments(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { documents } = req.body;
@@ -187,15 +196,15 @@ class VerificationController {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'User not authenticated',
-          code: 'NOT_AUTHENTICATED',
+          message: "User not authenticated",
+          code: "NOT_AUTHENTICATED",
         });
       }
 
       // const result = await verificationService.resubmitDocuments(user.id, documents);
 
       // remove the "let result = null" below as its just a placeholder
-      let result = null
+      let result = null;
 
       res.status(200).json({
         success: true,
@@ -212,7 +221,7 @@ class VerificationController {
     }
   }
 
-  async verifyDocuments(req: Request, res: Response) {
+  async verifyDocuments(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { userId, documentId, status, notes } = req.body;
 
@@ -224,7 +233,7 @@ class VerificationController {
       // );
 
       // remove the "let result = null" below as its just a placeholder
-      let result = null
+      let result = null;
 
       res.status(200).json({
         success: true,
@@ -241,22 +250,22 @@ class VerificationController {
     }
   }
 
-  async getDocuments(req: AuthenticatedRequest, res: Response) {
+  async getDocuments(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
 
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'User not authenticated',
-          code: 'NOT_AUTHENTICATED',
+          message: "User not authenticated",
+          code: "NOT_AUTHENTICATED",
         });
       }
 
       // const documents = await verificationService.getDocuments(user.id);
 
       // remove the "let result = null" below as its just a placeholder
-      let documents = null
+      let documents = null;
 
       res.status(200).json({
         success: true,
@@ -273,7 +282,7 @@ class VerificationController {
     }
   }
 
-  async deleteDocument(req: AuthenticatedRequest, res: Response) {
+  async deleteDocument(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { documentId } = req.params;
@@ -281,8 +290,8 @@ class VerificationController {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'User not authenticated',
-          code: 'NOT_AUTHENTICATED',
+          message: "User not authenticated",
+          code: "NOT_AUTHENTICATED",
         });
       }
 
@@ -302,7 +311,10 @@ class VerificationController {
     }
   }
 
-  async updateVerificationStatus(req: Request, res: Response) {
+  async updateVerificationStatus(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
     try {
       const { userId, status, rejectionReason } = req.body;
 
@@ -313,7 +325,7 @@ class VerificationController {
       // );
 
       // remove the "let result = null" below as its just a placeholder
-      let result = null
+      let result = null;
 
       res.status(200).json({
         success: true,
@@ -330,6 +342,5 @@ class VerificationController {
     }
   }
 }
-
 
 export const verificationController = new VerificationController();

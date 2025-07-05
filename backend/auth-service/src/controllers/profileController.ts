@@ -22,7 +22,7 @@ export const getProfile = async (
   res: Response
 ): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = req.user!.id;
 
     if (!userId) {
       sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });

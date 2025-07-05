@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",
+  "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./controllers": "./src/controllers/index.ts",
@@ -22,7 +23,7 @@
   "dependencies": {
     "@newcondo/auth": "workspace:*",
     "@newcondo/db": "workspace:*",
-    "@types/ms": "^2.1.0",
+    "@newcondo/backend-shared": "workspace:*",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.0",
     "cookie-parser": "^1.4.7",
@@ -57,6 +58,7 @@
     "@types/node": "^24.0.3",
     "@types/nodemailer": "^6.4.17",
     "nodemon": "^3.1.10",
+    "@types/ms": "^2.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }

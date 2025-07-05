@@ -170,7 +170,7 @@ class AuthController {
     }
   }
 
-  async logout(req: AuthenticatedRequest, res: Response) {
+  async logout(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       if (!user) {
@@ -390,7 +390,7 @@ class AuthController {
     }
   }
 
-  async resendVerification(req: AuthenticatedRequest, res: Response) {
+  async resendVerification(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       if (!user) {
@@ -421,7 +421,7 @@ class AuthController {
     }
   }
 
-  async verifyPhone(req: AuthenticatedRequest, res: Response) {
+  async verifyPhone(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { code } = req.body;
@@ -453,7 +453,10 @@ class AuthController {
     }
   }
 
-  async resendPhoneVerification(req: AuthenticatedRequest, res: Response) {
+  async resendPhoneVerification(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
     try {
       const { user } = req;
       if (!user) {
@@ -484,7 +487,7 @@ class AuthController {
     }
   }
 
-  async changePassword(req: AuthenticatedRequest, res: Response) {
+  async changePassword(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { currentPassword, newPassword } = req.body;
@@ -513,7 +516,7 @@ class AuthController {
     }
   }
 
-  async enableTwoFactor(req: AuthenticatedRequest, res: Response) {
+  async enableTwoFactor(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       if (!user) {
@@ -544,7 +547,7 @@ class AuthController {
     }
   }
 
-  async disableTwoFactor(req: AuthenticatedRequest, res: Response) {
+  async disableTwoFactor(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { password } = req.body;
@@ -573,7 +576,7 @@ class AuthController {
     }
   }
 
-  async verifyTwoFactor(req: AuthenticatedRequest, res: Response) {
+  async verifyTwoFactor(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { code } = req.body;
@@ -607,7 +610,7 @@ class AuthController {
     }
   }
 
-  async getSessions(req: AuthenticatedRequest, res: Response) {
+  async getSessions(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       if (!user) {
@@ -638,7 +641,7 @@ class AuthController {
     }
   }
 
-  async terminateSession(req: AuthenticatedRequest, res: Response) {
+  async terminateSession(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { sessionId } = req.params;
@@ -667,7 +670,10 @@ class AuthController {
     }
   }
 
-  async terminateAllSessions(req: AuthenticatedRequest, res: Response) {
+  async terminateAllSessions(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
     try {
       const { user } = req;
       if (!user) {

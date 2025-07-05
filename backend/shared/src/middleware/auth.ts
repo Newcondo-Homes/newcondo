@@ -2,7 +2,8 @@
 import { Request, Response, NextFunction } from "express";
 import { validationResult } from "express-validator";
 // import { validationResult, FieldValidationError, AlternativeValidationError, GroupedAlternativeValidationError, UnknownValidationError } from "express-validator";
-import jwt from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
+import { StringValue } from "ms";
 import { prisma, Role } from "@newcondo/db";
 import {
   sendResponse,
@@ -46,7 +47,10 @@ export const authenticateToken = async (
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET! as StringValue
+    ) as any;
 
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
@@ -103,7 +107,10 @@ export const authMiddleware = async (
       return;
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JWTPayload;
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET! as StringValue
+    ) as JWTPayload;
 
     // Verify user still exists and is active
     const user = await prisma.user.findUnique({
@@ -171,7 +178,7 @@ export const authenticateOptional = async (
       try {
         const decoded = jwt.verify(
           token,
-          process.env.JWT_SECRET!
+          process.env.JWT_SECRET! as StringValue
         ) as JWTPayload;
         req.user = {
           id: decoded.userId,

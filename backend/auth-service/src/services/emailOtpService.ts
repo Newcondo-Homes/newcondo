@@ -1,12 +1,20 @@
 // backend/auth-service/src/services/emailOtpService.ts
 import { prisma } from "@newcondo/db";
-import { generateOTP } from "@shared/utils/otp";
+import { generateOTP } from "@newcondo/backend-shared/src/utils";
+// import {
+//   sendEmail,
+//   generateOTPEmailHTML,
+//   generateOTPEmailText,
+// } from "../../../shared/src/utils/email";
 import {
   sendEmail,
   generateOTPEmailHTML,
   generateOTPEmailText,
-} from "../../../shared/src/utils/email";
-import { redis } from "../../../shared/src/config/redis";
+} from "@newcondo/backend-shared/src/utils";
+
+// import { redis } from "../../../shared/src/config/redis";
+import { redis } from "@newcondo/backend-shared/src/config/redis";
+
 
 interface OTPVerificationResult {
   success: boolean;

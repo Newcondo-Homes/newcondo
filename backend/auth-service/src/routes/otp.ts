@@ -1,12 +1,12 @@
 import { Router } from "express";
 import type { Router as ExpressRouter } from "express";
-import { OTPController } from "../controllers/otpController";
+import { otpController } from "../controllers/otpController";
 import { validateRequest } from "../middleware/authValidation";
 import { sendOTPSchema, verifyOTPSchema } from "../validations/otpValidation";
 
 const router: ExpressRouter = Router();
 
-const otpController = new OTPController();
+// const otpController = new OTPController();
 
 // Send OTP
 router.post(
