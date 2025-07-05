@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2023",
     "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -15,14 +15,13 @@
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
     "baseUrl": ".",
+    "allowImportingTsExtensions": false,
+    "noEmit": false,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "ts-node": {
-    "esm": true,
-    "experimentalSpecifierResolution": "node"
-  },
+ 
   "include": ["src/**/*", "src/types/**/*", "**/*.ts", "**/*.tsx",],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

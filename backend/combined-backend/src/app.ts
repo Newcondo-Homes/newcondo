@@ -9,11 +9,11 @@ import type { Application } from 'express';
 import { logger, requestLogger } from "./utils/logger";
 
 // Import combined app middleware
-import { healthCheck } from "./middleware/healthCheck";
+// import { healthCheck } from "./middleware/healthCheck";
 import { errorHandler } from "./middleware/errorHandler";
 
 // Import main router
-import { mainRouter } from "./routes";
+import { mainRouter } from "./routes/index";
 
 // Import configuration
 import { config } from "./config/environment";
@@ -67,7 +67,7 @@ app.use(compression());
 app.use(requestLogger);
 
 // Health check endpoint (must be before rate limiting for monitoring)
-app.get("/health", healthCheck);
+// app.get("/health", healthCheck);
 
 // API versioning and main routes
 app.use("/api/v1", mainRouter);

@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "index.ts",
+  "main": "./dist/index.js",
   "exports": {
-    ".": "./index.ts"
+    ".": "./dist/index.js"
   },
   "scripts": {
     "db:migrate": "prisma migrate dev --name init --skip-generate",
@@ -17,14 +17,15 @@
     "db:reset": "prisma migrate reset",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma generate",
-    "build": "tsc",
+    "build": "tsc && node fix-imports.js",
     "clean": "rimraf dist"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^6.9.0"
+    "@prisma/client": "^6.9.0",
+    "dotenv": "^17.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.15.29",

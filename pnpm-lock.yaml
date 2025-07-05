@@ -162,6 +162,9 @@ importers:
       express-validator:
         specifier: ^7.2.1
         version: 7.2.1
+      form-data:
+        specifier: 4.0.3
+        version: 4.0.3
       helmet:
         specifier: ^8.1.0
         version: 8.1.0
@@ -171,6 +174,9 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
+      mailgun.js:
+        specifier: 12.0.3
+        version: 12.0.3
       morgan:
         specifier: ^1.10.0
         version: 1.10.0
@@ -825,6 +831,9 @@ importers:
       '@prisma/client':
         specifier: ^6.9.0
         version: 6.10.1(prisma@6.10.1(typescript@5.8.3))(typescript@5.8.3)
+      dotenv:
+        specifier: ^17.0.1
+        version: 17.0.1
     devDependencies:
       '@types/node':
         specifier: ^22.15.29
@@ -4724,6 +4733,10 @@ packages:
 
   dotenv@16.6.1:
     resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+
+  dotenv@17.0.1:
+    resolution: {integrity: sha512-GLjkduuAL7IMJg/ZnOPm9AnWKJ82mSE2tzXLaJ/6hD6DhwGfZaXG77oB8qbReyiczNxnbxQKyh0OE5mXq0bAHA==}
     engines: {node: '>=12'}
 
   dunder-proto@1.0.1:
@@ -13070,6 +13083,8 @@ snapshots:
   dotenv@16.0.3: {}
 
   dotenv@16.6.1: {}
+
+  dotenv@17.0.1: {}
 
   dunder-proto@1.0.1:
     dependencies:
