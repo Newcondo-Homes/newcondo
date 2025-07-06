@@ -24,6 +24,11 @@ export class AppError extends Error implements ApiError {
   }
 }
 
+// Type guard to check if error is ApiError
+function isApiError(error: Error): error is ApiError {
+  return 'statusCode' in error || 'code' in error;
+}
+
 export const errorHandler = (
   error: Error | ApiError | ZodError,
   req: Request,
@@ -96,11 +101,18 @@ export const errorHandler = (
     message = 'File upload error';
     code = 'UPLOAD_ERROR';
     details = { type: (error as any).code };
-  } else if ('statusCode' in error && error.statusCode) {
-    statusCode = error.statusCode;
+  }else if (isApiError(error)) {
+    // Handle ApiError with type safety
+    statusCode = error.statusCode || 500;
     message = error.message;
     code = error.code || 'API_ERROR';
-  }
+    details = error.details;
+  } 
+  // else if ('statusCode' in error && error.statusCode) {
+  //   statusCode = error.statusCode;
+  //   message = error.message;
+  //   code = error.code || 'API_ERROR';
+  // }
 
   // Don't expose internal errors in production
   if (process.env.NODE_ENV === 'production' && statusCode === 500) {
