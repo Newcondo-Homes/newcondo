@@ -1,12 +1,14 @@
-import express from "express";
+// import express from "express";
+import express, { Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
-import type { Application } from 'express';
+// import type { Application } from 'express';
 
 // Import shared middleware
-import { logger, requestLogger } from "./utils/logger";
+// import { logger, requestLogger } from "./utils/logger";
+import { logger } from "./utils/logger";
 
 // Import combined app middleware
 import { healthCheck } from "./middleware/healthCheck";
@@ -19,7 +21,7 @@ import { mainRouter } from "./routes/index";
 import { config } from "./config/environment";
 
 // Create Express app
-const app: Application = express();
+const app: Express = express();
 
 // Trust proxy for deployment platforms like Render
 // app.set("trust proxy", 1);
@@ -64,7 +66,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(compression());
 
 // Request logging middleware
-app.use(requestLogger);
+// app.use(requestLogger);
 
 // Health check endpoint (must be before rate limiting for monitoring)
 app.get("/health", healthCheck);
@@ -111,4 +113,5 @@ app.use(errorHandler);
 // Log startup
 logger.info("✅ Combined NewCondo Backend initialized successfully");
 
-export { app };
+// export { app };
+export default app;

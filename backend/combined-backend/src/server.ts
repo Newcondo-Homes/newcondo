@@ -1,4 +1,4 @@
-import { app } from './app';
+import app from './app';
 import { logger } from './utils/logger';
 import { config } from './config/environment';
 
@@ -35,4 +35,4 @@ app.listen(PORT, () => {
   logger.info(`🌍 Environment: ${config.NODE_ENV}`);
 });
 
-export { app };
+// export { app };
