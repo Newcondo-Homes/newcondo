@@ -12,7 +12,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "db:generate": "prisma generate"
+    "db:generate": "prisma generate",
+    "build:backend": "pnpm run build --filter=@newcondo/db && pnpm run build --filter=@newcondo/backend-shared && pnpm run build --filter=@newcondo/auth-service && pnpm run build --filter=@newcondo/combined-backend",
+    "start:backend": "cd backend/combined-backend && pnpm run start"
   },
   "devDependencies": {
     "@newcondo/eslint-config": "workspace:*",
