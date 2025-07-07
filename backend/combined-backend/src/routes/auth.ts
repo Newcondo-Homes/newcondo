@@ -18,11 +18,18 @@ import { auth } from "@newcondo/backend-shared/middleware";
 const router: ExpressRouter = Router();
 
 // Auth routes
-router.post(
-  "/register",
-  authValidation.register,
-  authController.register
-);
+
+// test auth route
+router.get("/test", (req, res) => {
+  res.json({
+    success: true,
+    message: "Auth router is working!",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// main auth routes
+router.post("/register", authValidation.register, authController.register);
 router.post("/login", authValidation.login, authController.login);
 router.post("/logout", auth, authController.logout);
 router.post("/refresh-token", authController.refreshToken);

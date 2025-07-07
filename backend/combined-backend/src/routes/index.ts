@@ -16,6 +16,17 @@ import { authRouter } from './auth';
 
 const router: ExpressRouter = Router();
 
+// Test route to verify router is working
+router.get('/test', (req, res) => {
+  logger.info('Test route hit successfully');
+  res.json({
+    success: true,
+    message: 'Main router is working correctly',
+    timestamp: new Date().toISOString(),
+    route: '/api/v1/test'
+  });
+});
+
 // Service route mounting with error handling
 const mountRoute = (path: string, routerInstance: Router, serviceName: string) => {
   try {

@@ -5,7 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build_change_this_back_to_build_later": "tsc",
     "start": "node dist/server.js",
     "start:dev": "tsx src/server.ts",
     "clean": "rimraf dist",

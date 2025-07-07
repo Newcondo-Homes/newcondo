@@ -1,6 +1,5 @@
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
-import { getUserByEmail } from "@newcondo/db/src/utils";
 import type { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "./schemas";
 import { prisma } from "@newcondo/db";
