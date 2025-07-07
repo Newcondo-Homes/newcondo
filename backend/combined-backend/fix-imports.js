@@ -12,7 +12,7 @@ const distDir = path.join(__dirname, "dist");
 const extensions = [".js", ".ts", ".json"];
 
 /**
- * Recursively get all .js files in a directory
+ * Recursively get all .js files in a given directory
  */
 function getAllJsFiles(dir) {
   const files = [];
