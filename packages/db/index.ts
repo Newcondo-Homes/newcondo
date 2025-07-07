@@ -1,10 +1,5 @@
-
-import { PrismaClient } from '@prisma/client';
-export * from '@prisma/client'
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
+import { PrismaClient } from "@prisma/client";
+export * from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -13,10 +8,10 @@ const globalForPrisma = globalThis as unknown as {
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: ['query', 'info', 'warn', 'error'],
+    log: ["query", "info", "warn", "error"],
   });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-export { prisma }
+export { prisma };
 // export default prisma;
