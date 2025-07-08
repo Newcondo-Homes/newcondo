@@ -10,6 +10,10 @@ import type {
   User,
 } from "@/types/api";
 
+// auth route
+// first the base route is "https://newcondo.onrender.com/api/v1"
+// then the auth route is "auth/*" like the example below
+// https://newcondo.onrender.com/api/v1/auth/test
 const AUTH_ENDPOINTS = {
   REGISTER: "/auth/register",
   LOGIN: "/auth/login",
@@ -307,3 +311,6 @@ export const authApi = {
     }
   },
 };
+
+// you may add session routes for 
+// getSessions, terminateSession, terminateAllSessions etc
