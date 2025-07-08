@@ -31,9 +31,20 @@ export const authApi = {
   // Register new user
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
+      const { firstName, lastName, ...restOfData } = data;
+
+      // Create the 'name' string: filter out any undefined/null values, then join
+      const name = [firstName, lastName].filter(Boolean).join(" ");
+
+      // Construct the new payload with the combined 'name' and the rest of the data
+      const payload = {
+        ...restOfData, // Includes all other properties from the original 'data'
+        name, // Adds the new 'name' property
+      };
+
       const response = await apiClient.post<ApiResponse>(
         AUTH_ENDPOINTS.REGISTER,
-        data
+        payload
       );
       // return response.data
       return {
@@ -46,9 +57,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Registration failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Registration failed";
       return {
         success: false,
         error: errorMessage,
@@ -74,9 +84,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Login failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Login failed";
       return {
         success: false,
         error: errorMessage,
@@ -99,9 +108,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Logout failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "Logout failed";
       return {
         success: false,
         error: errorMessage,
@@ -127,9 +135,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "OTP verification failed";
+      const errorMessage =
+        error instanceof Error ? error.message : "OTP verification failed";
       return {
         success: false,
         error: errorMessage,
@@ -155,9 +162,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to resend OTP";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to resend OTP";
       return {
         success: false,
         error: errorMessage,
@@ -183,9 +189,10 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to request password reset";
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to request password reset";
       return {
         success: false,
         error: errorMessage,
@@ -219,9 +226,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to reset password";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to reset password";
       return {
         success: false,
         error: errorMessage,
@@ -247,9 +253,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to update profile";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to update profile";
       return {
         success: false,
         error: errorMessage,
@@ -274,9 +279,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to get profile";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to get profile";
       return {
         success: false,
         error: errorMessage,
@@ -301,9 +305,8 @@ export const authApi = {
         data: response.data,
       };
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-      ? error.message 
-      : "Failed to refresh token";
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to refresh token";
       return {
         success: false,
         error: errorMessage,
@@ -312,5 +315,5 @@ export const authApi = {
   },
 };
 
-// you may add session routes for 
+// you may add session routes for
 // getSessions, terminateSession, terminateAllSessions etc

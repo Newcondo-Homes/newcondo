@@ -8,6 +8,12 @@ CREATE TYPE "VerificationStatus" AS ENUM ('PENDING', 'VERIFIED', 'REJECTED');
 CREATE TYPE "IdDocumentType" AS ENUM ('NIN', 'BVN', 'PASSPORT', 'VOTERS_CARD', 'DRIVERS_LICENSE');
 
 -- CreateEnum
+CREATE TYPE "DocumentSide" AS ENUM ('FRONT', 'BACK', 'SINGLE');
+
+-- CreateEnum
+CREATE TYPE "DocumentStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED', 'EXPIRED');
+
+-- CreateEnum
 CREATE TYPE "PropertyType" AS ENUM ('APARTMENT', 'HOUSE', 'DUPLEX', 'ROOM', 'SHARED_APARTMENT', 'OFFICE', 'SHOP', 'WAREHOUSE');
 
 -- CreateEnum
@@ -15,6 +21,12 @@ CREATE TYPE "PropertyStatus" AS ENUM ('DRAFT', 'PENDING', 'PUBLISHED', 'RENTED',
 
 -- CreateEnum
 CREATE TYPE "AdminApprovalStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED');
+
+-- CreateEnum
+CREATE TYPE "UserType" AS ENUM ('LANDLORD', 'PROPERTY_MANAGER', 'AGENT', 'RENTER', 'ADMIN');
+
+-- CreateEnum
+CREATE TYPE "DocumentType" AS ENUM ('NIN', 'BVN', 'PASSPORT', 'VOTERS_CARD', 'DRIVERS_LICENSE', 'SELFIE', 'OWNERSHIP_DOCUMENT', 'CONSENT_DOCUMENT', 'UNDERTAKING_DOCUMENT', 'BUSINESS_REGISTRATION', 'TAX_CERTIFICATE', 'UTILITY_BILL', 'BANK_STATEMENT', 'OTHER');
 
 -- CreateEnum
 CREATE TYPE "DuplicateStatus" AS ENUM ('PENDING', 'CONFIRMED_DUPLICATE', 'NOT_DUPLICATE', 'RESOLVED');
@@ -60,10 +72,8 @@ CREATE TABLE "User" (
     "passwordHash" TEXT,
     "image" TEXT,
     "role" "Role" NOT NULL DEFAULT 'RENTER',
+    "userType" "UserType",
     "verificationStatus" "VerificationStatus" NOT NULL DEFAULT 'PENDING',
-    "idDocument" TEXT,
-    "idDocumentType" "IdDocumentType",
-    "selfieImage" TEXT,
     "verificationRejectionReason" TEXT,
     "verifiedAt" TIMESTAMP(3),
     "verifiedBy" TEXT,
@@ -72,6 +82,9 @@ CREATE TABLE "User" (
     "city" TEXT,
     "state" TEXT,
     "country" TEXT DEFAULT 'Nigeria',
+    "companyName" TEXT,
+    "businessRegNumber" TEXT,
+    "isB2BCustomer" BOOLEAN NOT NULL DEFAULT false,
     "isPremium" BOOLEAN NOT NULL DEFAULT false,
     "premiumExpiresAt" TIMESTAMP(3),
     "referralCode" TEXT NOT NULL,
@@ -103,6 +116,29 @@ CREATE TABLE "Account" (
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Account_pkey" PRIMARY KEY ("provider","providerAccountId")
+);
+
+-- CreateTable
+CREATE TABLE "Document" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "propertyId" TEXT,
+    "documentType" "DocumentType" NOT NULL,
+    "documentSide" "DocumentSide",
+    "pageNumber" INTEGER,
+    "documentNumber" TEXT,
+    "fileName" TEXT,
+    "fileUrl" TEXT,
+    "fileSizeBytes" INTEGER,
+    "mimeType" TEXT,
+    "status" "DocumentStatus" NOT NULL DEFAULT 'PENDING',
+    "verificationNotes" TEXT,
+    "isRequired" BOOLEAN NOT NULL DEFAULT true,
+    "expiresAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Document_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -163,9 +199,6 @@ CREATE TABLE "Property" (
     "ownerId" TEXT NOT NULL,
     "agentId" TEXT,
     "isOwnerListing" BOOLEAN NOT NULL DEFAULT true,
-    "ownershipDocument" TEXT,
-    "consentDocument" TEXT,
-    "undertakingDocument" TEXT,
     "status" "PropertyStatus" NOT NULL DEFAULT 'DRAFT',
     "adminApprovalStatus" "AdminApprovalStatus" NOT NULL DEFAULT 'PENDING',
     "rejectionReason" TEXT,
@@ -332,6 +365,17 @@ CREATE TABLE "EventLog" (
 );
 
 -- CreateTable
+CREATE TABLE "RefreshToken" (
+    "id" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "RefreshToken_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "FeatureFlag" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -412,7 +456,28 @@ CREATE INDEX "User_verificationStatus_idx" ON "User"("verificationStatus");
 CREATE INDEX "User_role_idx" ON "User"("role");
 
 -- CreateIndex
+CREATE INDEX "User_userType_idx" ON "User"("userType");
+
+-- CreateIndex
 CREATE INDEX "User_isAvailableForMarking_idx" ON "User"("isAvailableForMarking");
+
+-- CreateIndex
+CREATE INDEX "Document_userId_idx" ON "Document"("userId");
+
+-- CreateIndex
+CREATE INDEX "Document_propertyId_idx" ON "Document"("propertyId");
+
+-- CreateIndex
+CREATE INDEX "Document_documentType_idx" ON "Document"("documentType");
+
+-- CreateIndex
+CREATE INDEX "Document_status_idx" ON "Document"("status");
+
+-- CreateIndex
+CREATE INDEX "Document_documentNumber_idx" ON "Document"("documentNumber");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Document_userId_documentType_documentSide_pageNumber_key" ON "Document"("userId", "documentType", "documentSide", "pageNumber");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
@@ -550,16 +615,25 @@ CREATE INDEX "EventLog_type_idx" ON "EventLog"("type");
 CREATE INDEX "EventLog_timestamp_idx" ON "EventLog"("timestamp");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
+
+-- CreateIndex
+CREATE INDEX "RefreshToken_userId_idx" ON "RefreshToken"("userId");
+
+-- CreateIndex
+CREATE INDEX "RefreshToken_expiresAt_idx" ON "RefreshToken"("expiresAt");
+
+-- CreateIndex
 CREATE INDEX "FeatureFlag_userId_idx" ON "FeatureFlag"("userId");
 
 -- CreateIndex
 CREATE INDEX "FeatureFlag_key_idx" ON "FeatureFlag"("key");
 
 -- CreateIndex
-CREATE INDEX "identifier_type" ON "OTPCode"("identifier", "type");
+CREATE INDEX "OTPCode_expiresAt_idx" ON "OTPCode"("expiresAt");
 
 -- CreateIndex
-CREATE INDEX "OTPCode_expiresAt_idx" ON "OTPCode"("expiresAt");
+CREATE UNIQUE INDEX "OTPCode_identifier_type_key" ON "OTPCode"("identifier", "type");
 
 -- CreateIndex
 CREATE INDEX "SupportTicket_userId_idx" ON "SupportTicket"("userId");
@@ -581,6 +655,12 @@ CREATE INDEX "AdminAction_targetType_targetId_idx" ON "AdminAction"("targetType"
 
 -- AddForeignKey
 ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Document" ADD CONSTRAINT "Document_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -635,6 +715,9 @@ ALTER TABLE "Referral" ADD CONSTRAINT "Referral_referredId_fkey" FOREIGN KEY ("r
 
 -- AddForeignKey
 ALTER TABLE "EventLog" ADD CONSTRAINT "EventLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "FeatureFlag" ADD CONSTRAINT "FeatureFlag_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

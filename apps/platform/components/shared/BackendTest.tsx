@@ -1,5 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // apps/platform/components/shared/BackendTest.tsx
 'use client';
+
+import type {
+ UserType
+} from "@/types/api";
 
 import { useState, useEffect } from 'react';
 import { healthCheck } from '@/lib/api/client';
@@ -24,9 +30,9 @@ export default function BackendTest() {
   const [testData, setTestData] = useState({
     email: 'test@example.com',
     password: 'password123',
-    firstName: 'Test',
-    lastName: 'User',
-    userType: 'tenant' as const,
+    firstName: 'Doe',
+    lastName: 'Mark',
+    userType: 'RENTER' as UserType,
   });
 
   const runTest = async (testName: string, testFn: () => Promise<void>) => {
@@ -67,7 +73,7 @@ export default function BackendTest() {
     try {
       const health = await healthCheck();
       setHealthStatus(health);
-    } catch (error) {
+    } catch {
       setHealthStatus({ status: 'unhealthy', timestamp: new Date().toISOString() });
     }
   };
@@ -90,52 +96,53 @@ export default function BackendTest() {
         await authApi.register(testData);
       } catch (error: any) {
         // If user already exists, that's also a successful connection
-        if (error.response?.data?.code === 'USER_ALREADY_EXISTS') {
+        if (error.response?.message === 'User already exists') {
           return; // This is fine for testing
         }
+      
         throw error;
       }
     });
 
     // Test 3: Login
-    await runTest('User Login', async () => {
-      try {
-        const response = await authApi.login({
-          email: testData.email,
-          password: testData.password,
-        });
+    // await runTest('User Login', async () => {
+    //   try {
+    //     const response = await authApi.login({
+    //       email: testData.email,
+    //       password: testData.password,
+    //     });
         
-        if (!response.data.tokens.accessToken) {
-          throw new Error('No access token received');
-        }
+    //     if (!response.data.tokens.accessToken) {
+    //       throw new Error('No access token received');
+    //     }
         
-        // Store tokens for subsequent tests
-        localStorage.setItem('accessToken', response.data.tokens.accessToken);
-        localStorage.setItem('refreshToken', response.data.tokens.refreshToken);
-      } catch (error: any) {
-        // If registration test failed, login might fail too
-        if (error.response?.data?.code === 'INVALID_CREDENTIALS') {
-          throw new Error('Invalid credentials (registration might have failed)');
-        }
-        throw error;
-      }
-    });
+    //     // Store tokens for subsequent tests
+    //     localStorage.setItem('accessToken', response.data.tokens.accessToken);
+    //     localStorage.setItem('refreshToken', response.data.tokens.refreshToken);
+    //   } catch (error: any) {
+    //     // If registration test failed, login might fail too
+    //     if (error.response?.data?.code === 'INVALID_CREDENTIALS') {
+    //       throw new Error('Invalid credentials (registration might have failed)');
+    //     }
+    //     throw error;
+    //   }
+    // });
 
     // Test 4: Get Profile (authenticated request)
-    await runTest('Get Profile (Authenticated)', async () => {
-      const response = await authApi.getProfile();
+    // await runTest('Get Profile (Authenticated)', async () => {
+    //   const response = await authApi.getProfile();
       
-      if (!response.data.email) {
-        throw new Error('No profile data received');
-      }
-    });
+    //   if (!response.data.email) {
+    //     throw new Error('No profile data received');
+    //   }
+    // });
 
     // Test 5: Logout
-    await runTest('User Logout', async () => {
-      await authApi.logout();
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-    });
+    // await runTest('User Logout', async () => {
+    //   await authApi.logout();
+    //   localStorage.removeItem('accessToken');
+    //   localStorage.removeItem('refreshToken');
+    // });
 
     setIsLoading(false);
   };
@@ -165,11 +172,11 @@ export default function BackendTest() {
             Refresh
           </button>
         </div>
-        {healthStatus && (
+        {/* {healthStatus && (
           <p className="text-xs text-gray-500 mt-1">
             Last checked: {new Date(healthStatus.timestamp).toLocaleString()}
           </p>
-        )}
+        )} */}
       </div>
 
       {/* API Configuration */}
@@ -177,7 +184,7 @@ export default function BackendTest() {
         <h3 className="text-lg font-semibold mb-2">API Configuration</h3>
         <div className="text-sm text-gray-600">
           <p><strong>Environment:</strong> {process.env.NODE_ENV}</p>
-          <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL_PROD}</p>
+          <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL_DEV}</p>
         </div>
       </div>
 

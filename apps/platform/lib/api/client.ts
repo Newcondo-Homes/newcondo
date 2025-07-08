@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // apps/platform/lib/api/client.ts
-import { getSession } from '@newcondo/auth/client';
-import type { User } from '@/types/api'
+import { getSession } from "@newcondo/auth/client";
+import type { User } from "@/types/api";
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -26,28 +26,40 @@ class ApiClient {
   private defaultHeaders: Record<string, string>;
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    // API Configuration
+    const API_BASE_URL =
+      process.env.NODE_ENV === "production"
+        ? process.env.NEXT_PUBLIC_API_URL
+        : process.env.NEXT_PUBLIC_API_URL_DEV;
+
+    if (!API_BASE_URL) {
+      throw new Error(
+        "API URL is not configured. Please check your environment variables."
+      );
+    }
+
+    this.baseURL = API_BASE_URL;
     this.defaultHeaders = {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     };
   }
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
     const session = await getSession();
     const headers = { ...this.defaultHeaders };
-    
+
     if (session?.accessToken) {
-      headers['Authorization'] = `Bearer ${session.accessToken}`;
+      headers["Authorization"] = `Bearer ${session.accessToken}`;
     }
-    
+
     return headers;
   }
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
-    const contentType = response.headers.get('content-type');
-    
+    const contentType = response.headers.get("content-type");
+
     let data: any;
-    if (contentType && contentType.includes('application/json')) {
+    if (contentType && contentType.includes("application/json")) {
       data = await response.json();
     } else {
       data = await response.text();
@@ -55,9 +67,9 @@ class ApiClient {
 
     if (!response.ok) {
       const error: ApiError = {
-        message: data.message || data.error || 'An error occurred',
+        message: data.message || data.error || "An error occurred",
         status: response.status,
-        code: data.code
+        code: data.code,
       };
       throw error;
     }
@@ -65,7 +77,7 @@ class ApiClient {
     return {
       success: true,
       data: data.data || data,
-      message: data.message
+      message: data.message,
     };
   }
 
@@ -75,7 +87,7 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
     const headers = await this.getAuthHeaders();
-
+    console.log("url request: ", url);
     const config: RequestInit = {
       ...options,
       headers: {
@@ -88,19 +100,23 @@ class ApiClient {
       const response = await fetch(url, config);
       return await this.handleResponse<T>(response);
     } catch (error) {
-      if (error instanceof Error && 'status' in error) {
+      if (error instanceof Error && "status" in error) {
         throw error; // Re-throw ApiError
       }
-      
+
       // Handle network errors or other fetch errors
       throw {
-        message: error instanceof Error ? error.message : 'Network error occurred',
+        message:
+          error instanceof Error ? error.message : "Network error occurred",
         status: 0,
       } as ApiError;
     }
   }
 
-  async get<T>(endpoint: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    params?: Record<string, unknown>
+  ): Promise<ApiResponse<T>> {
     let url = endpoint;
     if (params) {
       const searchParams = new URLSearchParams();
@@ -116,34 +132,34 @@ class ApiClient {
     }
 
     return this.request<T>(url, {
-      method: 'GET',
+      method: "GET",
     });
   }
 
   async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
-      method: 'POST',
+      method: "POST",
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
   async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
-      method: 'PUT',
+      method: "PUT",
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
   async patch<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
-      method: 'PATCH',
+      method: "PATCH",
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
@@ -154,8 +170,8 @@ class ApiClient {
     additionalData?: Record<string, unknown>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
-    formData.append('file', file);
-    
+    formData.append("file", file);
+
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
         formData.append(key, String(value));
@@ -163,10 +179,10 @@ class ApiClient {
     }
 
     const headers = await this.getAuthHeaders();
-    delete headers['Content-Type']; // Let browser set content-type for FormData
+    delete headers["Content-Type"]; // Let browser set content-type for FormData
 
     return this.request<T>(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: formData,
     });
@@ -179,11 +195,11 @@ class ApiClient {
     additionalData?: Record<string, unknown>
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
-    
+
     files.forEach((file, index) => {
       formData.append(`files[${index}]`, file);
     });
-    
+
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
         formData.append(key, String(value));
@@ -191,10 +207,10 @@ class ApiClient {
     }
 
     const headers = await this.getAuthHeaders();
-    delete headers['Content-Type']; // Let browser set content-type for FormData
+    delete headers["Content-Type"]; // Let browser set content-type for FormData
 
     return this.request<T>(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: formData,
     });
@@ -218,50 +234,71 @@ class ApiClient {
     delay: number = 1000
   ): Promise<ApiResponse<T>> {
     let lastError: ApiError;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await requestFn();
       } catch (error) {
         lastError = error as ApiError;
-        
+
         // Don't retry on client errors (4xx)
         if (lastError.status >= 400 && lastError.status < 500) {
           throw lastError;
         }
-        
+
         if (attempt === maxRetries) {
           throw lastError;
         }
-        
+
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, delay * attempt));
+        await new Promise((resolve) => setTimeout(resolve, delay * attempt));
       }
     }
-    
+
     throw lastError!;
   }
 }
+
+// Health check function - ADD THIS
+export const healthCheck = async (): Promise<{
+  status: string;
+  timestamp: string;
+}> => {
+  try {
+    const response = await apiClient.get<{ status: string; timestamp: string }>(
+      "/auth/test"
+    );
+   
+    return {
+      ...response.data,
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+    };
+  } catch {
+    return { status: "unhealthy", timestamp: new Date().toISOString() };
+  }
+};
 
 // Create and export a singleton instance
 export const apiClient = new ApiClient();
 
 // Export utility functions for common API patterns
-export const createApiError = (message: string, status: number, code?: string): ApiError => ({
+export const createApiError = (
+  message: string,
+  status: number,
+  code?: string
+): ApiError => ({
   message,
   status,
   code,
 });
 
 export const isApiError = (error: unknown): error is ApiError => {
-
-      return (
-        error instanceof Error && 
-        typeof error.message === 'string' 
-        // Add more checks for other properties if needed
-    );
+  return (
+    error instanceof Error && typeof error.message === "string"
+    // Add more checks for other properties if needed
+  );
   // return errorr && typeof errorr.message === 'string' && typeof error.status === 'number';
-
 };
 
 // Export types
