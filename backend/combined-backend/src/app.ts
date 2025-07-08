@@ -26,6 +26,10 @@ const app: Express = express();
 // Trust proxy for deployment platforms like Render
 // app.set("trust proxy", 1);
 
+const corsOriginValue = config.CORS_ORIGINS.includes("*")
+  ? "*"
+  : config.CORS_ORIGINS;
+
 // Security middleware
 app.use(
   helmet({
@@ -37,7 +41,7 @@ app.use(
 // CORS configuration
 app.use(
   cors({
-    origin: config.CORS_ORIGINS,
+    origin: corsOriginValue,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],

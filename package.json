@@ -14,7 +14,8 @@
     "check-types": "turbo run check-types",
     "db:generate": "prisma generate",
     "build:backend": "pnpm run build --filter=@newcondo/db && pnpm run build --filter=@newcondo/backend-shared && pnpm run build --filter=@newcondo/auth-service && pnpm run build --filter=@newcondo/combined-backend",
-    "start:backend": "cd backend/combined-backend && pnpm run start"
+    "start:backend": "cd backend/combined-backend && pnpm run start",
+    "start:platform": "concurrently \"pnpm --filter combined-backend dev\" \"pnpm --filter platform dev\""
   },
   "devDependencies": {
     "@newcondo/eslint-config": "workspace:*",
@@ -27,5 +28,8 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
   }
 }
