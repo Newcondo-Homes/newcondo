@@ -24,7 +24,6 @@ export const publicRoutes = [
   "/email-verification",
   "/reset-password",
   "/password-reset-email-redirect",
-  "/test/backend"
 ];
 
 /**
@@ -64,6 +63,7 @@ export const protectedRoutes = [
   "/marking-jobs",
   "/marking-jobs/create",
   "/marking-jobs/queue",
+  "/test/backend"
 ];
 
 /**
