@@ -33,7 +33,7 @@ const corsOriginValue = config.CORS_ORIGINS.includes("*")
 if (corsOriginValue === "*") {
   console.log("Cors is set to wild card");
 } else {
-  console.log("Cors is defined");
+  console.log("Cors is defined", corsOriginValue);
 }
 // Security middleware
 app.use(
