@@ -21,6 +21,7 @@ const router: ExpressRouter = Router();
 
 // test auth route
 router.get("/test", (req, res) => {
+  console.log('Test ping is successfull')
   res.json({
     success: true,
     message: "Auth router is working!",
