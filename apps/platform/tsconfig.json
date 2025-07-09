@@ -20,8 +20,9 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@newcondo/ui/*": ["../../packages/ui/src/*"],
       "@/types/*": ["./types/*"],
+      "@newcondo/ui/*": ["../../packages/ui/src/*"],
+      "@newcondo/db": ["../../packages/db/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
