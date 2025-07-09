@@ -4,9 +4,9 @@
   "main": "./src/index.ts",
   "private": true,
   "scripts": {
-    "generate-exports": "node_modules/.bin/tsx scripts/generate-exports.ts",
+    "generate-exports": "pnpm dlx tsx@4.19.4 scripts/generate-exports.ts",
     "postinstall": "pnpm run generate-exports",
-    "dev": "node_modules/.bin/tsx scripts/generate-exports.ts -- --watch",
+    "dev": "pnpm dlx tsx@4.19.4 scripts/generate-exports.ts -- --watch",
     "lint": "eslint . --max-warnings 0",
     "generate:component": "turbo gen react-component",
     "check-types": "tsc --noEmit"
