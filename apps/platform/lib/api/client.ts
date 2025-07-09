@@ -28,7 +28,7 @@ class ApiClient {
   constructor() {
     // API Configuration
     const API_BASE_URL =
-      process.env.NODE_ENV === "production"
+      process.env.PLATFORM_PROD === "production"
         ? process.env.NEXT_PUBLIC_API_URL
         : process.env.NEXT_PUBLIC_API_URL_DEV;
 
