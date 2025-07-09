@@ -22,7 +22,7 @@ export interface ApiError {
 }
 
 const API_BASE_URL =
-  process.env.PLATFORM_PROD! as string === `production`
+  process.env.NODE_ENV! as string === "production"
     ? process.env.NEXT_PUBLIC_API_URL
     : process.env.NEXT_PUBLIC_API_URL_DEV;
 
