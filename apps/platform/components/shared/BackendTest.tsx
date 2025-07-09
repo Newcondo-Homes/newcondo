@@ -82,7 +82,7 @@ export default function BackendTest() {
     setIsLoading(true);
     setTestResults([]);
     
-    // Test 1: Health Check
+    // Test 1 : Health Check
     await runTest('Health Check', async () => {
       const health = await healthCheck();
       if (health.status !== 'healthy') {
