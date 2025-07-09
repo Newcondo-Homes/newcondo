@@ -21,24 +21,21 @@ export interface ApiError {
   code?: string;
 }
 
+const API_BASE_URL =
+  process.env.PLATFORM_PROD === "production"
+    ? process.env.NEXT_PUBLIC_API_URL
+    : process.env.NEXT_PUBLIC_API_URL_DEV;
+
+if (!API_BASE_URL) {
+  throw new Error("API URL is not configured.");
+}
+
 class ApiClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
 
-  constructor() {
-    // API Configuration
-    const API_BASE_URL =
-      process.env.PLATFORM_PROD === "production"
-        ? process.env.NEXT_PUBLIC_API_URL
-        : process.env.NEXT_PUBLIC_API_URL_DEV;
-
-    if (!API_BASE_URL) {
-      throw new Error(
-        "API URL is not configured. Please check your environment variables."
-      );
-    }
-
-    this.baseURL = API_BASE_URL;
+  constructor(private baseUrl: string) {
+    this.baseURL = baseUrl;
     this.defaultHeaders = {
       "Content-Type": "application/json",
     };
@@ -268,7 +265,7 @@ export const healthCheck = async (): Promise<{
     const response = await apiClient.get<{ status: string; timestamp: string }>(
       "/auth/test"
     );
-   
+
     return {
       ...response.data,
       status: "healthy",
@@ -280,7 +277,7 @@ export const healthCheck = async (): Promise<{
 };
 
 // Create and export a singleton instance
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient(API_BASE_URL);
 
 // Export utility functions for common API patterns
 export const createApiError = (
