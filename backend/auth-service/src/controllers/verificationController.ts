@@ -264,7 +264,7 @@ class VerificationController {
 
       // const documents = await verificationService.getDocuments(user.id);
 
-      // remove the "let result = null" below as its just a placeholder
+      // remove the "let documents = null" below as its just a placeholder
       let documents = null;
 
       res.status(200).json({
