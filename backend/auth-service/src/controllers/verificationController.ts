@@ -1,6 +1,32 @@
 import { Request, Response } from "express";
 import { verificationService } from "../services/verificationService";
 import { AuthenticatedRequest } from "../types/auth";
+import { standardResponse } from "@newcondo/backend-shared/src/utils";
+import { z } from "zod";
+
+// Validation schemas
+const uploadDocumentSchema = z.object({
+  documentType: z.enum([
+    "NIN",
+    "BVN",
+    "PASSPORT",
+    "VOTERS_CARD",
+    "DRIVERS_LICENSE",
+    "SELFIE",
+  ]),
+  documentSide: z.enum(["FRONT", "BACK", "SINGLE"]).optional(),
+  documentNumber: z.string().optional(),
+  fileName: z.string().optional(),
+  fileUrl: z.string().optional(),
+  fileSizeBytes: z.number().optional(),
+  mimeType: z.string().optional(),
+});
+
+const updateVerificationStatusSchema = z.object({
+  documentId: z.string(),
+  status: z.enum(["PENDING", "APPROVED", "REJECTED"]),
+  verificationNotes: z.string().optional(),
+});
 
 class VerificationController {
   async sendEmailVerification(
@@ -126,7 +152,7 @@ class VerificationController {
   async uploadDocuments(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
-      const { documents } = req.body;
+      // const { documents } = req.body;
 
       if (!user) {
         return res.status(401).json({
@@ -136,10 +162,15 @@ class VerificationController {
         });
       }
 
-      // const result = await verificationService.uploadDocuments(user.id, documents);
+      const validatedData = uploadDocumentSchema.parse(req.body);
+
+      const result = await verificationService.uploadDocument(
+        user.id,
+        validatedData
+      );
 
       // remove the "let result = null" below as its just a placeholder
-      let result = null;
+      // let result = null;
 
       res.status(200).json({
         success: true,
@@ -188,10 +219,11 @@ class VerificationController {
     }
   }
 
-  async resubmitDocuments(req: AuthenticatedRequest | Request, res: Response) {
+  async resubmitDocument(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
       const { documents } = req.body;
+      const { documentId } = req.params;
 
       if (!user) {
         return res.status(401).json({
@@ -201,10 +233,16 @@ class VerificationController {
         });
       }
 
-      // const result = await verificationService.resubmitDocuments(user.id, documents);
+      const validatedData = uploadDocumentSchema.parse(req.body);
+
+      const result = await verificationService.resubmitDocument(
+        user.id,
+        documentId,
+        validatedData
+      );
 
       // remove the "let result = null" below as its just a placeholder
-      let result = null;
+      // let result = null;
 
       res.status(200).json({
         success: true,
@@ -250,7 +288,7 @@ class VerificationController {
     }
   }
 
-  async getDocuments(req: AuthenticatedRequest | Request, res: Response) {
+  async getUserDocuments(req: AuthenticatedRequest | Request, res: Response) {
     try {
       const { user } = req;
 
@@ -262,10 +300,10 @@ class VerificationController {
         });
       }
 
-      // const documents = await verificationService.getDocuments(user.id);
+      const documents = await verificationService.getUserDocuments(user.id);
 
       // remove the "let documents = null" below as its just a placeholder
-      let documents = null;
+      // let documents = null;
 
       res.status(200).json({
         success: true,
@@ -339,6 +377,92 @@ class VerificationController {
         message: error.message || "Failed to update verification status",
         code: error.code || "UPDATE_VERIFICATION_STATUS_FAILED",
       });
+    }
+  }
+
+  // Admin: Get pending verifications
+  async getPendingVerifications(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
+    try {
+      const adminId = req.user?.id;
+      if (!adminId || req.user?.role !== "ADMIN") {
+        return res
+          .status(403)
+          .json(standardResponse(false, "Access denied", null));
+      }
+
+      const { page = 1, limit = 20 } = req.query;
+      const pageNum = parseInt(page as string);
+      const limitNum = parseInt(limit as string);
+
+      const verifications = await verificationService.getPendingVerifications(
+        pageNum,
+        limitNum
+      );
+
+      return res
+        .status(200)
+        .json(
+          standardResponse(
+            true,
+            "Pending verifications retrieved successfully",
+            verifications
+          )
+        );
+    } catch (error) {
+      console.error("Get pending verifications error:", error);
+      return res
+        .status(500)
+        .json(
+          standardResponse(
+            false,
+            "Failed to retrieve pending verifications",
+            null
+          )
+        );
+    }
+  }
+
+  // Admin: Get user verification details
+  async getUserVerificationDetails(
+    req: AuthenticatedRequest | Request,
+    res: Response
+  ) {
+    try {
+      const adminId = req.user?.id;
+      if (!adminId || req.user?.role !== "ADMIN") {
+        return res
+          .status(403)
+          .json(standardResponse(false, "Access denied", null));
+      }
+
+      const { userId } = req.params;
+
+      const details =
+        await verificationService.getUserVerificationDetails(userId);
+
+      return res
+        .status(200)
+        .json(
+          standardResponse(
+            true,
+            "User verification details retrieved successfully",
+            details
+          )
+        );
+    } catch (error) {
+      console.error("Get user verification details error:", error);
+      return res
+        .status(500)
+        .json(
+          standardResponse(
+            false,
+            "Failed to retrieve user verification details",
+            null
+          )
+        );
     }
   }
 }

@@ -182,7 +182,7 @@ export default function Sidebar({ user, onNavigate }: SidebarProps) {
               {user.name || 'User'}
             </p>
             <p className="text-xs text-gray-500 capitalize">
-              {user.role.toLowerCase()}
+              {user?.role?.toLowerCase()}
             </p>
           </div>
           <div>

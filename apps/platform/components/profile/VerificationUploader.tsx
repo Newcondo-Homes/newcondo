@@ -1,24 +1,93 @@
 "use client";
 
 import { useState } from "react";
-import { Upload, X, FileText, Camera, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Upload,
+  X,
+  Image as ImageIcon,
+  FileText,
+  Camera,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@newcondo/ui/";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@newcondo/ui/";
 import { Badge } from "@newcondo/ui/";
 import { Alert, AlertDescription } from "@newcondo/ui/";
 import { Progress } from "@newcondo/ui/";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@newcondo/ui/";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@newcondo/ui/";
 import { Input } from "@newcondo/ui/";
 import { Label } from "@newcondo/ui/";
 import { Textarea } from "@newcondo/ui/";
 import { useVerification } from "@/hooks/useVerification";
 import { DocumentType, DocumentSide, DocumentStatus } from "@newcondo/db";
+import {
+ verificationSubmissionSchema,
+ documentUploadSchema,
+ type DocumentUpload,
+  type  VerificationSubmission,
+} from "@/lib/validations/verification";
 import { cn } from "@/lib/utils";
+import { Separator } from "@newcondo/ui/";
+
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from 'zod';
+
+import { useUploadThing } from "@/lib/uploadthing";
+// import { verificationSchema, type VerificationFormData } from "@/lib/validations/verification";
+
+const currentDocumentFormSchema = documentUploadSchema.partial().and(
+  z.object({
+    documentType: z.nativeEnum(DocumentType, {
+      required_error: "Please select a document type.",
+    }),
+  })
+);
+
+type CurrentDocumentFormData = z.infer<typeof currentDocumentFormSchema>;
 
 interface VerificationUploaderProps {
   className?: string;
   onUploadComplete?: () => void;
 }
+
+// interface VerificationUploaderProps {
+//   userId: string;
+//   existingDocuments?: Array<{
+//     id: string;
+//     documentType: DocumentType;
+//     documentSide?: DocumentSide;
+//     documentNumber?: string;
+//     fileUrl?: string;
+//     fileName?: string;
+//     status: DocumentStatus;
+//     verificationNotes?: string;
+//   }>;
+// }
 
 interface UploadFile {
   file: File;
@@ -29,11 +98,61 @@ interface UploadFile {
 }
 
 const DOCUMENT_TYPES = [
-  { value: DocumentType.NIN, label: "National Identification Number (NIN)", needsFile: false },
-  { value: DocumentType.BVN, label: "Bank Verification Number (BVN)", needsFile: false },
-  { value: DocumentType.PASSPORT, label: "International Passport", needsFile: true },
+  {
+    value: DocumentType.NIN,
+    label: "National Identification Number (NIN)",
+    needsFile: false,
+  },
+  {
+    value: DocumentType.BVN,
+    label: "Bank Verification Number (BVN)",
+    needsFile: false,
+  },
+  {
+    value: DocumentType.PASSPORT,
+    label: "International Passport",
+    needsFile: true,
+  },
   { value: DocumentType.VOTERS_CARD, label: "Voter's Card", needsFile: true },
-  { value: DocumentType.DRIVERS_LICENSE, label: "Driver's License", needsFile: true },
+  {
+    value: DocumentType.DRIVERS_LICENSE,
+    label: "Driver's License",
+    needsFile: true,
+  },
+  { value: DocumentType.SELFIE, label: "Selfie", needsFile: true }, // Added Selfie here
+  // Add other document types from your backend DocumentType enum as needed
+  {
+    value: DocumentType.OWNERSHIP_DOCUMENT,
+    label: "Ownership Document",
+    needsFile: true,
+  },
+  {
+    value: DocumentType.CONSENT_DOCUMENT,
+    label: "Consent Document",
+    needsFile: true,
+  },
+  {
+    value: DocumentType.UNDERTAKING_DOCUMENT,
+    label: "Undertaking Document",
+    needsFile: true,
+  },
+  {
+    value: DocumentType.BUSINESS_REGISTRATION,
+    label: "Business Registration",
+    needsFile: true,
+  },
+  {
+    value: DocumentType.TAX_CERTIFICATE,
+    label: "Tax Certificate",
+    needsFile: true,
+  },
+  { value: DocumentType.UTILITY_BILL, label: "Utility Bill", needsFile: true },
+  {
+    value: DocumentType.BANK_STATEMENT,
+    label: "Bank Statement",
+    needsFile: true,
+  },
+  { value: DocumentType.OTHER, label: "Other Document", needsFile: true },
 ];
 
 const DOCUMENT_SIDES = [
@@ -43,41 +162,167 @@ const DOCUMENT_SIDES = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ACCEPTED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const ACCEPTED_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+];
 
-export default function VerificationUploader({ className, onUploadComplete }: VerificationUploaderProps) {
+export default function VerificationUploader({
+  className,
+  onUploadComplete,
+}: VerificationUploaderProps) {
   const {
     documents,
-    userDocuments,
     isLoading,
     uploadDocument,
-    uploadDocumentById,
+    submitDocumentNumber,
+    submitVerification,
     refreshDocuments,
   } = useVerification();
 
-  const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | "">("");
-  const [selectedDocumentSide, setSelectedDocumentSide] = useState<DocumentSide | "">("");
+  const router = useRouter();
+  const [selectedDocumentType, setSelectedDocumentType] = useState<
+    DocumentType | ""
+  >("");
+  const [selectedDocumentSide, setSelectedDocumentSide] = useState<
+    DocumentSide | ""
+  >("");
   const [documentNumber, setDocumentNumber] = useState("");
   const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [showSelfieUpload, setShowSelfieUpload] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const selectedDocumentConfig = DOCUMENT_TYPES.find(doc => doc.value === selectedDocumentType);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [uploadedFiles, setUploadedFiles] = useState<
+    Array<{
+      documentType: DocumentType;
+      documentSide?: DocumentSide;
+      url: string;
+      name: string;
+      size: number;
+      key: string;
+    }>
+  >([]); // NEW
+
+  // UploadThing hooks // NEW
+  const { startUpload: startDocumentUpload, isUploading: isDocumentUploading } =
+    useUploadThing(
+      // NEW
+      "verificationDocuments", // NEW
+      {
+        // NEW
+        onClientUploadComplete: (files) => {
+          // NEW
+          console.log("Document upload completed:", files); // NEW
+          if (files && files.length > 0) {
+            // NEW
+            const file = files[0]; // NEW
+            setUploadedFiles((prev) => [
+              ...prev,
+              {
+                // NEW
+                documentType: form.watch("documentType"), // NEW
+                documentSide: form.watch("documentSide"), // NEW
+                url: file.url, // NEW
+                name: file.name, // NEW
+                size: file.size, // NEW
+                key: file.key, // NEW
+              },
+            ]); // NEW
+          } // NEW
+          toast.success("Document uploaded successfully!"); // NEW
+        }, // NEW
+        onUploadError: (error) => {
+          // NEW
+          console.error("Document upload error:", error); // NEW
+          toast.error(`Upload failed: ${error.message}`); // NEW
+        }, // NEW
+      } // NEW
+    ); // NEW
+
+  const { startUpload: startSelfieUpload, isUploading: isSelfieUploading } =
+    useUploadThing(
+      // NEW
+      "selfieUpload", // NEW
+      {
+        // NEW
+        onClientUploadComplete: (files) => {
+          // NEW
+          console.log("Selfie upload completed:", files); // NEW
+          if (files && files.length > 0) {
+            // NEW
+            const file = files[0]; // NEW
+            setUploadedFiles((prev) => [
+              ...prev,
+              {
+                // NEW
+                documentType: DocumentType.SELFIE, // NEW
+                documentSide: DocumentSide.SINGLE, // NEW
+                url: file.url, // NEW
+                name: file.name, // NEW
+                size: file.size, // NEW
+                key: file.key, // NEW
+              },
+            ]); // NEW
+          } // NEW
+          toast.success("Selfie uploaded successfully!"); // NEW
+        }, // NEW
+        onUploadError: (error) => {
+          // NEW
+          console.error("Selfie upload error:", error); // NEW
+          toast.error(`Upload failed: ${error.message}`); // NEW
+        }, // NEW
+      } // NEW
+    ); // NEW
+
+  // const form = useForm<VerificationFormData>({
+  //   resolver: zodResolver(verificationSchema),
+  //   defaultValues: {
+  //     documentType: DocumentType.NIN,
+  //     documentSide: DocumentSide.SINGLE,
+  //     documentNumber: "",
+  //   },
+  // });
+
+   const form = useForm<CurrentDocumentFormData>({
+    resolver: zodResolver(currentDocumentFormSchema),
+    defaultValues: {
+      documentType: undefined, // Start with no selection
+      documentSide: DocumentSide.SINGLE, // Default to single
+      documentNumber: "",
+    },
+  });
+
+  // const selectedDocumentType = form.watch("documentType");
+  const selectedDocument = DOCUMENT_TYPES.find(
+    (doc) => doc.value === selectedDocumentType
+  );
+  const requiresUpload = selectedDocument?.needsFile || false;
+  const selectedDocumentConfig = DOCUMENT_TYPES.find(
+    (doc) => doc.value === selectedDocumentType
+  );
   const needsFile = selectedDocumentConfig?.needsFile ?? false;
-  const needsSides = selectedDocumentType === DocumentType.VOTERS_CARD || selectedDocumentType === DocumentType.DRIVERS_LICENSE;
+  const needsSides =
+    selectedDocumentType === DocumentType.VOTERS_CARD ||
+    selectedDocumentType === DocumentType.DRIVERS_LICENSE;
 
   const handleFileSelect = (files: FileList | null) => {
     if (!files) return;
 
     const newFiles: UploadFile[] = [];
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      
+
       // Validate file type
       if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
-        alert(`${file.name} is not a supported file type. Please upload JPEG, PNG, WebP, or PDF files.`);
+        alert(
+          `${file.name} is not a supported file type. Please upload JPEG, PNG, WebP, or PDF files.`
+        );
         continue;
       }
 
@@ -95,7 +340,7 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
       });
     }
 
-    setUploadFiles(prev => [...prev, ...newFiles]);
+    setUploadFiles((prev) => [...prev, ...newFiles]);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -115,7 +360,7 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
   };
 
   const removeFile = (index: number) => {
-    setUploadFiles(prev => {
+    setUploadFiles((prev) => {
       const newFiles = [...prev];
       URL.revokeObjectURL(newFiles[index].preview);
       newFiles.splice(index, 1);
@@ -149,8 +394,8 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
         // Upload files
         for (let i = 0; i < uploadFiles.length; i++) {
           const fileData = uploadFiles[i];
-          
-          setUploadFiles(prev => {
+
+          setUploadFiles((prev) => {
             const newFiles = [...prev];
             newFiles[i] = { ...newFiles[i], status: "uploading" };
             return newFiles;
@@ -168,32 +413,43 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
 
           // Simulate upload progress
           const uploadInterval = setInterval(() => {
-            setUploadFiles(prev => {
+            setUploadFiles((prev) => {
               const newFiles = [...prev];
               if (newFiles[i] && newFiles[i].progress < 90) {
-                newFiles[i] = { ...newFiles[i], progress: newFiles[i].progress + 10 };
+                newFiles[i] = {
+                  ...newFiles[i],
+                  progress: newFiles[i].progress + 10,
+                };
               }
               return newFiles;
             });
           }, 200);
 
           try {
-            await uploadDocument(formData);
-            
+            await uploadDocument(
+              fileData.file,
+              selectedDocumentType,
+              needsSides ? selectedDocumentSide : undefined
+            );
+
             clearInterval(uploadInterval);
-            setUploadFiles(prev => {
+            setUploadFiles((prev) => {
               const newFiles = [...prev];
-              newFiles[i] = { ...newFiles[i], status: "success", progress: 100 };
+              newFiles[i] = {
+                ...newFiles[i],
+                status: "success",
+                progress: 100,
+              };
               return newFiles;
             });
           } catch (error) {
             clearInterval(uploadInterval);
-            setUploadFiles(prev => {
+            setUploadFiles((prev) => {
               const newFiles = [...prev];
-              newFiles[i] = { 
-                ...newFiles[i], 
-                status: "error", 
-                error: error instanceof Error ? error.message : "Upload failed"
+              newFiles[i] = {
+                ...newFiles[i],
+                status: "error",
+                error: error instanceof Error ? error.message : "Upload failed",
               };
               return newFiles;
             });
@@ -201,11 +457,11 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
         }
       } else {
         // Upload document by ID
-        await uploadDocumentById({
-          documentType: selectedDocumentType,
-          documentNumber: documentNumber.trim(),
-          notes: notes.trim() || undefined,
-        });
+        await submitDocumentNumber(
+          selectedDocumentType,
+          documentNumber.trim()
+          // notes: notes.trim() || undefined,
+        );
       }
 
       // Reset form
@@ -214,7 +470,7 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
       setDocumentNumber("");
       setNotes("");
       setUploadFiles([]);
-      
+
       await refreshDocuments();
       onUploadComplete?.();
     } catch (error) {
@@ -223,76 +479,206 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
     }
   };
 
-  const handleSelfieUpload = async () => {
-    if (uploadFiles.length === 0) {
-      alert("Please select a selfie to upload");
-      return;
-    }
+  // const handleSelfieUpload = async () => {
+  //   if (uploadFiles.length === 0) {
+  //     alert("Please select a selfie to upload");
+  //     return;
+  //   }
 
-    try {
-      const formData = new FormData();
-      formData.append("file", uploadFiles[0].file);
-      formData.append("documentType", DocumentType.SELFIE);
-      if (notes.trim()) {
-        formData.append("notes", notes);
-      }
+  //   const fileData = uploadFiles[0];
+  //   try {
+  //     setUploadFiles((prev) => {
+  //       const newFiles = [...prev];
+  //       newFiles[0] = { ...newFiles[0], status: "uploading" };
+  //       return newFiles;
+  //     });
 
-      setUploadFiles(prev => {
-        const newFiles = [...prev];
-        newFiles[0] = { ...newFiles[0], status: "uploading" };
-        return newFiles;
-      });
+  //     // await uploadDocument(formData);
+  //     await uploadDocument(fileData.file, DocumentType.SELFIE);
 
-      await uploadDocument(formData);
-      
-      setUploadFiles(prev => {
-        const newFiles = [...prev];
-        newFiles[0] = { ...newFiles[0], status: "success", progress: 100 };
-        return newFiles;
-      });
+  //     setUploadFiles((prev) => {
+  //       const newFiles = [...prev];
+  //       newFiles[0] = { ...newFiles[0], status: "success", progress: 100 };
+  //       return newFiles;
+  //     });
 
-      setShowSelfieUpload(false);
-      setUploadFiles([]);
-      setNotes("");
-      
-      await refreshDocuments();
-      onUploadComplete?.();
-    } catch (error) {
-      setUploadFiles(prev => {
-        const newFiles = [...prev];
-        newFiles[0] = { 
-          ...newFiles[0], 
-          status: "error", 
-          error: error instanceof Error ? error.message : "Upload failed"
-        };
-        return newFiles;
-      });
-    }
-  };
+  //     setShowSelfieUpload(false);
+  //     setUploadFiles([]);
+  //     setNotes("");
+
+  //     await refreshDocuments();
+  //     onUploadComplete?.();
+  //   } catch (error) {
+  //     setUploadFiles((prev) => {
+  //       const newFiles = [...prev];
+  //       newFiles[0] = {
+  //         ...newFiles[0],
+  //         status: "error",
+  //         error: error instanceof Error ? error.message : "Upload failed",
+  //       };
+  //       return newFiles;
+  //     });
+  //   }
+  // };
+
+  const handleDocumentUpload = async (files: FileList | null) => {
+    // NEW
+    if (!files || files.length === 0) return; // NEW
+    const file = files[0]; // NEW
+    // Validate file type // NEW
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "application/pdf",
+    ]; // NEW
+    if (!allowedTypes.includes(file.type)) {
+      // NEW
+      toast.error("Please upload a valid image (JPEG, PNG) or PDF file"); // NEW
+      return; // NEW
+    } // NEW
+    // Validate file size (max 8MB) // NEW
+    const maxSize = 8 * 1024 * 1024; // 8MB // NEW
+    if (file.size > maxSize) {
+      // NEW
+      toast.error("File size must be less than 8MB"); // NEW
+      return; // NEW
+    } // NEW
+    await startDocumentUpload([file]); // NEW
+  }; // NEW
+
+  const handleSelfieUpload = async (files: FileList | null) => {
+    // NEW
+    if (!files || files.length === 0) return; // NEW
+    const file = files[0]; // NEW
+    // Validate file type (only images for selfies) // NEW
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"]; // NEW
+    if (!allowedTypes.includes(file.type)) {
+      // NEW
+      toast.error("Please upload a valid image (JPEG, PNG) for your selfie"); // NEW
+      return; // NEW
+    } // NEW
+    // Validate file size (max 4MB for selfies) // NEW
+    const maxSize = 4 * 1024 * 1024; // 4MB // NEW
+    if (file.size > maxSize) {
+      // NEW
+      toast.error("Selfie file size must be less than 4MB"); // NEW
+      return; // NEW
+    } // NEW
+    await startSelfieUpload([file]); // NEW
+  }; // NEW
+
+  const removeUploadedFile = (index: number) => {
+    // NEW
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index)); // NEW
+  }; // NEW
+
+  // const onSubmit = async (data: VerificationFormData) => {
+  //   try {
+  //     setIsSubmitting(true);
+
+  //     // Find uploaded files for this document
+  //     const documentFiles = uploadedFiles.filter(
+  //       (file) =>
+  //         file.documentType === data.documentType &&
+  //         file.documentSide === data.documentSide
+  //     ); // MODIFIED
+
+  //     // For documents that require upload, ensure files are uploaded
+  //     if (requiresUpload && documentFiles.length === 0) {
+  //       toast.error("Please upload the required document files");
+  //       return;
+  //     } // NEW
+
+  //     // For ID-only documents, ensure document number is provided
+  //     if (!requiresUpload && !data.documentNumber?.trim()) {
+  //       toast.error("Please provide the document number");
+  //       return;
+  //     } // NEW
+
+  //     // Find selfie file
+  //     const selfieFile = uploadedFiles.find(
+  //       (file) => file.documentType === DocumentType.SELFIE
+  //     ); // NEW
+  //     if (!selfieFile) {
+  //       // NEW
+  //       toast.error("Please upload a selfie for identity verification"); // NEW
+  //       return; // NEW
+  //     } // NEW
+
+  //     // Prepare verification data
+  //     const verificationData = {
+  //       // MODIFIED
+  //       documentType: data.documentType, // MODIFIED
+  //       documentSide: data.documentSide, // MODIFIED
+  //       documentNumber: data.documentNumber, // MODIFIED
+  //       fileUrl: documentFiles[0]?.url, // MODIFIED
+  //       fileName: documentFiles[0]?.name, // MODIFIED
+  //       fileSizeBytes: documentFiles[0]?.size, // NEW
+  //       mimeType: documentFiles[0]?.name.endsWith(".pdf")
+  //         ? "application/pdf"
+  //         : "image/jpeg", // NEW
+  //       selfieUrl: selfieFile.url, // NEW
+  //       selfieFileName: selfieFile.name, // NEW
+  //       selfieFileSize: selfieFile.size, // NEW
+  //     }; // MODIFIED
+
+  //     await submitVerification(verificationData); // MODIFIED
+
+  //     toast.success("Verification documents submitted successfully!");
+  //     router.push("/dashboard/profile");
+  //   } catch (error) {
+  //     console.error("Verification submission error:", error);
+  //     toast.error("Failed to submit verification documents");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
+  const formatFileSize = (bytes: number) => {
+    // NEW
+    if (bytes === 0) return "0 Bytes"; // NEW
+    const k = 1024; // NEW
+    const sizes = ["Bytes", "KB", "MB", "GB"]; // NEW
+    const i = Math.floor(Math.log(bytes) / Math.log(k)); // NEW
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]; // NEW
+  }; // NEW
 
   const getStatusBadge = (status: DocumentStatus) => {
     switch (status) {
       case DocumentStatus.PENDING:
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+            Pending
+          </Badge>
+        );
       case DocumentStatus.APPROVED:
-        return <Badge variant="secondary" className="bg-green-100 text-green-800">Approved</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            Approved
+          </Badge>
+        );
       case DocumentStatus.REJECTED:
         return <Badge variant="destructive">Rejected</Badge>;
       case DocumentStatus.EXPIRED:
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Expired</Badge>;
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            Expired
+          </Badge>
+        );
       default:
         return null;
     }
   };
 
   const getDocumentTypeLabel = (type: DocumentType) => {
-    return DOCUMENT_TYPES.find(doc => doc.value === type)?.label || type;
+    return DOCUMENT_TYPES.find((doc) => doc.value === type)?.label || type;
   };
 
   return (
     <div className={cn("space-y-6", className)}>
       {/* Existing Documents */}
-      {userDocuments.length > 0 && (
+      {documents.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -305,7 +691,7 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {userDocuments.map((doc) => (
+              {documents.map((doc) => (
                 <div
                   key={doc.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
@@ -319,14 +705,22 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{getDocumentTypeLabel(doc.documentType)}</p>
+                      <p className="font-medium">
+                        {getDocumentTypeLabel(doc.documentType)}
+                      </p>
                       {doc.documentSide && (
                         <p className="text-sm text-gray-600">
-                          {DOCUMENT_SIDES.find(side => side.value === doc.documentSide)?.label}
+                          {
+                            DOCUMENT_SIDES.find(
+                              (side) => side.value === doc.documentSide
+                            )?.label
+                          }
                         </p>
                       )}
                       {doc.documentNumber && (
-                        <p className="text-sm text-gray-600">ID: {doc.documentNumber}</p>
+                        <p className="text-sm text-gray-600">
+                          ID: {doc.documentNumber}
+                        </p>
                       )}
                       <p className="text-xs text-gray-500">
                         Uploaded {new Date(doc.createdAt).toLocaleDateString()}
@@ -364,7 +758,12 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
           {/* Document Type Selection */}
           <div className="space-y-2">
             <Label htmlFor="documentType">Document Type</Label>
-            <Select value={selectedDocumentType} onValueChange={(value) => setSelectedDocumentType(value as DocumentType)}>
+            <Select
+              value={selectedDocumentType}
+              onValueChange={(value) =>
+                setSelectedDocumentType(value as DocumentType)
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select document type" />
               </SelectTrigger>
@@ -396,12 +795,19 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
           {needsFile && needsSides && (
             <div className="space-y-2">
               <Label htmlFor="documentSide">Document Side</Label>
-              <Select value={selectedDocumentSide} onValueChange={(value) => setSelectedDocumentSide(value as DocumentSide)}>
+              <Select
+                value={selectedDocumentSide}
+                onValueChange={(value) =>
+                  setSelectedDocumentSide(value as DocumentSide)
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select document side" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DOCUMENT_SIDES.filter(side => side.value !== DocumentSide.SINGLE).map((side) => (
+                  {DOCUMENT_SIDES.filter(
+                    (side) => side.value !== DocumentSide.SINGLE
+                  ).map((side) => (
                     <SelectItem key={side.value} value={side.value}>
                       {side.label}
                     </SelectItem>
@@ -417,7 +823,9 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               <div
                 className={cn(
                   "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-                  dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
+                  dragOver
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-gray-400"
                 )}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -425,7 +833,9 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               >
                 <Upload className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="mt-4">
-                  <p className="text-lg font-medium">Drop files here or click to upload</p>
+                  <p className="text-lg font-medium">
+                    Drop files here or click to upload
+                  </p>
                   <p className="text-sm text-gray-600">
                     Supports JPEG, PNG, WebP, and PDF files up to 10MB
                   </p>
@@ -434,15 +844,19 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                   type="file"
                   multiple
                   accept={ACCEPTED_FILE_TYPES.join(",")}
-                  onChange={(e) => handleFileSelect(e.target.files)}
+                  // onChange={(e) => handleFileSelect(e.target.files)}
+                  onChange={(e) => handleDocumentUpload(e.target.files)}
                   className="hidden"
                   id="file-upload"
+                  disabled={isDocumentUploading}
                 />
                 <Button
                   type="button"
                   variant="outline"
                   className="mt-4"
-                  onClick={() => document.getElementById("file-upload")?.click()}
+                  onClick={() =>
+                    document.getElementById("file-upload")?.click()
+                  }
                 >
                   Select Files
                 </Button>
@@ -452,7 +866,10 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               {uploadFiles.length > 0 && (
                 <div className="space-y-2">
                   {uploadFiles.map((fileData, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 border rounded-lg"
+                    >
                       <div className="flex-shrink-0">
                         {fileData.file.type.startsWith("image/") ? (
                           <img
@@ -467,15 +884,22 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{fileData.file.name}</p>
+                        <p className="font-medium truncate">
+                          {fileData.file.name}
+                        </p>
                         <p className="text-sm text-gray-600">
                           {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                         {fileData.status === "uploading" && (
-                          <Progress value={fileData.progress} className="mt-1" />
+                          <Progress
+                            value={fileData.progress}
+                            className="mt-1"
+                          />
                         )}
                         {fileData.status === "error" && (
-                          <p className="text-sm text-red-600 mt-1">{fileData.error}</p>
+                          <p className="text-sm text-red-600 mt-1">
+                            {fileData.error}
+                          </p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -525,7 +949,7 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               (!needsFile && !documentNumber.trim()) ||
               (needsSides && !selectedDocumentSide) ||
               isLoading ||
-              uploadFiles.some(f => f.status === "uploading")
+              uploadFiles.some((f) => f.status === "uploading")
             }
             className="w-full"
           >
@@ -572,7 +996,9 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               <div
                 className={cn(
                   "border-2 border-dashed rounded-lg p-8 text-center transition-colors",
-                  dragOver ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
+                  dragOver
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-gray-400"
                 )}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -580,7 +1006,9 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               >
                 <Camera className="mx-auto h-12 w-12 text-gray-400" />
                 <div className="mt-4">
-                  <p className="text-lg font-medium">Drop your selfie here or click to upload</p>
+                  <p className="text-lg font-medium">
+                    Drop your selfie here or click to upload
+                  </p>
                   <p className="text-sm text-gray-600">
                     Supports JPEG, PNG, and WebP files up to 10MB
                   </p>
@@ -588,15 +1016,19 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
-                  onChange={(e) => handleFileSelect(e.target.files)}
+                  // onChange={(e) => handleFileSelect(e.target.files)}
+                  onChange={(e) => handleDocumentUpload(e.target.files)}
                   className="hidden"
                   id="selfie-upload"
+                  disabled={isDocumentUploading}
                 />
                 <Button
                   type="button"
                   variant="outline"
                   className="mt-4"
-                  onClick={() => document.getElementById("selfie-upload")?.click()}
+                  onClick={() =>
+                    document.getElementById("selfie-upload")?.click()
+                  }
                 >
                   Select Selfie
                 </Button>
@@ -605,22 +1037,32 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
               {uploadFiles.length > 0 && (
                 <div className="space-y-2">
                   {uploadFiles.map((fileData, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 border rounded-lg">
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 border rounded-lg"
+                    >
                       <img
                         src={fileData.preview}
                         alt="Selfie preview"
                         className="h-16 w-16 object-cover rounded"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{fileData.file.name}</p>
+                        <p className="font-medium truncate">
+                          {fileData.file.name}
+                        </p>
                         <p className="text-sm text-gray-600">
                           {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
                         </p>
                         {fileData.status === "uploading" && (
-                          <Progress value={fileData.progress} className="mt-1" />
+                          <Progress
+                            value={fileData.progress}
+                            className="mt-1"
+                          />
                         )}
                         {fileData.status === "error" && (
-                          <p className="text-sm text-red-600 mt-1">{fileData.error}</p>
+                          <p className="text-sm text-red-600 mt-1">
+                            {fileData.error}
+                          </p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
@@ -647,8 +1089,10 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="selfie-notes">Additional Notes (Optional)</Label>
+               <div className="space-y-2">
+                <Label htmlFor="selfie-notes">
+                  Additional Notes (Optional)
+                </Label>
                 <Textarea
                   id="selfie-notes"
                   placeholder="Add any additional information..."
@@ -658,10 +1102,14 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                 />
               </div>
 
-              <div className="flex gap-2">
+              {/* <div className="flex gap-2">
                 <Button
                   onClick={handleSelfieUpload}
-                  disabled={uploadFiles.length === 0 || isLoading || uploadFiles.some(f => f.status === "uploading")}
+                  disabled={
+                    uploadFiles.length === 0 ||
+                    isLoading ||
+                    uploadFiles.some((f) => f.status === "uploading")
+                  }
                   className="flex-1"
                 >
                   {isLoading ? (
@@ -685,8 +1133,8 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
                   }}
                 >
                   Cancel
-                </Button>
-              </div>
+                </Button> */}
+              {/* </div>  */}
             </div>
           )}
         </CardContent>
@@ -701,7 +1149,10 @@ export default function VerificationUploader({ className, onUploadComplete }: Ve
             <li>• Ensure documents are clear and readable</li>
             <li>• Make sure all corners of the document are visible</li>
             <li>• Use good lighting and avoid shadows</li>
-            <li>• For selfies, ensure your face is clearly visible and matches your ID</li>
+            <li>
+              • For selfies, ensure your face is clearly visible and matches
+              your ID
+            </li>
             <li>• Upload high-quality images (avoid blurry photos)</li>
           </ul>
         </AlertDescription>

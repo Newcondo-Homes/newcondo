@@ -1,7 +1,11 @@
 // apps/platform/lib/api/verification.ts
-import { apiClient } from './client';
-import { VerificationDocument, VerificationProgress, VerificationFormData } from '../../types/verification';
-import { DocumentType, DocumentStatus, VerificationStatus } from '@newcondo/db';
+import { apiClient } from "./client";
+import {
+  VerificationDocument,
+  VerificationProgress,
+  VerificationFormData,
+} from "../../types/verification";
+import { DocumentType, DocumentStatus, VerificationStatus } from "@newcondo/db";
 
 export interface UploadResponse {
   success: boolean;
@@ -32,13 +36,25 @@ export interface DocumentSubmission {
 class VerificationAPI {
   // Get user's verification status and documents
   async getVerificationStatus(): Promise<VerificationProgress> {
-    const response = await apiClient.get('/auth/verification/status');
+    const response = await apiClient.get<VerificationProgress>(
+      "/auth/verification/status"
+    );
+
+    if (!response.data) {
+      throw new Error("Verification status data not found");
+    }
     return response.data;
   }
 
   // Get user's documents
   async getDocuments(): Promise<VerificationDocument[]> {
-    const response = await apiClient.get('/auth/verification/documents');
+    const response = await apiClient.get<VerificationDocument[]>(
+      "/auth/verification/documents"
+    );
+
+    if (!response.data) {
+      throw new Error("Documents data not found");
+    }
     return response.data;
   }
 
@@ -49,18 +65,24 @@ class VerificationAPI {
     documentSide?: string
   ): Promise<UploadResponse> {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('documentType', documentType);
+    // formData.append('file', file);
+    const additionalData: Record<string, unknown> = {
+      documentType: documentType,
+    };
+
     if (documentSide) {
-      formData.append('documentSide', documentSide);
+      additionalData.documentSide = documentSide;
     }
 
-    const response = await apiClient.post('/auth/verification/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    
+    const response = await apiClient.uploadFile<UploadResponse>(
+      "/auth/verification/upload",
+      file,
+      additionalData
+    );
+
+    if (!response.data) {
+      throw new Error("Upload response data not found.");
+    }
     return response.data;
   }
 
@@ -69,26 +91,48 @@ class VerificationAPI {
     documentType: DocumentType,
     documentNumber: string
   ): Promise<VerificationResponse> {
-    const response = await apiClient.post('/auth/verification/submit-number', {
-      documentType,
-      documentNumber,
-    });
-    
+    const response = await apiClient.post<VerificationResponse>(
+      "/auth/verification/submit-number",
+      {
+        documentType,
+        documentNumber,
+      }
+    );
+
+    if (!response.data) {
+      throw new Error("Document number submission response data not found.");
+    }
     return response.data;
   }
 
   // Submit documents for verification
-  async submitDocuments(documents: DocumentSubmission[]): Promise<VerificationResponse> {
-    const response = await apiClient.post('/auth/verification/submit', {
-      documents,
-    });
-    
+  async submitDocuments(
+    documents: DocumentSubmission[]
+  ): Promise<VerificationResponse> {
+    const response = await apiClient.post<VerificationResponse>(
+      "/auth/verification/submit",
+      {
+        documents,
+      }
+    );
+    if (!response.data) {
+      throw new Error("Document submission response data not found.");
+    }
+
     return response.data;
   }
 
   // Submit complete verification
-  async submitVerification(data: VerificationFormData): Promise<VerificationResponse> {
-    const response = await apiClient.post('/auth/verification/complete', data);
+  async submitVerification(
+    data: VerificationFormData
+  ): Promise<VerificationResponse> {
+    const response = await apiClient.post<VerificationResponse>(
+      "/auth/verification/complete",
+      data
+    );
+    if (!response.data) {
+      throw new Error("Verification completion response data not found.");
+    }
     return response.data;
   }
 
@@ -97,35 +141,56 @@ class VerificationAPI {
     rejectedDocumentIds: string[],
     documents: DocumentSubmission[]
   ): Promise<VerificationResponse> {
-    const response = await apiClient.post('/auth/verification/resubmit', {
-      rejectedDocumentIds,
-      documents,
-    });
-    
+    const response = await apiClient.post<VerificationResponse>(
+      "/auth/verification/resubmit",
+      {
+        rejectedDocumentIds,
+        documents,
+      }
+    );
+    if (!response.data) {
+      throw new Error("Re-submission response data not found.");
+    }
     return response.data;
   }
 
   // Delete a document
   async deleteDocument(documentId: string): Promise<{ success: boolean }> {
-    const response = await apiClient.delete(`/auth/verification/documents/${documentId}`);
+    const response = await apiClient.delete<{ success: boolean }>(
+      `/auth/verification/documents/${documentId}`
+    );
+    if (!response.data) {
+      // Depending on API, delete might return success: true directly or in data.
+      // If it directly returns { success: boolean }, adjust handleResponse in client.ts
+      // For now, assuming it's within .data or direct
+      return { success: response.success }; // Use response.success if data is empty for deletes
+    }
     return response.data;
   }
 
   // Get verification requirements
   async getRequirements(): Promise<any> {
-    const response = await apiClient.get('/auth/verification/requirements');
+    const response = await apiClient.get("/auth/verification/requirements");
     return response.data;
   }
 
   // Check document verification status
   async checkDocumentStatus(documentId: string): Promise<VerificationDocument> {
-    const response = await apiClient.get(`/auth/verification/documents/${documentId}/status`);
+    const response = await apiClient.get<VerificationDocument>(
+      `/auth/verification/documents/${documentId}/status`
+    );
+    if (!response.data) {
+      throw new Error("Document status data not found.");
+    }
     return response.data;
   }
 
   // Get verification history
   async getVerificationHistory(): Promise<any[]> {
-    const response = await apiClient.get('/auth/verification/history');
+    const response = await apiClient.get<any[]>("/auth/verification/history");
+    if (!response.data) {
+      throw new Error("Verification history data not found.");
+    }
     return response.data;
   }
 }

@@ -1,13 +1,13 @@
 // apps/platform/components/shared/layouts/DashboardLayout.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 // import { User } from '@newcondo/auth';
-import type { Role, VerificationStatus } from '@newcondo/db'
+import type { Role, VerificationStatus } from "@newcondo/db";
 
-import { useRouter } from 'next/navigation';
-import { Button } from '@newcondo/ui/';
-import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/';
+import { useRouter } from "next/navigation";
+import { Button } from "@newcondo/ui/";
+import { Avatar, AvatarFallback, AvatarImage } from "@newcondo/ui/";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,25 +15,24 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@newcondo/ui/';
-import { Sheet, SheetContent, SheetTrigger } from '@newcondo/ui/';
-import { Badge } from '@newcondo/ui/';
-import { 
-  Home, 
-  Building, 
-  // CreditCard, 
-  Users, 
-  Settings, 
-  LogOut, 
+} from "@newcondo/ui/";
+import { Sheet, SheetContent, SheetTrigger } from "@newcondo/ui/";
+import { Badge } from "@newcondo/ui/";
+import {
+  Home,
+  Building,
+  // CreditCard,
+  Users,
+  Settings,
+  LogOut,
   Menu,
   Bell,
   Shield,
   MapPin,
-  Briefcase
-} from 'lucide-react';
-import { signOut } from '@newcondo/auth/client';
-import Sidebar from '@/components/shared/navigation/Sidebar';
-
+  Briefcase,
+} from "lucide-react";
+import { signOut } from "@newcondo/auth/client";
+import Sidebar from "@/components/shared/navigation/Sidebar";
 
 // The dashboard type below initially pulled alot of user data as the 'User' type from
 // the database suggest. the thing is, is it efficient to get all the 'User' data at once
@@ -60,33 +59,54 @@ interface DashboardUser {
   image?: string | null;
   phone?: string | null;
   verificationStatus: VerificationStatus;
-  isAvailableForMarking?: boolean
+  isAvailableForMarking?: boolean;
 }
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   user: DashboardUser;
+  // user: DashboardUser | null | undefined;
 }
 
-export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
+export default function DashboardLayout({
+  children,
+  user,
+}: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const router = useRouter();
-
+  if (!user) {
+    // This redirect will only happen on the client side if `user` is unexpectedly null
+    // after the initial server render where it should have been handled by layout.tsx
+    router.push("/login");
+    return null; // Don't render anything if no user
+  }
   const handleSignOut = async () => {
-    await signOut({ 
-      callbackUrl: '/',
-      redirect: true
+    await signOut({
+      callbackUrl: "/",
+      redirect: true,
     });
   };
 
   const getVerificationBadge = () => {
     switch (user.verificationStatus) {
-      case 'VERIFIED':
-        return <Badge variant="default" className="text-xs">Verified</Badge>;
-      case 'PENDING':
-        return <Badge variant="secondary" className="text-xs">Pending</Badge>;
-      case 'REJECTED':
-        return <Badge variant="destructive" className="text-xs">Rejected</Badge>;
+      case "VERIFIED":
+        return (
+          <Badge variant="default" className="text-xs">
+            Verified
+          </Badge>
+        );
+      case "PENDING":
+        return (
+          <Badge variant="secondary" className="text-xs">
+            Pending
+          </Badge>
+        );
+      case "REJECTED":
+        return (
+          <Badge variant="destructive" className="text-xs">
+            Rejected
+          </Badge>
+        );
       default:
         return null;
     }
@@ -94,13 +114,13 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
 
   const getRoleIcon = () => {
     switch (user.role) {
-      case 'OWNER':
+      case "OWNER":
         return <Building className="h-4 w-4" />;
-      case 'AGENT':
+      case "AGENT":
         return <Briefcase className="h-4 w-4" />;
-      case 'RENTER':
+      case "RENTER":
         return <Home className="h-4 w-4" />;
-      case 'ADMIN':
+      case "ADMIN":
         return <Shield className="h-4 w-4" />;
       default:
         return <Users className="h-4 w-4" />;
@@ -144,9 +164,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
-              <h1 className="text-lg font-semibold text-gray-900">
-                Dashboard
-              </h1>
+              <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
             </div>
 
             <div className="flex items-center gap-x-4 lg:gap-x-6">
@@ -159,11 +177,17 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               {/* Profile dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.image || undefined} alt={user.name || 'User'} />
+                      <AvatarImage
+                        src={user.image || undefined}
+                        alt={user.name || "User"}
+                      />
                       <AvatarFallback>
-                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        {user.name ? user.name.charAt(0).toUpperCase() : "U"}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -171,26 +195,30 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">
+                        {user.name}
+                      </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
                         {getRoleIcon()}
                         <span className="text-xs text-muted-foreground capitalize">
-                          {user.role.toLowerCase()}
+                          {user?.role?.toLowerCase()}
                         </span>
                         {getVerificationBadge()}
                       </div>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  <DropdownMenuItem onClick={() => router.push("/profile")}>
                     <Settings className="mr-2 h-4 w-4" />
                     Profile & Settings
                   </DropdownMenuItem>
-                  {user.role === 'AGENT' && (
-                    <DropdownMenuItem onClick={() => router.push('/marking-jobs/queue')}>
+                  {user.role === "AGENT" && (
+                    <DropdownMenuItem
+                      onClick={() => router.push("/marking-jobs/queue")}
+                    >
                       <MapPin className="mr-2 h-4 w-4" />
                       Agent Queue
                       {user.isAvailableForMarking && (
@@ -213,9 +241,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
 
         {/* Page content */}
         <main className="py-8">
-          <div className="px-4 sm:px-6 lg:px-8">
-            {children}
-          </div>
+          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
         </main>
       </div>
     </div>
