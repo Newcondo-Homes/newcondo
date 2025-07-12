@@ -220,11 +220,16 @@ model Authenticator {
 }
 
 model Property {
-  id          String  @id @default(cuid())
+  id          String @id @default(cuid())
   title       String
   description String
-  price       Decimal @db.Decimal(10, 2)
-  currency    String  @default("NGN")
+
+  // Add structure type
+  structure PropertyStructure @default(SINGLE_UNIT)
+
+  // For single units - keep existing price field
+  price    Decimal? @db.Decimal(10, 2) // Now optional for multi-family
+  currency String   @default("NGN")
 
   // Location
   address        String
@@ -241,7 +246,12 @@ model Property {
   boundaryImages      String[] // URLs to boundary marking photos
   buildingFingerprint String? // Unique identifier for duplicate detection
 
-  // Property details
+  // Building-level details (for multi-family)
+  totalUnits       Int? // Total number of units in the building
+  availableUnits   Int? // Number of currently available units
+  buildingFeatures String[] // Building-wide amenities ["Elevator", "Generator", "Security", "Parking"]
+
+  // Property details  (for single units)
   propertyType PropertyType @default(APARTMENT)
   bedrooms     Int?
   bathrooms    Int?
@@ -268,7 +278,7 @@ model Property {
   approvedAt          DateTime?
   approvedBy          String? // Admin user ID
 
-  // Rental & Availability
+  // Rental & Availability (for single units)
   isAvailable       Boolean   @default(true)
   availableFrom     DateTime?
   isPaymentLocked   Boolean   @default(false) // Prevent double booking
@@ -280,8 +290,12 @@ model Property {
   favoriteCount Int     @default(0)
 
   // Relations
-  owner            User                 @relation("PropertyOwner", fields: [ownerId], references: [id])
-  agent            User?                @relation("PropertyAgent", fields: [agentId], references: [id])
+  owner User  @relation("PropertyOwner", fields: [ownerId], references: [id])
+  agent User? @relation("PropertyAgent", fields: [agentId], references: [id])
+
+  // New relation for units
+  units PropertyUnit[] // Units within this property
+
   rentals          Rental[]
   duplicateReports PropertyDuplicate[]
   markingJobs      PropertyMarkingJob[]
@@ -301,6 +315,73 @@ model Property {
   @@index([isAvailable])
   @@index([buildingFingerprint])
   @@index([boundaryVerified])
+  @@index([structure])
+  @@index([totalUnits])
+  @@index([availableUnits])
+}
+
+// New PropertyUnit model for individual units in multi-family buildings
+model PropertyUnit {
+  id         String @id @default(cuid())
+  propertyId String
+
+  // Unit identification
+  unitNumber String // e.g., "A1", "Flat 2", "Unit 101"
+  floor      Int? // Floor number
+
+  // Unit details
+  bedrooms  Int?
+  bathrooms Int?
+  area      String? // e.g., "85 sqm"
+  features  String[] // Unit-specific features
+
+  // Pricing
+  price    Decimal @db.Decimal(10, 2)
+  currency String  @default("NGN")
+
+  // Availability
+  status        UnitStatus @default(AVAILABLE)
+  isAvailable   Boolean    @default(true)
+  availableFrom DateTime?
+
+  // Payment locking (prevent double booking)
+  isPaymentLocked   Boolean   @default(false)
+  paymentLockExpiry DateTime?
+
+  // Unit-specific media
+  images PropertyUnitImage[]
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentals  Rental[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([propertyId, unitNumber], name: "unique_unit_per_property")
+  @@index([propertyId])
+  @@index([status])
+  @@index([isAvailable])
+  @@index([price])
+  @@index([bedrooms])
+  @@index([floor])
+}
+
+// New model for unit-specific images
+model PropertyUnitImage {
+  id        String  @id @default(cuid())
+  unitId    String
+  url       String
+  altText   String?
+  isPrimary Boolean @default(false)
+  order     Int     @default(0)
+
+  unit PropertyUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([unitId])
+  @@index([isPrimary])
 }
 
 enum PropertyType {
@@ -320,6 +401,19 @@ enum PropertyStatus {
   PUBLISHED
   RENTED
   UNAVAILABLE
+}
+
+// Add these new enums
+enum PropertyStructure {
+  SINGLE_UNIT // Traditional single property
+  MULTI_FAMILY // Building with multiple units
+}
+
+enum UnitStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+  RESERVED
 }
 
 enum AdminApprovalStatus {
@@ -473,6 +567,7 @@ enum UrgencyLevel {
 model Rental {
   id          String       @id @default(cuid())
   propertyId  String
+  unitId      String? // Optional: specific unit being rented
   renterId    String
   startDate   DateTime
   endDate     DateTime?
@@ -485,14 +580,16 @@ model Rental {
   confirmedAt          DateTime?
 
   // Relations
-  property Property  @relation(fields: [propertyId], references: [id])
-  renter   User      @relation(fields: [renterId], references: [id])
+  property Property      @relation(fields: [propertyId], references: [id])
+  unit     PropertyUnit? @relation(fields: [unitId], references: [id])
+  renter   User          @relation(fields: [renterId], references: [id])
   payments Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([propertyId])
+  @@index([unitId])
   @@index([renterId])
   @@index([status])
   @@index([confirmationDeadline])
