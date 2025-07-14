@@ -44,7 +44,7 @@ import {
   Upload,
   X
 } from "lucide-react";
-import { usePropertyListingStore } from "@/store/property-listing";
+import { usePropertyListingStore } from "@/store/propertyListingStore";
 import { useAuthStore } from "@/store/auth";
 import { BoundaryMarkingMap } from "./boundary-marking-map";
 import { ImageUploader } from "./image-uploader";

@@ -15,7 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/';
 import { Alert, AlertDescription } from '@newcondo/ui/';
 import { Badge } from '@newcondo/ui/';
 import { Loader2, MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
-import { usePropertyListingStore, PropertyBoundary } from '../../store/property-listing';
+import { usePropertyListingStore, PropertyBoundary } from '../../store/propertyListingStore';
 
 const libraries: ("drawing" | "geometry" | "places")[] = ["drawing", "geometry", "places"];
 
