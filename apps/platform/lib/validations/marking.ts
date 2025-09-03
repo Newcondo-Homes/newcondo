@@ -1,0 +1,146 @@
+// apps/platform/lib/validations/marking.ts
+import { z } from 'zod';
+import { coordinateSchema, boundaryPointSchema } from './boundary';
+
+// Phone number validation for Nigeria
+const nigerianPhoneSchema = z.string()
+  .regex(/^(\+234|234|0)[789][01]\d{8}$/, 'Invalid Nigerian phone number')
+  .transform((val) => {
+    // Normalize to international format
+    if (val.startsWith('0')) {
+      return '+234' + val.slice(1);
+    }
+    if (val.startsWith('234')) {
+      return '+' + val;
+    }
+    return val;
+  });
+
+// Marking job urgency levels
+export const urgencyLevelSchema = z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']);
+
+// Marking job status
+export const markingJobStatusSchema = z.enum([
+  'QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED'
+]);
+
+// Create marking job request
+export const createMarkingJobSchema = z.object({
+  propertyId: z.string().min(1, 'Property ID is required'),
+  
+  // Contact details
+  contactPersonName: z.string()
+    .min(2, 'Contact person name must be at least 2 characters')
+    .max(100, 'Contact person name cannot exceed 100 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Contact person name contains invalid characters'),
+  
+  contactPersonPhone: nigerianPhoneSchema,
+  
+  // Access instructions
+  accessInstructions: z.string()
+    .min(10, 'Access instructions must be at least 10 characters')
+    .max(500, 'Access instructions cannot exceed 500 characters')
+    .optional(),
+  
+  // Preferred time
+  preferredTime: z.coerce.date()
+    .refine(
+      (date) => date > new Date(),
+      'Preferred time must be in the future'
+    )
+    .refine(
+      (date) => {
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + 30); // Max 30 days in advance
+        return date <= maxDate;
+      },
+      'Preferred time cannot be more than 30 days in advance'
+    )
+    .optional(),
+  
+  // Urgency level
+  urgencyLevel: urgencyLevelSchema.default('NORMAL'),
+  
+  // Additional information
+  propertySize: z.enum(['SMALL', 'MEDIUM', 'LARGE']).optional(),
+  accessType: z.enum(['EASY', 'RESTRICTED', 'DIFFICULT']).optional(),
+  specialInstructions: z.string().max(300, 'Special instructions cannot exceed 300 characters').optional(),
+  
+  // Alternative contact
+  alternativeContact: z.object({
+    name: z.string().min(2).max(100),
+    phone: nigerianPhoneSchema,
+    relationship: z.string().max(50),
+  }).optional(),
+});
+
+// Update marking job request
+export const updateMarkingJobSchema = z.object({
+  jobId: z.string().min(1, 'Job ID is required'),
+  
+  // Updatable fields
+  contactPersonName: z.string().min(2).max(100).optional(),
+  contactPersonPhone: nigerianPhoneSchema.optional(),
+  accessInstructions: z.string().min(10).max(500).optional(),
+  preferredTime: z.coerce.date()
+    .refine((date) => date > new Date(), 'Preferred time must be in the future')
+    .optional(),
+  urgencyLevel: urgencyLevelSchema.optional(),
+  specialInstructions: z.string().max(300).optional(),
+  
+  // Status updates (admin/agent only)
+  status: markingJobStatusSchema.optional(),
+  assignedAgentId: z.string().optional(),
+  completionNotes: z.string().max(1000).optional(),
+});
+
+// Agent assignment request
+export const assignAgentSchema = z.object({
+  jobId: z.string().min(1, 'Job ID is required'),
+  agentId: z.string().min(1, 'Agent ID is required'),
+  estimatedCompletionTime: z.coerce.date()
+    .refine(
+      (date) => date > new Date(),
+      'Estimated completion time must be in the future'
+    )
+    .refine(
+      (date) => {
+        const maxTime = new Date();
+        maxTime.setHours(maxTime.getHours() + 3); // Max 3 hours for completion
+        return date <= maxTime;
+      },
+      'Estimated completion time cannot exceed 3 hours'
+    ),
+  agentNotes: z.string().max(300, 'Agent notes cannot exceed 300 characters').optional(),
+});
+
+// Complete marking job request
+export const completeMarkingJobSchema = z.object({
+jobId: z.string().min(1, 'Job ID is required'),
+// Boundary data
+boundaryCoordinates: z.array(boundaryPointSchema)
+.min(3, 'Property boundary must have at least 3 points')
+.max(20, 'Property boundary cannot have more than 20 points'),
+// Completion evidence
+completionImages: z.array(z.string().url('Invalid image URL'))
+.min(1, 'At least one completion image is required')
+.max(10, 'Cannot upload more than 10 completion images'),
+// Completion notes
+completionNotes: z.string()
+.min(20, 'Completion notes must be at least 20 characters')
+.max(1000, 'Completion notes cannot exceed 1000 characters'),
+// Property verification
+propertyMatches: z.boolean(),
+propertyCondition: z.enum(['EXCELLENT', 'GOOD', 'FAIR', 'POOR']),
+accessDifficulty: z.enum(['EASY', 'MODERATE', 'DIFFICULT']),
+// Additional findings
+additionalFindings: z.string().max(500).optional(),
+recommendedActions: z.array(z.string()).max(5).optional(),
+// GPS accuracy
+gpsAccuracy: z.number()
+.min(1, 'GPS accuracy must be at least 1 meter')
+.max(50, 'GPS accuracy cannot exceed 50 meters'),
+// Final verification
+verifiedByAgentId: z.string().min(1, 'Agent ID is required'),
+verifiedAt: z.coerce.date()
+});

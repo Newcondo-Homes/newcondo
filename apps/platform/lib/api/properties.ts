@@ -1,0 +1,293 @@
+// apps/platform/lib/api/properties.ts
+import { Property, PropertyStatus, PropertyType, PropertyStructure } from '@newcondo/db'
+import { apiClient } from './client'
+
+export interface CreatePropertyPayload {
+  title: string
+  description: string
+  structure: PropertyStructure
+  price?: number
+  currency?: string
+  address: string
+  city: string
+  state: string
+  country?: string
+  gpsCoordinates?: string
+  propertyType: PropertyType
+  bedrooms?: number
+  bathrooms?: number
+  area?: string
+  features: string[]
+  buildingFeatures?: string[]
+  totalUnits?: number
+  availableUnits?: number
+  isOwnerListing: boolean
+  agentId?: string
+  availableFrom?: string
+  shareableLink?: string
+}
+
+export interface UpdatePropertyPayload extends Partial<CreatePropertyPayload> {
+  id: string
+}
+
+export interface PropertyFilters {
+  city?: string
+  state?: string
+  propertyType?: PropertyType
+  minPrice?: number
+  maxPrice?: number
+  bedrooms?: number
+  bathrooms?: number
+  features?: string[]
+  isAvailable?: boolean
+  ownerId?: string
+  agentId?: string
+  structure?: PropertyStructure
+  page?: number
+  limit?: number
+  sortBy?: 'price' | 'createdAt' | 'updatedAt' | 'viewCount'
+  sortOrder?: 'asc' | 'desc'
+}
+
+export interface PropertyBoundaryData {
+  boundaryCoordinates: {
+    type: 'Polygon'
+    coordinates: number[][][]
+  }
+  gpsCoordinates: {
+    lat: number
+    lng: number
+  }
+  boundaryImages?: string[]
+  buildingFingerprint: string
+}
+
+export interface PropertyResponse extends Property {
+  owner: {
+    id: string
+    name: string | null
+    email: string
+    phone: string | null
+    verificationStatus: string
+  }
+  agent?: {
+    id: string
+    name: string | null
+    email: string
+    phone: string | null
+  }
+  images: Array<{
+    id: string
+    url: string
+    altText: string | null
+    isPrimary: boolean
+    order: number
+  }>
+  units?: Array<{
+    id: string
+    unitNumber: string
+    floor: number | null
+    bedrooms: number | null
+    bathrooms: number | null
+    area: string | null
+    price: number
+    status: string
+    isAvailable: boolean
+    features: string[]
+  }>
+  _count?: {
+    rentals: number
+    duplicateReports: number
+  }
+}
+
+export interface PropertyListResponse {
+  properties: PropertyResponse[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+// Property CRUD Operations
+export const propertyApi = {
+  // Create new property
+  async create(data: CreatePropertyPayload): Promise<PropertyResponse> {
+    const response = await apiClient.post('/properties', data)
+    return response.data
+  },
+
+  // Get property by ID
+  async getById(id: string): Promise<PropertyResponse> {
+    const response = await apiClient.get(`/properties/${id}`)
+    return response.data
+  },
+
+  // Update property
+  async update(data: UpdatePropertyPayload): Promise<PropertyResponse> {
+    const { id, ...updateData } = data
+    const response = await apiClient.put(`/properties/${id}`, updateData)
+    return response.data
+  },
+
+  // Delete property
+  async delete(id: string): Promise<void> {
+    await apiClient.delete(`/properties/${id}`)
+  },
+
+  // Get properties with filters and pagination
+  async getAll(filters?: PropertyFilters): Promise<PropertyListResponse> {
+    const params = new URLSearchParams()
+    
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(`${key}[]`, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+
+    const response = await apiClient.get(`/properties?${params.toString()}`)
+    return response.data
+  },
+
+  // Get user's properties (owner or agent)
+  async getUserProperties(userId: string, filters?: Omit<PropertyFilters, 'ownerId' | 'agentId'>): Promise<PropertyListResponse> {
+    const params = new URLSearchParams()
+    
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(`${key}[]`, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+
+    const response = await apiClient.get(`/properties/user/${userId}?${params.toString()}`)
+    return response.data
+  },
+
+  // Update property boundary data
+  async updateBoundary(propertyId: string, boundaryData: PropertyBoundaryData): Promise<PropertyResponse> {
+    const response = await apiClient.put(`/properties/${propertyId}/boundary`, boundaryData)
+    return response.data
+  },
+
+  // Verify property boundary
+  async verifyBoundary(propertyId: string): Promise<PropertyResponse> {
+    const response = await apiClient.post(`/properties/${propertyId}/boundary/verify`)
+    return response.data
+  },
+
+  // Update property status
+  async updateStatus(propertyId: string, status: PropertyStatus): Promise<PropertyResponse> {
+    const response = await apiClient.patch(`/properties/${propertyId}/status`, { status })
+    return response.data
+  },
+
+  // Toggle property availability
+  async toggleAvailability(propertyId: string, isAvailable: boolean): Promise<PropertyResponse> {
+    const response = await apiClient.patch(`/properties/${propertyId}/availability`, { isAvailable })
+    return response.data
+  },
+
+  // Increment property view count
+  async incrementViewCount(propertyId: string): Promise<void> {
+    await apiClient.post(`/properties/${propertyId}/view`)
+  },
+
+  // Search properties by location
+  async searchByLocation(
+    lat: number,
+    lng: number,
+    radius: number,
+    filters?: Omit<PropertyFilters, 'city' | 'state'>
+  ): Promise<PropertyListResponse> {
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lng: lng.toString(),
+      radius: radius.toString()
+    })
+
+    if (filters) {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          if (Array.isArray(value)) {
+            value.forEach(v => params.append(`${key}[]`, v.toString()))
+          } else {
+            params.append(key, value.toString())
+          }
+        }
+      })
+    }
+
+    const response = await apiClient.get(`/properties/search/location?${params.toString()}`)
+    return response.data
+  },
+
+  // Get property suggestions based on user preferences
+  async getSuggestions(userId: string, limit: number = 10): Promise<PropertyResponse[]> {
+    const response = await apiClient.get(`/properties/suggestions/${userId}?limit=${limit}`)
+    return response.data
+  },
+
+  // Get similar properties
+  async getSimilar(propertyId: string, limit: number = 5): Promise<PropertyResponse[]> {
+    const response = await apiClient.get(`/properties/${propertyId}/similar?limit=${limit}`)
+    return response.data
+  },
+
+  // Lock property for payment (prevent double booking)
+  async lockForPayment(propertyId: string, unitId?: string): Promise<{ success: boolean; lockExpiry: string }> {
+    const response = await apiClient.post(`/properties/${propertyId}/lock`, { unitId })
+    return response.data
+  },
+
+  // Release property payment lock
+  async releaseLock(propertyId: string, unitId?: string): Promise<{ success: boolean }> {
+    const response = await apiClient.post(`/properties/${propertyId}/unlock`, { unitId })
+    return response.data
+  },
+
+  // Bulk operations for multi-family properties
+  async bulkUpdateUnits(propertyId: string, units: Array<{
+    id?: string
+    unitNumber: string
+    floor?: number
+    bedrooms?: number
+    bathrooms?: number
+    area?: string
+    price: number
+    features?: string[]
+    isAvailable?: boolean
+  }>): Promise<PropertyResponse> {
+    const response = await apiClient.put(`/properties/${propertyId}/units/bulk`, { units })
+    return response.data
+  },
+
+  // Get property analytics
+  async getAnalytics(propertyId: string, period: 'week' | 'month' | 'year' = 'month'): Promise<{
+    views: number
+    inquiries: number
+    rentals: number
+    revenue: number
+    viewsOverTime: Array<{ date: string; count: number }>
+    popularFeatures: Array<{ feature: string; count: number }>
+  }> {
+    const response = await apiClient.get(`/properties/${propertyId}/analytics?period=${period}`)
+    return response.data
+  }
+}
