@@ -1,0 +1,120 @@
+{
+  "name": "@newcondo/marking-service",
+  "version": "1.0.0",
+  "description": "Property boundary marking and verification service for NewCondo platform",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev:watch": "ts-node-dev --respawn --transpile-only --watch src src/server.ts",
+    "clean": "rimraf dist",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "docker:build": "docker build -t newcondo-marking-service .",
+    "docker:run": "docker run -p 3005:3005 newcondo-marking-service"
+  },
+  "keywords": [
+    "newcondo",
+    "property",
+    "marking",
+    "boundary",
+    "verification",
+    "geolocation",
+    "real-estate"
+  ],
+  "author": "NewCondo Development Team",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "express-rate-limit": "^7.1.5",
+    "express-validator": "^7.0.1",
+    "dotenv": "^16.3.1",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "@newcondo/db": "workspace:*",
+    "zod": "^3.22.4",
+    "date-fns": "^2.30.0",
+    "uuid": "^9.0.1",
+    "lodash": "^4.17.21",
+    "axios": "^1.6.2",
+    "node-cron": "^3.0.3",
+    "bull": "^4.12.2",
+    "redis": "^4.6.10",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.6",
+    "geolib": "^3.3.4",
+    "@turf/turf": "^6.5.0",
+    "ws": "^8.15.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/compression": "^1.7.5",
+    "@types/morgan": "^1.9.9",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.4",
+    "@types/uuid": "^9.0.7",
+    "@types/lodash": "^4.14.202",
+    "@types/multer": "^1.4.11",
+    "@types/ws": "^8.5.10",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.15.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8",
+    "ts-jest": "^29.1.1",
+    "supertest": "^6.3.3",
+    "@types/supertest": "^6.0.2",
+    "rimraf": "^5.0.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": ["<rootDir>/src"],
+    "testMatch": ["**/__tests__/**/*.ts", "**/*.test.ts"],
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/**/*.d.ts",
+      "!src/server.ts",
+      "!src/types/**"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov", "html"]
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": ["@typescript-eslint"],
+    "extends": [
+      "eslint:recommended",
+      "@typescript-eslint/recommended"
+    ],
+    "rules": {
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "prefer-const": "error",
+      "no-var": "error"
+    },
+    "env": {
+      "node": true,
+      "es2022": true
+    }
+  }
+}
