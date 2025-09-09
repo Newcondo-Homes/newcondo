@@ -1,0 +1,346 @@
+<!-- backend/notification-service/src/templates/document-verification-required.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Verification Required - NewCondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8fafc;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 32px 24px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 8px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 32px 24px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 24px;
+        }
+        
+        .message {
+            color: #4b5563;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        
+        .document-list {
+            background-color: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+        }
+        
+        .document-list h3 {
+            color: #92400e;
+            margin: 0 0 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .document-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #fbbf24;
+        }
+        
+        .document-item:last-child {
+            border-bottom: none;
+        }
+        
+        .document-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            color: #d97706;
+        }
+        
+        .document-name {
+            font-weight: 500;
+            color: #92400e;
+        }
+        
+        .status-badge {
+            margin-left: auto;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .status-required {
+            background-color: #fecaca;
+            color: #b91c1c;
+        }
+        
+        .status-pending {
+            background-color: #fed7aa;
+            color: #c2410c;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 32px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .requirements {
+            background-color: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+        }
+        
+        .requirements h3 {
+            color: #374151;
+            margin: 0 0 16px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .requirement-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .requirement-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .check-icon {
+            width: 16px;
+            height: 16px;
+            color: #059669;
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+        
+        .requirement-text {
+            color: #4b5563;
+            font-size: 14px;
+        }
+        
+        .timeline {
+            background-color: #fef2f2;
+            border: 1px solid #f87171;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 24px 0;
+        }
+        
+        .timeline h3 {
+            color: #dc2626;
+            margin: 0 0 8px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .timeline p {
+            color: #7f1d1d;
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .footer {
+            background-color: #f9fafb;
+            padding: 24px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer p {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0 0 8px;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .social-links {
+            margin-top: 16px;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 8px;
+            color: #9ca3af;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .content {
+                padding: 24px 16px;
+            }
+            
+            .header {
+                padding: 24px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Document Verification Required</h1>
+            <p>Complete your verification to continue</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello {{userName}},
+            </div>
+            
+            <div class="message">
+                We need to verify some documents to complete your account setup and ensure compliance with our platform requirements. Please upload the required documents as soon as possible.
+            </div>
+            
+            {{#if requiredDocuments}}
+            <div class="document-list">
+                <h3>📋 Required Documents</h3>
+                {{#each requiredDocuments}}
+                <div class="document-item">
+                    <div class="document-icon">📄</div>
+                    <div class="document-name">{{this.name}}</div>
+                    <span class="status-badge status-required">Required</span>
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            
+            {{#if pendingDocuments}}
+            <div class="document-list">
+                <h3>⏳ Pending Verification</h3>
+                {{#each pendingDocuments}}
+                <div class="document-item">
+                    <div class="document-icon">📄</div>
+                    <div class="document-name">{{this.name}}</div>
+                    <span class="status-badge status-pending">Pending</span>
+                </div>
+                {{/each}}
+            </div>
+            {{/if}}
+            
+            <div class="cta-section">
+                <a href="{{uploadDocumentsUrl}}" class="cta-button">
+                    Upload Documents Now
+                </a>
+            </div>
+            
+            <div class="requirements">
+                <h3>📋 Document Requirements</h3>
+                <div class="requirement-item">
+                    <div class="check-icon">✓</div>
+                    <div class="requirement-text">Clear, high-resolution images or PDFs</div>
+                </div>
+                <div class="requirement-item">
+                    <div class="check-icon">✓</div>
+                    <div class="requirement-text">All text must be clearly readable</div>
+                </div>
+                <div class="requirement-item">
+                    <div class="check-icon">✓</div>
+                    <div class="requirement-text">Documents must be current and not expired</div>
+                </div>
+                <div class="requirement-item">
+                    <div class="check-icon">✓</div>
+                    <div class="requirement-text">File size should not exceed 10MB</div>
+                </div>
+                <div class="requirement-item">
+                    <div class="check-icon">✓</div>
+                    <div class="requirement-text">Accepted formats: JPG, PNG, PDF</div>
+                </div>
+            </div>
+            
+            {{#if urgentVerification}}
+            <div class="timeline">
+                <h3>⚠️ Urgent Verification Required</h3>
+                <p>Please upload your documents within the next {{timelineHours}} hours to avoid account restrictions.</p>
+            </div>
+            {{/if}}
+            
+            <div class="message">
+                <strong>Need help?</strong> Our support team is available 24/7 to assist you with the document upload process. You can reach us at <a href="mailto:support@newcondo.com">support@newcondo.com</a> or through our help center.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message from NewCondo.</p>
+            <p>
+                <a href="{{unsubscribeUrl}}">Unsubscribe</a> | 
+                <a href="{{privacyPolicyUrl}}">Privacy Policy</a> | 
+                <a href="{{supportUrl}}">Support</a>
+            </p>
+            <div class="social-links">
+                <a href="{{facebookUrl}}">Facebook</a>
+                <a href="{{twitterUrl}}">Twitter</a>
+                <a href="{{linkedinUrl}}">LinkedIn</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

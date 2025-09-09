@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Compliance Reminder - NewCondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #f39c12;
+        }
+        .warning-title {
+            color: #856404;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 0 0 10px 0;
+        }
+        .urgent-box {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #dc3545;
+        }
+        .urgent-title {
+            color: #721c24;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 0 0 10px 0;
+        }
+        .countdown-box {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .countdown-number {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .missing-documents {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .document-list {
+            list-style: none;
+            padding: 0;
+            margin: 15px 0;
+        }
+        .document-list li {
+            padding: 12px;
+            margin: 8px 0;
+            background-color: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .document-name {
+            font-weight: 500;
+            color: #495057;
+        }
+        .status-missing {
+            color: #dc3545;
+            font-weight: 500;
+            font-size: 12px;
+            background-color: #f8d7da;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            color: #856404;
+            font-weight: 500;
+            font-size: 12px;
+            background-color: #fff3cd;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .consequences {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .consequences h4 {
+            color: #721c24;
+            margin-top: 0;
+        }
+        .consequences ul {
+            color: #721c24;
+            margin: 10px 0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 15px 10px 15px 0;
+            text-align: center;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .requirements-box {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .requirements-box h4 {
+            color: #155724;
+            margin-top: 0;
+        }
+        .requirements-box ul {
+            color: #155724;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Legal Compliance Required</h1>
+            <p>Important: Complete your document submission</p>
+        </div>
+        
+        <div class="content">
+            {{#isUrgent}}
+            <div class="urgent-box">
+                <div class="urgent-title">⚠️ Urgent Action Required</div>
+                <p>Hello {{userName}},</p>
+                <p><strong>Your account compliance deadline is approaching.</strong> To continue using NewCondo and avoid account restrictions, you must complete your legal document submissions immediately.</p>
+            </div>
+            
+            <div class="countdown-box">
+                <div>Time Remaining</div>
+                <div class="countdown-number">{{daysRemaining}} Days</div>
+                <div>Until account restriction</div>
+            </div>
+            {{/isUrgent}}
+            
+            {{^isUrgent}}
+            <div class="warning-box">
+                <div class="warning-title">Document Compliance Reminder</div>
+                <p>Hello {{userName}},</p>
+                <p>This is a reminder that you have pending legal documents that need to be submitted to maintain compliance with our platform requirements.</p>
+            </div>
+            {{/isUrgent}}
+
+            <div class="missing-documents">
+                <h3 style="margin-top: 0; color: #495057;">Missing/Pending Documents</h3>
+                <p style="color: #6c757d; margin-bottom: 15px;">The following documents require your attention:</p>
+                
+                <ul class="document-list">
+                    {{#missingDocuments}}
+                    <li>
+                        <div class="document-name">{{documentType}}</div>
+                        <div class="status-missing">Missing</div>
+                    </li>
+                    {{/missingDocuments}}
+                    
+                    {{#pendingDocuments}}
+                    <li>
+                        <div class="document-name">{{documentType}}</div>
+                        <div class="status-pending">Under Review</div>
+                    </li>
+                    {{/pendingDocuments}}
+                </ul>
+            </div>
+
+            {{#userType.isPropertyOwner}}
+            <div class="requirements-box">
+                <h4>Required Documents for Property Owners:</h4>
+                <ul>
+                    <li><strong>Proof of Ownership:</strong> Title deeds, Certificate of Occupancy, or Purchase Agreement</li>
+                    <li><strong>Identity Verification:</strong> Valid government-issued ID (NIN, Passport, Driver's License)</li>
+                    <li><strong>Consent Documents:</strong> If listing through an agent</li>
+                    <li><strong>Legal Undertaking:</strong> Signed declaration of property ownership and rights</li>
+                </ul>
+            </div>
+            {{/userType.isPropertyOwner}}
+            
+            {{#userType.isAgent}}
+            <div class="requirements-box">
+                <h4>Required Documents for Agents:</h4>
+                <ul>
+                    <li><strong>Agent License:</strong> Valid real estate agent license or certification</li>
+                    <li><strong>Identity Verification:</strong> Valid government-issued ID</li>
+                    <li><strong>Owner Authorization:</strong> Signed consent from property owners for each listing</li>
+                    <li><strong>Business Registration:</strong> If operating as a business entity</li>
+                    <li><strong>Legal Undertaking:</strong> Signed agent agreement and terms</li>
+                </ul>
+            </div>
+            {{/userType.isAgent}}
+            
+            {{#userType.isRenter}}
+            <div class="requirements-box">
+                <h4>Required Documents for Renters:</h4>
+                <ul>
+                    <li><strong>Identity Verification:</strong> Valid government-issued ID (NIN, Passport, Driver's License)</li>
+                    <li><strong>Income Verification:</strong> Bank statements or employment letter</li>
+                    <li><strong>Utility Bill:</strong> Recent utility bill for address verification</li>
+                </ul>
+            </div>
+            {{/userType.isRenter}}
+
+            {{#isUrgent}}
+            <div class="consequences">
+                <h4>⚠️ Consequences of Non-Compliance</h4>
+                <p>If documents are not submitted within {{daysRemaining}} days, the following restrictions will apply:</p>
+                <ul>
+                    <li>Property listings will be temporarily hidden</li>
+                    <li>New property submissions will be blocked</li>
+                    <li>Payment processing may be suspended</li>
+                    <li>Account access may be limited</li>
+                    <li>Profile verification status will be downgraded</li>
+                </ul>
+            </div>
+            {{/isUrgent}}
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{uploadLink}}" class="btn btn-primary">Upload Documents Now</a>
+                {{#hasRejectedDocs}}
+                <a href="{{resubmitLink}}" class="btn">Resubmit Rejected Documents</a>
+                {{/hasRejectedDocs}}
+                <a href="{{supportLink}}" class="btn btn-secondary">Get Help</a>
+            </div>
+
+            <div style="background-color: #e9ecef; padding: 20px; border-radius: 8px; margin-top: 30px;">
+                <h4 style="margin-top: 0; color: #495057;">Document Submission Guidelines:</h4>
+                <ul style="color: #6c757d; margin: 0;">
+                    <li>Ensure documents are clear, legible, and not expired</li>
+                    <li>Upload high-quality images or PDFs (max 5MB per file)</li>
+                    <li>All document information must match your profile details</li>
+                    <li>Submit complete documents (both sides if applicable)</li>
+                    <li>Processing typically takes 24-48 hours</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 6px;">
+                <h4 style="margin-top: 0; color: #495057;">Need Assistance?</h4>
+                <p style="margin-bottom: 0;">Our support team is ready to help with any questions:</p>
+                <ul style="margin: 10px 0;">
+                    <li>Email: compliance@newcondo.com</li>
+                    <li>Phone: +234 (0) 123 456 7890</li>
+                    <li>WhatsApp: +234 (0) 123 456 7890</li>
+                    <li>Live Chat: Available 9 AM - 6 PM (Mon-Fri)</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Secure, Compliant, Trusted</p>
+            <p>This is an automated compliance reminder. Please do not reply to this email.</p>
+            <p>© 2024 NewCondo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

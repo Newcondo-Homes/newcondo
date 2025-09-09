@@ -1,4 +1,5 @@
 // backend/property-service/src/services/legalService.ts
+import { prisma } from '@newcondo/db';
 import { PrismaClient, DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
 import { PropertyDocument, LegalDocumentValidation, DocumentUploadData } from '../types/boundary';
 
@@ -110,6 +111,83 @@ export class LegalService {
     });
   }
 
+  // Update a document
+  async updateDocument(documentId: string, userId: string, updateData: Partial<LegalDocumentData>) {
+    // Verify document ownership
+    const document = await prisma.document.findFirst({
+      where: {
+        id: documentId,
+        userId
+      }
+    });
+
+    if (!document) {
+      throw new Error('Document not found or unauthorized');
+    }
+
+    if (document.status === DocumentStatus.APPROVED) {
+      throw new Error('Cannot update approved documents');
+    }
+
+    const updatedDocument = await prisma.document.update({
+      where: { id: documentId },
+      data: {
+        ...updateData,
+        status: DocumentStatus.PENDING, // Reset to pending after update
+        updatedAt: new Date()
+      }
+    });
+
+    // Log the document update
+    await prisma.eventLog.create({
+      data: {
+        userId,
+        type: 'DOCUMENT_UPDATED',
+        metadata: {
+          documentId,
+          updateData
+        }
+      }
+    });
+
+    return updatedDocument;
+  }
+
+  // Delete a document
+  async deleteDocument(documentId: string, userId: string) {
+    // Verify document ownership
+    const document = await prisma.document.findFirst({
+      where: {
+        id: documentId,
+        userId
+      }
+    });
+
+    if (!document) {
+      throw new Error('Document not found or unauthorized');
+    }
+
+    if (document.status === DocumentStatus.APPROVED && document.isRequired) {
+      throw new Error('Cannot delete required approved documents');
+    }
+
+    await prisma.document.delete({
+      where: { id: documentId }
+    });
+
+    // Log the document deletion
+    await prisma.eventLog.create({
+      data: {
+        userId,
+        type: 'DOCUMENT_DELETED',
+        metadata: {
+          documentId,
+          documentType: document.documentType
+        }
+      }
+    });
+  }
+
   /**
    * Update document status (admin only)
    */
@@ -131,22 +209,22 @@ export class LegalService {
   /**
    * Delete document
    */
-  async deleteDocument(documentId: string, userId: string): Promise<void> {
-    const document = await this.db.document.findFirst({
-      where: {
-        id: documentId,
-        userId,
-      },
-    });
+  // async deleteDocument(documentId: string, userId: string): Promise<void> {
+  //   const document = await this.db.document.findFirst({
+  //     where: {
+  //       id: documentId,
+  //       userId,
+  //     },
+  //   });
 
-    if (!document) {
-      throw new Error('Document not found or unauthorized');
-    }
+  //   if (!document) {
+  //     throw new Error('Document not found or unauthorized');
+  //   }
 
-    await this.db.document.delete({
-      where: { id: documentId },
-    });
-  }
+  //   await this.db.document.delete({
+  //     where: { id: documentId },
+  //   });
+  // }
 
   /**
    * Check if user has all required documents for property
@@ -334,4 +412,277 @@ export class LegalService {
         return null; // No expiration for other document types
     }
   }
+
+  // Get required documents for property listing
+  async getRequiredDocuments(propertyId: string, userId: string) {
+    // Get user info to determine required documents
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const property = await prisma.property.findFirst({
+      where: {
+        id: propertyId,
+        OR: [
+          { ownerId: userId },
+          { agentId: userId }
+        ]
+      }
+    });
+
+    if (!property) {
+      throw new Error('Unauthorized or property not found');
+    }
+
+    // Get existing documents
+    const existingDocuments = await prisma.document.findMany({
+      where: {
+        propertyId,
+        userId
+      }
+    });
+
+    // Determine required documents based on user role and property
+    const requiredDocTypes = this.getRequiredDocumentTypes(user.role, property.isOwnerListing);
+    
+    const requiredDocuments = requiredDocTypes.map(docType => {
+      const existing = existingDocuments.find(doc => doc.documentType === docType);
+      return {
+        documentType: docType,
+        isRequired: true,
+        status: existing?.status || 'NOT_UPLOADED',
+        document: existing || null,
+        description: this.getDocumentDescription(docType)
+      };
+    });
+
+    return {
+      propertyId,
+      requiredDocuments,
+      totalRequired: requiredDocuments.length,
+      uploaded: requiredDocuments.filter(doc => doc.document).length,
+      approved: requiredDocuments.filter(doc => doc.status === DocumentStatus.APPROVED).length,
+      isCompliant: requiredDocuments.every(doc => doc.status === DocumentStatus.APPROVED)
+    };
+  }
+
+  // Record terms and conditions acceptance
+  async recordTermsAcceptance(userId: string, termsVersion: string, acceptedAt: Date): Promise<TermsAcceptance> {
+    // Log the acceptance in event log
+    await prisma.eventLog.create({
+      data: {
+        userId,
+        type: 'TERMS_ACCEPTED',
+        metadata: {
+          termsVersion,
+          acceptedAt: acceptedAt.toISOString(),
+          ipAddress: null // Would be passed from controller
+        }
+      }
+    });
+
+    return {
+      userId,
+      termsVersion,
+      acceptedAt,
+      isValid: true
+    };
+  }
+
+  // Add digital signature to document
+  async addDigitalSignature(documentId: string, userId: string, signatureUrl: string, signedAt: Date) {
+    // Verify document ownership
+    const document = await prisma.document.findFirst({
+      where: {
+        id: documentId,
+        userId
+      }
+    });
+
+    if (!document) {
+      throw new Error('Document not found or unauthorized');
+    }
+
+    // Update document with signature info (using metadata field)
+    const updatedDocument = await prisma.document.update({
+      where: { id: documentId },
+      data: {
+        // Store signature data in metadata since it's JSON
+        // In a real implementation, you might want a separate signatures table
+        updatedAt: new Date()
+      }
+    });
+
+    // Log the signature
+    await prisma.eventLog.create({
+      data: {
+        userId,
+        type: 'DOCUMENT_SIGNED',
+        metadata: {
+          documentId,
+          signatureUrl,
+          signedAt: signedAt.toISOString()
+        }
+      }
+    });
+
+    return updatedDocument;
+  }
+
+  // Get document templates
+  async getDocumentTemplates(documentType?: DocumentType): Promise<DocumentTemplate[]> {
+    // This would typically come from a database or file system
+    // For now, returning static templates
+    const allTemplates: DocumentTemplate[] = [
+      {
+        id: 'ownership_template_1',
+        documentType: DocumentType.OWNERSHIP_DOCUMENT,
+        name: 'Certificate of Occupancy Template',
+        description: 'Standard template for certificate of occupancy',
+        templateUrl: '/templates/certificate-of-occupancy.pdf',
+        isRequired: true
+      },
+      {
+        id: 'consent_template_1',
+        documentType: DocumentType.CONSENT_DOCUMENT,
+        name: 'Agent Consent Form',
+        description: 'Consent form for property agents',
+        templateUrl: '/templates/agent-consent-form.pdf',
+        isRequired: true
+      },
+      {
+        id: 'undertaking_template_1',
+        documentType: DocumentType.UNDERTAKING_DOCUMENT,
+        name: 'Property Undertaking Agreement',
+        description: 'Standard undertaking agreement for property listings',
+        templateUrl: '/templates/undertaking-agreement.pdf',
+        isRequired: true
+      }
+    ];
+
+    if (documentType) {
+      return allTemplates.filter(template => template.documentType === documentType);
+    }
+
+    return allTemplates;
+  }
+
+  // Check compliance status for property
+  async checkComplianceStatus(propertyId: string, userId: string): Promise<ComplianceStatus> {
+    const requiredDocs = await this.getRequiredDocuments(propertyId, userId);
+    
+    // Check terms acceptance
+    const termsAccepted = await prisma.eventLog.findFirst({
+      where: {
+        userId,
+        type: 'TERMS_ACCEPTED'
+      },
+      orderBy: {
+        timestamp: 'desc'
+      }
+    });
+
+    // Check privacy policy acceptance
+    const privacyAccepted = await prisma.eventLog.findFirst({
+      where: {
+        userId,
+        type: 'PRIVACY_POLICY_ACCEPTED'
+      },
+      orderBy: {
+        timestamp: 'desc'
+      }
+    });
+
+    const complianceChecks = [
+      {
+        requirement: 'Required Documents',
+        status: requiredDocs.isCompliant ? 'COMPLIANT' : 'NON_COMPLIANT',
+        details: `${requiredDocs.approved}/${requiredDocs.totalRequired} documents approved`
+      },
+      {
+        requirement: 'Terms and Conditions',
+        status: termsAccepted ? 'COMPLIANT' : 'NON_COMPLIANT',
+        details: termsAccepted ? 'Accepted' : 'Not accepted'
+      },
+      {
+        requirement: 'Privacy Policy',
+        status: privacyAccepted ? 'COMPLIANT' : 'NON_COMPLIANT',
+        details: privacyAccepted ? 'Accepted' : 'Not accepted'
+      }
+    ];
+
+    const overallCompliant = complianceChecks.every(check => check.status === 'COMPLIANT');
+
+    return {
+      propertyId,
+      userId,
+      isCompliant: overallCompliant,
+      complianceScore: (complianceChecks.filter(check => check.status === 'COMPLIANT').length / complianceChecks.length) * 100,
+      checks: complianceChecks,
+      lastChecked: new Date()
+    };
+  }
+
+  // Private helper methods
+  private isDocumentRequired(documentType: DocumentType): boolean {
+    const requiredTypes = [
+      DocumentType.NIN,
+      DocumentType.OWNERSHIP_DOCUMENT,
+      DocumentType.CONSENT_DOCUMENT,
+      DocumentType.UNDERTAKING_DOCUMENT,
+      DocumentType.SELFIE
+    ];
+    return requiredTypes.includes(documentType);
+  }
+
+  private getRequiredDocumentTypes(userRole: Role, isOwnerListing: boolean): DocumentType[] {
+    const baseRequired = [
+      DocumentType.NIN,
+      DocumentType.SELFIE
+    ];
+
+    if (userRole === Role.OWNER || isOwnerListing) {
+      return [
+        ...baseRequired,
+        DocumentType.OWNERSHIP_DOCUMENT,
+        DocumentType.UNDERTAKING_DOCUMENT
+      ];
+    }
+
+    if (userRole === Role.AGENT) {
+      return [
+        ...baseRequired,
+        DocumentType.CONSENT_DOCUMENT,
+        DocumentType.UNDERTAKING_DOCUMENT
+      ];
+    }
+
+    return baseRequired;
+  }
+
+  private getDocumentDescription(documentType: DocumentType): string {
+    const descriptions: Record<DocumentType, string> = {
+      [DocumentType.NIN]: 'National Identification Number document',
+      [DocumentType.BVN]: 'Bank Verification Number',
+      [DocumentType.PASSPORT]: 'International passport',
+      [DocumentType.VOTERS_CARD]: 'Voter registration card',
+      [DocumentType.DRIVERS_LICENSE]: 'Driver\'s license',
+      [DocumentType.SELFIE]: 'Verification selfie photo',
+      [DocumentType.OWNERSHIP_DOCUMENT]: 'Proof of property ownership (Certificate of Occupancy, etc.)',
+      [DocumentType.CONSENT_DOCUMENT]: 'Property owner consent for agent listing',
+      [DocumentType.UNDERTAKING_DOCUMENT]: 'Legal undertaking agreement',
+      [DocumentType.BUSINESS_REGISTRATION]: 'Business registration certificate',
+      [DocumentType.TAX_CERTIFICATE]: 'Tax clearance certificate',
+      [DocumentType.UTILITY_BILL]: 'Utility bill for address verification',
+      [DocumentType.BANK_STATEMENT]: 'Bank account statement',
+      [DocumentType.OTHER]: 'Other supporting documents'
+    };
+
+    return descriptions[documentType] || 'Supporting document';
+  }
+  
 }

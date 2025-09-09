@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Rejected - NewCondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #f39c12;
+        }
+        .alert-title {
+            color: #856404;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 0 0 10px 0;
+        }
+        .document-details {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .document-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .document-item:last-child {
+            border-bottom: none;
+        }
+        .document-name {
+            font-weight: 500;
+            color: #495057;
+        }
+        .status-rejected {
+            color: #dc3545;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .rejection-reason {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #721c24;
+        }
+        .action-required {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            margin: 10px 10px 10px 0;
+            text-align: center;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .requirements-list {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .requirements-list ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .requirements-list li {
+            margin: 8px 0;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Document Verification Required</h1>
+            <p>Your document submission needs attention</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert-box">
+                <div class="alert-title">Document Rejected</div>
+                <p>Hello {{userName}},</p>
+                <p>We have reviewed your document submission and unfortunately, it cannot be approved in its current form. Please review the details below and resubmit the corrected documents.</p>
+            </div>
+
+            <div class="document-details">
+                <h3 style="margin-top: 0; color: #495057;">Rejected Document Details</h3>
+                
+                <div class="document-item">
+                    <div class="document-name">{{documentType}}</div>
+                    <div class="status-rejected">REJECTED</div>
+                </div>
+                
+                {{#documentSide}}
+                <div class="document-item">
+                    <div class="document-name">Document Side</div>
+                    <div>{{documentSide}}</div>
+                </div>
+                {{/documentSide}}
+                
+                {{#fileName}}
+                <div class="document-item">
+                    <div class="document-name">File Name</div>
+                    <div>{{fileName}}</div>
+                </div>
+                {{/fileName}}
+                
+                <div class="document-item">
+                    <div class="document-name">Submitted On</div>
+                    <div>{{submissionDate}}</div>
+                </div>
+            </div>
+
+            {{#rejectionReason}}
+            <div class="rejection-reason">
+                <strong>Reason for Rejection:</strong><br>
+                {{rejectionReason}}
+            </div>
+            {{/rejectionReason}}
+
+            <div class="requirements-list">
+                <h4 style="color: #155724; margin-top: 0;">Document Requirements:</h4>
+                <ul>
+                    <li>Image must be clear and legible</li>
+                    <li>All corners of the document must be visible</li>
+                    <li>No glare or shadows covering important information</li>
+                    <li>Document must be valid and not expired</li>
+                    <li>Personal information must match your profile details</li>
+                    <li>File format: JPEG, PNG, or PDF (max 5MB)</li>
+                </ul>
+            </div>
+
+            <div class="action-required">
+                <h3 style="margin-top: 0;">Action Required</h3>
+                <p>Please resubmit your document following the requirements above. Your account verification is on hold until we receive a valid document.</p>
+                
+                <div style="margin-top: 20px;">
+                    <a href="{{resubmissionLink}}" class="btn">Resubmit Document</a>
+                    <a href="{{supportLink}}" class="btn btn-secondary">Contact Support</a>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 6px;">
+                <h4 style="margin-top: 0; color: #495057;">Need Help?</h4>
+                <p style="margin-bottom: 0;">If you need assistance with document submission or have questions about the rejection, please contact our support team:</p>
+                <ul style="margin: 10px 0;">
+                    <li>Email: support@newcondo.com</li>
+                    <li>Phone: +234 (0) 123 456 7890</li>
+                    <li>WhatsApp: +234 (0) 123 456 7890</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Your Trusted Property Platform</p>
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>© 2024 NewCondo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
