@@ -1,516 +1,651 @@
 // backend/admin-service/src/services/documentVerificationService.ts
 
-import { PrismaClient, User, Document, DocumentStatus as PrismaDocumentStatus, UserType } from '@newcondo/db';
-import {
-  DocumentStatus,
-  DocumentType,
-  DocumentVerificationFilters,
-  DocumentComplianceStatus,
-  VerificationStats,
-  ComplianceReport,
-  DocumentHistory,
-  VerificationQueueSummary,
-  AdminVerificationAction
-} from '../types/documentVerification';
-import { notificationService } from '@newcondo/notification-service'; // Assuming a shared notification service import
+import { PrismaClient, DocumentType, DocumentStatus, Document, User, VerificationStatus } from '@newcondo/db';
+import { ApiResponse, ApiError } from '../../../shared/src/types/api';
+import { logger } from '../../../shared/src/middleware/logger';
+import { sendEmail } from '../../../shared/src/utils/email';
+import { sendSMS } from '../../../shared/src/utils/sms';
 
-const prisma = new PrismaClient();
+export interface VerificationRequest {
+  documentId: string;
+  adminId: string;
+  status: DocumentStatus.APPROVED | DocumentStatus.REJECTED;
+  notes?: string;
+  requiresFollowUp?: boolean;
+  followUpDeadline?: Date;
+}
 
-export class DocumentVerificationService {
-  // Get pending documents for verification
-  async getPendingDocuments(filters: DocumentVerificationFilters) {
-    const {
-      status = PrismaDocumentStatus.PENDING,
-      documentType,
-      userId,
-      propertyId,
-      page = 1,
-      limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'desc'
-    } = filters;
+export interface BulkVerificationRequest {
+  documentIds: string[];
+  adminId: string;
+  status: DocumentStatus.APPROVED | DocumentStatus.REJECTED;
+  notes?: string;
+}
 
-    const skip = (page - 1) * limit;
-    
-    const whereClause: any = {
-      status,
-      ...(documentType && { documentType }),
-      ...(userId && { userId }),
-      ...(propertyId && { propertyId })
-    };
+export interface VerificationQueue {
+  pending: Document[];
+  inReview: Document[];
+  requiresFollowUp: Document[];
+  total: number;
+}
 
-    const [documents, total] = await Promise.all([
-      prisma.document.findMany({
-        where: whereClause,
+export interface VerificationMetrics {
+  totalProcessed: number;
+  approvedCount: number;
+  rejectedCount: number;
+  avgProcessingTime: number; // in hours
+  pendingCount: number;
+  verificationsByType: Record<DocumentType, {
+    total: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+  }>;
+}
+
+export interface AdminPerformanceMetrics {
+  adminId: string;
+  adminName: string;
+  totalVerifications: number;
+  approvedCount: number;
+  rejectedCount: number;
+  avgProcessingTime: number;
+  accuracyScore?: number; // Based on appeals/reversals
+}
+
+class DocumentVerificationService {
+  private prisma: PrismaClient;
+
+  constructor() {
+    this.prisma = new PrismaClient();
+  }
+
+  /**
+   * Get documents in verification queue
+   */
+  async getVerificationQueue(adminId?: string): Promise<ApiResponse<VerificationQueue>> {
+    try {
+      const baseQuery = {
         include: {
           user: {
             select: {
               id: true,
               name: true,
               email: true,
-              phone: true,
-              role: true,
-              userType: true,
-              verificationStatus: true
+              phone: true
             }
           },
           property: {
             select: {
               id: true,
               title: true,
-              address: true,
-              city: true,
-              state: true
+              address: true
             }
           }
         },
         orderBy: {
-          [sortBy]: sortOrder
-        },
-        skip,
-        take: limit
-      }),
-      prisma.document.count({ where: whereClause })
-    ]);
-
-    return {
-      documents,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
-    };
-  }
-
-  // Get document details for verification
-  async getDocumentDetails(documentId: string) {
-    const document = await prisma.document.findUnique({
-      where: { id: documentId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            phone: true,
-            role: true,
-            userType: true,
-            verificationStatus: true,
-            dateOfBirth: true,
-            address: true,
-            city: true,
-            state: true,
-            country: true
-          }
-        },
-        property: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            address: true,
-            city: true,
-            state: true,
-            country: true,
-            propertyType: true,
-            status: true
-          }
+          createdAt: 'asc' as const
         }
-      }
-    });
+      };
 
-    if (!document) {
-      throw new Error('Document not found');
-    }
-
-    // Get related documents for context
-    const relatedDocuments = await prisma.document.findMany({
-      where: {
-        userId: document.userId,
-        id: { not: documentId }
-      },
-      select: {
-        id: true,
-        documentType: true,
-        status: true,
-        createdAt: true
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    return {
-      ...document,
-      relatedDocuments
-    };
-  }
-
-  // Verify (approve/reject) a document
-  async verifyDocument(
-    documentId: string,
-    status: DocumentStatus,
-    adminId: string,
-    verificationNotes?: string,
-    rejectionReason?: string
-  ) {
-    const document = await prisma.document.findUnique({
-      where: { id: documentId },
-      include: { user: true, property: true }
-    });
-
-    if (!document) {
-      throw new Error('Document not found');
-    }
-
-    if (document.status !== PrismaDocumentStatus.PENDING) {
-      throw new Error('Document has already been verified');
-    }
-
-    // Update document status
-    const updatedDocument = await prisma.document.update({
-      where: { id: documentId },
-      data: {
-        status,
-        verificationNotes,
-        updatedAt: new Date()
-      }
-    });
-
-    // Log admin action
-    await prisma.adminAction.create({
-      data: {
-        adminId,
-        action: status === PrismaDocumentStatus.APPROVED ? 'DOCUMENT_APPROVED' : 'DOCUMENT_REJECTED',
-        targetType: 'Document',
-        targetId: documentId,
-        description: `Document ${status.toLowerCase()}: ${document.documentType}`,
-        metadata: {
-          userId: document.userId,
-          documentType: document.documentType,
-          verificationNotes,
-          rejectionReason
-        }
-      }
-    });
-
-    // Check if this affects user's overall verification status
-    await this.updateUserVerificationStatus(document.userId);
-
-    // Send notification to user
-    await this.sendVerificationNotification(document, status, verificationNotes, rejectionReason);
-
-    return updatedDocument;
-  }
-
-  // Bulk verify documents
-  async bulkVerifyDocuments(
-    documentIds: string[],
-    status: DocumentStatus,
-    adminId: string,
-    verificationNotes?: string
-  ) {
-    // Get all documents
-    const documents = await prisma.document.findMany({
-      where: {
-        id: { in: documentIds },
-        status: PrismaDocumentStatus.PENDING
-      },
-      include: { user: true }
-    });
-
-    if (documents.length === 0) {
-      throw new Error('No eligible documents found for verification');
-    }
-
-    // Update documents
-    const updatedDocuments = await prisma.$transaction(
-      documents.map(doc => 
-        prisma.document.update({
-          where: { id: doc.id },
-          data: {
-            status,
-            verificationNotes,
-            updatedAt: new Date()
-          }
-        })
-      )
-    );
-
-    // Log admin actions
-    await prisma.$transaction(
-      documents.map(doc =>
-        prisma.adminAction.create({
-          data: {
-            adminId,
-            action: status === PrismaDocumentStatus.APPROVED ? 'DOCUMENT_APPROVED' : 'DOCUMENT_REJECTED',
-            targetType: 'Document',
-            targetId: doc.id,
-            description: `Bulk ${status.toLowerCase()}: ${doc.documentType}`,
-            metadata: {
-              userId: doc.userId,
-              documentType: doc.documentType,
-              verificationNotes,
-              isBulkAction: true
+      const [pending, requiresFollowUp] = await Promise.all([
+        this.prisma.document.findMany({
+          where: {
+            status: DocumentStatus.PENDING
+          },
+          ...baseQuery
+        }),
+        this.prisma.document.findMany({
+          where: {
+            status: DocumentStatus.REJECTED,
+            verificationNotes: {
+              contains: 'FOLLOW_UP_REQUIRED'
             }
-          }
+          },
+          ...baseQuery
         })
-      )
-    );
+      ]);
 
-    // Update user verification statuses
-    const userIds = [...new Set(documents.map(doc => doc.userId))];
-    await Promise.all(
-      userIds.map(userId => this.updateUserVerificationStatus(userId))
-    );
-
-    // Send notifications
-    await Promise.all(
-      documents.map(doc => this.sendVerificationNotification(doc, status, verificationNotes))
-    );
-
-    return {
-      updated: updatedDocuments.length,
-      failed: documentIds.length - updatedDocuments.length,
-      documents: updatedDocuments
-    };
-  }
-
-  // Get verification statistics
-  async getVerificationStats(filters: {
-    startDate?: Date;
-    endDate?: Date;
-    documentType?: DocumentType;
-  }): Promise<VerificationStats> {
-    const { startDate, endDate, documentType } = filters;
-    
-    const whereClause: any = {
-      ...(startDate && { createdAt: { gte: startDate } }),
-      ...(endDate && { createdAt: { lte: endDate } }),
-      ...(documentType && { documentType })
-    };
-
-    const [
-      totalDocuments,
-      pendingDocuments,
-      approvedDocuments,
-      rejectedDocuments,
-      expiredDocuments
-    ] = await Promise.all([
-      prisma.document.count({ where: whereClause }),
-      prisma.document.count({ where: { ...whereClause, status: PrismaDocumentStatus.PENDING } }),
-      prisma.document.count({ where: { ...whereClause, status: PrismaDocumentStatus.APPROVED } }),
-      prisma.document.count({ where: { ...whereClause, status: PrismaDocumentStatus.REJECTED } }),
-      prisma.document.count({ where: { ...whereClause, status: PrismaDocumentStatus.EXPIRED } })
-    ]);
-
-    // Get document type breakdown
-    const documentTypeStats = await prisma.document.groupBy({
-      by: ['documentType'],
-      _count: true,
-      where: whereClause
-    });
-    
-    const stats: VerificationStats = {
-      totalDocuments,
-      pendingDocuments,
-      approvedDocuments,
-      rejectedDocuments,
-      expiredDocuments,
-      documentTypeBreakdown: documentTypeStats.reduce((acc, curr) => {
-        acc[curr.documentType] = curr._count;
-        return acc;
-      }, {} as { [key in DocumentType]?: number })
-    };
-
-    return stats;
-  }
-
-  // Get verification queue summary
-  async getVerificationQueueSummary(): Promise<VerificationQueueSummary> {
-    const pendingDocuments = await prisma.document.count({
-      where: { status: PrismaDocumentStatus.PENDING }
-    });
-
-    const pendingByDocumentType = await prisma.document.groupBy({
-      by: ['documentType'],
-      _count: true,
-      where: { status: PrismaDocumentStatus.PENDING }
-    });
-
-    const pendingCountByType = pendingByDocumentType.reduce((acc, curr) => {
-      acc[curr.documentType] = curr._count;
-      return acc;
-    }, {} as { [key in DocumentType]?: number });
-
-    // Assuming a simple average time calculation from a log or audit trail.
-    // This is a placeholder and would require more complex logic in a real app.
-    const averageProcessingTime = await prisma.adminAction.aggregate({
-        _avg: {
-            createdAt: true
-        },
-        where: {
-            action: {
-                in: ['DOCUMENT_APPROVED', 'DOCUMENT_REJECTED'] as AdminVerificationAction[]
-            }
-        },
-        orderBy: {
-            createdAt: 'desc'
-        },
-    });
-
-    // In a real-world scenario, you'd calculate average time from a starting point
-    // (document upload) to an ending point (verification action).
-    const averageTimeInQueue = averageProcessingTime?._avg?.createdAt ? (new Date().getTime() - averageProcessingTime._avg.createdAt.getTime()) / 1000 : 0;
-
-    return {
-      pendingDocuments,
-      pendingCountByType,
-      averageTimeInQueue: averageTimeInQueue / 3600 // Convert to hours
-    };
-  }
-
-  // Check and update a user's overall verification status
-  private async updateUserVerificationStatus(userId: string) {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        documents: true
-      }
-    });
-
-    if (!user) return;
-
-    // Define required documents based on user type
-    const requiredDocumentTypes: DocumentType[] = [
-      DocumentType.SELFIE,
-    ];
-
-    if (user.role === 'OWNER' || user.userType === UserType.LANDLORD) {
-      requiredDocumentTypes.push(DocumentType.OWNERSHIP_DOCUMENT);
-    }
-    // Add other required documents based on business logic, e.g., agent-specific docs
-
-    const hasAllRequired = requiredDocumentTypes.every(docType =>
-      user.documents.some(d => d.documentType === docType && d.status === PrismaDocumentStatus.APPROVED)
-    );
-
-    // Update user's verification status
-    if (hasAllRequired) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          verificationStatus: 'VERIFIED',
-          verifiedAt: new Date()
-        }
-      });
-    } else {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          verificationStatus: 'PENDING'
-        }
-      });
-    }
-  }
-
-  // Send notification to user about document verification status
-  private async sendVerificationNotification(
-    document: Document & { user: User },
-    status: DocumentStatus,
-    verificationNotes?: string,
-    rejectionReason?: string
-  ) {
-    if (status === PrismaDocumentStatus.APPROVED) {
-      // Send approved notification
-      await notificationService.sendEmail({
-        to: document.user.email,
-        subject: `Your ${document.documentType} Document Has Been Approved`,
-        template: 'document-approved',
-        context: {
-          userName: document.user.name || 'User',
-          documentType: document.documentType,
-          notes: verificationNotes
-        }
-      });
-    } else if (status === PrismaDocumentStatus.REJECTED) {
-      // Send rejected notification
-      await notificationService.sendEmail({
-        to: document.user.email,
-        subject: `Update on Your ${document.documentType} Document`,
-        template: 'document-rejected',
-        context: {
-          userName: document.user.name || 'User',
-          documentType: document.documentType,
-          reason: rejectionReason,
-          notes: verificationNotes
-        }
-      });
-    }
-  }
-
-  // Get a report of user compliance
-  async getComplianceReport(): Promise<ComplianceReport[]> {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        userType: true,
-        verificationStatus: true,
-        documents: {
-          select: {
-            documentType: true,
-            status: true,
-            isRequired: true,
-          }
-        }
-      }
-    });
-
-    const complianceReports: ComplianceReport[] = users.map(user => {
-      const requiredDocs = user.documents.filter(d => d.isRequired);
-      const missingDocs = requiredDocs.filter(d => d.status !== PrismaDocumentStatus.APPROVED);
-      const overallStatus: DocumentComplianceStatus = missingDocs.length > 0 ? 'NON_COMPLIANT' : 'COMPLIANT';
+      const queue: VerificationQueue = {
+        pending,
+        inReview: [], // Could be implemented with a separate status
+        requiresFollowUp,
+        total: pending.length + requiresFollowUp.length
+      };
 
       return {
-        userId: user.id,
-        userName: user.name || user.email,
-        userRole: user.role,
-        userVerificationStatus: user.verificationStatus,
-        overallComplianceStatus: overallStatus,
-        requiredDocuments: requiredDocs.map(d => ({
-          documentType: d.documentType,
-          status: d.status,
-        })),
-        missingDocumentsCount: missingDocs.length,
+        success: true,
+        data: queue
       };
-    });
-
-    return complianceReports;
+    } catch (error) {
+      logger.error('Error fetching verification queue', error);
+      throw new ApiError('Failed to fetch verification queue', 500);
+    }
   }
 
-  // Get a document history for a specific user
-  async getDocumentHistory(userId: string): Promise<DocumentHistory[]> {
-    const documents = await prisma.document.findMany({
-      where: { userId },
-      select: {
-        id: true,
-        documentType: true,
-        status: true,
-        verificationNotes: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+  /**
+   * Verify a single document
+   */
+  async verifyDocument(request: VerificationRequest): Promise<ApiResponse<Document>> {
+    try {
+      const { documentId, adminId, status, notes, requiresFollowUp, followUpDeadline } = request;
 
-    return documents.map(doc => ({
-      documentId: doc.id,
-      documentType: doc.documentType,
-      status: doc.status,
-      notes: doc.verificationNotes,
-      uploadedAt: doc.createdAt,
-      lastUpdatedAt: doc.updatedAt,
-    }));
+      // Get document with user details
+      const document = await this.prisma.document.findUnique({
+        where: { id: documentId },
+        include: {
+          user: true,
+          property: {
+            select: {
+              id: true,
+              title: true,
+              address: true
+            }
+          }
+        }
+      });
+
+      if (!document) {
+        throw new ApiError('Document not found', 404);
+      }
+
+      if (document.status !== DocumentStatus.PENDING) {
+        throw new ApiError('Document has already been processed', 400);
+      }
+
+      // Prepare verification notes
+      let verificationNotes = notes || '';
+      if (requiresFollowUp) {
+        verificationNotes += ' [FOLLOW_UP_REQUIRED]';
+      }
+
+      // Update document status
+      const updatedDocument = await this.prisma.document.update({
+        where: { id: documentId },
+        data: {
+          status,
+          verificationNotes
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true
+            }
+          },
+          property: {
+            select: {
+              id: true,
+              title: true
+            }
+          }
+        }
+      });
+
+      // Log admin action
+      await this.prisma.adminAction.create({
+        data: {
+          adminId,
+          action: status === DocumentStatus.APPROVED ? 'USER_VERIFIED' : 'USER_REJECTED',
+          targetType: 'Document',
+          targetId: documentId,
+          description: `Document verification: ${status}`,
+          metadata: {
+            documentType: document.documentType,
+            userId: document.userId,
+            propertyId: document.propertyId,
+            notes: verificationNotes,
+            requiresFollowUp
+          }
+        }
+      });
+
+      // Check if user verification status should be updated
+      await this.updateUserVerificationStatus(document.userId);
+
+      // Send notification to user
+      await this.sendVerificationNotification(document.user, updatedDocument, status);
+
+      logger.info('Document verified', {
+        documentId,
+        status,
+        adminId,
+        userId: document.userId
+      });
+
+      return {
+        success: true,
+        data: updatedDocument,
+        message: `Document ${status.toLowerCase()} successfully`
+      };
+    } catch (error) {
+      logger.error('Error verifying document', error);
+      
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      
+      throw new ApiError('Failed to verify document', 500);
+    }
+  }
+
+  /**
+   * Bulk verify documents
+   */
+  async bulkVerifyDocuments(request: BulkVerificationRequest): Promise<ApiResponse<{
+    processed: number;
+    failed: number;
+    results: Array<{ documentId: string; success: boolean; error?: string }>
+  }>> {
+    try {
+      const { documentIds, adminId, status, notes } = request;
+      const results: Array<{ documentId: string; success: boolean; error?: string }> = [];
+      let processed = 0;
+      let failed = 0;
+
+      for (const documentId of documentIds) {
+        try {
+          await this.verifyDocument({
+            documentId,
+            adminId,
+            status,
+            notes
+          });
+          
+          results.push({ documentId, success: true });
+          processed++;
+        } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Unknown error';
+          results.push({ documentId, success: false, error: errorMessage });
+          failed++;
+          
+          logger.error('Failed to verify document in bulk operation', {
+            documentId,
+            error: errorMessage
+          });
+        }
+      }
+
+      return {
+        success: true,
+        data: {
+          processed,
+          failed,
+          results
+        },
+        message: `Bulk verification completed. ${processed} processed, ${failed} failed.`
+      };
+    } catch (error) {
+      logger.error('Error in bulk document verification', error);
+      throw new ApiError('Failed to perform bulk verification', 500);
+    }
+  }
+
+  /**
+   * Get verification metrics
+   */
+  async getVerificationMetrics(
+    startDate?: Date,
+    endDate?: Date,
+    adminId?: string
+  ): Promise<ApiResponse<VerificationMetrics>> {
+    try {
+      const whereClause: any = {};
+      
+      if (startDate || endDate) {
+        whereClause.updatedAt = {};
+        if (startDate) whereClause.updatedAt.gte = startDate;
+        if (endDate) whereClause.updatedAt.lte = endDate;
+      }
+
+      // Get basic counts
+      const [totalProcessed, approvedCount, rejectedCount, pendingCount] = await Promise.all([
+        this.prisma.document.count({
+          where: {
+            ...whereClause,
+            status: {
+              in: [DocumentStatus.APPROVED, DocumentStatus.REJECTED]
+            }
+          }
+        }),
+        this.prisma.document.count({
+          where: {
+            ...whereClause,
+            status: DocumentStatus.APPROVED
+          }
+        }),
+        this.prisma.document.count({
+          where: {
+            ...whereClause,
+            status: DocumentStatus.REJECTED
+          }
+        }),
+        this.prisma.document.count({
+          where: {
+            status: DocumentStatus.PENDING
+          }
+        })
+      ]);
+
+      // Get verification breakdown by document type
+      const documentTypes = Object.values(DocumentType);
+      const verificationsByType: Record<DocumentType, any> = {} as any;
+
+      for (const docType of documentTypes) {
+        const [total, approved, rejected, pending] = await Promise.all([
+          this.prisma.document.count({
+            where: {
+              ...whereClause,
+              documentType: docType,
+              status: { in: [DocumentStatus.APPROVED, DocumentStatus.REJECTED, DocumentStatus.PENDING] }
+            }
+          }),
+          this.prisma.document.count({
+            where: {
+              ...whereClause,
+              documentType: docType,
+              status: DocumentStatus.APPROVED
+            }
+          }),
+          this.prisma.document.count({
+            where: {
+              ...whereClause,
+              documentType: docType,
+              status: DocumentStatus.REJECTED
+            }
+          }),
+          this.prisma.document.count({
+            where: {
+              documentType: docType,
+              status: DocumentStatus.PENDING
+            }
+          })
+        ]);
+
+        verificationsByType[docType] = {
+          total,
+          approved,
+          rejected,
+          pending
+        };
+      }
+
+      // Calculate average processing time (simplified - would need more complex query in production)
+      const avgProcessingTime = 24; // placeholder - would calculate from createdAt to updatedAt
+
+      const metrics: VerificationMetrics = {
+        totalProcessed,
+        approvedCount,
+        rejectedCount,
+        avgProcessingTime,
+        pendingCount,
+        verificationsByType
+      };
+
+      return {
+        success: true,
+        data: metrics
+      };
+    } catch (error) {
+      logger.error('Error fetching verification metrics', error);
+      throw new ApiError('Failed to fetch verification metrics', 500);
+    }
+  }
+
+  /**
+   * Get admin performance metrics
+   */
+  async getAdminPerformanceMetrics(
+    startDate?: Date,
+    endDate?: Date
+  ): Promise<ApiResponse<AdminPerformanceMetrics[]>> {
+    try {
+      const whereClause: any = {
+        targetType: 'Document',
+        action: {
+          in: ['USER_VERIFIED', 'USER_REJECTED']
+        }
+      };
+
+      if (startDate || endDate) {
+        whereClause.createdAt = {};
+        if (startDate) whereClause.createdAt.gte = startDate;
+        if (endDate) whereClause.createdAt.lte = endDate;
+      }
+
+      const adminActions = await this.prisma.adminAction.findMany({
+        where: whereClause,
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        }
+      });
+
+      // Group by admin and calculate metrics
+      const adminMetricsMap = new Map<string, AdminPerformanceMetrics>();
+
+      for (const action of adminActions) {
+        const adminId = action.adminId;
+        const adminName = action.admin.name || 'Unknown';
+
+        if (!adminMetricsMap.has(adminId)) {
+          adminMetricsMap.set(adminId, {
+            adminId,
+            adminName,
+            totalVerifications: 0,
+            approvedCount: 0,
+            rejectedCount: 0,
+            avgProcessingTime: 0
+          });
+        }
+
+        const metrics = adminMetricsMap.get(adminId)!;
+        metrics.totalVerifications++;
+
+        if (action.action === 'USER_VERIFIED') {
+          metrics.approvedCount++;
+        } else {
+          metrics.rejectedCount++;
+        }
+      }
+
+      const performanceMetrics = Array.from(adminMetricsMap.values());
+
+      return {
+        success: true,
+        data: performanceMetrics
+      };
+    } catch (error) {
+      logger.error('Error fetching admin performance metrics', error);
+      throw new ApiError('Failed to fetch admin performance metrics', 500);
+    }
+  }
+
+  /**
+   * Update user verification status based on document approvals
+   */
+  private async updateUserVerificationStatus(userId: string): Promise<void> {
+    try {
+      // Get user's required documents
+      const userDocuments = await this.prisma.document.findMany({
+        where: {
+          userId,
+          isRequired: true
+        }
+      });
+
+      // Check if all required documents are approved
+      const requiredDocTypes = [DocumentType.NIN, DocumentType.SELFIE]; // Basic requirements
+      const approvedDocs = userDocuments.filter(doc =>
+        doc.status === DocumentStatus.APPROVED &&
+        requiredDocTypes.includes(doc.documentType)
+      );
+
+      // Update user verification status
+      if (approvedDocs.length >= requiredDocTypes.length) {
+        await this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            verificationStatus: VerificationStatus.VERIFIED,
+            verifiedAt: new Date()
+          }
+        });
+      }
+    } catch (error) {
+      logger.error('Error updating user verification status', error);
+      // Don't throw - this is a secondary operation
+    }
+  }
+
+  /**
+   * Send verification notification to user
+   */
+  private async sendVerificationNotification(
+    user: User,
+    document: Document,
+    status: DocumentStatus
+  ): Promise<void> {
+    try {
+      const isApproved = status === DocumentStatus.APPROVED;
+      const subject = isApproved
+        ? 'Document Approved - NewCondo'
+        : 'Document Verification Required - NewCondo';
+
+      const emailContent = `
+        Dear ${user.name || 'User'},
+
+        Your ${document.documentType.replace('_', ' ').toLowerCase()} document has been ${status.toLowerCase()}.
+
+        ${isApproved
+          ? 'Your document has been successfully verified and approved.'
+          : `Your document requires attention. ${document.verificationNotes || 'Please review and resubmit if necessary.'}`
+        }
+
+        ${!isApproved ? 'Please log in to your account to view details and take any required action.' : ''}
+
+        Best regards,
+        The NewCondo Team
+      `;
+
+      // Send email notification
+      if (user.email) {
+        await sendEmail({
+          to: user.email,
+          subject,
+          html: emailContent
+        });
+      }
+
+      // Send SMS for critical rejections
+      if (!isApproved && user.phone) {
+        const smsMessage = `NewCondo: Your ${document.documentType.replace('_', ' ').toLowerCase()} document needs attention. Please check your email for details.`;
+        
+        await sendSMS({
+          to: user.phone,
+          message: smsMessage
+        });
+      }
+    } catch (error) {
+      logger.error('Error sending verification notification', {
+        userId: user.id,
+        documentId: document.id,
+        error
+      });
+      // Don't throw - notification failure shouldn't fail the main operation
+    }
+  }
+
+  /**
+   * Get document verification history
+   */
+  async getDocumentVerificationHistory(documentId: string): Promise<ApiResponse<any[]>> {
+    try {
+      const history = await this.prisma.adminAction.findMany({
+        where: {
+          targetType: 'Document',
+          targetId: documentId
+        },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'asc'
+        }
+      });
+
+      return {
+        success: true,
+        data: history
+      };
+    } catch (error) {
+      logger.error('Error fetching document verification history', error);
+      throw new ApiError('Failed to fetch verification history', 500);
+    }
+  }
+
+  /**
+   * Flag a document for follow-up review
+   */
+  async flagForFollowUp(documentId: string, adminId: string, notes?: string, followUpDeadline?: Date): Promise<ApiResponse<Document>> {
+    try {
+      const document = await this.prisma.document.findUnique({
+        where: { id: documentId }
+      });
+
+      if (!document) {
+        throw new ApiError('Document not found', 404);
+      }
+
+      const updatedDocument = await this.prisma.document.update({
+        where: { id: documentId },
+        data: {
+          status: DocumentStatus.REJECTED, // Or a new `FOLLOW_UP` status if available
+          verificationNotes: `[FOLLOW_UP_REQUIRED] ${notes || ''}`,
+          followUpDeadline,
+          updatedAt: new Date(),
+        },
+      });
+
+      await this.prisma.adminAction.create({
+        data: {
+          adminId,
+          action: 'FOLLOW_UP_FLAGGED',
+          targetType: 'Document',
+          targetId: documentId,
+          description: 'Document flagged for follow-up',
+          metadata: {
+            notes,
+            followUpDeadline
+          }
+        }
+      });
+
+      logger.info('Document flagged for follow-up', { documentId, adminId });
+
+      return {
+        success: true,
+        data: updatedDocument,
+        message: 'Document flagged for follow-up successfully'
+      };
+    } catch (error) {
+      logger.error('Error flagging document for follow-up', error);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError('Failed to flag document for follow-up', 500);
+    }
   }
 }
+
+export const documentVerificationService = new DocumentVerificationService();
