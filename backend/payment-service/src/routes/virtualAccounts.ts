@@ -1,0 +1,251 @@
+import { Router } from 'express';
+import { auth } from '../../../shared/src/middleware/auth';
+import { validateRequest } from '../../../shared/src/middleware/validation';
+import { rateLimiter } from '../../../shared/src/middleware/rateLimiter';
+import { virtualAccountController } from '../controllers/virtualAccountController';
+import { z } from 'zod';
+
+const router = Router();
+
+// Validation schemas
+const createVirtualAccountSchema = z.object({
+  body: z.object({
+    propertyId: z.string().cuid().optional(),
+    accountName: z.string().min(3).max(100),
+    bankCode: z.string().optional().default('999999'), // Default test bank code
+    currency: z.string().default('NGN')
+  })
+});
+
+const updateVirtualAccountSchema = z.object({
+  body: z.object({
+    accountName: z.string().min(3).max(100).optional(),
+    isActive: z.boolean().optional()
+  })
+});
+
+const transferFundsSchema = z.object({
+  body: z.object({
+    recipientAccount: z.string(),
+    amount: z.number().positive(),
+    narration: z.string().max(200),
+    currency: z.string().default('NGN'),
+    recipientBankCode: z.string()
+  })
+});
+
+const freezeAccountSchema = z.object({
+  body: z.object({
+    reason: z.string().max(500),
+    duration: z.number().positive().optional() // Duration in hours
+  })
+});
+
+// Routes
+
+/**
+ * @route POST /api/virtual-accounts
+ * @desc Create a new virtual account
+ * @access Private (Property Owners)
+ */
+router.post(
+  '/',
+  auth,
+  rateLimiter(5, 60), // 5 accounts per hour
+  validateRequest(createVirtualAccountSchema),
+  virtualAccountController.createVirtualAccount
+);
+
+/**
+ * @route GET /api/virtual-accounts
+ * @desc Get user's virtual accounts
+ * @access Private
+ */
+router.get(
+  '/',
+  auth,
+  virtualAccountController.getUserVirtualAccounts
+);
+
+/**
+ * @route GET /api/virtual-accounts/:accountId
+ * @desc Get specific virtual account details
+ * @access Private (Account owner)
+ */
+router.get(
+  '/:accountId',
+  auth,
+  virtualAccountController.getVirtualAccount
+);
+
+/**
+ * @route PUT /api/virtual-accounts/:accountId
+ * @desc Update virtual account details
+ * @access Private (Account owner)
+ */
+router.put(
+  '/:accountId',
+  auth,
+  rateLimiter(10, 60), // 10 updates per hour
+  validateRequest(updateVirtualAccountSchema),
+  virtualAccountController.updateVirtualAccount
+);
+
+/**
+ * @route DELETE /api/virtual-accounts/:accountId
+ * @desc Delete/deactivate virtual account
+ * @access Private (Account owner)
+ */
+router.delete(
+  '/:accountId',
+  auth,
+  rateLimiter(3, 60), // 3 deletions per hour
+  virtualAccountController.deleteVirtualAccount
+);
+
+/**
+ * @route GET /api/virtual-accounts/:accountId/balance
+ * @desc Get virtual account balance
+ * @access Private (Account owner)
+ */
+router.get(
+  '/:accountId/balance',
+  auth,
+  virtualAccountController.getAccountBalance
+);
+
+/**
+ * @route GET /api/virtual-accounts/:accountId/transactions
+ * @desc Get virtual account transaction history
+ * @access Private (Account owner)
+ */
+router.get(
+  '/:accountId/transactions',
+  auth,
+  virtualAccountController.getAccountTransactions
+);
+
+/**
+ * @route POST /api/virtual-accounts/:accountId/transfer
+ * @desc Transfer funds from virtual account
+ * @access Private (Account owner)
+ */
+router.post(
+  '/:accountId/transfer',
+  auth,
+  rateLimiter(10, 60), // 10 transfers per hour
+  validateRequest(transferFundsSchema),
+  virtualAccountController.transferFunds
+);
+
+/**
+ * @route POST /api/virtual-accounts/:accountId/freeze
+ * @desc Freeze virtual account (admin or security)
+ * @access Private (Account owner or Admin)
+ */
+router.post(
+  '/:accountId/freeze',
+  auth,
+  rateLimiter(3, 60), // 3 freeze actions per hour
+  validateRequest(freezeAccountSchema),
+  virtualAccountController.freezeAccount
+);
+
+/**
+ * @route POST /api/virtual-accounts/:accountId/unfreeze
+ * @desc Unfreeze virtual account
+ * @access Private (Account owner or Admin)
+ */
+router.post(
+  '/:accountId/unfreeze',
+  auth,
+  rateLimiter(3, 60), // 3 unfreeze actions per hour
+  virtualAccountController.unfreezeAccount
+);
+
+/**
+ * @route GET /api/virtual-accounts/:accountId/webhook-logs
+ * @desc Get webhook logs for virtual account
+ * @access Private (Account owner)
+ */
+router.get(
+  '/:accountId/webhook-logs',
+  auth,
+  virtualAccountController.getWebhookLogs
+);
+
+/**
+ * @route POST /api/virtual-accounts/:accountId/sync
+ * @desc Sync virtual account with Flutterwave
+ * @access Private (Account owner)
+ */
+router.post(
+  '/:accountId/sync',
+  auth,
+  rateLimiter(5, 15), // 5 syncs per 15 minutes
+  virtualAccountController.syncWithFlutterwave
+);
+
+/**
+ * @route GET /api/virtual-accounts/:accountId/statements
+ * @desc Generate virtual account statement
+ * @access Private (Account owner)
+ */
+router.get(
+  '/:accountId/statements',
+  auth,
+  virtualAccountController.generateStatement
+);
+
+/**
+ * @route POST /api/virtual-accounts/:accountId/auto-payout
+ * @desc Configure automatic payout settings
+ * @access Private (Account owner)
+ */
+router.post(
+  '/:accountId/auto-payout',
+  auth,
+  rateLimiter(5, 60), // 5 configurations per hour
+  validateRequest(z.object({
+    body: z.object({
+      enabled: z.boolean(),
+      threshold: z.number().positive().optional(),
+      schedule: z.enum(['daily', 'weekly', 'monthly']).optional(),
+      recipientAccount: z.string().optional(),
+      recipientBankCode: z.string().optional()
+    })
+  })),
+  virtualAccountController.configureAutoPayout
+);
+
+/**
+ * @route GET /api/virtual-accounts/:accountId/analytics
+ * @desc Get virtual account analytics
+ * @access Private (Account owner)
+ */
+router.get(
+  '/:accountId/analytics',
+  auth,
+  virtualAccountController.getAccountAnalytics
+);
+
+/**
+ * @route POST /api/virtual-accounts/:accountId/notifications
+ * @desc Configure account notifications
+ * @access Private (Account owner)
+ */
+router.post(
+  '/:accountId/notifications',
+  auth,
+  validateRequest(z.object({
+    body: z.object({
+      emailNotifications: z.boolean(),
+      smsNotifications: z.boolean(),
+      webhookUrl: z.string().url().optional(),
+      thresholdAlerts: z.boolean()
+    })
+  })),
+  virtualAccountController.configureNotifications
+);
+
+export default router;
