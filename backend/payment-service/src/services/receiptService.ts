@@ -492,3 +492,504 @@ export class ReceiptService {
 }
 
 export const receiptService = new ReceiptService(new PrismaClient());
+
+
+
+// import { PrismaClient, Payment, PaymentType } from '@prisma/client';
+// import { format } from 'date-fns';
+// import PDFDocument from 'pdfkit';
+// import { Readable } from 'stream';
+
+// const prisma = new PrismaClient();
+
+// export interface ReceiptData {
+//   payment: Payment & {
+//     user: {
+//       id: string;
+//       name: string | null;
+//       email: string;
+//       phone: string | null;
+//     };
+//     rental?: {
+//       id: string;
+//       property: {
+//         id: string;
+//         title: string;
+//         address: string;
+//         city: string;
+//         state: string;
+//       };
+//       unit?: {
+//         id: string;
+//         unitNumber: string;
+//       } | null;
+//       monthlyRent: number;
+//       startDate: Date;
+//       endDate: Date | null;
+//     } | null;
+//   };
+//   receiptNumber: string;
+//   companyDetails: CompanyDetails;
+// }
+
+// export interface CompanyDetails {
+//   name: string;
+//   address: string;
+//   phone: string;
+//   email: string;
+//   website: string;
+//   logo?: string;
+// }
+
+// export interface ReceiptOptions {
+//   format?: 'pdf' | 'html' | 'json';
+//   includeQR?: boolean;
+//   watermark?: string;
+// }
+
+// export class ReceiptService {
+//   private static readonly DEFAULT_COMPANY_DETAILS: CompanyDetails = {
+//     name: 'NewCondo Platform',
+//     address: '123 Property Street, Lagos, Nigeria',
+//     phone: '+234 800 000 0000',
+//     email: 'support@newcondo.com',
+//     website: 'www.newcondo.com'
+//   };
+
+//   /**
+//    * Generate a unique receipt number
+//    */
+//   static generateReceiptNumber(paymentId: string, paymentType: PaymentType): string {
+//     const prefix = paymentType === PaymentType.RENT ? 'NCR' :
+//                    paymentType === PaymentType.DEPOSIT ? 'NCD' :
+//                    paymentType === PaymentType.PROPERTY_MARKING ? 'NCM' : 'NCP';
+    
+//     const timestamp = format(new Date(), 'yyyyMMdd');
+//     const shortId = paymentId.slice(-8).toUpperCase();
+    
+//     return `${prefix}-${timestamp}-${shortId}`;
+//   }
+
+//   /**
+//    * Get receipt data for a payment
+//    */
+//   static async getReceiptData(paymentId: string): Promise<ReceiptData | null> {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//         include: {
+//           user: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//               phone: true
+//             }
+//           },
+//           rental: {
+//             include: {
+//               property: {
+//                 select: {
+//                   id: true,
+//                   title: true,
+//                   address: true,
+//                   city: true,
+//                   state: true
+//                 }
+//               },
+//               unit: {
+//                 select: {
+//                   id: true,
+//                   unitNumber: true
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       });
+
+//       if (!payment) {
+//         return null;
+//       }
+
+//       const receiptNumber = this.generateReceiptNumber(payment.id, payment.paymentType);
+
+//       return {
+//         payment,
+//         receiptNumber,
+//         companyDetails: this.DEFAULT_COMPANY_DETAILS
+//       };
+
+//     } catch (error) {
+//       console.error('Error fetching receipt data:', error);
+//       return null;
+//     }
+//   }
+
+//   /**
+//    * Generate PDF receipt
+//    */
+//   static async generatePDFReceipt(
+//     receiptData: ReceiptData,
+//     options: ReceiptOptions = {}
+//   ): Promise<Buffer> {
+//     return new Promise((resolve, reject) => {
+//       try {
+//         const doc = new PDFDocument({ margin: 50 });
+//         const chunks: Buffer[] = [];
+
+//         doc.on('data', (chunk) => chunks.push(chunk));
+//         doc.on('end', () => resolve(Buffer.concat(chunks)));
+//         doc.on('error', reject);
+
+//         // Header
+//         doc.fontSize(20)
+//            .fillColor('#2563eb')
+//            .text(receiptData.companyDetails.name, { align: 'center' });
+
+//         doc.fontSize(10)
+//            .fillColor('black')
+//            .text(receiptData.companyDetails.address, { align: 'center' })
+//            .text(`${receiptData.companyDetails.phone} | ${receiptData.companyDetails.email}`, { align: 'center' })
+//            .text(receiptData.companyDetails.website, { align: 'center' });
+
+//         doc.moveDown(2);
+
+//         // Receipt Title
+//         doc.fontSize(18)
+//            .fillColor('#1e40af')
+//            .text('PAYMENT RECEIPT', { align: 'center' });
+
+//         doc.moveDown(1);
+
+//         // Receipt Details
+//         doc.fontSize(12)
+//            .fillColor('black');
+
+//         const leftColumn = 50;
+//         const rightColumn = 300;
+//         let yPosition = doc.y;
+
+//         // Receipt Info
+//         doc.text('Receipt Number:', leftColumn, yPosition)
+//            .text(receiptData.receiptNumber, rightColumn, yPosition);
+
+//         yPosition += 20;
+//         doc.text('Date:', leftColumn, yPosition)
+//            .text(format(receiptData.payment.paidAt || receiptData.payment.createdAt, 'PPP'), rightColumn, yPosition);
+
+//         yPosition += 20;
+//         doc.text('Transaction ID:', leftColumn, yPosition)
+//            .text(receiptData.payment.transactionId || 'N/A', rightColumn, yPosition);
+
+//         yPosition += 30;
+
+//         // Customer Details
+//         doc.fontSize(14)
+//            .fillColor('#374151')
+//            .text('Customer Information', leftColumn, yPosition);
+
+//         yPosition += 25;
+//         doc.fontSize(12)
+//            .fillColor('black');
+
+//         doc.text('Name:', leftColumn, yPosition)
+//            .text(receiptData.payment.user.name || 'N/A', rightColumn, yPosition);
+
+//         yPosition += 20;
+//         doc.text('Email:', leftColumn, yPosition)
+//            .text(receiptData.payment.user.email, rightColumn, yPosition);
+
+//         if (receiptData.payment.user.phone) {
+//           yPosition += 20;
+//           doc.text('Phone:', leftColumn, yPosition)
+//               .text(receiptData.payment.user.phone, rightColumn, yPosition);
+//         }
+
+//         yPosition += 30;
+
+//         // Property Details (if applicable)
+//         if (receiptData.payment.rental) {
+//           doc.fontSize(14)
+//               .fillColor('#374151')
+//               .text('Property Information', leftColumn, yPosition);
+
+//           yPosition += 25;
+//           doc.fontSize(12)
+//               .fillColor('black');
+
+//           doc.text('Property:', leftColumn, yPosition)
+//               .text(receiptData.payment.rental.property.title, rightColumn, yPosition);
+
+//           yPosition += 20;
+//           doc.text('Address:', leftColumn, yPosition)
+//               .text(`${receiptData.payment.rental.property.address}, ${receiptData.payment.rental.property.city}`, rightColumn, yPosition);
+
+//           if (receiptData.payment.rental.unit) {
+//             yPosition += 20;
+//             doc.text('Unit:', leftColumn, yPosition)
+//                 .text(receiptData.payment.rental.unit.unitNumber, rightColumn, yPosition);
+//           }
+
+//           yPosition += 20;
+//           doc.text('Rental Period:', leftColumn, yPosition);
+          
+//           const startDate = format(receiptData.payment.rental.startDate, 'PP');
+//           const endDate = receiptData.payment.rental.endDate ?
+//                           format(receiptData.payment.rental.endDate, 'PP') : 'Ongoing';
+          
+//           doc.text(`${startDate} - ${endDate}`, rightColumn, yPosition);
+
+//           yPosition += 30;
+//         }
+
+//         // Payment Details
+//         doc.fontSize(14)
+//            .fillColor('#374151')
+//            .text('Payment Details', leftColumn, yPosition);
+
+//         yPosition += 25;
+//         doc.fontSize(12)
+//            .fillColor('black');
+
+//         doc.text('Payment Type:', leftColumn, yPosition)
+//            .text(this.getPaymentTypeDisplay(receiptData.payment.paymentType), rightColumn, yPosition);
+
+//         yPosition += 20;
+//         doc.text('Amount:', leftColumn, yPosition)
+//            .text(`${receiptData.payment.currency} ${receiptData.payment.amount.toLocaleString()}`, rightColumn, yPosition);
+
+//         yPosition += 20;
+//         doc.text('Status:', leftColumn, yPosition)
+//            .fillColor('#10b981')
+//            .text(receiptData.payment.status, rightColumn, yPosition);
+
+//         yPosition += 20;
+//         doc.fillColor('black')
+//            .text('Payment Method:', leftColumn, yPosition)
+//            .text(receiptData.payment.paymentMethod || 'N/A', rightColumn, yPosition);
+
+//         if (receiptData.payment.description) {
+//           yPosition += 20;
+//           doc.text('Description:', leftColumn, yPosition)
+//               .text(receiptData.payment.description, rightColumn, yPosition);
+//         }
+
+//         // Footer
+//         yPosition += 50;
+//         doc.fontSize(10)
+//            .fillColor('#6b7280')
+//            .text('Thank you for using NewCondo Platform!', { align: 'center' })
+//            .text('This is a computer-generated receipt and does not require a signature.', { align: 'center' });
+
+//         // Watermark
+//         if (options.watermark && receiptData.payment.status === 'SUCCESS') {
+//           doc.fontSize(72)
+//               .fillColor('#10b981', 0.1)
+//               .text('PAID', 200, 400, { rotate: -45 });
+//         }
+
+//         doc.end();
+
+//       } catch (error) {
+//         reject(error);
+//       }
+//     });
+//   }
+
+//   /**
+//    * Generate HTML receipt
+//    */
+//   static generateHTMLReceipt(receiptData: ReceiptData, options: ReceiptOptions = {}): string {
+//     const paymentDate = format(receiptData.payment.paidAt || receiptData.payment.createdAt, 'PPP');
+//     const isRentalPayment = receiptData.payment.rental;
+
+//     return `
+//     <!DOCTYPE html>
+//     <html lang="en">
+//     <head>
+//         <meta charset="UTF-8">
+//         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//         <title>Payment Receipt - ${receiptData.receiptNumber}</title>
+//         <style>
+//             body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+//             .header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+//             .company-name { color: #2563eb; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+//             .company-details { color: #666; font-size: 14px; }
+//             .receipt-title { color: #1e40af; font-size: 20px; font-weight: bold; text-align: center; margin: 30px 0; }
+//             .section { margin-bottom: 30px; }
+//             .section-title { color: #374151; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+//             .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; }
+//             .detail-label { font-weight: bold; }
+//             .status-success { color: #10b981; font-weight: bold; }
+//             .amount { color: #2563eb; font-size: 18px; font-weight: bold; }
+//             .footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; }
+//             @media print { body { margin: 0; } .no-print { display: none; } }
+//         </style>
+//     </head>
+//     <body>
+//         <div class="header">
+//             <div class="company-name">${receiptData.companyDetails.name}</div>
+//             <div class="company-details">
+//                 ${receiptData.companyDetails.address}<br>
+//                 ${receiptData.companyDetails.phone} | ${receiptData.companyDetails.email}<br>
+//                 ${receiptData.companyDetails.website}
+//             </div>
+//         </div>
+
+//         <div class="receipt-title">PAYMENT RECEIPT</div>
+
+//         <div class="section">
+//             <div class="detail-row">
+//                 <span class="detail-label">Receipt Number:</span>
+//                 <span>${receiptData.receiptNumber}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Date:</span>
+//                 <span>${paymentDate}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Transaction ID:</span>
+//                 <span>${receiptData.payment.transactionId || 'N/A'}</span>
+//             </div>
+//         </div>
+
+//         <div class="section">
+//             <div class="section-title">Customer Information</div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Name:</span>
+//                 <span>${receiptData.payment.user.name || 'N/A'}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Email:</span>
+//                 <span>${receiptData.payment.user.email}</span>
+//             </div>
+//             ${receiptData.payment.user.phone ? `
+//             <div class="detail-row">
+//                 <span class="detail-label">Phone:</span>
+//                 <span>${receiptData.payment.user.phone}</span>
+//             </div>
+//             ` : ''}
+//         </div>
+
+//         ${isRentalPayment ? `
+//         <div class="section">
+//             <div class="section-title">Property Information</div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Property:</span>
+//                 <span>${receiptData.payment.rental!.property.title}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Address:</span>
+//                 <span>${receiptData.payment.rental!.property.address}, ${receiptData.payment.rental!.property.city}</span>
+//             </div>
+//             ${receiptData.payment.rental!.unit ? `
+//             <div class="detail-row">
+//                 <span class="detail-label">Unit:</span>
+//                 <span>${receiptData.payment.rental!.unit.unitNumber}</span>
+//             </div>
+//             ` : ''}
+//             <div class="detail-row">
+//                 <span class="detail-label">Rental Period:</span>
+//                 <span>${format(receiptData.payment.rental!.startDate, 'PP')} - ${receiptData.payment.rental!.endDate ? format(receiptData.payment.rental!.endDate, 'PP') : 'Ongoing'}</span>
+//             </div>
+//         </div>
+//         ` : ''}
+
+//         <div class="section">
+//             <div class="section-title">Payment Details</div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Payment Type:</span>
+//                 <span>${this.getPaymentTypeDisplay(receiptData.payment.paymentType)}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Amount:</span>
+//                 <span class="amount">${receiptData.payment.currency} ${receiptData.payment.amount.toLocaleString()}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Status:</span>
+//                 <span class="status-success">${receiptData.payment.status}</span>
+//             </div>
+//             <div class="detail-row">
+//                 <span class="detail-label">Payment Method:</span>
+//                 <span>${receiptData.payment.paymentMethod || 'N/A'}</span>
+//             </div>
+//             ${receiptData.payment.description ? `
+//             <div class="detail-row">
+//                 <span class="detail-label">Description:</span>
+//                 <span>${receiptData.payment.description}</span>
+//             </div>
+//             ` : ''}
+//         </div>
+
+//         <div class="footer">
+//             <p>Thank you for using NewCondo Platform!</p>
+//             <p>This is a computer-generated receipt and does not require a signature.</p>
+//         </div>
+
+//         <div class="no-print" style="margin-top: 30px; text-align: center;">
+//             <button onclick="window.print()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer;">
+//                 Print Receipt
+//             </button>
+//         </div>
+//     </body>
+//     </html>
+//     `;
+//   }
+
+//   /**
+//    * Generate JSON receipt data
+//    */
+//   static generateJSONReceipt(receiptData: ReceiptData): object {
+//     return {
+//       receiptNumber: receiptData.receiptNumber,
+//       generatedAt: new Date().toISOString(),
+//       payment: {
+//         id: receiptData.payment.id,
+//         amount: receiptData.payment.amount,
+//         currency: receiptData.payment.currency,
+//         type: receiptData.payment.paymentType,
+//         status: receiptData.payment.status,
+//         method: receiptData.payment.paymentMethod,
+//         transactionId: receiptData.payment.transactionId,
+//         description: receiptData.payment.description,
+//         paidAt: receiptData.payment.paidAt,
+//         createdAt: receiptData.payment.createdAt
+//       },
+//       customer: {
+//         name: receiptData.payment.user.name,
+//         email: receiptData.payment.user.email,
+//         phone: receiptData.payment.user.phone
+//       },
+//       property: receiptData.payment.rental ? {
+//         title: receiptData.payment.rental.property.title,
+//         address: receiptData.payment.rental.property.address,
+//         city: receiptData.payment.rental.property.city,
+//         state: receiptData.payment.rental.property.state,
+//         unit: receiptData.payment.rental.unit?.unitNumber,
+//         rentalPeriod: `${format(receiptData.payment.rental.startDate, 'PP')} - ${receiptData.payment.rental.endDate ? format(receiptData.payment.rental.endDate, 'PP') : 'Ongoing'}`
+//       } : undefined,
+//       company: this.DEFAULT_COMPANY_DETAILS,
+//     };
+//   }
+
+//   /**
+//    * Helper to get a displayable payment type name
+//    */
+//   private static getPaymentTypeDisplay(paymentType: PaymentType): string {
+//     switch (paymentType) {
+//       case PaymentType.RENT:
+//         return 'Rent Payment';
+//       case PaymentType.DEPOSIT:
+//         return 'Security Deposit';
+//       case PaymentType.AGENT_COMMISSION:
+//         return 'Agent Commission';
+//       case PaymentType.PROPERTY_MARKING:
+//         return 'Property Marking Fee';
+//       case PaymentType.PREMIUM_UPGRADE:
+//         return 'Premium Subscription';
+//       default:
+//         return 'General Payment';
+//     }
+//   }
+// }

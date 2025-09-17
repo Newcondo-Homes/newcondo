@@ -272,3 +272,129 @@ router.get(
 );
 
 export default router;
+
+// import express from 'express';
+// import { authMiddleware } from '../../../shared/src/middleware/auth';
+// import { validateRequest } from '../../../shared/src/middleware/validation';
+// import { paymentValidation } from '../middleware/paymentValidation';
+// import { lockingMiddleware } from '../middleware/lockingMiddleware';
+// import {
+//   initiatePayment,
+//   verifyPayment,
+//   getPaymentHistory,
+//   getPaymentDetails,
+//   cancelPayment,
+//   requestRefund,
+//   retryPayment,
+//   getPaymentMethods,
+//   updatePaymentMethod
+// } from '../controllers/paymentController';
+
+// const router = express.Router();
+
+// // Apply auth middleware to all routes
+// router.use(authMiddleware);
+
+// /**
+//  * @route   POST /api/payments/initiate
+//  * @desc    Initiate a new payment
+//  * @access  Private
+//  * @body    { paymentType, amount, propertyId?, unitId?, markingJobId?, paymentMethod? }
+//  */
+// router.post(
+//   '/initiate',
+//   validateRequest(paymentValidation.initiatePayment),
+//   lockingMiddleware.checkPropertyLock,
+//   initiatePayment
+// );
+
+// /**
+//  * @route   POST /api/payments/verify/:transactionId
+//  * @desc    Verify payment status with Flutterwave
+//  * @access  Private
+//  */
+// router.post(
+//   '/verify/:transactionId',
+//   validateRequest(paymentValidation.verifyPayment),
+//   verifyPayment
+// );
+
+// /**
+//  * @route   GET /api/payments/history
+//  * @desc    Get user payment history with pagination
+//  * @access  Private
+//  * @query   { page?, limit?, status?, paymentType?, startDate?, endDate? }
+//  */
+// router.get(
+//   '/history',
+//   validateRequest(paymentValidation.getPaymentHistory),
+//   getPaymentHistory
+// );
+
+// /**
+//  * @route   GET /api/payments/:paymentId
+//  * @desc    Get specific payment details
+//  * @access  Private
+//  */
+// router.get(
+//   '/:paymentId',
+//   validateRequest(paymentValidation.getPaymentDetails),
+//   getPaymentDetails
+// );
+
+// /**
+//  * @route   POST /api/payments/:paymentId/cancel
+//  * @desc    Cancel a pending payment
+//  * @access  Private
+//  */
+// router.post(
+//   '/:paymentId/cancel',
+//   validateRequest(paymentValidation.cancelPayment),
+//   cancelPayment
+// );
+
+// /**
+//  * @route   POST /api/payments/:paymentId/refund
+//  * @desc    Request payment refund
+//  * @access  Private
+//  * @body    { reason, description? }
+//  */
+// router.post(
+//   '/:paymentId/refund',
+//   validateRequest(paymentValidation.requestRefund),
+//   requestRefund
+// );
+
+// /**
+//  * @route   POST /api/payments/:paymentId/retry
+//  * @desc    Retry failed payment
+//  * @access  Private
+//  * @body    { paymentMethod? }
+//  */
+// router.post(
+//   '/:paymentId/retry',
+//   validateRequest(paymentValidation.retryPayment),
+//   lockingMiddleware.checkPropertyLock,
+//   retryPayment
+// );
+
+// /**
+//  * @route   GET /api/payments/methods
+//  * @desc    Get available payment methods
+//  * @access  Private
+//  */
+// router.get('/methods', getPaymentMethods);
+
+// /**
+//  * @route   PUT /api/payments/methods
+//  * @desc    Update preferred payment method
+//  * @access  Private
+//  * @body    { paymentMethod, isDefault? }
+//  */
+// router.put(
+//   '/methods',
+//   validateRequest(paymentValidation.updatePaymentMethod),
+//   updatePaymentMethod
+// );
+
+// export default router;

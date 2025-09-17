@@ -414,3 +414,430 @@ export class LockingService {
 }
 
 export default LockingService;
+
+
+
+
+// import { PrismaClient, PropertyUnit } from '@prisma/client';
+// import { addMinutes } from 'date-fns';
+
+// const prisma = new PrismaClient();
+
+// export interface PropertyLock {
+//   propertyId?: string;
+//   unitId?: string;
+//   userId: string;
+//   lockDuration?: number; // minutes, default 15
+// }
+
+// export interface LockResult {
+//   success: boolean;
+//   lockExpiry?: Date;
+//   message: string;
+//   alreadyLocked?: boolean;
+//   lockedBy?: string;
+// }
+
+// export class LockingService {
+//   private static readonly DEFAULT_LOCK_DURATION = 15; // 15 minutes
+
+//   /**
+//    * Acquire a payment lock on a property or unit
+//    */
+//   static async acquirePaymentLock({
+//     propertyId,
+//     unitId,
+//     userId,
+//     lockDuration = this.DEFAULT_LOCK_DURATION
+//   }: PropertyLock): Promise<LockResult> {
+//     try {
+//       const lockExpiry = addMinutes(new Date(), lockDuration);
+
+//       if (unitId) {
+//         // Lock specific unit
+//         const unit = await prisma.propertyUnit.findUnique({
+//           where: { id: unitId },
+//           include: { property: true }
+//         });
+
+//         if (!unit) {
+//           return {
+//             success: false,
+//             message: 'Unit not found'
+//           };
+//         }
+
+//         // Check if unit is already locked and not expired
+//         if (unit.isPaymentLocked && unit.paymentLockExpiry && unit.paymentLockExpiry > new Date()) {
+//           return {
+//             success: false,
+//             message: 'Unit is currently locked for payment by another user',
+//             alreadyLocked: true,
+//             lockedBy: 'another user'
+//           };
+//         }
+
+//         // Check if unit is available
+//         if (!unit.isAvailable) {
+//           return {
+//             success: false,
+//             message: 'Unit is not available for rent'
+//           };
+//         }
+
+//         // Acquire lock
+//         await prisma.propertyUnit.update({
+//           where: { id: unitId },
+//           data: {
+//             isPaymentLocked: true,
+//             paymentLockExpiry: lockExpiry
+//           }
+//         });
+
+//         return {
+//           success: true,
+//           lockExpiry,
+//           message: 'Unit payment lock acquired successfully'
+//         };
+
+//       } else if (propertyId) {
+//         // Lock entire property (single unit properties)
+//         const property = await prisma.property.findUnique({
+//           where: { id: propertyId }
+//         });
+
+//         if (!property) {
+//           return {
+//             success: false,
+//             message: 'Property not found'
+//           };
+//         }
+
+//         // Check if property is already locked and not expired
+//         if (property.isPaymentLocked && property.paymentLockExpiry && property.paymentLockExpiry > new Date()) {
+//           return {
+//             success: false,
+//             message: 'Property is currently locked for payment by another user',
+//             alreadyLocked: true,
+//             lockedBy: 'another user'
+//           };
+//         }
+
+//         // Check if property is available
+//         if (!property.isAvailable) {
+//           return {
+//             success: false,
+//             message: 'Property is not available for rent'
+//           };
+//         }
+
+//         // Acquire lock
+//         await prisma.property.update({
+//           where: { id: propertyId },
+//           data: {
+//             isPaymentLocked: true,
+//             paymentLockExpiry: lockExpiry
+//           }
+//         });
+
+//         return {
+//           success: true,
+//           lockExpiry,
+//           message: 'Property payment lock acquired successfully'
+//         };
+//       }
+
+//       return {
+//         success: false,
+//         message: 'Either propertyId or unitId must be provided'
+//       };
+
+//     } catch (error) {
+//       console.error('Error acquiring payment lock:', error);
+//       return {
+//         success: false,
+//         message: 'Failed to acquire payment lock'
+//       };
+//     }
+//   }
+
+//   /**
+//    * Release a payment lock on a property or unit
+//    */
+//   static async releasePaymentLock({
+//     propertyId,
+//     unitId,
+//     userId
+//   }: Omit<PropertyLock, 'lockDuration'>): Promise<LockResult> {
+//     try {
+//       if (unitId) {
+//         // Release unit lock
+//         await prisma.propertyUnit.update({
+//           where: { id: unitId },
+//           data: {
+//             isPaymentLocked: false,
+//             paymentLockExpiry: null
+//           }
+//         });
+
+//         return {
+//           success: true,
+//           message: 'Unit payment lock released successfully'
+//         };
+
+//       } else if (propertyId) {
+//         // Release property lock
+//         await prisma.property.update({
+//           where: { id: propertyId },
+//           data: {
+//             isPaymentLocked: false,
+//             paymentLockExpiry: null
+//           }
+//         });
+
+//         return {
+//           success: true,
+//           message: 'Property payment lock released successfully'
+//         };
+//       }
+
+//       return {
+//         success: false,
+//         message: 'Either propertyId or unitId must be provided'
+//       };
+
+//     } catch (error) {
+//       console.error('Error releasing payment lock:', error);
+//       return {
+//         success: false,
+//         message: 'Failed to release payment lock'
+//       };
+//     }
+//   }
+
+//   /**
+//    * Check if a property or unit is currently locked
+//    */
+//   static async isLocked({ propertyId, unitId }: Pick<PropertyLock, 'propertyId' | 'unitId'>): Promise<{
+//     isLocked: boolean;
+//     lockExpiry?: Date;
+//     timeRemaining?: number; // minutes
+//   }> {
+//     try {
+//       if (unitId) {
+//         const unit = await prisma.propertyUnit.findUnique({
+//           where: { id: unitId },
+//           select: { isPaymentLocked: true, paymentLockExpiry: true }
+//         });
+
+//         if (!unit) {
+//           return { isLocked: false };
+//         }
+
+//         const isLocked = unit.isPaymentLocked && 
+//                         unit.paymentLockExpiry && 
+//                         unit.paymentLockExpiry > new Date();
+
+//         return {
+//           isLocked: !!isLocked,
+//           lockExpiry: unit.paymentLockExpiry || undefined,
+//           timeRemaining: isLocked && unit.paymentLockExpiry ? 
+//             Math.ceil((unit.paymentLockExpiry.getTime() - new Date().getTime()) / (1000 * 60)) : 
+//             undefined
+//         };
+
+//       } else if (propertyId) {
+//         const property = await prisma.property.findUnique({
+//           where: { id: propertyId },
+//           select: { isPaymentLocked: true, paymentLockExpiry: true }
+//         });
+
+//         if (!property) {
+//           return { isLocked: false };
+//         }
+
+//         const isLocked = property.isPaymentLocked && 
+//                         property.paymentLockExpiry && 
+//                         property.paymentLockExpiry > new Date();
+
+//         return {
+//           isLocked: !!isLocked,
+//           lockExpiry: property.paymentLockExpiry || undefined,
+//           timeRemaining: isLocked && property.paymentLockExpiry ? 
+//             Math.ceil((property.paymentLockExpiry.getTime() - new Date().getTime()) / (1000 * 60)) : 
+//             undefined
+//         };
+//       }
+
+//       return { isLocked: false };
+
+//     } catch (error) {
+//       console.error('Error checking lock status:', error);
+//       return { isLocked: false };
+//     }
+//   }
+
+//   /**
+//    * Extend an existing payment lock
+//    */
+//   static async extendPaymentLock({
+//     propertyId,
+//     unitId,
+//     userId,
+//     additionalMinutes = 15
+//   }: PropertyLock & { additionalMinutes?: number }): Promise<LockResult> {
+//     try {
+//       if (unitId) {
+//         const unit = await prisma.propertyUnit.findUnique({
+//           where: { id: unitId },
+//           select: { isPaymentLocked: true, paymentLockExpiry: true }
+//         });
+
+//         if (!unit?.isPaymentLocked || !unit.paymentLockExpiry) {
+//           return {
+//             success: false,
+//             message: 'No active payment lock found for this unit'
+//           };
+//         }
+
+//         const newExpiry = addMinutes(unit.paymentLockExpiry, additionalMinutes);
+
+//         await prisma.propertyUnit.update({
+//           where: { id: unitId },
+//           data: { paymentLockExpiry: newExpiry }
+//         });
+
+//         return {
+//           success: true,
+//           lockExpiry: newExpiry,
+//           message: 'Unit payment lock extended successfully'
+//         };
+
+//       } else if (propertyId) {
+//         const property = await prisma.property.findUnique({
+//           where: { id: propertyId },
+//           select: { isPaymentLocked: true, paymentLockExpiry: true }
+//         });
+
+//         if (!property?.isPaymentLocked || !property.paymentLockExpiry) {
+//           return {
+//             success: false,
+//             message: 'No active payment lock found for this property'
+//           };
+//         }
+
+//         const newExpiry = addMinutes(property.paymentLockExpiry, additionalMinutes);
+
+//         await prisma.property.update({
+//           where: { id: propertyId },
+//           data: { paymentLockExpiry: newExpiry }
+//         });
+
+//         return {
+//           success: true,
+//           lockExpiry: newExpiry,
+//           message: 'Property payment lock extended successfully'
+//         };
+//       }
+
+//       return {
+//         success: false,
+//         message: 'Either propertyId or unitId must be provided'
+//       };
+
+//     } catch (error) {
+//       console.error('Error extending payment lock:', error);
+//       return {
+//         success: false,
+//         message: 'Failed to extend payment lock'
+//       };
+//     }
+//   }
+
+//   /**
+//    * Clean up expired locks (should be run periodically)
+//    */
+//   static async cleanupExpiredLocks(): Promise<{
+//     propertiesUnlocked: number;
+//     unitsUnlocked: number;
+//   }> {
+//     try {
+//       const now = new Date();
+
+//       // Clean up expired property locks
+//       const expiredProperties = await prisma.property.updateMany({
+//         where: {
+//           isPaymentLocked: true,
+//           paymentLockExpiry: {
+//             lte: now
+//           }
+//         },
+//         data: {
+//           isPaymentLocked: false,
+//           paymentLockExpiry: null
+//         }
+//       });
+
+//       // Clean up expired unit locks
+//       const expiredUnits = await prisma.propertyUnit.updateMany({
+//         where: {
+//           isPaymentLocked: true,
+//           paymentLockExpiry: {
+//             lte: now
+//           }
+//         },
+//         data: {
+//           isPaymentLocked: false,
+//           paymentLockExpiry: null
+//         }
+//       });
+
+//       return {
+//         propertiesUnlocked: expiredProperties.count,
+//         unitsUnlocked: expiredUnits.count
+//       };
+
+//     } catch (error) {
+//       console.error('Error cleaning up expired locks:', error);
+//       return {
+//         propertiesUnlocked: 0,
+//         unitsUnlocked: 0
+//       };
+//     }
+//   }
+
+//   /**
+//    * Force release all locks for a user (in case of emergency)
+//    */
+//   static async forceReleaseUserLocks(userId: string): Promise<{
+//     success: boolean;
+//     message: string;
+//     propertiesUnlocked: number;
+//     unitsUnlocked: number;
+//   }> {
+//     try {
+//       // Note: This is a simplified version. In a real implementation,
+//       // you might want to track which user has which locks
+      
+//       const result = await this.cleanupExpiredLocks();
+      
+//       return {
+//         success: true,
+//         message: 'All expired locks have been cleaned up',
+//         propertiesUnlocked: result.propertiesUnlocked,
+//         unitsUnlocked: result.unitsUnlocked
+//       };
+
+//     } catch (error) {
+//       console.error('Error force releasing user locks:', error);
+//       return {
+//         success: false,
+//         message: 'Failed to release user locks',
+//         propertiesUnlocked: 0,
+//         unitsUnlocked: 0
+//       };
+//     }
+//   }
+// }
+
+// export default LockingService;

@@ -411,3 +411,512 @@ export class PaymentService {
 }
 
 export const paymentService = new PaymentService();
+
+// backend/payment-service/src/services/paymentService.ts
+// import { PrismaClient, Payment, PaymentStatus, PaymentType, Rental } from '@newcondo/db';
+// import { FlutterwaveService } from './flutterwaveService';
+// import { RentalService } from './rentalService';
+// import { VirtualAccountService } from './virtualAccountService';
+// import { ConfirmationService } from './confirmationService';
+// import { LockingService } from './lockingService';
+// import { ReceiptService } from './receiptService';
+// import { logger } from '../../../shared/src/utils/logger';
+// import { ApiError } from '../../../shared/src/utils/response';
+
+// export interface PaymentRequest {
+//   userId: string;
+//   amount: number;
+//   paymentType: PaymentType;
+//   description?: string;
+//   propertyId?: string;
+//   unitId?: string;
+//   markingJobId?: string;
+//   redirectUrl: string;
+//   metadata?: Record<string, any>;
+// }
+
+// export interface PaymentResponse {
+//   paymentId: string;
+//   paymentLink: string;
+//   transactionId: string;
+//   status: PaymentStatus;
+//   amount: number;
+//   currency: string;
+// }
+
+// export interface PaymentVerification {
+//   transactionId: string;
+//   status: PaymentStatus;
+//   amount: number;
+//   currency: string;
+//   paidAt?: Date;
+//   failureReason?: string;
+//   metadata?: Record<string, any>;
+// }
+
+// export class PaymentService {
+//   private db: PrismaClient;
+//   private flutterwaveService: FlutterwaveService;
+//   private rentalService: RentalService;
+//   private virtualAccountService: VirtualAccountService;
+//   private confirmationService: ConfirmationService;
+//   private lockingService: LockingService;
+//   private receiptService: ReceiptService;
+
+//   constructor() {
+//     this.db = new PrismaClient();
+//     this.flutterwaveService = new FlutterwaveService();
+//     this.rentalService = new RentalService();
+//     this.virtualAccountService = new VirtualAccountService();
+//     this.confirmationService = new ConfirmationService();
+//     this.lockingService = new LockingService();
+//     this.receiptService = new ReceiptService();
+//   }
+
+//   async initiatePayment(request: PaymentRequest): Promise<PaymentResponse> {
+//     try {
+//       logger.info('Initiating payment', { 
+//         userId: request.userId, 
+//         amount: request.amount, 
+//         type: request.paymentType 
+//       });
+
+//       // Validate payment request
+//       await this.validatePaymentRequest(request);
+
+//       // Apply property lock if it's a rental payment
+//       if (request.paymentType === PaymentType.RENT && request.propertyId) {
+//         await this.lockingService.lockProperty(request.propertyId, request.userId, request.unitId);
+//       }
+
+//       // Create payment record
+//       const payment = await this.createPaymentRecord(request);
+
+//       // Initialize Flutterwave payment
+//       const flutterwavePayment = await this.flutterwaveService.initializePayment({
+//         amount: request.amount,
+//         currency: 'NGN',
+//         email: await this.getUserEmail(request.userId),
+//         txRef: payment.id,
+//         redirectUrl: request.redirectUrl,
+//         customerId: request.userId,
+//         customerName: await this.getUserName(request.userId),
+//         paymentType: request.paymentType,
+//         metadata: {
+//           paymentId: payment.id,
+//           propertyId: request.propertyId,
+//           unitId: request.unitId,
+//           markingJobId: request.markingJobId,
+//           ...request.metadata
+//         }
+//       });
+
+//       // Update payment with Flutterwave reference
+//       await this.updatePaymentWithFlutterwaveRef(payment.id, flutterwavePayment.data.link, flutterwavePayment.data.id);
+
+//       return {
+//         paymentId: payment.id,
+//         paymentLink: flutterwavePayment.data.link,
+//         transactionId: flutterwavePayment.data.id,
+//         status: PaymentStatus.PENDING,
+//         amount: request.amount,
+//         currency: 'NGN'
+//       };
+//     } catch (error) {
+//       logger.error('Failed to initiate payment', { error, request });
+      
+//       // Release property lock if payment initiation fails
+//       if (request.paymentType === PaymentType.RENT && request.propertyId) {
+//         await this.lockingService.releasePropertyLock(request.propertyId, request.unitId);
+//       }
+      
+//       throw error;
+//     }
+//   }
+
+//   async verifyPayment(transactionId: string): Promise<PaymentVerification> {
+//     try {
+//       logger.info('Verifying payment', { transactionId });
+
+//       // Verify with Flutterwave
+//       const verification = await this.flutterwaveService.verifyTransaction(transactionId);
+      
+//       // Find payment record
+//       const payment = await this.db.payment.findFirst({
+//         where: {
+//           OR: [
+//             { transactionId },
+//             { flutterwaveRef: transactionId }
+//           ]
+//         },
+//         include: {
+//           user: true,
+//           rental: {
+//             include: {
+//               property: true,
+//               unit: true
+//             }
+//           }
+//         }
+//       });
+
+//       if (!payment) {
+//         throw new ApiError(404, 'Payment record not found');
+//       }
+
+//       // Update payment status
+//       const updatedPayment = await this.updatePaymentStatus(payment.id, {
+//         status: verification.status,
+//         paidAt: verification.paidAt,
+//         failureReason: verification.failureReason,
+//         transactionId: verification.transactionId
+//       });
+
+//       // Handle successful payment
+//       if (verification.status === PaymentStatus.SUCCESS) {
+//         await this.handleSuccessfulPayment(updatedPayment);
+//       }
+
+//       // Handle failed payment
+//       if (verification.status === PaymentStatus.FAILED) {
+//         await this.handleFailedPayment(updatedPayment);
+//       }
+
+//       return verification;
+//     } catch (error) {
+//       logger.error('Failed to verify payment', { error, transactionId });
+//       throw error;
+//     }
+//   }
+
+//   async retryPayment(paymentId: string): Promise<PaymentResponse> {
+//     try {
+//       logger.info('Retrying payment', { paymentId });
+
+//       const payment = await this.db.payment.findUnique({
+//         where: { id: paymentId },
+//         include: { user: true }
+//       });
+
+//       if (!payment) {
+//         throw new ApiError(404, 'Payment not found');
+//       }
+
+//       if (payment.status === PaymentStatus.SUCCESS) {
+//         throw new ApiError(400, 'Payment already successful');
+//       }
+
+//       // Create new payment request from existing payment
+//       const retryRequest: PaymentRequest = {
+//         userId: payment.userId,
+//         amount: Number(payment.amount),
+//         paymentType: payment.paymentType,
+//         description: payment.description || undefined,
+//         propertyId: payment.rental?.propertyId,
+//         unitId: payment.rental?.unitId,
+//         markingJobId: payment.markingJobId || undefined,
+//         redirectUrl: process.env.FRONTEND_URL + '/payments/success',
+//         metadata: { isRetry: true, originalPaymentId: paymentId }
+//       };
+
+//       return await this.initiatePayment(retryRequest);
+//     } catch (error) {
+//       logger.error('Failed to retry payment', { error, paymentId });
+//       throw error;
+//     }
+//   }
+
+//   async refundPayment(paymentId: string, reason: string, adminId: string): Promise<void> {
+//     try {
+//       logger.info('Processing refund', { paymentId, reason, adminId });
+
+//       const payment = await this.db.payment.findUnique({
+//         where: { id: paymentId },
+//         include: { 
+//           user: true,
+//           rental: {
+//             include: {
+//               property: true,
+//               unit: true
+//             }
+//           }
+//         }
+//       });
+
+//       if (!payment) {
+//         throw new ApiError(404, 'Payment not found');
+//       }
+
+//       if (payment.status !== PaymentStatus.SUCCESS) {
+//         throw new ApiError(400, 'Can only refund successful payments');
+//       }
+
+//       // Process refund with Flutterwave
+//       if (payment.flutterwaveRef) {
+//         await this.flutterwaveService.processRefund(payment.flutterwaveRef, Number(payment.amount));
+//       }
+
+//       // Update payment status
+//       await this.db.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: PaymentStatus.REFUNDED,
+//           description: `${payment.description} - REFUNDED: ${reason}`
+//         }
+//       });
+
+//       // Handle rental refund
+//       if (payment.paymentType === PaymentType.RENT && payment.rental) {
+//         await this.rentalService.handleRentalRefund(payment.rental.id);
+//       }
+
+//       // Release property lock
+//       if (payment.rental?.propertyId) {
+//         await this.lockingService.releasePropertyLock(
+//           payment.rental.propertyId, 
+//           payment.rental.unitId || undefined
+//         );
+//       }
+
+//       logger.info('Refund processed successfully', { paymentId, adminId });
+//     } catch (error) {
+//       logger.error('Failed to process refund', { error, paymentId });
+//       throw error;
+//     }
+//   }
+
+//   async getUserPayments(userId: string, page: number = 1, limit: number = 20) {
+//     try {
+//       const skip = (page - 1) * limit;
+
+//       const [payments, total] = await Promise.all([
+//         this.db.payment.findMany({
+//           where: { userId },
+//           include: {
+//             rental: {
+//               include: {
+//                 property: {
+//                   select: {
+//                     id: true,
+//                     title: true,
+//                     address: true
+//                   }
+//                 },
+//                 unit: {
+//                   select: {
+//                     id: true,
+//                     unitNumber: true
+//                   }
+//                 }
+//               }
+//             }
+//           },
+//           orderBy: { createdAt: 'desc' },
+//           skip,
+//           take: limit
+//         }),
+//         this.db.payment.count({ where: { userId } })
+//       ]);
+
+//       return {
+//         payments,
+//         pagination: {
+//           total,
+//           pages: Math.ceil(total / limit),
+//           currentPage: page,
+//           limit
+//         }
+//       };
+//     } catch (error) {
+//       logger.error('Failed to get user payments', { error, userId });
+//       throw error;
+//     }
+//   }
+
+//   async getPaymentReceipt(paymentId: string, userId: string): Promise<Buffer> {
+//     try {
+//       const payment = await this.db.payment.findFirst({
+//         where: { 
+//           id: paymentId,
+//           userId 
+//         },
+//         include: {
+//           user: true,
+//           rental: {
+//             include: {
+//               property: true,
+//               unit: true
+//             }
+//           }
+//         }
+//       });
+
+//       if (!payment) {
+//         throw new ApiError(404, 'Payment not found');
+//       }
+
+//       if (payment.status !== PaymentStatus.SUCCESS) {
+//         throw new ApiError(400, 'Receipt only available for successful payments');
+//       }
+
+//       return await this.receiptService.generateReceipt(payment);
+//     } catch (error) {
+//       logger.error('Failed to get payment receipt', { error, paymentId });
+//       throw error;
+//     }
+//   }
+
+//   private async validatePaymentRequest(request: PaymentRequest): Promise<void> {
+//     if (request.amount <= 0) {
+//       throw new ApiError(400, 'Payment amount must be greater than 0');
+//     }
+
+//     // Validate user exists
+//     const user = await this.db.user.findUnique({
+//       where: { id: request.userId }
+//     });
+
+//     if (!user) {
+//       throw new ApiError(404, 'User not found');
+//     }
+
+//     // Additional validations based on payment type
+//     if (request.paymentType === PaymentType.RENT) {
+//       if (!request.propertyId) {
+//         throw new ApiError(400, 'Property ID required for rent payments');
+//       }
+
+//       const property = await this.db.property.findUnique({
+//         where: { id: request.propertyId }
+//       });
+
+//       if (!property) {
+//         throw new ApiError(404, 'Property not found');
+//       }
+
+//       if (!property.isAvailable) {
+//         throw new ApiError(400, 'Property is not available for rent');
+//       }
+//     }
+//   }
+
+//   private async createPaymentRecord(request: PaymentRequest): Promise<Payment> {
+//     return await this.db.payment.create({
+//       data: {
+//         userId: request.userId,
+//         amount: request.amount,
+//         currency: 'NGN',
+//         paymentType: request.paymentType,
+//         status: PaymentStatus.PENDING,
+//         description: request.description,
+//         markingJobId: request.markingJobId
+//       }
+//     });
+//   }
+
+//   private async updatePaymentWithFlutterwaveRef(
+//     paymentId: string, 
+//     paymentLink: string, 
+//     flutterwaveRef: string
+//   ): Promise<void> {
+//     await this.db.payment.update({
+//       where: { id: paymentId },
+//       data: {
+//         flutterwaveRef,
+//         // Store payment link in metadata if needed
+//       }
+//     });
+//   }
+
+//   private async updatePaymentStatus(
+//     paymentId: string, 
+//     update: {
+//       status: PaymentStatus;
+//       paidAt?: Date;
+//       failureReason?: string;
+//       transactionId?: string;
+//     }
+//   ): Promise<Payment> {
+//     return await this.db.payment.update({
+//       where: { id: paymentId },
+//       data: {
+//         status: update.status,
+//         paidAt: update.paidAt,
+//         failureReason: update.failureReason,
+//         transactionId: update.transactionId || undefined
+//       },
+//       include: {
+//         user: true,
+//         rental: {
+//           include: {
+//             property: true,
+//             unit: true
+//           }
+//         }
+//       }
+//     });
+//   }
+
+//   private async handleSuccessfulPayment(payment: Payment): Promise<void> {
+//     try {
+//       // Handle rental payments
+//       if (payment.paymentType === PaymentType.RENT) {
+//         await this.rentalService.processRentalPayment(payment.id);
+//         // Start confirmation period
+//         await this.confirmationService.startConfirmationPeriod(payment.id);
+//       }
+
+//       // Handle property marking payments
+//       if (payment.paymentType === PaymentType.PROPERTY_MARKING) {
+//         // Update marking job status or trigger assignment
+//         // This would be handled by the marking service
+//       }
+
+//       // Generate receipt
+//       await this.receiptService.generateAndStoreReceipt(payment);
+
+//       logger.info('Successfully handled payment', { paymentId: payment.id });
+//     } catch (error) {
+//       logger.error('Failed to handle successful payment', { error, paymentId: payment.id });
+//       // Don't throw here to avoid reverting the payment status
+//     }
+//   }
+
+//   private async handleFailedPayment(payment: Payment): Promise<void> {
+//     try {
+//       // Release property lock for rental payments
+//       if (payment.paymentType === PaymentType.RENT && payment.rental?.propertyId) {
+//         await this.lockingService.releasePropertyLock(
+//           payment.rental.propertyId,
+//           payment.rental.unitId || undefined
+//         );
+//       }
+
+//       logger.info('Handled failed payment', { paymentId: payment.id });
+//     } catch (error) {
+//       logger.error('Failed to handle failed payment', { error, paymentId: payment.id });
+//     }
+//   }
+
+//   private async getUserEmail(userId: string): Promise<string> {
+//     const user = await this.db.user.findUnique({
+//       where: { id: userId },
+//       select: { email: true }
+//     });
+    
+//     if (!user?.email) {
+//       throw new ApiError(404, 'User email not found');
+//     }
+    
+//     return user.email;
+//   }
+
+//   private async getUserName(userId: string): Promise<string> {
+//     const user = await this.db.user.findUnique({
+//       where: { id: userId },
+//       select: { name: true, email: true }
+//     });
+    
+//     return user?.name || user?.email?.split('@')[0] || 'User';
+//   }
+// }

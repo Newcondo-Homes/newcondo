@@ -249,3 +249,196 @@ router.post(
 );
 
 export default router;
+
+
+// import express from 'express';
+// import { authMiddleware } from '../../../shared/src/middleware/auth';
+// import { validateRequest } from '../../../shared/src/middleware/validation';
+// import { paymentValidation } from '../middleware/paymentValidation';
+// import {
+//   createVirtualAccount,
+//   getVirtualAccount,
+//   getUserVirtualAccounts,
+//   getVirtualAccountBalance,
+//   getVirtualAccountTransactions,
+//   updateVirtualAccount,
+//   deactivateVirtualAccount,
+//   reactivateVirtualAccount,
+//   transferFromVirtualAccount,
+//   createPropertyVirtualAccount,
+//   linkVirtualAccountToProperty,
+//   unlinkVirtualAccountFromProperty,
+//   getVirtualAccountStatement,
+//   bulkCreateVirtualAccounts
+// } from '../controllers/virtualAccountController';
+
+// const router = express.Router();
+
+// // Apply auth middleware to all routes
+// router.use(authMiddleware);
+
+// /**
+//  * @route   POST /api/virtual-accounts/create
+//  * @desc    Create a new virtual account for user
+//  * @access  Private
+//  * @body    { accountName?, currency?, propertyId? }
+//  */
+// router.post(
+//   '/create',
+//   validateRequest(paymentValidation.createVirtualAccount),
+//   createVirtualAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/property/:propertyId
+//  * @desc    Create virtual account specifically for a property
+//  * @access  Private
+//  * @body    { accountName?, currency? }
+//  */
+// router.post(
+//   '/property/:propertyId',
+//   validateRequest(paymentValidation.createPropertyVirtualAccount),
+//   createPropertyVirtualAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/bulk-create
+//  * @desc    Bulk create virtual accounts (Admin/System use)
+//  * @access  Private (Admin only)
+//  * @body    { accounts: [{ userId, propertyId?, accountName?, currency? }] }
+//  */
+// router.post(
+//   '/bulk-create',
+//   validateRequest(paymentValidation.bulkCreateVirtualAccounts),
+//   bulkCreateVirtualAccounts
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId
+//  * @desc    Get specific virtual account details
+//  * @access  Private
+//  */
+// router.get(
+//   '/:accountId',
+//   validateRequest(paymentValidation.getVirtualAccount),
+//   getVirtualAccount
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/user/all
+//  * @desc    Get all virtual accounts for current user
+//  * @access  Private
+//  * @query   { includeInactive?, propertyId? }
+//  */
+// router.get(
+//   '/user/all',
+//   validateRequest(paymentValidation.getUserVirtualAccounts),
+//   getUserVirtualAccounts
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId/balance
+//  * @desc    Get virtual account balance
+//  * @access  Private
+//  */
+// router.get(
+//   '/:accountId/balance',
+//   validateRequest(paymentValidation.getVirtualAccountBalance),
+//   getVirtualAccountBalance
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId/transactions
+//  * @desc    Get virtual account transaction history
+//  * @access  Private
+//  * @query   { page?, limit?, startDate?, endDate?, type? }
+//  */
+// router.get(
+//   '/:accountId/transactions',
+//   validateRequest(paymentValidation.getVirtualAccountTransactions),
+//   getVirtualAccountTransactions
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId/statement
+//  * @desc    Generate virtual account statement
+//  * @access  Private
+//  * @query   { startDate?, endDate?, format?, includeBalance? }
+//  */
+// router.get(
+//   '/:accountId/statement',
+//   validateRequest(paymentValidation.getVirtualAccountStatement),
+//   getVirtualAccountStatement
+// );
+
+// /**
+//  * @route   PUT /api/virtual-accounts/:accountId
+//  * @desc    Update virtual account details
+//  * @access  Private
+//  * @body    { accountName?, isActive? }
+//  */
+// router.put(
+//   '/:accountId',
+//   validateRequest(paymentValidation.updateVirtualAccount),
+//   updateVirtualAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/:accountId/link-property
+//  * @desc    Link virtual account to a property
+//  * @access  Private
+//  * @body    { propertyId }
+//  */
+// router.post(
+//   '/:accountId/link-property',
+//   validateRequest(paymentValidation.linkVirtualAccountToProperty),
+//   linkVirtualAccountToProperty
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/:accountId/unlink-property
+//  * @desc    Unlink virtual account from property
+//  * @access  Private
+//  */
+// router.post(
+//   '/:accountId/unlink-property',
+//   validateRequest(paymentValidation.unlinkVirtualAccountFromProperty),
+//   unlinkVirtualAccountFromProperty
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/:accountId/transfer
+//  * @desc    Transfer funds from virtual account
+//  * @access  Private
+//  * @body    { amount, destinationType, destinationId, description?, pin? }
+//  */
+// router.post(
+//   '/:accountId/transfer',
+//   validateRequest(paymentValidation.transferFromVirtualAccount),
+//   transferFromVirtualAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/:accountId/deactivate
+//  * @desc    Deactivate virtual account
+//  * @access  Private
+//  * @body    { reason?, transferRemainingBalance? }
+//  */
+// router.post(
+//   '/:accountId/deactivate',
+//   validateRequest(paymentValidation.deactivateVirtualAccount),
+//   deactivateVirtualAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/:accountId/reactivate
+//  * @desc    Reactivate virtual account
+//  * @access  Private
+//  */
+// router.post(
+//   '/:accountId/reactivate',
+//   validateRequest(paymentValidation.reactivateVirtualAccount),
+//   reactivateVirtualAccount
+// );
+
+// export default router;

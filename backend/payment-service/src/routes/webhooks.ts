@@ -81,3 +81,134 @@ router.post(
 );
 
 export default router;
+
+
+// import express from 'express';
+// import { webhookVerification } from '../middleware/webhookVerification';
+// import {
+//   handleFlutterwaveWebhook,
+//   handleChargeCompletedWebhook,
+//   handleTransferWebhook,
+//   handleDisputeWebhook,
+//   handleRefundWebhook,
+//   handleVirtualAccountWebhook,
+//   getWebhookStatus,
+//   reprocessWebhook
+// } from '../controllers/webhookController';
+// import { authMiddleware } from '../../../shared/src/middleware/auth';
+// import { validateRequest } from '../../../shared/src/middleware/validation';
+// import { paymentValidation } from '../middleware/paymentValidation';
+
+// const router = express.Router();
+
+// /**
+//  * @route   POST /api/webhooks/flutterwave
+//  * @desc    Handle Flutterwave webhook notifications
+//  * @access  Public (with signature verification)
+//  */
+// router.post(
+//   '/flutterwave',
+//   express.raw({ type: 'application/json' }), // Raw body for signature verification
+//   webhookVerification.verifyFlutterwaveSignature,
+//   handleFlutterwaveWebhook
+// );
+
+// /**
+//  * @route   POST /api/webhooks/flutterwave/charge-completed
+//  * @desc    Handle charge completed webhook specifically
+//  * @access  Public (with signature verification)
+//  */
+// router.post(
+//   '/flutterwave/charge-completed',
+//   express.raw({ type: 'application/json' }),
+//   webhookVerification.verifyFlutterwaveSignature,
+//   handleChargeCompletedWebhook
+// );
+
+// /**
+//  * @route   POST /api/webhooks/flutterwave/transfer
+//  * @desc    Handle transfer webhook events
+//  * @access  Public (with signature verification)
+//  */
+// router.post(
+//   '/flutterwave/transfer',
+//   express.raw({ type: 'application/json' }),
+//   webhookVerification.verifyFlutterwaveSignature,
+//   handleTransferWebhook
+// );
+
+// /**
+//  * @route   POST /api/webhooks/flutterwave/dispute
+//  * @desc    Handle dispute webhook events
+//  * @access  Public (with signature verification)
+//  */
+// router.post(
+//   '/flutterwave/dispute',
+//   express.raw({ type: 'application/json' }),
+//   webhookVerification.verifyFlutterwaveSignature,
+//   handleDisputeWebhook
+// );
+
+// /**
+//  * @route   POST /api/webhooks/flutterwave/refund
+//  * @desc    Handle refund webhook events
+//  * @access  Public (with signature verification)
+//  */
+// router.post(
+//   '/flutterwave/refund',
+//   express.raw({ type: 'application/json' }),
+//   webhookVerification.verifyFlutterwaveSignature,
+//   handleRefundWebhook
+// );
+
+// /**
+//  * @route   POST /api/webhooks/flutterwave/virtual-account
+//  * @desc    Handle virtual account webhook events
+//  * @access  Public (with signature verification)
+//  */
+// router.post(
+//   '/flutterwave/virtual-account',
+//   express.raw({ type: 'application/json' }),
+//   webhookVerification.verifyFlutterwaveSignature,
+//   handleVirtualAccountWebhook
+// );
+
+// // Protected webhook management endpoints
+// router.use(authMiddleware); // Apply auth for management endpoints
+
+// /**
+//  * @route   GET /api/webhooks/status/:webhookId
+//  * @desc    Get webhook processing status
+//  * @access  Private (Admin only)
+//  */
+// router.get(
+//   '/status/:webhookId',
+//   validateRequest(paymentValidation.getWebhookStatus),
+//   getWebhookStatus
+// );
+
+// /**
+//  * @route   POST /api/webhooks/reprocess/:webhookId
+//  * @desc    Reprocess failed webhook
+//  * @access  Private (Admin only)
+//  */
+// router.post(
+//   '/reprocess/:webhookId',
+//   validateRequest(paymentValidation.reprocessWebhook),
+//   reprocessWebhook
+// );
+
+// /**
+//  * @route   GET /api/webhooks/health
+//  * @desc    Webhook endpoint health check
+//  * @access  Public
+//  */
+// router.get('/health', (req, res) => {
+//   res.status(200).json({
+//     status: 'success',
+//     message: 'Webhook endpoint is healthy',
+//     timestamp: new Date().toISOString()
+//   });
+// });
+
+// export default router;

@@ -554,3 +554,226 @@ class ConfirmationService {
 }
 
 export const confirmationService = new ConfirmationService();
+
+
+
+
+// import { PrismaClient, Payment, PaymentStatus, RentalStatus } from '@newcondo/db';
+// import { Decimal } from 'decimal.js';
+// import { standardResponse, ApiError } from '../../../shared/src/utils/response';
+// import type { ApiResponse } from '../../../shared/src/types/api';
+// import { logger } from '../../../shared/src/utils/logger';
+// import { sendPaymentConfirmationEmail, sendPaymentDisputeEmail } from '../../../notification-service/src/services/emailService'; // Assuming a notification service
+
+// const prisma = new PrismaClient();
+
+// export interface PaymentConfirmation {
+//   paymentId: string;
+//   status: 'CONFIRMED' | 'DISPUTED' | 'PENDING';
+//   confirmationDate: Date;
+//   disputeReason?: string;
+//   adminNotes?: string;
+// }
+
+// export interface ConfirmationRequest {
+//   paymentId: string;
+//   userId: string;
+//   confirmed: boolean;
+//   disputeReason?: string;
+// }
+
+// export interface EscrowRelease {
+//   paymentId: string;
+//   releaseAmount: Decimal;
+//   commissionAmount: Decimal;
+//   platformFee: Decimal;
+//   ownerAmount: Decimal;
+// }
+
+// export interface ConfirmationStats {
+//   totalPayments: number;
+//   pendingConfirmations: number;
+//   disputedPayments: number;
+//   releasedPayments: number;
+// }
+
+// export class ConfirmationService {
+//   /**
+//    * Handles a user's confirmation or dispute of a payment.
+//    * @param data The confirmation request data.
+//    * @returns The updated payment record.
+//    */
+//   async handlePaymentConfirmation(data: ConfirmationRequest): Promise<Payment> {
+//     const { paymentId, userId, confirmed, disputeReason } = data;
+
+//     logger.info('Handling payment confirmation', { paymentId, userId, confirmed });
+
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//       include: { user: true, rental: { include: { property: true } } }
+//     });
+
+//     if (!payment) {
+//       throw new ApiError(404, 'Payment not found.');
+//     }
+
+//     if (payment.userId !== userId) {
+//       throw new ApiError(403, 'User is not authorized to confirm this payment.');
+//     }
+
+//     if (payment.status !== PaymentStatus.HELD) {
+//       throw new ApiError(400, `Payment cannot be confirmed in status: ${payment.status}.`);
+//     }
+
+//     if (confirmed) {
+//       // User confirms payment, release funds after a grace period.
+//       const releaseTime = new Date();
+//       releaseTime.setDate(releaseTime.getDate() + 2); // Release in 2 days as a grace period.
+
+//       const updatedPayment = await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: PaymentStatus.RELEASED,
+//           isReleased: true,
+//           releasedAt: releaseTime,
+//           confirmationPeriodEnd: null, // Confirmation period is over
+//         },
+//       });
+
+//       // Notify owner/agent of successful confirmation
+//       // const owner = await prisma.user.findUnique({ where: { id: payment.rental.property.ownerId } });
+//       // if (owner) {
+//       //   await sendPaymentConfirmationEmail(owner.email, {
+//       //     amount: updatedPayment.amount,
+//       //     description: updatedPayment.description,
+//       //     paymentId: updatedPayment.id,
+//       //   });
+//       // }
+
+//       logger.info('Payment confirmed and scheduled for release', { paymentId });
+//       return updatedPayment;
+
+//     } else {
+//       // User disputes the payment
+//       if (!disputeReason || disputeReason.length < 10) {
+//         throw new ApiError(400, 'A valid reason is required to dispute a payment.');
+//       }
+
+//       const updatedPayment = await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: PaymentStatus.FAILED, // Mark as failed or 'disputed' depending on your flow. 'FAILED' is a good initial state.
+//           failureReason: `Payment disputed by user: ${disputeReason}`,
+//           isReleased: false,
+//           confirmationPeriodEnd: null,
+//         },
+//       });
+
+//       // Notify admin of the dispute
+//       // await sendPaymentDisputeEmail({
+//       //   paymentId: updatedPayment.id,
+//       //   disputer: payment.user.email,
+//       //   reason: disputeReason,
+//       // });
+
+//       logger.warn('Payment disputed by user', { paymentId, disputeReason });
+//       return updatedPayment;
+//     }
+//   }
+
+//   /**
+//    * Automatically releases funds for confirmed or expired payments.
+//    * This function should be called by a cron job.
+//    */
+//   async releaseConfirmedPayments(): Promise<void> {
+//     const now = new Date();
+
+//     const paymentsToRelease = await prisma.payment.findMany({
+//       where: {
+//         status: PaymentStatus.HELD,
+//         confirmationPeriodEnd: {
+//           lte: now, // Confirmation period has expired
+//         },
+//       },
+//       include: { rental: { include: { property: true } } },
+//     });
+
+//     logger.info(`Found ${paymentsToRelease.length} payments to automatically release.`);
+
+//     for (const payment of paymentsToRelease) {
+//       try {
+//         const { platformFee, agentCommission, ownerAmount } = this.calculateEscrowSplit(payment);
+
+//         await prisma.$transaction(async (tx) => {
+//           // 1. Update Payment status to RELEASED
+//           await tx.payment.update({
+//             where: { id: payment.id },
+//             data: {
+//               status: PaymentStatus.RELEASED,
+//               isReleased: true,
+//               releasedAt: now,
+//               platformFee,
+//               agentCommission,
+//               ownerAmount,
+//             },
+//           });
+
+//           // 2. Transfer funds to virtual accounts (simulated or real)
+//           // Here, you would call a virtual account service to handle the actual transfer
+//           // For now, we'll just log it.
+//           logger.info(`Simulating fund release for payment ${payment.id}:`);
+//           logger.info(`  - Platform Fee: ${platformFee.toFixed(2)}`);
+//           logger.info(`  - Agent Commission: ${agentCommission.toFixed(2)}`);
+//           logger.info(`  - Owner Amount: ${ownerAmount.toFixed(2)}`);
+
+//           // 3. Mark the rental as active (if it's the first payment)
+//           if (payment.rentalId) {
+//             const rental = await tx.rental.findUnique({
+//               where: { id: payment.rentalId },
+//             });
+//             if (rental?.status === RentalStatus.PENDING_CONFIRMATION) {
+//               await tx.rental.update({
+//                 where: { id: rental.id },
+//                 data: {
+//                   status: RentalStatus.ACTIVE,
+//                   isConfirmed: true,
+//                   confirmedAt: now,
+//                 },
+//               });
+//             }
+//           }
+//         });
+//         logger.info(`Payment ${payment.id} successfully released.`);
+//       } catch (error) {
+//         logger.error(`Failed to release payment ${payment.id}:`, { error });
+//       }
+//     }
+//   }
+
+//   /**
+//    * Calculates the split of a payment between the owner, agent, and platform.
+//    * This is a simplified example.
+//    * @param payment The payment record.
+//    * @returns The split amounts.
+//    */
+//   private calculateEscrowSplit(payment: Payment): EscrowRelease {
+//     const totalAmount = new Decimal(payment.amount);
+//     const platformFeeRate = new Decimal(0.05); // 5% platform fee
+//     const agentCommissionRate = new Decimal(0.05); // 5% agent commission
+
+//     const platformFee = totalAmount.times(platformFeeRate);
+//     const agentCommission = totalAmount.times(agentCommissionRate);
+//     const ownerAmount = totalAmount.minus(platformFee).minus(agentCommission);
+
+//     return {
+//       paymentId: payment.id,
+//       releaseAmount: totalAmount,
+//       commissionAmount: agentCommission,
+//       platformFee,
+//       ownerAmount,
+//     };
+//   }
+// }
+
+// // You can create a singleton instance for easier use
+// export const confirmationService = new ConfirmationService();
