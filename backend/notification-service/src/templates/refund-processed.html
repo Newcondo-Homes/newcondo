@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refund Processed - NewCondo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 25px;
+            color: #555;
+        }
+        .refund-details {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px dotted #dee2e6;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .detail-value {
+            color: #6c757d;
+        }
+        .success-message {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #2d5016;
+            font-weight: 500;
+            text-align: center;
+        }
+        .processing-time {
+            background-color: #fff8e1;
+            border: 1px solid #ffd54f;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #e65100;
+        }
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            margin: 0 10px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+        }
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+            transform: translateY(-1px);
+        }
+        .help-section {
+            background-color: #f8f9fa;
+            padding: 25px;
+            margin-top: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .help-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .help-section p {
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .footer {
+            background-color: #343a40;
+            color: #adb5bd;
+            padding: 30px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-value {
+                margin-top: 5px;
+                font-weight: 600;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">✅</div>
+            <h1>Refund Processed</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello {{userName}},
+            </div>
+            
+            <div class="message">
+                We're pleased to inform you that your refund has been successfully processed. The refunded amount will be credited back to your original payment method.
+            </div>
+            
+            <div class="success-message">
+                Your refund of ₦{{refundAmount}} has been processed successfully!
+            </div>
+            
+            <div class="refund-details">
+                <div class="detail-row">
+                    <span class="detail-label">Original Transaction Ref:</span>
+                    <span class="detail-value">{{originalTransactionRef}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Refund Reference:</span>
+                    <span class="detail-value">{{refundReference}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Refund Amount:</span>
+                    <span class="detail-value">₦{{refundAmount}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Property:</span>
+                    <span class="detail-value">{{propertyTitle}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Original Payment Date:</span>
+                    <span class="detail-value">{{originalPaymentDate}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Refund Processed At:</span>
+                    <span class="detail-value">{{refundProcessedAt}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{{paymentMethod}}</span>
+                </div>
+            </div>
+            
+            {{#if refundReason}}
+            <div class="processing-time">
+                <strong>Refund Reason:</strong> {{refundReason}}
+            </div>
+            {{/if}}
+            
+            <div class="processing-time">
+                <strong>Processing Time:</strong> Please allow 3-5 business days for the refund to appear in your account, depending on your bank or payment provider.
+            </div>
+            
+            <div class="action-buttons">
+                <a href="{{paymentsUrl}}" class="btn btn-primary">View Payment History</a>
+                <a href="{{dashboardUrl}}" class="btn btn-secondary">Go to Dashboard</a>
+            </div>
+            
+            <div class="help-section">
+                <h3>Questions About Your Refund?</h3>
+                <p>If you have any questions or concerns about this refund, or if you don't see the credit in your account after 5 business days, please don't hesitate to contact us.</p>
+                <div class="contact-info">
+                    <strong>Email:</strong> <a href="mailto:support@newcondo.com">support@newcondo.com</a><br>
+                    <strong>Phone:</strong> <a href="tel:+2348000000000">+234 800 000 0000</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2025 NewCondo. All rights reserved.</p>
+            <p>
+                <a href="{{websiteUrl}}/privacy">Privacy Policy</a> | 
+                <a href="{{websiteUrl}}/terms">Terms of Service</a> | 
+                <a href="{{websiteUrl}}/contact">Contact Us</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

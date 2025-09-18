@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful - NewCondo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f8f9fa;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .success-icon {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 25px;
+            color: #374151;
+        }
+        
+        .payment-details {
+            background-color: #f3f4f6;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #10b981;
+        }
+        
+        .payment-amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #10b981;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .property-info {
+            background-color: #fef3c7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .property-info h3 {
+            color: #92400e;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .confirmation-notice {
+            background-color: #dbeafe;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .confirmation-notice h3 {
+            color: #1e40af;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .confirmation-notice p {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+        }
+        
+        .countdown {
+            background-color: #fef2f2;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .countdown .days {
+            font-size: 24px;
+            font-weight: 700;
+            color: #dc2626;
+        }
+        
+        .cta-buttons {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #059669;
+        }
+        
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 2px solid #d1d5db;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e5e7eb;
+        }
+        
+        .receipt-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .footer {
+            background-color: #374151;
+            color: #d1d5db;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #9ca3af;
+            font-size: 20px;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 640px) {
+            .email-container {
+                width: 100%;
+                border-radius: 0;
+            }
+            .content, .header, .footer {
+                padding: 20px;
+            }
+            .payment-amount {
+                font-size: 28px;
+            }
+            .btn {
+                width: 100%;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="success-icon">✓</div>
+            <h1>Payment Successful!</h1>
+            <p>Your recent payment to NewCondo has been processed.</p>
+        </div>
+
+        <div class="content">
+            <p class="greeting">Hi {{firstName}},</p>
+            <p>We've received your payment. Here are the details of your transaction:</p>
+
+            <div class="payment-details">
+                <div class="payment-amount">${{amount}}</div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment ID:</span>
+                    <span class="detail-value">{{paymentId}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value">{{paymentDate}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">{{paymentMethod}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Description:</span>
+                    <span class="detail-value">{{description}}</span>
+                </div>
+            </div>
+
+            <p>
+                You can view and download your full receipt by clicking the button below.
+                If you have any questions, feel free to reach out to our support team.
+            </p>
+
+            <div class="cta-buttons">
+                <a href="{{receiptUrl}}" class="btn btn-primary">View Receipt</a>
+                <a href="{{supportUrl}}" class="btn btn-secondary">Contact Support</a>
+            </div>
+
+            <div class="property-info">
+                <h3>Property Information</h3>
+                <p><strong>Property:</strong> {{propertyName}}</p>
+                <p><strong>Unit:</strong> {{unitNumber}}</p>
+            </div>
+            
+            <div class="confirmation-notice">
+                <h3>What's Next?</h3>
+                <p>We are now processing your request. You'll be notified once the service is confirmed. Thank you for your patience!</p>
+                <p>Your payment ensures uninterrupted services. Thank you for being a valued resident!</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 NewCondo. All rights reserved.</p>
+            <p>
+                <a href="{{privacyPolicyUrl}}">Privacy Policy</a> | 
+                <a href="{{termsOfServiceUrl}}">Terms of Service</a>
+            </p>
+            <div class="social-links">
+                <a href="{{twitterUrl}}">🐦</a>
+                <a href="{{facebookUrl}}">📘</a>
+                <a href="{{linkedinUrl}}">💼</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
