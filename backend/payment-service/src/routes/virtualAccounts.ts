@@ -442,3 +442,140 @@ export default router;
 // );
 
 // export default router;
+
+
+// backend/payment-service/src/routes/virtualAccounts.ts
+
+// import { Router } from 'express';
+// import { VirtualAccountController } from '../controllers/virtualAccountController';
+// import { auth } from '../../../shared/src/middleware/auth';
+// import { rateLimiter } from '../../../shared/src/middleware/rateLimiter';
+// import { 
+//   validateCreateOwnerAccount,
+//   validateCreateAgentAccount,
+//   validateTransferFunds,
+//   validateAccountId
+// } from '../middleware/virtualAccountValidation';
+
+// const router = Router();
+// const virtualAccountController = new VirtualAccountController();
+
+// // Apply auth middleware to all routes
+// router.use(auth);
+
+// /**
+//  * @route   POST /api/virtual-accounts/owner
+//  * @desc    Create virtual account for property owner
+//  * @access  Private
+//  */
+// router.post(
+//   '/owner',
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }), // 5 requests per 15 minutes
+//   validateCreateOwnerAccount,
+//   virtualAccountController.createOwnerAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/agent
+//  * @desc    Create virtual account for agent
+//  * @access  Private
+//  */
+// router.post(
+//   '/agent',
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }), // 5 requests per 15 minutes
+//   validateCreateAgentAccount,
+//   virtualAccountController.createAgentAccount
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/my-accounts
+//  * @desc    Get current user's virtual accounts
+//  * @access  Private
+//  */
+// router.get(
+//   '/my-accounts',
+//   virtualAccountController.getUserVirtualAccounts
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId
+//  * @desc    Get virtual account details
+//  * @access  Private
+//  */
+// router.get(
+//   '/:accountId',
+//   validateAccountId,
+//   virtualAccountController.getVirtualAccount
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId/balance
+//  * @desc    Get virtual account balance
+//  * @access  Private
+//  */
+// router.get(
+//   '/:accountId/balance',
+//   validateAccountId,
+//   virtualAccountController.getAccountBalance
+// );
+
+// /**
+//  * @route   GET /api/virtual-accounts/:accountId/transactions
+//  * @desc    Get virtual account transactions
+//  * @access  Private
+//  */
+// router.get(
+//   '/:accountId/transactions',
+//   validateAccountId,
+//   virtualAccountController.getAccountTransactions
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/:accountId/transfer
+//  * @desc    Transfer funds from virtual account
+//  * @access  Private
+//  */
+// router.post(
+//   '/:accountId/transfer',
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 10 }), // 10 transfers per 15 minutes
+//   validateAccountId,
+//   validateTransferFunds,
+//   virtualAccountController.transferFunds
+// );
+
+// /**
+//  * @route   PUT /api/virtual-accounts/:accountId/deactivate
+//  * @desc    Deactivate virtual account
+//  * @access  Private
+//  */
+// router.put(
+//   '/:accountId/deactivate',
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 3 }), // 3 requests per 15 minutes
+//   validateAccountId,
+//   virtualAccountController.deactivateAccount
+// );
+
+// /**
+//  * @route   PUT /api/virtual-accounts/:accountId/reactivate
+//  * @desc    Reactivate virtual account
+//  * @access  Private
+//  */
+// router.put(
+//   '/:accountId/reactivate',
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 3 }), // 3 requests per 15 minutes
+//   validateAccountId,
+//   virtualAccountController.reactivateAccount
+// );
+
+// /**
+//  * @route   POST /api/virtual-accounts/webhook
+//  * @desc    Handle Flutterwave virtual account webhooks
+//  * @access  Public (but verified by signature)
+//  */
+// router.post(
+//   '/webhook',
+//   rateLimiter({ windowMs: 1 * 60 * 1000, max: 100 }), // 100 webhooks per minute
+//   virtualAccountController.handleVirtualAccountWebhook
+// );
+
+// export { router as virtualAccountsRouter };

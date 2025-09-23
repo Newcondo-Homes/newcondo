@@ -243,3 +243,330 @@ export class VirtualAccountController {
 }
 
 export const virtualAccountController = new VirtualAccountController();
+
+
+
+// backend/payment-service/src/controllers/virtualAccountController.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { VirtualAccountService } from '../services/virtualAccountService';
+// import { FlutterwaveVirtualAccountService } from '../services/flutterwaveVirtualAccountService';
+// import { standardResponse } from '../../../shared/src/utils/response';
+
+// export class VirtualAccountController {
+//   private virtualAccountService: VirtualAccountService;
+//   private flutterwaveService: FlutterwaveVirtualAccountService;
+
+//   constructor() {
+//     this.virtualAccountService = new VirtualAccountService();
+//     this.flutterwaveService = new FlutterwaveVirtualAccountService();
+//   }
+
+//   // Create virtual account for property owner
+//   createOwnerAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { userId, propertyId } = req.body;
+//       const { id: requesterId } = req.user as { id: string };
+
+//       // Verify user owns the property or is the user
+//       if (requesterId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Unauthorized to create virtual account', null));
+//         return;
+//       }
+
+//       const virtualAccount = await this.virtualAccountService.createOwnerVirtualAccount(userId, propertyId);
+      
+//       res.status(201).json(standardResponse(
+//         true, 
+//         'Virtual account created successfully', 
+//         virtualAccount
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Create virtual account for agent
+//   createAgentAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { userId } = req.body;
+//       const { id: requesterId } = req.user as { id: string };
+
+//       // Verify user is creating for themselves
+//       if (requesterId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Unauthorized to create virtual account', null));
+//         return;
+//       }
+
+//       const virtualAccount = await this.virtualAccountService.createAgentVirtualAccount(userId);
+      
+//       res.status(201).json(standardResponse(
+//         true, 
+//         'Agent virtual account created successfully', 
+//         virtualAccount
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Get virtual account details
+//   getVirtualAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { accountId } = req.params;
+//       const { id: userId } = req.user as { id: string };
+
+//       const virtualAccount = await this.virtualAccountService.getVirtualAccountById(accountId);
+
+//       if (!virtualAccount) {
+//         res.status(404).json(standardResponse(false, 'Virtual account not found', null));
+//         return;
+//       }
+
+//       // Check ownership
+//       if (virtualAccount.userId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Access denied', null));
+//         return;
+//       }
+
+//       res.json(standardResponse(
+//         true, 
+//         'Virtual account retrieved successfully', 
+//         virtualAccount
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Get user's virtual accounts
+//   getUserVirtualAccounts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { id: userId } = req.user as { id: string };
+//       const { propertyId } = req.query;
+
+//       const virtualAccounts = await this.virtualAccountService.getUserVirtualAccounts(
+//         userId, 
+//         propertyId as string
+//       );
+
+//       res.json(standardResponse(
+//         true, 
+//         'Virtual accounts retrieved successfully', 
+//         virtualAccounts
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Get virtual account balance
+//   getAccountBalance = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { accountId } = req.params;
+//       const { id: userId } = req.user as { id: string };
+
+//       const virtualAccount = await this.virtualAccountService.getVirtualAccountById(accountId);
+
+//       if (!virtualAccount) {
+//         res.status(404).json(standardResponse(false, 'Virtual account not found', null));
+//         return;
+//       }
+
+//       // Check ownership
+//       if (virtualAccount.userId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Access denied', null));
+//         return;
+//       }
+
+//       // Get fresh balance from Flutterwave
+//       const balance = await this.flutterwaveService.getAccountBalance(virtualAccount.flutterwaveAccountId!);
+
+//       // Update local balance
+//       await this.virtualAccountService.updateAccountBalance(accountId, balance);
+
+//       res.json(standardResponse(
+//         true, 
+//         'Account balance retrieved successfully', 
+//         { balance, currency: virtualAccount.currency }
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Deactivate virtual account
+//   deactivateAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { accountId } = req.params;
+//       const { id: userId } = req.user as { id: string };
+
+//       const virtualAccount = await this.virtualAccountService.getVirtualAccountById(accountId);
+
+//       if (!virtualAccount) {
+//         res.status(404).json(standardResponse(false, 'Virtual account not found', null));
+//         return;
+//       }
+
+//       // Check ownership
+//       if (virtualAccount.userId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Access denied', null));
+//         return;
+//       }
+
+//       await this.virtualAccountService.deactivateVirtualAccount(accountId);
+
+//       res.json(standardResponse(
+//         true, 
+//         'Virtual account deactivated successfully', 
+//         null
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Reactivate virtual account
+//   reactivateAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { accountId } = req.params;
+//       const { id: userId } = req.user as { id: string };
+
+//       const virtualAccount = await this.virtualAccountService.getVirtualAccountById(accountId);
+
+//       if (!virtualAccount) {
+//         res.status(404).json(standardResponse(false, 'Virtual account not found', null));
+//         return;
+//       }
+
+//       // Check ownership
+//       if (virtualAccount.userId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Access denied', null));
+//         return;
+//       }
+
+//       await this.virtualAccountService.reactivateVirtualAccount(accountId);
+
+//       res.json(standardResponse(
+//         true, 
+//         'Virtual account reactivated successfully', 
+//         null
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Get virtual account transactions
+//   getAccountTransactions = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { accountId } = req.params;
+//       const { page = 1, limit = 20, startDate, endDate } = req.query;
+//       const { id: userId } = req.user as { id: string };
+
+//       const virtualAccount = await this.virtualAccountService.getVirtualAccountById(accountId);
+
+//       if (!virtualAccount) {
+//         res.status(404).json(standardResponse(false, 'Virtual account not found', null));
+//         return;
+//       }
+
+//       // Check ownership
+//       if (virtualAccount.userId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Access denied', null));
+//         return;
+//       }
+
+//       const transactions = await this.flutterwaveService.getAccountTransactions(
+//         virtualAccount.flutterwaveAccountId!,
+//         {
+//           page: parseInt(page as string),
+//           limit: parseInt(limit as string),
+//           startDate: startDate as string,
+//           endDate: endDate as string
+//         }
+//       );
+
+//       res.json(standardResponse(
+//         true, 
+//         'Account transactions retrieved successfully', 
+//         transactions
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Transfer funds from virtual account
+//   transferFunds = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const { accountId } = req.params;
+//       const { amount, bankCode, accountNumber, narration } = req.body;
+//       const { id: userId } = req.user as { id: string };
+
+//       const virtualAccount = await this.virtualAccountService.getVirtualAccountById(accountId);
+
+//       if (!virtualAccount) {
+//         res.status(404).json(standardResponse(false, 'Virtual account not found', null));
+//         return;
+//       }
+
+//       // Check ownership
+//       if (virtualAccount.userId !== userId) {
+//         res.status(403).json(standardResponse(false, 'Access denied', null));
+//         return;
+//       }
+
+//       // Check if account has sufficient balance
+//       const currentBalance = await this.flutterwaveService.getAccountBalance(virtualAccount.flutterwaveAccountId!);
+      
+//       if (currentBalance < amount) {
+//         res.status(400).json(standardResponse(false, 'Insufficient balance', null));
+//         return;
+//       }
+
+//       const transfer = await this.flutterwaveService.transferFunds({
+//         sourceAccountId: virtualAccount.flutterwaveAccountId!,
+//         amount,
+//         bankCode,
+//         accountNumber,
+//         narration: narration || `Transfer from ${virtualAccount.accountName}`
+//       });
+
+//       res.json(standardResponse(
+//         true, 
+//         'Transfer initiated successfully', 
+//         transfer
+//       ));
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+
+//   // Webhook for virtual account credit notifications
+//   handleVirtualAccountWebhook = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+//     try {
+//       const webhookData = req.body;
+
+//       // Verify webhook signature (implement signature verification)
+//       const isValidSignature = await this.flutterwaveService.verifyWebhookSignature(
+//         req.headers['verif-hash'] as string,
+//         webhookData
+//       );
+
+//       if (!isValidSignature) {
+//         res.status(401).json({ message: 'Invalid webhook signature' });
+//         return;
+//       }
+
+//       // Process virtual account credit
+//       if (webhookData.event === 'charge.completed' && webhookData.data?.charge_type === 'virtual_account') {
+//         await this.virtualAccountService.processVirtualAccountCredit(webhookData.data);
+//       }
+
+//       res.status(200).json({ message: 'Webhook processed successfully' });
+//     } catch (error) {
+//       next(error);
+//     }
+//   };
+// }
