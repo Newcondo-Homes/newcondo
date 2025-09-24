@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Account Created - NewCondo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+        
+        .account-details {
+            background-color: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        
+        .account-details h3 {
+            color: #2d3748;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .account-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            background-color: #667eea;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        
+        .detail-value {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            background-color: #edf2f7;
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+        
+        .important-note {
+            background-color: #fff5f5;
+            border-left: 4px solid #f56565;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .important-note h4 {
+            color: #c53030;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .important-note p {
+            color: #742a2a;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            transition: transform 0.2s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .footer {
+            background-color: #f7fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .footer p {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .support-info {
+            color: #4a5568;
+            font-size: 13px;
+        }
+        
+        .support-info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        @media (max-width: 600px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+            
+            .content {
+                padding: 25px 20px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .account-details {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🏦 Virtual Account Created!</h1>
+            <p>Your dedicated property account is ready</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hello {{userName}},
+            </div>
+            
+            <div class="message">
+                Congratulations! We've successfully created a dedicated virtual account for your property listing. This account will help streamline all payments and transactions related to your property.
+            </div>
+            
+            <div class="account-details">
+                <h3>
+                    <span class="account-icon">🏦</span>
+                    Your Virtual Account Details
+                </h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Account Name:</span>
+                    <span class="detail-value">{{accountName}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Account Number:</span>
+                    <span class="detail-value">{{accountNumber}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Bank:</span>
+                    <span class="detail-value">{{bankName}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Property:</span>
+                    <span class="detail-value">{{propertyTitle}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Current Balance:</span>
+                    <span class="detail-value">₦{{currentBalance}}</span>
+                </div>
+            </div>
+            
+            <div class="important-note">
+                <h4>🔒 Important Security Information</h4>
+                <p>
+                    This virtual account is exclusively linked to your property and NewCondo account. Never share these details with unauthorized parties. All transactions are monitored for your security.
+                </p>
+            </div>
+            
+            <div class="message">
+                <strong>What happens next?</strong><br>
+                • Tenants can now pay rent directly to this account<br>
+                • All payments will be automatically tracked<br>
+                • You'll receive instant notifications for all transactions<br>
+                • Funds will be available according to our standard processing times
+            </div>
+            
+            <div class="cta-section">
+                <a href="{{dashboardUrl}}" class="cta-button">
+                    View Account Dashboard
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Simplifying Property Management</p>
+            <div class="support-info">
+                Need help? Contact us at <a href="mailto:support@newcondo.ng">support@newcondo.ng</a><br>
+                or call +234 (0) 123 456 7890
+            </div>
+        </div>
+    </div>
+</body>
+</html>
