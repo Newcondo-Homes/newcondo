@@ -367,6 +367,27 @@ model PropertyUnit {
   @@index([floor])
 }
 
+
+model PaymentAttemptLog {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  unitId     String?
+  amount     Decimal  @db.Decimal(10, 2)
+  status     String   // "LOCKED", "SUCCESS", "FAILED", "TIMEOUT"
+  failureReason String?
+  lockAcquired Boolean @default(false)
+  lockDuration Int?    // milliseconds
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
+  @@index([createdAt])
+}
+
 // New model for unit-specific images
 model PropertyUnitImage {
   id        String  @id @default(cuid())
