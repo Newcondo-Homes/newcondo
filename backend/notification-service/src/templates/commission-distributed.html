@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commission Distribution - NewCondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            color: #555555;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .info-value {
+            color: #212529;
+            text-align: right;
+        }
+        .amount-highlight {
+            background-color: #e7f3ff;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            padding: 20px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .amount-label {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 8px;
+        }
+        .amount-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 0;
+        }
+        .breakdown-section {
+            margin: 25px 0;
+        }
+        .breakdown-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 15px;
+        }
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #f8f9fa;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        .breakdown-item.total {
+            background-color: #667eea;
+            color: #ffffff;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #667eea;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 30px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 25px 0;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Commission Distribution</h1>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Hi {{recipientName}},
+            </div>
+            
+            <div class="message">
+                Great news! The confirmation period for the rental payment has successfully passed, and your commission has been distributed to your virtual account.
+            </div>
+
+            <div class="amount-highlight">
+                <div class="amount-label">Your Commission</div>
+                <div class="amount-value">NGN {{commissionAmount}}</div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Property:</span>
+                    <span class="info-value">{{propertyTitle}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Unit:</span>
+                    <span class="info-value">{{unitNumber}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Transaction ID:</span>
+                    <span class="info-value">{{transactionId}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Payment Date:</span>
+                    <span class="info-value">{{paymentDate}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Distribution Date:</span>
+                    <span class="info-value">{{distributionDate}}</span>
+                </div>
+            </div>
+
+            <div class="breakdown-section">
+                <div class="breakdown-title">Commission Breakdown</div>
+                <div class="breakdown-item">
+                    <span>Total Rent Paid</span>
+                    <span>NGN {{totalRent}}</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Platform Commission (20%)</span>
+                    <span>NGN {{platformCommission}}</span>
+                </div>
+                {{#if isListingAgent}}
+                <div class="breakdown-item">
+                    <span>Listing Agent Share ({{listingAgentPercentage}}%)</span>
+                    <span>NGN {{listingAgentAmount}}</span>
+                </div>
+                {{/if}}
+                {{#if isSubAgent}}
+                <div class="breakdown-item">
+                    <span>Sub-Agent Share ({{subAgentPercentage}}%)</span>
+                    <span>NGN {{subAgentAmount}}</span>
+                </div>
+                {{/if}}
+                {{#if isPropertyOwner}}
+                <div class="breakdown-item">
+                    <span>Property Owner Amount (80%)</span>
+                    <span>NGN {{ownerAmount}}</span>
+                </div>
+                {{/if}}
+                <div class="breakdown-item total">
+                    <span>Your Total Commission</span>
+                    <span>NGN {{commissionAmount}}</span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Virtual Account Balance:</span>
+                    <span class="info-value">NGN {{newBalance}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Available for Withdrawal:</span>
+                    <span class="info-value">NGN {{availableBalance}}</span>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{dashboardUrl}}" class="cta-button">View Dashboard</a>
+            </div>
+
+            <div class="note">
+                <strong>Note:</strong> You can now withdraw this amount to your bank account or keep it in your virtual account for future transactions.
+            </div>
+
+            <div class="message">
+                {{#if hasAutoTransfer}}
+                Based on your auto-transfer settings, this amount will be automatically transferred to your bank account {{autoTransferTiming}}.
+                {{else}}
+                To withdraw funds, visit your dashboard and navigate to the Payments section.
+                {{/if}}
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for being a valued member of NewCondo!</p>
+            <p>
+                <a href="{{dashboardUrl}}">Dashboard</a> | 
+                <a href="{{supportUrl}}">Support</a> | 
+                <a href="{{settingsUrl}}">Settings</a>
+            </p>
+            <p style="margin-top: 15px; color: #868e96; font-size: 12px;">
+                © 2025 NewCondo. All rights reserved.<br>
+                This is an automated email. Please do not reply directly.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

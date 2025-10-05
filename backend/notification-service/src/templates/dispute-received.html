@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Dispute Received - NewCondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .alert-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .greeting {
+            font-size: 18px;
+            color: #333333;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            color: #555555;
+            margin-bottom: 25px;
+            line-height: 1.8;
+        }
+        .alert-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-box strong {
+            color: #92400e;
+        }
+        .info-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #6366f1;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        .info-value {
+            color: #212529;
+            text-align: right;
+            max-width: 60%;
+            word-wrap: break-word;
+        }
+        .dispute-box {
+            background-color: #fee2e2;
+            border: 2px solid #dc2626;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .dispute-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+        .dispute-reason {
+            font-size: 15px;
+            color: #7f1d1d;
+            line-height: 1.6;
+            padding: 10px;
+            background-color: #fef2f2;
+            border-radius: 4px;
+        }
+        .timeline {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 15px;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding-left: 20px;
+            position: relative;
+        }
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #6366f1;
+        }
+        .timeline-item.completed:before {
+            background-color: #10b981;
+        }
+        .timeline-item.pending:before {
+            background-color: #f59e0b;
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-label {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 4px;
+        }
+        .timeline-description {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .next-steps {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .next-steps-title {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .next-steps-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .next-steps-list li {
+            padding: 8px 0;
+            color: #1e3a8a;
+            position: relative;
+            padding-left: 25px;
+        }
+        .next-steps-list li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #3b82f6;
+            font-weight: bold;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #dc2626;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 30px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px;
+        }
+        .cta-button.secondary {
+            background-color: #6366f1;
+        }
+        .warning-box {
+            background-color: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .warning-box p {
+            margin: 5px 0;
+            color: #991b1b;
+            font-size: 14px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 25px 0;
+        }
+        .contact-box {
+            background-color: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .contact-box p {
+            margin: 5px 0;
+            color: #166534;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚠️ Payment Dispute Received</h1>
+            <div class="alert-badge">URGENT: Action Required</div>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                Dear {{recipientName}},
+            </div>
+            
+            <div class="alert-box">
+                <strong>A payment dispute has been filed for one of your properties.</strong> The payment is currently on hold pending investigation and resolution.
+            </div>
+
+            <div class="message">
+                We have received a dispute from the renter regarding the property listed below. Our team will investigate this matter thoroughly to ensure a fair resolution for all parties involved.
+            </div>
+
+            <div class="info-box">
+                <div class="info-row">
+                    <span class="info-label">Property:</span>
+                    <span class="info-value">{{propertyTitle}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Unit:</span>
+                    <span class="info-value">{{unitNumber}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Renter:</span>
+                    <span class="info-value">{{renterName}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Payment Amount:</span>
+                    <span class="info-value">NGN {{paymentAmount}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Transaction ID:</span>
+                    <span class="info-value">{{transactionId}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Dispute Filed:</span>
+                    <span class="info-value">{{disputeDate}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Case Number:</span>
+                    <span class="info-value">{{caseNumber}}</span>
+                </div>
+            </div>
+
+            <div class="dispute-box">
+                <div class="dispute-title">Dispute Reason</div>
+                <div class="dispute-reason">
+                    {{disputeReason}}
+                </div>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-title">Resolution Timeline</div>
+                <div class="timeline-item completed">
+                    <div class="timeline-content">
+                        <div class="timeline-label">Dispute Filed</div>
+                        <div class="timeline-description">{{disputeDate}}</div>
+                    </div>
+                </div>
+                <div class="timeline-item pending">
+                    <div class="timeline-content">
+                        <div class="timeline-label">Investigation Period</div>
+                        <div class="timeline-description">1-3 business days</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-content">
+                        <div class="timeline-label">Resolution</div>
+                        <div class="timeline-description">Expected by {{expectedResolutionDate}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="next-steps">
+                <div class="next-steps-title">What Happens Next?</div>
+                <ul class="next-steps-list">
+                    <li>Our team will review the dispute and all supporting evidence</li>
+                    <li>We may contact you for additional information or documentation</li>
+                    <li>The payment will remain on hold until resolution</li>
+                    <li>You will be notified of the final decision via email and SMS</li>
+                    <li>If resolved in your favor, payment will be released immediately</li>
+                </ul>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="next-steps">
+                <div class="next-steps-title">How You Can Help</div>
+                <ul class="next-steps-list">
+                    <li>Provide any relevant documentation or evidence</li>
+                    <li>Respond promptly to any requests from our team</li>
+                    <li>Maintain open communication with the renter if possible</li>
+                    <li>Avoid direct contact that could escalate the situation</li>
+                </ul>
+            </div>
+
+            <div class="cta-section">
+                <a href="{{viewDisputeUrl}}" class="cta-button">View Dispute Details</a>
+                <a href="{{uploadEvidenceUrl}}" class="cta-button secondary">Upload Evidence</a>
+            </div>
+
+            <div class="warning-box">
+                <p><strong>Important:</strong></p>
+                <p>• The payment is currently held and cannot be withdrawn</p>
+                <p>• Platform fees are non-refundable regardless of dispute outcome</p>
+                <p>• False information may result in account suspension</p>
+                <p>• Resolution typically takes 1-3 business days</p>
+            </div>
+
+            <div class="contact-box">
+                <p><strong>Need Assistance?</strong></p>
+                <p>Our support team is here to help</p>
+                <p>📧 disputes@newcondo.com | 📞 +234 XXX XXX XXXX</p>
+            </div>
+
+            <div class="message">
+                We are committed to ensuring a fair and transparent resolution process. Thank you for your patience and cooperation during this investigation.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>NewCondo Dispute Resolution Team</p>
+            <p>
+                <a href="{{dashboardUrl}}">Dashboard</a> | 
+                <a href="{{disputePolicyUrl}}">Dispute Policy</a> | 
+                <a href="{{supportUrl}}">Support Center</a>
+            </p>
+            <p style="margin-top: 15px; color: #868e96; font-size: 12px;">
+                © 2025 NewCondo. All rights reserved.<br>
+                Case Number: {{caseNumber}} | This is an automated notification.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

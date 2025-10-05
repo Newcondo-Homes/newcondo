@@ -1,0 +1,27 @@
+Newcondo - Property Confirmation Reminder
+
+Hello {{renterName}},
+
+ACTION REQUIRED: Confirm your property within {{hoursRemaining}} hours.
+
+Property: {{propertyTitle}}
+Location: {{propertyAddress}}
+{{#unitNumber}}Unit: {{unitNumber}}{{/unitNumber}}
+Amount Paid: ₦{{amount}}
+
+TIME REMAINING: {{hoursRemaining}} hours
+
+Please confirm that:
+- You visited and inspected the property
+- Property matches the listing
+- You're satisfied with the condition
+
+Confirm now: {{confirmationLink}}
+
+Deadline: {{confirmationDeadline}}
+
+If you don't confirm by the deadline, we'll assume there's an issue.
+
+Having problems? Report an issue on your dashboard or contact support@newcondo.com
+
+- Newcondo Team

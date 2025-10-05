@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Property - Newcondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .content {
+            padding: 30px 0;
+        }
+        .alert-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .property-details {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .detail-value {
+            color: #111827;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 14px 32px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .cta-button:hover {
+            background-color: #1d4ed8;
+        }
+        .button-container {
+            text-align: center;
+        }
+        .warning-text {
+            color: #dc2626;
+            font-weight: 600;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .info-text {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .countdown {
+            font-size: 24px;
+            font-weight: bold;
+            color: #dc2626;
+            text-align: center;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Newcondo</div>
+        </div>
+        
+        <div class="content">
+            <h2 style="color: #111827; margin-bottom: 10px;">Property Confirmation Reminder</h2>
+            
+            <p>Hello {{renterName}},</p>
+            
+            <div class="alert-box">
+                <strong>Action Required:</strong> Please confirm your property within the next <strong>{{hoursRemaining}} hours</strong> to complete your rental process.
+            </div>
+            
+            <p>You recently made a payment for a property on Newcondo. To ensure everything is in order and to release payment to the property owner, we need you to confirm that:</p>
+            
+            <ul>
+                <li>You have visited and inspected the property</li>
+                <li>The property matches the listing description</li>
+                <li>You are satisfied with the property condition</li>
+                <li>You are ready to proceed with the rental</li>
+            </ul>
+            
+            <div class="property-details">
+                <h3 style="margin-top: 0; color: #111827;">Property Details</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Property:</span>
+                    <span class="detail-value">{{propertyTitle}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Location:</span>
+                    <span class="detail-value">{{propertyAddress}}</span>
+                </div>
+                {{#unitNumber}}
+                <div class="detail-row">
+                    <span class="detail-label">Unit:</span>
+                    <span class="detail-value">{{unitNumber}}</span>
+                </div>
+                {{/unitNumber}}
+                <div class="detail-row">
+                    <span class="detail-label">Payment Amount:</span>
+                    <span class="detail-value">₦{{amount}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Date:</span>
+                    <span class="detail-value">{{paymentDate}}</span>
+                </div>
+            </div>
+            
+            <div class="countdown">
+                Time Remaining: {{hoursRemaining}} hours
+            </div>
+            
+            <p class="warning-text">⚠️ If you do not confirm by {{confirmationDeadline}}, we will assume there is an issue with the property.</p>
+            
+            <div class="button-container">
+                <a href="{{confirmationLink}}" class="cta-button">Confirm Property Now</a>
+            </div>
+            
+            <p class="info-text" style="text-align: center;">
+                Or copy this link: <a href="{{confirmationLink}}">{{confirmationLink}}</a>
+            </p>
+            
+            <div style="background-color: #fef2f2; padding: 15px; border-radius: 6px; margin-top: 20px;">
+                <strong>Having Issues?</strong>
+                <p style="margin: 10px 0 0 0;">If there are any problems with the property or you need to dispute this payment, please click the "Report Issue" button on your dashboard or contact our support team immediately.</p>
+            </div>
+            
+            <p style="margin-top: 30px;">Best regards,<br>The Newcondo Team</p>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated message from Newcondo.</p>
+            <p>Need help? Contact us at support@newcondo.com</p>
+            <p>&copy; {{currentYear}} Newcondo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

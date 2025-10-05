@@ -1,0 +1,31 @@
+Newcondo - Payment Released Successfully!
+
+Hello {{recipientName}},
+
+✓ PAYMENT RELEASED ✓
+
+The confirmation period has ended and your payment has been released to your virtual account.
+
+AMOUNT RELEASED: ₦{{releasedAmount}}
+
+Property: {{propertyTitle}}
+Location: {{propertyAddress}}
+{{#unitNumber}}Unit: {{unitNumber}}{{/unitNumber}}
+Renter: {{renterName}}
+
+PAYMENT BREAKDOWN:
+- Total Rent: ₦{{totalRent}}
+{{#commission}}- Commission ({{commissionPercentage}}%): ₦{{commission}}{{/commission}}
+{{#platformFee}}- Platform Fee: ₦{{platformFee}}{{/platformFee}}
+- Released to You: ₦{{releasedAmount}}
+
+Current Virtual Account Balance: ₦{{currentBalance}}
+
+You can now withdraw funds to your registered bank account.
+
+Withdraw: {{withdrawalLink}}
+
+Thank you for using Newcondo!
+
+- Newcondo Team
+support@newcondo.com

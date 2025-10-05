@@ -1411,3 +1411,411 @@ export default VirtualAccountService;
 //     }
 //   }
 // }
+
+
+
+// import { PrismaClient, VirtualAccount } from '@prisma/client';
+// import { Decimal } from '@prisma/client/runtime/library';
+
+// const prisma = new PrismaClient();
+
+// interface TransferRequest {
+//   fromAccountId: string;
+//   toAccountId: string;
+//   amount: Decimal;
+//   description?: string;
+// }
+
+// interface WithdrawalRequest {
+//   virtualAccountId: string;
+//   amount: Decimal;
+//   bankAccountNumber: string;
+//   bankCode: string;
+//   accountName: string;
+// }
+
+// export class VirtualAccountService {
+//   /**
+//    * Create virtual account for a user
+//    */
+//   async createVirtualAccount(
+//     userId: string,
+//     accountName: string
+//   ): Promise<VirtualAccount> {
+//     // Check if user already has a virtual account
+//     const existing = await prisma.virtualAccount.findFirst({
+//       where: { userId },
+//     });
+
+//     if (existing) {
+//       throw new Error('User already has a virtual account');
+//     }
+
+//     // Generate account number (in production, this would come from Flutterwave)
+//     const accountNumber = this.generateAccountNumber();
+
+//     const virtualAccount = await prisma.virtualAccount.create({
+//       data: {
+//         userId,
+//         accountName,
+//         accountNumber,
+//         bankCode: '000', // Flutterwave bank code
+//         balance: new Decimal(0),
+//         currency: 'NGN',
+//         isActive: true,
+//       },
+//     });
+
+//     return virtualAccount;
+//   }
+
+//   /**
+//    * Create virtual account for a property
+//    */
+//   async createPropertyVirtualAccount(
+//     propertyId: string,
+//     ownerId: string,
+//     accountName: string
+//   ): Promise<VirtualAccount> {
+//     // Check if property already has a virtual account
+//     const existing = await prisma.virtualAccount.findFirst({
+//       where: { propertyId },
+//     });
+
+//     if (existing) {
+//       throw new Error('Property already has a virtual account');
+//     }
+
+//     const accountNumber = this.generateAccountNumber();
+
+//     const virtualAccount = await prisma.virtualAccount.create({
+//       data: {
+//         userId: ownerId,
+//         propertyId,
+//         accountName,
+//         accountNumber,
+//         bankCode: '000',
+//         balance: new Decimal(0),
+//         currency: 'NGN',
+//         isActive: true,
+//       },
+//     });
+
+//     return virtualAccount;
+//   }
+
+//   /**
+//    * Get virtual account balance
+//    */
+//   async getBalance(accountId: string): Promise<Decimal> {
+//     const account = await prisma.virtualAccount.findUnique({
+//       where: { id: accountId },
+//     });
+
+//     if (!account) {
+//       throw new Error('Virtual account not found');
+//     }
+
+//     return account.balance;
+//   }
+
+//   /**
+//    * Get user's virtual accounts
+//    */
+//   async getUserVirtualAccounts(userId: string): Promise<VirtualAccount[]> {
+//     return prisma.virtualAccount.findMany({
+//       where: { userId },
+//       include: {
+//         property: true,
+//       },
+//     });
+//   }
+
+//   /**
+//    * Credit virtual account
+//    */
+//   async creditAccount(
+//     accountId: string,
+//     amount: Decimal,
+//     description?: string
+//   ): Promise<VirtualAccount> {
+//     const account = await prisma.virtualAccount.findUnique({
+//       where: { id: accountId },
+//     });
+
+//     if (!account) {
+//       throw new Error('Virtual account not found');
+//     }
+
+//     if (!account.isActive) {
+//       throw new Error('Virtual account is not active');
+//     }
+
+//     const updatedAccount = await prisma.virtualAccount.update({
+//       where: { id: accountId },
+//       data: {
+//         balance: {
+//           increment: amount,
+//         },
+//       },
+//     });
+
+//     // Log transaction
+//     await this.logTransaction({
+//       accountId,
+//       type: 'CREDIT',
+//       amount,
+//       description,
+//       balanceAfter: updatedAccount.balance,
+//     });
+
+//     return updatedAccount;
+//   }
+
+//   /**
+//    * Debit virtual account
+//    */
+//   async debitAccount(
+//     accountId: string,
+//     amount: Decimal,
+//     description?: string
+//   ): Promise<VirtualAccount> {
+//     const account = await prisma.virtualAccount.findUnique({
+//       where: { id: accountId },
+//     });
+
+//     if (!account) {
+//       throw new Error('Virtual account not found');
+//     }
+
+//     if (!account.isActive) {
+//       throw new Error('Virtual account is not active');
+//     }
+
+//     if (account.balance.lessThan(amount)) {
+//       throw new Error('Insufficient balance');
+//     }
+
+//     const updatedAccount = await prisma.virtualAccount.update({
+//       where: { id: accountId },
+//       data: {
+//         balance: {
+//           decrement: amount,
+//         },
+//       },
+//     });
+
+//     // Log transaction
+//     await this.logTransaction({
+//       accountId,
+//       type: 'DEBIT',
+//       amount,
+//       description,
+//       balanceAfter: updatedAccount.balance,
+//     });
+
+//     return updatedAccount;
+//   }
+
+//   /**
+//    * Transfer between virtual accounts
+//    */
+//   async transfer(request: TransferRequest): Promise<{
+//     fromAccount: VirtualAccount;
+//     toAccount: VirtualAccount;
+//   }> {
+//     const { fromAccountId, toAccountId, amount, description } = request;
+
+//     // Use transaction to ensure atomicity
+//     const result = await prisma.$transaction(async (tx) => {
+//       // Debit from account
+//       const fromAccount = await tx.virtualAccount.update({
+//         where: { id: fromAccountId },
+//         data: {
+//           balance: {
+//             decrement: amount,
+//           },
+//         },
+//       });
+
+//       if (fromAccount.balance.lessThan(0)) {
+//         throw new Error('Insufficient balance');
+//       }
+
+//       // Credit to account
+//       const toAccount = await tx.virtualAccount.update({
+//         where: { id: toAccountId },
+//         data: {
+//           balance: {
+//             increment: amount,
+//           },
+//         },
+//       });
+
+//       return { fromAccount, toAccount };
+//     });
+
+//     // Log transactions
+//     await this.logTransaction({
+//       accountId: fromAccountId,
+//       type: 'TRANSFER_OUT',
+//       amount,
+//       description: `Transfer to ${toAccountId}: ${description || ''}`,
+//       balanceAfter: result.fromAccount.balance,
+//     });
+
+//     await this.logTransaction({
+//       accountId: toAccountId,
+//       type: 'TRANSFER_IN',
+//       amount,
+//       description: `Transfer from ${fromAccountId}: ${description || ''}`,
+//       balanceAfter: result.toAccount.balance,
+//     });
+
+//     return result;
+//   }
+
+//   /**
+//    * Withdraw to bank account (via Flutterwave)
+//    */
+//   async withdrawToBankAccount(request: WithdrawalRequest): Promise<{
+//     success: boolean;
+//     transactionId?: string;
+//     message: string;
+//   }> {
+//     const { virtualAccountId, amount, bankAccountNumber, bankCode, accountName } = request;
+
+//     // Get virtual account
+//     const account = await prisma.virtualAccount.findUnique({
+//       where: { id: virtualAccountId },
+//     });
+
+//     if (!account) {
+//       throw new Error('Virtual account not found');
+//     }
+
+//     if (account.balance.lessThan(amount)) {
+//       throw new Error('Insufficient balance');
+//     }
+
+//     // Debit virtual account
+//     await this.debitAccount(virtualAccountId, amount, `Withdrawal to ${bankAccountNumber}`);
+
+//     // In production, integrate with Flutterwave Transfer API
+//     // For now, we'll simulate the withdrawal
+//     const transactionId = `TXN-${Date.now()}`;
+
+//     // Log withdrawal
+//     await this.logTransaction({
+//       accountId: virtualAccountId,
+//       type: 'WITHDRAWAL',
+//       amount,
+//       description: `Withdrawal to ${accountName} - ${bankAccountNumber}`,
+//       balanceAfter: account.balance.sub(amount),
+//       metadata: {
+//         bankAccountNumber,
+//         bankCode,
+//         accountName,
+//         transactionId,
+//       },
+//     });
+
+//     return {
+//       success: true,
+//       transactionId,
+//       message: 'Withdrawal initiated successfully',
+//     };
+//   }
+
+//   /**
+//    * Get account transaction history
+//    */
+//   async getTransactionHistory(
+//     accountId: string,
+//     limit: number = 50
+//   ): Promise<any[]> {
+//     const transactions = await prisma.eventLog.findMany({
+//       where: {
+//         type: {
+//           in: ['CREDIT', 'DEBIT', 'TRANSFER_IN', 'TRANSFER_OUT', 'WITHDRAWAL'],
+//         },
+//         metadata: {
+//           path: ['accountId'],
+//           equals: accountId,
+//         },
+//       },
+//       orderBy: {
+//         timestamp: 'desc',
+//       },
+//       take: limit,
+//     });
+
+//     return transactions.map((t) => ({
+//       id: t.id,
+//       type: t.type,
+//       timestamp: t.timestamp,
+//       ...(typeof t.metadata === 'object' && t.metadata !== null ? t.metadata : {}),
+//     }));
+//   }
+
+//   /**
+//    * Freeze/unfreeze virtual account
+//    */
+//   async setAccountStatus(accountId: string, isActive: boolean): Promise<VirtualAccount> {
+//     return prisma.virtualAccount.update({
+//       where: { id: accountId },
+//       data: { isActive },
+//     });
+//   }
+
+//   /**
+//    * Generate account number (placeholder - in production use Flutterwave)
+//    */
+//   private generateAccountNumber(): string {
+//     return `VA${Date.now()}${Math.floor(Math.random() * 1000)}`;
+//   }
+
+//   /**
+//    * Log transaction to event log
+//    */
+//   private async logTransaction(data: {
+//     accountId: string;
+//     type: string;
+//     amount: Decimal;
+//     description?: string;
+//     balanceAfter: Decimal;
+//     metadata?: any;
+//   }): Promise<void> {
+//     await prisma.eventLog.create({
+//       data: {
+//         type: data.type,
+//         metadata: {
+//           accountId: data.accountId,
+//           amount: data.amount.toString(),
+//           description: data.description,
+//           balanceAfter: data.balanceAfter.toString(),
+//           ...data.metadata,
+//         },
+//       },
+//     });
+//   }
+
+//   /**
+//    * Get NewCondo admin virtual account
+//    */
+//   async getAdminVirtualAccount(): Promise<VirtualAccount | null> {
+//     const adminUser = await prisma.user.findFirst({
+//       where: { role: 'ADMIN' },
+//     });
+
+//     if (!adminUser) {
+//       return null;
+//     }
+
+//     return prisma.virtualAccount.findFirst({
+//       where: { userId: adminUser.id },
+//     });
+//   }
+// }
+
+// export const virtualAccountService = new VirtualAccountService();

@@ -1,0 +1,14 @@
+Hi {{renterName}},
+
+Your refund of NGN {{refundAmount}} for {{propertyTitle}} has been processed successfully.
+
+Transaction ID: {{transactionId}}
+Refund Reason: {{refundReason}}
+
+The amount will be credited to your account within 3-5 business days.
+
+Platform Fee (Non-refundable): NGN {{platformFee}}
+
+Need help? Contact support@newcondo.com
+
+- NewCondo Team

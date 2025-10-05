@@ -329,3 +329,495 @@ export class ConfirmationController {
 }
 
 export const confirmationController = new ConfirmationController();
+
+
+
+
+// import { Request, Response } from 'express';
+// import { confirmationService } from '../services/confirmationService';
+// import { logger } from '../../../shared/src/middleware/logger';
+
+// export class ConfirmationController {
+//   /**
+//    * Renter confirms property is as described
+//    */
+//   async confirmProperty(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { rentalId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized'
+//         });
+//         return;
+//       }
+
+//       const result = await confirmationService.confirmProperty(rentalId, userId);
+
+//       res.status(200).json({
+//         success: true,
+//         message: 'Property confirmed successfully',
+//         data: result
+//       });
+//     } catch (error: any) {
+//       logger.error('Error confirming property:', error);
+//       res.status(error.statusCode || 500).json({
+//         success: false,
+//         message: error.message || 'Failed to confirm property'
+//       });
+//     }
+//   }
+
+//   /**
+//    * Renter disputes property and requests refund
+//    */
+//   async disputeProperty(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { rentalId } = req.params;
+//       const { reason, description, evidence } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized'
+//         });
+//         return;
+//       }
+
+//       const result = await confirmationService.disputeProperty(
+//         rentalId,
+//         userId,
+//         reason,
+//         description,
+//         evidence
+//       );
+
+//       res.status(200).json({
+//         success: true,
+//         message: 'Dispute submitted successfully',
+//         data: result
+//       });
+//     } catch (error: any) {
+//       logger.error('Error disputing property:', error);
+//       res.status(error.statusCode || 500).json({
+//         success: false,
+//         message: error.message || 'Failed to submit dispute'
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get confirmation status for a rental
+//    */
+//   async getConfirmationStatus(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { rentalId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized'
+//         });
+//         return;
+//       }
+
+//       const status = await confirmationService.getConfirmationStatus(rentalId, userId);
+
+//       res.status(200).json({
+//         success: true,
+//         data: status
+//       });
+//     } catch (error: any) {
+//       logger.error('Error getting confirmation status:', error);
+//       res.status(error.statusCode || 500).json({
+//         success: false,
+//         message: error.message || 'Failed to get confirmation status'
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get all rentals pending confirmation for a user
+//    */
+//   async getPendingConfirmations(req: Request, res: Response): Promise<void> {
+//     try {
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized'
+//         });
+//         return;
+//       }
+
+//       const rentals = await confirmationService.getPendingConfirmations(userId);
+
+//       res.status(200).json({
+//         success: true,
+//         data: rentals
+//       });
+//     } catch (error: any) {
+//       logger.error('Error getting pending confirmations:', error);
+//       res.status(error.statusCode || 500).json({
+//         success: false,
+//         message: error.message || 'Failed to get pending confirmations'
+//       });
+//     }
+//   }
+
+//   /**
+//    * Cancel confirmation period (admin only)
+//    */
+//   async cancelConfirmationPeriod(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { rentalId } = req.params;
+//       const { reason } = req.body;
+//       const adminId = req.user?.id;
+
+//       if (!adminId) {
+//         res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized'
+//         });
+//         return;
+//       }
+
+//       const result = await confirmationService.cancelConfirmationPeriod(
+//         rentalId,
+//         adminId,
+//         reason
+//       );
+
+//       res.status(200).json({
+//         success: true,
+//         message: 'Confirmation period cancelled',
+//         data: result
+//       });
+//     } catch (error: any) {
+//       logger.error('Error cancelling confirmation period:', error);
+//       res.status(error.statusCode || 500).json({
+//         success: false,
+//         message: error.message || 'Failed to cancel confirmation period'
+//       });
+//     }
+//   }
+// }
+
+// export const confirmationController = new ConfirmationController();
+
+
+// backend/payment-service/src/controllers/confirmationController.ts
+
+// import { Request, Response } from 'express';
+// import { PrismaClient, PaymentStatus } from '@prisma/client';
+// import { successResponse, errorResponse } from '../../../shared/src/utils/response';
+// import { CONFIRMATION_PERIOD_HOURS } from '../../../shared/src/constants/paymentTimings';
+
+// const prisma = new PrismaClient();
+
+// /**
+//  * Get payment confirmation status
+//  * GET /api/payments/:paymentId/confirmation-status
+//  */
+// export const getConfirmationStatus = async (req: Request, res: Response) => {
+//   try {
+//     const { paymentId } = req.params;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return errorResponse(res, 'Unauthorized', 401);
+//     }
+
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//       include: {
+//         rental: {
+//           include: {
+//             property: {
+//               select: {
+//                 title: true,
+//                 address: true,
+//               },
+//             },
+//             unit: {
+//               select: {
+//                 unitNumber: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     if (!payment) {
+//       return errorResponse(res, 'Payment not found', 404);
+//     }
+
+//     // Check if user is the renter
+//     if (payment.userId !== userId) {
+//       return errorResponse(res, 'Unauthorized to view this payment', 403);
+//     }
+
+//     const now = new Date();
+//     const confirmationPeriodEnd = payment.confirmationPeriodEnd;
+//     const isConfirmationPeriodActive = confirmationPeriodEnd && now < confirmationPeriodEnd;
+//     const hoursRemaining = confirmationPeriodEnd
+//       ? Math.max(0, Math.floor((confirmationPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60)))
+//       : 0;
+
+//     return successResponse(res, {
+//       paymentId: payment.id,
+//       amount: payment.amount,
+//       status: payment.status,
+//       isReleased: payment.isReleased,
+//       confirmationPeriodEnd: payment.confirmationPeriodEnd,
+//       isConfirmationPeriodActive,
+//       hoursRemaining,
+//       canRequestRefund: isConfirmationPeriodActive && !payment.isReleased,
+//       property: {
+//         title: payment.rental?.property.title,
+//         address: payment.rental?.property.address,
+//         unit: payment.rental?.unit?.unitNumber,
+//       },
+//     });
+//   } catch (error) {
+//     console.error('Get confirmation status error:', error);
+//     return errorResponse(res, 'Failed to get confirmation status', 500);
+//   }
+// };
+
+// /**
+//  * Confirm payment and property satisfaction
+//  * POST /api/payments/:paymentId/confirm
+//  */
+// export const confirmPayment = async (req: Request, res: Response) => {
+//   try {
+//     const { paymentId } = req.params;
+//     const userId = req.user?.id;
+//     const { confirmationNotes } = req.body;
+
+//     if (!userId) {
+//       return errorResponse(res, 'Unauthorized', 401);
+//     }
+
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//       include: {
+//         rental: true,
+//       },
+//     });
+
+//     if (!payment) {
+//       return errorResponse(res, 'Payment not found', 404);
+//     }
+
+//     if (payment.userId !== userId) {
+//       return errorResponse(res, 'Unauthorized to confirm this payment', 403);
+//     }
+
+//     // Check if payment is already released
+//     if (payment.isReleased) {
+//       return errorResponse(res, 'Payment has already been released', 400);
+//     }
+
+//     // Check if confirmation period has expired
+//     const now = new Date();
+//     if (payment.confirmationPeriodEnd && now > payment.confirmationPeriodEnd) {
+//       return errorResponse(res, 'Confirmation period has expired', 400);
+//     }
+
+//     // Update rental to confirmed
+//     if (payment.rental) {
+//       await prisma.rental.update({
+//         where: { id: payment.rental.id },
+//         data: {
+//           isConfirmed: true,
+//           confirmedAt: now,
+//         },
+//       });
+//     }
+
+//     // Log the confirmation
+//     await prisma.eventLog.create({
+//       data: {
+//         userId,
+//         type: 'PAYMENT_CONFIRMED',
+//         metadata: {
+//           paymentId: payment.id,
+//           rentalId: payment.rentalId,
+//           confirmationNotes,
+//           confirmedAt: now.toISOString(),
+//         },
+//       },
+//     });
+
+//     return successResponse(res, {
+//       message: 'Payment confirmed successfully',
+//       paymentId: payment.id,
+//       confirmedAt: now,
+//       note: 'Payment will be released to the property owner after the confirmation period ends',
+//     });
+//   } catch (error) {
+//     console.error('Confirm payment error:', error);
+//     return errorResponse(res, 'Failed to confirm payment', 500);
+//   }
+// };
+
+// /**
+//  * Get all pending confirmations for a user
+//  * GET /api/payments/confirmations/pending
+//  */
+// export const getPendingConfirmations = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return errorResponse(res, 'Unauthorized', 401);
+//     }
+
+//     const now = new Date();
+
+//     const pendingPayments = await prisma.payment.findMany({
+//       where: {
+//         userId,
+//         status: PaymentStatus.HELD,
+//         isReleased: false,
+//         confirmationPeriodEnd: {
+//           gte: now,
+//         },
+//       },
+//       include: {
+//         rental: {
+//           include: {
+//             property: {
+//               select: {
+//                 id: true,
+//                 title: true,
+//                 address: true,
+//                 city: true,
+//               },
+//             },
+//             unit: {
+//               select: {
+//                 unitNumber: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//       orderBy: {
+//         confirmationPeriodEnd: 'asc',
+//       },
+//     });
+
+//     const formattedPayments = pendingPayments.map((payment) => {
+//       const hoursRemaining = payment.confirmationPeriodEnd
+//         ? Math.max(
+//             0,
+//             Math.floor((payment.confirmationPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60))
+//           )
+//         : 0;
+
+//       return {
+//         id: payment.id,
+//         amount: payment.amount,
+//         currency: payment.currency,
+//         status: payment.status,
+//         confirmationPeriodEnd: payment.confirmationPeriodEnd,
+//         hoursRemaining,
+//         property: {
+//           id: payment.rental?.property.id,
+//           title: payment.rental?.property.title,
+//           address: payment.rental?.property.address,
+//           city: payment.rental?.property.city,
+//           unit: payment.rental?.unit?.unitNumber,
+//         },
+//         rental: {
+//           id: payment.rental?.id,
+//           isConfirmed: payment.rental?.isConfirmed,
+//         },
+//       };
+//     });
+
+//     return successResponse(res, {
+//       count: formattedPayments.length,
+//       payments: formattedPayments,
+//     });
+//   } catch (error) {
+//     console.error('Get pending confirmations error:', error);
+//     return errorResponse(res, 'Failed to get pending confirmations', 500);
+//   }
+// };
+
+// /**
+//  * Extend confirmation period (admin only)
+//  * POST /api/payments/:paymentId/extend-confirmation
+//  */
+// export const extendConfirmationPeriod = async (req: Request, res: Response) => {
+//   try {
+//     const { paymentId } = req.params;
+//     const { extensionHours, reason } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return errorResponse(res, 'Unauthorized', 401);
+//     }
+
+//     // Validate extension hours
+//     if (!extensionHours || extensionHours <= 0 || extensionHours > 72) {
+//       return errorResponse(res, 'Extension hours must be between 1 and 72', 400);
+//     }
+
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//     });
+
+//     if (!payment) {
+//       return errorResponse(res, 'Payment not found', 404);
+//     }
+
+//     if (payment.isReleased) {
+//       return errorResponse(res, 'Cannot extend confirmation period for released payment', 400);
+//     }
+
+//     const currentEnd = payment.confirmationPeriodEnd || new Date();
+//     const newEnd = new Date(currentEnd.getTime() + extensionHours * 60 * 60 * 1000);
+
+//     const updatedPayment = await prisma.payment.update({
+//       where: { id: paymentId },
+//       data: {
+//         confirmationPeriodEnd: newEnd,
+//       },
+//     });
+
+//     // Log admin action
+//     await prisma.adminAction.create({
+//       data: {
+//         adminId,
+//         action: 'PAYMENT_REFUNDED', // We can add a new action type later
+//         targetType: 'Payment',
+//         targetId: paymentId,
+//         description: `Extended confirmation period by ${extensionHours} hours`,
+//         metadata: {
+//           reason,
+//           originalEnd: currentEnd.toISOString(),
+//           newEnd: newEnd.toISOString(),
+//         },
+//       },
+//     });
+
+//     return successResponse(res, {
+//       message: 'Confirmation period extended successfully',
+//       paymentId: updatedPayment.id,
+//       newConfirmationPeriodEnd: newEnd,
+//     });
+//   } catch (error) {
+//     console.error('Extend confirmation period error:', error);
+//     return errorResponse(res, 'Failed to extend confirmation period', 500);
+//   }
+// };

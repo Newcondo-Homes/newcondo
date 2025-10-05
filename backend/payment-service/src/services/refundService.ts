@@ -958,3 +958,231 @@ export const refundService = new RefundService();
 //     };
 //   }
 // }
+
+
+
+// import { PrismaClient, PaymentStatus, RentalStatus } from '@prisma/client';
+// import { FlutterwaveService } from './flutterwaveService';
+// import { VirtualAccountService } from './virtualAccountService';
+// import { logger } from '../../../shared/src/middleware/logger';
+
+// const prisma = new PrismaClient();
+
+// export class RefundService {
+//   private flutterwaveService: FlutterwaveService;
+//   private virtualAccountService: VirtualAccountService;
+
+//   constructor() {
+//     this.flutterwaveService = new FlutterwaveService();
+//     this.virtualAccountService = new VirtualAccountService();
+//   }
+
+//   /**
+//    * Process refund for disputed property
+//    */
+//   async processRefund(
+//     paymentId: string,
+//     reason: string,
+//     adminId: string
+//   ): Promise<{
+//     success: boolean;
+//     message: string;
+//     refund?: any;
+//   }> {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//         include: {
+//           user: true,
+//           rental: {
+//             include: {
+//               property: {
+//                 include: {
+//                   owner: true,
+//                   agent: true,
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       });
+
+//       if (!payment) {
+//         return {
+//           success: false,
+//           message: 'Payment not found',
+//         };
+//       }
+
+//       // Verify payment is held and eligible for refund
+//       if (payment.status !== PaymentStatus.HELD) {
+//         return {
+//           success: false,
+//           message: 'Payment is not eligible for refund',
+//         };
+//       }
+
+//       // Calculate refund amount (excluding non-refundable service fee)
+//       const refundAmount = payment.amount - (payment.platformFee || 0);
+
+//       // Process refund through Flutterwave
+//       let flutterwaveRefund;
+//       if (payment.transactionId) {
+//         flutterwaveRefund = await this.flutterwaveService.initiateRefund({
+//           transactionId: payment.transactionId,
+//           amount: refundAmount.toNumber(),
+//         });
+//       }
+
+//       // Update payment status
+//       await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: PaymentStatus.REFUNDED,
+//           description: `Refunded: ${reason}`,
+//         },
+//       });
+
+//       // Update rental status
+//       if (payment.rental) {
+//         await prisma.rental.update({
+//           where: { id: payment.rental.id },
+//           data: {
+//             status: RentalStatus.TERMINATED,
+//           },
+//         });
+//       }
+
+//       // Log refund event
+//       await prisma.eventLog.create({
+//         data: {
+//           userId: payment.userId,
+//           type: 'PAYMENT_REFUNDED',
+//           metadata: {
+//             paymentId,
+//             rentalId: payment.rentalId,
+//             refundAmount: refundAmount.toNumber(),
+//             reason,
+//             adminId,
+//             flutterwaveRefund,
+//           },
+//         },
+//       });
+
+//       // Log admin action
+//       await prisma.adminAction.create({
+//         data: {
+//           adminId,
+//           action: 'PAYMENT_REFUNDED',
+//           targetType: 'Payment',
+//           targetId: paymentId,
+//           description: reason,
+//           metadata: {
+//             refundAmount: refundAmount.toNumber(),
+//             originalAmount: payment.amount.toNumber(),
+//             platformFeeRetained: payment.platformFee?.toNumber() || 0,
+//           },
+//         },
+//       });
+
+//       logger.info(`Refund processed for payment ${paymentId} by admin ${adminId}`);
+
+//       return {
+//         success: true,
+//         message: 'Refund processed successfully',
+//         refund: {
+//           paymentId,
+//           refundAmount: refundAmount.toNumber(),
+//           originalAmount: payment.amount.toNumber(),
+//           platformFeeRetained: payment.platformFee?.toNumber() || 0,
+//           flutterwaveRefund,
+//         },
+//       };
+//     } catch (error) {
+//       logger.error('Error processing refund:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Calculate refund breakdown
+//    */
+//   async calculateRefundBreakdown(paymentId: string): Promise<{
+//     originalAmount: number;
+//     refundableAmount: number;
+//     platformFeeRetained: number;
+//     transactionCharges: number;
+//   }> {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//       });
+
+//       if (!payment) {
+//         throw new Error('Payment not found');
+//       }
+
+//       const originalAmount = payment.amount.toNumber();
+//       const platformFeeRetained = payment.platformFee?.toNumber() || 0;
+      
+//       // Flutterwave charges for refund (estimated 2% of transaction or minimum fee)
+//       const transactionCharges = Math.max(
+//         originalAmount * 0.02,
+//         100 // Minimum charge in NGN
+//       );
+
+//       const refundableAmount = originalAmount - platformFeeRetained;
+
+//       return {
+//         originalAmount,
+//         refundableAmount,
+//         platformFeeRetained,
+//         transactionCharges,
+//       };
+//     } catch (error) {
+//       logger.error('Error calculating refund breakdown:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get refund history for a user
+//    */
+//   async getRefundHistory(userId: string): Promise<any[]> {
+//     try {
+//       const refunds = await prisma.payment.findMany({
+//         where: {
+//           userId,
+//           status: PaymentStatus.REFUNDED,
+//         },
+//         include: {
+//           rental: {
+//             include: {
+//               property: {
+//                 select: {
+//                   id: true,
+//                   title: true,
+//                   address: true,
+//                 },
+//               },
+//             },
+//           },
+//         },
+//         orderBy: {
+//           updatedAt: 'desc',
+//         },
+//       });
+
+//       return refunds.map(payment => ({
+//         id: payment.id,
+//         amount: payment.amount.toNumber(),
+//         refundedAt: payment.updatedAt,
+//         reason: payment.description,
+//         property: payment.rental?.property,
+//       }));
+//     } catch (error) {
+//       logger.error('Error getting refund history:', error);
+//       throw error;
+//     }
+//   }
+// }

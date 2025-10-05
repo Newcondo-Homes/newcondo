@@ -287,6 +287,75 @@ router.get(
 
 export default router;
 
+
+
+
+// import { Router } from 'express';
+// import { confirmationController } from '../controllers/confirmationController';
+// import { authMiddleware } from '../../../shared/src/middleware/auth';
+// import { confirmationValidation } from '../middleware/confirmationValidation';
+
+// const router = Router();
+
+// // All routes require authentication
+// router.use(authMiddleware);
+
+// /**
+//  * @route   POST /api/confirmations/:rentalId/confirm
+//  * @desc    Confirm property is as described
+//  * @access  Private (Renter only)
+//  */
+// router.post(
+//   '/:rentalId/confirm',
+//   confirmationValidation.validateConfirm,
+//   confirmationController.confirmProperty
+// );
+
+// /**
+//  * @route   POST /api/confirmations/:rentalId/dispute
+//  * @desc    Dispute property and request refund
+//  * @access  Private (Renter only)
+//  */
+// router.post(
+//   '/:rentalId/dispute',
+//   confirmationValidation.validateDispute,
+//   confirmationController.disputeProperty
+// );
+
+// /**
+//  * @route   GET /api/confirmations/:rentalId/status
+//  * @desc    Get confirmation status for rental
+//  * @access  Private
+//  */
+// router.get(
+//   '/:rentalId/status',
+//   confirmationController.getConfirmationStatus
+// );
+
+// /**
+//  * @route   GET /api/confirmations/pending
+//  * @desc    Get all pending confirmations for user
+//  * @access  Private
+//  */
+// router.get(
+//   '/pending',
+//   confirmationController.getPendingConfirmations
+// );
+
+// /**
+//  * @route   POST /api/confirmations/:rentalId/cancel
+//  * @desc    Cancel confirmation period (admin only)
+//  * @access  Private (Admin only)
+//  */
+// router.post(
+//   '/:rentalId/cancel',
+//   confirmationValidation.validateCancel,
+//   confirmationController.cancelConfirmationPeriod
+// );
+
+// export default router;
+
+
 // import express from 'express';
 // import { authMiddleware } from '../../../shared/src/middleware/auth';
 // import { validateRequest } from '../../../shared/src/middleware/validation';

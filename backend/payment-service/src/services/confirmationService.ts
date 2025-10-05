@@ -777,3 +777,743 @@ export const confirmationService = new ConfirmationService();
 
 // // You can create a singleton instance for easier use
 // export const confirmationService = new ConfirmationService();
+
+
+
+
+// import { PrismaClient, PaymentStatus, RentalStatus } from '@prisma/client';
+// import { NotificationService } from './notificationService';
+
+// const prisma = new PrismaClient();
+
+// interface ConfirmPaymentInput {
+//   paymentId: string;
+//   renterId: string;
+//   isConfirmed: boolean;
+//   notes?: string;
+// }
+
+// interface ConfirmationCheckResult {
+//   paymentId: string;
+//   canConfirm: boolean;
+//   reason?: string;
+//   hoursRemaining?: number;
+// }
+
+// export class ConfirmationService {
+//   private notificationService: NotificationService;
+
+//   constructor() {
+//     this.notificationService = new NotificationService();
+//   }
+
+//   /**
+//    * Renter confirms they have verified the property
+//    */
+//   async confirmPayment(input: ConfirmPaymentInput) {
+//     const { paymentId, renterId, isConfirmed, notes } = input;
+
+//     // Fetch payment with relations
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//       include: {
+//         rental: {
+//           include: {
+//             property: {
+//               include: {
+//                 owner: true,
+//                 agent: true,
+//               },
+//             },
+//             unit: true,
+//           },
+//         },
+//         user: true,
+//       },
+//     });
+
+//     if (!payment) {
+//       throw new Error('Payment not found');
+//     }
+
+//     // Verify the renter owns this payment
+//     if (payment.userId !== renterId) {
+//       throw new Error('Unauthorized: You can only confirm your own payments');
+//     }
+
+//     // Check if payment is in HELD status
+//     if (payment.status !== PaymentStatus.HELD) {
+//       throw new Error(
+//         `Payment cannot be confirmed. Current status: ${payment.status}`
+//       );
+//     }
+
+//     // Check if confirmation period has expired
+//     if (
+//       payment.confirmationPeriodEnd &&
+//       new Date() > payment.confirmationPeriodEnd
+//     ) {
+//       throw new Error('Confirmation period has expired');
+//     }
+
+//     // Check if already confirmed
+//     if (payment.rental?.isConfirmed) {
+//       throw new Error('Payment already confirmed');
+//     }
+
+//     // Update payment and rental
+//     const [updatedPayment, updatedRental] = await prisma.$transaction([
+//       // Update payment status to awaiting release
+//       prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: isConfirmed ? PaymentStatus.HELD : PaymentStatus.PENDING,
+//           updatedAt: new Date(),
+//         },
+//       }),
+
+//       // Update rental confirmation
+//       prisma.rental.update({
+//         where: { id: payment.rentalId! },
+//         data: {
+//           isConfirmed,
+//           confirmedAt: isConfirmed ? new Date() : null,
+//           status: isConfirmed
+//             ? RentalStatus.ACTIVE
+//             : RentalStatus.PENDING_CONFIRMATION,
+//         },
+//       }),
+//     ]);
+
+//     // Log the confirmation event
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: renterId,
+//         type: isConfirmed ? 'PAYMENT_CONFIRMED' : 'PAYMENT_DISPUTED',
+//         metadata: {
+//           paymentId,
+//           rentalId: payment.rentalId,
+//           propertyId: payment.rental?.propertyId,
+//           unitId: payment.rental?.unitId,
+//           notes,
+//           confirmedAt: new Date().toISOString(),
+//         },
+//       },
+//     });
+
+//     // Send notifications
+//     if (isConfirmed) {
+//       // Notify property owner
+//       await this.notificationService.sendPaymentConfirmedNotification({
+//         recipientId: payment.rental!.property.ownerId,
+//         paymentId,
+//         propertyTitle: payment.rental!.property.title,
+//         amount: payment.amount.toString(),
+//         renterName: payment.user.name || 'Renter',
+//       });
+
+//       // Notify agent if exists
+//       if (payment.rental!.property.agentId) {
+//         await this.notificationService.sendPaymentConfirmedNotification({
+//           recipientId: payment.rental!.property.agentId,
+//           paymentId,
+//           propertyTitle: payment.rental!.property.title,
+//           amount: payment.amount.toString(),
+//           renterName: payment.user.name || 'Renter',
+//         });
+//       }
+//     } else {
+//       // Notify admin of dispute
+//       await this.notificationService.sendPaymentDisputeNotification({
+//         paymentId,
+//         propertyTitle: payment.rental!.property.title,
+//         renterName: payment.user.name || 'Renter',
+//         notes: notes || 'No notes provided',
+//       });
+//     }
+
+//     return {
+//       success: true,
+//       payment: updatedPayment,
+//       rental: updatedRental,
+//       message: isConfirmed
+//         ? 'Payment confirmed. Funds will be released after 24 hours.'
+//         : 'Dispute registered. Admin will review your case.',
+//     };
+//   }
+
+//   /**
+//    * Check if a payment can be confirmed
+//    */
+//   async checkConfirmationEligibility(
+//     paymentId: string
+//   ): Promise<ConfirmationCheckResult> {
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//       include: {
+//         rental: true,
+//       },
+//     });
+
+//     if (!payment) {
+//       return {
+//         paymentId,
+//         canConfirm: false,
+//         reason: 'Payment not found',
+//       };
+//     }
+
+//     if (payment.status !== PaymentStatus.HELD) {
+//       return {
+//         paymentId,
+//         canConfirm: false,
+//         reason: `Payment is not in HELD status (current: ${payment.status})`,
+//       };
+//     }
+
+//     if (payment.rental?.isConfirmed) {
+//       return {
+//         paymentId,
+//         canConfirm: false,
+//         reason: 'Payment already confirmed',
+//       };
+//     }
+
+//     if (
+//       !payment.confirmationPeriodEnd ||
+//       new Date() > payment.confirmationPeriodEnd
+//     ) {
+//       return {
+//         paymentId,
+//         canConfirm: false,
+//         reason: 'Confirmation period has expired',
+//       };
+//     }
+
+//     // Calculate hours remaining
+//     const hoursRemaining = Math.floor(
+//       (payment.confirmationPeriodEnd.getTime() - new Date().getTime()) /
+//         (1000 * 60 * 60)
+//     );
+
+//     return {
+//       paymentId,
+//       canConfirm: true,
+//       hoursRemaining,
+//     };
+//   }
+
+//   /**
+//    * Get all payments pending confirmation for a user
+//    */
+//   async getPendingConfirmations(userId: string) {
+//     const payments = await prisma.payment.findMany({
+//       where: {
+//         userId,
+//         status: PaymentStatus.HELD,
+//         rental: {
+//           isConfirmed: false,
+//         },
+//         confirmationPeriodEnd: {
+//           gte: new Date(),
+//         },
+//       },
+//       include: {
+//         rental: {
+//           include: {
+//             property: {
+//               select: {
+//                 id: true,
+//                 title: true,
+//                 address: true,
+//                 city: true,
+//               },
+//             },
+//             unit: {
+//               select: {
+//                 id: true,
+//                 unitNumber: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//       orderBy: {
+//         confirmationPeriodEnd: 'asc',
+//       },
+//     });
+
+//     return payments.map((payment) => ({
+//       ...payment,
+//       hoursRemaining: Math.floor(
+//         (payment.confirmationPeriodEnd!.getTime() - new Date().getTime()) /
+//           (1000 * 60 * 60)
+//       ),
+//     }));
+//   }
+
+//   /**
+//    * Get expired confirmations that need auto-processing
+//    */
+//   async getExpiredConfirmations() {
+//     return prisma.payment.findMany({
+//       where: {
+//         status: PaymentStatus.HELD,
+//         confirmationPeriodEnd: {
+//           lt: new Date(),
+//         },
+//         rental: {
+//           isConfirmed: false,
+//         },
+//       },
+//       include: {
+//         rental: {
+//           include: {
+//             property: true,
+//           },
+//         },
+//         user: true,
+//       },
+//     });
+//   }
+
+//   /**
+//    * Auto-confirm expired payments (called by scheduler)
+//    */
+//   async autoConfirmExpiredPayments() {
+//     const expiredPayments = await this.getExpiredConfirmations();
+
+//     const results = [];
+
+//     for (const payment of expiredPayments) {
+//       try {
+//         // Auto-confirm the payment
+//         const result = await prisma.$transaction([
+//           prisma.payment.update({
+//             where: { id: payment.id },
+//             data: {
+//               status: PaymentStatus.HELD, // Keep HELD until release
+//               updatedAt: new Date(),
+//             },
+//           }),
+//           prisma.rental.update({
+//             where: { id: payment.rentalId! },
+//             data: {
+//               isConfirmed: true,
+//               confirmedAt: new Date(),
+//               status: RentalStatus.ACTIVE,
+//             },
+//           }),
+//         ]);
+
+//         // Log auto-confirmation
+//         await prisma.eventLog.create({
+//           data: {
+//             userId: payment.userId,
+//             type: 'PAYMENT_AUTO_CONFIRMED',
+//             metadata: {
+//               paymentId: payment.id,
+//               rentalId: payment.rentalId,
+//               reason: 'Confirmation period expired without dispute',
+//               autoConfirmedAt: new Date().toISOString(),
+//             },
+//           },
+//         });
+
+//         // Notify renter
+//         await this.notificationService.sendAutoConfirmationNotification({
+//           recipientId: payment.userId,
+//           paymentId: payment.id,
+//           propertyTitle: payment.rental!.property.title,
+//         });
+
+//         results.push({
+//           paymentId: payment.id,
+//           success: true,
+//         });
+//       } catch (error) {
+//         results.push({
+//           paymentId: payment.id,
+//           success: false,
+//           error: error instanceof Error ? error.message : 'Unknown error',
+//         });
+//       }
+//     }
+
+//     return {
+//       processed: results.length,
+//       successful: results.filter((r) => r.success).length,
+//       failed: results.filter((r) => !r.success).length,
+//       results,
+//     };
+//   }
+// }
+
+
+// import { PrismaClient, PaymentStatus, RentalStatus } from '@prisma/client';
+// import { NotificationService } from './notificationService';
+// import { logger } from '../../../shared/src/middleware/logger';
+
+// const prisma = new PrismaClient();
+
+// export class ConfirmationService {
+//   private notificationService: NotificationService;
+
+//   constructor() {
+//     this.notificationService = new NotificationService();
+//   }
+
+//   /**
+//    * Record renter's confirmation that property is as advertised
+//    */
+//   async confirmProperty(rentalId: string, userId: string): Promise<{
+//     success: boolean;
+//     message: string;
+//     rental?: any;
+//   }> {
+//     try {
+//       // Verify rental exists and belongs to user
+//       const rental = await prisma.rental.findFirst({
+//         where: {
+//           id: rentalId,
+//           renterId: userId,
+//           status: RentalStatus.PENDING_CONFIRMATION,
+//         },
+//         include: {
+//           property: {
+//             include: {
+//               owner: true,
+//               agent: true,
+//             },
+//           },
+//           unit: true,
+//           payments: {
+//             where: {
+//               status: PaymentStatus.HELD,
+//             },
+//           },
+//         },
+//       });
+
+//       if (!rental) {
+//         return {
+//           success: false,
+//           message: 'Rental not found or not eligible for confirmation',
+//         };
+//       }
+
+//       // Check if confirmation deadline has passed
+//       if (rental.confirmationDeadline && new Date() > rental.confirmationDeadline) {
+//         return {
+//           success: false,
+//           message: 'Confirmation period has expired',
+//         };
+//       }
+
+//       // Update rental status
+//       const updatedRental = await prisma.rental.update({
+//         where: { id: rentalId },
+//         data: {
+//           isConfirmed: true,
+//           confirmedAt: new Date(),
+//           status: RentalStatus.ACTIVE,
+//         },
+//       });
+
+//       // Log confirmation event
+//       await prisma.eventLog.create({
+//         data: {
+//           userId,
+//           type: 'RENTAL_CONFIRMED',
+//           metadata: {
+//             rentalId,
+//             propertyId: rental.property.id,
+//             unitId: rental.unitId,
+//             confirmedAt: new Date(),
+//           },
+//         },
+//       });
+
+//       // Send notifications
+//       await this.notificationService.sendConfirmationNotifications({
+//         rental,
+//         renter: { id: userId },
+//         propertyOwner: rental.property.owner,
+//         agent: rental.property.agent,
+//       });
+
+//       logger.info(`Rental ${rentalId} confirmed by user ${userId}`);
+
+//       return {
+//         success: true,
+//         message: 'Property confirmed successfully. Payment will be released after 24 hours.',
+//         rental: updatedRental,
+//       };
+//     } catch (error) {
+//       logger.error('Error confirming property:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Handle dispute raised by renter
+//    */
+//   async raiseDispute(
+//     rentalId: string,
+//     userId: string,
+//     disputeDetails: {
+//       reason: string;
+//       description: string;
+//       evidence?: string[];
+//     }
+//   ): Promise<{
+//     success: boolean;
+//     message: string;
+//     ticket?: any;
+//   }> {
+//     try {
+//       // Verify rental exists and belongs to user
+//       const rental = await prisma.rental.findFirst({
+//         where: {
+//           id: rentalId,
+//           renterId: userId,
+//           status: RentalStatus.PENDING_CONFIRMATION,
+//         },
+//         include: {
+//           property: {
+//             include: {
+//               owner: true,
+//               agent: true,
+//             },
+//           },
+//           unit: true,
+//           payments: {
+//             where: {
+//               status: PaymentStatus.HELD,
+//             },
+//           },
+//         },
+//       });
+
+//       if (!rental) {
+//         return {
+//           success: false,
+//           message: 'Rental not found or not eligible for dispute',
+//         };
+//       }
+
+//       // Check if still within confirmation period
+//       if (rental.confirmationDeadline && new Date() > rental.confirmationDeadline) {
+//         return {
+//           success: false,
+//           message: 'Dispute period has expired',
+//         };
+//       }
+
+//       // Create support ticket
+//       const ticket = await prisma.supportTicket.create({
+//         data: {
+//           userId,
+//           title: `Property Dispute - Rental ${rentalId}`,
+//           description: `Reason: ${disputeDetails.reason}\n\nDetails: ${disputeDetails.description}`,
+//           category: 'PROPERTY',
+//           priority: 'HIGH',
+//           status: 'OPEN',
+//         },
+//       });
+
+//       // Log dispute event
+//       await prisma.eventLog.create({
+//         data: {
+//           userId,
+//           type: 'RENTAL_DISPUTED',
+//           metadata: {
+//             rentalId,
+//             propertyId: rental.property.id,
+//             ticketId: ticket.id,
+//             reason: disputeDetails.reason,
+//             evidence: disputeDetails.evidence || [],
+//           },
+//         },
+//       });
+
+//       // Update rental status to indicate dispute
+//       await prisma.rental.update({
+//         where: { id: rentalId },
+//         data: {
+//           status: RentalStatus.PENDING_CONFIRMATION, // Keep in pending
+//         },
+//       });
+
+//       // Send notifications to admin and property owner
+//       await this.notificationService.sendDisputeNotifications({
+//         rental,
+//         renter: { id: userId },
+//         propertyOwner: rental.property.owner,
+//         agent: rental.property.agent,
+//         ticket,
+//         disputeDetails,
+//       });
+
+//       logger.info(`Dispute raised for rental ${rentalId} by user ${userId}`);
+
+//       return {
+//         success: true,
+//         message: 'Dispute raised successfully. Admin will review your case within 24 hours.',
+//         ticket,
+//       };
+//     } catch (error) {
+//       logger.error('Error raising dispute:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get confirmation status for a rental
+//    */
+//   async getConfirmationStatus(rentalId: string, userId: string): Promise<{
+//     rental: any;
+//     canConfirm: boolean;
+//     canDispute: boolean;
+//     timeRemaining: number | null;
+//   }> {
+//     try {
+//       const rental = await prisma.rental.findFirst({
+//         where: {
+//           id: rentalId,
+//           renterId: userId,
+//         },
+//         include: {
+//           property: {
+//             include: {
+//               owner: true,
+//               agent: true,
+//             },
+//           },
+//           unit: true,
+//           payments: true,
+//         },
+//       });
+
+//       if (!rental) {
+//         throw new Error('Rental not found');
+//       }
+
+//       const now = new Date();
+//       const canConfirm = 
+//         rental.status === RentalStatus.PENDING_CONFIRMATION &&
+//         rental.confirmationDeadline &&
+//         now < rental.confirmationDeadline &&
+//         !rental.isConfirmed;
+
+//       const canDispute = canConfirm;
+
+//       const timeRemaining = rental.confirmationDeadline
+//         ? Math.max(0, rental.confirmationDeadline.getTime() - now.getTime())
+//         : null;
+
+//       return {
+//         rental,
+//         canConfirm,
+//         canDispute,
+//         timeRemaining,
+//       };
+//     } catch (error) {
+//       logger.error('Error getting confirmation status:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Auto-confirm rental if deadline passed without dispute
+//    */
+//   async autoConfirmExpiredRentals(): Promise<number> {
+//     try {
+//       const now = new Date();
+
+//       // Find all rentals past confirmation deadline that aren't confirmed
+//       const expiredRentals = await prisma.rental.findMany({
+//         where: {
+//           status: RentalStatus.PENDING_CONFIRMATION,
+//           isConfirmed: false,
+//           confirmationDeadline: {
+//             lt: now,
+//           },
+//         },
+//         include: {
+//           property: {
+//             include: {
+//               owner: true,
+//               agent: true,
+//             },
+//           },
+//           renter: true,
+//         },
+//       });
+
+//       logger.info(`Found ${expiredRentals.length} rentals to auto-confirm`);
+
+//       let confirmedCount = 0;
+
+//       for (const rental of expiredRentals) {
+//         try {
+//           await prisma.rental.update({
+//             where: { id: rental.id },
+//             data: {
+//               isConfirmed: true,
+//               confirmedAt: now,
+//               status: RentalStatus.ACTIVE,
+//             },
+//           });
+
+//           // Log auto-confirmation
+//           await prisma.eventLog.create({
+//             data: {
+//               userId: rental.renterId,
+//               type: 'RENTAL_AUTO_CONFIRMED',
+//               metadata: {
+//                 rentalId: rental.id,
+//                 propertyId: rental.property.id,
+//                 autoConfirmedAt: now,
+//               },
+//             },
+//           });
+
+//           // Send notifications
+//           await this.notificationService.sendAutoConfirmationNotifications({
+//             rental,
+//             renter: rental.renter,
+//             propertyOwner: rental.property.owner,
+//             agent: rental.property.agent,
+//           });
+
+//           confirmedCount++;
+//         } catch (error) {
+//           logger.error(`Error auto-confirming rental ${rental.id}:`, error);
+//         }
+//       }
+
+//       logger.info(`Auto-confirmed ${confirmedCount} rentals`);
+//       return confirmedCount;
+//     } catch (error) {
+//       logger.error('Error in auto-confirm expired rentals:', error);
+//       throw error;
+//     }
+//   }
+// }
+
+// // Notification service placeholder
+// class NotificationService {
+//   async sendConfirmationNotifications(data: any) {
+//     // Implementation will be in notification-service
+//     logger.info('Sending confirmation notifications', data);
+//   }
+
+//   async sendDisputeNotifications(data: any) {
+//     logger.info('Sending dispute notifications', data);
+//   }
+
+//   async sendAutoConfirmationNotifications(data: any) {
+//     logger.info('Sending auto-confirmation notifications', data);
+//   }
+// }
