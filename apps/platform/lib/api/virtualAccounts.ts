@@ -169,3 +169,81 @@ export const virtualAccountsApi = {
     return response.data.data
   }
 }
+
+
+
+// import { apiClient } from './client';
+// import type { 
+//   VirtualAccountResponse, 
+//   VirtualAccountBalanceResponse,
+//   TransactionHistoryResponse 
+// } from '@/types/api';
+
+// export const virtualAccountsApi = {
+//   /**
+//    * Get user's virtual account details
+//    */
+//   getMyVirtualAccount: async (): Promise<VirtualAccountResponse> => {
+//     const response = await apiClient.get('/api/virtual-accounts/me');
+//     return response.data;
+//   },
+
+//   /**
+//    * Get virtual account balance
+//    */
+//   getBalance: async (): Promise<VirtualAccountBalanceResponse> => {
+//     const response = await apiClient.get('/api/virtual-accounts/balance');
+//     return response.data;
+//   },
+
+//   /**
+//    * Get property-specific virtual account
+//    */
+//   getPropertyVirtualAccount: async (propertyId: string): Promise<VirtualAccountResponse> => {
+//     const response = await apiClient.get(`/api/virtual-accounts/property/${propertyId}`);
+//     return response.data;
+//   },
+
+//   /**
+//    * Get transaction history for virtual account
+//    */
+//   getTransactionHistory: async (params?: {
+//     page?: number;
+//     limit?: number;
+//     startDate?: string;
+//     endDate?: string;
+//     type?: 'credit' | 'debit';
+//   }): Promise<{
+//     transactions: TransactionHistoryResponse[];
+//     total: number;
+//     page: number;
+//     limit: number;
+//   }> => {
+//     const response = await apiClient.get('/api/virtual-accounts/transactions', { params });
+//     return response.data;
+//   },
+
+//   /**
+//    * Get pending funds (funds in confirmation period)
+//    */
+//   getPendingFunds: async (): Promise<{
+//     totalPending: number;
+//     pendingTransactions: Array<{
+//       id: string;
+//       amount: number;
+//       releaseDate: string;
+//       source: string;
+//     }>;
+//   }> => {
+//     const response = await apiClient.get('/api/virtual-accounts/pending-funds');
+//     return response.data;
+//   },
+
+//   /**
+//    * Refresh virtual account balance (force sync with Flutterwave)
+//    */
+//   refreshBalance: async (): Promise<VirtualAccountBalanceResponse> => {
+//     const response = await apiClient.post('/api/virtual-accounts/refresh-balance');
+//     return response.data;
+//   }
+// };

@@ -287,3 +287,213 @@ export const usePaymentStats = () => usePaymentStore(state => ({
   failedPayments: state.getPaymentsByStatus('FAILED').length,
   pendingPayments: state.getPaymentsByStatus('PENDING').length,
 }));
+
+
+
+
+// import { create } from 'zustand';
+// import { devtools, persist } from 'zustand/middleware';
+
+// interface Payment {
+//   id: string;
+//   userId: string;
+//   rentalId: string | null;
+//   amount: number;
+//   currency: string;
+//   paymentType: 'RENT' | 'DEPOSIT' | 'AGENT_COMMISSION' | 'PREMIUM_UPGRADE' | 'PROPERTY_MARKING';
+//   status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'REFUNDED' | 'HELD' | 'RELEASED';
+//   paymentMethod?: string;
+//   flutterwaveRef?: string;
+//   transactionId?: string;
+//   confirmationPeriodEnd?: string;
+//   isReleased: boolean;
+//   releasedAt?: string;
+//   description?: string;
+//   failureReason?: string;
+//   paidAt?: string;
+//   createdAt: string;
+//   updatedAt: string;
+// }
+
+// interface PaymentConfirmation {
+//   paymentId: string;
+//   timeRemaining: number; // milliseconds
+//   canConfirm: boolean;
+//   canDispute: boolean;
+//   isExpired: boolean;
+// }
+
+// interface PaymentStoreState {
+//   // Payment data
+//   payments: Payment[];
+//   selectedPayment: Payment | null;
+//   isLoading: boolean;
+//   error: string | null;
+
+//   // Confirmation state
+//   confirmationStatus: Map<string, PaymentConfirmation>;
+//   activeConfirmations: string[]; // Payment IDs with active confirmation periods
+
+//   // Actions
+//   setPayments: (payments: Payment[]) => void;
+//   addPayment: (payment: Payment) => void;
+//   updatePayment: (paymentId: string, updates: Partial<Payment>) => void;
+//   setSelectedPayment: (payment: Payment | null) => void;
+//   removePayment: (paymentId: string) => void;
+  
+//   // Confirmation actions
+//   setConfirmationStatus: (paymentId: string, status: PaymentConfirmation) => void;
+//   updateConfirmationTimer: (paymentId: string, timeRemaining: number) => void;
+//   markConfirmationExpired: (paymentId: string) => void;
+//   addActiveConfirmation: (paymentId: string) => void;
+//   removeActiveConfirmation: (paymentId: string) => void;
+  
+//   // Loading states
+//   setLoading: (isLoading: boolean) => void;
+//   setError: (error: string | null) => void;
+  
+//   // Utility
+//   getPaymentById: (paymentId: string) => Payment | undefined;
+//   getPaymentsByStatus: (status: Payment['status']) => Payment[];
+//   getPaymentsInConfirmation: () => Payment[];
+//   clearPayments: () => void;
+//   reset: () => void;
+// }
+
+// const initialState = {
+//   payments: [],
+//   selectedPayment: null,
+//   isLoading: false,
+//   error: null,
+//   confirmationStatus: new Map(),
+//   activeConfirmations: [],
+// };
+
+// export const usePaymentStore = create<PaymentStoreState>()(
+//   devtools(
+//     persist(
+//       (set, get) => ({
+//         ...initialState,
+
+//         // Basic payment actions
+//         setPayments: (payments) => set({ payments, error: null }),
+
+//         addPayment: (payment) =>
+//           set((state) => ({
+//             payments: [payment, ...state.payments],
+//             error: null,
+//           })),
+
+//         updatePayment: (paymentId, updates) =>
+//           set((state) => ({
+//             payments: state.payments.map((p) =>
+//               p.id === paymentId ? { ...p, ...updates } : p
+//             ),
+//             selectedPayment:
+//               state.selectedPayment?.id === paymentId
+//                 ? { ...state.selectedPayment, ...updates }
+//                 : state.selectedPayment,
+//           })),
+
+//         setSelectedPayment: (payment) => set({ selectedPayment: payment }),
+
+//         removePayment: (paymentId) =>
+//           set((state) => ({
+//             payments: state.payments.filter((p) => p.id !== paymentId),
+//             selectedPayment:
+//               state.selectedPayment?.id === paymentId
+//                 ? null
+//                 : state.selectedPayment,
+//           })),
+
+//         // Confirmation actions
+//         setConfirmationStatus: (paymentId, status) =>
+//           set((state) => {
+//             const newMap = new Map(state.confirmationStatus);
+//             newMap.set(paymentId, status);
+//             return { confirmationStatus: newMap };
+//           }),
+
+//         updateConfirmationTimer: (paymentId, timeRemaining) =>
+//           set((state) => {
+//             const newMap = new Map(state.confirmationStatus);
+//             const current = newMap.get(paymentId);
+//             if (current) {
+//               newMap.set(paymentId, {
+//                 ...current,
+//                 timeRemaining,
+//                 isExpired: timeRemaining <= 0,
+//                 canConfirm: timeRemaining > 0,
+//                 canDispute: timeRemaining > 0,
+//               });
+//             }
+//             return { confirmationStatus: newMap };
+//           }),
+
+//         markConfirmationExpired: (paymentId) =>
+//           set((state) => {
+//             const newMap = new Map(state.confirmationStatus);
+//             const current = newMap.get(paymentId);
+//             if (current) {
+//               newMap.set(paymentId, {
+//                 ...current,
+//                 timeRemaining: 0,
+//                 isExpired: true,
+//                 canConfirm: false,
+//                 canDispute: false,
+//               });
+//             }
+//             return { 
+//               confirmationStatus: newMap,
+//               activeConfirmations: state.activeConfirmations.filter(id => id !== paymentId)
+//             };
+//           }),
+
+//         addActiveConfirmation: (paymentId) =>
+//           set((state) => ({
+//             activeConfirmations: state.activeConfirmations.includes(paymentId)
+//               ? state.activeConfirmations
+//               : [...state.activeConfirmations, paymentId],
+//           })),
+
+//         removeActiveConfirmation: (paymentId) =>
+//           set((state) => ({
+//             activeConfirmations: state.activeConfirmations.filter(
+//               (id) => id !== paymentId
+//             ),
+//           })),
+
+//         // Loading states
+//         setLoading: (isLoading) => set({ isLoading }),
+//         setError: (error) => set({ error }),
+
+//         // Utility methods
+//         getPaymentById: (paymentId) => {
+//           return get().payments.find((p) => p.id === paymentId);
+//         },
+
+//         getPaymentsByStatus: (status) => {
+//           return get().payments.filter((p) => p.status === status);
+//         },
+
+//         getPaymentsInConfirmation: () => {
+//           return get().payments.filter(
+//             (p) => p.status === 'HELD' && p.confirmationPeriodEnd
+//           );
+//         },
+
+//         clearPayments: () => set({ payments: [], selectedPayment: null }),
+
+//         reset: () => set(initialState),
+//       }),
+//       {
+//         name: 'payment-storage',
+//         partialize: (state) => ({
+//           payments: state.payments,
+//           selectedPayment: state.selectedPayment,
+//         }),
+//       }
+//     ),
+//     { name: 'PaymentStore' }
+//   )
+// );
