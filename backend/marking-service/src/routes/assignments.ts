@@ -152,3 +152,111 @@ router.patch(
 );
 
 export default router;
+
+
+
+
+
+// import { Router } from 'express';
+// import {
+//   acceptAssignment,
+//   declineAssignment,
+//   getAssignedJobs,
+//   getAssignmentDetails,
+//   startMarkingJob,
+//   submitMarkingProgress,
+//   getAgentActiveAssignments,
+// } from '../controllers/assignmentController';
+// import { auth } from '../../../shared/src/middleware/auth';
+// import { checkRolePermission } from '../middleware/rolePermission';
+// import { validateAssignmentAction } from '../middleware/markingValidation';
+
+// const router = Router();
+
+// /**
+//  * @route   POST /api/assignments/:jobId/accept
+//  * @desc    Accept a marking job assignment
+//  * @access  Private (Agent/Premium Renter)
+//  */
+// router.post(
+//   '/:jobId/accept',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   validateAssignmentAction,
+//   acceptAssignment
+// );
+
+// /**
+//  * @route   POST /api/assignments/:jobId/decline
+//  * @desc    Decline a marking job assignment
+//  * @access  Private (Agent/Premium Renter)
+//  */
+// router.post(
+//   '/:jobId/decline',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   validateAssignmentAction,
+//   declineAssignment
+// );
+
+// /**
+//  * @route   GET /api/assignments/my-assignments
+//  * @desc    Get all assigned jobs for the authenticated user
+//  * @access  Private (Agent/Premium Renter)
+//  */
+// router.get(
+//   '/my-assignments',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   getAssignedJobs
+// );
+
+// /**
+//  * @route   GET /api/assignments/active
+//  * @desc    Get active assignments for agent
+//  * @access  Private (Agent/Premium Renter)
+//  */
+// router.get(
+//   '/active',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   getAgentActiveAssignments
+// );
+
+// /**
+//  * @route   GET /api/assignments/:jobId
+//  * @desc    Get assignment details
+//  * @access  Private (Assigned agent only)
+//  */
+// router.get(
+//   '/:jobId',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   getAssignmentDetails
+// );
+
+// /**
+//  * @route   POST /api/assignments/:jobId/start
+//  * @desc    Start marking a job
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/start',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   startMarkingJob
+// );
+
+// /**
+//  * @route   POST /api/assignments/:jobId/progress
+//  * @desc    Submit marking progress/updates
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/progress',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   submitMarkingProgress
+// );
+
+// export default router;

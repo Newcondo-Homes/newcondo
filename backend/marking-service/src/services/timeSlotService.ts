@@ -349,3 +349,273 @@ export class TimeSlotService {
     return stats;
   }
 }
+
+
+
+
+// import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+
+// const prisma = new PrismaClient();
+
+// interface TimeSlot {
+//   startTime: Date;
+//   endTime: Date;
+//   isExpired: boolean;
+// }
+
+// interface QueuedAgent {
+//   agentId: string;
+//   queuePosition: number;
+//   timeSlot: TimeSlot;
+//   notifiedAt: Date;
+// }
+
+// export class TimeSlotService {
+//   private static readonly TIME_SLOT_DURATION_HOURS = 3;
+//   private static readonly MAX_COMPLETION_DAYS = 3;
+
+//   /**
+//    * Calculate time slot for an agent in the queue
+//    */
+//   static calculateTimeSlot(queuePosition: number, jobCreatedAt: Date): TimeSlot {
+//     const slotStartOffset = (queuePosition - 1) * this.TIME_SLOT_DURATION_HOURS;
+//     const startTime = new Date(jobCreatedAt);
+//     startTime.setHours(startTime.getHours() + slotStartOffset);
+
+//     const endTime = new Date(startTime);
+//     endTime.setHours(endTime.getHours() + this.TIME_SLOT_DURATION_HOURS);
+
+//     const now = new Date();
+//     const isExpired = now > endTime;
+
+//     return { startTime, endTime, isExpired };
+//   }
+
+//   /**
+//    * Get current active time slot for a marking job
+//    */
+//   static async getCurrentActiveSlot(markingJobId: string): Promise<QueuedAgent | null> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: markingJobId },
+//         select: {
+//           id: true,
+//           status: true,
+//           queuePosition: true,
+//           assignedAgentId: true,
+//           timeSlotExpiry: true,
+//           createdAt: true,
+//         },
+//       });
+
+//       if (!job || !job.assignedAgentId || !job.queuePosition) {
+//         return null;
+//       }
+
+//       const timeSlot = this.calculateTimeSlot(job.queuePosition, job.createdAt);
+
+//       return {
+//         agentId: job.assignedAgentId,
+//         queuePosition: job.queuePosition,
+//         timeSlot,
+//         notifiedAt: job.createdAt,
+//       };
+//     } catch (error) {
+//       console.error('Error getting current active slot:', error);
+//       throw new Error('Failed to retrieve active time slot');
+//     }
+//   }
+
+//   /**
+//    * Check if current time slot has expired
+//    */
+//   static isTimeSlotExpired(timeSlotExpiry: Date): boolean {
+//     return new Date() > timeSlotExpiry;
+//   }
+
+//   /**
+//    * Assign next agent in queue if current slot expired
+//    */
+//   static async assignNextAgentInQueue(markingJobId: string): Promise<boolean> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: markingJobId },
+//         select: {
+//           id: true,
+//           status: true,
+//           queuePosition: true,
+//           timeSlotExpiry: true,
+//           assignedAgentId: true,
+//           createdAt: true,
+//           requestedBy: true,
+//         },
+//       });
+
+//       if (!job || job.status !== MarkingJobStatus.ASSIGNED) {
+//         return false;
+//       }
+
+//       // Check if time slot expired
+//       if (!job.timeSlotExpiry || !this.isTimeSlotExpired(job.timeSlotExpiry)) {
+//         return false;
+//       }
+
+//       // Find next agent in queue (this would typically be from a separate queue table)
+//       // For now, we'll update the queue position and reassign
+//       const nextQueuePosition = (job.queuePosition || 0) + 1;
+//       const nextTimeSlot = this.calculateTimeSlot(nextQueuePosition, job.createdAt);
+
+//       // Update job with next queue position and time slot
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: markingJobId },
+//         data: {
+//           queuePosition: nextQueuePosition,
+//           timeSlotExpiry: nextTimeSlot.endTime,
+//           status: MarkingJobStatus.QUEUED, // Reset to queued for reassignment
+//           assignedAgentId: null, // Clear current agent
+//         },
+//       });
+
+//       console.log(`Time slot expired for job ${markingJobId}. Moving to next queue position.`);
+//       return true;
+//     } catch (error) {
+//       console.error('Error assigning next agent in queue:', error);
+//       throw new Error('Failed to assign next agent');
+//     }
+//   }
+
+//   /**
+//    * Calculate maximum completion time (3 days from job creation)
+//    */
+//   static calculateMaxCompletionTime(jobCreatedAt: Date): Date {
+//     const maxTime = new Date(jobCreatedAt);
+//     maxTime.setDate(maxTime.getDate() + this.MAX_COMPLETION_DAYS);
+//     return maxTime;
+//   }
+
+//   /**
+//    * Check if job has exceeded maximum completion time
+//    */
+//   static isJobExpired(maxCompletionTime: Date): boolean {
+//     return new Date() > maxCompletionTime;
+//   }
+
+//   /**
+//    * Expire jobs that exceeded maximum completion time
+//    */
+//   static async expireOverdueJobs(): Promise<number> {
+//     try {
+//       const now = new Date();
+
+//       const result = await prisma.propertyMarkingJob.updateMany({
+//         where: {
+//           maxCompletionTime: {
+//             lt: now,
+//           },
+//           status: {
+//             notIn: [MarkingJobStatus.COMPLETED, MarkingJobStatus.CANCELLED, MarkingJobStatus.EXPIRED],
+//           },
+//         },
+//         data: {
+//           status: MarkingJobStatus.EXPIRED,
+//         },
+//       });
+
+//       console.log(`Expired ${result.count} overdue marking jobs`);
+//       return result.count;
+//     } catch (error) {
+//       console.error('Error expiring overdue jobs:', error);
+//       throw new Error('Failed to expire overdue jobs');
+//     }
+//   }
+
+//   /**
+//    * Get remaining time in current slot
+//    */
+//   static getRemainingTimeInSlot(timeSlotExpiry: Date): {
+//     hours: number;
+//     minutes: number;
+//     seconds: number;
+//     isExpired: boolean;
+//   } {
+//     const now = new Date();
+//     const diff = timeSlotExpiry.getTime() - now.getTime();
+
+//     if (diff <= 0) {
+//       return { hours: 0, minutes: 0, seconds: 0, isExpired: true };
+//     }
+
+//     const hours = Math.floor(diff / (1000 * 60 * 60));
+//     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+//     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+//     return { hours, minutes, seconds, isExpired: false };
+//   }
+
+//   /**
+//    * Assign time slot to agent when accepting job
+//    */
+//   static async assignTimeSlotToAgent(
+//     markingJobId: string,
+//     agentId: string,
+//     queuePosition: number
+//   ): Promise<TimeSlot> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: markingJobId },
+//         select: { createdAt: true },
+//       });
+
+//       if (!job) {
+//         throw new Error('Marking job not found');
+//       }
+
+//       const timeSlot = this.calculateTimeSlot(queuePosition, job.createdAt);
+
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: markingJobId },
+//         data: {
+//           assignedAgentId: agentId,
+//           queuePosition,
+//           timeSlotExpiry: timeSlot.endTime,
+//           assignedAt: new Date(),
+//           status: MarkingJobStatus.ASSIGNED,
+//         },
+//       });
+
+//       console.log(`Assigned time slot to agent ${agentId} for job ${markingJobId}`);
+//       return timeSlot;
+//     } catch (error) {
+//       console.error('Error assigning time slot to agent:', error);
+//       throw new Error('Failed to assign time slot');
+//     }
+//   }
+
+//   /**
+//    * Get all active time slots for a marking job (queue visualization)
+//    */
+//   static async getJobQueueTimeSlots(markingJobId: string): Promise<TimeSlot[]> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: markingJobId },
+//         select: { createdAt: true, queuePosition: true },
+//       });
+
+//       if (!job || !job.queuePosition) {
+//         return [];
+//       }
+
+//       const timeSlots: TimeSlot[] = [];
+//       for (let i = 1; i <= job.queuePosition; i++) {
+//         timeSlots.push(this.calculateTimeSlot(i, job.createdAt));
+//       }
+
+//       return timeSlots;
+//     } catch (error) {
+//       console.error('Error getting job queue time slots:', error);
+//       throw new Error('Failed to retrieve queue time slots');
+//     }
+//   }
+// }
+
+// export default TimeSlotService;

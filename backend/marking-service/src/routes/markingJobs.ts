@@ -99,3 +99,106 @@ router.patch(
 );
 
 export default router;
+
+
+
+
+// import { Router } from 'express';
+// import {
+//   createMarkingJob,
+//   getMarkingJob,
+//   getUserMarkingJobs,
+//   updateMarkingJob,
+//   cancelMarkingJob,
+//   getAvailableMarkingJobs,
+//   getNearbyMarkingJobs,
+// } from '../controllers/markingJobController';
+// import { auth } from '../../../shared/src/middleware/auth';
+// import { validateMarkingJobCreation, validateMarkingJobUpdate } from '../middleware/markingValidation';
+// import { checkRolePermission } from '../middleware/rolePermission';
+
+// const router = Router();
+
+// /**
+//  * @route   POST /api/marking-jobs
+//  * @desc    Create a new marking job
+//  * @access  Private (Owner/Agent)
+//  */
+// router.post(
+//   '/',
+//   auth,
+//   checkRolePermission(['OWNER', 'AGENT']),
+//   validateMarkingJobCreation,
+//   createMarkingJob
+// );
+
+// /**
+//  * @route   GET /api/marking-jobs/:id
+//  * @desc    Get marking job details
+//  * @access  Private (Job owner or assigned agent)
+//  */
+// router.get(
+//   '/:id',
+//   auth,
+//   getMarkingJob
+// );
+
+// /**
+//  * @route   GET /api/marking-jobs/user/my-jobs
+//  * @desc    Get all marking jobs for the authenticated user
+//  * @access  Private
+//  */
+// router.get(
+//   '/user/my-jobs',
+//   auth,
+//   getUserMarkingJobs
+// );
+
+// /**
+//  * @route   GET /api/marking-jobs/available/list
+//  * @desc    Get all available marking jobs (for agents/premium renters)
+//  * @access  Private (Agent/Premium Renter)
+//  */
+// router.get(
+//   '/available/list',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   getAvailableMarkingJobs
+// );
+
+// /**
+//  * @route   GET /api/marking-jobs/nearby/list
+//  * @desc    Get marking jobs within proximity
+//  * @access  Private (Agent/Premium Renter)
+//  */
+// router.get(
+//   '/nearby/list',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   getNearbyMarkingJobs
+// );
+
+// /**
+//  * @route   PATCH /api/marking-jobs/:id
+//  * @desc    Update marking job details
+//  * @access  Private (Job owner only)
+//  */
+// router.patch(
+//   '/:id',
+//   auth,
+//   validateMarkingJobUpdate,
+//   updateMarkingJob
+// );
+
+// /**
+//  * @route   DELETE /api/marking-jobs/:id
+//  * @desc    Cancel a marking job
+//  * @access  Private (Job owner only)
+//  */
+// router.delete(
+//   '/:id',
+//   auth,
+//   cancelMarkingJob
+// );
+
+// export default router;

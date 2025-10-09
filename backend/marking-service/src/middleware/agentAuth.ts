@@ -330,3 +330,343 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
   
   next();
 };
+
+
+
+// // backend/marking-service/src/middleware/agentAuth.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { PrismaClient, Role } from '@prisma/client';
+
+// const prisma = new PrismaClient();
+
+// // Extend Express Request type to include user
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       user?: {
+//         id: string;
+//         role: Role;
+//         email: string;
+//         isPremium?: boolean;
+//         isAvailableForMarking?: boolean;
+//       };
+//     }
+//   }
+// }
+
+// /**
+//  * Middleware to verify that the authenticated user is an agent
+//  * Assumes authentication middleware has already run and attached user to req
+//  */
+// export const requireAgent = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+
+//     if (req.user.role !== 'AGENT') {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Access denied. Only agents can perform this action',
+//       });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error('Agent auth error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Authentication error',
+//     });
+//   }
+// };
+
+// /**
+//  * Middleware to verify that the user is an agent OR a premium renter
+//  * Premium renters can also participate in marking jobs
+//  */
+// export const requireAgentOrPremiumRenter = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+
+//     const isAgent = req.user.role === 'AGENT';
+//     const isPremiumRenter = req.user.role === 'RENTER' && req.user.isPremium;
+
+//     if (!isAgent && !isPremiumRenter) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Access denied. Only agents and premium renters can perform this action',
+//       });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error('Agent/Premium renter auth error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Authentication error',
+//     });
+//   }
+// };
+
+// /**
+//  * Middleware to verify agent is available for marking jobs
+//  */
+// export const requireAvailableAgent = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+
+//     // Fetch fresh user data to check availability status
+//     const user = await prisma.user.findUnique({
+//       where: { id: req.user.id },
+//       select: {
+//         isAvailableForMarking: true,
+//         role: true,
+//         isPremium: true,
+//         agentServiceAreas: true,
+//       },
+//     });
+
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+
+//     // Check if user is eligible (agent or premium renter)
+//     const isEligible = user.role === 'AGENT' || (user.role === 'RENTER' && user.isPremium);
+
+//     if (!isEligible) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Only agents and premium renters can mark properties',
+//       });
+//       return;
+//     }
+
+//     // Check if agent/renter is available for marking
+//     if (!user.isAvailableForMarking) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'You must set your availability status to accept marking jobs',
+//       });
+//       return;
+//     }
+
+//     // Check if agent has service areas configured
+//     if (!user.agentServiceAreas || user.agentServiceAreas.length === 0) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Please configure your service areas before accepting marking jobs',
+//       });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error('Available agent check error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking agent availability',
+//     });
+//   }
+// };
+
+// /**
+//  * Middleware to verify agent has completed verification
+//  */
+// export const requireVerifiedAgent = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+
+//     // Fetch verification status
+//     const user = await prisma.user.findUnique({
+//       where: { id: req.user.id },
+//       select: {
+//         verificationStatus: true,
+//         role: true,
+//       },
+//     });
+
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+
+//     if (user.verificationStatus !== 'VERIFIED') {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Account verification required to accept marking jobs',
+//         verificationStatus: user.verificationStatus,
+//       });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error('Verified agent check error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking verification status',
+//     });
+//   }
+// };
+
+// /**
+//  * Middleware to check if agent has virtual account
+//  * Required before they can receive payments for marking jobs
+//  */
+// export const requireVirtualAccount = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+
+//     // Check if user has a virtual account
+//     const virtualAccount = await prisma.virtualAccount.findFirst({
+//       where: {
+//         userId: req.user.id,
+//         isActive: true,
+//       },
+//     });
+
+//     if (!virtualAccount) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Virtual account setup required to receive payments for marking jobs',
+//         action: 'SETUP_VIRTUAL_ACCOUNT',
+//       });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error('Virtual account check error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking virtual account status',
+//     });
+//   }
+// };
+
+// /**
+//  * Middleware to verify agent can access a specific marking job
+//  * Checks if the agent is assigned to the job or in the queue
+//  */
+// export const requireJobAccess = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     if (!req.user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+
+//     const { jobId } = req.params;
+
+//     if (!jobId) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Job ID is required',
+//       });
+//       return;
+//     }
+
+//     // Check if user is assigned to this job
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       select: {
+//         assignedAgentId: true,
+//         requestedBy: true,
+//       },
+//     });
+
+//     if (!markingJob) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'Marking job not found',
+//       });
+//       return;
+//     }
+
+//     // Check if user is the assigned agent or the requester
+//     const hasAccess = 
+//       markingJob.assignedAgentId === req.user.id || 
+//       markingJob.requestedBy === req.user.id;
+
+//     if (!hasAccess) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'You do not have access to this marking job',
+//       });
+//       return;
+//     }
+
+//     next();
+//   } catch (error) {
+//     console.error('Job access check error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking job access',
+//     });
+//   }
+// };

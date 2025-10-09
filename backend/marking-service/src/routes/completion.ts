@@ -149,3 +149,141 @@ router.get(
 );
 
 export default router;
+
+
+
+
+// import { Router } from 'express';
+// import {
+//   submitCompletion,
+//   verifyCompletion,
+//   rejectCompletion,
+//   requestRevision,
+//   getCompletionDetails,
+//   uploadCompletionImages,
+//   getVerificationStatus,
+//   autoReleaseExpiredVerifications,
+// } from '../controllers/completionController';
+// import { auth } from '../../../shared/src/middleware/auth';
+// import { checkRolePermission } from '../middleware/rolePermission';
+// import { validateCompletionSubmission, validateVerificationAction } from '../middleware/markingValidation';
+// import multer from 'multer';
+
+// const router = Router();
+
+// // Configure multer for image uploads
+// const upload = multer({
+//   storage: multer.memoryStorage(),
+//   limits: {
+//     fileSize: 5 * 1024 * 1024, // 5MB per file
+//     files: 10, // Max 10 images
+//   },
+//   fileFilter: (req, file, cb) => {
+//     if (file.mimetype.startsWith('image/')) {
+//       cb(null, true);
+//     } else {
+//       cb(new Error('Only image files are allowed'));
+//     }
+//   },
+// });
+
+// /**
+//  * @route   POST /api/completion/:jobId/submit
+//  * @desc    Submit marking job completion
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/submit',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   validateCompletionSubmission,
+//   submitCompletion
+// );
+
+// /**
+//  * @route   POST /api/completion/:jobId/images
+//  * @desc    Upload completion images
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/images',
+//   auth,
+//   checkRolePermission(['AGENT', 'RENTER']),
+//   upload.array('images', 10),
+//   uploadCompletionImages
+// );
+
+// /**
+//  * @route   GET /api/completion/:jobId
+//  * @desc    Get completion details
+//  * @access  Private (Job owner or assigned agent)
+//  */
+// router.get(
+//   '/:jobId',
+//   auth,
+//   getCompletionDetails
+// );
+
+// /**
+//  * @route   GET /api/completion/:jobId/verification-status
+//  * @desc    Get verification status and deadline
+//  * @access  Private (Job owner or assigned agent)
+//  */
+// router.get(
+//   '/:jobId/verification-status',
+//   auth,
+//   getVerificationStatus
+// );
+
+// /**
+//  * @route   POST /api/completion/:jobId/verify
+//  * @desc    Verify and approve marking job completion
+//  * @access  Private (Job owner only)
+//  */
+// router.post(
+//   '/:jobId/verify',
+//   auth,
+//   checkRolePermission(['OWNER', 'AGENT']),
+//   validateVerificationAction,
+//   verifyCompletion
+// );
+
+// /**
+//  * @route   POST /api/completion/:jobId/reject
+//  * @desc    Reject marking job completion
+//  * @access  Private (Job owner only)
+//  */
+// router.post(
+//   '/:jobId/reject',
+//   auth,
+//   checkRolePermission(['OWNER', 'AGENT']),
+//   validateVerificationAction,
+//   rejectCompletion
+// );
+
+// /**
+//  * @route   POST /api/completion/:jobId/request-revision
+//  * @desc    Request revision for marking job
+//  * @access  Private (Job owner only)
+//  */
+// router.post(
+//   '/:jobId/request-revision',
+//   auth,
+//   checkRolePermission(['OWNER', 'AGENT']),
+//   validateVerificationAction,
+//   requestRevision
+// );
+
+// /**
+//  * @route   POST /api/completion/auto-release
+//  * @desc    Auto-release payments for expired verification periods
+//  * @access  Private (System/Admin - Cron job)
+//  */
+// router.post(
+//   '/auto-release',
+//   auth,
+//   checkRolePermission(['ADMIN']),
+//   autoReleaseExpiredVerifications
+// );
+
+// export default router;

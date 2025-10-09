@@ -838,3 +838,452 @@ export class CompletionController {
 }
 
 export const completionController = new CompletionController();
+
+
+
+// // backend/marking-service/src/controllers/completionController.ts
+
+// import { Request, Response } from 'express';
+// import { completionService } from '../services/completionService';
+// import { compensationService } from '../services/compensationService';
+// import { notificationService } from '../services/notificationService';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+
+// /**
+//  * Completion Controller
+//  * Handles job completion and verification for property marking
+//  */
+// class CompletionController {
+//   /**
+//    * Submit marking job completion
+//    * POST /api/marking/completion/submit
+//    */
+//   async submitCompletion(req: Request, res: Response): Promise<void> {
+//     try {
+//       const agentId = req.user?.id;
+//       const {
+//         markingJobId,
+//         boundaryData,
+//         completionNotes,
+//         completionImages
+//       } = req.body;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       // Validate completion data
+//       const validation = await completionService.validateCompletionData({
+//         markingJobId,
+//         agentId,
+//         boundaryData,
+//         completionImages
+//       });
+
+//       if (!validation.isValid) {
+//         res.status(400).json(
+//           ApiResponse.error(validation.error || 'Invalid completion data', 400)
+//         );
+//         return;
+//       }
+
+//       // Submit completion
+//       const completion = await completionService.submitCompletion({
+//         markingJobId,
+//         agentId,
+//         boundaryData,
+//         completionNotes,
+//         completionImages
+//       });
+
+//       // Process initial compensation (holding amount)
+//       const initialCompensation = await compensationService.processInitialCompensation(
+//         markingJobId,
+//         agentId
+//       );
+
+//       // Notify property owner for verification
+//       await notificationService.notifyOwnerForVerification(
+//         completion.markingJob.requestedBy,
+//         completion.markingJob,
+//         completion
+//       );
+
+//       res.status(200).json(
+//         ApiResponse.success(
+//           {
+//             completion,
+//             initialCompensation,
+//             verificationDeadline: completion.verificationDeadline
+//           },
+//           'Completion submitted successfully. Awaiting owner verification.'
+//         )
+//       );
+//     } catch (error: any) {
+//       console.error('Error in submitCompletion:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to submit completion', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Property owner verifies/confirms marking completion
+//    * POST /api/marking/completion/:jobId/verify
+//    */
+//   async verifyCompletion(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { jobId } = req.params;
+//       const ownerId = req.user?.id;
+//       const { isApproved, rejectionReason } = req.body;
+
+//       if (!ownerId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       // Verify ownership
+//       const isOwner = await completionService.verifyOwnership(jobId, ownerId);
+//       if (!isOwner) {
+//         res.status(403).json(
+//           ApiResponse.error('Only property owner can verify completion', 403)
+//         );
+//         return;
+//       }
+
+//       if (isApproved) {
+//         // Owner approved the marking
+//         const verification = await completionService.approveCompletion(
+//           jobId,
+//           ownerId
+//         );
+
+//         // Release full compensation to agent
+//         const compensation = await compensationService.releaseFullCompensation(
+//           jobId,
+//           verification.agentId
+//         );
+
+//         // Update property with boundary data
+//         await completionService.updatePropertyBoundary(
+//           verification.propertyId,
+//           verification.boundaryData
+//         );
+
+//         // Close the marking job
+//         await completionService.closeMarkingJob(jobId);
+
+//         // Notify agent of approval and payment
+//         await notificationService.notifyAgentOfApproval(
+//           verification.agentId,
+//           verification.markingJob,
+//           compensation.totalAmount
+//         );
+
+//         res.status(200).json(
+//           ApiResponse.success(
+//             {
+//               verification,
+//               compensation
+//             },
+//             'Marking approved and agent compensated successfully'
+//           )
+//         );
+//       } else {
+//         // Owner rejected the marking
+//         const rejection = await completionService.rejectCompletion(
+//           jobId,
+//           ownerId,
+//           rejectionReason
+//         );
+
+//         // Process partial compensation for agent's effort
+//         const partialCompensation = await compensationService.processPartialCompensation(
+//           jobId,
+//           rejection.agentId,
+//           rejection.attemptCount
+//         );
+
+//         // Check if max attempts reached
+//         if (rejection.attemptCount >= rejection.maxAttempts) {
+//           // Max attempts reached, close job
+//           await completionService.closeMarkingJob(jobId);
+          
+//           // Notify owner to create new marking job
+//           await notificationService.notifyOwnerMaxAttemptsReached(
+//             ownerId,
+//             rejection.markingJob
+//           );
+//         } else {
+//           // Reassign to next agent in queue
+//           const reassignment = await completionService.reassignAfterRejection(jobId);
+          
+//           if (reassignment) {
+//             await notificationService.notifyAgentOfAssignment(
+//               reassignment.newAgentId,
+//               reassignment.markingJob
+//             );
+//           }
+//         }
+
+//         // Notify agent of rejection
+//         await notificationService.notifyAgentOfRejection(
+//           rejection.agentId,
+//           rejection.markingJob,
+//           rejectionReason,
+//           partialCompensation?.amount
+//         );
+
+//         res.status(200).json(
+//           ApiResponse.success(
+//             {
+//               rejection,
+//               partialCompensation,
+//               remainingAttempts: rejection.maxAttempts - rejection.attemptCount
+//             },
+//             'Marking rejected. Agent notified.'
+//           )
+//         );
+//       }
+//     } catch (error: any) {
+//       console.error('Error in verifyCompletion:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to verify completion', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get completion details for a marking job
+//    * GET /api/marking/completion/:jobId
+//    */
+//   async getCompletionDetails(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { jobId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const completion = await completionService.getCompletionDetails(jobId, userId);
+
+//       if (!completion) {
+//         res.status(404).json(
+//           ApiResponse.error('Completion not found', 404)
+//         );
+//         return;
+//       }
+
+//       res.status(200).json(
+//         ApiResponse.success(completion, 'Completion details retrieved')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in getCompletionDetails:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to get completion details', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get pending verifications for property owner
+//    * GET /api/marking/completion/pending-verifications
+//    */
+//   async getPendingVerifications(req: Request, res: Response): Promise<void> {
+//     try {
+//       const ownerId = req.user?.id;
+
+//       if (!ownerId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const pendingVerifications = await completionService.getPendingVerifications(ownerId);
+
+//       res.status(200).json(
+//         ApiResponse.success(
+//           {
+//             verifications: pendingVerifications,
+//             count: pendingVerifications.length
+//           },
+//           'Pending verifications retrieved'
+//         )
+//       );
+//     } catch (error: any) {
+//       console.error('Error in getPendingVerifications:', error);
+//       res.status(500).json(
+//         ApiResponse.error('Failed to get pending verifications', 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Handle verification deadline expiry (automated cron job endpoint)
+//    * POST /api/marking/completion/handle-expiry
+//    */
+//   async handleVerificationExpiry(req: Request, res: Response): Promise<void> {
+//     try {
+//       // This should be called by a cron job
+//       const expiredJobs = await completionService.getExpiredVerifications();
+
+//       const processedJobs = [];
+
+//       for (const job of expiredJobs) {
+//         try {
+//           // Process partial compensation
+//           const compensation = await compensationService.processPartialCompensation(
+//             job.id,
+//             job.assignedAgentId!,
+//             job.attemptCount || 1
+//           );
+
+//           // Check if max attempts reached
+//           if ((job.attemptCount || 1) >= 3) {
+//             await completionService.closeMarkingJob(job.id);
+            
+//             // Notify owner
+//             await notificationService.notifyOwnerMaxAttemptsReached(
+//               job.requestedBy,
+//               job
+//             );
+//           } else {
+//             // Reassign to next agent
+//             const reassignment = await completionService.reassignAfterRejection(job.id);
+            
+//             if (reassignment) {
+//               await notificationService.notifyAgentOfAssignment(
+//                 reassignment.newAgentId,
+//                 reassignment.markingJob
+//               );
+//             }
+//           }
+
+//           // Notify agent of expiry
+//           await notificationService.notifyAgentOfVerificationExpiry(
+//             job.assignedAgentId!,
+//             job,
+//             compensation?.amount
+//           );
+
+//           processedJobs.push({
+//             jobId: job.id,
+//             status: 'processed',
+//             compensation: compensation?.amount
+//           });
+//         } catch (error) {
+//           console.error(`Error processing expired job ${job.id}:`, error);
+//           processedJobs.push({
+//             jobId: job.id,
+//             status: 'failed',
+//             error: error instanceof Error ? error.message : 'Unknown error'
+//           });
+//         }
+//       }
+
+//       res.status(200).json(
+//         ApiResponse.success(
+//           {
+//             processedCount: processedJobs.length,
+//             jobs: processedJobs
+//           },
+//           'Expired verifications processed'
+//         )
+//       );
+//     } catch (error: any) {
+//       console.error('Error in handleVerificationExpiry:', error);
+//       res.status(500).json(
+//         ApiResponse.error('Failed to handle verification expiry', 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Update completion (before verification)
+//    * PUT /api/marking/completion/:jobId
+//    */
+//   async updateCompletion(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { jobId } = req.params;
+//       const agentId = req.user?.id;
+//       const {
+//         boundaryData,
+//         completionNotes,
+//         completionImages
+//       } = req.body;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const updatedCompletion = await completionService.updateCompletion(
+//         jobId,
+//         agentId,
+//         {
+//           boundaryData,
+//           completionNotes,
+//           completionImages
+//         }
+//       );
+
+//       // Notify owner of update
+//       await notificationService.notifyOwnerOfCompletionUpdate(
+//         updatedCompletion.markingJob.requestedBy,
+//         updatedCompletion.markingJob
+//       );
+
+//       res.status(200).json(
+//         ApiResponse.success(updatedCompletion, 'Completion updated successfully')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in updateCompletion:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to update completion', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get completion statistics
+//    * GET /api/marking/completion/stats
+//    */
+//   async getCompletionStats(req: Request, res: Response): Promise<void> {
+//     try {
+//       const userId = req.user?.id;
+//       const userRole = req.user?.role;
+
+//       if (!userId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const stats = await completionService.getCompletionStats(userId, userRole);
+
+//       res.status(200).json(
+//         ApiResponse.success(stats, 'Completion statistics retrieved')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in getCompletionStats:', error);
+//       res.status(500).json(
+//         ApiResponse.error('Failed to get completion statistics', 500)
+//       );
+//     }
+//   }
+// }
+
+// export const completionController = new CompletionController();

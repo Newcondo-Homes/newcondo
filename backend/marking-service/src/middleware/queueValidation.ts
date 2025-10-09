@@ -247,3 +247,292 @@ export const validateQueueMetrics = (req: Request, res: Response, next: NextFunc
     next(error);
   }
 };
+
+
+// // backend/marking-service/src/middleware/queueValidation.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { z } from 'zod';
+
+// // Validation schema for joining the marking queue
+// const joinQueueSchema = z.object({
+//   jobId: z.string().cuid(),
+//   estimatedArrivalTime: z.string().datetime().optional(),
+//   currentLocation: z.object({
+//     lat: z.number().min(-90).max(90),
+//     lng: z.number().min(-180).max(180),
+//   }).optional(),
+// });
+
+// // Validation schema for updating queue status
+// const updateQueueStatusSchema = z.object({
+//   status: z.enum(['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'STARTED', 'CANCELLED']),
+//   currentLocation: z.object({
+//     lat: z.number().min(-90).max(90),
+//     lng: z.number().min(-180).max(180),
+//   }).optional(),
+//   cancellationReason: z.string().optional(),
+// });
+
+// // Validation schema for queue position management
+// const manageQueuePositionSchema = z.object({
+//   action: z.enum(['SKIP', 'FORFEIT', 'EXTEND_TIME']),
+//   reason: z.string().optional(),
+//   extensionMinutes: z.number().min(15).max(60).optional(),
+// });
+
+// // Validation schema for agent availability update
+// const updateAvailabilitySchema = z.object({
+//   isAvailableForMarking: z.boolean(),
+//   serviceAreas: z.array(z.object({
+//     state: z.string(),
+//     lga: z.string(),
+//     city: z.string(),
+//   })).optional(),
+//   maxJobsPerDay: z.number().min(1).max(10).optional(),
+// });
+
+// /**
+//  * Middleware to validate joining the marking queue
+//  */
+// export const validateJoinQueue = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = joinQueueSchema.parse(req.body);
+    
+//     // Validate estimated arrival time if provided
+//     if (validated.estimatedArrivalTime) {
+//       const arrivalTime = new Date(validated.estimatedArrivalTime);
+//       const now = new Date();
+//       const maxArrivalTime = new Date(now.getTime() + 3 * 60 * 60 * 1000); // 3 hours from now
+      
+//       if (arrivalTime < now) {
+//         res.status(400).json({
+//           success: false,
+//           message: 'Estimated arrival time cannot be in the past',
+//         });
+//         return;
+//       }
+      
+//       if (arrivalTime > maxArrivalTime) {
+//         res.status(400).json({
+//           success: false,
+//           message: 'Estimated arrival time cannot exceed 3 hours from now',
+//         });
+//         return;
+//       }
+//     }
+    
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate queue status update
+//  */
+// export const validateUpdateQueueStatus = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = updateQueueStatusSchema.parse(req.body);
+    
+//     // If cancelling, reason is required
+//     if (validated.status === 'CANCELLED' && !validated.cancellationReason) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Cancellation reason is required when cancelling',
+//       });
+//       return;
+//     }
+    
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate queue position management
+//  */
+// export const validateManageQueuePosition = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = manageQueuePositionSchema.parse(req.body);
+    
+//     // If extending time, extension minutes is required
+//     if (validated.action === 'EXTEND_TIME' && !validated.extensionMinutes) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Extension minutes is required when extending time',
+//       });
+//       return;
+//     }
+    
+//     // If skipping or forfeiting, reason is required
+//     if ((validated.action === 'SKIP' || validated.action === 'FORFEIT') && !validated.reason) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Reason is required when skipping or forfeiting',
+//       });
+//       return;
+//     }
+    
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate agent availability update
+//  */
+// export const validateUpdateAvailability = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = updateAvailabilitySchema.parse(req.body);
+    
+//     // If setting available, service areas should be provided
+//     if (validated.isAvailableForMarking && (!validated.serviceAreas || validated.serviceAreas.length === 0)) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Service areas are required when setting availability to true',
+//       });
+//       return;
+//     }
+    
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate queue entry ID parameter
+//  */
+// export const validateQueueEntryId = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   const { queueId } = req.params;
+  
+//   if (!queueId || typeof queueId !== 'string') {
+//     res.status(400).json({
+//       success: false,
+//       message: 'Valid queue entry ID is required',
+//     });
+//     return;
+//   }
+  
+//   next();
+// };
+
+// /**
+//  * Middleware to validate query parameters for queue listing
+//  */
+// export const validateQueueQueryParams = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   const { status, limit, offset } = req.query;
+  
+//   // Validate status if provided
+//   if (status) {
+//     const validStatuses = ['QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED'];
+//     if (!validStatuses.includes(status as string)) {
+//       res.status(400).json({
+//         success: false,
+//         message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`,
+//       });
+//       return;
+//     }
+//   }
+  
+//   // Validate limit if provided
+//   if (limit) {
+//     const limitNum = parseInt(limit as string);
+//     if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Limit must be a number between 1 and 100',
+//       });
+//       return;
+//     }
+//   }
+  
+//   // Validate offset if provided
+//   if (offset) {
+//     const offsetNum = parseInt(offset as string);
+//     if (isNaN(offsetNum) || offsetNum < 0) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Offset must be a non-negative number',
+//       });
+//       return;
+//     }
+//   }
+  
+//   next();
+// };

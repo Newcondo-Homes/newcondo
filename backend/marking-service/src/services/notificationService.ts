@@ -1093,3 +1093,523 @@ class NotificationService {
 }
 
 export const notificationService = new NotificationService();
+
+
+
+
+// // backend/marking-service/src/services/notificationService.ts
+// import { PrismaClient, PropertyMarkingJob, User } from '@newcondo/db';
+// import { EmailService } from '../utils/emailService';
+// import { SMSService } from '../utils/smsService';
+// import { Logger } from '../utils/logger';
+
+// interface NotificationPayload {
+//   userId: string;
+//   type: NotificationType;
+//   title: string;
+//   message: string;
+//   data: Record<string, any>;
+// }
+
+// enum NotificationType {
+//   MARKING_JOB_QUEUED = 'MARKING_JOB_QUEUED',
+//   MARKING_JOB_ASSIGNED = 'MARKING_JOB_ASSIGNED',
+//   MARKING_JOB_COMPLETED = 'MARKING_JOB_COMPLETED',
+//   MARKING_VERIFICATION_NEEDED = 'MARKING_VERIFICATION_NEEDED',
+//   MARKING_JOB_EXPIRED = 'MARKING_JOB_EXPIRED',
+//   COMPENSATION_RELEASED = 'COMPENSATION_RELEASED',
+//   OWNER_AGENT_ASSIGNED = 'OWNER_AGENT_ASSIGNED',
+//   TIME_SLOT_EXPIRING = 'TIME_SLOT_EXPIRING',
+// }
+
+// export class NotificationService {
+//   private prisma: PrismaClient;
+//   private emailService: EmailService;
+//   private smsService: SMSService;
+//   private logger: Logger;
+
+//   constructor(
+//     prisma: PrismaClient,
+//     emailService: EmailService,
+//     smsService: SMSService,
+//     logger: Logger
+//   ) {
+//     this.prisma = prisma;
+//     this.emailService = emailService;
+//     this.smsService = smsService;
+//     this.logger = logger;
+//   }
+
+//   /**
+//    * Notify agent when added to marking job queue
+//    */
+//   async notifyAgentQueuedForJob(
+//     agentId: string,
+//     markingJobId: string,
+//     queuePosition: number,
+//     propertyId: string
+//   ): Promise<void> {
+//     try {
+//       const agent = await this.prisma.user.findUnique({
+//         where: { id: agentId },
+//       });
+
+//       const property = await this.prisma.property.findUnique({
+//         where: { id: propertyId },
+//       });
+
+//       if (!agent || !property) {
+//         this.logger.warn('Agent or property not found for notification');
+//         return;
+//       }
+
+//       const message = `You have been added to marking job queue for property at ${property.address}. Position: ${queuePosition}`;
+
+//       // Send email notification
+//       if (agent.email) {
+//         await this.emailService.sendMarkingJobQueueNotification({
+//           to: agent.email,
+//           agentName: agent.name || 'Agent',
+//           propertyAddress: property.address,
+//           queuePosition,
+//           markingJobId,
+//         });
+//       }
+
+//       // Send SMS notification
+//       if (agent.phone) {
+//         await this.smsService.sendMessage({
+//           phone: agent.phone,
+//           message: `You're in queue for marking job at ${property.address}. Position: ${queuePosition}. Check your email for details.`,
+//         });
+//       }
+
+//       // Log notification
+//       await this.logNotification({
+//         userId: agentId,
+//         type: NotificationType.MARKING_JOB_QUEUED,
+//         title: 'Marking Job Added to Queue',
+//         message,
+//         data: {
+//           markingJobId,
+//           propertyId,
+//           queuePosition,
+//           propertyAddress: property.address,
+//         },
+//       });
+
+//       this.logger.info(
+//         `Queued job notification sent to agent ${agentId}`
+//       );
+//     } catch (error) {
+//       this.logger.error('Error sending queued job notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Notify agent when assigned a marking job
+//    */
+//   async notifyAgentAssignment(
+//     agentId: string,
+//     markingJob: PropertyMarkingJob & { property: any; requestingUser: User },
+//     timeSlotExpiry: Date
+//   ): Promise<void> {
+//     try {
+//       const agent = await this.prisma.user.findUnique({
+//         where: { id: agentId },
+//       });
+
+//       if (!agent) {
+//         this.logger.warn(`Agent ${agentId} not found for notification`);
+//         return;
+//       }
+
+//       const hoursRemaining = Math.floor(
+//         (timeSlotExpiry.getTime() - Date.now()) / (1000 * 60 * 60)
+//       );
+
+//       const message = `You have been assigned a marking job for property at ${markingJob.property.address}. Complete within ${hoursRemaining} hours.`;
+
+//       // Send email notification with property details
+//       if (agent.email) {
+//         await this.emailService.sendMarkingJobAssignmentNotification({
+//           to: agent.email,
+//           agentName: agent.name || 'Agent',
+//           propertyAddress: markingJob.property.address,
+//           contactPersonName: markingJob.contactPersonName,
+//           contactPersonPhone: markingJob.contactPersonPhone,
+//           accessInstructions: markingJob.accessInstructions,
+//           timeSlotExpiry,
+//           markingJobId: markingJob.id,
+//           compensationAmount: markingJob.markingFee,
+//         });
+//       }
+
+//       // Send SMS notification
+//       if (agent.phone) {
+//         await this.smsService.sendMessage({
+//           phone: agent.phone,
+//           message: `Marking job assigned! Property: ${markingJob.property.address}. Complete within ${hoursRemaining} hours. Contact: ${markingJob.contactPersonPhone}`,
+//         });
+//       }
+
+//       // Log notification
+//       await this.logNotification({
+//         userId: agentId,
+//         type: NotificationType.MARKING_JOB_ASSIGNED,
+//         title: 'Marking Job Assigned',
+//         message,
+//         data: {
+//           markingJobId: markingJob.id,
+//           propertyAddress: markingJob.property.address,
+//           contactPerson: markingJob.contactPersonName,
+//           hoursRemaining,
+//           timeSlotExpiry,
+//         },
+//       });
+
+//       this.logger.info(`Assignment notification sent to agent ${agentId}`);
+//     } catch (error) {
+//       this.logger.error('Error sending assignment notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Notify agent of manual assignment
+//    */
+//   async notifyAgentManualAssignment(
+//     agentId: string,
+//     markingJob: PropertyMarkingJob & { property: any },
+//     timeSlotExpiry: Date
+//   ): Promise<void> {
+//     try {
+//       const agent = await this.prisma.user.findUnique({
+//         where: { id: agentId },
+//       });
+
+//       if (!agent) return;
+
+//       const message = `You have been directly assigned a marking job for ${markingJob.property.address}`;
+
+//       if (agent.email) {
+//         await this.emailService.sendMarkingJobAssignmentNotification({
+//           to: agent.email,
+//           agentName: agent.name || 'Agent',
+//           propertyAddress: markingJob.property.address,
+//           contactPersonName: markingJob.contactPersonName,
+//           contactPersonPhone: markingJob.contactPersonPhone,
+//           accessInstructions: markingJob.accessInstructions,
+//           timeSlotExpiry,
+//           markingJobId: markingJob.id,
+//           compensationAmount: markingJob.markingFee,
+//           isManualAssignment: true,
+//         });
+//       }
+
+//       this.logger.info(
+//         `Manual assignment notification sent to agent ${agentId}`
+//       );
+//     } catch (error) {
+//       this.logger.error('Error sending manual assignment notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Notify property owner when agent is assigned
+//    */
+//   async notifyOwnerAgentAssigned(
+//     ownerId: string,
+//     markingJob: PropertyMarkingJob & { property: any },
+//     agentId: string
+//   ): Promise<void> {
+//     try {
+//       const owner = await this.prisma.user.findUnique({
+//         where: { id: ownerId },
+//       });
+
+//       const agent = await this.prisma.user.findUnique({
+//         where: { id: agentId },
+//         select: { id: true, name: true, phone: true, email: true },
+//       });
+
+//       if (!owner || !agent) {
+//         this.logger.warn('Owner or agent not found for notification');
+//         return;
+//       }
+
+//       const message = `Your marking job for ${markingJob.property.address} has been assigned to agent ${agent.name}. They will contact you shortly.`;
+
+//       if (owner.email) {
+//         await this.emailService.sendOwnerAgentAssignedNotification({
+//           to: owner.email,
+//           ownerName: owner.name || 'Owner',
+//           propertyAddress: markingJob.property.address,
+//           agentName: agent.name || 'Agent',
+//           agentPhone: agent.phone || '',
+//           markingJobId: markingJob.id,
+//         });
+//       }
+
+//       if (owner.phone) {
+//         await this.smsService.sendMessage({
+//           phone: owner.phone,
+//           message: `Marking agent assigned! Agent: ${agent.name}, Phone: ${agent.phone}. They'll contact you soon.`,
+//         });
+//       }
+
+//       await this.logNotification({
+//         userId: ownerId,
+//         type: NotificationType.OWNER_AGENT_ASSIGNED,
+//         title: 'Agent Assigned to Your Marking Job',
+//         message,
+//         data: {
+//           markingJobId: markingJob.id,
+//           agentId,
+//           agentName: agent.name,
+//           agentPhone: agent.phone,
+//         },
+//       });
+
+//       this.logger.info(
+//         `Agent assignment notification sent to owner ${ownerId}`
+//       );
+//     } catch (error) {
+//       this.logger.error('Error sending owner assignment notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Notify owner when marking is completed and needs verification
+//    */
+//   async notifyOwnerMarkingCompleted(
+//     ownerId: string,
+//     markingJob: PropertyMarkingJob & { property: any; assignedAgent: any },
+//     completionDetails: {
+//       completionNotes?: string;
+//       completionImages: string[];
+//     }
+//   ): Promise<void> {
+//     try {
+//       const owner = await this.prisma.user.findUnique({
+//         where: { id: ownerId },
+//       });
+
+//       if (!owner) return;
+
+//       const verificationDeadline = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days
+
+//       const message = `Your property at ${markingJob.property.address} has been marked by ${markingJob.assignedAgent.name}. Please verify the marking within 3 days.`;
+
+//       if (owner.email) {
+//         await this.emailService.sendOwnerMarkingCompletedNotification({
+//           to: owner.email,
+//           ownerName: owner.name || 'Owner',
+//           propertyAddress: markingJob.property.address,
+//           agentName: markingJob.assignedAgent.name,
+//           completionImages: completionDetails.completionImages,
+//           completionNotes: completionDetails.completionNotes,
+//           verificationDeadline,
+//           markingJobId: markingJob.id,
+//         });
+//       }
+
+//       if (owner.phone) {
+//         await this.smsService.sendMessage({
+//           phone: owner.phone,
+//           message: `Your property marking is complete! Please verify within 3 days. Check your email for details.`,
+//         });
+//       }
+
+//       await this.logNotification({
+//         userId: ownerId,
+//         type: NotificationType.MARKING_VERIFICATION_NEEDED,
+//         title: 'Property Marking Complete - Verification Required',
+//         message,
+//         data: {
+//           markingJobId: markingJob.id,
+//           verificationDeadline,
+//           imageCount: completionDetails.completionImages.length,
+//         },
+//       });
+
+//       this.logger.info(
+//         `Marking completion notification sent to owner ${ownerId}`
+//       );
+//     } catch (error) {
+//       this.logger.error('Error sending marking completion notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Notify agent when compensation is released
+//    */
+//   async notifyAgentCompensationReleased(
+//     agentId: string,
+//     amount: number,
+//     markingJobId: string,
+//     propertyAddress: string
+//   ): Promise<void> {
+//     try {
+//       const agent = await this.prisma.user.findUnique({
+//         where: { id: agentId },
+//       });
+
+//       if (!agent) return;
+
+//       const message = `You have received ₦${amount.toLocaleString()} for completing marking job at ${propertyAddress}`;
+
+//       if (agent.email) {
+//         await this.emailService.sendAgentCompensationNotification({
+//           to: agent.email,
+//           agentName: agent.name || 'Agent',
+//           amount,
+//           propertyAddress,
+//           markingJobId,
+//         });
+//       }
+
+//       if (agent.phone) {
+//         await this.smsService.sendMessage({
+//           phone: agent.phone,
+//           message: `You've received ₦${amount.toLocaleString()} for marking. Check your virtual account.`,
+//         });
+//       }
+
+//       await this.logNotification({
+//         userId: agentId,
+//         type: NotificationType.COMPENSATION_RELEASED,
+//         title: 'Compensation Released',
+//         message,
+//         data: {
+//           markingJobId,
+//           amount,
+//           propertyAddress,
+//         },
+//       });
+
+//       this.logger.info(
+//         `Compensation notification sent to agent ${agentId}`
+//       );
+//     } catch (error) {
+//       this.logger.error('Error sending compensation notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Notify agent when time slot is about to expire
+//    */
+//   async notifyAgentTimeSlotExpiring(
+//     agentId: string,
+//     markingJobId: string,
+//     propertyAddress: string,
+//     hoursRemaining: number
+//   ): Promise<void> {
+//     try {
+//       const agent = await this.prisma.user.findUnique({
+//         where: { id: agentId },
+//       });
+
+//       if (!agent) return;
+
+//       const message = `Time slot for marking job at ${propertyAddress} expires in ${hoursRemaining} hours. Complete marking immediately.`;
+
+//       if (agent.phone) {
+//         await this.smsService.sendMessage({
+//           phone: agent.phone,
+//           message,
+//         });
+//       }
+
+//       await this.logNotification({
+//         userId: agentId,
+//         type: NotificationType.TIME_SLOT_EXPIRING,
+//         title: 'Time Slot Expiring Soon',
+//         message,
+//         data: {
+//           markingJobId,
+//           propertyAddress,
+//           hoursRemaining,
+//         },
+//       });
+
+//       this.logger.info(
+//         `Time slot expiring notification sent to agent ${agentId}`
+//       );
+//     } catch (error) {
+//       this.logger.error(
+//         'Error sending time slot expiring notification:',
+//         error
+//       );
+//     }
+//   }
+
+//   /**
+//    * Notify owner when marking job expires
+//    */
+//   async notifyOwnerMarkingExpired(
+//     ownerId: string,
+//     markingJobId: string,
+//     propertyAddress: string
+//   ): Promise<void> {
+//     try {
+//       const owner = await this.prisma.user.findUnique({
+//         where: { id: ownerId },
+//       });
+
+//       if (!owner) return;
+
+//       const message = `Your marking job for ${propertyAddress} has expired. Please initiate a new marking request if needed.`;
+
+//       if (owner.email) {
+//         await this.emailService.sendOwnerMarkingExpiredNotification({
+//           to: owner.email,
+//           ownerName: owner.name || 'Owner',
+//           propertyAddress,
+//           markingJobId,
+//         });
+//       }
+
+//       if (owner.phone) {
+//         await this.smsService.sendMessage({
+//           phone: owner.phone,
+//           message: `Marking job expired. Please request a new marking if needed.`,
+//         });
+//       }
+
+//       await this.logNotification({
+//         userId: ownerId,
+//         type: NotificationType.MARKING_JOB_EXPIRED,
+//         title: 'Marking Job Expired',
+//         message,
+//         data: {
+//           markingJobId,
+//           propertyAddress,
+//         },
+//       });
+
+//       this.logger.info(`Marking expired notification sent to owner ${ownerId}`);
+//     } catch (error) {
+//       this.logger.error('Error sending marking expired notification:', error);
+//     }
+//   }
+
+//   /**
+//    * Log notification in database for audit trail
+//    */
+//   private async logNotification(payload: NotificationPayload): Promise<void> {
+//     try {
+//       // Note: You may need to create a Notification model in Prisma schema
+//       // For now, this logs the notification data for audit purposes
+//       this.logger.info('Notification logged', {
+//         userId: payload.userId,
+//         type: payload.type,
+//         title: payload.title,
+//         timestamp: new Date(),
+//       });
+//     } catch (error) {
+//       this.logger.error('Error logging notification:', error);
+//     }
+//   }
+// }
+
+// export { NotificationType };

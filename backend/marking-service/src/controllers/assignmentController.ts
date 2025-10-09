@@ -323,3 +323,384 @@ export const assignmentController = {
     }
   }
 };
+
+
+
+
+// // backend/marking-service/src/controllers/assignmentController.ts
+
+// import { Request, Response } from 'express';
+// import { assignmentService } from '../services/assignmentService';
+// import { queueService } from '../services/queueService';
+// import { notificationService } from '../services/notificationService';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+
+// /**
+//  * Assignment Controller
+//  * Handles job assignment logic for property marking service
+//  */
+// class AssignmentController {
+//   /**
+//    * Assign marking job to specific agent (direct assignment)
+//    * POST /api/marking/assignments/direct
+//    */
+//   async assignDirectly(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { markingJobId, agentId } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       // Assign job directly to agent
+//       const assignment = await assignmentService.assignJobDirectly(
+//         markingJobId,
+//         agentId,
+//         userId
+//       );
+
+//       // Send notification to assigned agent
+//       await notificationService.notifyAgentOfAssignment(
+//         agentId,
+//         assignment.markingJob
+//       );
+
+//       res.status(200).json(
+//         ApiResponse.success(assignment, 'Job assigned successfully')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in assignDirectly:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to assign job', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Broadcast marking job to nearby agents
+//    * POST /api/marking/assignments/broadcast
+//    */
+//   async broadcastToAgents(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { markingJobId } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       // Broadcast job to nearby agents
+//       const broadcastResult = await assignmentService.broadcastJob(
+//         markingJobId,
+//         userId
+//       );
+
+//       // Send notifications to all nearby agents
+//       await notificationService.notifyNearbyAgents(
+//         broadcastResult.notifiedAgents,
+//         broadcastResult.markingJob
+//       );
+
+//       res.status(200).json(
+//         ApiResponse.success(
+//           {
+//             markingJob: broadcastResult.markingJob,
+//             notifiedAgentsCount: broadcastResult.notifiedAgents.length,
+//             proximityRadius: broadcastResult.proximityRadius
+//           },
+//           'Job broadcasted to nearby agents'
+//         )
+//       );
+//     } catch (error: any) {
+//       console.error('Error in broadcastToAgents:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to broadcast job', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Agent accepts a marking job from queue
+//    * POST /api/marking/assignments/accept
+//    */
+//   async acceptJob(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { markingJobId } = req.body;
+//       const agentId = req.user?.id;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       // Check if agent is eligible
+//       const eligibility = await assignmentService.checkAgentEligibility(
+//         agentId,
+//         markingJobId
+//       );
+
+//       if (!eligibility.isEligible) {
+//         res.status(400).json(
+//           ApiResponse.error(eligibility.reason || 'Agent not eligible', 400)
+//         );
+//         return;
+//       }
+
+//       // Add agent to queue
+//       const queueEntry = await queueService.addToQueue(markingJobId, agentId);
+
+//       // If agent is first in queue, assign immediately
+//       if (queueEntry.position === 1) {
+//         const assignment = await assignmentService.assignToFirstInQueue(markingJobId);
+        
+//         // Notify agent of assignment
+//         await notificationService.notifyAgentOfAssignment(
+//           agentId,
+//           assignment.markingJob
+//         );
+
+//         res.status(200).json(
+//           ApiResponse.success(
+//             {
+//               assignment,
+//               queuePosition: 1,
+//               timeSlotExpiry: assignment.timeSlotExpiry
+//             },
+//             'Job assigned successfully'
+//           )
+//         );
+//       } else {
+//         // Agent added to queue
+//         res.status(200).json(
+//           ApiResponse.success(
+//             {
+//               queueEntry,
+//               estimatedWaitTime: queueEntry.estimatedWaitTime
+//             },
+//             'Added to queue successfully'
+//           )
+//         );
+//       }
+//     } catch (error: any) {
+//       console.error('Error in acceptJob:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to accept job', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Reassign job to next agent in queue (when current agent fails/expires)
+//    * POST /api/marking/assignments/:jobId/reassign
+//    */
+//   async reassignToNext(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { jobId } = req.params;
+//       const { reason } = req.body;
+
+//       // Reassign to next in queue
+//       const reassignment = await assignmentService.reassignToNextInQueue(
+//         jobId,
+//         reason
+//       );
+
+//       if (!reassignment) {
+//         res.status(404).json(
+//           ApiResponse.error('No agents available in queue', 404)
+//         );
+//         return;
+//       }
+
+//       // Notify new agent
+//       await notificationService.notifyAgentOfAssignment(
+//         reassignment.newAgentId,
+//         reassignment.markingJob
+//       );
+
+//       // Notify previous agent (if any)
+//       if (reassignment.previousAgentId) {
+//         await notificationService.notifyAgentOfReassignment(
+//           reassignment.previousAgentId,
+//           reassignment.markingJob,
+//           reason
+//         );
+//       }
+
+//       res.status(200).json(
+//         ApiResponse.success(reassignment, 'Job reassigned successfully')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in reassignToNext:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to reassign job', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get agent's current assignment
+//    * GET /api/marking/assignments/current
+//    */
+//   async getCurrentAssignment(req: Request, res: Response): Promise<void> {
+//     try {
+//       const agentId = req.user?.id;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const assignment = await assignmentService.getAgentCurrentAssignment(agentId);
+
+//       if (!assignment) {
+//         res.status(200).json(
+//           ApiResponse.success(null, 'No active assignment')
+//         );
+//         return;
+//       }
+
+//       res.status(200).json(
+//         ApiResponse.success(assignment, 'Current assignment retrieved')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in getCurrentAssignment:', error);
+//       res.status(500).json(
+//         ApiResponse.error('Failed to get current assignment', 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get assignment history for agent
+//    * GET /api/marking/assignments/history
+//    */
+//   async getAssignmentHistory(req: Request, res: Response): Promise<void> {
+//     try {
+//       const agentId = req.user?.id;
+//       const { page = 1, limit = 10, status } = req.query;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const history = await assignmentService.getAgentAssignmentHistory(
+//         agentId,
+//         {
+//           page: Number(page),
+//           limit: Number(limit),
+//           status: status as string
+//         }
+//       );
+
+//       res.status(200).json(
+//         ApiResponse.success(history, 'Assignment history retrieved')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in getAssignmentHistory:', error);
+//       res.status(500).json(
+//         ApiResponse.error('Failed to get assignment history', 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Cancel assignment (agent declines or withdraws)
+//    * DELETE /api/marking/assignments/:jobId/cancel
+//    */
+//   async cancelAssignment(req: Request, res: Response): Promise<void> {
+//     try {
+//       const { jobId } = req.params;
+//       const agentId = req.user?.id;
+//       const { reason } = req.body;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const cancellation = await assignmentService.cancelAgentAssignment(
+//         jobId,
+//         agentId,
+//         reason
+//       );
+
+//       // Notify property owner of cancellation
+//       await notificationService.notifyOwnerOfCancellation(
+//         cancellation.markingJob.requestedBy,
+//         cancellation.markingJob,
+//         reason
+//       );
+
+//       // Reassign to next in queue if available
+//       const reassignment = await assignmentService.reassignToNextInQueue(
+//         jobId,
+//         'Previous agent cancelled'
+//       );
+
+//       if (reassignment) {
+//         await notificationService.notifyAgentOfAssignment(
+//           reassignment.newAgentId,
+//           reassignment.markingJob
+//         );
+//       }
+
+//       res.status(200).json(
+//         ApiResponse.success(
+//           { cancellation, reassignment },
+//           'Assignment cancelled successfully'
+//         )
+//       );
+//     } catch (error: any) {
+//       console.error('Error in cancelAssignment:', error);
+//       res.status(error.statusCode || 500).json(
+//         ApiResponse.error(error.message || 'Failed to cancel assignment', error.statusCode || 500)
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get assignment statistics for agent
+//    * GET /api/marking/assignments/stats
+//    */
+//   async getAssignmentStats(req: Request, res: Response): Promise<void> {
+//     try {
+//       const agentId = req.user?.id;
+
+//       if (!agentId) {
+//         res.status(401).json(
+//           ApiResponse.error('Unauthorized', 401)
+//         );
+//         return;
+//       }
+
+//       const stats = await assignmentService.getAgentAssignmentStats(agentId);
+
+//       res.status(200).json(
+//         ApiResponse.success(stats, 'Assignment statistics retrieved')
+//       );
+//     } catch (error: any) {
+//       console.error('Error in getAssignmentStats:', error);
+//       res.status(500).json(
+//         ApiResponse.error('Failed to get assignment statistics', 500)
+//       );
+//     }
+//   }
+// }
+
+// export const assignmentController = new AssignmentController();

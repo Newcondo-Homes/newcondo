@@ -266,3 +266,279 @@ export const validatePagination = (req: Request, res: Response, next: NextFuncti
   
   next();
 };
+
+
+
+// // backend/marking-service/src/middleware/markingValidation.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { z } from 'zod';
+
+// // Validation schema for creating a marking job
+// const createMarkingJobSchema = z.object({
+//   propertyId: z.string().cuid(),
+//   markingMethod: z.enum(['SELF', 'NEWCONDO_ADMIN', 'SEND_SOMEONE', 'ASSIGN_TO_AGENTS']),
+//   contactPersonName: z.string().min(2, 'Contact person name must be at least 2 characters'),
+//   contactPersonPhone: z.string().regex(/^(\+234|0)[789][01]\d{8}$/, 'Invalid Nigerian phone number'),
+//   accessInstructions: z.string().optional(),
+//   preferredTime: z.string().datetime().optional(),
+//   urgencyLevel: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).default('NORMAL'),
+  
+//   // Property location details (hierarchical address)
+//   propertyLocation: z.object({
+//     state: z.string().min(1, 'State is required'),
+//     lga: z.string().min(1, 'LGA is required'),
+//     city: z.string().min(1, 'City is required'),
+//     location: z.string().min(1, 'Location is required'),
+//     streetAddress: z.string().min(1, 'Street address is required'),
+//   }),
+  
+//   // Optional property images for identification
+//   propertyImages: z.array(z.string().url()).optional(),
+  
+//   // For SEND_SOMEONE method - guide/marker details
+//   guideDetails: z.object({
+//     name: z.string().min(2),
+//     phone: z.string().regex(/^(\+234|0)[789][01]\d{8}$/),
+//     relationship: z.string().optional(),
+//   }).optional(),
+// });
+
+// // Validation schema for completing a marking job
+// const completeMarkingJobSchema = z.object({
+//   completionNotes: z.string().min(10, 'Completion notes must be at least 10 characters'),
+//   completionImages: z.array(z.string().url()).min(3, 'At least 3 images are required'),
+//   boundaryData: z.object({
+//     coordinates: z.array(z.object({
+//       lat: z.number(),
+//       lng: z.number(),
+//     })).min(4, 'At least 4 boundary points are required'),
+//     center: z.object({
+//       lat: z.number(),
+//       lng: z.number(),
+//     }),
+//     area: z.number().positive('Area must be positive'),
+//   }),
+//   roomImages: z.array(z.object({
+//     roomType: z.string(),
+//     imageUrl: z.string().url(),
+//     description: z.string().optional(),
+//   })).min(1, 'At least 1 room image is required'),
+// });
+
+// // Validation schema for confirming/verifying a marking job
+// const confirmMarkingJobSchema = z.object({
+//   isConfirmed: z.boolean(),
+//   feedback: z.string().optional(),
+//   rejectionReason: z.string().optional(),
+// });
+
+// // Validation schema for updating marking job
+// const updateMarkingJobSchema = z.object({
+//   contactPersonName: z.string().min(2).optional(),
+//   contactPersonPhone: z.string().regex(/^(\+234|0)[789][01]\d{8}$/).optional(),
+//   accessInstructions: z.string().optional(),
+//   preferredTime: z.string().datetime().optional(),
+//   urgencyLevel: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).optional(),
+//   propertyImages: z.array(z.string().url()).optional(),
+// });
+
+// // Validation schema for shareable link generation
+// const generateShareableLinkSchema = z.object({
+//   propertyId: z.string().cuid(),
+//   expiresInHours: z.number().min(1).max(72).default(24),
+//   markerName: z.string().min(2, 'Marker name is required'),
+//   markerPhone: z.string().regex(/^(\+234|0)[789][01]\d{8}$/, 'Invalid phone number'),
+// });
+
+// /**
+//  * Middleware to validate creating a marking job
+//  */
+// export const validateCreateMarkingJob = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = createMarkingJobSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate completing a marking job
+//  */
+// export const validateCompleteMarkingJob = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = completeMarkingJobSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate confirming a marking job
+//  */
+// export const validateConfirmMarkingJob = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = confirmMarkingJobSchema.parse(req.body);
+    
+//     // If not confirmed, rejection reason is required
+//     if (!validated.isConfirmed && !validated.rejectionReason) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Rejection reason is required when not confirming',
+//       });
+//       return;
+//     }
+    
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate updating a marking job
+//  */
+// export const validateUpdateMarkingJob = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = updateMarkingJobSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate shareable link generation
+//  */
+// export const validateGenerateShareableLink = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const validated = generateShareableLinkSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map(err => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Middleware to validate marking job ID parameter
+//  */
+// export const validateMarkingJobId = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   const { jobId } = req.params;
+  
+//   if (!jobId || typeof jobId !== 'string') {
+//     res.status(400).json({
+//       success: false,
+//       message: 'Valid marking job ID is required',
+//     });
+//     return;
+//   }
+  
+//   next();
+// };
+
+// /**
+//  * Middleware to validate property ID parameter
+//  */
+// export const validatePropertyId = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   const { propertyId } = req.params;
+  
+//   if (!propertyId || typeof propertyId !== 'string') {
+//     res.status(400).json({
+//       success: false,
+//       message: 'Valid property ID is required',
+//     });
+//     return;
+//   }
+  
+//   next();
+// };
