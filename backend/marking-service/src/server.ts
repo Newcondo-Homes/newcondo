@@ -152,3 +152,269 @@ startServer().catch((error) => {
 });
 
 export default app;
+
+
+
+
+// /**
+//  * Property Marking Service - Server Entry Point
+//  * Location: backend/marking-service/src/server.ts
+//  */
+
+// import dotenv from 'dotenv';
+// import path from 'path';
+// import app from './app';
+
+// // Load environment variables
+// dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// // ==============================================
+// // ENVIRONMENT VALIDATION
+// // ==============================================
+
+// const requiredEnvVars = [
+//   'DATABASE_URL',
+//   'DIRECT_URL',
+//   'PORT',
+//   'JWT_SECRET',
+//   'ALLOWED_ORIGINS',
+// ];
+
+// const missingEnvVars = requiredEnvVars.filter(
+//   (envVar) => !process.env[envVar]
+// );
+
+// if (missingEnvVars.length > 0) {
+//   console.error(
+//     '❌ Missing required environment variables:',
+//     missingEnvVars.join(', ')
+//   );
+//   process.exit(1);
+// }
+
+// // ==============================================
+// // SERVER CONFIGURATION
+// // ==============================================
+
+// const PORT = parseInt(process.env.PORT || '3004', 10);
+// const HOST = process.env.HOST || '0.0.0.0';
+// const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// // Service configuration
+// const SERVICE_CONFIG = {
+//   name: 'marking-service',
+//   version: process.env.SERVICE_VERSION || '1.0.0',
+//   port: PORT,
+//   host: HOST,
+//   environment: NODE_ENV,
+//   features: {
+//     markingJobManagement: true,
+//     agentQueueSystem: true,
+//     proximityBasedAssignment: true,
+//     timeSlotManagement: true,
+//     paymentProcessing: true,
+//     ownerConfirmationSystem: true,
+//   },
+//   pricing: {
+//     markingFee: parseInt(process.env.MARKING_FEE || '20000', 10),
+//     agentCommissionRate: parseFloat(process.env.AGENT_COMMISSION_RATE || '0.25'),
+//     partialPayment: parseInt(process.env.PARTIAL_PAYMENT || '1000', 10),
+//     adminMarkingFee: parseInt(process.env.ADMIN_MARKING_FEE || '25000', 10),
+//   },
+//   timeWindows: {
+//     agentTimeSlotHours: parseInt(process.env.AGENT_TIME_SLOT_HOURS || '3', 10),
+//     ownerConfirmationDays: parseInt(process.env.OWNER_CONFIRMATION_DAYS || '3', 10),
+//     maxJobDurationDays: parseInt(process.env.MAX_JOB_DURATION_DAYS || '3', 10),
+//   },
+//   proximity: {
+//     maxDistanceKm: parseInt(process.env.MAX_ASSIGNMENT_DISTANCE_KM || '50', 10),
+//     preferredDistanceKm: parseInt(process.env.PREFERRED_DISTANCE_KM || '20', 10),
+//   },
+// };
+
+// // ==============================================
+// // DATABASE CONNECTION
+// // ==============================================
+
+// async function connectDatabase() {
+//   try {
+//     // TODO: Initialize Prisma client
+//     // const prisma = new PrismaClient();
+//     // await prisma.$connect();
+//     console.log('✅ Database connected successfully');
+//     return true;
+//   } catch (error) {
+//     console.error('❌ Database connection failed:', error);
+//     return false;
+//   }
+// }
+
+// // ==============================================
+// // REDIS CONNECTION (Optional)
+// // ==============================================
+
+// async function connectRedis() {
+//   try {
+//     // TODO: Initialize Redis client if needed for queue management
+//     // const redis = createRedisClient();
+//     // await redis.connect();
+//     console.log('✅ Redis connected successfully');
+//     return true;
+//   } catch (error) {
+//     console.error('⚠️  Redis connection failed (optional):', error);
+//     return false; // Non-critical, service can work without Redis
+//   }
+// }
+
+// // ==============================================
+// // BACKGROUND JOBS & SCHEDULED TASKS
+// // ==============================================
+
+// function initializeBackgroundJobs() {
+//   console.log('🔄 Initializing background jobs...');
+
+//   // TODO: Set up cron jobs or task schedulers
+
+//   // 1. Job expiration checker (runs every 5 minutes)
+//   // Check for expired time slots and move to next agent in queue
+//   // setInterval(checkExpiredTimeSlots, 5 * 60 * 1000);
+
+//   // 2. Owner confirmation deadline checker (runs every hour)
+//   // Check for expired confirmation deadlines and process partial payments
+//   // setInterval(checkConfirmationDeadlines, 60 * 60 * 1000);
+
+//   // 3. Stale job cleaner (runs daily)
+//   // Archive or cleanup old completed/cancelled jobs
+//   // setInterval(cleanupStaleJobs, 24 * 60 * 60 * 1000);
+
+//   // 4. Agent queue health monitor (runs every 10 minutes)
+//   // Monitor queue health and send alerts if issues detected
+//   // setInterval(monitorQueueHealth, 10 * 60 * 1000);
+
+//   console.log('✅ Background jobs initialized');
+// }
+
+// // ==============================================
+// // WEBHOOK HANDLERS (If needed)
+// // ==============================================
+
+// function initializeWebhooks() {
+//   console.log('🔗 Initializing webhook handlers...');
+
+//   // TODO: Set up webhook handlers for:
+//   // - Payment service notifications
+//   // - Property service updates
+//   // - Notification service callbacks
+
+//   console.log('✅ Webhook handlers initialized');
+// }
+
+// // ==============================================
+// // SERVER STARTUP
+// // ==============================================
+
+// async function startServer() {
+//   console.log('\n🚀 Starting Property Marking Service...\n');
+//   console.log('📋 Service Configuration:');
+//   console.log(JSON.stringify(SERVICE_CONFIG, null, 2));
+//   console.log('\n');
+
+//   try {
+//     // Connect to database
+//     const dbConnected = await connectDatabase();
+//     if (!dbConnected) {
+//       throw new Error('Failed to connect to database');
+//     }
+
+//     // Connect to Redis (optional)
+//     await connectRedis();
+
+//     // Initialize background jobs
+//     initializeBackgroundJobs();
+
+//     // Initialize webhooks
+//     initializeWebhooks();
+
+//     // Start the Express server
+//     const server = app.listen(PORT, HOST, () => {
+//       console.log('\n✅ Server is running!\n');
+//       console.log(`🌐 Environment: ${NODE_ENV}`);
+//       console.log(`🏠 Host: ${HOST}`);
+//       console.log(`🔌 Port: ${PORT}`);
+//       console.log(`📡 Health check: http://${HOST}:${PORT}/health`);
+//       console.log(`📊 Service info: http://${HOST}:${PORT}/info`);
+//       console.log('\n🎯 Available endpoints:');
+//       console.log(`   POST   /api/marking-jobs              Create marking job`);
+//       console.log(`   GET    /api/marking-jobs/:id          Get job details`);
+//       console.log(`   PATCH  /api/marking-jobs/:id/status   Update job status`);
+//       console.log(`   POST   /api/queue/join                Join agent queue`);
+//       console.log(`   GET    /api/queue/:jobId              Get queue status`);
+//       console.log(`   POST   /api/assignments/accept        Accept assignment`);
+//       console.log(`   POST   /api/completion/submit         Submit completion`);
+//       console.log(`   POST   /api/completion/confirm        Confirm by owner`);
+//       console.log('\n⏳ Waiting for requests...\n');
+//     });
+
+//     // Handle server errors
+//     server.on('error', (error: NodeJS.ErrnoException) => {
+//       if (error.code === 'EADDRINUSE') {
+//         console.error(`❌ Port ${PORT} is already in use`);
+//         console.error('   Try using a different port or stop the other process');
+//       } else {
+//         console.error('❌ Server error:', error);
+//       }
+//       process.exit(1);
+//     });
+
+//     // Graceful shutdown handler
+//     const gracefulShutdown = async () => {
+//       console.log('\n⏳ Shutting down gracefully...');
+
+//       server.close(async () => {
+//         console.log('✅ HTTP server closed');
+
+//         try {
+//           // TODO: Close database connection
+//           // await prisma.$disconnect();
+//           console.log('✅ Database connection closed');
+
+//           // TODO: Close Redis connection
+//           // await redis.quit();
+//           console.log('✅ Redis connection closed');
+
+//           console.log('👋 Goodbye!\n');
+//           process.exit(0);
+//         } catch (error) {
+//           console.error('❌ Error during shutdown:', error);
+//           process.exit(1);
+//         }
+//       });
+
+//       // Force shutdown after 10 seconds
+//       setTimeout(() => {
+//         console.error('❌ Forced shutdown due to timeout');
+//         process.exit(1);
+//       }, 10000);
+//     };
+
+//     // Listen for shutdown signals
+//     process.on('SIGTERM', gracefulShutdown);
+//     process.on('SIGINT', gracefulShutdown);
+
+//   } catch (error) {
+//     console.error('\n❌ Failed to start server:', error);
+//     process.exit(1);
+//   }
+// }
+
+// // ==============================================
+// // START THE SERVER
+// // ==============================================
+
+// startServer().catch((error) => {
+//   console.error('❌ Unhandled error during startup:', error);
+//   process.exit(1);
+// });
+
+// // Export for testing purposes
+// export { app, SERVICE_CONFIG };

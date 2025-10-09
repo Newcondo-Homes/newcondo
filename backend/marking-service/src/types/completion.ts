@@ -166,3 +166,292 @@ export interface CompletionMetrics {
   };
   reworkRate: number; // percentage of jobs requiring rework
 }
+
+
+
+
+
+// // backend/marking-service/src/types/completion.ts
+
+// export enum CompletionStatus {
+//   PENDING_SUBMISSION = 'PENDING_SUBMISSION',
+//   SUBMITTED = 'SUBMITTED',
+//   UNDER_REVIEW = 'UNDER_REVIEW',
+//   APPROVED = 'APPROVED',
+//   REJECTED = 'REJECTED',
+//   REQUIRES_REVISION = 'REQUIRES_REVISION'
+// }
+
+// export enum RoomType {
+//   LIVING_ROOM = 'LIVING_ROOM',
+//   KITCHEN = 'KITCHEN',
+//   BEDROOM = 'BEDROOM',
+//   BATHROOM = 'BATHROOM',
+//   DINING_ROOM = 'DINING_ROOM',
+//   BALCONY = 'BALCONY',
+//   GARAGE = 'GARAGE',
+//   COMPOUND = 'COMPOUND',
+//   EXTERIOR = 'EXTERIOR',
+//   OTHER = 'OTHER'
+// }
+
+// export interface CompletionImage {
+//   id: string;
+//   url: string;
+//   roomType: RoomType;
+//   description?: string;
+//   timestamp: Date;
+//   location?: {
+//     lat: number;
+//     lng: number;
+//   };
+//   metadata?: {
+//     fileSize: number;
+//     dimensions: {
+//       width: number;
+//       height: number;
+//     };
+//     format: string;
+//   };
+// }
+
+// export interface BoundaryMarkingData {
+//   coordinates: {
+//     lat: number;
+//     lng: number;
+//   }[];
+//   centerPoint: {
+//     lat: number;
+//     lng: number;
+//   };
+//   boundingBox: {
+//     north: number;
+//     south: number;
+//     east: number;
+//     west: number;
+//   };
+//   area: number; // Square meters
+//   perimeter: number; // Meters
+//   markedAt: Date;
+//   markedBy: string;
+//   accuracy?: number; // GPS accuracy in meters
+//   mapZoomLevel?: number;
+// }
+
+// export interface PropertyVerificationData {
+//   hasMatchingAddress: boolean;
+//   hasMatchingImages: boolean;
+//   hasAccessibleEntrance: boolean;
+//   hasVisibleStreetNumber: boolean;
+//   isOccupied: boolean;
+//   occupancyType?: 'OWNER' | 'TENANT' | 'VACANT';
+//   condition?: 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR';
+//   notes?: string;
+// }
+
+// export interface CompletionSubmission {
+//   id: string;
+//   markingJobId: string;
+//   assignmentId: string;
+//   agentId: string;
+  
+//   // Boundary Data
+//   boundaryData: BoundaryMarkingData;
+  
+//   // Images
+//   images: CompletionImage[];
+//   requiredRooms: RoomType[]; // Minimum required: EXTERIOR, LIVING_ROOM, KITCHEN, BATHROOM
+//   submittedRoomTypes: RoomType[];
+  
+//   // Verification
+//   verificationData: PropertyVerificationData;
+  
+//   // Agent Notes
+//   completionNotes: string;
+//   challenges?: string; // Any issues encountered
+//   recommendations?: string;
+  
+//   // Time Tracking
+//   startedAt: Date;
+//   completedAt: Date;
+//   timeSpentMinutes: number;
+  
+//   // Location Verification
+//   submissionLocation: {
+//     lat: number;
+//     lng: number;
+//   };
+//   distanceFromPropertyMeters: number;
+  
+//   // Status
+//   status: CompletionStatus;
+  
+//   // Metadata
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// export interface OwnerConfirmation {
+//   id: string;
+//   markingJobId: string;
+//   completionSubmissionId: string;
+//   ownerId: string;
+  
+//   // Confirmation Details
+//   isConfirmed: boolean;
+//   confirmedAt?: Date;
+//   confirmationDeadline: Date;
+  
+//   // Rejection Details
+//   isRejected: boolean;
+//   rejectedAt?: Date;
+//   rejectionReason?: string;
+//   rejectionCategory?: 'WRONG_PROPERTY' | 'POOR_IMAGES' | 'INCORRECT_BOUNDARY' | 'MISSING_ROOMS' | 'OTHER';
+  
+//   // Revision Request
+//   requiresRevision: boolean;
+//   revisionNotes?: string;
+//   revisionDeadline?: Date;
+  
+//   // Feedback
+//   qualityRating?: number; // 1-5
+//   feedback?: string;
+  
+//   // Attempts
+//   attemptNumber: number;
+//   maxAttempts: number; // After x rejections, marking job is cancelled
+  
+//   // Metadata
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// export interface CompletionPayment {
+//   id: string;
+//   markingJobId: string;
+//   completionSubmissionId: string;
+//   agentId: string;
+  
+//   // Payment Breakdown
+//   totalFee: number; // 20,000 NGN
+//   initialPayment: number; // 1,000 NGN on submission
+//   remainingPayment: number; // Released after confirmation
+//   platformFee: number; // 75% of total
+//   agentCompensation: number; // 25% of total
+  
+//   // Payment Status
+//   initialPaid: boolean;
+//   initialPaidAt?: Date;
+//   remainingPaid: boolean;
+//   remainingPaidAt?: Date;
+  
+//   // Virtual Account
+//   virtualAccountId: string;
+  
+//   // Metadata
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// export interface CompletionValidation {
+//   isValid: boolean;
+//   errors: CompletionValidationError[];
+//   warnings: CompletionValidationWarning[];
+// }
+
+// export interface CompletionValidationError {
+//   field: string;
+//   message: string;
+//   severity: 'ERROR';
+// }
+
+// export interface CompletionValidationWarning {
+//   field: string;
+//   message: string;
+//   severity: 'WARNING';
+// }
+
+// export interface CompletionQualityCheck {
+//   imageQuality: {
+//     passed: boolean;
+//     minImages: number;
+//     submittedImages: number;
+//     missingRoomTypes: RoomType[];
+//   };
+//   boundaryQuality: {
+//     passed: boolean;
+//     isWithinPropertyBounds: boolean;
+//     areaReasonable: boolean;
+//     coordinatesValid: boolean;
+//   };
+//   locationAccuracy: {
+//     passed: boolean;
+//     distanceFromProperty: number;
+//     maxAllowedDistance: number;
+//   };
+//   overallScore: number; // 0-100
+//   recommendations: string[];
+// }
+
+// export interface CreateCompletionSubmissionDTO {
+//   markingJobId: string;
+//   assignmentId: string;
+//   agentId: string;
+//   boundaryData: Omit<BoundaryMarkingData, 'markedAt' | 'markedBy'>;
+//   images: Omit<CompletionImage, 'id' | 'timestamp'>[];
+//   verificationData: PropertyVerificationData;
+//   completionNotes: string;
+//   challenges?: string;
+//   recommendations?: string;
+//   startedAt: Date;
+//   submissionLocation: {
+//     lat: number;
+//     lng: number;
+//   };
+// }
+
+// export interface UpdateCompletionSubmissionDTO {
+//   status?: CompletionStatus;
+//   images?: Omit<CompletionImage, 'id' | 'timestamp'>[];
+//   boundaryData?: Partial<BoundaryMarkingData>;
+//   completionNotes?: string;
+// }
+
+// export interface CreateOwnerConfirmationDTO {
+//   markingJobId: string;
+//   completionSubmissionId: string;
+//   ownerId: string;
+//   isConfirmed: boolean;
+//   isRejected: boolean;
+//   rejectionReason?: string;
+//   rejectionCategory?: OwnerConfirmation['rejectionCategory'];
+//   requiresRevision: boolean;
+//   revisionNotes?: string;
+//   qualityRating?: number;
+//   feedback?: string;
+// }
+
+// export interface CompletionFilters {
+//   markingJobId?: string;
+//   agentId?: string;
+//   status?: CompletionStatus[];
+//   dateFrom?: Date;
+//   dateTo?: Date;
+//   minQualityScore?: number;
+// }
+
+// export interface CompletionAnalytics {
+//   totalSubmissions: number;
+//   approvedSubmissions: number;
+//   rejectedSubmissions: number;
+//   averageCompletionTime: number; // Minutes
+//   averageQualityScore: number;
+//   averageImagesPerSubmission: number;
+//   byStatus: Record<CompletionStatus, number>;
+//   topPerformingAgents: {
+//     agentId: string;
+//     completedJobs: number;
+//     approvalRate: number;
+//     averageQuality: number;
+//   }[];
+// }
