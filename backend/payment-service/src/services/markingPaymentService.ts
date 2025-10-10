@@ -447,3 +447,358 @@ export class MarkingPaymentService {
 }
 
 export const markingPaymentService = new MarkingPaymentService();
+
+
+
+
+
+// // backend/payment-service/src/services/markingPaymentService.ts
+
+// import { PrismaClient, PaymentStatus, PaymentType } from '@newcondo/db';
+// import { flutterwaveService } from './flutterwaveService';
+// import { virtualAccountService } from './virtualAccountService';
+
+// const prisma = new PrismaClient();
+
+// interface MarkingPaymentData {
+//   userId: string;
+//   markingJobId: string;
+//   amount: number;
+//   paymentMethod: 'card' | 'bank_transfer' | 'virtual_account';
+//   metadata?: Record<string, any>;
+// }
+
+// interface MarkingPaymentResult {
+//   success: boolean;
+//   payment?: any;
+//   paymentLink?: string;
+//   virtualAccount?: any;
+//   error?: string;
+// }
+
+// class MarkingPaymentService {
+//   /**
+//    * Initialize marking job payment
+//    */
+//   async initiateMarkingPayment(data: MarkingPaymentData): Promise<MarkingPaymentResult> {
+//     try {
+//       // Verify marking job exists and is in correct state
+//       const markingJob = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: data.markingJobId },
+//         include: {
+//           property: true,
+//           requestingUser: true,
+//         },
+//       });
+
+//       if (!markingJob) {
+//         return { success: false, error: 'Marking job not found' };
+//       }
+
+//       if (markingJob.paymentStatus === PaymentStatus.SUCCESS) {
+//         return { success: false, error: 'Marking job already paid for' };
+//       }
+
+//       if (markingJob.requestedBy !== data.userId) {
+//         return { success: false, error: 'Unauthorized: Not the job requester' };
+//       }
+
+//       // Create payment record
+//       const payment = await prisma.payment.create({
+//         data: {
+//           userId: data.userId,
+//           markingJobId: data.markingJobId,
+//           amount: data.amount,
+//           currency: 'NGN',
+//           paymentType: PaymentType.PROPERTY_MARKING,
+//           status: PaymentStatus.PENDING,
+//           paymentMethod: data.paymentMethod,
+//           description: `Property marking service for ${markingJob.property.title}`,
+//         },
+//       });
+
+//       // Handle different payment methods
+//       if (data.paymentMethod === 'virtual_account') {
+//         // Get or create virtual account for user
+//         const virtualAccount = await virtualAccountService.getOrCreateVirtualAccount({
+//           userId: data.userId,
+//         });
+
+//         // Update payment with virtual account details
+//         await prisma.payment.update({
+//           where: { id: payment.id },
+//           data: {
+//             description: `${payment.description} - Pay to account: ${virtualAccount.accountNumber}`,
+//           },
+//         });
+
+//         return {
+//           success: true,
+//           payment,
+//           virtualAccount: {
+//             accountNumber: virtualAccount.accountNumber,
+//             accountName: virtualAccount.accountName,
+//             bankCode: virtualAccount.bankCode,
+//             amount: data.amount,
+//           },
+//         };
+//       } else {
+//         // Generate Flutterwave payment link
+//         const flutterwavePayment = await flutterwaveService.initializePayment({
+//           amount: data.amount,
+//           currency: 'NGN',
+//           email: markingJob.requestingUser.email!,
+//           txRef: payment.id,
+//           redirectUrl: `${process.env.FRONTEND_URL}/payments/marking/verify`,
+//           meta: {
+//             paymentId: payment.id,
+//             markingJobId: data.markingJobId,
+//             userId: data.userId,
+//           },
+//         });
+
+//         // Update payment with Flutterwave reference
+//         await prisma.payment.update({
+//           where: { id: payment.id },
+//           data: {
+//             flutterwaveRef: flutterwavePayment.data.link,
+//           },
+//         });
+
+//         return {
+//           success: true,
+//           payment,
+//           paymentLink: flutterwavePayment.data.link,
+//         };
+//       }
+//     } catch (error) {
+//       console.error('Error initiating marking payment:', error);
+//       return {
+//         success: false,
+//         error: error instanceof Error ? error.message : 'Failed to initiate payment',
+//       };
+//     }
+//   }
+
+//   /**
+//    * Verify marking payment
+//    */
+//   async verifyMarkingPayment(paymentId: string, transactionId: string): Promise<MarkingPaymentResult> {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//         include: {
+//           user: true,
+//         },
+//       });
+
+//       if (!payment) {
+//         return { success: false, error: 'Payment not found' };
+//       }
+
+//       if (payment.status === PaymentStatus.SUCCESS) {
+//         return { success: true, payment };
+//       }
+
+//       // Verify with Flutterwave
+//       const verificationResult = await flutterwaveService.verifyPayment(transactionId);
+
+//       if (verificationResult.status === 'success' && verificationResult.data.status === 'successful') {
+//         // Update payment status
+//         const updatedPayment = await prisma.payment.update({
+//           where: { id: paymentId },
+//           data: {
+//             status: PaymentStatus.SUCCESS,
+//             transactionId: verificationResult.data.id.toString(),
+//             paidAt: new Date(),
+//           },
+//         });
+
+//         // Update marking job payment status
+//         if (payment.markingJobId) {
+//           await prisma.propertyMarkingJob.update({
+//             where: { id: payment.markingJobId },
+//             data: {
+//               paymentStatus: PaymentStatus.SUCCESS,
+//             },
+//           });
+//         }
+
+//         return { success: true, payment: updatedPayment };
+//       } else {
+//         // Update payment as failed
+//         await prisma.payment.update({
+//           where: { id: paymentId },
+//           data: {
+//             status: PaymentStatus.FAILED,
+//             failureReason: verificationResult.data.status || 'Payment verification failed',
+//           },
+//         });
+
+//         return { success: false, error: 'Payment verification failed' };
+//       }
+//     } catch (error) {
+//       console.error('Error verifying marking payment:', error);
+//       return {
+//         success: false,
+//         error: error instanceof Error ? error.message : 'Failed to verify payment',
+//       };
+//     }
+//   }
+
+//   /**
+//    * Process virtual account payment for marking job
+//    */
+//   async processVirtualAccountPayment(webhookData: any): Promise<MarkingPaymentResult> {
+//     try {
+//       const { account_number, amount, transaction_reference } = webhookData;
+
+//       // Find virtual account
+//       const virtualAccount = await prisma.virtualAccount.findUnique({
+//         where: { accountNumber: account_number },
+//       });
+
+//       if (!virtualAccount) {
+//         return { success: false, error: 'Virtual account not found' };
+//       }
+
+//       // Find pending marking payment for this user
+//       const payment = await prisma.payment.findFirst({
+//         where: {
+//           userId: virtualAccount.userId,
+//           paymentType: PaymentType.PROPERTY_MARKING,
+//           status: PaymentStatus.PENDING,
+//           amount: parseFloat(amount),
+//         },
+//         orderBy: { createdAt: 'desc' },
+//       });
+
+//       if (!payment) {
+//         return { success: false, error: 'No matching pending payment found' };
+//       }
+
+//       // Update payment status
+//       const updatedPayment = await prisma.payment.update({
+//         where: { id: payment.id },
+//         data: {
+//           status: PaymentStatus.SUCCESS,
+//           transactionId: transaction_reference,
+//           paidAt: new Date(),
+//         },
+//       });
+
+//       // Update marking job payment status
+//       if (payment.markingJobId) {
+//         await prisma.propertyMarkingJob.update({
+//           where: { id: payment.markingJobId },
+//           data: {
+//             paymentStatus: PaymentStatus.SUCCESS,
+//           },
+//         });
+//       }
+
+//       return { success: true, payment: updatedPayment };
+//     } catch (error) {
+//       console.error('Error processing virtual account payment:', error);
+//       return {
+//         success: false,
+//         error: error instanceof Error ? error.message : 'Failed to process payment',
+//       };
+//     }
+//   }
+
+//   /**
+//    * Get marking payment details
+//    */
+//   async getMarkingPayment(paymentId: string) {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//         include: {
+//           user: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//             },
+//           },
+//         },
+//       });
+
+//       return payment;
+//     } catch (error) {
+//       console.error('Error fetching marking payment:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get all marking payments for a user
+//    */
+//   async getUserMarkingPayments(userId: string) {
+//     try {
+//       const payments = await prisma.payment.findMany({
+//         where: {
+//           userId,
+//           paymentType: PaymentType.PROPERTY_MARKING,
+//         },
+//         orderBy: { createdAt: 'desc' },
+//       });
+
+//       return payments;
+//     } catch (error) {
+//       console.error('Error fetching user marking payments:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Refund marking payment
+//    */
+//   async refundMarkingPayment(paymentId: string, reason: string) {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//       });
+
+//       if (!payment) {
+//         throw new Error('Payment not found');
+//       }
+
+//       if (payment.status !== PaymentStatus.SUCCESS) {
+//         throw new Error('Can only refund successful payments');
+//       }
+
+//       // Process refund with Flutterwave
+//       if (payment.transactionId) {
+//         await flutterwaveService.refundPayment(payment.transactionId, payment.amount.toNumber());
+//       }
+
+//       // Update payment status
+//       const refundedPayment = await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: PaymentStatus.REFUNDED,
+//           failureReason: reason,
+//         },
+//       });
+
+//       // Update marking job payment status if exists
+//       if (payment.markingJobId) {
+//         await prisma.propertyMarkingJob.update({
+//           where: { id: payment.markingJobId },
+//           data: {
+//             paymentStatus: PaymentStatus.REFUNDED,
+//           },
+//         });
+//       }
+
+//       return refundedPayment;
+//     } catch (error) {
+//       console.error('Error refunding marking payment:', error);
+//       throw error;
+//     }
+//   }
+// }
+
+// export const markingPaymentService = new MarkingPaymentService();

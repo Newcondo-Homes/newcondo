@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marking Compensation Released</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .success-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .details-box {
+            background-color: #f9fafb;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .detail-value {
+            color: #1f2937;
+            text-align: right;
+        }
+        .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .wallet-section {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .wallet-section p {
+            margin: 10px 0;
+            color: #1e40af;
+        }
+        .info-section {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-section strong {
+            color: #92400e;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background-color: #5568d3;
+        }
+        .footer {
+            background-color: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 20px 0;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💰 Compensation Released</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                <p>Hi {{agentName}},</p>
+                <p>Great news! Your marking compensation has been successfully released to your virtual account.</p>
+            </div>
+
+            <div class="success-badge">✓ Payment Processed</div>
+
+            <div class="details-box">
+                <div class="detail-row">
+                    <span class="detail-label">Property Address:</span>
+                    <span class="detail-value">{{propertyAddress}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Marking Job ID:</span>
+                    <span class="detail-value">{{jobId}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Completion Date:</span>
+                    <span class="detail-value">{{completionDate}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value">Virtual Account Transfer</span>
+                </div>
+            </div>
+
+            <div class="amount">
+                ₦{{compensationAmount}}
+            </div>
+
+            <div class="wallet-section">
+                <p><strong>Compensation deposited to:</strong></p>
+                <p>{{bankName}} - {{accountNumber}}</p>
+                <p style="font-size: 12px; margin-top: 10px;">Account holder: {{accountName}}</p>
+            </div>
+
+            <div class="info-section">
+                <strong>⏱️ Important Information:</strong>
+                <p style="margin: 10px 0 0 0;">The property owner has {{confirmationWindowDays}} days to confirm this marking. If confirmed, the full compensation will remain in your account. If not confirmed and the marking is rejected, a new marking job will be required.</p>
+            </div>
+
+            <div class="divider"></div>
+
+            <div>
+                <h3 style="margin-top: 0;">How to Access Your Funds:</h3>
+                <ol style="color: #374151;">
+                    <li>Log in to your Newcondo account</li>
+                    <li>Navigate to your Wallet or Virtual Account section</li>
+                    <li>View your updated balance: ₦{{newBalance}}</li>
+                    <li>Withdraw to your linked bank account (processing time: 1-2 business days)</li>
+                </ol>
+            </div>
+
+            <div class="cta-section">
+                <a href="{{dashboardLink}}" class="cta-button">View Your Wallet</a>
+            </div>
+
+            <div class="info-section" style="background-color: #dbeafe; border-left-color: #3b82f6;">
+                <strong style="color: #1e3a8a;">📊 Your Stats:</strong>
+                <p style="margin: 10px 0 0 0;">
+                    Total Completed Jobs: {{totalCompletedJobs}} | 
+                    Total Earned: ₦{{totalEarned}} | 
+                    Reliability Score: {{reliabilityScore}}/5.0
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message from Newcondo. Please do not reply to this email.</p>
+            <p>If you believe this email was sent in error or have questions, contact support@newcondo.ng</p>
+            <p>&copy; {{currentYear}} Newcondo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

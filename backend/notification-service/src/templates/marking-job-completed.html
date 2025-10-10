@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Marking Job Completed</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .success-icon {
+            font-size: 60px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .job-summary {
+            background-color: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+        .verification-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .countdown {
+            font-size: 24px;
+            font-weight: bold;
+            color: #f57c00;
+            margin: 10px 0;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .image-item {
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #eee;
+        }
+        .image-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background-color: #45a049;
+        }
+        .secondary-button {
+            background-color: #2196F3;
+        }
+        .secondary-button:hover {
+            background-color: #1976D2;
+        }
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .agent-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+        .warning-text {
+            color: #f57c00;
+            font-weight: 600;
+        }
+        .payment-status {
+            background-color: #e8f5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏠 NewCondo</div>
+            <h2 style="margin: 10px 0; color: #333;">Property Marking Completed!</h2>
+        </div>
+
+        <div class="success-icon">✅</div>
+
+        <div class="content">
+            <p>Hello <strong>{{ownerName}}</strong>,</p>
+            
+            <p>Great news! Your property marking job has been completed. Please review and verify the work to finalize the process.</p>
+
+            <div class="job-summary">
+                <h3 style="margin-top: 0; color: #4CAF50;">Job Summary</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Job ID:</span>
+                    <span class="detail-value">{{jobId}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Property:</span>
+                    <span class="detail-value">{{propertyTitle}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Address:</span>
+                    <span class="detail-value">{{propertyAddress}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Completed At:</span>
+                    <span class="detail-value">{{completedAt}}</span>
+                </div>
+            </div>
+
+            <div class="agent-info">
+                <h4 style="margin-top: 0;">👤 Marked By:</h4>
+                <p style="margin: 5px 0;"><strong>Name:</strong> {{agentName}}</p>
+                <p style="margin: 5px 0;"><strong>Rating:</strong> ⭐ {{agentRating}}/5.0</p>
+                <p style="margin: 5px 0;"><strong>Completed Jobs:</strong> {{agentCompletedJobs}}</p>
+            </div>
+
+            <div class="verification-box">
+                <h3 style="margin-top: 0;">⏰ Verification Required</h3>
+                <p>Please verify this marking within:</p>
+                <div class="countdown">{{verificationDeadline}}</div>
+                <p class="warning-text">Deadline: {{verificationDeadlineDate}}</p>
+            </div>
+
+            <div class="info-box">
+                <h4 style="margin-top: 0;">📸 Property Images</h4>
+                <p>The agent has uploaded {{imageCount}} images of your property:</p>
+                
+                <div class="image-gallery">
+                    {{#each images}}
+                    <div class="image-item">
+                        <img src="{{this.url}}" alt="{{this.description}}">
+                    </div>
+                    {{/each}}
+                </div>
+            </div>
+
+            {{#if completionNotes}}
+            <div class="agent-info">
+                <h4 style="margin-top: 0;">📝 Agent's Notes:</h4>
+                <p>{{completionNotes}}</p>
+            </div>
+            {{/if}}
+
+            <div class="payment-status">
+                <h4 style="margin-top: 0;">💰 Payment Status</h4>
+                <p><strong>Initial Payment Released:</strong> ₦1,000 (paid to agent)</p>
+                <p><strong>Pending Your Verification:</strong> ₦{{remainingPayment}}</p>
+                <p style="font-size: 14px; color: #666; margin-top: 10px;">
+                    The remaining payment will be released to the agent once you verify and confirm the marking.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{verifyUrl}}" class="cta-button">Verify & Confirm Marking</a>
+                <a href="{{viewDetailsUrl}}" class="cta-button secondary-button">View Full Details</a>
+            </div>
+
+            <div class="info-box">
+                <h4 style="margin-top: 0;">What Happens Next?</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>If you verify:</strong> The remaining ₦{{remainingPayment}} will be released to the agent, and your property can proceed to listing.</li>
+                    <li><strong>If you don't verify within {{verificationWindow}} days:</strong> A partial compensation (₦{{partialCompensation}}) will be released to the agent automatically.</li>
+                    <li><strong>If the marking is incorrect:</strong> You can reject it and request a new marking job.</li>
+                </ul>
+            </div>
+
+            <div style="background-color: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <h4 style="margin-top: 0;">⚠️ Important Notes:</h4>
+                <ul style="margin: 10px 0; padding-left: 20px; font-size: 14px;">
+                    <li>Please verify the property boundaries match your actual property</li>
+                    <li>Check that all uploaded images accurately represent your property</li>
+                    <li>If you notice any issues, contact support immediately</li>
+                    <li>Your feedback helps maintain quality service on our platform</li>
+                </ul>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                Need help? <a href="{{supportUrl}}" style="color: #4CAF50;">Contact our support team</a>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>NewCondo - Making Property Management Simple</p>
+            <p style="font-size: 12px;">
+                <a href="{{faqUrl}}" style="color: #666;">FAQs</a> | 
+                <a href="{{supportUrl}}" style="color: #666;">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Marking Invitation - Newcondo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .header p {
+            margin: 8px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px 30px;
+        }
+
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 24px;
+            color: #333;
+        }
+
+        .greeting strong {
+            color: #0066cc;
+        }
+
+        .info-box {
+            background-color: #f0f7ff;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .info-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        .property-details {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .detail-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .detail-value {
+            color: #333;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: #0066cc;
+            color: white;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 24px 0;
+            transition: background-color 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #0052a3;
+        }
+
+        .cta-container {
+            text-align: center;
+        }
+
+        .instructions {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 16px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            margin: 0 0 12px 0;
+            color: #856404;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .compensation-info {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 16px;
+            margin: 24px 0;
+            border-radius: 4px;
+        }
+
+        .compensation-info h3 {
+            margin: 0 0 12px 0;
+            color: #2e7d32;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .compensation-info p {
+            margin: 0;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .highlight {
+            color: #0066cc;
+            font-weight: 600;
+        }
+
+        .footer {
+            background-color: #f5f5f5;
+            padding: 24px 30px;
+            text-align: center;
+            border-top: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .footer p {
+            margin: 0 0 8px 0;
+        }
+
+        .footer a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 24px 0;
+        }
+
+        .time-slot-badge {
+            display: inline-block;
+            background-color: #0066cc;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0 4px;
+        }
+
+        @media (max-width: 600px) {
+            .content {
+                padding: 24px 16px;
+            }
+
+            .header {
+                padding: 30px 16px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+            }
+
+            .detail-value {
+                text-align: left;
+                margin-top: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏠 Property Marking Request</h1>
+            <p>You've been invited to mark a property on Newcondo</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="greeting">
+                Hi <strong>{{markerName}}</strong>,
+            </div>
+
+            <p style="margin: 16px 0; color: #555;">
+                {{propertyOwnerName}} has invited you to mark a property on Newcondo. This is an opportunity to earn a fair compensation for verifying and marking the property boundary.
+            </p>
+
+            <!-- Property Information -->
+            <div class="property-details">
+                <div class="detail-row">
+                    <span class="detail-label">Property Address:</span>
+                    <span class="detail-value">{{propertyAddress}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Property Type:</span>
+                    <span class="detail-value">{{propertyType}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Location (State/LGA):</span>
+                    <span class="detail-value">{{propertyState}} / {{propertyLGA}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Guide/Contact Person:</span>
+                    <span class="detail-value">{{contactPersonName}}<br>{{contactPersonPhone}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Time Slot:</span>
+                    <span class="detail-value">
+                        <span class="time-slot-badge">3 Hours</span>
+                        <br>From: {{timeSlotStart}}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Compensation Information -->
+            <div class="compensation-info">
+                <h3>💰 Your Compensation</h3>
+                <p>
+                    For successfully marking this property, you will receive <span class="highlight">₦5,000</span> as an initial payment upon marking completion. The remaining payment (₦5,000) will be released after the property owner confirms the marking.
+                </p>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions">
+                <h3>📋 What You Need to Do:</h3>
+                <ol>
+                    <li><strong>Click the button below</strong> to access the marking tool and property details</li>
+                    <li><strong>Locate the property</strong> using the address, contact person, and any provided images</li>
+                    <li><strong>Mark the boundaries</strong> on the satellite map view by drawing a box that covers the entire property</li>
+                    <li><strong>Take photos</strong> of key parts and rooms of the building (you'll upload these after marking)</li>
+                    <li><strong>Submit your work</strong> and notify the property owner</li>
+                </ol>
+            </div>
+
+            <!-- Important Note -->
+            <div class="info-box">
+                <p>
+                    <strong>⏰ Important:</strong> You have <span class="highlight">3 hours</span> from the time you access this link to complete the property marking. This ensures fair access for multiple markers in the queue.
+                </p>
+                <p>
+                    <strong>📸 Note:</strong> Property images have {{hasImages}} been provided by the owner. Use these along with the contact information to identify and mark the correct building.
+                </p>
+            </div>
+
+            <!-- CTA Button -->
+            <div class="cta-container">
+                <a href="{{markingLink}}" class="cta-button">Start Marking Property</a>
+            </div>
+
+            <p style="text-align: center; margin-top: 16px; font-size: 12px; color: #999;">
+                Or copy this link into your browser if the button doesn't work:<br>
+                <span style="color: #666; word-break: break-all;">{{markingLink}}</span>
+            </p>
+
+            <div class="divider"></div>
+
+            <!-- Support Section -->
+            <div style="background-color: #f0f7ff; padding: 16px; border-radius: 6px; margin: 24px 0;">
+                <p style="margin: 0; font-size: 14px; color: #0066cc; font-weight: 600;">Need Help?</p>
+                <p style="margin: 8px 0 0 0; font-size: 13px; color: #555;">
+                    If you have questions about this marking job or need assistance, contact our support team at <a href="mailto:support@newcondo.com" style="color: #0066cc; text-decoration: none;">support@newcondo.com</a> or call {{supportPhoneNumber}}.
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>© 2025 Newcondo. All rights reserved.</p>
+            <p>
+                <a href="{{termsLink}}">Terms & Conditions</a> | 
+                <a href="{{privacyLink}}">Privacy Policy</a> | 
+                <a href="{{supportLink}}">Support</a>
+            </p>
+            <p style="margin-top: 16px; color: #999;">
+                This email was sent because you were invited to mark a property. If you did not expect this invitation, please ignore this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

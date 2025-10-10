@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marking Job Expired</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        .alert-box {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-box h3 {
+            margin: 0 0 10px 0;
+            color: #991b1b;
+            font-size: 16px;
+        }
+        .alert-box p {
+            margin: 0;
+            color: #7f1d1d;
+        }
+        .details-box {
+            background-color: #f9fafb;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .detail-value {
+            color: #1f2937;
+            text-align: right;
+        }
+        .timeline {
+            background-color: #f3f4f6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 6px;
+        }
+        .timeline-item {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-marker {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            flex-shrink: 0;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-content .label {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        .timeline-content .time {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .info-section {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-section p {
+            margin: 0;
+            color: #1e3a8a;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #f59e0b;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin: 0 10px;
+        }
+        .cta-button:hover {
+            background-color: #d97706;
+        }
+        .cta-button.secondary {
+            background-color: #6b7280;
+        }
+        .cta-button.secondary:hover {
+            background-color: #4b5563;
+        }
+        .footer {
+            background-color: #f3f4f6;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 20px 0;
+        }
+        .compensation-info {
+            background-color: #fef9e7;
+            border: 1px solid #fcd34d;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .compensation-info strong {
+            color: #92400e;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+            .cta-button {
+                display: block;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Marking Job Expired</h1>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                <p>Hi {{userName}},</p>
+            </div>
+
+            <div class="status-badge">⚠️ Job Expired</div>
+
+            <div class="alert-box">
+                <h3>Job Status Update</h3>
+                <p>Unfortunately, the marking job for your property has expired. No markers were able to complete the task within the allocated time and confirmation window.</p>
+            </div>
+
+            <div class="details-box">
+                <div class="detail-row">
+                    <span class="detail-label">Property Address:</span>
+                    <span class="detail-value">{{propertyAddress}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Marking Job ID:</span>
+                    <span class="detail-value">{{jobId}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Job Created:</span>
+                    <span class="detail-value">{{jobCreatedDate}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Expiration Date:</span>
+                    <span class="detail-value">{{expirationDate}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Assigned Markers:</span>
+                    <span class="detail-value">{{assignedMarkersCount}}</span>
+                </div>
+            </div>
+
+            <div class="timeline">
+                <h3 style="margin-top: 0; margin-bottom: 20px; color: #1f2937;">Job Timeline</h3>
+                <div class="timeline-item">
+                    <div class="timeline-marker">1</div>
+                    <div class="timeline-content">
+                        <div class="label">Job Created</div>
+                        <div class="time">{{jobCreatedDate}} {{jobCreatedTime}}</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker">2</div>
+                    <div class="timeline-content">
+                        <div class="label">First Marker Assignment</div>
+                        <div class="time">{{firstAssignmentDate}} {{firstAssignmentTime}}</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker">3</div>
+                    <div class="timeline-content">
+                        <div class="label">Confirmation Window Closed</div>
+                        <div class="time">{{confirmationWindowClosedDate}}</div>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker" style="background-color: #ef4444;">✕</div>
+                    <div class="timeline-content">
+                        <div class="label">Job Expired</div>
+                        <div class="time">{{expirationDate}} {{expirationTime}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <p><strong>ℹ️ What Happened:</strong></p>
+                <p>{{expiredReason}}</p>
+            </div>
+
+            <div class="compensation-info">
+                <strong>💰 Compensation Status</strong>
+                <p style="margin-bottom: 0; margin-top: 8px;">
+                    {{compensationStatus}}
+                    {{#if agentCompensationPaid}}
+                    Assigned marker(s) received partial compensation (₦{{markerCompensation}}) for their efforts.
+                    {{/if}}
+                </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 style="margin-top: 0;">What Happens Next?</h3>
+            <p>To proceed with property verification, you have the following options:</p>
+            <ol style="color: #374151;">
+                <li><strong>Create a New Marking Job:</strong> Post another marking job with updated information or contact details</li>
+                <li><strong>Mark it Yourself:</strong> If you're available, mark the property boundary through the platform</li>
+                <li><strong>Ask Someone You Know:</strong> Share a shareable link with a friend or family member to mark the property</li>
+                <li><strong>Direct Assignment:</strong> We can connect you with an available agent in your area</li>
+            </ol>
+
+            <div class="cta-section">
+                <a href="{{newJobLink}}" class="cta-button">Create New Marking Job</a>
+                <a href="{{markYourselfLink}}" class="cta-button secondary">Mark Yourself</a>
+            </div>
+
+            <div class="alert-box">
+                <h3>Important Note</h3>
+                <p>Creating a new marking job will incur another service fee of ₦{{markingFee}}. If the previous job had issues, please review your property details, contact information, and access instructions before creating a new job.</p>
+            </div>
+
+            <h3 style="margin-top: 30px;">Troubleshooting Tips</h3>
+            <ul style="color: #374151;">
+                <li>Ensure your property address and access instructions are clear and accurate</li>
+                <li>Provide updated contact information for the guide or property access person</li>
+                <li>If the property location is remote, consider marking it yourself or assigning it to someone you know</li>
+                <li>Verify that your phone number is active for agent communication</li>
+                <li>Check that you have provided property images (if available) to help markers identify the building</li>
+            </ul>
+
+            <div class="info-section">
+                <p><strong>Need Help?</strong> Contact our support team at support@newcondo.ng or call {{supportPhoneNumber}} for assistance.</p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated message from Newcondo. Please do not reply to this email.</p>
+            <p>If you believe this email was sent in error or have questions, contact support@newcondo.ng</p>
+            <p>&copy; {{currentYear}} Newcondo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
