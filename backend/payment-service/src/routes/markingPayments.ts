@@ -335,3 +335,140 @@ router.get(
 );
 
 export default router;
+
+
+
+
+// import { Router } from 'express';
+// import { markingPaymentController } from '../controllers/markingPaymentController';
+// import { authenticateToken } from '../middleware/auth';
+// import { validateRequest } from '../middleware/validation';
+// import { rateLimiter } from '../middleware/rateLimiter';
+// import {
+//   initializeMarkingPaymentSchema,
+//   releaseCompensationSchema,
+//   calculatePriceSchema,
+//   refundPaymentSchema,
+// } from '../validations/markingPayment';
+
+// const router = Router();
+
+// /**
+//  * @route   POST /api/marking-payments/initialize
+//  * @desc    Initialize marking payment for a property marking job
+//  * @access  Private (Owner/Agent)
+//  */
+// router.post(
+//   '/initialize',
+//   authenticateToken,
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 10 }), // 10 requests per 15 minutes
+//   validateRequest(initializeMarkingPaymentSchema),
+//   markingPaymentController.initializeMarkingPayment
+// );
+
+// /**
+//  * @route   GET /api/marking-payments/verify/:transactionId
+//  * @desc    Verify marking payment after Flutterwave redirect
+//  * @access  Private
+//  */
+// router.get(
+//   '/verify/:transactionId',
+//   authenticateToken,
+//   markingPaymentController.verifyMarkingPayment
+// );
+
+// /**
+//  * @route   POST /api/marking-payments/webhook
+//  * @desc    Handle Flutterwave webhook for marking payments
+//  * @access  Public (Webhook)
+//  */
+// router.post(
+//   '/webhook',
+//   markingPaymentController.handleMarkingPaymentWebhook
+// );
+
+// /**
+//  * @route   POST /api/marking-payments/release-partial
+//  * @desc    Release partial compensation to agent (initial payment)
+//  * @access  Private (Admin/System)
+//  */
+// router.post(
+//   '/release-partial',
+//   authenticateToken,
+//   validateRequest(releaseCompensationSchema),
+//   markingPaymentController.releasePartialCompensation
+// );
+
+// /**
+//  * @route   POST /api/marking-payments/release-full
+//  * @desc    Release full compensation to agent (after confirmation)
+//  * @access  Private (Owner/System)
+//  */
+// router.post(
+//   '/release-full',
+//   authenticateToken,
+//   validateRequest(releaseCompensationSchema),
+//   markingPaymentController.releaseFullCompensation
+// );
+
+// /**
+//  * @route   POST /api/marking-payments/handle-timeout
+//  * @desc    Handle timeout compensation for unconfirmed marking jobs
+//  * @access  Private (System/Admin)
+//  */
+// router.post(
+//   '/handle-timeout',
+//   authenticateToken,
+//   validateRequest(releaseCompensationSchema),
+//   markingPaymentController.handleTimeoutCompensation
+// );
+
+// /**
+//  * @route   GET /api/marking-payments/:paymentId
+//  * @desc    Get marking payment details
+//  * @access  Private
+//  */
+// router.get(
+//   '/:paymentId',
+//   authenticateToken,
+//   markingPaymentController.getMarkingPaymentDetails
+// );
+
+// /**
+//  * @route   GET /api/marking-payments/history
+//  * @desc    Get payment history for marking jobs
+//  * @access  Private
+//  */
+// router.get(
+//   '/history',
+//   authenticateToken,
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 50 }), // 50 requests per 15 minutes
+//   markingPaymentController.getMarkingPaymentHistory
+// );
+
+// /**
+//  * @route   POST /api/marking-payments/calculate-price
+//  * @desc    Calculate marking job pricing
+//  * @access  Private
+//  */
+// router.post(
+//   '/calculate-price',
+//   authenticateToken,
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 30 }), // 30 requests per 15 minutes
+//   validateRequest(calculatePriceSchema),
+//   markingPaymentController.calculateMarkingPrice
+// );
+
+// /**
+//  * @route   POST /api/marking-payments/refund
+//  * @desc    Refund marking payment
+//  * @access  Private (Admin)
+//  */
+// router.post(
+//   '/refund',
+//   authenticateToken,
+//   validateRequest(refundPaymentSchema),
+//   markingPaymentController.refundMarkingPayment
+// );
+
+// export default router;

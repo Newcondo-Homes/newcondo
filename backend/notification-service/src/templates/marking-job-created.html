@@ -1,0 +1,217 @@
+<!-- backend/notification-service/src/templates/marking-job-created.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Marking Job Created</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            color: #0066cc;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            margin: 15px 0;
+        }
+        .property-card {
+            background: #f8fafc;
+            border-left: 4px solid #0066cc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .property-card h3 {
+            margin: 0 0 10px 0;
+            color: #0066cc;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: 600;
+            color: #64748b;
+        }
+        .value {
+            color: #1e293b;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        .method-card {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .button {
+            display: inline-block;
+            background: #0066cc;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .button:hover {
+            background: #0052a3;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .contact-info {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏠 NewCondo</div>
+            <h1>Property Marking Job Created</h1>
+            <span class="status-badge">✓ Job Created Successfully</span>
+        </div>
+
+        <p>Hi <strong>{{propertyOwnerName}}</strong>,</p>
+        
+        <p>Your property marking job has been successfully created! We'll help you get your property verified and listed on NewCondo.</p>
+
+        <div class="property-card">
+            <h3>📍 Property Details</h3>
+            <div class="info-row">
+                <span class="label">Address:</span>
+                <span class="value">{{propertyAddress}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">City:</span>
+                <span class="value">{{propertyCity}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">State:</span>
+                <span class="value">{{propertyState}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Property Type:</span>
+                <span class="value">{{propertyType}}</span>
+            </div>
+        </div>
+
+        <div class="method-card">
+            <h3>📝 Marking Method Selected</h3>
+            <p><strong>{{markingMethodLabel}}</strong></p>
+            {{#if isKnownPerson}}
+            <p>You've chosen to have someone you know mark the property. A shareable link has been generated for them.</p>
+            {{/if}}
+            {{#if isPlatformBroadcast}}
+            <p>We're broadcasting this job to verified agents in your area. You'll be notified when an agent accepts the job.</p>
+            {{/if}}
+            {{#if isNewcondoAgent}}
+            <p>Our admin team will review and assign this job to one of our trusted agents.</p>
+            {{/if}}
+        </div>
+
+        <div class="property-card">
+            <h3>💰 Job Information</h3>
+            <div class="info-row">
+                <span class="label">Marking Fee:</span>
+                <span class="value"><strong>₦{{markingFee}}</strong></span>
+            </div>
+            <div class="info-row">
+                <span class="label">Job ID:</span>
+                <span class="value">{{markingJobId}}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Status:</span>
+                <span class="value">{{jobStatus}}</span>
+            </div>
+        </div>
+
+        {{#if contactPerson}}
+        <div class="contact-info">
+            <h3>👤 Contact Person for Access</h3>
+            <p><strong>Name:</strong> {{contactPersonName}}</p>
+            <p><strong>Phone:</strong> {{contactPersonPhone}}</p>
+            {{#if accessInstructions}}
+            <p><strong>Instructions:</strong> {{accessInstructions}}</p>
+            {{/if}}
+        </div>
+        {{/if}}
+
+        <div class="highlight">
+            <h3>⏰ What Happens Next?</h3>
+            <ul>
+                {{#if isPlatformBroadcast}}
+                <li>Agents within your area will be notified of this job</li>
+                <li>The first available agent will be assigned (first-come, first-served)</li>
+                <li>They have 3 hours to complete the marking</li>
+                {{/if}}
+                {{#if isKnownPerson}}
+                <li>Share the provided link with your trusted person</li>
+                <li>They'll use the link to mark the property when on-site</li>
+                {{/if}}
+                <li>You'll receive photos and details after marking is complete</li>
+                <li>You have 2-3 days to verify and confirm the marking</li>
+                <li>Once confirmed, your property will be ready for listing!</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{viewJobUrl}}" class="button">View Job Details</a>
+        </div>
+
+        <div class="footer">
+            <p>Need help? Contact our support team</p>
+            <p>Email: support@newcondo.ng | Phone: +234 XXX XXX XXXX</p>
+            <p style="margin-top: 15px; font-size: 12px;">
+                This is an automated message from NewCondo. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

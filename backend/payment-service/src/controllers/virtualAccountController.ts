@@ -570,3 +570,415 @@ export const virtualAccountController = new VirtualAccountController();
 //     }
 //   };
 // }
+
+
+
+// import { Request, Response, NextFunction } from 'express';
+// import { virtualAccountService } from '../services/virtualAccountService';
+
+// /**
+//  * Controller for handling virtual account operations
+//  * Enhanced with marking service account management
+//  */
+// class VirtualAccountController {
+//   /**
+//    * Create virtual account for user
+//    * POST /api/virtual-accounts/create
+//    */
+//   async createVirtualAccount(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const userId = req.user?.id;
+//       const { accountType } = req.body; // 'USER' | 'PROPERTY'
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const account = await virtualAccountService.createUserVirtualAccount({
+//         userId,
+//         accountType,
+//       });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: 'Virtual account created successfully',
+//         data: account,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Create virtual account for property
+//    * POST /api/virtual-accounts/property/:propertyId
+//    */
+//   async createPropertyVirtualAccount(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { propertyId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const account = await virtualAccountService.createPropertyVirtualAccount({
+//         propertyId,
+//         userId,
+//       });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: 'Property virtual account created successfully',
+//         data: account,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Auto-create virtual accounts for eligible users
+//    * POST /api/virtual-accounts/auto-create
+//    */
+//   async autoCreateVirtualAccounts(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const result = await virtualAccountService.autoCreateAccountsForUser(userId);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Virtual accounts auto-created successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get user virtual accounts
+//    * GET /api/virtual-accounts/user
+//    */
+//   async getUserVirtualAccounts(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const accounts = await virtualAccountService.getUserVirtualAccounts(userId);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Virtual accounts retrieved successfully',
+//         data: accounts,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get virtual account details
+//    * GET /api/virtual-accounts/:accountId
+//    */
+//   async getVirtualAccountDetails(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const account = await virtualAccountService.getVirtualAccountDetails({
+//         accountId,
+//         userId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Virtual account details retrieved successfully',
+//         data: account,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Credit virtual account (for marking compensation)
+//    * POST /api/virtual-accounts/credit
+//    */
+//   async creditVirtualAccount(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId, amount, reference, description } = req.body;
+//       const adminId = req.user?.id;
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - Admin authentication required',
+//         });
+//       }
+
+//       const result = await virtualAccountService.creditAccount({
+//         accountId,
+//         amount,
+//         reference,
+//         description,
+//         adminId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Virtual account credited successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Debit virtual account
+//    * POST /api/virtual-accounts/debit
+//    */
+//   async debitVirtualAccount(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId, amount, reference, description } = req.body;
+//       const adminId = req.user?.id;
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - Admin authentication required',
+//         });
+//       }
+
+//       const result = await virtualAccountService.debitAccount({
+//         accountId,
+//         amount,
+//         reference,
+//         description,
+//         adminId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Virtual account debited successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get virtual account balance
+//    * GET /api/virtual-accounts/:accountId/balance
+//    */
+//   async getAccountBalance(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const balance = await virtualAccountService.getAccountBalance({
+//         accountId,
+//         userId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Account balance retrieved successfully',
+//         data: balance,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get account transaction history
+//    * GET /api/virtual-accounts/:accountId/transactions
+//    */
+//   async getAccountTransactions(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId } = req.params;
+//       const { page = 1, limit = 20, type } = req.query;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const transactions = await virtualAccountService.getAccountTransactions({
+//         accountId,
+//         userId,
+//         page: Number(page),
+//         limit: Number(limit),
+//         type: type as string,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Account transactions retrieved successfully',
+//         data: transactions,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Withdraw from virtual account
+//    * POST /api/virtual-accounts/withdraw
+//    */
+//   async withdrawFromAccount(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId, amount, bankDetails } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const result = await virtualAccountService.withdrawFromAccount({
+//         accountId,
+//         amount,
+//         bankDetails,
+//         userId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Withdrawal initiated successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Activate/Deactivate virtual account
+//    * PATCH /api/virtual-accounts/:accountId/status
+//    */
+//   async updateAccountStatus(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { accountId } = req.params;
+//       const { isActive } = req.body;
+//       const adminId = req.user?.id;
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - Admin authentication required',
+//         });
+//       }
+
+//       const result = await virtualAccountService.updateAccountStatus({
+//         accountId,
+//         isActive,
+//         adminId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: `Account ${isActive ? 'activated' : 'deactivated'} successfully`,
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Handle virtual account webhook from Flutterwave
+//    * POST /api/virtual-accounts/webhook
+//    */
+//   async handleVirtualAccountWebhook(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const webhookData = req.body;
+//       const signature = req.headers['verif-hash'] as string;
+
+//       await virtualAccountService.handleVirtualAccountWebhook(webhookData, signature);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Webhook processed successfully',
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get marking compensation summary for agent
+//    * GET /api/virtual-accounts/marking-summary
+//    */
+//   async getMarkingCompensationSummary(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const userId = req.user?.id;
+//       const { startDate, endDate } = req.query;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const summary = await virtualAccountService.getMarkingCompensationSummary({
+//         userId,
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Marking compensation summary retrieved successfully',
+//         data: summary,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// }
+
+// export const virtualAccountController = new VirtualAccountController();

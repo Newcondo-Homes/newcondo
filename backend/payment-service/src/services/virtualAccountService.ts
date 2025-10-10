@@ -1819,3 +1819,424 @@ export default VirtualAccountService;
 // }
 
 // export const virtualAccountService = new VirtualAccountService();
+
+
+
+
+
+// // backend/payment-service/src/services/virtualAccountService.ts
+
+// import { PrismaClient, Role } from '@prisma/client';
+// import { Decimal } from '@prisma/client/runtime/library';
+// import axios from 'axios';
+
+// const prisma = new PrismaClient();
+
+// interface FlutterwaveVirtualAccountResponse {
+//   status: string;
+//   message: string;
+//   data: {
+//     account_number: string;
+//     account_name: string;
+//     bank_name: string;
+//     bank_code: string;
+//     account_reference: string;
+//   };
+// }
+
+// interface CreateVirtualAccountParams {
+//   userId: string;
+//   propertyId?: string;
+//   accountName?: string;
+//   purpose?: 'GENERAL' | 'PROPERTY_SPECIFIC' | 'MARKING_PAYMENT';
+// }
+
+// export class VirtualAccountService {
+//   private flutterwaveSecretKey: string;
+//   private flutterwaveBaseUrl: string;
+
+//   constructor() {
+//     this.flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY || '';
+//     this.flutterwaveBaseUrl = process.env.FLUTTERWAVE_BASE_URL || 'https://api.flutterwave.com/v3';
+//   }
+
+//   /**
+//    * Create virtual account for user upon registration
+//    */
+//   async createVirtualAccountOnRegistration(userId: string): Promise<any> {
+//     try {
+//       const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//         select: { email: true, name: true, role: true, isPremium: true },
+//       });
+
+//       if (!user) {
+//         throw new Error('User not found');
+//       }
+
+//       // Only create virtual accounts for property owners, agents, and premium renters
+//       const shouldCreateAccount = 
+//         user.role === Role.OWNER || 
+//         user.role === Role.AGENT || 
+//         (user.role === Role.RENTER && user.isPremium);
+
+//       if (!shouldCreateAccount) {
+//         return null;
+//       }
+
+//       return await this.createVirtualAccount({
+//         userId,
+//         accountName: user.name || user.email,
+//         purpose: 'GENERAL',
+//       });
+//     } catch (error) {
+//       console.error('Error creating virtual account on registration:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Create virtual account for renter on premium subscription
+//    */
+//   async createVirtualAccountForPremiumRenter(userId: string): Promise<any> {
+//     try {
+//       const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//         select: { email: true, name: true, role: true, isPremium: true },
+//       });
+
+//       if (!user) {
+//         throw new Error('User not found');
+//       }
+
+//       if (user.role !== Role.RENTER || !user.isPremium) {
+//         throw new Error('Only premium renters can have virtual accounts created');
+//       }
+
+//       return await this.createVirtualAccount({
+//         userId,
+//         accountName: user.name || user.email,
+//         purpose: 'GENERAL',
+//       });
+//     } catch (error) {
+//       console.error('Error creating virtual account for premium renter:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Create virtual account (core logic)
+//    */
+//   async createVirtualAccount(params: CreateVirtualAccountParams): Promise<any> {
+//     try {
+//       const { userId, propertyId, accountName, purpose = 'GENERAL' } = params;
+
+//       // Check if virtual account already exists
+//       const existingAccount = await prisma.virtualAccount.findFirst({
+//         where: {
+//           userId,
+//           ...(propertyId ? { propertyId } : { propertyId: null }),
+//         },
+//       });
+
+//       if (existingAccount) {
+//         return existingAccount;
+//       }
+
+//       const user = await prisma.user.findUnique({
+//         where: { id: userId },
+//         select: { email: true, name: true },
+//       });
+
+//       if (!user) {
+//         throw new Error('User not found');
+//       }
+
+//       // Generate unique reference
+//       const reference = `VA_${userId}_${Date.now()}`;
+
+//       // Call Flutterwave API to create virtual account
+//       const response = await axios.post<FlutterwaveVirtualAccountResponse>(
+//         `${this.flutterwaveBaseUrl}/virtual-account-numbers`,
+//         {
+//           email: user.email,
+//           is_permanent: true,
+//           bvn: '', // Optional: can be added if available
+//           tx_ref: reference,
+//           firstname: accountName?.split(' ')[0] || user.name?.split(' ')[0] || 'User',
+//           lastname: accountName?.split(' ').slice(1).join(' ') || user.name?.split(' ').slice(1).join(' ') || 'Account',
+//           narration: `Newcondo ${purpose} Account`,
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.flutterwaveSecretKey}`,
+//             'Content-Type': 'application/json',
+//           },
+//         }
+//       );
+
+//       if (response.data.status !== 'success') {
+//         throw new Error(response.data.message || 'Failed to create virtual account');
+//       }
+
+//       const { account_number, account_name, bank_code } = response.data.data;
+
+//       // Save virtual account to database
+//       const virtualAccount = await prisma.virtualAccount.create({
+//         data: {
+//           accountNumber: account_number,
+//           accountName: account_name || accountName || user.name || user.email,
+//           bankCode: bank_code,
+//           userId,
+//           propertyId: propertyId || null,
+//           flutterwaveAccountId: reference,
+//           isActive: true,
+//           balance: new Decimal(0),
+//           currency: 'NGN',
+//         },
+//       });
+
+//       return virtualAccount;
+//     } catch (error) {
+//       console.error('Error creating virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get user's virtual account
+//    */
+//   async getUserVirtualAccount(userId: string): Promise<any> {
+//     try {
+//       return await prisma.virtualAccount.findFirst({
+//         where: {
+//           userId,
+//           propertyId: null, // General account
+//           isActive: true,
+//         },
+//       });
+//     } catch (error) {
+//       console.error('Error fetching user virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get property-specific virtual account
+//    */
+//   async getPropertyVirtualAccount(propertyId: string): Promise<any> {
+//     try {
+//       return await prisma.virtualAccount.findUnique({
+//         where: {
+//           propertyId,
+//           isActive: true,
+//         },
+//       });
+//     } catch (error) {
+//       console.error('Error fetching property virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Credit virtual account (webhook handler)
+//    */
+//   async creditVirtualAccount(
+//     accountNumber: string,
+//     amount: Decimal,
+//     transactionReference: string
+//   ): Promise<any> {
+//     try {
+//       const virtualAccount = await prisma.virtualAccount.findUnique({
+//         where: { accountNumber },
+//       });
+
+//       if (!virtualAccount) {
+//         throw new Error('Virtual account not found');
+//       }
+
+//       // Update balance
+//       const updatedAccount = await prisma.virtualAccount.update({
+//         where: { id: virtualAccount.id },
+//         data: {
+//           balance: virtualAccount.balance.add(amount),
+//         },
+//       });
+
+//       return updatedAccount;
+//     } catch (error) {
+//       console.error('Error crediting virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Debit virtual account
+//    */
+//   async debitVirtualAccount(
+//     userId: string,
+//     amount: Decimal,
+//     purpose: string
+//   ): Promise<any> {
+//     try {
+//       const virtualAccount = await prisma.virtualAccount.findFirst({
+//         where: {
+//           userId,
+//           propertyId: null,
+//           isActive: true,
+//         },
+//       });
+
+//       if (!virtualAccount) {
+//         throw new Error('Virtual account not found');
+//       }
+
+//       if (virtualAccount.balance.lt(amount)) {
+//         throw new Error('Insufficient balance');
+//       }
+
+//       // Update balance
+//       const updatedAccount = await prisma.virtualAccount.update({
+//         where: { id: virtualAccount.id },
+//         data: {
+//           balance: virtualAccount.balance.sub(amount),
+//         },
+//       });
+
+//       return updatedAccount;
+//     } catch (error) {
+//       console.error('Error debiting virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get virtual account balance
+//    */
+//   async getAccountBalance(userId: string): Promise<Decimal> {
+//     try {
+//       const virtualAccount = await prisma.virtualAccount.findFirst({
+//         where: {
+//           userId,
+//           propertyId: null,
+//           isActive: true,
+//         },
+//         select: { balance: true },
+//       });
+
+//       return virtualAccount?.balance || new Decimal(0);
+//     } catch (error) {
+//       console.error('Error fetching account balance:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Transfer funds from virtual account
+//    */
+//   async transferFromVirtualAccount(
+//     userId: string,
+//     amount: Decimal,
+//     recipientDetails: {
+//       accountNumber: string;
+//       accountBank: string;
+//       accountName: string;
+//     },
+//     narration: string
+//   ): Promise<any> {
+//     try {
+//       // Debit user's virtual account
+//       await this.debitVirtualAccount(userId, amount, narration);
+
+//       // Call Flutterwave transfer API
+//       const transferData = {
+//         account_bank: recipientDetails.accountBank,
+//         account_number: recipientDetails.accountNumber,
+//         amount: amount.toNumber(),
+//         narration,
+//         currency: 'NGN',
+//         reference: `TRF_${userId}_${Date.now()}`,
+//         callback_url: `${process.env.BACKEND_URL}/api/payments/webhooks/transfer`,
+//         debit_currency: 'NGN',
+//       };
+
+//       const response = await axios.post(
+//         `${this.flutterwaveBaseUrl}/transfers`,
+//         transferData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.flutterwaveSecretKey}`,
+//             'Content-Type': 'application/json',
+//           },
+//         }
+//       );
+
+//       return response.data;
+//     } catch (error) {
+//       console.error('Error transferring from virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Deactivate virtual account
+//    */
+//   async deactivateVirtualAccount(accountId: string): Promise<any> {
+//     try {
+//       return await prisma.virtualAccount.update({
+//         where: { id: accountId },
+//         data: { isActive: false },
+//       });
+//     } catch (error) {
+//       console.error('Error deactivating virtual account:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Check if user has active virtual account
+//    */
+//   async hasActiveVirtualAccount(userId: string): Promise<boolean> {
+//     try {
+//       const account = await prisma.virtualAccount.findFirst({
+//         where: {
+//           userId,
+//           isActive: true,
+//         },
+//       });
+
+//       return !!account;
+//     } catch (error) {
+//       console.error('Error checking virtual account:', error);
+//       return false;
+//     }
+//   }
+
+//   /**
+//    * Get all virtual accounts for user (including property-specific)
+//    */
+//   async getUserVirtualAccounts(userId: string): Promise<any[]> {
+//     try {
+//       return await prisma.virtualAccount.findMany({
+//         where: {
+//           userId,
+//           isActive: true,
+//         },
+//         include: {
+//           property: {
+//             select: {
+//               id: true,
+//               title: true,
+//               address: true,
+//             },
+//           },
+//         },
+//       });
+//     } catch (error) {
+//       console.error('Error fetching user virtual accounts:', error);
+//       throw error;
+//     }
+//   }
+// }
+
+// export default new VirtualAccountService();

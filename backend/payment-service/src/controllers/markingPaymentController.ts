@@ -341,3 +341,313 @@ export class MarkingPaymentController {
 }
 
 export const markingPaymentController = new MarkingPaymentController();
+
+
+
+
+// import { Request, Response, NextFunction } from 'express';
+// import { markingPaymentService } from '../services/markingPaymentService';
+// import { partialCompensationService } from '../services/partialCompensationService';
+
+// /**
+//  * Controller for handling property marking payment operations
+//  */
+// class MarkingPaymentController {
+//   /**
+//    * Initialize marking payment for a property marking job
+//    * POST /api/marking-payments/initialize
+//    */
+//   async initializeMarkingPayment(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { markingJobId, paymentMethod } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const result = await markingPaymentService.initializePayment({
+//         markingJobId,
+//         userId,
+//         paymentMethod,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Marking payment initialized successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Verify marking payment after Flutterwave redirect
+//    * GET /api/marking-payments/verify/:transactionId
+//    */
+//   async verifyMarkingPayment(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { transactionId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const result = await markingPaymentService.verifyPayment({
+//         transactionId,
+//         userId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Payment verified successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Handle Flutterwave webhook for marking payments
+//    * POST /api/marking-payments/webhook
+//    */
+//   async handleMarkingPaymentWebhook(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const webhookData = req.body;
+      
+//       // Verify webhook signature
+//       const signature = req.headers['verif-hash'] as string;
+      
+//       await markingPaymentService.handleWebhook(webhookData, signature);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Webhook processed successfully',
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Release partial compensation to agent (initial payment)
+//    * POST /api/marking-payments/release-partial
+//    */
+//   async releasePartialCompensation(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { markingJobId } = req.body;
+//       const adminId = req.user?.id;
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - Admin authentication required',
+//         });
+//       }
+
+//       const result = await partialCompensationService.releasePartialPayment({
+//         markingJobId,
+//         adminId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Partial compensation released successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Release full compensation to agent (after confirmation)
+//    * POST /api/marking-payments/release-full
+//    */
+//   async releaseFullCompensation(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { markingJobId, confirmationStatus } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const result = await partialCompensationService.releaseFullPayment({
+//         markingJobId,
+//         userId,
+//         confirmationStatus,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Full compensation released successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Handle timeout compensation for unconfirmed marking jobs
+//    * POST /api/marking-payments/handle-timeout
+//    */
+//   async handleTimeoutCompensation(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { markingJobId } = req.body;
+
+//       const result = await partialCompensationService.handleTimeoutCompensation({
+//         markingJobId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Timeout compensation processed successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get marking payment details
+//    * GET /api/marking-payments/:paymentId
+//    */
+//   async getMarkingPaymentDetails(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { paymentId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const payment = await markingPaymentService.getPaymentDetails(paymentId, userId);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Payment details retrieved successfully',
+//         data: payment,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Get payment history for marking jobs
+//    * GET /api/marking-payments/history
+//    */
+//   async getMarkingPaymentHistory(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const userId = req.user?.id;
+//       const { page = 1, limit = 10, status } = req.query;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const history = await markingPaymentService.getPaymentHistory({
+//         userId,
+//         page: Number(page),
+//         limit: Number(limit),
+//         status: status as string,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Payment history retrieved successfully',
+//         data: history,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Calculate marking job pricing
+//    * POST /api/marking-payments/calculate-price
+//    */
+//   async calculateMarkingPrice(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { markingType, urgencyLevel, propertyId } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - User not authenticated',
+//         });
+//       }
+
+//       const pricing = await markingPaymentService.calculateMarkingPrice({
+//         markingType,
+//         urgencyLevel,
+//         propertyId,
+//         userId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Marking price calculated successfully',
+//         data: pricing,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+
+//   /**
+//    * Refund marking payment
+//    * POST /api/marking-payments/refund
+//    */
+//   async refundMarkingPayment(req: Request, res: Response, next: NextFunction) {
+//     try {
+//       const { paymentId, reason } = req.body;
+//       const adminId = req.user?.id;
+
+//       if (!adminId) {
+//         return res.status(401).json({
+//           success: false,
+//           message: 'Unauthorized - Admin authentication required',
+//         });
+//       }
+
+//       const result = await markingPaymentService.refundPayment({
+//         paymentId,
+//         reason,
+//         adminId,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Payment refunded successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// }
+
+// export const markingPaymentController = new MarkingPaymentController();
