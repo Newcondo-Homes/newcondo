@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Marking Service Terms and Conditions - NewCondo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        .header h1 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+        .effective-date {
+            color: #666;
+            font-style: italic;
+        }
+        h2 {
+            color: #1e40af;
+            margin-top: 30px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        h3 {
+            color: #374151;
+            margin-top: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .important-notice {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .warning {
+            background-color: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        ul, ol {
+            margin-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        .signature-section {
+            margin-top: 60px;
+            border-top: 2px solid #e5e7eb;
+            padding-top: 30px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        @media print {
+            body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PROPERTY MARKING SERVICE</h1>
+        <h2>Terms and Conditions</h2>
+        <p class="effective-date">Effective Date: October 14, 2025</p>
+        <p><strong>NewCondo Technologies Limited</strong></p>
+    </div>
+
+    <div class="important-notice">
+        <strong>IMPORTANT NOTICE:</strong> Please read these Terms and Conditions carefully before using the Property Marking Service. By engaging with our Property Marking Service, you acknowledge that you have read, understood, and agree to be bound by these terms.
+    </div>
+
+    <div class="section">
+        <h2>1. DEFINITIONS AND INTERPRETATION</h2>
+        <p><strong>1.1</strong> In these Terms and Conditions, unless the context otherwise requires:</p>
+        <ul>
+            <li><strong>"NewCondo," "we," "us," or "our"</strong> refers to NewCondo Technologies Limited, a company registered in Nigeria.</li>
+            <li><strong>"Property Owner"</strong> refers to any individual or entity that owns or has legal authority over a property listed on the Platform.</li>
+            <li><strong>"Marking Agent" or "Agent"</strong> refers to registered users on the Platform who provide property marking services.</li>
+            <li><strong>"Property Marking" or "Marking Service"</strong> refers to the service of physically visiting a property, verifying its location, and creating a digital boundary mask on the Platform's mapping interface.</li>
+            <li><strong>"Marking Job"</strong> refers to a specific request for property marking services.</li>
+            <li><strong>"Platform"</strong> refers to the NewCondo website, mobile application, and all associated services.</li>
+            <li><strong>"Virtual Account"</strong> refers to the digital wallet or account maintained for users on the Platform.</li>
+            <li><strong>"Marking Fee"</strong> refers to the compensation paid for property marking services.</li>
+            <li><strong>"Confirmation Period"</strong> refers to the 2-3 day window during which a Property Owner must verify and confirm a completed marking job.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>2. SERVICE DESCRIPTION</h2>
+        <p><strong>2.1 Nature of Service:</strong> NewCondo provides a platform connecting Property Owners with Marking Agents for the purpose of verifying property locations and creating digital property boundaries.</p>
+        
+        <p><strong>2.2 Service Options:</strong> Property Owners may choose from the following marking options:</p>
+        <ol type="a">
+            <li><strong>Self-Marking:</strong> Property Owner marks their own property</li>
+            <li><strong>NewCondo Marking:</strong> NewCondo assigns an internal team member (Fee: ₦25,000)</li>
+            <li><strong>Designated Person:</strong> Property Owner sends someone they know via a shareable link</li>
+            <li><strong>Platform Agent:</strong> Property Owner assigns the job to registered Marking Agents (Fee: ₦20,000)</li>
+        </ol>
+
+        <p><strong>2.3 Service Limitations:</strong> NewCondo acts solely as an intermediary platform and does not guarantee:</p>
+        <ul>
+            <li>The accuracy of property boundaries marked by agents</li>
+            <li>The legal validity of property ownership claims</li>
+            <li>The prevention of property disputes</li>
+            <li>Agent availability in all locations</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>3. PRICING AND PAYMENT TERMS</h2>
+        <p><strong>3.1 Marking Fees:</strong></p>
+        <ul>
+            <li><strong>Standard Agent Marking:</strong> ₦20,000 per property</li>
+            <li><strong>NewCondo Direct Marking:</strong> ₦25,000 per property</li>
+            <li><strong>Self-Marking or Designated Person:</strong> No fee</li>
+        </ul>
+
+        <p><strong>3.2 Payment Distribution (Standard Agent Marking):</strong></p>
+        <ul>
+            <li>Agent Commission: 25% (₦5,000)</li>
+            <li>Platform Fee: 75% (₦15,000)</li>
+        </ul>
+
+        <p><strong>3.3 Payment Structure:</strong></p>
+        <ul>
+            <li><strong>Partial Payment:</strong> Upon successful marking, agents receive ₦1,000 to their Virtual Account</li>
+            <li><strong>Full Release:</strong> Remaining ₦4,000 is released only after Property Owner confirmation</li>
+            <li><strong>Non-Refundable Fee:</strong> Marking fees are non-refundable once an agent has completed the marking</li>
+        </ul>
+
+        <p><strong>3.4 Payment Methods:</strong> All payments must be made through approved payment gateways integrated with the Platform.</p>
+
+        <p><strong>3.5 Virtual Account Requirements:</strong></p>
+        <ul>
+            <li>Property Owners and Agents must have active Virtual Accounts</li>
+            <li>Virtual Accounts are created automatically upon account registration</li>
+            <li>Premium Plan Renters receive Virtual Accounts upon subscription</li>
