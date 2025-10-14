@@ -368,3 +368,176 @@ export const markingApi = {
         return response.data
     }
 }
+
+
+// // apps/platform/lib/api/marking.ts
+// import { apiClient } from './client';
+
+// export interface MarkingJobRequest {
+//   propertyId: string;
+//   markingChoice: 'SELF' | 'NEWCONDO_ADMIN' | 'KNOWN_PERSON' | 'ASSIGN_AGENTS';
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: string;
+//   urgencyLevel?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+//   hasPropertyImages: boolean;
+// }
+
+// export interface MarkingJobResponse {
+//   id: string;
+//   propertyId: string;
+//   requestedBy: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: string;
+//   urgencyLevel: string;
+//   markingFee: number;
+//   paymentStatus: string;
+//   status: string;
+//   shareableLink?: string;
+//   queuePosition?: number;
+//   createdAt: string;
+//   updatedAt: string;
+// }
+
+// export interface MarkingJobConfirmation {
+//   jobId: string;
+//   confirmed: boolean;
+//   rejectionReason?: string;
+// }
+
+// export interface MarkingJobCompletion {
+//   jobId: string;
+//   boundaryData: {
+//     type: 'Polygon';
+//     coordinates: number[][][];
+//   };
+//   completionImages: string[];
+//   completionNotes?: string;
+// }
+
+// /**
+//  * Create a new property marking job
+//  */
+// export async function createMarkingJob(
+//   data: MarkingJobRequest
+// ): Promise<MarkingJobResponse> {
+//   const response = await apiClient.post('/api/marking-jobs', data);
+//   return response.data;
+// }
+
+// /**
+//  * Get marking job details
+//  */
+// export async function getMarkingJob(jobId: string): Promise<MarkingJobResponse> {
+//   const response = await apiClient.get(`/api/marking-jobs/${jobId}`);
+//   return response.data;
+// }
+
+// /**
+//  * Get user's marking jobs
+//  */
+// export async function getUserMarkingJobs(params?: {
+//   status?: string;
+//   page?: number;
+//   limit?: number;
+// }): Promise<{ jobs: MarkingJobResponse[]; total: number; page: number; totalPages: number }> {
+//   const response = await apiClient.get('/api/marking-jobs/my-jobs', { params });
+//   return response.data;
+// }
+
+// /**
+//  * Get marking jobs assigned to agent
+//  */
+// export async function getAssignedMarkingJobs(params?: {
+//   status?: string;
+//   page?: number;
+//   limit?: number;
+// }): Promise<{ jobs: MarkingJobResponse[]; total: number; page: number; totalPages: number }> {
+//   const response = await apiClient.get('/api/marking-jobs/assigned', { params });
+//   return response.data;
+// }
+
+// /**
+//  * Confirm marking job completion (by property owner)
+//  */
+// export async function confirmMarkingJob(
+//   data: MarkingJobConfirmation
+// ): Promise<{ success: boolean; message: string }> {
+//   const response = await apiClient.post('/api/marking-jobs/confirm', data);
+//   return response.data;
+// }
+
+// /**
+//  * Complete marking job (by agent)
+//  */
+// export async function completeMarkingJob(
+//   data: MarkingJobCompletion
+// ): Promise<{ success: boolean; message: string; job: MarkingJobResponse }> {
+//   const response = await apiClient.post('/api/marking-jobs/complete', data);
+//   return response.data;
+// }
+
+// /**
+//  * Cancel marking job
+//  */
+// export async function cancelMarkingJob(
+//   jobId: string,
+//   reason?: string
+// ): Promise<{ success: boolean; message: string }> {
+//   const response = await apiClient.post(`/api/marking-jobs/${jobId}/cancel`, { reason });
+//   return response.data;
+// }
+
+// /**
+//  * Get marking job pricing
+//  */
+// export async function getMarkingPricing(params: {
+//   markingChoice: string;
+//   urgencyLevel?: string;
+// }): Promise<{ 
+//   baseFee: number; 
+//   urgencyFee: number; 
+//   totalFee: number;
+//   agentCompensation?: number;
+//   newcondoShare?: number;
+// }> {
+//   const response = await apiClient.get('/api/marking-jobs/pricing', { params });
+//   return response.data;
+// }
+
+// /**
+//  * Generate shareable marking link for known person
+//  */
+// export async function generateShareableLink(
+//   jobId: string
+// ): Promise<{ shareableLink: string; expiresAt: string }> {
+//   const response = await apiClient.post(`/api/marking-jobs/${jobId}/generate-link`);
+//   return response.data;
+// }
+
+// /**
+//  * Access marking job via shareable link
+//  */
+// export async function accessShareableMarkingJob(
+//   token: string
+// ): Promise<MarkingJobResponse> {
+//   const response = await apiClient.get(`/api/marking-jobs/shared/${token}`);
+//   return response.data;
+// }
+
+// /**
+//  * Get marking job statistics (for agents)
+//  */
+// export async function getMarkingJobStats(): Promise<{
+//   totalJobs: number;
+//   completedJobs: number;
+//   inProgressJobs: number;
+//   totalEarnings: number;
+//   averageRating: number;
+// }> {
+//   const response = await apiClient.get('/api/marking-jobs/stats');
+//   return response.data;
+// }
