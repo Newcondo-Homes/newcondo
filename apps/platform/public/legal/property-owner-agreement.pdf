@@ -640,3 +640,484 @@
 
     <h2>13. GENERAL PROVISIONS</h2>
     <div class="clause">
+
+
+
+
+
+-------------------------------------------
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Owner Agreement - Newcondo Marking Service</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: 24px;
+            margin: 20px 0;
+            text-transform: uppercase;
+        }
+        h2 {
+            font-size: 18px;
+            margin: 25px 0 15px 0;
+            color: #1e40af;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        .clause {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        .sub-clause {
+            margin: 10px 0;
+            padding-left: 40px;
+        }
+        .important {
+            background-color: #fef3c7;
+            padding: 15px;
+            border-left: 4px solid #f59e0b;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 60px;
+            border-top: 2px solid #000;
+            padding-top: 20px;
+        }
+        .signature-block {
+            margin: 40px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-line {
+            width: 45%;
+        }
+        .line {
+            border-bottom: 1px solid #000;
+            margin: 30px 0 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .date {
+            text-align: right;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">NEWCONDO</div>
+        <h1>Property Marking Service Agreement</h1>
+        <p><strong>Between Property Owner and Newcondo Platform</strong></p>
+    </div>
+
+    <div class="date">
+        Effective Date: [Date of Agreement]
+    </div>
+
+    <div class="section">
+        <h2>1. PARTIES TO THE AGREEMENT</h2>
+        <div class="clause">
+            <p><strong>1.1</strong> This agreement ("Agreement") is entered into between:</p>
+            <table>
+                <tr>
+                    <td><strong>Party A:</strong></td>
+                    <td>The Property Owner ("Owner")<br>
+                    Name: _______________________<br>
+                    Contact: _____________________<br>
+                    Property Address: _____________</td>
+                </tr>
+                <tr>
+                    <td><strong>Party B:</strong></td>
+                    <td>Newcondo Technology Limited ("Newcondo")<br>
+                    A property rental technology platform registered in Nigeria</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. PURPOSE OF AGREEMENT</h2>
+        <div class="clause">
+            <p><strong>2.1</strong> This Agreement governs the property marking service whereby Newcondo facilitates the geolocation verification and boundary marking of the Owner's property for listing on the Newcondo platform.</p>
+            <p><strong>2.2</strong> The marking service ensures accurate property identification and prevents duplicate listings through GPS-based boundary verification.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. MARKING SERVICE OPTIONS</h2>
+        <div class="clause">
+            <p><strong>3.1</strong> The Owner may choose from the following marking options:</p>
+            <div class="sub-clause">
+                <p><strong>a) Self-Marking:</strong> Owner marks the property themselves using the platform's tools at no cost.</p>
+                <p><strong>b) Designated Person:</strong> Owner provides a shareable link to a trusted individual to mark the property at no cost to Newcondo.</p>
+                <p><strong>c) Newcondo Agent Assignment:</strong> Owner pays ₦20,000 for a verified Newcondo agent to mark the property.</p>
+                <p><strong>d) Direct Newcondo Service:</strong> Owner pays ₦25,000 for Newcondo's direct marking service.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. PROPERTY OWNER OBLIGATIONS</h2>
+        <div class="clause">
+            <p><strong>4.1 Accuracy of Information:</strong></p>
+            <div class="sub-clause">
+                <p>Owner must provide accurate property address, GPS coordinates, and access instructions.</p>
+                <p>Owner warrants they have legal authority over the property being marked.</p>
+                <p>Owner must provide valid contact information for property access coordination.</p>
+            </div>
+            
+            <p><strong>4.2 Property Access:</strong></p>
+            <div class="sub-clause">
+                <p>Owner must ensure property is accessible during the agreed marking timeframe.</p>
+                <p>Owner must provide contact details of an on-site person or guide for agent access.</p>
+                <p>Owner is responsible for any security clearances needed for agent entry.</p>
+            </div>
+
+            <p><strong>4.3 Verification Responsibility:</strong></p>
+            <div class="sub-clause">
+                <p>Owner has 48-72 hours from marking completion to verify and confirm the marking.</p>
+                <p>Owner must review uploaded property images and boundary coordinates.</p>
+                <p>Failure to respond within the timeframe constitutes automatic approval.</p>
+            </div>
+
+            <p><strong>4.4 Payment Obligations:</strong></p>
+            <div class="sub-clause">
+                <p>Payment for marking services (if applicable) must be completed before agent assignment.</p>
+                <p>Payments are non-refundable once an agent has been assigned and commenced work.</p>
+                <p>Owner may request remarking at their own cost if dissatisfied with initial marking.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="important">
+        <strong>IMPORTANT NOTICE:</strong> Once payment is made for agent marking services, the marking job enters the assignment queue. Failure to verify completed marking within the specified timeframe will result in automatic approval and partial agent compensation from the marking fee.
+    </div>
+
+    <div class="section">
+        <h2>5. NEWCONDO OBLIGATIONS</h2>
+        <div class="clause">
+            <p><strong>5.1 Agent Assignment (Where Applicable):</strong></p>
+            <div class="sub-clause">
+                <p>Newcondo will assign verified agents within reasonable proximity to the property.</p>
+                <p>Agents are assigned on a first-come-first-served queue basis.</p>
+                <p>Each agent has a 3-hour window to complete the marking job.</p>
+            </div>
+
+            <p><strong>5.2 Quality Standards:</strong></p>
+            <div class="sub-clause">
+                <p>Newcondo ensures agents follow marking protocols and capture required images.</p>
+                <p>Boundary coordinates must be accurately recorded using GPS technology.</p>
+                <p>Property images must clearly show key features and rooms.</p>
+            </div>
+
+            <p><strong>5.3 Data Protection:</strong></p>
+            <div class="sub-clause">
+                <p>Newcondo will protect Owner's personal and property information.</p>
+                <p>Property data will only be used for platform operations and listing purposes.</p>
+                <p>Owner contact information is shared only with assigned agents.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>6. MARKING SERVICE FEES & COMPENSATION</h2>
+        <div class="clause">
+            <p><strong>6.1 Fee Structure:</strong></p>
+            <table>
+                <tr>
+                    <td><strong>Service Type</strong></td>
+                    <td><strong>Cost to Owner</strong></td>
+                    <td><strong>Agent Compensation</strong></td>
+                </tr>
+                <tr>
+                    <td>Self-Marking</td>
+                    <td>₦0</td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td>Designated Person</td>
+                    <td>₦0</td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td>Newcondo Agent</td>
+                    <td>₦20,000</td>
+                    <td>₦5,000 (25%)</td>
+                </tr>
+                <tr>
+                    <td>Direct Newcondo Service</td>
+                    <td>₦25,000</td>
+                    <td>As determined by Newcondo</td>
+                </tr>
+            </table>
+
+            <p><strong>6.2 Payment Processing:</strong></p>
+            <div class="sub-clause">
+                <p>All payments are processed through Newcondo's secure payment gateway (Flutterwave).</p>
+                <p>Upon agent marking completion, ₦1,000 advance is credited to agent's virtual account.</p>
+                <p>Remaining balance is released upon Owner's verification and approval.</p>
+                <p>If Owner fails to verify within 48-72 hours, automatic approval triggers full payment release.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>7. VERIFICATION & CONFIRMATION PROCESS</h2>
+        <div class="clause">
+            <p><strong>7.1 Verification Timeline:</strong></p>
+            <div class="sub-clause">
+                <p>Owner receives notification when marking is completed by agent.</p>
+                <p>Owner has 48-72 hours to review and confirm the marking.</p>
+                <p>Owner can approve, request corrections, or reject the marking.</p>
+            </div>
+
+            <p><strong>7.2 Approval Consequences:</strong></p>
+            <div class="sub-clause">
+                <p>Upon approval, property is enabled for listing on the platform.</p>
+                <p>Agent receives full remaining payment (₦4,000 balance).</p>
+                <p>Property boundary is permanently stored in Newcondo's database.</p>
+            </div>
+
+            <p><strong>7.3 Rejection Process:</strong></p>
+            <div class="sub-clause">
+                <p>Owner must provide specific reasons for rejection.</p>
+                <p>Agent still receives partial compensation for completed work.</p>
+                <p>Owner may request remarking at their own additional cost.</p>
+                <p>Repeated rejections without valid reasons may result in service suspension.</p>
+            </div>
+
+            <p><strong>7.4 Auto-Approval:</strong></p>
+            <div class="sub-clause">
+                <p>If Owner doesn't respond within the verification window, marking is auto-approved.</p>
+                <p>Progressive payment release to agent occurs per the schedule below.</p>
+                <p>Property listing is automatically activated.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>8. PROGRESSIVE PAYMENT RELEASE SCHEDULE</h2>
+        <div class="clause">
+            <p><strong>8.1</strong> If Owner fails to verify within the initial 48-72 hour window, payments are released progressively to the agent:</p>
+            <table>
+                <tr>
+                    <td><strong>Verification Window</strong></td>
+                    <td><strong>Payment Released to Agent</strong></td>
+                    <td><strong>Cumulative Total</strong></td>
+                </tr>
+                <tr>
+                    <td>Upon completion</td>
+                    <td>₦1,000 (advance)</td>
+                    <td>₦1,000</td>
+                </tr>
+                <tr>
+                    <td>After 72 hours (auto-approval)</td>
+                    <td>₦1,500</td>
+                    <td>₦2,500</td>
+                </tr>
+                <tr>
+                    <td>After 5 days</td>
+                    <td>₦1,000</td>
+                    <td>₦3,500</td>
+                </tr>
+                <tr>
+                    <td>After 7 days</td>
+                    <td>₦1,500 (final balance)</td>
+                    <td>₦5,000</td>
+                </tr>
+            </table>
+            <p><strong>8.2</strong> After complete payment release, if Owner later disputes the marking, they must initiate a new marking job at their expense.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>9. DUPLICATE PREVENTION & BOUNDARY PROTECTION</h2>
+        <div class="clause">
+            <p><strong>9.1 Unique Property Identification:</strong></p>
+            <div class="sub-clause">
+                <p>Each marked property is assigned a unique building fingerprint based on GPS coordinates and boundaries.</p>
+                <p>Once marked, the property cannot be re-marked by another user.</p>
+                <p>Duplicate marking attempts will display a transparent red overlay indicating prior marking.</p>
+            </div>
+
+            <p><strong>9.2 Boundary Disputes:</strong></p>
+            <div class="sub-clause">
+                <p>If multiple parties claim ownership of the same property, Newcondo will investigate.</p>
+                <p>Parties must provide legal documentation proving ownership.</p>
+                <p>Newcondo reserves the right to suspend disputed property listings pending resolution.</p>
+                <p>Newcondo's decision on boundary disputes is final.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>10. INTELLECTUAL PROPERTY & DATA USAGE</h2>
+        <div class="clause">
+            <p><strong>10.1</strong> All property images, boundary data, and geolocation information uploaded through the marking service become part of Newcondo's database.</p>
+            <p><strong>10.2</strong> Owner grants Newcondo a non-exclusive license to use property images and data for platform operations, marketing, and promotional purposes.</p>
+            <p><strong>10.3</strong> Owner retains ownership rights to their property and can request data removal upon delisting.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>11. LIABILITY & INDEMNIFICATION</h2>
+        <div class="clause">
+            <p><strong>11.1 Newcondo's Liability:</strong></p>
+            <div class="sub-clause">
+                <p>Newcondo is not liable for agent delays beyond reasonable control (traffic, weather, security).</p>
+                <p>Newcondo is not responsible for property damage during marking activities.</p>
+                <p>Newcondo's maximum liability is limited to refund of marking service fees paid.</p>
+            </div>
+
+            <p><strong>11.2 Owner's Indemnification:</strong></p>
+            <div class="sub-clause">
+                <p>Owner indemnifies Newcondo against claims arising from false property information.</p>
+                <p>Owner is liable for any damages or injuries to agents during property access.</p>
+                <p>Owner warrants they have legal authority to list and mark the property.</p>
+            </div>
+
+            <p><strong>11.3 Agent Conduct:</strong></p>
+            <div class="sub-clause">
+                <p>Agents are independent contractors, not Newcondo employees.</p>
+                <p>Newcondo vets agents but is not liable for their individual actions.</p>
+                <p>Property Owners should report agent misconduct immediately.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="important">
+        <strong>DISCLAIMER:</strong> Newcondo acts solely as a technology platform facilitating property marking services. We do not guarantee property condition, legal title, or rental success. Property Owners are responsible for ensuring legal compliance and property documentation.
+    </div>
+
+    <div class="section">
+        <h2>12. PRIVACY & DATA PROTECTION</h2>
+        <div class="clause">
+            <p><strong>12.1</strong> Newcondo complies with Nigeria Data Protection Regulation (NDPR) 2019.</p>
+            <p><strong>12.2</strong> Owner's personal data is processed solely for marking service delivery and platform operations.</p>
+            <p><strong>12.3</strong> Owner contact information shared with agents is used only for marking coordination.</p>
+            <p><strong>12.4</strong> Owners can request data access, correction, or deletion subject to legal retention requirements.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>13. TERMINATION & CANCELLATION</h2>
+        <div class="clause">
+            <p><strong>13.1 Cancellation Before Agent Assignment:</strong></p>
+            <div class="sub-clause">
+                <p>Owner may cancel marking request before agent assignment for full refund minus processing fees.</p>
+            </div>
+
+            <p><strong>13.2 Cancellation After Agent Assignment:</strong></p>
+            <div class="sub-clause">
+                <p>No refund is provided once agent has been assigned and notified.</p>
+                <p>If agent has commenced travel, Owner is liable for the full marking fee.</p>
+            </div>
+
+            <p><strong>13.3 Service Suspension:</strong></p>
+            <div class="sub-clause">
+                <p>Newcondo may suspend marking services for fraudulent activity or repeated policy violations.</p>
+                <p>Owners engaging in duplicate listing attempts face permanent service suspension.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>14. DISPUTE RESOLUTION</h2>
+        <div class="clause">
+            <p><strong>14.1 Informal Resolution:</strong></p>
+            <div class="sub-clause">
+                <p>Parties agree to first attempt informal resolution through Newcondo's customer support.</p>
+            </div>
+
+            <p><strong>14.2 Mediation:</strong></p>
+            <div class="sub-clause">
+                <p>Unresolved disputes shall be referred to mediation in Lagos, Nigeria.</p>
+            </div>
+
+            <p><strong>14.3 Arbitration:</strong></p>
+            <div class="sub-clause">
+                <p>If mediation fails, disputes shall be settled through arbitration under the Nigerian Arbitration and Conciliation Act.</p>
+                <p>Arbitration proceedings shall be conducted in English in Lagos, Nigeria.</p>
+            </div>
+
+            <p><strong>14.4 Governing Law:</strong></p>
+            <div class="sub-clause">
+                <p>This Agreement is governed by the laws of the Federal Republic of Nigeria.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>15. GENERAL PROVISIONS</h2>
+        <div class="clause">
+            <p><strong>15.1 Entire Agreement:</strong> This Agreement constitutes the entire understanding between the parties regarding property marking services.</p>
+            <p><strong>15.2 Amendments:</strong> Newcondo reserves the right to modify this Agreement with 30 days' notice to property owners.</p>
+            <p><strong>15.3 Severability:</strong> If any provision is found invalid, the remaining provisions remain in full effect.</p>
+            <p><strong>15.4 Waiver:</strong> Failure to enforce any provision does not constitute a waiver of that provision.</p>
+            <p><strong>15.5 Assignment:</strong> Owner may not assign this Agreement without Newcondo's written consent.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>16. ACKNOWLEDGMENT & ACCEPTANCE</h2>
+        <div class="clause">
+            <p>By clicking "I Agree" or using the property marking service, the Property Owner acknowledges that they have read, understood, and agree to be bound by all terms and conditions of this Agreement.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="signature-block">
+            <div class="signature-line">
+                <p><strong>PROPERTY OWNER</strong></p>
+                <div class="line"></div>
+                <p>Name: _______________________</p>
+                <p>Signature: ___________________</p>
+                <p>Date: _______________________</p>
+            </div>
+            <div class="signature-line">
+                <p><strong>NEWCONDO TECHNOLOGY LIMITED</strong></p>
+                <div class="line"></div>
+                <p>Authorized Representative</p>
+                <p>Signature: ___________________</p>
+                <p>Date: _______________________</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
+            <p><strong>Newcondo Technology Limited</strong></p>
+            <p>Lagos, Nigeria | support@newcondo.ng | www.newcondo.ng</p>
+            <p>Document Version: 1.0 | Last Updated: October 2025</p>
+        </div>
+    </div>
+</body>
+</html>
