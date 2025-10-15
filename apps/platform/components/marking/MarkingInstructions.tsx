@@ -483,3 +483,431 @@ export default function MarkingInstructions({
 //     ],
 //   },
 // ];
+
+
+
+
+
+// // apps/platform/components/marking/MarkingInstructions.tsx
+// "use client";
+
+// import { useState } from "react";
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/card";
+// import { Badge } from "@newcondo/ui/badge";
+// import { Button } from "@newcondo/ui/button";
+// import { Alert, AlertDescription, AlertTitle } from "@newcondo/ui/alert";
+// import { 
+//   CheckCircle2, 
+//   MapPin, 
+//   Camera, 
+//   Clock, 
+//   AlertTriangle,
+//   ChevronDown,
+//   ChevronUp,
+//   Navigation,
+//   Home,
+//   FileCheck,
+//   Shield
+// } from "lucide-react";
+
+// interface MarkingInstructionsProps {
+//   contactPersonName?: string;
+//   contactPersonPhone?: string;
+//   propertyAddress?: string;
+//   timeSlotExpiry?: Date;
+//   accessInstructions?: string;
+//   isAssignedJob?: boolean;
+// }
+
+// export function MarkingInstructions({
+//   contactPersonName,
+//   contactPersonPhone,
+//   propertyAddress,
+//   timeSlotExpiry,
+//   accessInstructions,
+//   isAssignedJob = false
+// }: MarkingInstructionsProps) {
+//   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+//     preparation: true,
+//     location: true,
+//     marking: true,
+//     completion: true
+//   });
+
+//   const toggleSection = (section: string) => {
+//     setExpandedSections(prev => ({
+//       ...prev,
+//       [section]: !prev[section]
+//     }));
+//   };
+
+//   const formatTimeRemaining = (expiry?: Date) => {
+//     if (!expiry) return null;
+//     const now = new Date();
+//     const diff = new Date(expiry).getTime() - now.getTime();
+//     const hours = Math.floor(diff / (1000 * 60 * 60));
+//     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+//     if (diff <= 0) return "Time expired";
+//     if (hours === 0) return `${minutes} minutes remaining`;
+//     return `${hours}h ${minutes}m remaining`;
+//   };
+
+//   return (
+//     <div className="space-y-6">
+//       {/* Time Alert for Assigned Jobs */}
+//       {isAssignedJob && timeSlotExpiry && (
+//         <Alert variant={new Date(timeSlotExpiry).getTime() - Date.now() < 60 * 60 * 1000 ? "destructive" : "default"}>
+//           <Clock className="h-4 w-4" />
+//           <AlertTitle>Time Slot Active</AlertTitle>
+//           <AlertDescription>
+//             {formatTimeRemaining(timeSlotExpiry)} to complete this marking job.
+//             Complete within the allocated time to receive full payment.
+//           </AlertDescription>
+//         </Alert>
+//       )}
+
+//       {/* Contact Information */}
+//       {contactPersonName && (
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="flex items-center gap-2">
+//               <Shield className="h-5 w-5" />
+//               Contact Information
+//             </CardTitle>
+//             <CardDescription>
+//               Reach out to the contact person for property access
+//             </CardDescription>
+//           </CardHeader>
+//           <CardContent className="space-y-3">
+//             <div>
+//               <p className="text-sm font-medium text-muted-foreground">Contact Person</p>
+//               <p className="text-base font-semibold">{contactPersonName}</p>
+//             </div>
+//             <div>
+//               <p className="text-sm font-medium text-muted-foreground">Phone Number</p>
+//               <p className="text-base font-semibold">{contactPersonPhone}</p>
+//               <Button variant="outline" size="sm" className="mt-2" asChild>
+//                 <a href={`tel:${contactPersonPhone}`}>Call Contact Person</a>
+//               </Button>
+//             </div>
+//             {propertyAddress && (
+//               <div>
+//                 <p className="text-sm font-medium text-muted-foreground">Property Address</p>
+//                 <p className="text-base">{propertyAddress}</p>
+//               </div>
+//             )}
+//             {accessInstructions && (
+//               <div>
+//                 <p className="text-sm font-medium text-muted-foreground">Access Instructions</p>
+//                 <p className="text-base text-muted-foreground">{accessInstructions}</p>
+//               </div>
+//             )}
+//           </CardContent>
+//         </Card>
+//       )}
+
+//       {/* Step 1: Preparation */}
+//       <Card>
+//         <CardHeader className="cursor-pointer" onClick={() => toggleSection('preparation')}>
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-3">
+//               <Badge variant="outline" className="h-8 w-8 rounded-full flex items-center justify-center">
+//                 1
+//               </Badge>
+//               <div>
+//                 <CardTitle>Preparation Before Leaving</CardTitle>
+//                 <CardDescription>Essential items and checks</CardDescription>
+//               </div>
+//             </div>
+//             {expandedSections.preparation ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+//           </div>
+//         </CardHeader>
+//         {expandedSections.preparation && (
+//           <CardContent className="space-y-4">
+//             <div className="space-y-3">
+//               <ChecklistItem 
+//                 icon={<Camera className="h-5 w-5" />}
+//                 title="Ensure Good Phone Camera"
+//                 description="Your phone camera should be clean and capable of taking clear photos"
+//               />
+//               <ChecklistItem 
+//                 icon={<Navigation className="h-5 w-5" />}
+//                 title="Enable GPS/Location Services"
+//                 description="Location must be enabled for accurate property marking"
+//               />
+//               <ChecklistItem 
+//                 icon={<Clock className="h-5 w-5" />}
+//                 title="Check Time Availability"
+//                 description="Ensure you have sufficient time to complete the marking job"
+//               />
+//               <ChecklistItem 
+//                 icon={<Shield className="h-5 w-5" />}
+//                 title="Contact Property Guide"
+//                 description="Call the contact person to confirm availability and arrange access"
+//               />
+//             </div>
+//           </CardContent>
+//         )}
+//       </Card>
+
+//       {/* Step 2: Locating the Property */}
+//       <Card>
+//         <CardHeader className="cursor-pointer" onClick={() => toggleSection('location')}>
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-3">
+//               <Badge variant="outline" className="h-8 w-8 rounded-full flex items-center justify-center">
+//                 2
+//               </Badge>
+//               <div>
+//                 <CardTitle>Locating the Property</CardTitle>
+//                 <CardDescription>Navigation and identification</CardDescription>
+//               </div>
+//             </div>
+//             {expandedSections.location ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+//           </div>
+//         </CardHeader>
+//         {expandedSections.location && (
+//           <CardContent className="space-y-4">
+//             <div className="space-y-3">
+//               <ChecklistItem 
+//                 icon={<MapPin className="h-5 w-5" />}
+//                 title="Use Provided Address"
+//                 description="Navigate using the exact address and contact person details provided"
+//               />
+//               <ChecklistItem 
+//                 icon={<Home className="h-5 w-5" />}
+//                 title="Verify Property Features"
+//                 description="Cross-check building characteristics with any photos provided by the owner"
+//               />
+//               <ChecklistItem 
+//                 icon={<Shield className="h-5 w-5" />}
+//                 title="Meet Contact Person"
+//                 description="Introduce yourself and verify you're at the correct property"
+//               />
+//             </div>
+            
+//             <Alert>
+//               <AlertTriangle className="h-4 w-4" />
+//               <AlertTitle>Important</AlertTitle>
+//               <AlertDescription>
+//                 If you cannot locate the property or access is denied, contact Newcondo support immediately.
+//                 Do not mark the wrong property.
+//               </AlertDescription>
+//             </Alert>
+//           </CardContent>
+//         )}
+//       </Card>
+
+//       {/* Step 3: Marking the Property */}
+//       <Card>
+//         <CardHeader className="cursor-pointer" onClick={() => toggleSection('marking')}>
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-3">
+//               <Badge variant="outline" className="h-8 w-8 rounded-full flex items-center justify-center">
+//                 3
+//               </Badge>
+//               <div>
+//                 <CardTitle>Marking the Property Boundary</CardTitle>
+//                 <CardDescription>GPS marking and boundary definition</CardDescription>
+//               </div>
+//             </div>
+//             {expandedSections.marking ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+//           </div>
+//         </CardHeader>
+//         {expandedSections.marking && (
+//           <CardContent className="space-y-4">
+//             <div className="space-y-3">
+//               <InstructionStep 
+//                 number={1}
+//                 title="Open Satellite Map View"
+//                 description="The app will automatically open the map and zoom to your current location"
+//               />
+//               <InstructionStep 
+//                 number={2}
+//                 title="Locate the Property on Map"
+//                 description="Find the exact building on the satellite map view. The map will be zoomed in to the maximum level"
+//               />
+//               <InstructionStep 
+//                 number={3}
+//                 title="Draw Property Boundary"
+//                 description="Carefully draw a box/mask that covers only the property you're marking. Be precise and don't overlap with neighboring properties"
+//               />
+//               <InstructionStep 
+//                 number={4}
+//                 title="Verify GPS Coordinates"
+//                 description="The system will automatically capture the GPS coordinates. Ensure your location services are active"
+//               />
+//             </div>
+
+//             <Alert>
+//               <AlertTriangle className="h-4 w-4" />
+//               <AlertTitle>Accuracy is Critical</AlertTitle>
+//               <AlertDescription>
+//                 The boundary you draw must accurately represent only this property. 
+//                 Overlapping boundaries or incorrect marking may result in job rejection and no payment.
+//               </AlertDescription>
+//             </Alert>
+//           </CardContent>
+//         )}
+//       </Card>
+
+//       {/* Step 4: Completion Documentation */}
+//       <Card>
+//         <CardHeader className="cursor-pointer" onClick={() => toggleSection('completion')}>
+//           <div className="flex items-center justify-between">
+//             <div className="flex items-center gap-3">
+//               <Badge variant="outline" className="h-8 w-8 rounded-full flex items-center justify-center">
+//                 4
+//               </Badge>
+//               <div>
+//                 <CardTitle>Documentation & Completion</CardTitle>
+//                 <CardDescription>Photo evidence and submission</CardDescription>
+//               </div>
+//             </div>
+//             {expandedSections.completion ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+//           </div>
+//         </CardHeader>
+//         {expandedSections.completion && (
+//           <CardContent className="space-y-4">
+//             <div className="space-y-3">
+//               <PhotoRequirement 
+//                 title="Building Exterior (Front View)"
+//                 description="Clear photo showing the entire front of the building"
+//                 required
+//               />
+//               <PhotoRequirement 
+//                 title="Building Entrance/Gate"
+//                 description="Photo of the main entrance or gate"
+//                 required
+//               />
+//               <PhotoRequirement 
+//                 title="Key Interior Rooms"
+//                 description="Photos of living room, kitchen, bedrooms, and bathrooms (at least 6 photos)"
+//                 required
+//               />
+//               <PhotoRequirement 
+//                 title="Property Number/Identification"
+//                 description="Photo of house number, gate number, or any identifying marker"
+//                 required
+//               />
+//               <PhotoRequirement 
+//                 title="Surrounding Area"
+//                 description="Photos showing neighboring buildings or landmarks"
+//                 required={false}
+//               />
+//             </div>
+
+//             <div className="pt-4 border-t">
+//               <h4 className="font-semibold mb-2 flex items-center gap-2">
+//                 <FileCheck className="h-5 w-5" />
+//                 Final Submission
+//               </h4>
+//               <ul className="space-y-2 text-sm text-muted-foreground">
+//                 <li>• Review all photos for clarity and relevance</li>
+//                 <li>• Add completion notes if necessary</li>
+//                 <li>• Submit the marking job</li>
+//                 <li>• Wait for property owner confirmation</li>
+//               </ul>
+//             </div>
+
+//             <Alert>
+//               <CheckCircle2 className="h-4 w-4" />
+//               <AlertTitle>Payment Release</AlertTitle>
+//               <AlertDescription>
+//                 After submission, you'll receive a partial payment (₦1,000). 
+//                 The remaining payment will be released after the property owner confirms and verifies your marking.
+//               </AlertDescription>
+//             </Alert>
+//           </CardContent>
+//         )}
+//       </Card>
+
+//       {/* Important Reminders */}
+//       <Card className="border-orange-200 bg-orange-50">
+//         <CardHeader>
+//           <CardTitle className="flex items-center gap-2 text-orange-900">
+//             <AlertTriangle className="h-5 w-5" />
+//             Important Reminders
+//           </CardTitle>
+//         </CardHeader>
+//         <CardContent className="space-y-2 text-sm text-orange-900">
+//           <p>• Always verify you're at the correct property before marking</p>
+//           <p>• Take clear, well-lit photos showing accurate property details</p>
+//           <p>• Draw property boundaries precisely to avoid overlaps</p>
+//           <p>• Complete the job within your allocated time slot (3 hours)</p>
+//           <p>• Contact support immediately if you encounter any issues</p>
+//           <p>• Be professional and courteous when interacting with property contacts</p>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }
+
+// // Helper Components
+// function ChecklistItem({ 
+//   icon, 
+//   title, 
+//   description 
+// }: { 
+//   icon: React.ReactNode; 
+//   title: string; 
+//   description: string;
+// }) {
+//   return (
+//     <div className="flex gap-3">
+//       <div className="mt-0.5 text-primary">{icon}</div>
+//       <div>
+//         <p className="font-medium">{title}</p>
+//         <p className="text-sm text-muted-foreground">{description}</p>
+//       </div>
+//     </div>
+//   );
+// }
+
+// function InstructionStep({ 
+//   number, 
+//   title, 
+//   description 
+// }: { 
+//   number: number; 
+//   title: string; 
+//   description: string;
+// }) {
+//   return (
+//     <div className="flex gap-3">
+//       <Badge variant="secondary" className="h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0">
+//         {number}
+//       </Badge>
+//       <div>
+//         <p className="font-medium">{title}</p>
+//         <p className="text-sm text-muted-foreground">{description}</p>
+//       </div>
+//     </div>
+//   );
+// }
+
+// function PhotoRequirement({ 
+//   title, 
+//   description, 
+//   required 
+// }: { 
+//   title: string; 
+//   description: string; 
+//   required: boolean;
+// }) {
+//   return (
+//     <div className="flex items-start gap-3 p-3 rounded-lg border">
+//       <Camera className="h-5 w-5 mt-0.5 text-primary" />
+//       <div className="flex-1">
+//         <div className="flex items-center gap-2">
+//           <p className="font-medium">{title}</p>
+//           {required && (
+//             <Badge variant="destructive" className="h-5 text-xs">Required</Badge>
+//           )}
+//         </div>
+//         <p className="text-sm text-muted-foreground">{description}</p>
+//       </div>
+//     </div>
+//   );
+// }

@@ -215,3 +215,209 @@ export interface WithdrawalRequest {
   processedAt?: string;
   failureReason?: string;
 }
+
+
+
+
+
+
+// // apps/platform/types/markingPayment.ts
+
+// export type MarkingChoice = 
+//   | 'SELF_MARK' 
+//   | 'ASSIGN_NEWCONDO' 
+//   | 'SEND_SOMEONE' 
+//   | 'ASSIGN_AGENT';
+
+// export interface MarkingPaymentDetails {
+//   totalFee: number;
+//   agentCompensation: number; // 25% of total fee
+//   platformFee: number; // Remaining 75%
+//   newcondoAdminFee?: number; // 25,000 NGN for admin marking
+//   currency: string;
+// }
+
+// export interface MarkingJobPayment {
+//   id: string;
+//   markingJobId: string;
+//   userId: string;
+//   amount: number;
+//   currency: string;
+//   paymentType: 'PROPERTY_MARKING';
+//   status: PaymentStatus;
+//   flutterwaveRef?: string;
+//   transactionId?: string;
+//   description?: string;
+//   failureReason?: string;
+//   paidAt?: Date;
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// export type PaymentStatus = 
+//   | 'PENDING' 
+//   | 'SUCCESS' 
+//   | 'FAILED' 
+//   | 'CANCELLED' 
+//   | 'REFUNDED'
+//   | 'HELD'
+//   | 'RELEASED';
+
+// export interface VirtualAccountDetails {
+//   id: string;
+//   accountNumber: string;
+//   accountName: string;
+//   bankCode: string;
+//   balance: number;
+//   currency: string;
+//   isActive: boolean;
+// }
+
+// export interface MarkingFeeStructure {
+//   propertyOwnerMarkingFee: number; // 20,000 NGN
+//   agentCompensationPercentage: number; // 25%
+//   agentCompensationAmount: number; // 5,000 NGN (25% of 20,000)
+//   platformFeePercentage: number; // 75%
+//   platformFeeAmount: number; // 15,000 NGN (75% of 20,000)
+//   newcondoAdminMarkingFee: number; // 25,000 NGN
+//   initialAgentPayment: number; // 1,000 NGN (paid immediately after marking)
+//   remainingAgentPayment: number; // 4,000 NGN (paid after owner confirmation)
+// }
+
+// export interface PaymentConfirmation {
+//   paymentId: string;
+//   confirmationDeadline: Date;
+//   isConfirmed: boolean;
+//   confirmedAt?: Date;
+//   autoReleaseDate: Date;
+// }
+
+// export interface AgentCompensationBreakdown {
+//   totalCompensation: number;
+//   immediatePayment: number; // ~1,000 NGN
+//   pendingPayment: number; // ~4,000 NGN
+//   status: 'PENDING' | 'PARTIALLY_PAID' | 'FULLY_PAID';
+//   releasedAt?: Date;
+// }
+
+// export interface MarkingPaymentRequest {
+//   propertyId: string;
+//   markingChoice: MarkingChoice;
+//   assignedAgentId?: string; // For ASSIGN_AGENT choice
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+// }
+
+// export interface FlutterwavePaymentResponse {
+//   status: 'success' | 'error';
+//   message: string;
+//   data?: {
+//     link: string;
+//     transactionId: string;
+//     reference: string;
+//   };
+// }
+
+// export interface PaymentWebhookPayload {
+//   event: string;
+//   data: {
+//     id: number;
+//     tx_ref: string;
+//     flw_ref: string;
+//     amount: number;
+//     currency: string;
+//     charged_amount: number;
+//     status: string;
+//     payment_type: string;
+//     created_at: string;
+//     customer: {
+//       id: number;
+//       email: string;
+//       phone_number: string;
+//       name: string;
+//     };
+//   };
+// }
+
+// export interface MarkingPaymentVerification {
+//   isValid: boolean;
+//   paymentStatus: PaymentStatus;
+//   transactionId?: string;
+//   amount?: number;
+//   paidAt?: Date;
+//   errorMessage?: string;
+// }
+
+// export const MARKING_FEE_CONSTANTS: MarkingFeeStructure = {
+//   propertyOwnerMarkingFee: 20000, // 20,000 NGN
+//   agentCompensationPercentage: 25, // 25%
+//   agentCompensationAmount: 5000, // 25% of 20,000
+//   platformFeePercentage: 75, // 75%
+//   platformFeeAmount: 15000, // 75% of 20,000
+//   newcondoAdminMarkingFee: 25000, // 25,000 NGN for Newcondo admin marking
+//   initialAgentPayment: 1000, // ~1,000 NGN paid immediately
+//   remainingAgentPayment: 4000, // ~4,000 NGN paid after confirmation
+// };
+
+// export const calculateMarkingPayment = (
+//   choice: MarkingChoice
+// ): MarkingPaymentDetails => {
+//   const { 
+//     propertyOwnerMarkingFee, 
+//     agentCompensationAmount, 
+//     platformFeeAmount,
+//     newcondoAdminMarkingFee 
+//   } = MARKING_FEE_CONSTANTS;
+
+//   switch (choice) {
+//     case 'ASSIGN_NEWCONDO':
+//       return {
+//         totalFee: newcondoAdminMarkingFee,
+//         agentCompensation: 0,
+//         platformFee: newcondoAdminMarkingFee,
+//         newcondoAdminFee: newcondoAdminMarkingFee,
+//         currency: 'NGN',
+//       };
+    
+//     case 'ASSIGN_AGENT':
+//       return {
+//         totalFee: propertyOwnerMarkingFee,
+//         agentCompensation: agentCompensationAmount,
+//         platformFee: platformFeeAmount,
+//         currency: 'NGN',
+//       };
+    
+//     case 'SEND_SOMEONE':
+//     case 'SELF_MARK':
+//       return {
+//         totalFee: 0,
+//         agentCompensation: 0,
+//         platformFee: 0,
+//         currency: 'NGN',
+//       };
+    
+//     default:
+//       return {
+//         totalFee: 0,
+//         agentCompensation: 0,
+//         platformFee: 0,
+//         currency: 'NGN',
+//       };
+//   }
+// };
+
+// export const getAgentCompensationBreakdown = (
+//   totalCompensation: number
+// ): AgentCompensationBreakdown => {
+//   const { initialAgentPayment } = MARKING_FEE_CONSTANTS;
+  
+//   return {
+//     totalCompensation,
+//     immediatePayment: initialAgentPayment,
+//     pendingPayment: totalCompensation - initialAgentPayment,
+//     status: 'PENDING',
+//   };
+// };

@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewCondo Property Owner Agreement</title>
+    <style>
+        @page {
+            margin: 2.5cm;
+            size: A4;
+        }
+        
+        body {
+            font-family: 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            color: #000;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .logo {
+            font-size: 24pt;
+            font-weight: bold;
+            color: #1a5490;
+            margin-bottom: 10px;
+        }
+        
+        h1 {
+            font-size: 18pt;
+            text-align: center;
+            margin: 30px 0 20px 0;
+            text-transform: uppercase;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            margin: 25px 0 15px 0;
+            color: #1a5490;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            margin: 20px 0 10px 0;
+            font-weight: bold;
+        }
+        
+        p {
+            text-align: justify;
+            margin: 10px 0;
+        }
+        
+        .section {
+            margin: 20px 0;
+        }
+        
+        .clause {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+        
+        .sub-clause {
+            margin: 10px 0;
+            padding-left: 40px;
+        }
+        
+        .important {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        
+        .signature-section {
+            margin-top: 50px;
+            page-break-inside: avoid;
+        }
+        
+        .signature-box {
+            border: 1px solid #333;
+            padding: 15px;
+            margin: 20px 0;
+            min-height: 80px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ccc;
+            font-size: 9pt;
+            color: #666;
+        }
+        
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 40px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .definition {
+            font-style: italic;
+            margin-left: 20px;
+        }
+        
+        .fee-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        .fee-table th, .fee-table td {
+            border: 1px solid #333;
+            padding: 10px;
+            text-align: left;
+        }
+        
+        .fee-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">NEWCONDO</div>
+        <p style="margin: 0; font-size: 10pt;">Property Technology Platform</p>
+        <p style="margin: 0; font-size: 9pt;">Lagos, Nigeria | support@newcondo.com | www.newcondo.com</p>
+    </div>
+
+    <h1>Property Owner Agreement<br/>Property Marking Service</h1>
+
+    <div class="section">
+        <p><strong>Effective Date:</strong> January 1, 2025</p>
+        <p><strong>Last Updated:</strong> January 1, 2025</p>
+        <p><strong>Version:</strong> 1.0</p>
+    </div>
+
+    <div class="important">
+        <strong>IMPORTANT NOTICE:</strong> This agreement contains important legal terms governing your use of NewCondo's Property Marking Service. Please read this document carefully before requesting marking services. By using our marking service, you acknowledge that you have read, understood, and agree to be bound by all terms and conditions contained herein.
+    </div>
+
+    <h2>1. PARTIES TO THIS AGREEMENT</h2>
+    <div class="clause">
+        <p><strong>1.1</strong> This Property Owner Agreement ("Agreement") is entered into between:</p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> <strong>NewCondo Technology Limited</strong> ("NewCondo", "we", "us", or "the Platform"), a company incorporated under the laws of the Federal Republic of Nigeria, with its principal place of business in Lagos, Nigeria;</p>
+            <p><strong>AND</strong></p>
+            <p><strong>b)</strong> The property owner ("You", "Your", or "Property Owner") who requests property marking services through the NewCondo platform.</p>
+        </div>
+    </div>
+
+    <h2>2. DEFINITIONS</h2>
+    <div class="clause">
+        <p><strong>2.1</strong> In this Agreement, unless the context otherwise requires:</p>
+        <div class="sub-clause">
+            <p><strong>"Property Marking Service"</strong> means the service provided by NewCondo or its authorized agents to physically verify, mark, and create digital boundaries for properties on the NewCondo platform using GPS coordinates, satellite imagery, and photographic documentation.</p>
+            
+            <p><strong>"Marking Agent"</strong> means an individual authorized by NewCondo to perform property marking services, including registered agents on the platform, premium subscribers, or NewCondo-employed personnel.</p>
+            
+            <p><strong>"Property Boundary"</strong> means the digital mask or boundary created on satellite imagery that defines the specific property being listed on the platform.</p>
+            
+            <p><strong>"Marking Fee"</strong> means the fee payable for the property marking service as specified in this Agreement.</p>
+            
+            <p><strong>"Contact Person"</strong> means the individual designated by the Property Owner to facilitate access to the property for marking purposes.</p>
+            
+            <p><strong>"Confirmation Period"</strong> means the time window (2-3 days from marking completion) within which the Property Owner must verify and confirm the completed marking.</p>
+            
+            <p><strong>"Virtual Account"</strong> means the dedicated bank account created for the Property Owner within the NewCondo platform for managing transactions.</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>3. SCOPE OF SERVICES</h2>
+    <div class="clause">
+        <p><strong>3.1 Service Description</strong></p>
+        <div class="sub-clause">
+            <p>NewCondo's Property Marking Service includes:</p>
+            <ul>
+                <li>Physical verification of property location using GPS coordinates</li>
+                <li>Digital boundary marking on satellite/street view imagery</li>
+                <li>Photographic documentation of key property features</li>
+                <li>Creation of property fingerprint for duplicate prevention</li>
+                <li>Integration of marked boundaries into the platform database</li>
+            </ul>
+        </div>
+
+        <p><strong>3.2 Marking Options</strong></p>
+        <div class="sub-clause">
+            <p>Property Owners may choose from the following marking options:</p>
+            <ul>
+                <li><strong>Self-Marking:</strong> Mark the property personally through the platform interface (no charge)</li>
+                <li><strong>Designated Person:</strong> Share a marking link with someone you know (no charge; link valid for 48 hours)</li>
+                <li><strong>Platform Agent:</strong> Assign to available registered agents or premium subscribers (₦20,000)</li>
+                <li><strong>NewCondo Direct Service:</strong> Request direct marking by NewCondo personnel (₦25,000)</li>
+            </ul>
+        </div>
+
+        <p><strong>3.3 Service Exclusions</strong></p>
+        <div class="sub-clause">
+            <p>The Property Marking Service does NOT include:</p>
+            <ul>
+                <li>Legal verification of property ownership</li>
+                <li>Property valuation or assessment</li>
+                <li>Structural inspection or condition assessment</li>
+                <li>Title verification or land registry searches</li>
+                <li>Resolution of boundary disputes with neighbors</li>
+                <li>Interior renovation or improvement recommendations</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>4. FEES AND PAYMENT</h2>
+    <div class="clause">
+        <p><strong>4.1 Marking Fees</strong></p>
+        <table class="fee-table">
+            <thead>
+                <tr>
+                    <th>Marking Option</th>
+                    <th>Fee (NGN)</th>
+                    <th>Payment Timing</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Self-Marking</td>
+                    <td>FREE</td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td>Designated Person (Shareable Link)</td>
+                    <td>FREE</td>
+                    <td>N/A</td>
+                </tr>
+                <tr>
+                    <td>Platform Agent Assignment</td>
+                    <td>₦20,000</td>
+                    <td>Before agent assignment</td>
+                </tr>
+                <tr>
+                    <td>NewCondo Direct Service</td>
+                    <td>₦25,000</td>
+                    <td>Before service scheduling</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>4.2 Payment Terms</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> All marking fees must be paid in advance before service initiation.</p>
+            <p><strong>b)</strong> Payment shall be made through the NewCondo platform using available payment methods (bank transfer, card payment, or virtual account deposit).</p>
+            <p><strong>c)</strong> Payment confirmation is required before agents are notified or assigned to marking jobs.</p>
+            <p><strong>d)</strong> Fees are non-refundable once an agent has been assigned and begins the marking process.</p>
+        </div>
+
+        <p><strong>4.3 Agent Compensation Structure</strong></p>
+        <div class="sub-clause">
+            <p>For Platform Agent Assignments (₦20,000 marking fee):</p>
+            <ul>
+                <li><strong>Initial Payment:</strong> ₦1,000 released to agent upon completing the marking</li>
+                <li><strong>Final Payment:</strong> ₦4,000 (25% of fee) released upon property owner confirmation</li>
+                <li><strong>Platform Fee:</strong> ₦15,000 (75%) retained by NewCondo</li>
+            </ul>
+            <p>The agent receives full compensation (₦5,000 total) only after successful completion and property owner confirmation within the stipulated timeframe.</p>
+        </div>
+
+        <p><strong>4.4 Virtual Account Creation</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> A virtual account is automatically created for each Property Owner upon account registration.</p>
+            <p><strong>b)</strong> The virtual account facilitates payment for marking services and future transactions on the platform.</p>
+            <p><strong>c)</strong> Virtual account details remain valid throughout the Property Owner's tenure on the platform.</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>5. PROPERTY OWNER OBLIGATIONS</h2>
+    <div class="clause">
+        <p><strong>5.1 Accurate Information</strong></p>
+        <div class="sub-clause">
+            <p>The Property Owner warrants and agrees to:</p>
+            <ul>
+                <li>Provide accurate and complete property address details including State, LGA, and location</li>
+                <li>Ensure GPS coordinates (if provided) are correct and correspond to the actual property location</li>
+                <li>Upload clear property images (if available) to assist in property identification</li>
+                <li>Provide truthful information about property ownership and authorization to list</li>
+            </ul>
+        </div>
+
+        <p><strong>5.2 Contact Person Designation</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> The Property Owner must designate a reliable Contact Person who will:</p>
+            <ul>
+                <li>Be available at the property during the scheduled marking time</li>
+                <li>Grant the Marking Agent safe and timely access to the property</li>
+                <li>Provide any additional information needed to identify or access the property</li>
+                <li>Respond to calls or messages from the assigned Marking Agent</li>
+            </ul>
+            <p><strong>b)</strong> The Property Owner must provide accurate contact details (phone number, name) for the Contact Person.</p>
+            <p><strong>c)</strong> The Property Owner is responsible for informing the Contact Person about the scheduled marking activity.</p>
+        </div>
+
+        <p><strong>5.3 Property Access</strong></p>
+        <div class="sub-clause">
+            <p>The Property Owner agrees to:</p>
+            <ul>
+                <li>Ensure the property is accessible during the agreed marking time</li>
+                <li>Provide clear access instructions if the property is in a gated community, estate, or difficult-to-locate area</li>
+                <li>Bear responsibility for any delays caused by denied or delayed access</li>
+                <li>Inform the Contact Person about security protocols or access requirements</li>
+            </ul>
+        </div>
+
+        <p><strong>5.4 Safety and Security</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> The Property Owner must ensure that:</p>
+            <ul>
+                <li>The property is safe for the Marking Agent to access and photograph</li>
+                <li>There are no undisclosed hazards (aggressive animals, structural dangers, etc.)</li>
+                <li>The Contact Person will not engage in any threatening or inappropriate behavior</li>
+            </ul>
+            <p><strong>b)</strong> The Property Owner must inform NewCondo of any special safety considerations before agent assignment.</p>
+        </div>
+
+        <p><strong>5.5 Confirmation Obligations</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Upon receiving notification of marking completion, the Property Owner MUST:</p>
+            <ul>
+                <li>Review the marked boundaries and uploaded photographs within 2-3 days</li>
+                <li>Verify that the marked property is indeed the correct property</li>
+                <li>Confirm or reject the marking through the platform interface</li>
+                <li>Provide clear reasons if rejecting the marking</li>
+            </ul>
+            <p><strong>b)</strong> Failure to confirm within the Confirmation Period will trigger automatic partial payment to the agent as outlined in Section 6.</p>
+        </div>
+
+        <p><strong>5.6 Ownership Verification</strong></p>
+        <div class="sub-clause">
+            <p>The Property Owner warrants that:</p>
+            <ul>
+                <li>They are the legal owner of the property OR have valid authorization from the owner to list it</li>
+                <li>They have the right to grant access to the property for marking purposes</li>
+                <li>The property is not subject to any legal disputes that would prevent listing</li>
+                <li>They will provide ownership documents as required by the platform</li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>6. MARKING PROCESS AND TIMELINE</h2>
+    <div class="clause">
+        <p><strong>6.1 Job Initiation</strong></p>
+        <div class="sub-clause">
+            <p>The marking process begins when:</p>
+            <ul>
+                <li>The Property Owner completes the marking request form with all required information</li>
+                <li>Payment is successfully processed (for paid marking options)</li>
+                <li>The system confirms the marking job has been queued</li>
+            </ul>
+        </div>
+
+        <p><strong>6.2 Agent Assignment (Platform Agent Option)</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Upon job initiation, NewCondo broadcasts the marking opportunity to available agents and premium subscribers within reasonable proximity to the property.</p>
+            <p><strong>b)</strong> Agents who accept the job are placed in a first-come-first-served queue.</p>
+            <p><strong>c)</strong> The first agent in the queue is assigned a 3-hour time slot to complete the marking.</p>
+            <p><strong>d)</strong> If the first agent fails to complete within their time slot, the job automatically moves to the next agent in queue.</p>
+        </div>
+
+        <p><strong>6.3 Marking Completion Timeline</strong></p>
+        <div class="sub-clause">
+            <table class="fee-table">
+                <thead>
+                    <tr>
+                        <th>Marking Option</th>
+                        <th>Expected Completion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Self-Marking</td>
+                        <td>Immediate (at Property Owner's convenience)</td>
+                    </tr>
+                    <tr>
+                        <td>Designated Person</td>
+                        <td>Within 48 hours (link expiry period)</td>
+                    </tr>
+                    <tr>
+                        <td>Platform Agent</td>
+                        <td>Within 24-72 hours of job posting</td>
+                    </tr>
+                    <tr>
+                        <td>NewCondo Direct Service</td>
+                        <td>Within 48-96 hours (subject to scheduling)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p><strong>6.4 Confirmation Period</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> After the Marking Agent uploads the completed marking (boundary and photos), the Property Owner receives immediate notification.</p>
+            <p><strong>b)</strong> The Property Owner has 2-3 days from the notification time to review and confirm the marking.</p>
+            <p><strong>c)</strong> If the Property Owner confirms, the agent's remaining payment (₦4,000) is immediately released.</p>
+            <p><strong>d)</strong> If the Property Owner does NOT respond within 2-3 days, the system automatically proceeds as follows:</p>
+            <ul>
+                <li><strong>First instance:</strong> Agent receives their remaining ₦4,000 payment automatically</li>
+                <li><strong>Subsequent instances (if marking needs to be redone):</strong> The Property Owner must initiate and pay for a new marking job</li>
+            </ul>
+        </div>
+
+        <p><strong>6.5 Marking Rejection</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> If the Property Owner rejects the marking within the Confirmation Period with valid reasons, the agent receives only the initial ₦1,000 payment.</p>
+            <p><strong>b)</strong> Valid rejection reasons include:</p>
+            <ul>
+                <li>Wrong property marked</li>
+                <li>Boundary markings are clearly inaccurate</li>
+                <li>Photos do not show the correct property</li>
+                <li>GPS coordinates are significantly off</li>
+            </ul>
+            <p><strong>c)</strong> If rejected, the job re-enters the queue for reassignment to the next available agent (no additional charge to Property Owner for the first reassignment).</p>
+        </div>
+
+        <p><strong>6.6 Maximum Attempts</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> If a marking job is rejected multiple times or remains unconfirmed after repeated attempts, NewCondo reserves the right to:</p>
+            <ul>
+                <li>Suspend the marking job pending further investigation</li>
+                <li>Request additional clarification or documentation from the Property Owner</li>
+                <li>Refund partial or full fees (at NewCondo's discretion) and cancel the marking request</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>7. LIABILITY AND INDEMNIFICATION</h2>
+    <div class="clause">
+        <p><strong>7.1 NewCondo's Liability Limitations</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> NewCondo acts solely as a technology platform connecting Property Owners with Marking Agents.</p>
+            <p><strong>b)</strong> NewCondo does NOT guarantee:</p>
+            <ul>
+                <li>The accuracy of marking performed by independent agents</li>
+                <li>That the marked property represents the correct legal boundaries</li>
+                <li>That the property owner has valid title or ownership rights</li>
+                <li>Immediate availability of agents in all geographic areas</li>
+            </ul>
+            <p><strong>c)</strong> NewCondo's total liability for any claims arising from the marking service shall not exceed the amount of the marking fee paid.</p>
+        </div>
+
+        <p><strong>7.2 Property Owner Indemnification</strong></p>
+        <div class="sub-clause">
+            <p>The Property Owner agrees to indemnify and hold harmless NewCondo, its directors, officers, employees, and agents from:</p>
+            <ul>
+                <li>Any claims arising from false or inaccurate property information provided</li>
+                <li>Disputes with neighbors or third parties regarding property boundaries</li>
+                <li>Injuries or damages occurring on the property during marking activities (unless caused by NewCondo's gross negligence)</li>
+                <li>Claims arising from unauthorized listing of properties</li>
+                <li>Breach of any representations or warranties made in this Agreement</li>
+            </ul>
+        </div>
+
+        <p><strong>7.3 Agent Actions</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Independent agents are not employees or direct representatives of NewCondo.</p>
+            <p><strong>b)</strong> NewCondo conducts reasonable verification of agents but cannot guarantee their conduct or professionalism.</p>
+            <p><strong>c)</strong> Property Owners should report any concerning agent behavior immediately through the platform's support system.</p>
+        </div>
+
+        <p><strong>7.4 Force Majeure</strong></p>
+        <div class="sub-clause">
+            <p>NewCondo shall not be liable for delays or failures in providing marking services due to circumstances beyond reasonable control, including but not limited to: natural disasters, civil unrest, government restrictions, pandemics, or telecommunications failures.</p>
+        </div>
+    </div>
+
+    <h2>8. DATA PRIVACY AND SECURITY</h2>
+    <div class="clause">
+        <p><strong>8.1 Personal Information</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> NewCondo collects and processes Property Owner personal information including:</p>
+            <ul>
+                <li>Name, email, phone number</li>
+                <li>Property address and GPS coordinates</li>
+                <li>Contact Person details</li>
+                <li>Payment and virtual account information</li>
+                <li>Property photographs and boundary data</li>
+            </ul>
+        </div>
+
+        <p><strong>8.2 Data Usage</strong></p>
+        <div class="sub-clause">
+            <p>Personal information is used solely for:</p>
+            <ul>
+                <li>Facilitating property marking services</li>
+                <li>Enabling communication between Property Owners and agents</li>
+                <li>Processing payments and maintaining financial records</li>
+                <li>Preventing duplicate property listings</li>
+                <li>Complying with legal and regulatory requirements</li>
+            </ul>
+        </div>
+
+        <p><strong>8.3 Information Sharing</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Contact Person details are shared only with assigned Marking Agents for the purpose of completing the marking service.</p>
+            <p><strong>b)</strong> Property Owner information is not sold or shared with third parties except:</p>
+            <ul>
+                <li>As required by law or legal process</li>
+                <li>With service providers necessary for platform operation (payment processors, hosting providers)</li>
+                <li>In anonymized form for analytics and platform improvement</li>
+            </ul>
+        </div>
+
+        <p><strong>8.4 Data Security</strong></p>
+        <div class="sub-clause">
+            <p>NewCondo implements industry-standard security measures to protect Property Owner data, but cannot guarantee absolute security against all potential threats.</p>
+        </div>
+
+        <p><strong>8.5 Full Privacy Policy</strong></p>
+        <div class="sub-clause">
+            <p>For complete details on data handling, please review the NewCondo Privacy Policy available at www.newcondo.com/privacy</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>9. INTELLECTUAL PROPERTY</h2>
+    <div class="clause">
+        <p><strong>9.1 Platform Content</strong></p>
+        <div class="sub-clause">
+            <p>All content on the NewCondo platform including software, design, text, graphics, and functionality remains the exclusive property of NewCondo.</p>
+        </div>
+
+        <p><strong>9.2 Property Images and Data</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> By uploading property images or providing property information, the Property Owner grants NewCondo a non-exclusive, worldwide license to use, display, and distribute such content for platform operations.</p>
+            <p><strong>b)</strong> The Property Owner warrants they have the right to grant this license and that the content does not infringe on any third-party rights.</p>
+        </div>
+
+        <p><strong>9.3 Boundary Data</strong></p>
+        <div class="sub-clause">
+            <p>Property boundary data and coordinates created through the marking service become part of the NewCondo database for duplicate prevention purposes and remain accessible to NewCondo even after the Property Owner removes their listing.</p>
+        </div>
+    </div>
+
+    <h2>10. DISPUTE RESOLUTION</h2>
+    <div class="clause">
+        <p><strong>10.1 Internal Resolution</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Property Owners should first attempt to resolve any disputes by contacting NewCondo support at support@newcondo.com</p>
+            <p><strong>b)</strong> NewCondo will investigate complaints and attempt to mediate a fair resolution within 7-14 business days.</p>
+        </div>
+
+        <p><strong>10.2 Boundary Disputes</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> If disputes arise regarding property boundaries or duplicate property claims:</p>
+            <ul>
+                <li>NewCondo will review all available evidence including GPS data, photos, and satellite imagery</li>
+                <li>Both parties will be given opportunity to present documentation</li>
+                <li>NewCondo's determination shall be binding unless overturned by legal proceedings</li>
+            </ul>
+        </div>
+
+        <p><strong>10.3 Governing Law</strong></p>
+        <div class="sub-clause">
+            <p>This Agreement is governed by the laws of the Federal Republic of Nigeria. Any disputes not resolved through internal processes shall be subject to the exclusive jurisdiction of Nigerian courts.</p>
+        </div>
+
+        <p><strong>10.4 Arbitration</strong></p>
+        <div class="sub-clause">
+            <p>Where applicable, disputes may be referred to arbitration under the Nigerian Arbitration and Conciliation Act before resorting to litigation, if both parties agree.</p>
+        </div>
+    </div>
+
+    <h2>11. TERMINATION</h2>
+    <div class="clause">
+        <p><strong>11.1 By Property Owner</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Property Owners may cancel a marking request before agent assignment for a full refund.</p>
+            <p><strong>b)</strong> Once an agent is assigned and begins work, cancellation is not permitted and fees are non-refundable.</p>
+            <p><strong>c)</strong> Property Owners may close their account at any time, but remain bound by obligations arising from active marking jobs.</p>
+        </div>
+
+        <p><strong>11.2 By NewCondo</strong></p>
+        <div class="sub-clause">
+            <p>NewCondo may suspend or terminate Property Owner accounts if:</p>
+            <ul>
+                <li>The Property Owner violates terms of this Agreement</li>
+                <li>False or fraudulent information is provided</li>
+                <li>The Property Owner engages in abusive behavior toward agents</li>
+                <li>The Property Owner repeatedly fails to provide property access</li>
+                <li>Legal or regulatory requirements mandate account closure</li>
+            </ul>
+        </div>
+
+        <p><strong>11.3 Effect of Termination</strong></p>
+        <div class="sub-clause">
+            <p><strong>a)</strong> Upon termination, all pending marking jobs will be cancelled (subject to refund policies).</p>
+            <p><strong>b)</strong> Marked property boundaries and data remain in the NewCondo database for duplicate prevention.</p>
+            <p><strong>c)</strong> Property listings associated with the account will be unpublished.</p>
+            <p><strong>d)</strong> Virtual account balances (if any) will be disbursed according to platform policies.</p>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>12. MODIFICATIONS TO AGREEMENT</h2>
+    <div class="clause">
+        <p><strong>12.1 Right to Modify</strong></p>
+        <div class="sub-clause">
+            <p>NewCondo reserves the right to modify this Agreement at any time by posting the updated version on the platform.</p>
+        </div>
+
+        <p><strong>12.2 Notification</strong></p>
+        <div class="sub-clause">
+            <p>Property Owners will be notified of material changes via email or platform notification at least 14 days before changes take effect.</p>
+        </div>
+
+        <p><strong>12.3 Continued Use</strong></p>
+        <div class="sub-clause">
+            <p>Continued use of marking services after modifications take effect constitutes acceptance of the revised Agreement.</p>
+        </div>
+    </div>
+
+    <h2>13. GENERAL PROVISIONS</h2>
+    <div class="clause">

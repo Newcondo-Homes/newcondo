@@ -217,3 +217,255 @@ export const TIME_WINDOW_COLORS = {
     border: 'border-gray-200',
   },
 } as const;
+
+
+
+
+
+
+// // apps/platform/lib/constants/timeWindows.ts
+
+// /**
+//  * Time window constants for Property Marking Service
+//  * All durations are in milliseconds for consistency
+//  */
+
+// // Agent marking time window - 3 hours to complete the job
+// export const AGENT_MARKING_WINDOW_HOURS = 3;
+// export const AGENT_MARKING_WINDOW_MS = AGENT_MARKING_WINDOW_HOURS * 60 * 60 * 1000;
+
+// // Property owner confirmation time window - 2-3 days
+// export const OWNER_CONFIRMATION_MIN_DAYS = 2;
+// export const OWNER_CONFIRMATION_MAX_DAYS = 3;
+// export const OWNER_CONFIRMATION_WINDOW_MS = OWNER_CONFIRMATION_MAX_DAYS * 24 * 60 * 60 * 1000;
+
+// // Payment lock window for preventing double bookings
+// export const PAYMENT_LOCK_WINDOW_MINUTES = 15;
+// export const PAYMENT_LOCK_WINDOW_MS = PAYMENT_LOCK_WINDOW_MINUTES * 60 * 1000;
+
+// // Queue position expiry - if agent doesn't respond
+// export const QUEUE_POSITION_EXPIRY_MINUTES = 30;
+// export const QUEUE_POSITION_EXPIRY_MS = QUEUE_POSITION_EXPIRY_MINUTES * 60 * 1000;
+
+// // Maximum time for entire marking job completion
+// export const MAX_MARKING_JOB_DAYS = 7;
+// export const MAX_MARKING_JOB_MS = MAX_MARKING_JOB_DAYS * 24 * 60 * 60 * 1000;
+
+// // Notification reminder intervals
+// export const REMINDER_INTERVALS = {
+//   FIRST_REMINDER_HOURS: 24, // 1 day before deadline
+//   SECOND_REMINDER_HOURS: 12, // 12 hours before deadline
+//   FINAL_REMINDER_HOURS: 2, // 2 hours before deadline
+// } as const;
+
+// export const REMINDER_INTERVALS_MS = {
+//   FIRST_REMINDER: REMINDER_INTERVALS.FIRST_REMINDER_HOURS * 60 * 60 * 1000,
+//   SECOND_REMINDER: REMINDER_INTERVALS.SECOND_REMINDER_HOURS * 60 * 60 * 1000,
+//   FINAL_REMINDER: REMINDER_INTERVALS.FINAL_REMINDER_HOURS * 60 * 60 * 1000,
+// } as const;
+
+// // Agent compensation release timing
+// export const IMMEDIATE_PAYMENT_PERCENTAGE = 20; // 20% paid immediately (1,000 NGN out of 5,000)
+// export const PENDING_PAYMENT_PERCENTAGE = 80; // 80% paid after confirmation (4,000 NGN)
+
+// // Auto-release payment if owner doesn't confirm
+// export const AUTO_RELEASE_PAYMENT_DAYS = OWNER_CONFIRMATION_MAX_DAYS;
+// export const AUTO_RELEASE_PAYMENT_MS = AUTO_RELEASE_PAYMENT_DAYS * 24 * 60 * 60 * 1000;
+
+// // Maximum number of retry attempts for failed confirmations
+// export const MAX_CONFIRMATION_RETRIES = 3;
+
+// // Time window before marking job expiry to send warnings
+// export const EXPIRY_WARNING_HOURS = 24;
+// export const EXPIRY_WARNING_MS = EXPIRY_WARNING_HOURS * 60 * 60 * 1000;
+
+// /**
+//  * Helper functions for time window calculations
+//  */
+
+// export const calculateAgentDeadline = (startTime: Date): Date => {
+//   return new Date(startTime.getTime() + AGENT_MARKING_WINDOW_MS);
+// };
+
+// export const calculateConfirmationDeadline = (markingCompletedAt: Date): Date => {
+//   return new Date(markingCompletedAt.getTime() + OWNER_CONFIRMATION_WINDOW_MS);
+// };
+
+// export const calculatePaymentLockExpiry = (startTime: Date): Date => {
+//   return new Date(startTime.getTime() + PAYMENT_LOCK_WINDOW_MS);
+// };
+
+// export const calculateQueuePositionExpiry = (assignedAt: Date): Date => {
+//   return new Date(assignedAt.getTime() + QUEUE_POSITION_EXPIRY_MS);
+// };
+
+// export const calculateMaxJobCompletionTime = (jobCreatedAt: Date): Date => {
+//   return new Date(jobCreatedAt.getTime() + MAX_MARKING_JOB_MS);
+// };
+
+// export const calculateAutoReleaseDate = (markingCompletedAt: Date): Date => {
+//   return new Date(markingCompletedAt.getTime() + AUTO_RELEASE_PAYMENT_MS);
+// };
+
+// export const isWithinTimeWindow = (deadline: Date, currentTime: Date = new Date()): boolean => {
+//   return currentTime < deadline;
+// };
+
+// export const getTimeRemaining = (deadline: Date, currentTime: Date = new Date()): number => {
+//   return Math.max(0, deadline.getTime() - currentTime.getTime());
+// };
+
+// export const getTimeRemainingFormatted = (deadline: Date, currentTime: Date = new Date()): string => {
+//   const remaining = getTimeRemaining(deadline, currentTime);
+  
+//   if (remaining === 0) {
+//     return 'Expired';
+//   }
+
+//   const hours = Math.floor(remaining / (60 * 60 * 1000));
+//   const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+
+//   if (hours > 24) {
+//     const days = Math.floor(hours / 24);
+//     return `${days} day${days !== 1 ? 's' : ''} remaining`;
+//   }
+
+//   if (hours > 0) {
+//     return `${hours}h ${minutes}m remaining`;
+//   }
+
+//   return `${minutes}m remaining`;
+// };
+
+// export const shouldSendReminder = (
+//   deadline: Date,
+//   reminderType: keyof typeof REMINDER_INTERVALS_MS,
+//   currentTime: Date = new Date()
+// ): boolean => {
+//   const timeUntilDeadline = getTimeRemaining(deadline, currentTime);
+//   const reminderThreshold = REMINDER_INTERVALS_MS[reminderType];
+  
+//   return timeUntilDeadline <= reminderThreshold && timeUntilDeadline > 0;
+// };
+
+// /**
+//  * Time window status types
+//  */
+// export type TimeWindowStatus = 
+//   | 'ACTIVE' 
+//   | 'EXPIRING_SOON' 
+//   | 'EXPIRED';
+
+// export const getTimeWindowStatus = (
+//   deadline: Date,
+//   warningThresholdMs: number = EXPIRY_WARNING_MS,
+//   currentTime: Date = new Date()
+// ): TimeWindowStatus => {
+//   const remaining = getTimeRemaining(deadline, currentTime);
+  
+//   if (remaining === 0) {
+//     return 'EXPIRED';
+//   }
+  
+//   if (remaining <= warningThresholdMs) {
+//     return 'EXPIRING_SOON';
+//   }
+  
+//   return 'ACTIVE';
+// };
+
+// /**
+//  * Marking job phase tracking
+//  */
+// export enum MarkingJobPhase {
+//   PAYMENT_PENDING = 'PAYMENT_PENDING',
+//   AGENT_ASSIGNMENT = 'AGENT_ASSIGNMENT',
+//   MARKING_IN_PROGRESS = 'MARKING_IN_PROGRESS',
+//   AWAITING_CONFIRMATION = 'AWAITING_CONFIRMATION',
+//   COMPLETED = 'COMPLETED',
+//   EXPIRED = 'EXPIRED',
+//   CANCELLED = 'CANCELLED',
+// }
+
+// export interface TimeWindowInfo {
+//   phase: MarkingJobPhase;
+//   deadline: Date | null;
+//   status: TimeWindowStatus;
+//   timeRemaining: number;
+//   timeRemainingFormatted: string;
+//   canProgress: boolean;
+//   message: string;
+// }
+
+// export const getMarkingJobTimeInfo = (
+//   phase: MarkingJobPhase,
+//   relevantDate: Date | null,
+//   currentTime: Date = new Date()
+// ): TimeWindowInfo => {
+//   if (!relevantDate) {
+//     return {
+//       phase,
+//       deadline: null,
+//       status: 'ACTIVE',
+//       timeRemaining: 0,
+//       timeRemainingFormatted: 'N/A',
+//       canProgress: phase === MarkingJobPhase.PAYMENT_PENDING,
+//       message: 'Awaiting action',
+//     };
+//   }
+
+//   let deadline: Date;
+//   let message: string;
+
+//   switch (phase) {
+//     case MarkingJobPhase.MARKING_IN_PROGRESS:
+//       deadline = calculateAgentDeadline(relevantDate);
+//       message = 'Agent marking in progress';
+//       break;
+    
+//     case MarkingJobPhase.AWAITING_CONFIRMATION:
+//       deadline = calculateConfirmationDeadline(relevantDate);
+//       message = 'Awaiting owner confirmation';
+//       break;
+    
+//     default:
+//       deadline = relevantDate;
+//       message = 'Processing';
+//   }
+
+//   const status = getTimeWindowStatus(deadline, EXPIRY_WARNING_MS, currentTime);
+//   const timeRemaining = getTimeRemaining(deadline, currentTime);
+//   const timeRemainingFormatted = getTimeRemainingFormatted(deadline, currentTime);
+//   const canProgress = status !== 'EXPIRED';
+
+//   return {
+//     phase,
+//     deadline,
+//     status,
+//     timeRemaining,
+//     timeRemainingFormatted,
+//     canProgress,
+//     message,
+//   };
+// };
+
+// /**
+//  * Export all constants as a single object for easy import
+//  */
+// export const TIME_WINDOWS = {
+//   AGENT_MARKING_HOURS: AGENT_MARKING_WINDOW_HOURS,
+//   AGENT_MARKING_MS: AGENT_MARKING_WINDOW_MS,
+//   OWNER_CONFIRMATION_DAYS: OWNER_CONFIRMATION_MAX_DAYS,
+//   OWNER_CONFIRMATION_MS: OWNER_CONFIRMATION_WINDOW_MS,
+//   PAYMENT_LOCK_MINUTES: PAYMENT_LOCK_WINDOW_MINUTES,
+//   PAYMENT_LOCK_MS: PAYMENT_LOCK_WINDOW_MS,
+//   QUEUE_EXPIRY_MINUTES: QUEUE_POSITION_EXPIRY_MINUTES,
+//   QUEUE_EXPIRY_MS: QUEUE_POSITION_EXPIRY_MS,
+//   MAX_JOB_DAYS: MAX_MARKING_JOB_DAYS,
+//   MAX_JOB_MS: MAX_MARKING_JOB_MS,
+//   AUTO_RELEASE_DAYS: AUTO_RELEASE_PAYMENT_DAYS,
+//   AUTO_RELEASE_MS: AUTO_RELEASE_PAYMENT_MS,
+//   REMINDERS: REMINDER_INTERVALS_MS,
+//   EXPIRY_WARNING_HOURS,
+//   EXPIRY_WARNING_MS,
+// } as const;
