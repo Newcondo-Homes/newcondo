@@ -55,3 +55,59 @@ export type {
   CompensationPaymentType,
   CompensationPaymentStatus
 } from './compensation';
+
+
+
+
+
+// // backend/marking-service/src/types/index.ts
+// // Barrel export file for all marking service types
+
+// // Marking Job Types
+// export * from './markingJob';
+
+// // Queue Types
+// export * from './queue';
+
+// // Assignment Types
+// export * from './assignment';
+
+// // Performance Metrics Types
+// export * from './performance';
+
+// // Re-export commonly used types for convenience
+// export type {
+//   MarkingJobStatus,
+//   MarkingJobPriority,
+//   MarkingJobDetails,
+//   CreateMarkingJobInput,
+//   UpdateMarkingJobInput,
+//   MarkingJobResponse,
+//   MarkingJobListResponse,
+// } from './markingJob';
+
+// export type {
+//   QueueStatus,
+//   QueueEntry,
+//   QueuePosition,
+//   QueueNotification,
+//   AgentQueueResponse,
+//   QueueStatusResponse,
+// } from './queue';
+
+// export type {
+//   AssignmentStatus,
+//   JobAssignment,
+//   CreateAssignmentInput,
+//   AssignmentResponse,
+//   AssignmentHistoryResponse,
+// } from './assignment';
+
+// export type {
+//   AgentPerformanceMetrics,
+//   AgentReliabilityFactors,
+//   PerformanceThresholds,
+//   AgentRanking,
+//   GetAgentPerformanceResponse,
+//   GetLeaderboardResponse,
+// } from './performance';

@@ -651,3 +651,334 @@ export const markingPaymentController = new MarkingPaymentController();
 // }
 
 // export const markingPaymentController = new MarkingPaymentController();
+
+
+
+
+
+
+
+
+
+
+
+// // backend/payment-service/src/controllers/markingPaymentController.ts
+
+// import { Request, Response } from 'express';
+// import { markingPaymentService } from '../services/markingPaymentService';
+// import { escrowService } from '../services/escrowService';
+// import { standardResponse } from '@newcondo/shared/utils/response';
+// import { logger } from '@newcondo/shared/middleware/logger';
+
+// class MarkingPaymentController {
+//   /**
+//    * Initiate marking payment when property owner or agent requests marking service
+//    * Creates payment record and initiates Flutterwave transaction
+//    */
+//   async initiateMarkingPayment(req: Request, res: Response) {
+//     try {
+//       const { propertyId, markingJobId, markingType, userId } = req.body;
+
+//       // Validate required fields
+//       if (!propertyId || !markingJobId || !markingType || !userId) {
+//         return res.status(400).json(
+//           standardResponse(false, 'Missing required fields', {
+//             required: ['propertyId', 'markingJobId', 'markingType', 'userId'],
+//           })
+//         );
+//       }
+
+//       logger.info(
+//         `Initiating marking payment - JobID: ${markingJobId}, Type: ${markingType}`
+//       );
+
+//       // Create payment record with PENDING status
+//       const paymentRecord = await markingPaymentService.createMarkingPayment({
+//         userId,
+//         propertyId,
+//         markingJobId,
+//         markingType,
+//       });
+
+//       // Initiate Flutterwave payment
+//       const flutterwavePayload = await markingPaymentService.prepareFlutterwavePayload(
+//         paymentRecord
+//       );
+
+//       logger.info(
+//         `Flutterwave payment initiated - PaymentID: ${paymentRecord.id}`
+//       );
+
+//       res.status(200).json(
+//         standardResponse(true, 'Marking payment initiated successfully', {
+//           paymentId: paymentRecord.id,
+//           amount: paymentRecord.amount,
+//           currency: paymentRecord.currency,
+//           flutterwavePayload,
+//         })
+//       );
+//     } catch (error) {
+//       logger.error('Error initiating marking payment:', error);
+//       res.status(500).json(
+//         standardResponse(false, 'Failed to initiate marking payment', { error })
+//       );
+//     }
+//   }
+
+//   /**
+//    * Handle Flutterwave webhook callback for marking payments
+//    * Updates payment status and triggers escrow hold or fund release
+//    */
+//   async handleMarkingPaymentWebhook(req: Request, res: Response) {
+//     try {
+//       const { data } = req.body;
+
+//       if (!data || !data.id) {
+//         logger.warn('Invalid webhook payload received');
+//         return res.status(400).json(
+//           standardResponse(false, 'Invalid webhook payload')
+//         );
+//       }
+
+//       logger.info(`Processing marking payment webhook - FlutterwaveRef: ${data.id}`);
+
+//       // Verify webhook signature
+//       const isValid = await markingPaymentService.verifyWebhookSignature(req);
+//       if (!isValid) {
+//         logger.warn('Invalid webhook signature');
+//         return res.status(401).json(
+//           standardResponse(false, 'Invalid webhook signature')
+//         );
+//       }
+
+//       // Get payment record by Flutterwave reference
+//       const paymentRecord = await markingPaymentService.getPaymentByFlutterwaveRef(
+//         data.id
+//       );
+
+//       if (!paymentRecord) {
+//         logger.warn(
+//           `Payment record not found for FlutterwaveRef: ${data.id}`
+//         );
+//         return res.status(404).json(
+//           standardResponse(false, 'Payment record not found')
+//         );
+//       }
+
+//       // Update payment status based on webhook data
+//       const updatedPayment = await markingPaymentService.updatePaymentStatus(
+//         paymentRecord.id,
+//         data.status,
+//         data
+//       );
+
+//       // If payment successful, hold initial 1000 NGN escrow for agent
+//       if (data.status === 'successful' || data.status === 'completed') {
+//         logger.info(
+//           `Payment successful - Creating escrow hold for PaymentID: ${paymentRecord.id}`
+//         );
+
+//         await escrowService.holdInitialFee(paymentRecord);
+//       }
+
+//       logger.info(
+//         `Marking payment webhook processed successfully - PaymentID: ${paymentRecord.id}`
+//       );
+
+//       res.status(200).json(
+//         standardResponse(true, 'Webhook processed successfully', {
+//           paymentId: updatedPayment.id,
+//           status: updatedPayment.status,
+//         })
+//       );
+//     } catch (error) {
+//       logger.error('Error processing marking payment webhook:', error);
+//       res.status(500).json(
+//         standardResponse(false, 'Webhook processing failed', { error })
+//       );
+//     }
+//   }
+
+//   /**
+//    * Verify marking payment status for a specific marking job
+//    * Used to check payment confirmation on payment history
+//    */
+//   async getMarkingPaymentStatus(req: Request, res: Response) {
+//     try {
+//       const { paymentId } = req.params;
+//       const { userId } = req.query;
+
+//       if (!paymentId || !userId) {
+//         return res.status(400).json(
+//           standardResponse(false, 'Missing paymentId or userId')
+//         );
+//       }
+
+//       const paymentRecord = await markingPaymentService.getPaymentById(
+//         paymentId
+//       );
+
+//       if (!paymentRecord) {
+//         return res.status(404).json(
+//           standardResponse(false, 'Payment record not found')
+//         );
+//       }
+
+//       // Verify user authorization
+//       if (paymentRecord.userId !== (userId as string)) {
+//         return res.status(403).json(
+//           standardResponse(false, 'Unauthorized access to payment record')
+//         );
+//       }
+
+//       res.status(200).json(
+//         standardResponse(true, 'Payment status retrieved successfully', {
+//           payment: {
+//             id: paymentRecord.id,
+//             amount: paymentRecord.amount,
+//             status: paymentRecord.status,
+//             markingJobId: paymentRecord.markingJobId,
+//             createdAt: paymentRecord.createdAt,
+//             paidAt: paymentRecord.paidAt,
+//           },
+//         })
+//       );
+//     } catch (error) {
+//       logger.error('Error retrieving marking payment status:', error);
+//       res.status(500).json(
+//         standardResponse(false, 'Failed to retrieve payment status', { error })
+//       );
+//     }
+//   }
+
+//   /**
+//    * Release final payment to agent after property owner confirmation
+//    * Transitions from escrow hold to full payment release
+//    */
+//   async releasePaymentToAgent(req: Request, res: Response) {
+//     try {
+//       const { paymentId, markingJobId } = req.body;
+//       const { userId } = req.query;
+
+//       if (!paymentId || !markingJobId || !userId) {
+//         return res.status(400).json(
+//           standardResponse(false, 'Missing required fields')
+//         );
+//       }
+
+//       logger.info(
+//         `Releasing payment to agent - PaymentID: ${paymentId}, JobID: ${markingJobId}`
+//       );
+
+//       // Verify property owner identity (call property service)
+//       // This ensures only the actual property owner can confirm and release payment
+
+//       // Release escrow hold and transfer funds to agent
+//       const releasedPayment = await escrowService.releasePaymentToAgent(
+//         paymentId,
+//         markingJobId
+//       );
+
+//       logger.info(
+//         `Payment released to agent successfully - PaymentID: ${paymentId}`
+//       );
+
+//       res.status(200).json(
+//         standardResponse(true, 'Payment released to agent successfully', {
+//           payment: {
+//             id: releasedPayment.id,
+//             status: releasedPayment.status,
+//             releasedAt: releasedPayment.releasedAt,
+//             amount: releasedPayment.amount,
+//           },
+//         })
+//       );
+//     } catch (error) {
+//       logger.error('Error releasing payment to agent:', error);
+//       res.status(500).json(
+//         standardResponse(false, 'Failed to release payment to agent', { error })
+//       );
+//     }
+//   }
+
+//   /**
+//    * Handle marking payment refund (if marking job is cancelled or rejected)
+//    * Refunds payment back to original payment method
+//    */
+//   async refundMarkingPayment(req: Request, res: Response) {
+//     try {
+//       const { paymentId, reason } = req.body;
+//       const { userId } = req.query;
+
+//       if (!paymentId || !reason || !userId) {
+//         return res.status(400).json(
+//           standardResponse(false, 'Missing required fields')
+//         );
+//       }
+
+//       logger.info(`Initiating marking payment refund - PaymentID: ${paymentId}`);
+
+//       const refundedPayment = await markingPaymentService.refundMarkingPayment(
+//         paymentId,
+//         reason
+//       );
+
+//       logger.info(
+//         `Payment refunded successfully - PaymentID: ${paymentId}`
+//       );
+
+//       res.status(200).json(
+//         standardResponse(true, 'Payment refunded successfully', {
+//           payment: {
+//             id: refundedPayment.id,
+//             status: refundedPayment.status,
+//             refundReason: reason,
+//           },
+//         })
+//       );
+//     } catch (error) {
+//       logger.error('Error refunding marking payment:', error);
+//       res.status(500).json(
+//         standardResponse(false, 'Failed to refund marking payment', { error })
+//       );
+//     }
+//   }
+
+//   /**
+//    * Get marking payment history for a user
+//    * Shows all marking payments (both as requester and as assigned agent)
+//    */
+//   async getMarkingPaymentHistory(req: Request, res: Response) {
+//     try {
+//       const { userId } = req.params;
+//       const { page = 1, limit = 10, status } = req.query;
+
+//       if (!userId) {
+//         return res.status(400).json(
+//           standardResponse(false, 'Missing userId parameter')
+//         );
+//       }
+
+//       const pageNum = parseInt(page as string) || 1;
+//       const limitNum = parseInt(limit as string) || 10;
+
+//       const history = await markingPaymentService.getPaymentHistory(
+//         userId,
+//         pageNum,
+//         limitNum,
+//         status as string | undefined
+//       );
+
+//       res.status(200).json(
+//         standardResponse(true, 'Payment history retrieved successfully', history)
+//       );
+//     } catch (error) {
+//       logger.error('Error retrieving marking payment history:', error);
+//       res.status(500).json(
+//         standardResponse(false, 'Failed to retrieve payment history', { error })
+//       );
+//     }
+//   }
+// }
+
+// export const markingPaymentController = new MarkingPaymentController();

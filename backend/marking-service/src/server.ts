@@ -418,3 +418,78 @@ export default app;
 
 // // Export for testing purposes
 // export { app, SERVICE_CONFIG };
+
+
+
+
+
+
+
+// import app from './app';
+// import { PrismaClient } from '@newcondo/db';
+// import { redisClient } from '../../shared/src/config/redis';
+
+// const PORT = process.env.PORT || 4003;
+// const prisma = new PrismaClient();
+
+// // Graceful shutdown handler
+// const gracefulShutdown = async (signal: string) => {
+//   console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+//   try {
+//     // Close database connection
+//     await prisma.$disconnect();
+//     console.log('Database connection closed');
+    
+//     // Close Redis connection
+//     await redisClient.quit();
+//     console.log('Redis connection closed');
+    
+//     // Exit process
+//     process.exit(0);
+//   } catch (error) {
+//     console.error('Error during graceful shutdown:', error);
+//     process.exit(1);
+//   }
+// };
+
+// // Start server
+// const startServer = async () => {
+//   try {
+//     // Test database connection
+//     await prisma.$connect();
+//     console.log('✅ Database connected successfully');
+    
+//     // Test Redis connection
+//     await redisClient.ping();
+//     console.log('✅ Redis connected successfully');
+    
+//     // Start Express server
+//     const server = app.listen(PORT, () => {
+//       console.log(`🚀 Marking Service running on port ${PORT}`);
+//       console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+//       console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+//     });
+    
+//     // Handle graceful shutdown
+//     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+//     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    
+//     // Handle uncaught errors
+//     process.on('uncaughtException', (error) => {
+//       console.error('Uncaught Exception:', error);
+//       gracefulShutdown('uncaughtException');
+//     });
+    
+//     process.on('unhandledRejection', (reason, promise) => {
+//       console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+//       gracefulShutdown('unhandledRejection');
+//     });
+    
+//   } catch (error) {
+//     console.error('Failed to start server:', error);
+//     process.exit(1);
+//   }
+// };
+
+// startServer();

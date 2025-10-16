@@ -670,3 +670,290 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
 //     });
 //   }
 // };
+
+
+
+
+
+
+// import { Request, Response, NextFunction } from 'express';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+// import { verifyJWT } from '../../../shared/src/utils/jwt';
+// import prisma from '@newcondo/db';
+
+// interface AuthenticatedAgent extends Express.Request {
+//   user?: {
+//     id: string;
+//     role: string;
+//     email: string;
+//     isAvailableForMarking: boolean;
+//     agentServiceAreas: string[];
+//     agentReliabilityScore: number;
+//     totalMarkingJobs: number;
+//     completedMarkingJobs: number;
+//   };
+// }
+
+// /**
+//  * Middleware to authenticate agent/marker requests
+//  * Verifies JWT token and ensures user has marking permissions
+//  */
+// export const authenticateAgent = async (
+//   req: AuthenticatedAgent,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const authHeader = req.headers.authorization;
+
+//     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//       return res.status(401).json(
+//         ApiResponse.error('Missing or invalid authorization token')
+//       );
+//     }
+
+//     const token = authHeader.substring(7);
+
+//     const decoded = verifyJWT(token);
+//     if (!decoded) {
+//       return res.status(401).json(
+//         ApiResponse.error('Invalid or expired token')
+//       );
+//     }
+
+//     // Fetch user from database to get latest data
+//     const user = await prisma.user.findUnique({
+//       where: { id: decoded.sub || decoded.userId },
+//       select: {
+//         id: true,
+//         role: true,
+//         email: true,
+//         isAvailableForMarking: true,
+//         agentServiceAreas: true,
+//         agentReliabilityScore: true,
+//         totalMarkingJobs: true,
+//         completedMarkingJobs: true,
+//       },
+//     });
+
+//     if (!user) {
+//       return res.status(401).json(
+//         ApiResponse.error('User not found')
+//       );
+//     }
+
+//     // Verify user is agent or has marking capability
+//     if (user.role !== 'AGENT' && user.role !== 'RENTER') {
+//       return res.status(403).json(
+//         ApiResponse.error('Only agents and premium renters can perform marking operations')
+//       );
+//     }
+
+//     req.user = user as any;
+//     next();
+//   } catch (error) {
+//     return res.status(401).json(
+//       ApiResponse.error('Authentication failed', error instanceof Error ? error.message : undefined)
+//     );
+//   }
+// };
+
+// /**
+//  * Middleware to verify agent is available and qualified for jobs
+//  */
+// export const verifyAgentAvailability = (
+//   req: AuthenticatedAgent,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const agent = req.user;
+
+//   if (!agent) {
+//     return res.status(401).json(
+//       ApiResponse.error('Agent not authenticated')
+//     );
+//   }
+
+//   if (!agent.isAvailableForMarking) {
+//     return res.status(403).json(
+//       ApiResponse.error('Agent is currently not available for marking jobs', {
+//         reason: 'Agent availability is disabled in profile settings',
+//       })
+//     );
+//   }
+
+//   if (!agent.agentServiceAreas || agent.agentServiceAreas.length === 0) {
+//     return res.status(403).json(
+//       ApiResponse.error('Agent has not configured service areas', {
+//         requiredAction: 'Agent must set service areas before accepting marking jobs',
+//       })
+//     );
+//   }
+
+//   next();
+// };
+
+// /**
+//  * Middleware to verify agent reliability score is acceptable
+//  * Agents with low reliability scores may be restricted from certain operations
+//  */
+// export const verifyAgentReliability = (minScoreRequired: number = 2.0) => {
+//   return (req: AuthenticatedAgent, res: Response, next: NextFunction) => {
+//     const agent = req.user;
+
+//     if (!agent) {
+//       return res.status(401).json(
+//         ApiResponse.error('Agent not authenticated')
+//       );
+//     }
+
+//     const reliabilityScore = agent.agentReliabilityScore || 0;
+
+//     if (reliabilityScore < minScoreRequired) {
+//       return res.status(403).json(
+//         ApiResponse.error('Agent reliability score is below minimum required', {
+//           currentScore: reliabilityScore,
+//           minimumRequired: minScoreRequired,
+//           completionRate: `${((agent.completedMarkingJobs / agent.totalMarkingJobs) * 100).toFixed(2)}%`,
+//           requiredAction: 'Complete more marking jobs successfully to improve reliability score',
+//         })
+//       );
+//     }
+
+//     next();
+//   };
+// };
+
+// /**
+//  * Middleware to check if agent is owner of a specific marking job
+//  */
+// export const verifyAgentOwnsMarkingJob = async (
+//   req: AuthenticatedAgent,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const agent = req.user;
+//     const { markingJobId } = req.params;
+
+//     if (!agent) {
+//       return res.status(401).json(
+//         ApiResponse.error('Agent not authenticated')
+//       );
+//     }
+
+//     if (!markingJobId) {
+//       return res.status(400).json(
+//         ApiResponse.error('Marking job ID is required')
+//       );
+//     }
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       select: { assignedAgentId: true },
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found')
+//       );
+//     }
+
+//     if (markingJob.assignedAgentId !== agent.id) {
+//       return res.status(403).json(
+//         ApiResponse.error('Agent does not have permission to modify this marking job')
+//       );
+//     }
+
+//     next();
+//   } catch (error) {
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to verify marking job ownership', error instanceof Error ? error.message : undefined)
+//     );
+//   }
+// };
+
+// /**
+//  * Middleware to prevent agent from accepting too many concurrent jobs
+//  * Limits to prevent burnout and ensure quality
+//  */
+// export const checkAgentConcurrentJobs = (maxConcurrentJobs: number = 3) => {
+//   return async (req: AuthenticatedAgent, res: Response, next: NextFunction) => {
+//     try {
+//       const agent = req.user;
+
+//       if (!agent) {
+//         return res.status(401).json(
+//           ApiResponse.error('Agent not authenticated')
+//         );
+//       }
+
+//       const activeJobs = await prisma.propertyMarkingJob.count({
+//         where: {
+//           assignedAgentId: agent.id,
+//           status: { in: ['ASSIGNED', 'IN_PROGRESS'] },
+//         },
+//       });
+
+//       if (activeJobs >= maxConcurrentJobs) {
+//         return res.status(429).json(
+//           ApiResponse.error('Agent has reached maximum concurrent marking jobs', {
+//             currentActiveJobs: activeJobs,
+//             maxAllowed: maxConcurrentJobs,
+//             message: 'Complete or cancel current jobs before accepting new ones',
+//           })
+//         );
+//       }
+
+//       next();
+//     } catch (error) {
+//       return res.status(500).json(
+//         ApiResponse.error('Failed to check agent concurrent jobs', error instanceof Error ? error.message : undefined)
+//       );
+//     }
+//   };
+// };
+
+// /**
+//  * Middleware to validate agent location is within service areas
+//  */
+// export const validateAgentInServiceArea = (
+//   req: AuthenticatedAgent,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const agent = req.user;
+//   const { propertyCity, propertyState } = req.body;
+
+//   if (!agent) {
+//     return res.status(401).json(
+//       ApiResponse.error('Agent not authenticated')
+//     );
+//   }
+
+//   if (!propertyCity || !propertyState) {
+//     return res.status(400).json(
+//       ApiResponse.error('Property location (city, state) is required')
+//     );
+//   }
+
+//   const serviceAreas = agent.agentServiceAreas || [];
+//   const propertyArea = `${propertyCity}, ${propertyState}`;
+
+//   const isInServiceArea = serviceAreas.some(
+//     (area) => area.toLowerCase() === propertyArea.toLowerCase() ||
+//               area.toLowerCase().includes(propertyCity.toLowerCase())
+//   );
+
+//   if (!isInServiceArea) {
+//     return res.status(403).json(
+//       ApiResponse.error('Property location is outside agent service areas', {
+//         propertyLocation: propertyArea,
+//         agentServiceAreas: serviceAreas,
+//         message: 'Agent can only accept jobs within configured service areas',
+//       })
+//     );
+//   }
+
+//   next();
+// };

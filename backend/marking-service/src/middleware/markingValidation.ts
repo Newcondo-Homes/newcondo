@@ -542,3 +542,124 @@ export const validatePagination = (req: Request, res: Response, next: NextFuncti
   
 //   next();
 // };
+
+
+
+
+
+
+
+
+
+
+// import { Request, Response, NextFunction } from 'express';
+// import { z } from 'zod';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+
+// // Zod schemas for marking job validation
+// const CreateMarkingJobSchema = z.object({
+//   propertyId: z.string().cuid('Invalid property ID'),
+//   contactPersonName: z.string().min(2, 'Contact person name is required').max(100),
+//   contactPersonPhone: z.string().regex(/^\+?[\d\s-]{10,}$/, 'Invalid phone number'),
+//   accessInstructions: z.string().optional().nullable(),
+//   preferredTime: z.string().datetime().optional().nullable(),
+//   urgencyLevel: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).default('NORMAL'),
+//   markingOption: z.enum(['SELF_MARK', 'NEWCONDO_AGENT', 'KNOWN_PERSON', 'AVAILABLE_AGENTS']),
+// });
+
+// const UpdateMarkingJobSchema = z.object({
+//   contactPersonName: z.string().min(2).max(100).optional(),
+//   contactPersonPhone: z.string().regex(/^\+?[\d\s-]{10,}$/).optional(),
+//   accessInstructions: z.string().optional().nullable(),
+//   preferredTime: z.string().datetime().optional().nullable(),
+//   urgencyLevel: z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']).optional(),
+// });
+
+// const CompleteMarkingJobSchema = z.object({
+//   completionNotes: z.string().min(10).max(500),
+//   boundaryData: z.object({
+//     coordinates: z.array(z.object({
+//       lat: z.number(),
+//       lng: z.number(),
+//     })).min(3, 'At least 3 coordinates required for boundary'),
+//     area: z.number().positive('Area must be positive'),
+//   }),
+//   completionImages: z.array(z.string().url()).min(1, 'At least one completion image required'),
+// });
+
+// const ConfirmMarkingSchema = z.object({
+//   isConfirmed: z.boolean(),
+//   rejectionReason: z.string().optional().nullable(),
+// });
+
+// export const validateCreateMarkingJob = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = CreateMarkingJobSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateUpdateMarkingJob = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = UpdateMarkingJobSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateCompleteMarkingJob = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = CompleteMarkingJobSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateConfirmMarking = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = ConfirmMarkingSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateMarkingJobId = (req: Request, res: Response, next: NextFunction) => {
+//   const { markingJobId } = req.params;
+  
+//   if (!markingJobId || !markingJobId.match(/^[a-z0-9]+$/i)) {
+//     return res.status(400).json(
+//       ApiResponse.error('Invalid marking job ID format')
+//     );
+//   }
+  
+//   next();
+// };

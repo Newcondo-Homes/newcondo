@@ -245,3 +245,207 @@ export interface AgentAssignmentData {
 //   dateTo?: Date;
 //   paymentStatus?: 'PENDING' | 'COMPLETED' | 'REFUNDED';
 // }
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/types/markingJob.ts
+
+// import { 
+//   MarkingJobStatus, 
+//   UrgencyLevel, 
+//   PaymentStatus 
+// } from '@prisma/client';
+
+// export interface MarkingJobCreate {
+//   propertyId: string;
+//   requestedBy: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel?: UrgencyLevel;
+//   markingFee: number;
+// }
+
+// export interface MarkingJobUpdate {
+//   contactPersonName?: string;
+//   contactPersonPhone?: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel?: UrgencyLevel;
+//   status?: MarkingJobStatus;
+// }
+
+// export interface MarkingJobCompletion {
+//   completionNotes?: string;
+//   completionImages: string[];
+//   boundaryData: {
+//     coordinates: Array<{ lat: number; lng: number }>;
+//     area: number;
+//     centerPoint: { lat: number; lng: number };
+//   };
+// }
+
+// export interface MarkingJobAssignment {
+//   jobId: string;
+//   agentId: string;
+//   timeSlotExpiry: Date;
+//   queuePosition: number;
+// }
+
+// export interface MarkingJobFilter {
+//   status?: MarkingJobStatus | MarkingJobStatus[];
+//   requestedBy?: string;
+//   assignedAgentId?: string;
+//   propertyId?: string;
+//   paymentStatus?: PaymentStatus;
+//   urgencyLevel?: UrgencyLevel;
+//   createdAfter?: Date;
+//   createdBefore?: Date;
+//   hasExpired?: boolean;
+//   queuePosition?: number;
+// }
+
+// export interface MarkingJobStats {
+//   totalJobs: number;
+//   queuedJobs: number;
+//   assignedJobs: number;
+//   completedJobs: number;
+//   expiredJobs: number;
+//   averageCompletionTime: number; // in hours
+//   totalRevenue: number;
+//   agentPayouts: number;
+// }
+
+// export interface MarkingJobNotification {
+//   jobId: string;
+//   type: 'ASSIGNMENT' | 'REMINDER' | 'EXPIRY_WARNING' | 'COMPLETION' | 'CANCELLATION';
+//   recipientId: string;
+//   recipientType: 'AGENT' | 'PROPERTY_OWNER' | 'ADMIN';
+//   message: string;
+//   metadata?: Record<string, any>;
+// }
+
+// export interface MarkingJobPayment {
+//   jobId: string;
+//   totalFee: number;
+//   agentCommission: number; // 25% of total fee
+//   platformFee: number; // 75% of total fee
+//   status: PaymentStatus;
+//   paidAt?: Date;
+//   releasedAt?: Date;
+// }
+
+// export interface MarkingJobTimeTracking {
+//   jobId: string;
+//   assignedAt?: Date;
+//   timeSlotExpiry?: Date;
+//   completedAt?: Date;
+//   timeTakenHours?: number;
+//   isWithinTimeSlot: boolean;
+//   daysUntilMaxCompletion?: number;
+// }
+
+// export interface MarkingJobQueueInfo {
+//   jobId: string;
+//   queuePosition: number;
+//   totalInQueue: number;
+//   estimatedWaitTime: number; // in hours
+//   currentAssignee?: {
+//     agentId: string;
+//     agentName: string;
+//     timeRemaining: number; // in minutes
+//   };
+// }
+
+// export interface MarkingJobValidation {
+//   propertyId: string;
+//   requestedBy: string;
+//   errors: string[];
+//   warnings: string[];
+//   canProceed: boolean;
+// }
+
+// export interface MarkingJobAgentEligibility {
+//   agentId: string;
+//   isEligible: boolean;
+//   reasons: string[];
+//   distance?: number; // in kilometers
+//   reliabilityScore?: number;
+//   activeJobs: number;
+//   completedJobs: number;
+// }
+
+// export interface MarkingJobMetrics {
+//   jobId: string;
+//   viewCount: number;
+//   agentInterestCount: number;
+//   reassignmentCount: number;
+//   completionAttempts: number;
+//   averageResponseTime: number; // in minutes
+// }
+
+// export interface MarkingJobResponse {
+//   success: boolean;
+//   message: string;
+//   data?: any;
+//   errors?: string[];
+//   warnings?: string[];
+// }
+
+// export interface MarkingJobCancellation {
+//   jobId: string;
+//   cancelledBy: string;
+//   reason: string;
+//   refundAmount?: number;
+//   refundStatus?: 'PENDING' | 'PROCESSED' | 'FAILED';
+// }
+
+// export interface MarkingJobEscalation {
+//   jobId: string;
+//   reason: 'TIMEOUT' | 'NO_AGENTS' | 'QUALITY_ISSUE' | 'DISPUTE';
+//   escalatedBy: string;
+//   escalatedAt: Date;
+//   assignedToAdmin?: string;
+//   resolution?: string;
+//   resolvedAt?: Date;
+// }
+
+// // Constants for marking job business logic
+// export const MARKING_JOB_CONSTANTS = {
+//   DEFAULT_MARKING_FEE: 20000, // 20,000 NGN
+//   AGENT_COMMISSION_PERCENTAGE: 0.25, // 25%
+//   PLATFORM_FEE_PERCENTAGE: 0.75, // 75%
+//   TIME_SLOT_DURATION_HOURS: 3,
+//   MAX_COMPLETION_DAYS: 3,
+//   QUEUE_RETRY_LIMIT: 5,
+//   MIN_RELIABILITY_SCORE: 3.0,
+//   MAX_CONCURRENT_JOBS_PER_AGENT: 3,
+//   PROXIMITY_RADIUS_KM: 50, // 50km radius for agent matching
+//   REMINDER_INTERVALS_MINUTES: [30, 60, 120], // Reminder at 30min, 1hr, 2hrs before expiry
+// } as const;
+
+// export type MarkingJobStatusTransition = {
+//   from: MarkingJobStatus;
+//   to: MarkingJobStatus;
+//   isValid: boolean;
+//   requiredRole?: 'AGENT' | 'OWNER' | 'ADMIN';
+// };
+
+// export const VALID_STATUS_TRANSITIONS: MarkingJobStatusTransition[] = [
+//   { from: 'QUEUED', to: 'ASSIGNED', isValid: true, requiredRole: 'ADMIN' },
+//   { from: 'ASSIGNED', to: 'IN_PROGRESS', isValid: true, requiredRole: 'AGENT' },
+//   { from: 'IN_PROGRESS', to: 'COMPLETED', isValid: true, requiredRole: 'AGENT' },
+//   { from: 'ASSIGNED', to: 'QUEUED', isValid: true }, // Re-queue on timeout
+//   { from: 'QUEUED', to: 'CANCELLED', isValid: true, requiredRole: 'OWNER' },
+//   { from: 'ASSIGNED', to: 'CANCELLED', isValid: true, requiredRole: 'OWNER' },
+//   { from: 'IN_PROGRESS', to: 'CANCELLED', isValid: true, requiredRole: 'OWNER' },
+//   { from: 'ASSIGNED', to: 'EXPIRED', isValid: true },
+//   { from: 'QUEUED', to: 'EXPIRED', isValid: true },
+// ];

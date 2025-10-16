@@ -802,3 +802,446 @@ export const markingPaymentService = new MarkingPaymentService();
 // }
 
 // export const markingPaymentService = new MarkingPaymentService();
+
+
+
+
+
+
+
+// // backend/payment-service/src/services/markingPaymentService.ts
+
+// import { Request } from 'express';
+// import { prisma } from '@newcondo/db';
+// import {
+//   MarkingPaymentType,
+//   MarkingPaymentCreateInput,
+//   PaymentWebhookData,
+// } from '../types/markingPayment';
+// import { logger } from '@newcondo/shared/middleware/logger';
+// import crypto from 'crypto';
+
+// class MarkingPaymentService {
+//   private flutterwaveSecretKey = process.env.FLUTTERWAVE_SECRET_KEY || '';
+//   private platformFeePercentage = 0.75; // 75% goes to platform from 20,000 NGN fee
+//   private agentCommissionPercentage = 0.25; // 25% goes to agent (5,000 NGN)
+//   private initialEscrowAmount = 1000; // Initial hold amount for agent
+//   private totalMarkingFee = 20000; // Total fee for marking service
+
+//   /**
+//    * Create a new marking payment record
+//    * Initializes payment with PENDING status and links to marking job
+//    */
+//   async createMarkingPayment(
+//     input: MarkingPaymentCreateInput
+//   ): Promise<MarkingPaymentType> {
+//     try {
+//       logger.info(`Creating marking payment - JobID: ${input.markingJobId}`);
+
+//       // Verify marking job exists
+//       const markingJob = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: input.markingJobId },
+//         include: { property: true },
+//       });
+
+//       if (!markingJob) {
+//         throw new Error(`Marking job not found: ${input.markingJobId}`);
+//       }
+
+//       // Verify user is property owner or assigned agent
+//       const isPropertyOwner = markingJob.requestedBy === input.userId;
+//       const isAssignedAgent = markingJob.assignedAgentId === input.userId;
+
+//       if (!isPropertyOwner && !isAssignedAgent) {
+//         throw new Error(
+//           'User is not authorized to make payment for this marking job'
+//         );
+//       }
+
+//       // Determine marking type and calculate fees
+//       const { markingType } = input;
+//       let amount = this.totalMarkingFee;
+
+//       if (markingType === 'AGENT_ASSIGNED') {
+//         // Full fee for Newcondo or agent-assigned marking
+//         amount = this.totalMarkingFee;
+//       } else if (markingType === 'OWNER_SELF_MARK') {
+//         // No fee if owner marks themselves
+//         amount = 0;
+//       } else if (markingType === 'KNOWN_PERSON') {
+//         // No fee for known person marking (owner arranges separately)
+//         amount = 0;
+//       }
+
+//       // Create payment record in database
+//       const paymentRecord = await prisma.payment.create({
+//         data: {
+//           userId: input.userId,
+//           propertyId: input.propertyId,
+//           markingJobId: input.markingJobId,
+//           amount,
+//           currency: 'NGN',
+//           paymentType: 'PROPERTY_MARKING',
+//           status: 'PENDING',
+//           description: `Marking payment for property ${input.propertyId} - Type: ${markingType}`,
+//         },
+//       });
+
+//       logger.info(
+//         `Marking payment created - PaymentID: ${paymentRecord.id}, Amount: ${amount}`
+//       );
+
+//       return {
+//         id: paymentRecord.id,
+//         userId: paymentRecord.userId,
+//         propertyId: paymentRecord.propertyId,
+//         markingJobId: paymentRecord.markingJobId || '',
+//         amount: paymentRecord.amount,
+//         currency: paymentRecord.currency,
+//         status: paymentRecord.status,
+//         paymentType: paymentRecord.paymentType,
+//         flutterwaveRef: paymentRecord.flutterwaveRef || undefined,
+//         createdAt: paymentRecord.createdAt,
+//         paidAt: paymentRecord.paidAt || undefined,
+//       };
+//     } catch (error) {
+//       logger.error('Error creating marking payment:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Prepare Flutterwave payment payload for marking payment
+//    * Constructs the necessary data for initiating payment with Flutterwave
+//    */
+//   async prepareFlutterwavePayload(payment: MarkingPaymentType) {
+//     try {
+//       // Get user details
+//       const user = await prisma.user.findUnique({
+//         where: { id: payment.userId },
+//       });
+
+//       if (!user || !user.email) {
+//         throw new Error('User not found or missing email');
+//       }
+
+//       // If amount is 0 (owner self-marking), skip Flutterwave
+//       if (payment.amount === 0) {
+//         logger.info(
+//           `No payment required for marking - PaymentID: ${payment.id}`
+//         );
+//         return {
+//           requiresPayment: false,
+//           message: 'No payment required for this marking type',
+//         };
+//       }
+
+//       // Construct Flutterwave payload
+//       const flutterwavePayload = {
+//         public_key: process.env.FLUTTERWAVE_PUBLIC_KEY,
+//         tx_ref: `MARKING_${payment.id}_${Date.now()}`,
+//         amount: payment.amount,
+//         currency: payment.currency,
+//         payment_options: 'card,bank_transfer,ussd,qr',
+//         customer: {
+//           email: user.email,
+//           phone_number: user.phone || '',
+//           name: user.name || 'Newcondo User',
+//         },
+//         customizations: {
+//           title: 'Property Marking Payment',
+//           description: `Marking fee for property: ${payment.propertyId}`,
+//           logo: process.env.PLATFORM_LOGO_URL,
+//         },
+//         meta: {
+//           paymentId: payment.id,
+//           markingJobId: payment.markingJobId,
+//           propertyId: payment.propertyId,
+//           userId: payment.userId,
+//         },
+//       };
+
+//       logger.info(
+//         `Flutterwave payload prepared - PaymentID: ${payment.id}`
+//       );
+
+//       return {
+//         requiresPayment: true,
+//         payload: flutterwavePayload,
+//       };
+//     } catch (error) {
+//       logger.error('Error preparing Flutterwave payload:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Verify Flutterwave webhook signature
+//    * Ensures webhook originates from Flutterwave and hasn't been tampered with
+//    */
+//   async verifyWebhookSignature(req: Request): Promise<boolean> {
+//     try {
+//       const signature = req.headers['verificationhash'] as string;
+
+//       if (!signature) {
+//         logger.warn('Webhook signature missing');
+//         return false;
+//       }
+
+//       // Reconstruct the hash using Flutterwave secret
+//       const hash = crypto
+//         .createHmac('sha256', this.flutterwaveSecretKey)
+//         .update(JSON.stringify(req.body))
+//         .digest('hex');
+
+//       const isValid = hash === signature;
+
+//       if (!isValid) {
+//         logger.warn('Webhook signature verification failed');
+//       }
+
+//       return isValid;
+//     } catch (error) {
+//       logger.error('Error verifying webhook signature:', error);
+//       return false;
+//     }
+//   }
+
+//   /**
+//    * Get payment record by Flutterwave reference
+//    * Used to match webhook callbacks to payment records
+//    */
+//   async getPaymentByFlutterwaveRef(flutterwaveRef: string) {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { flutterwaveRef },
+//       });
+
+//       return payment;
+//     } catch (error) {
+//       logger.error('Error retrieving payment by Flutterwave ref:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Update payment status based on webhook data
+//    * Handles successful, failed, and cancelled payments
+//    */
+//   async updatePaymentStatus(
+//     paymentId: string,
+//     flutterwaveStatus: string,
+//     webhookData: PaymentWebhookData
+//   ) {
+//     try {
+//       let paymentStatus = 'FAILED';
+
+//       if (
+//         flutterwaveStatus === 'successful' ||
+//         flutterwaveStatus === 'completed'
+//       ) {
+//         paymentStatus = 'SUCCESS';
+//       } else if (
+//         flutterwaveStatus === 'failed' ||
+//         flutterwaveStatus === 'declined'
+//       ) {
+//         paymentStatus = 'FAILED';
+//       } else if (flutterwaveStatus === 'cancelled') {
+//         paymentStatus = 'CANCELLED';
+//       }
+
+//       const updatedPayment = await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: paymentStatus,
+//           flutterwaveRef: webhookData.id,
+//           transactionId: webhookData.transaction_id,
+//           paidAt: paymentStatus === 'SUCCESS' ? new Date() : null,
+//           failureReason:
+//             paymentStatus === 'FAILED' ? webhookData.status : null,
+//         },
+//       });
+
+//       logger.info(
+//         `Payment status updated - PaymentID: ${paymentId}, Status: ${paymentStatus}`
+//       );
+
+//       return updatedPayment;
+//     } catch (error) {
+//       logger.error('Error updating payment status:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get payment record by ID
+//    */
+//   async getPaymentById(paymentId: string) {
+//     try {
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//       });
+
+//       return payment;
+//     } catch (error) {
+//       logger.error('Error retrieving payment by ID:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Refund marking payment
+//    * Updates payment status to REFUNDED and stores refund reason
+//    */
+//   async refundMarkingPayment(paymentId: string, reason: string) {
+//     try {
+//       logger.info(`Refunding marking payment - PaymentID: ${paymentId}`);
+
+//       const payment = await prisma.payment.findUnique({
+//         where: { id: paymentId },
+//       });
+
+//       if (!payment) {
+//         throw new Error(`Payment not found: ${paymentId}`);
+//       }
+
+//       // Only allow refund if payment hasn't been released yet
+//       if (payment.status === 'RELEASED') {
+//         throw new Error(
+//           'Cannot refund released payment - contact support'
+//         );
+//       }
+
+//       const refundedPayment = await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: 'REFUNDED',
+//           failureReason: reason,
+//           updatedAt: new Date(),
+//         },
+//       });
+
+//       logger.info(
+//         `Payment refunded successfully - PaymentID: ${paymentId}, Reason: ${reason}`
+//       );
+
+//       return refundedPayment;
+//     } catch (error) {
+//       logger.error('Error refunding marking payment:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get marking payment history for a user
+//    * Retrieves paginated list of marking payments with optional status filter
+//    */
+//   async getPaymentHistory(
+//     userId: string,
+//     page: number = 1,
+//     limit: number = 10,
+//     status?: string
+//   ) {
+//     try {
+//       const skip = (page - 1) * limit;
+
+//       const where: any = {
+//         userId,
+//         paymentType: 'PROPERTY_MARKING',
+//       };
+
+//       if (status) {
+//         where.status = status;
+//       }
+
+//       const [payments, total] = await Promise.all([
+//         prisma.payment.findMany({
+//           where,
+//           skip,
+//           take: limit,
+//           orderBy: { createdAt: 'desc' },
+//           include: {
+//             rental: true,
+//           },
+//         }),
+//         prisma.payment.count({ where }),
+//       ]);
+
+//       const totalPages = Math.ceil(total / limit);
+
+//       logger.info(
+//         `Retrieved marking payment history - UserID: ${userId}, Total: ${total}`
+//       );
+
+//       return {
+//         payments: payments.map(p => ({
+//           id: p.id,
+//           amount: p.amount,
+//           status: p.status,
+//           paymentType: p.paymentType,
+//           markingJobId: p.markingJobId,
+//           propertyId: p.propertyId,
+//           createdAt: p.createdAt,
+//           paidAt: p.paidAt,
+//           failureReason: p.failureReason,
+//         })),
+//         pagination: {
+//           page,
+//           limit,
+//           total,
+//           totalPages,
+//         },
+//       };
+//     } catch (error) {
+//       logger.error('Error retrieving marking payment history:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Calculate commission split for marking payment
+//    * Returns breakdown of platform fee vs agent commission
+//    */
+//   calculateCommissionSplit(totalAmount: number) {
+//     const agentCommission = totalAmount * this.agentCommissionPercentage; // 25%
+//     const platformFee = totalAmount * this.platformFeePercentage; // 75%
+
+//     return {
+//       totalAmount,
+//       agentCommission,
+//       platformFee,
+//       breakdown: {
+//         agent: `${this.agentCommissionPercentage * 100}% (${agentCommission} NGN)`,
+//         platform: `${this.platformFeePercentage * 100}% (${platformFee} NGN)`,
+//       },
+//     };
+//   }
+
+//   /**
+//    * Get payment stats for a user (for dashboard)
+//    */
+//   async getUserPaymentStats(userId: string) {
+//     try {
+//       const stats = await prisma.payment.groupBy({
+//         by: ['status'],
+//         where: {
+//           userId,
+//           paymentType: 'PROPERTY_MARKING',
+//         },
+//         _sum: {
+//           amount: true,
+//         },
+//         _count: true,
+//       });
+
+//       logger.info(`Retrieved payment stats - UserID: ${userId}`);
+
+//       return stats;
+//     } catch (error) {
+//       logger.error('Error retrieving payment stats:', error);
+//       throw error;
+//     }
+//   }
+// }
+
+// export const markingPaymentService = new MarkingPaymentService();

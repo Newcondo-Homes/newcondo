@@ -1613,3 +1613,464 @@ export const notificationService = new NotificationService();
 // }
 
 // export { NotificationType };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/notificationService.ts
+// import { User, PropertyMarkingJob } from '@newcondo/db';
+// import { PrismaClient } from '@newcondo/db';
+
+// const prisma = new PrismaClient();
+
+// interface NotificationPayload {
+//   userId: string;
+//   type: NotificationType;
+//   title: string;
+//   message: string;
+//   data?: Record<string, unknown>;
+// }
+
+// enum NotificationType {
+//   JOB_ASSIGNED = 'JOB_ASSIGNED',
+//   JOB_AVAILABLE = 'JOB_AVAILABLE',
+//   TIME_SLOT_EXPIRING = 'TIME_SLOT_EXPIRING',
+//   TIME_SLOT_EXPIRED = 'TIME_SLOT_EXPIRED',
+//   JOB_COMPLETED = 'JOB_COMPLETED',
+//   JOB_CANCELLED = 'JOB_CANCELLED',
+//   PAYMENT_RELEASED = 'PAYMENT_RELEASED',
+//   PAYMENT_HELD = 'PAYMENT_HELD',
+//   MARKING_CONFIRMED = 'MARKING_CONFIRMED',
+//   MARKING_CONFIRMATION_PENDING = 'MARKING_CONFIRMATION_PENDING',
+//   JOB_EXPIRED = 'JOB_EXPIRED',
+//   PROPERTY_OWNER_CONFIRMATION_NEEDED = 'PROPERTY_OWNER_CONFIRMATION_NEEDED',
+// }
+
+// class NotificationService {
+//   /**
+//    * Notify agent of job assignment with 3-hour time slot
+//    */
+//   async notifyAgentAssignment(params: {
+//     agent: User;
+//     job: PropertyMarkingJob & { property: any };
+//     timeSlotExpiry: Date;
+//   }): Promise<void> {
+//     const { agent, job, timeSlotExpiry } = params;
+
+//     const timeRemaining = Math.floor(
+//       (timeSlotExpiry.getTime() - new Date().getTime()) / (1000 * 60)
+//     );
+
+//     const payload: NotificationPayload = {
+//       userId: agent.id,
+//       type: NotificationType.JOB_ASSIGNED,
+//       title: 'New Marking Job Assigned',
+//       message: `You have been assigned a property marking job for ${job.property.title}. Complete within ${timeRemaining} minutes.`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         propertyTitle: job.property.title,
+//         propertyAddress: job.property.address,
+//         contactPerson: job.contactPersonName,
+//         contactPhone: job.contactPersonPhone,
+//         timeSlotExpiry: timeSlotExpiry.toISOString(),
+//         fee: job.markingFee,
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, agent);
+//   }
+
+//   /**
+//    * Notify agents of available job (pre-assignment for FCFS queue building)
+//    */
+//   async notifyAgentsOfAvailableJob(params: {
+//     agentIds: string[];
+//     job: PropertyMarkingJob & { property: any };
+//     fee: number;
+//     proximity: string;
+//   }): Promise<void> {
+//     const { agentIds, job, fee, proximity } = params;
+
+//     for (const agentId of agentIds) {
+//       const payload: NotificationPayload = {
+//         userId: agentId,
+//         type: NotificationType.JOB_AVAILABLE,
+//         title: 'Marking Job Opportunity',
+//         message: `Property marking job available in ${proximity}. Fee: ₦${fee.toLocaleString()}. Quick response gets the job!`,
+//         data: {
+//           jobId: job.id,
+//           propertyId: job.propertyId,
+//           propertyTitle: job.property.title,
+//           propertyAddress: job.property.address,
+//           fee,
+//           proximity,
+//           urgency: job.urgencyLevel,
+//         },
+//       };
+
+//       await this.sendMultiChannelNotification(payload, { id: agentId });
+//     }
+//   }
+
+//   /**
+//    * Notify agent when time slot is expiring soon (15 min warning)
+//    */
+//   async notifyTimeSlotExpiringWarning(params: {
+//     agent: User;
+//     job: PropertyMarkingJob & { property: any };
+//   }): Promise<void> {
+//     const { agent, job } = params;
+
+//     const payload: NotificationPayload = {
+//       userId: agent.id,
+//       type: NotificationType.TIME_SLOT_EXPIRING,
+//       title: '⏰ 15 Minutes Left to Mark Property',
+//       message: `Your 3-hour time slot for ${job.property.title} expires in 15 minutes. Complete the marking now!`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         urgency: 'HIGH',
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, agent);
+//   }
+
+//   /**
+//    * Notify agent when time slot has expired
+//    */
+//   async notifyTimeSlotExpiry(params: {
+//     agent: User;
+//     job: PropertyMarkingJob & { property: any };
+//     compensation: number;
+//   }): Promise<void> {
+//     const { agent, job, compensation } = params;
+
+//     const payload: NotificationPayload = {
+//       userId: agent.id,
+//       type: NotificationType.TIME_SLOT_EXPIRED,
+//       title: 'Time Slot Expired',
+//       message: `Your 3-hour time slot for ${job.property.title} has expired. You've been credited ₦${compensation.toLocaleString()} compensation.`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         compensation,
+//         status: 'HELD',
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, agent);
+//   }
+
+//   /**
+//    * Notify property owner when job is completed and awaiting confirmation
+//    */
+//   async notifyPropertyOwnerForConfirmation(params: {
+//     propertyOwnerId: string;
+//     job: PropertyMarkingJob & { property: any };
+//     agent: User;
+//     completionImages: string[];
+//     deadline: Date;
+//   }): Promise<void> {
+//     const { propertyOwnerId, job, agent, completionImages, deadline } = params;
+
+//     const hoursRemaining = Math.floor(
+//       (deadline.getTime() - new Date().getTime()) / (1000 * 60 * 60)
+//     );
+
+//     const payload: NotificationPayload = {
+//       userId: propertyOwnerId,
+//       type: NotificationType.PROPERTY_OWNER_CONFIRMATION_NEEDED,
+//       title: 'Confirm Property Marking',
+//       message: `Agent ${agent.name} has marked your property. Please review and confirm the marking within ${hoursRemaining} hours.`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         agentName: agent.name,
+//         agentPhone: agent.phone,
+//         completionImages,
+//         confirmationDeadline: deadline.toISOString(),
+//         fee: job.markingFee,
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, { id: propertyOwnerId });
+//   }
+
+//   /**
+//    * Notify agent when property owner confirms the marking
+//    */
+//   async notifyAgentMarkingConfirmed(params: {
+//     agent: User;
+//     job: PropertyMarkingJob & { property: any };
+//     totalPayment: number;
+//   }): Promise<void> {
+//     const { agent, job, totalPayment } = params;
+
+//     const payload: NotificationPayload = {
+//       userId: agent.id,
+//       type: NotificationType.MARKING_CONFIRMED,
+//       title: '✅ Marking Confirmed',
+//       message: `Your marking for ${job.property.title} has been confirmed! ₦${totalPayment.toLocaleString()} is being released to your account.`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         totalPayment,
+//         releaseDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, agent);
+//   }
+
+//   /**
+//    * Notify agent when marking is completed but awaiting property owner confirmation
+//    */
+//   async notifyAgentAwaitingConfirmation(params: {
+//     agent: User;
+//     job: PropertyMarkingJob & { property: any };
+//   }): Promise<void> {
+//     const { agent, job } = params;
+
+//     const payload: NotificationPayload = {
+//       userId: agent.id,
+//       type: NotificationType.MARKING_CONFIRMATION_PENDING,
+//       title: 'Awaiting Property Owner Confirmation',
+//       message: `Your marking for ${job.property.title} is submitted. Waiting for property owner confirmation (up to 3 days).`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         status: 'PENDING_CONFIRMATION',
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, agent);
+//   }
+
+//   /**
+//    * Notify when payment is held pending confirmation
+//    */
+//   async notifyPaymentHeld(params: {
+//     userId: string;
+//     amount: number;
+//     reason: string;
+//     releaseDate: Date;
+//   }): Promise<void> {
+//     const { userId, amount, reason, releaseDate } = params;
+
+//     const daysRemaining = Math.ceil(
+//       (releaseDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+//     );
+
+//     const payload: NotificationPayload = {
+//       userId,
+//       type: NotificationType.PAYMENT_HELD,
+//       title: 'Payment On Hold',
+//       message: `₦${amount.toLocaleString()} is being held. ${reason}. Will be released in ${daysRemaining} days.`,
+//       data: {
+//         amount,
+//         reason,
+//         releaseDate: releaseDate.toISOString(),
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, { id: userId });
+//   }
+
+//   /**
+//    * Notify when payment is released
+//    */
+//   async notifyPaymentReleased(params: {
+//     userId: string;
+//     amount: number;
+//     jobId: string;
+//   }): Promise<void> {
+//     const { userId, amount, jobId } = params;
+
+//     const payload: NotificationPayload = {
+//       userId,
+//       type: NotificationType.PAYMENT_RELEASED,
+//       title: '💰 Payment Released',
+//       message: `₦${amount.toLocaleString()} has been released to your virtual account.`,
+//       data: {
+//         amount,
+//         jobId,
+//         status: 'RELEASED',
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, { id: userId });
+//   }
+
+//   /**
+//    * Notify when job is cancelled
+//    */
+//   async notifyJobCancelled(params: {
+//     agent: User;
+//     job: PropertyMarkingJob & { property: any };
+//     reason: string;
+//   }): Promise<void> {
+//     const { agent, job, reason } = params;
+
+//     const payload: NotificationPayload = {
+//       userId: agent.id,
+//       type: NotificationType.JOB_CANCELLED,
+//       title: 'Job Cancelled',
+//       message: `The marking job for ${job.property.title} has been cancelled. Reason: ${reason}`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         reason,
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, agent);
+//   }
+
+//   /**
+//    * Notify when job expires (no agents completed)
+//    */
+//   async notifyJobExpired(params: {
+//     job: PropertyMarkingJob & { property: any };
+//   }): Promise<void> {
+//     const { job } = params;
+
+//     const payload: NotificationPayload = {
+//       userId: job.requestedBy,
+//       type: NotificationType.JOB_EXPIRED,
+//       title: 'Marking Job Expired',
+//       message: `The marking job for ${job.property.title} has expired. No agents were able to complete it. Please initiate a new marking request.`,
+//       data: {
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         status: 'EXPIRED',
+//       },
+//     };
+
+//     await this.sendMultiChannelNotification(payload, { id: job.requestedBy });
+//   }
+
+//   /**
+//    * Core multi-channel notification method
+//    * Supports: Email, SMS, In-App Push Notifications
+//    */
+//   private async sendMultiChannelNotification(
+//     payload: NotificationPayload,
+//     recipient: { id: string; email?: string; phone?: string }
+//   ): Promise<void> {
+//     try {
+//       // Get full user info if not provided
+//       let user = recipient as any;
+//       if (!user.email || !user.phone) {
+//         user = await prisma.user.findUnique({
+//           where: { id: recipient.id },
+//           select: {
+//             id: true,
+//             email: true,
+//             phone: true,
+//             name: true,
+//           },
+//         });
+//       }
+
+//       // Send Email Notification
+//       if (user.email) {
+//         await this.sendEmailNotification({
+//           to: user.email,
+//           subject: payload.title,
+//           message: payload.message,
+//           data: payload.data,
+//         });
+//       }
+
+//       // Send SMS Notification (for time-sensitive alerts)
+//       if (user.phone && this.isTimeSensitive(payload.type)) {
+//         await this.sendSmsNotification({
+//           to: user.phone,
+//           message: payload.message,
+//         });
+//       }
+
+//       // Store In-App Notification
+//       await this.storeInAppNotification(payload);
+//     } catch (error) {
+//       console.error('Error sending multi-channel notification:', error);
+//       // Continue gracefully - don't throw
+//     }
+//   }
+
+//   /**
+//    * Send email notification
+//    */
+//   private async sendEmailNotification(params: {
+//     to: string;
+//     subject: string;
+//     message: string;
+//     data?: Record<string, unknown>;
+//   }): Promise<void> {
+//     try {
+//       // Integration with notification service
+//       // This would typically call the notification-service microservice
+//       console.log(`📧 Email to ${params.to}: ${params.subject}`);
+//       // await emailService.send({ ... })
+//     } catch (error) {
+//       console.error('Email notification failed:', error);
+//     }
+//   }
+
+//   /**
+//    * Send SMS notification
+//    */
+//   private async sendSmsNotification(params: {
+//     to: string;
+//     message: string;
+//   }): Promise<void> {
+//     try {
+//       // Integration with notification service
+//       // This would typically call the notification-service microservice
+//       console.log(`📱 SMS to ${params.to}: ${params.message}`);
+//       // await smsService.send({ ... })
+//     } catch (error) {
+//       console.error('SMS notification failed:', error);
+//     }
+//   }
+
+//   /**
+//    * Store in-app notification in database
+//    */
+//   private async storeInAppNotification(payload: NotificationPayload): Promise<void> {
+//     try {
+//       // This would store notifications in a separate table for in-app dashboard
+//       console.log(`📢 In-App: ${payload.title} - ${payload.message}`);
+//       // await prisma.notification.create({ ... })
+//     } catch (error) {
+//       console.error('In-app notification storage failed:', error);
+//     }
+//   }
+
+//   /**
+//    * Determine if notification is time-sensitive (send SMS)
+//    */
+//   private isTimeSensitive(type: NotificationType): boolean {
+//     const timeSensitiveTypes = [
+//       NotificationType.JOB_ASSIGNED,
+//       NotificationType.TIME_SLOT_EXPIRING,
+//       NotificationType.TIME_SLOT_EXPIRED,
+//       NotificationType.PROPERTY_OWNER_CONFIRMATION_NEEDED,
+//     ];
+//     return timeSensitiveTypes.includes(type);
+//   }
+// }
+
+// export const notificationService = new NotificationService();

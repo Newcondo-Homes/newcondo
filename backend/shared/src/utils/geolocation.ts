@@ -341,3 +341,302 @@ export function getPolygonCenter(coordinates: BoundaryCoordinates[]): Geolocatio
   const boundingBox = getBoundingBox(coordinates);
   return boundingBox.center;
 }
+
+
+
+
+// /**
+//  * Geolocation Utilities
+//  * Handles distance calculations, proximity checks, and coordinate validation
+//  */
+
+// interface Coordinates {
+//   latitude: number;
+//   longitude: number;
+// }
+
+// interface BoundingBox {
+//   minLat: number;
+//   maxLat: number;
+//   minLng: number;
+//   maxLng: number;
+// }
+
+// /**
+//  * Calculate distance between two coordinates using Haversine formula
+//  * @param coord1 - First coordinate
+//  * @param coord2 - Second coordinate
+//  * @returns Distance in kilometers
+//  */
+// export function calculateDistance(
+//   coord1: Coordinates,
+//   coord2: Coordinates
+// ): number {
+//   const R = 6371; // Earth's radius in kilometers
+//   const dLat = toRadians(coord2.latitude - coord1.latitude);
+//   const dLon = toRadians(coord2.longitude - coord1.longitude);
+
+//   const a =
+//     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+//     Math.cos(toRadians(coord1.latitude)) *
+//       Math.cos(toRadians(coord2.latitude)) *
+//       Math.sin(dLon / 2) *
+//       Math.sin(dLon / 2);
+
+//   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//   const distance = R * c;
+
+//   return Number(distance.toFixed(2));
+// }
+
+// /**
+//  * Convert degrees to radians
+//  */
+// function toRadians(degrees: number): number {
+//   return degrees * (Math.PI / 180);
+// }
+
+// /**
+//  * Check if a coordinate is within a specified radius of a center point
+//  * @param center - Center coordinate
+//  * @param point - Point to check
+//  * @param radiusKm - Radius in kilometers
+//  * @returns True if point is within radius
+//  */
+// export function isWithinRadius(
+//   center: Coordinates,
+//   point: Coordinates,
+//   radiusKm: number
+// ): boolean {
+//   const distance = calculateDistance(center, point);
+//   return distance <= radiusKm;
+// }
+
+// /**
+//  * Find all points within a radius (useful for finding nearby agents)
+//  * @param center - Center coordinate
+//  * @param points - Array of points with IDs
+//  * @param radiusKm - Radius in kilometers
+//  * @returns Filtered points with distances
+//  */
+// export function findPointsWithinRadius<T extends { id: string }>(
+//   center: Coordinates,
+//   points: (T & Coordinates)[],
+//   radiusKm: number
+// ): Array<T & { distance: number }> {
+//   return points
+//     .map((point) => ({
+//       ...point,
+//       distance: calculateDistance(center, point),
+//     }))
+//     .filter((point) => point.distance <= radiusKm)
+//     .sort((a, b) => a.distance - b.distance);
+// }
+
+// /**
+//  * Validate GPS coordinates
+//  * @param latitude - Latitude value
+//  * @param longitude - Longitude value
+//  * @returns True if coordinates are valid
+//  */
+// export function validateCoordinates(
+//   latitude: number,
+//   longitude: number
+// ): boolean {
+//   return (
+//     latitude >= -90 &&
+//     latitude <= 90 &&
+//     longitude >= -180 &&
+//     longitude <= 180 &&
+//     !isNaN(latitude) &&
+//     !isNaN(longitude)
+//   );
+// }
+
+// /**
+//  * Parse GPS coordinates from string format
+//  * @param coordsString - String in format "lat,lng" or JSON format
+//  * @returns Parsed coordinates or null if invalid
+//  */
+// export function parseCoordinates(coordsString: string): Coordinates | null {
+//   try {
+//     // Try JSON format first
+//     const parsed = JSON.parse(coordsString);
+//     if (parsed.lat && parsed.lng) {
+//       return {
+//         latitude: Number(parsed.lat),
+//         longitude: Number(parsed.lng),
+//       };
+//     }
+//     if (parsed.latitude && parsed.longitude) {
+//       return {
+//         latitude: Number(parsed.latitude),
+//         longitude: Number(parsed.longitude),
+//       };
+//     }
+//   } catch {
+//     // Try comma-separated format
+//     const parts = coordsString.split(',').map((s) => s.trim());
+//     if (parts.length === 2) {
+//       const lat = Number(parts[0]);
+//       const lng = Number(parts[1]);
+//       if (validateCoordinates(lat, lng)) {
+//         return { latitude: lat, longitude: lng };
+//       }
+//     }
+//   }
+//   return null;
+// }
+
+// /**
+//  * Calculate bounding box for a given center and radius
+//  * Useful for database queries to pre-filter results
+//  * @param center - Center coordinate
+//  * @param radiusKm - Radius in kilometers
+//  * @returns Bounding box coordinates
+//  */
+// export function getBoundingBox(
+//   center: Coordinates,
+//   radiusKm: number
+// ): BoundingBox {
+//   // Approximate degrees per kilometer (varies by latitude)
+//   const latDegreePerKm = 1 / 111.32;
+//   const lngDegreePerKm =
+//     1 / (111.32 * Math.cos(toRadians(center.latitude)));
+
+//   const latOffset = radiusKm * latDegreePerKm;
+//   const lngOffset = radiusKm * lngDegreePerKm;
+
+//   return {
+//     minLat: center.latitude - latOffset,
+//     maxLat: center.latitude + latOffset,
+//     minLng: center.longitude - lngOffset,
+//     maxLng: center.longitude + lngOffset,
+//   };
+// }
+
+// /**
+//  * Get the center point (centroid) of multiple coordinates
+//  * @param coordinates - Array of coordinates
+//  * @returns Center coordinate
+//  */
+// export function getCentroid(coordinates: Coordinates[]): Coordinates {
+//   if (coordinates.length === 0) {
+//     throw new Error('Cannot calculate centroid of empty array');
+//   }
+
+//   const sum = coordinates.reduce(
+//     (acc, coord) => ({
+//       latitude: acc.latitude + coord.latitude,
+//       longitude: acc.longitude + coord.longitude,
+//     }),
+//     { latitude: 0, longitude: 0 }
+//   );
+
+//   return {
+//     latitude: sum.latitude / coordinates.length,
+//     longitude: sum.longitude / coordinates.length,
+//   };
+// }
+
+// /**
+//  * Format coordinates for display
+//  * @param coords - Coordinates to format
+//  * @param precision - Decimal places (default: 6)
+//  * @returns Formatted string
+//  */
+// export function formatCoordinates(
+//   coords: Coordinates,
+//   precision: number = 6
+// ): string {
+//   return `${coords.latitude.toFixed(precision)}, ${coords.longitude.toFixed(precision)}`;
+// }
+
+// /**
+//  * Check if a point is within Nigeria's approximate boundaries
+//  * @param coords - Coordinates to check
+//  * @returns True if within Nigeria
+//  */
+// export function isWithinNigeria(coords: Coordinates): boolean {
+//   // Nigeria approximate boundaries
+//   const NIGERIA_BOUNDS = {
+//     minLat: 4.0,
+//     maxLat: 14.0,
+//     minLng: 2.5,
+//     maxLng: 15.0,
+//   };
+
+//   return (
+//     coords.latitude >= NIGERIA_BOUNDS.minLat &&
+//     coords.latitude <= NIGERIA_BOUNDS.maxLat &&
+//     coords.longitude >= NIGERIA_BOUNDS.minLng &&
+//     coords.longitude <= NIGERIA_BOUNDS.maxLng
+//   );
+// }
+
+// /**
+//  * Calculate reasonable proximity radius based on location density
+//  * @param cityOrState - City or state name
+//  * @returns Recommended radius in kilometers
+//  */
+// export function getRecommendedProximityRadius(cityOrState: string): number {
+//   const lowerCase = cityOrState.toLowerCase();
+
+//   // Major cities - smaller radius due to high agent density
+//   const majorCities = ['lagos', 'abuja', 'port harcourt', 'kano', 'ibadan'];
+//   if (majorCities.some((city) => lowerCase.includes(city))) {
+//     return 5; // 5km radius
+//   }
+
+//   // Medium cities
+//   const mediumCities = [
+//     'benin',
+//     'enugu',
+//     'jos',
+//     'ilorin',
+//     'owerri',
+//     'calabar',
+//     'abeokuta',
+//   ];
+//   if (mediumCities.some((city) => lowerCase.includes(city))) {
+//     return 10; // 10km radius
+//   }
+
+//   // Smaller cities and rural areas
+//   return 20; // 20km radius
+// }
+
+// /**
+//  * Sort agents by proximity to property
+//  * @param propertyCoords - Property coordinates
+//  * @param agents - Array of agents with coordinates
+//  * @returns Sorted agents with distance information
+//  */
+// export function sortAgentsByProximity<T extends { id: string; gpsCoordinates?: string }>(
+//   propertyCoords: Coordinates,
+//   agents: T[]
+// ): Array<T & { distance: number | null; coordinates: Coordinates | null }> {
+//   return agents
+//     .map((agent) => {
+//       const coordinates = agent.gpsCoordinates
+//         ? parseCoordinates(agent.gpsCoordinates)
+//         : null;
+      
+//       const distance = coordinates
+//         ? calculateDistance(propertyCoords, coordinates)
+//         : null;
+
+//       return {
+//         ...agent,
+//         coordinates,
+//         distance,
+//       };
+//     })
+//     .sort((a, b) => {
+//       // Agents with valid coordinates come first
+//       if (a.distance === null && b.distance === null) return 0;
+//       if (a.distance === null) return 1;
+//       if (b.distance === null) return -1;
+//       return a.distance - b.distance;
+//     });
+// }

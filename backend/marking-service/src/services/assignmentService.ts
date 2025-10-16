@@ -521,3 +521,330 @@ export class AssignmentService {
 //     }
 //   }
 // }
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/assignmentService.ts
+// import { PrismaClient, MarkingJobStatus, PropertyMarkingJob, User } from '@newcondo/db';
+// import { standardResponse } from '../../../shared/src/utils/response';
+// import { AppError } from '../../../shared/src/utils/errors';
+// import { timeSlotService } from './timeSlotService';
+// import { notificationService } from './notificationService';
+// import { performanceService } from './performanceService';
+// import { agentGeolocationService } from './agentGeolocationService';
+
+// const prisma = new PrismaClient();
+
+// interface AssignmentQueueItem {
+//   agentId: string;
+//   queuePosition: number;
+//   addedAt: Date;
+// }
+
+// interface AssignmentResult {
+//   assignedAgent: User;
+//   queuePosition: number;
+//   timeSlotExpiry: Date;
+//   estimatedCompletionTime: Date;
+// }
+
+// class AssignmentService {
+//   /**
+//    * Get available agents near a property (FCFS eligible)
+//    */
+//   async getEligibleAgentsNearProperty(
+//     propertyId: string,
+//     maxRadius: number = 15 // km
+//   ): Promise<User[]> {
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId },
+//       select: {
+//         gpsCoordinates: true,
+//         city: true,
+//         state: true,
+//       },
+//     });
+
+//     if (!property?.gpsCoordinates) {
+//       throw new AppError('Property location not found', 400);
+//     }
+
+//     const coords = JSON.parse(property.gpsCoordinates);
+
+//     // Get agents available for marking with good reliability score
+//     const eligibleAgents = await prisma.user.findMany({
+//       where: {
+//         role: 'AGENT',
+//         isAvailableForMarking: true,
+//         agentReliabilityScore: {
+//           gte: 3.0, // Minimum 3.0 rating
+//         },
+//         // Agent operates in property state or nearby areas
+//         agentServiceAreas: {
+//           hasSome: [property.city, property.state],
+//         },
+//       },
+//       select: {
+//         id: true,
+//         name: true,
+//         email: true,
+//         phone: true,
+//         agentServiceAreas: true,
+//         agentReliabilityScore: true,
+//         totalMarkingJobs: true,
+//         completedMarkingJobs: true,
+//       },
+//     });
+
+//     // Filter by geolocation distance
+//     const nearbyAgents = await Promise.all(
+//       eligibleAgents.map(async (agent) => {
+//         const distance = await agentGeolocationService.calculateDistance(
+//           coords.lat,
+//           coords.lng,
+//           agent // Agent's location will be fetched from their profile
+//         );
+
+//         return {
+//           agent,
+//           distance,
+//         };
+//       })
+//     );
+
+//     return nearbyAgents
+//       .filter((item) => item.distance <= maxRadius)
+//       .sort((a, b) => a.distance - b.distance)
+//       .map((item) => item.agent);
+//   }
+
+//   /**
+//    * Assign marking job to first available agent (FCFS)
+//    */
+//   async assignJobToNextAgent(
+//     markingJobId: string,
+//     candidateAgents: User[]
+//   ): Promise<AssignmentResult> {
+//     if (candidateAgents.length === 0) {
+//       throw new AppError('No eligible agents available in the area', 404);
+//     }
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: { property: true },
+//     });
+
+//     if (!job) {
+//       throw new AppError('Marking job not found', 404);
+//     }
+
+//     if (job.status !== MarkingJobStatus.QUEUED) {
+//       throw new AppError('Job is not in queued status', 400);
+//     }
+
+//     // Assign to first agent in the list (best combination of reliability + proximity)
+//     const assignedAgent = candidateAgents[0];
+//     const timeSlotExpiry = new Date();
+//     timeSlotExpiry.setHours(timeSlotExpiry.getHours() + 3);
+
+//     const maxCompletionTime = new Date();
+//     maxCompletionTime.setDate(maxCompletionTime.getDate() + 3);
+
+//     // Update marking job with assignment
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         assignedAgentId: assignedAgent.id,
+//         status: MarkingJobStatus.ASSIGNED,
+//         assignedAt: new Date(),
+//         timeSlotExpiry,
+//         maxCompletionTime,
+//         queuePosition: 1, // First assignment
+//       },
+//       include: { property: true },
+//     });
+
+//     // Update agent performance metrics
+//     await performanceService.recordJobAssignment(assignedAgent.id);
+
+//     // Send assignment notification
+//     await notificationService.notifyAgentAssignment({
+//       agent: assignedAgent,
+//       job: updatedJob,
+//       timeSlotExpiry,
+//     });
+
+//     return {
+//       assignedAgent,
+//       queuePosition: 1,
+//       timeSlotExpiry,
+//       estimatedCompletionTime: maxCompletionTime,
+//     };
+//   }
+
+//   /**
+//    * Build a queue for agents to bid for the job (FCFS queue)
+//    */
+//   async buildAgentQueue(
+//     markingJobId: string,
+//     agentIds: string[]
+//   ): Promise<AssignmentQueueItem[]> {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//     });
+
+//     if (!job) {
+//       throw new AppError('Marking job not found', 404);
+//     }
+
+//     // Create queue items with timestamps
+//     const queueItems: AssignmentQueueItem[] = agentIds.map((agentId, index) => ({
+//       agentId,
+//       queuePosition: index + 1,
+//       addedAt: new Date(),
+//     }));
+
+//     return queueItems;
+//   }
+
+//   /**
+//    * Auto-reassign job if current agent fails to complete in time
+//    */
+//   async handleTimeSlotExpiry(markingJobId: string): Promise<void> {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: { property: true, assignedAgent: true },
+//     });
+
+//     if (!job) {
+//       throw new AppError('Marking job not found', 404);
+//     }
+
+//     if (
+//       job.timeSlotExpiry &&
+//       new Date() > job.timeSlotExpiry &&
+//       job.status === MarkingJobStatus.ASSIGNED
+//     ) {
+//       // Reassign to next agent in queue
+//       const availableAgents = await this.getEligibleAgentsNearProperty(job.propertyId);
+
+//       // Filter out the agent who just failed
+//       const filteredAgents = availableAgents.filter(
+//         (agent) => agent.id !== job.assignedAgentId
+//       );
+
+//       if (filteredAgents.length > 0) {
+//         // Pay the previous agent a small percentage (1,000 NGN equivalent)
+//         const smallCompensation = 1000;
+//         await prisma.payment.create({
+//           data: {
+//             userId: job.assignedAgentId!,
+//             markingJobId,
+//             amount: smallCompensation,
+//             currency: 'NGN',
+//             paymentType: 'PROPERTY_MARKING',
+//             status: 'HELD', // Payment held until further confirmation
+//             description: 'Time slot expiry compensation',
+//           },
+//         });
+
+//         // Notify previous agent
+//         const previousAgent = job.assignedAgent;
+//         await notificationService.notifyTimeSlotExpiry({
+//           agent: previousAgent!,
+//           job,
+//           compensation: smallCompensation,
+//         });
+
+//         // Reassign to next agent
+//         await this.assignJobToNextAgent(markingJobId, filteredAgents);
+//       } else {
+//         // No more agents available - mark job as expired
+//         await prisma.propertyMarkingJob.update({
+//           where: { id: markingJobId },
+//           data: {
+//             status: MarkingJobStatus.EXPIRED,
+//             assignedAgentId: null,
+//           },
+//         });
+
+//         // Notify property owner
+//         await notificationService.notifyJobExpired({
+//           job,
+//         });
+//       }
+//     }
+//   }
+
+//   /**
+//    * Move agent up or down in queue based on performance metrics
+//    */
+//   async updateQueueBasedOnPerformance(markingJobId: string): Promise<void> {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: { assignedAgent: true },
+//     });
+
+//     if (!job?.assignedAgent) {
+//       return;
+//     }
+
+//     const performance = await performanceService.getAgentMetrics(job.assignedAgentId!);
+
+//     // Dynamic prioritization based on reliability
+//     if (performance.reliabilityScore >= 4.5) {
+//       // High performers get priority in future assignments
+//       await prisma.user.update({
+//         where: { id: job.assignedAgentId! },
+//         data: {
+//           agentReliabilityScore: performance.reliabilityScore,
+//         },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Cancel assignment and reassign job
+//    */
+//   async cancelAssignmentAndReassign(
+//     markingJobId: string,
+//     reason: string
+//   ): Promise<void> {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: { property: true },
+//     });
+
+//     if (!job) {
+//       throw new AppError('Marking job not found', 404);
+//     }
+
+//     // Reset assignment
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         assignedAgentId: null,
+//         status: MarkingJobStatus.QUEUED,
+//         assignedAt: null,
+//         timeSlotExpiry: null,
+//         queuePosition: null,
+//       },
+//     });
+
+//     // Get new available agents
+//     const availableAgents = await this.getEligibleAgentsNearProperty(job.propertyId);
+
+//     if (availableAgents.length > 0) {
+//       await this.assignJobToNextAgent(markingJobId, availableAgents);
+//     } else {
+//       throw new AppError('No available agents for reassignment', 404);
+//     }
+//   }
+// }
+
+// export const assignmentService = new AssignmentService();

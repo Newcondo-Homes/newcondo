@@ -536,3 +536,158 @@ export const validateQueueMetrics = (req: Request, res: Response, next: NextFunc
   
 //   next();
 // };
+
+
+
+
+
+
+
+
+
+// import { Request, Response, NextFunction } from 'express';
+// import { z } from 'zod';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+
+// // Zod schemas for queue operations
+// const AcceptQueueJobSchema = z.object({
+//   markingJobId: z.string().cuid('Invalid marking job ID'),
+//   estimatedArrivalTime: z.string().datetime().optional(),
+//   agentNotes: z.string().max(200).optional(),
+// });
+
+// const RejectQueueJobSchema = z.object({
+//   markingJobId: z.string().cuid('Invalid marking job ID'),
+//   reason: z.string().min(5).max(200, 'Reason must be between 5 and 200 characters'),
+// });
+
+// const UpdateQueuePositionSchema = z.object({
+//   markingJobId: z.string().cuid(),
+//   newPosition: z.number().int().positive().optional(),
+//   status: z.enum(['QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']).optional(),
+// });
+
+// const GetQueueStatsSchema = z.object({
+//   timeRange: z.enum(['TODAY', 'WEEK', 'MONTH', 'ALL']).default('TODAY').optional(),
+//   status: z.enum(['QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']).optional(),
+// });
+
+// export const validateAcceptQueueJob = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = AcceptQueueJobSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateRejectQueueJob = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = RejectQueueJobSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateUpdateQueuePosition = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = UpdateQueuePositionSchema.parse(req.body);
+//     req.body = validatedData;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// export const validateGetQueueStats = (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const validatedData = GetQueueStatsSchema.parse(req.query);
+//     req.query = validatedData as any;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(400).json(
+//         ApiResponse.error('Validation failed', error.errors)
+//       );
+//     }
+//     next(error);
+//   }
+// };
+
+// // Additional validation: Check if agent has valid service areas
+// export const validateAgentServiceArea = async (req: Request, res: Response, next: NextFunction) => {
+//   try {
+//     const { latitude, longitude } = req.body;
+    
+//     if (!latitude || !longitude) {
+//       return res.status(400).json(
+//         ApiResponse.error('Agent location (latitude, longitude) is required for queue assignment')
+//       );
+//     }
+
+//     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+//       return res.status(400).json(
+//         ApiResponse.error('Invalid coordinate format. Latitude and longitude must be numbers')
+//       );
+//     }
+
+//     if (latitude < -90 || latitude > 90) {
+//       return res.status(400).json(
+//         ApiResponse.error('Invalid latitude. Must be between -90 and 90')
+//       );
+//     }
+
+//     if (longitude < -180 || longitude > 180) {
+//       return res.status(400).json(
+//         ApiResponse.error('Invalid longitude. Must be between -180 and 180')
+//       );
+//     }
+
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// // Validate agent is eligible for queue operations
+// export const validateAgentEligibility = (req: Request, res: Response, next: NextFunction) => {
+//   const agent = (req as any).user;
+
+//   if (!agent) {
+//     return res.status(401).json(
+//       ApiResponse.error('Agent authentication required')
+//     );
+//   }
+
+//   if (!agent.isAvailableForMarking) {
+//     return res.status(403).json(
+//       ApiResponse.error('Agent is not marked as available for marking jobs')
+//     );
+//   }
+
+//   if (!agent.agentServiceAreas || agent.agentServiceAreas.length === 0) {
+//     return res.status(403).json(
+//       ApiResponse.error('Agent must set service areas before accepting jobs')
+//     );
+//   }
+
+//   next();
+// };

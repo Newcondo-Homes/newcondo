@@ -704,3 +704,369 @@ export const assignmentController = {
 // }
 
 // export const assignmentController = new AssignmentController();
+
+
+
+
+
+
+
+// import { Request, Response } from 'express';
+// import { PrismaClient } from '@newcondo/db';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+// import { validateAssignmentRequest } from '../middleware/markingValidation';
+// import { AssignmentService } from '../services/assignmentService';
+// import { NotificationService } from '../../notification-service/src/services/notificationService';
+
+// const prisma = new PrismaClient();
+// const assignmentService = new AssignmentService();
+// const notificationService = new NotificationService();
+
+// /**
+//  * Broadcast marking job to available agents/renters within proximity
+//  * POST /api/marking/assignments/broadcast
+//  */
+// export const broadcastMarkingJob = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     // Verify marking job exists and belongs to user
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: {
+//           select: { city, state, gpsCoordinates: true }
+//         },
+//         requestingUser: {
+//           select: { id: true, name: true }
+//         }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     if (markingJob.requestedBy !== userId) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized to broadcast this job', 403)
+//       );
+//     }
+
+//     // Get available agents/premium renters near property
+//     const availableWorkers = await assignmentService.findNearbyWorkers(
+//       markingJob.property.city,
+//       markingJob.property.state,
+//       markingJob.property.gpsCoordinates
+//     );
+
+//     if (availableWorkers.length === 0) {
+//       return res.status(400).json(
+//         ApiResponse.error('No available agents in this area', 400)
+//       );
+//     }
+
+//     // Create queue entries for each available worker
+//     const queueEntries = await assignmentService.createQueueForBroadcast(
+//       markingJobId,
+//       availableWorkers
+//     );
+
+//     // Send notifications to all workers
+//     await Promise.all(
+//       availableWorkers.map(worker =>
+//         notificationService.sendMarkingJobAlert({
+//           workerId: worker.id,
+//           jobId: markingJobId,
+//           propertyAddress: markingJob.property.address,
+//           fee: markingJob.markingFee,
+//           timeSlot: '3 hours'
+//         })
+//       )
+//     );
+
+//     // Update marking job status
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         status: 'QUEUED',
+//         queuePosition: 1
+//       }
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(
+//         {
+//           markingJob: updatedJob,
+//           broadcastedTo: availableWorkers.length,
+//           queueEntries: queueEntries
+//         },
+//         'Marking job broadcasted successfully'
+//       )
+//     );
+//   } catch (error) {
+//     console.error('Error broadcasting marking job:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to broadcast marking job', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Assign marking job to specific agent
+//  * POST /api/marking/assignments/assign
+//  */
+// export const assignJobToAgent = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId, agentId } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     // Verify job exists and user is owner
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: true
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     if (markingJob.requestedBy !== userId) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized', 403)
+//       );
+//     }
+
+//     // Verify agent exists and is available
+//     const agent = await prisma.user.findUnique({
+//       where: { id: agentId },
+//       select: {
+//         id: true,
+//         isAvailableForMarking: true,
+//         agentServiceAreas: true,
+//         role: true
+//       }
+//     });
+
+//     if (!agent) {
+//       return res.status(404).json(
+//         ApiResponse.error('Agent not found', 404)
+//       );
+//     }
+
+//     if (!agent.isAvailableForMarking) {
+//       return res.status(400).json(
+//         ApiResponse.error('Agent is not available for marking', 400)
+//       );
+//     }
+
+//     // Calculate 3-hour time slot
+//     const timeSlotExpiry = new Date();
+//     timeSlotExpiry.setHours(timeSlotExpiry.getHours() + 3);
+
+//     // Assign job to agent
+//     const assignment = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         assignedAgentId: agentId,
+//         status: 'ASSIGNED',
+//         assignedAt: new Date(),
+//         timeSlotExpiry,
+//         queuePosition: 1
+//       },
+//       include: {
+//         assignedAgent: {
+//           select: { id: true, name: true, email: true, phone: true }
+//         },
+//         requestingUser: {
+//           select: { id: true, name: true, email: true }
+//         },
+//         property: {
+//           select: { id: true, address: true, city: true, state: true }
+//         }
+//       }
+//     });
+
+//     // Send notification to agent
+//     await notificationService.sendJobAssignmentNotification({
+//       agentId,
+//       jobId: markingJobId,
+//       propertyAddress: markingJob.property.address,
+//       fee: markingJob.markingFee,
+//       timeSlotExpiry,
+//       contactPerson: {
+//         name: markingJob.contactPersonName,
+//         phone: markingJob.contactPersonPhone
+//       }
+//     });
+
+//     // Send notification to property owner
+//     await notificationService.sendJobAssignmentConfirmation({
+//       ownerId: userId,
+//       jobId: markingJobId,
+//       agentName: agent.id
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(assignment, 'Job assigned successfully')
+//     );
+//   } catch (error) {
+//     console.error('Error assigning job:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to assign job', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Get queue position for current user
+//  * GET /api/marking/assignments/queue-position/:jobId
+//  */
+// export const getQueuePosition = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     const queueInfo = await assignmentService.getWorkerQueuePosition(jobId, userId);
+
+//     if (!queueInfo) {
+//       return res.status(404).json(
+//         ApiResponse.error('Job not found or user not in queue', 404)
+//       );
+//     }
+
+//     return res.status(200).json(
+//       ApiResponse.success(queueInfo, 'Queue position retrieved')
+//     );
+//   } catch (error) {
+//     console.error('Error getting queue position:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to get queue position', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Accept marking job from queue
+//  * POST /api/marking/assignments/accept
+//  */
+// export const acceptMarkingJob = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     // Verify user is in queue for this job
+//     const queuePosition = await assignmentService.getWorkerQueuePosition(markingJobId, userId);
+
+//     if (!queuePosition) {
+//       return res.status(404).json(
+//         ApiResponse.error('You are not in queue for this job', 404)
+//       );
+//     }
+
+//     // Update assignment
+//     const assignment = await assignmentService.acceptJob(markingJobId, userId);
+
+//     if (!assignment) {
+//       return res.status(400).json(
+//         ApiResponse.error('Failed to accept job', 400)
+//       );
+//     }
+
+//     return res.status(200).json(
+//       ApiResponse.success(assignment, 'Job accepted successfully')
+//     );
+//   } catch (error) {
+//     console.error('Error accepting job:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to accept job', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Reject marking job from queue
+//  * POST /api/marking/assignments/reject
+//  */
+// export const rejectMarkingJob = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId, reason } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     await assignmentService.rejectJob(markingJobId, userId, reason);
+
+//     return res.status(200).json(
+//       ApiResponse.success(null, 'Job rejected successfully')
+//     );
+//   } catch (error) {
+//     console.error('Error rejecting job:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to reject job', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Reassign job when time limit expires
+//  * POST /api/marking/assignments/reassign-expired
+//  */
+// export const reassignExpiredJob = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId } = req.body;
+
+//     // This endpoint should be called by a scheduled task
+//     const reassigned = await assignmentService.reassignExpiredJob(markingJobId);
+
+//     if (!reassigned) {
+//       return res.status(400).json(
+//         ApiResponse.error('Job could not be reassigned', 400)
+//       );
+//     }
+
+//     return res.status(200).json(
+//       ApiResponse.success(reassigned, 'Job reassigned successfully')
+//     );
+//   } catch (error) {
+//     console.error('Error reassigning job:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to reassign job', 500)
+//     );
+//   }
+// };

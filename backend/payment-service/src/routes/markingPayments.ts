@@ -472,3 +472,123 @@ export default router;
 // );
 
 // export default router;
+
+
+
+
+
+
+// // backend/payment-service/src/routes/markingPayments.ts
+
+// import { Router, Request, Response } from 'express';
+// import { markingPaymentController } from '../controllers/markingPaymentController';
+// import {
+//   authMiddleware,
+//   roleMiddleware,
+// } from '@newcondo/shared/middleware/auth';
+// import {
+//   validateMarkingPaymentInitiation,
+//   validatePaymentRefund,
+//   validatePaymentRelease,
+// } from '../middleware/paymentValidation';
+// import { rateLimiter } from '@newcondo/shared/middleware/rateLimiter';
+// import { errorHandler } from '@newcondo/shared/middleware/errorHandler';
+
+// const router = Router();
+
+// /**
+//  * POST /api/payment/marking/initiate
+//  * Initiate marking payment when property owner or agent requests marking service
+//  * Only OWNER and AGENT roles can initiate marking payments
+//  * Requires: propertyId, markingJobId, markingType, userId
+//  */
+// router.post(
+//   '/initiate',
+//   rateLimiter,
+//   authMiddleware,
+//   roleMiddleware(['OWNER', 'AGENT', 'RENTER']),
+//   validateMarkingPaymentInitiation,
+//   async (req: Request, res: Response) => {
+//     await markingPaymentController.initiateMarkingPayment(req, res);
+//   }
+// );
+
+// /**
+//  * POST /api/payment/marking/webhook
+//  * Flutterwave webhook endpoint for marking payment confirmations
+//  * This is a public endpoint (webhook from external service)
+//  * Requires verification of webhook signature
+//  */
+// router.post(
+//   '/webhook',
+//   express.raw({ type: 'application/json' }),
+//   async (req: Request, res: Response) => {
+//     await markingPaymentController.handleMarkingPaymentWebhook(req, res);
+//   }
+// );
+
+// /**
+//  * GET /api/payment/marking/:paymentId
+//  * Get marking payment status for a specific payment
+//  * User can only view their own payment records
+//  * Query param: userId (for authorization)
+//  */
+// router.get(
+//   '/:paymentId',
+//   authMiddleware,
+//   async (req: Request, res: Response) => {
+//     await markingPaymentController.getMarkingPaymentStatus(req, res);
+//   }
+// );
+
+// /**
+//  * POST /api/payment/marking/:paymentId/release
+//  * Release payment to agent after property owner confirms marking
+//  * Transitions from escrow (1000 NGN) to full payment (25000 NGN)
+//  * Only property owner can trigger this after verifying the marked boundary
+//  * Requires: paymentId, markingJobId, userId
+//  */
+// router.post(
+//   '/:paymentId/release',
+//   rateLimiter,
+//   authMiddleware,
+//   validatePaymentRelease,
+//   async (req: Request, res: Response) => {
+//     await markingPaymentController.releasePaymentToAgent(req, res);
+//   }
+// );
+
+// /**
+//  * POST /api/payment/marking/:paymentId/refund
+//  * Refund marking payment if job is cancelled or rejected
+//  * Can be initiated by: property owner (before agent marks), admin (at any time)
+//  * Requires: paymentId, reason, userId
+//  */
+// router.post(
+//   '/:paymentId/refund',
+//   rateLimiter,
+//   authMiddleware,
+//   validatePaymentRefund,
+//   async (req: Request, res: Response) => {
+//     await markingPaymentController.refundMarkingPayment(req, res);
+//   }
+// );
+
+// /**
+//  * GET /api/payment/marking/history/:userId
+//  * Get marking payment history for a user
+//  * Shows all marking payments made by user
+//  * Query params: page (default: 1), limit (default: 10), status (optional filter)
+//  */
+// router.get(
+//   '/history/:userId',
+//   authMiddleware,
+//   async (req: Request, res: Response) => {
+//     await markingPaymentController.getMarkingPaymentHistory(req, res);
+//   }
+// );
+
+// // Error handling middleware
+// router.use(errorHandler);
+
+// export default router;

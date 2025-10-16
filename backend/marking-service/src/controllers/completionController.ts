@@ -1287,3 +1287,478 @@ export const completionController = new CompletionController();
 // }
 
 // export const completionController = new CompletionController();
+
+
+
+
+
+
+
+// import { Request, Response } from 'express';
+// import { PrismaClient } from '@newcondo/db';
+// import { ApiResponse } from '../../../shared/src/utils/response';
+// import { CompletionService } from '../services/completionService';
+// import { NotificationService } from '../../notification-service/src/services/notificationService';
+// import { PaymentService } from '../../payment-service/src/services/paymentService';
+
+// const prisma = new PrismaClient();
+// const completionService = new CompletionService();
+// const notificationService = new NotificationService();
+// const paymentService = new PaymentService();
+
+// /**
+//  * Mark job as in-progress
+//  * POST /api/marking/completion/start
+//  */
+// export const startMarking = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         assignedAgent: { select: { id: true } },
+//         requestingUser: { select: { id: true, email: true, name: true } }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     if (markingJob.assignedAgentId !== userId && markingJob.requestedBy !== userId) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized to mark this property', 403)
+//       );
+//     }
+
+//     // Check if time slot is still valid
+//     if (markingJob.timeSlotExpiry && markingJob.timeSlotExpiry < new Date()) {
+//       return res.status(400).json(
+//         ApiResponse.error('Time slot has expired', 400)
+//       );
+//     }
+
+//     const updated = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: { status: 'IN_PROGRESS' }
+//     });
+
+//     // Notify owner that marking has started
+//     await notificationService.sendMarkingStartedNotification({
+//       ownerId: markingJob.requestedBy,
+//       jobId: markingJobId,
+//       agentName: markingJob.assignedAgent?.id
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(updated, 'Marking started')
+//     );
+//   } catch (error) {
+//     console.error('Error starting marking:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to start marking', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Submit marking completion with photos and boundary data
+//  * POST /api/marking/completion/submit
+//  */
+// export const submitMarkingCompletion = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId, completionNotes, completionImages, boundaryData } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: {
+//           select: { id: true, ownerId: true, gpsCoordinates: true }
+//         },
+//         assignedAgent: { select: { id: true } },
+//         requestingUser: { select: { id: true, email: true, name: true } }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     if (markingJob.assignedAgentId !== userId) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized to submit this marking', 403)
+//       );
+//     }
+
+//     // Validate boundary data
+//     if (!boundaryData || !boundaryData.coordinates) {
+//       return res.status(400).json(
+//         ApiResponse.error('Boundary data is required', 400)
+//       );
+//     }
+
+//     if (!completionImages || completionImages.length === 0) {
+//       return res.status(400).json(
+//         ApiResponse.error('At least one completion photo is required', 400)
+//       );
+//     }
+
+//     // Submit completion
+//     const completed = await completionService.submitCompletion({
+//       markingJobId,
+//       agentId: userId,
+//       completionNotes,
+//       completionImages,
+//       boundaryData
+//     });
+
+//     if (!completed) {
+//       return res.status(400).json(
+//         ApiResponse.error('Failed to submit completion', 400)
+//       );
+//     }
+
+//     // Release initial payment to agent (~1000 NGN)
+//     const initialPayment = await paymentService.releaseInitialMarkingPayment({
+//       userId,
+//       jobId: markingJobId,
+//       amount: 1000, // Initial compensation
+//       propertyId: markingJob.property.id
+//     });
+
+//     // Notify property owner to confirm marking
+//     await notificationService.sendMarkingCompletedNotification({
+//       ownerId: markingJob.requestedBy,
+//       jobId: markingJobId,
+//       completionImages,
+//       confirmationDeadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000) // 3 days
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(
+//         {
+//           markingJob: completed,
+//           initialPayment,
+//           confirmationDeadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+//         },
+//         'Marking submitted for confirmation'
+//       )
+//     );
+//   } catch (error) {
+//     console.error('Error submitting completion:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to submit marking', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Property owner confirms marking is correct
+//  * POST /api/marking/completion/confirm
+//  */
+// export const confirmMarking = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: {
+//           select: { id: true, ownerId: true }
+//         },
+//         assignedAgent: {
+//           select: { id: true, email: true, name: true }
+//         }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     if (markingJob.property.ownerId !== userId) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized to confirm this marking', 403)
+//       );
+//     }
+
+//     if (markingJob.status !== 'COMPLETED') {
+//       return res.status(400).json(
+//         ApiResponse.error('Marking is not in completed state', 400)
+//       );
+//     }
+
+//     // Update marking job as confirmed
+//     const confirmed = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         status: 'VERIFIED'
+//       }
+//     });
+
+//     // Update property with boundary data
+//     const updatedProperty = await prisma.property.update({
+//       where: { id: markingJob.property.id },
+//       data: {
+//         boundaryCoordinates: confirmed.boundaryData,
+//         boundaryVerified: true,
+//         boundaryMarkedBy: markingJob.assignedAgentId,
+//         boundaryMarkedAt: new Date(),
+//         boundaryImages: confirmed.completionImages
+//       }
+//     });
+
+//     // Release remaining payment to agent
+//     const remainingPayment = await paymentService.releaseRemainingMarkingPayment({
+//       userId: markingJob.assignedAgentId,
+//       jobId: markingJobId,
+//       propertyId: markingJob.property.id
+//     });
+
+//     // Update agent performance metrics
+//     await completionService.updateAgentPerformance(markingJob.assignedAgentId);
+
+//     // Release other queued agents
+//     await completionService.releaseQueuedAgents(markingJobId);
+
+//     // Notify agent of payment release
+//     await notificationService.sendPaymentReleasedNotification({
+//       agentId: markingJob.assignedAgentId,
+//       jobId: markingJobId,
+//       amount: remainingPayment.amount
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(
+//         {
+//           markingJob: confirmed,
+//           property: updatedProperty,
+//           remainingPayment
+//         },
+//         'Marking confirmed and verified'
+//       )
+//     );
+//   } catch (error) {
+//     console.error('Error confirming marking:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to confirm marking', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Property owner rejects marking and needs to initiate new job
+//  * POST /api/marking/completion/reject
+//  */
+// export const rejectMarking = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId, rejectionReason } = req.body;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: { select: { id: true, ownerId: true } },
+//         assignedAgent: { select: { id: true, email: true, name: true } }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     if (markingJob.property.ownerId !== userId) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized to reject this marking', 403)
+//       );
+//     }
+
+//     // Update job as rejected
+//     const rejected = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         status: 'CANCELLED',
+//         completionNotes: `Rejected: ${rejectionReason}`
+//       }
+//     });
+
+//     // Release initial payment back to agent (they keep it as compensation)
+//     // This was already paid, so just notify them
+
+//     // Notify agent of rejection
+//     await notificationService.sendMarkingRejectionNotification({
+//       agentId: markingJob.assignedAgentId,
+//       jobId: markingJobId,
+//       reason: rejectionReason
+//     });
+
+//     // Notify property owner they need to initiate new marking job
+//     await notificationService.sendMarkingRejectionConfirmation({
+//       ownerId: userId,
+//       jobId: markingJobId,
+//       rejectionReason
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(rejected, 'Marking rejected. Please initiate a new marking job')
+//     );
+//   } catch (error) {
+//     console.error('Error rejecting marking:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to reject marking', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Handle confirmation deadline expiry
+//  * POST /api/marking/completion/expire-confirmation
+//  */
+// export const expireConfirmationDeadline = async (req: Request, res: Response) => {
+//   try {
+//     const { markingJobId } = req.body;
+
+//     // This should be called by a scheduled task
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         assignedAgent: { select: { id: true, email: true } }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     // Update job status
+//     const expired = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         status: 'EXPIRED',
+//         completionNotes: 'Confirmation deadline expired. Agent compensated.'
+//       }
+//     });
+
+//     // Agent keeps the initial payment as full compensation
+//     // Add note to their account
+//     await completionService.recordCompensationForExpiry(
+//       markingJob.assignedAgentId,
+//       markingJobId,
+//       1000
+//     );
+
+//     // Notify agent
+//     await notificationService.sendConfirmationDeadlineExpiredNotification({
+//       agentId: markingJob.assignedAgentId,
+//       jobId: markingJobId
+//     });
+
+//     return res.status(200).json(
+//       ApiResponse.success(expired, 'Confirmation deadline expired')
+//     );
+//   } catch (error) {
+//     console.error('Error expiring confirmation:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to expire confirmation', 500)
+//     );
+//   }
+// };
+
+// /**
+//  * Get marking completion details
+//  * GET /api/marking/completion/:jobId
+//  */
+// export const getCompletionDetails = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         ApiResponse.error('Unauthorized', 401)
+//       );
+//     }
+
+//     const markingJob = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true,
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             agentReliabilityScore: true
+//           }
+//         },
+//         requestingUser: {
+//           select: { id: true, name: true }
+//         }
+//       }
+//     });
+
+//     if (!markingJob) {
+//       return res.status(404).json(
+//         ApiResponse.error('Marking job not found', 404)
+//       );
+//     }
+
+//     // Verify user has access
+//     if (
+//       markingJob.requestedBy !== userId &&
+//       markingJob.assignedAgentId !== userId
+//     ) {
+//       return res.status(403).json(
+//         ApiResponse.error('Not authorized to view this marking', 403)
+//       );
+//     }
+
+//     return res.status(200).json(
+//       ApiResponse.success(markingJob, 'Completion details retrieved')
+//     );
+//   } catch (error) {
+//     console.error('Error getting completion details:', error);
+//     return res.status(500).json(
+//       ApiResponse.error('Failed to get completion details', 500)
+//     );
+//   }
+// };

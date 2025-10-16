@@ -811,3 +811,429 @@ export const queueController = {
 //     });
 //   }
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/controllers/queueController.ts
+// import { Request, Response, NextFunction } from 'express';
+// import { prisma } from '@newcondo/db';
+// import { standardResponse } from '../../../shared/src/utils/response';
+// import { MarkingJobStatus, Role } from '@prisma/client';
+// import { calculateDistance } from '../../../shared/src/utils/geolocation';
+
+// /**
+//  * Get all available marking jobs in queue for agents/renters
+//  * Filters by proximity, availability, and agent service areas
+//  */
+// export const getAvailableMarkingJobs = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const userId = req.user?.id;
+//     const { limit = 20, offset = 0 } = req.query;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         standardResponse(false, 'Unauthorized', null, 401)
+//       );
+//     }
+
+//     // Get user details
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//     });
+
+//     if (!user) {
+//       return res.status(404).json(
+//         standardResponse(false, 'User not found', null, 404)
+//       );
+//     }
+
+//     // Check if user is agent or premium renter
+//     const isPremiumRenter =
+//       user.role === Role.RENTER && user.isPremium;
+//     const isAgent = user.role === Role.AGENT;
+
+//     if (!isPremiumRenter && !isAgent) {
+//       return res.status(403).json(
+//         standardResponse(
+//           false,
+//           'Only agents and premium renters can accept marking jobs',
+//           null,
+//           403
+//         )
+//       );
+//     }
+
+//     // Get available jobs (QUEUED status without assigned agents)
+//     const jobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         assignedAgentId: null,
+//       },
+//       include: {
+//         property: {
+//           include: {
+//             owner: true,
+//           },
+//         },
+//         requestingUser: true,
+//       },
+//       orderBy: { urgencyLevel: 'desc' },
+//       take: parseInt(limit as string),
+//       skip: parseInt(offset as string),
+//     });
+
+//     // Filter jobs by proximity and service areas if agent
+//     let filteredJobs = jobs;
+
+//     if (isAgent && user.agentServiceAreas && user.agentServiceAreas.length > 0) {
+//       filteredJobs = jobs.filter(job => {
+//         const jobCity = job.property.city;
+//         return user.agentServiceAreas.includes(jobCity);
+//       });
+//     }
+
+//     // Calculate distance for each job
+//     const jobsWithDistance = filteredJobs.map(job => ({
+//       ...job,
+//       reasonableProximity: true, // Distance calculation would go here if user location available
+//     }));
+
+//     const total = await prisma.propertyMarkingJob.count({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         assignedAgentId: null,
+//       },
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Available marking jobs retrieved', {
+//         data: jobsWithDistance,
+//         pagination: {
+//           total,
+//           limit: parseInt(limit as string),
+//           offset: parseInt(offset as string),
+//         },
+//       })
+//     );
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Accept a marking job from the queue
+//  * Places agent in first-come-first-served queue with 3-hour time slot
+//  */
+// export const acceptMarkingJob = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const userId = req.user?.id;
+//     const { markingJobId } = req.body;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         standardResponse(false, 'Unauthorized', null, 401)
+//       );
+//     }
+
+//     // Verify job exists and is still available
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: true,
+//       },
+//     });
+
+//     if (!job) {
+//       return res.status(404).json(
+//         standardResponse(false, 'Marking job not found', null, 404)
+//       );
+//     }
+
+//     if (job.status !== MarkingJobStatus.QUEUED) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Job is no longer available', null, 400)
+//       );
+//     }
+
+//     if (job.assignedAgentId) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Job is already assigned', null, 400)
+//       );
+//     }
+
+//     // Update job: assign to agent and set time slot
+//     const timeSlotExpiry = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 hours
+
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         assignedAgentId: userId,
+//         status: MarkingJobStatus.ASSIGNED,
+//         assignedAt: new Date(),
+//         timeSlotExpiry,
+//         queuePosition: 1, // First in queue
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     // Update agent performance metrics
+//     await prisma.user.update({
+//       where: { id: userId },
+//       data: {
+//         totalMarkingJobs: { increment: 1 },
+//       },
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(
+//         true,
+//         'Marking job accepted successfully. You have 3 hours to complete it.',
+//         updatedJob
+//       )
+//     );
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Get agent's current queue position and status
+//  */
+// export const getAgentQueueStatus = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const userId = req.user?.id;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         standardResponse(false, 'Unauthorized', null, 401)
+//       );
+//     }
+
+//     // Get all assigned jobs for this agent that are not completed/cancelled
+//     const activeJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         assignedAgentId: userId,
+//         status: {
+//           in: [MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS],
+//         },
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//       },
+//       orderBy: { assignedAt: 'asc' },
+//     });
+
+//     // Calculate time remaining for each job
+//     const jobsWithTimeRemaining = activeJobs.map(job => {
+//       const timeRemaining = job.timeSlotExpiry
+//         ? Math.max(0, Math.floor((job.timeSlotExpiry.getTime() - Date.now()) / 1000 / 60))
+//         : null;
+
+//       return {
+//         ...job,
+//         timeRemainingMinutes: timeRemaining,
+//         isExpiring: timeRemaining && timeRemaining < 30, // Flag if less than 30 minutes
+//       };
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(
+//         true,
+//         'Agent queue status retrieved',
+//         {
+//           activeJobs: jobsWithTimeRemaining,
+//           totalActive: jobsWithTimeRemaining.length,
+//         }
+//       )
+//     );
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Decline or cancel an assigned marking job
+//  * Returns job to available queue (only if within time slot)
+//  */
+// export const declineMarkingJob = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const userId = req.user?.id;
+//     const { markingJobId } = req.params;
+//     const { reason } = req.body;
+
+//     if (!userId) {
+//       return res.status(401).json(
+//         standardResponse(false, 'Unauthorized', null, 401)
+//       );
+//     }
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//     });
+
+//     if (!job) {
+//       return res.status(404).json(
+//         standardResponse(false, 'Marking job not found', null, 404)
+//       );
+//     }
+
+//     // Only assigned agent can decline
+//     if (job.assignedAgentId !== userId) {
+//       return res.status(403).json(
+//         standardResponse(false, 'Only assigned agent can decline', null, 403)
+//       );
+//     }
+
+//     // Only decline if still in ASSIGNED status (not completed)
+//     if (job.status !== MarkingJobStatus.ASSIGNED) {
+//       return res.status(400).json(
+//         standardResponse(
+//           false,
+//           'Cannot decline job that is already in progress or completed',
+//           null,
+//           400
+//         )
+//       );
+//     }
+
+//     // Return job to QUEUED status
+//     const declinedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: markingJobId },
+//       data: {
+//         status: MarkingJobStatus.QUEUED,
+//         assignedAgentId: null,
+//         assignedAt: null,
+//         timeSlotExpiry: null,
+//         queuePosition: null,
+//       },
+//       include: {
+//         property: true,
+//       },
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(
+//         true,
+//         'Marking job declined and returned to queue',
+//         declinedJob
+//       )
+//     );
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// /**
+//  * Get queue statistics for admins
+//  * Shows overall queue health and performance metrics
+//  */
+// export const getQueueStatistics = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     // Check admin role
+//     if (req.user?.role !== Role.ADMIN) {
+//       return res.status(403).json(
+//         standardResponse(false, 'Admin access required', null, 403)
+//       );
+//     }
+
+//     const [
+//       totalQueued,
+//       totalAssigned,
+//       totalCompleted,
+//       avgCompletionTime,
+//       expiredJobs,
+//     ] = await Promise.all([
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.QUEUED },
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.ASSIGNED },
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.COMPLETED },
+//       }),
+//       prisma.propertyMarkingJob.findMany({
+//         where: {
+//           status: MarkingJobStatus.COMPLETED,
+//           completedAt: { not: null },
+//         },
+//         select: {
+//           assignedAt: true,
+//           completedAt: true,
+//         },
+//         take: 100,
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           status: MarkingJobStatus.EXPIRED,
+//         },
+//       }),
+//     ]);
+
+//     // Calculate average completion time
+//     let avgTime = 0;
+//     if (avgCompletionTime.length > 0) {
+//       const totalTime = avgCompletionTime.reduce((acc, job) => {
+//         if (job.assignedAt && job.completedAt) {
+//           return acc + (job.completedAt.getTime() - job.assignedAt.getTime());
+//         }
+//         return acc;
+//       }, 0);
+//       avgTime = Math.round(totalTime / avgCompletionTime.length / 1000 / 60); // in minutes
+//     }
+
+//     return res.status(200).json(
+//       standardResponse(
+//         true,
+//         'Queue statistics retrieved',
+//         {
+//           totalQueued,
+//           totalAssigned,
+//           totalCompleted,
+//           avgCompletionTimeMinutes: avgTime,
+//           expiredJobs,
+//           queueHealth: {
+//             healthy: totalQueued <= 50 && totalAssigned <= 20,
+//             message: totalQueued > 50 ? 'High queue backlog' : 'Queue healthy',
+//           },
+//         }
+//       )
+//     );
+//   } catch (error) {
+//     next(error);
+//   }
+// };

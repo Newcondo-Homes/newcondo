@@ -553,3 +553,446 @@ export class MarkingJobService {
 // }
 
 // export default MarkingJobService;
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/markingJobService.ts
+// import { PrismaClient } from '@newcondo/db';
+// import { MarkingJobStatus, PaymentStatus, UrgencyLevel } from '@newcondo/db';
+// import { logger } from '../middleware/logger';
+// import { AppError } from '../middleware/errorHandler';
+
+// interface CreateMarkingJobDTO {
+//   propertyId: string;
+//   requestedBy: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel?: UrgencyLevel;
+//   markingFee: number;
+// }
+
+// interface MarkingJobUpdate {
+//   assignedAgentId?: string;
+//   status?: MarkingJobStatus;
+//   completionNotes?: string;
+//   completionImages?: string[];
+//   boundaryData?: Record<string, any>;
+// }
+
+// export class MarkingJobService {
+//   constructor(private prisma: PrismaClient) {}
+
+//   /**
+//    * Create a new marking job
+//    */
+//   async createMarkingJob(data: CreateMarkingJobDTO) {
+//     try {
+//       // Verify property exists and belongs to requester
+//       const property = await this.prisma.property.findUnique({
+//         where: { id: data.propertyId },
+//       });
+
+//       if (!property) {
+//         throw new AppError('Property not found', 404);
+//       }
+
+//       // Only property owners and agents can request marking jobs
+//       const user = await this.prisma.user.findUnique({
+//         where: { id: data.requestedBy },
+//       });
+
+//       if (!user || (user.role !== 'OWNER' && user.role !== 'AGENT')) {
+//         throw new AppError('Only property owners and agents can request marking jobs', 403);
+//       }
+
+//       // Verify ownership or agent relationship
+//       if (property.ownerId !== data.requestedBy && property.agentId !== data.requestedBy) {
+//         throw new AppError('User not authorized for this property', 403);
+//       }
+
+//       // Check if there's an active/pending marking job for this property
+//       const existingJob = await this.prisma.propertyMarkingJob.findFirst({
+//         where: {
+//           propertyId: data.propertyId,
+//           status: {
+//             in: [MarkingJobStatus.QUEUED, MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS],
+//           },
+//         },
+//       });
+
+//       if (existingJob) {
+//         throw new AppError('An active marking job already exists for this property', 409);
+//       }
+
+//       // Calculate max completion time (3 days from now)
+//       const maxCompletionTime = new Date();
+//       maxCompletionTime.setDate(maxCompletionTime.getDate() + 3);
+
+//       // Create marking job
+//       const markingJob = await this.prisma.propertyMarkingJob.create({
+//         data: {
+//           propertyId: data.propertyId,
+//           requestedBy: data.requestedBy,
+//           contactPersonName: data.contactPersonName,
+//           contactPersonPhone: data.contactPersonPhone,
+//           accessInstructions: data.accessInstructions,
+//           preferredTime: data.preferredTime,
+//           urgencyLevel: data.urgencyLevel || UrgencyLevel.NORMAL,
+//           markingFee: data.markingFee,
+//           paymentStatus: PaymentStatus.PENDING,
+//           status: MarkingJobStatus.QUEUED,
+//           maxCompletionTime,
+//         },
+//         include: {
+//           property: true,
+//           requestingUser: true,
+//         },
+//       });
+
+//       logger.info(`Marking job created: ${markingJob.id} for property ${data.propertyId}`);
+
+//       return markingJob;
+//     } catch (error) {
+//       logger.error('Error creating marking job:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get marking job details
+//    */
+//   async getMarkingJob(jobId: string) {
+//     try {
+//       const job = await this.prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           property: true,
+//           requestingUser: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//               phone: true,
+//             },
+//           },
+//           assignedAgent: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//               phone: true,
+//               agentReliabilityScore: true,
+//               completedMarkingJobs: true,
+//             },
+//           },
+//         },
+//       });
+
+//       if (!job) {
+//         throw new AppError('Marking job not found', 404);
+//       }
+
+//       return job;
+//     } catch (error) {
+//       logger.error('Error fetching marking job:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get all marking jobs for a property owner
+//    */
+//   async getMarkingJobsByOwner(userId: string) {
+//     try {
+//       const jobs = await this.prisma.propertyMarkingJob.findMany({
+//         where: {
+//           requestedBy: userId,
+//         },
+//         include: {
+//           property: {
+//             select: {
+//               id: true,
+//               title: true,
+//               address: true,
+//               city: true,
+//             },
+//           },
+//           assignedAgent: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//             },
+//           },
+//         },
+//         orderBy: {
+//           createdAt: 'desc',
+//         },
+//       });
+
+//       return jobs;
+//     } catch (error) {
+//       logger.error('Error fetching marking jobs for owner:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get all marking jobs assigned to an agent
+//    */
+//   async getMarkingJobsByAgent(agentId: string) {
+//     try {
+//       const jobs = await this.prisma.propertyMarkingJob.findMany({
+//         where: {
+//           assignedAgentId: agentId,
+//         },
+//         include: {
+//           property: {
+//             select: {
+//               id: true,
+//               title: true,
+//               address: true,
+//               city: true,
+//               gpsCoordinates: true,
+//             },
+//           },
+//           requestingUser: {
+//             select: {
+//               id: true,
+//               name: true,
+//               phone: true,
+//               email: true,
+//             },
+//           },
+//         },
+//         orderBy: {
+//           assignedAt: 'desc',
+//         },
+//       });
+
+//       return jobs;
+//     } catch (error) {
+//       logger.error('Error fetching marking jobs for agent:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Update marking job status
+//    */
+//   async updateMarkingJob(jobId: string, updates: MarkingJobUpdate) {
+//     try {
+//       const job = await this.prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//       });
+
+//       if (!job) {
+//         throw new AppError('Marking job not found', 404);
+//       }
+
+//       // Validate state transitions
+//       if (updates.status) {
+//         this.validateStatusTransition(job.status, updates.status);
+//       }
+
+//       const updateData: any = { ...updates };
+
+//       // If transitioning to IN_PROGRESS, set the start time
+//       if (updates.status === MarkingJobStatus.IN_PROGRESS && job.status !== MarkingJobStatus.IN_PROGRESS) {
+//         updateData.assignedAt = new Date();
+//       }
+
+//       // If transitioning to COMPLETED, set the completion time
+//       if (updates.status === MarkingJobStatus.COMPLETED) {
+//         updateData.completedAt = new Date();
+//       }
+
+//       const updatedJob = await this.prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: updateData,
+//         include: {
+//           property: true,
+//           assignedAgent: true,
+//           requestingUser: true,
+//         },
+//       });
+
+//       logger.info(`Marking job ${jobId} updated to status ${updates.status}`);
+
+//       return updatedJob;
+//     } catch (error) {
+//       logger.error('Error updating marking job:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Complete marking job with boundary data and images
+//    */
+//   async completeMarkingJob(jobId: string, data: {
+//     boundaryData: Record<string, any>;
+//     completionImages: string[];
+//     completionNotes?: string;
+//   }) {
+//     try {
+//       const job = await this.getMarkingJob(jobId);
+
+//       if (job.status === MarkingJobStatus.COMPLETED) {
+//         throw new AppError('Marking job already completed', 409);
+//       }
+
+//       // Update property with boundary data
+//       await this.prisma.property.update({
+//         where: { id: job.propertyId },
+//         data: {
+//           boundaryCoordinates: data.boundaryData,
+//           boundaryMarkedBy: job.assignedAgentId,
+//           boundaryMarkedAt: new Date(),
+//           boundaryImages: data.completionImages,
+//           boundaryVerified: false, // Awaiting property owner confirmation
+//         },
+//       });
+
+//       // Update marking job
+//       const completedJob = await this.updateMarkingJob(jobId, {
+//         status: MarkingJobStatus.COMPLETED,
+//         boundaryData: data.boundaryData,
+//         completionImages: data.completionImages,
+//         completionNotes: data.completionNotes,
+//       });
+
+//       logger.info(`Marking job ${jobId} completed with boundary data`);
+
+//       return completedJob;
+//     } catch (error) {
+//       logger.error('Error completing marking job:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Validate job completion (property owner confirmation)
+//    */
+//   async validateMarkingJob(jobId: string, isValid: boolean) {
+//     try {
+//       const job = await this.getMarkingJob(jobId);
+
+//       if (job.status !== MarkingJobStatus.COMPLETED) {
+//         throw new AppError('Can only validate completed marking jobs', 409);
+//       }
+
+//       if (isValid) {
+//         // Mark boundary as verified
+//         await this.prisma.property.update({
+//           where: { id: job.propertyId },
+//           data: {
+//             boundaryVerified: true,
+//           },
+//         });
+
+//         logger.info(`Marking job ${jobId} validated by property owner`);
+//         return { validated: true, message: 'Property marking validated successfully' };
+//       } else {
+//         // Reset marking job for re-assignment
+//         const resetJob = await this.prisma.propertyMarkingJob.update({
+//           where: { id: jobId },
+//           data: {
+//             status: MarkingJobStatus.QUEUED,
+//             assignedAgentId: null,
+//             assignedAt: null,
+//             completedAt: null,
+//             boundaryData: null,
+//             completionImages: [],
+//             completionNotes: null,
+//           },
+//         });
+
+//         logger.info(`Marking job ${jobId} reset for re-marking`);
+//         return { validated: false, message: 'Property marking rejected, reset for re-assignment' };
+//       }
+//     } catch (error) {
+//       logger.error('Error validating marking job:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Cancel marking job
+//    */
+//   async cancelMarkingJob(jobId: string, reason: string) {
+//     try {
+//       const job = await this.getMarkingJob(jobId);
+
+//       if ([MarkingJobStatus.COMPLETED, MarkingJobStatus.CANCELLED, MarkingJobStatus.EXPIRED].includes(job.status)) {
+//         throw new AppError(`Cannot cancel job with status ${job.status}`, 409);
+//       }
+
+//       const cancelledJob = await this.prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           status: MarkingJobStatus.CANCELLED,
+//           completionNotes: `Cancelled: ${reason}`,
+//         },
+//       });
+
+//       logger.info(`Marking job ${jobId} cancelled: ${reason}`);
+
+//       return cancelledJob;
+//     } catch (error) {
+//       logger.error('Error cancelling marking job:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get marking jobs by status
+//    */
+//   async getMarkingJobsByStatus(status: MarkingJobStatus) {
+//     try {
+//       const jobs = await this.prisma.propertyMarkingJob.findMany({
+//         where: { status },
+//         include: {
+//           property: true,
+//           assignedAgent: true,
+//           requestingUser: true,
+//         },
+//         orderBy: {
+//           createdAt: 'asc',
+//         },
+//       });
+
+//       return jobs;
+//     } catch (error) {
+//       logger.error('Error fetching marking jobs by status:', error);
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Validate marking job status transitions
+//    */
+//   private validateStatusTransition(currentStatus: MarkingJobStatus, newStatus: MarkingJobStatus): void {
+//     const validTransitions: Record<MarkingJobStatus, MarkingJobStatus[]> = {
+//       [MarkingJobStatus.QUEUED]: [MarkingJobStatus.ASSIGNED, MarkingJobStatus.CANCELLED],
+//       [MarkingJobStatus.ASSIGNED]: [MarkingJobStatus.IN_PROGRESS, MarkingJobStatus.CANCELLED],
+//       [MarkingJobStatus.IN_PROGRESS]: [MarkingJobStatus.COMPLETED, MarkingJobStatus.CANCELLED],
+//       [MarkingJobStatus.COMPLETED]: [MarkingJobStatus.QUEUED], // For re-marking
+//       [MarkingJobStatus.CANCELLED]: [],
+//       [MarkingJobStatus.EXPIRED]: [MarkingJobStatus.QUEUED], // Re-queue after expiry
+//     };
+
+//     if (!validTransitions[currentStatus]?.includes(newStatus)) {
+//       throw new AppError(`Cannot transition from ${currentStatus} to ${newStatus}`, 409);
+//     }
+//   }
+// }

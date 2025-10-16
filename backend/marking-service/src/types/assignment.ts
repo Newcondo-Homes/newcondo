@@ -337,3 +337,346 @@ export interface AssignmentMetrics {
 //   byStatus: Record<AssignmentStatus, number>;
 //   byMethod: Record<AssignmentMethod, number>;
 // }
+
+
+
+
+
+// // backend/marking-service/src/types/assignment.ts
+
+// export interface AssignmentRequest {
+//   jobId: string;
+//   agentId?: string; // Optional: for manual assignment
+//   autoAssign: boolean;
+//   preferredAgents?: string[]; // Priority agents
+//   excludeAgents?: string[]; // Agents to exclude
+//   maxDistanceKm?: number;
+//   minReliabilityScore?: number;
+// }
+
+// export interface AssignmentResult {
+//   success: boolean;
+//   jobId: string;
+//   agentId?: string;
+//   agentName?: string;
+//   assignedAt?: Date;
+//   timeSlotExpiry?: Date;
+//   queuePosition?: number;
+//   message: string;
+//   errors?: string[];
+//   fallbackReason?: string;
+// }
+
+// export interface AssignmentCriteria {
+//   proximity: {
+//     enabled: boolean;
+//     weight: number;
+//     maxDistanceKm: number;
+//   };
+//   reliability: {
+//     enabled: boolean;
+//     weight: number;
+//     minScore: number;
+//   };
+//   availability: {
+//     enabled: boolean;
+//     weight: number;
+//     maxConcurrentJobs: number;
+//   };
+//   experience: {
+//     enabled: boolean;
+//     weight: number;
+//     minCompletedJobs: number;
+//   };
+//   performance: {
+//     enabled: boolean;
+//     weight: number;
+//     minSuccessRate: number;
+//   };
+// }
+
+// export interface AssignmentScore {
+//   agentId: string;
+//   totalScore: number;
+//   breakdown: {
+//     proximityScore: number;
+//     reliabilityScore: number;
+//     availabilityScore: number;
+//     experienceScore: number;
+//     performanceScore: number;
+//   };
+//   metadata: {
+//     distanceKm?: number;
+//     reliabilityRating?: number;
+//     currentJobs: number;
+//     completedJobs: number;
+//     successRate: number;
+//   };
+//   isQualified: boolean;
+//   disqualificationReasons?: string[];
+// }
+
+// export interface AssignmentPool {
+//   jobId: string;
+//   totalAgents: number;
+//   qualifiedAgents: number;
+//   rankedAgents: AssignmentScore[];
+//   selectionCriteria: AssignmentCriteria;
+//   generatedAt: Date;
+// }
+
+// export interface AssignmentHistory {
+//   jobId: string;
+//   assignments: Array<{
+//     agentId: string;
+//     agentName: string;
+//     assignedAt: Date;
+//     expiredAt?: Date;
+//     completedAt?: Date;
+//     status: 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'REASSIGNED';
+//     outcome?: AssignmentOutcome;
+//     notes?: string;
+//   }>;
+//   currentAssignment?: {
+//     agentId: string;
+//     assignedAt: Date;
+//     timeSlotExpiry: Date;
+//   };
+//   totalReassignments: number;
+// }
+
+// export type AssignmentOutcome = 
+//   | 'SUCCESS' 
+//   | 'TIMEOUT' 
+//   | 'DECLINED' 
+//   | 'CANCELLED' 
+//   | 'QUALITY_ISSUE';
+
+// export interface AssignmentNotification {
+//   assignmentId: string;
+//   jobId: string;
+//   agentId: string;
+//   notificationType: AssignmentNotificationType;
+//   channel: NotificationChannel[];
+//   content: {
+//     subject: string;
+//     body: string;
+//     actionRequired?: string;
+//     actionUrl?: string;
+//     expiresAt?: Date;
+//   };
+//   scheduledFor: Date;
+//   sentAt?: Date;
+//   status: 'PENDING' | 'SENT' | 'FAILED' | 'DELIVERED' | 'READ';
+// }
+
+// export type AssignmentNotificationType = 
+//   | 'NEW_ASSIGNMENT' 
+//   | 'ASSIGNMENT_REMINDER' 
+//   | 'EXPIRY_WARNING' 
+//   | 'ASSIGNMENT_EXPIRED' 
+//   | 'ASSIGNMENT_CANCELLED' 
+//   | 'NEXT_IN_LINE';
+
+// export type NotificationChannel = 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP';
+
+// export interface AssignmentReassignment {
+//   jobId: string;
+//   fromAgentId: string;
+//   toAgentId?: string;
+//   reason: ReassignmentReason;
+//   initiatedBy: string; // User ID or 'SYSTEM'
+//   initiatedAt: Date;
+//   previousTimeSlotStart: Date;
+//   previousTimeSlotEnd: Date;
+//   newTimeSlotStart?: Date;
+//   newTimeSlotEnd?: Date;
+//   compensationAdjustment?: {
+//     previousAgentCompensation: number;
+//     newAgentCompensation: number;
+//   };
+// }
+
+// export type ReassignmentReason = 
+//   | 'TIMEOUT' 
+//   | 'AGENT_DECLINED' 
+//   | 'AGENT_UNAVAILABLE' 
+//   | 'PROPERTY_OWNER_REQUEST' 
+//   | 'QUALITY_CONCERN' 
+//   | 'DISTANCE_TOO_FAR' 
+//   | 'MANUAL_OVERRIDE';
+
+// export interface AssignmentAcceptance {
+//   jobId: string;
+//   agentId: string;
+//   acceptedAt: Date;
+//   estimatedArrivalTime?: Date;
+//   notes?: string;
+//   confirmationMethod: 'IN_APP' | 'SMS' | 'PHONE_CALL';
+// }
+
+// export interface AssignmentDecline {
+//   jobId: string;
+//   agentId: string;
+//   declinedAt: Date;
+//   reason: DeclineReason;
+//   detailedReason?: string;
+//   willRetryLater: boolean;
+// }
+
+// export type DeclineReason = 
+//   | 'TOO_FAR' 
+//   | 'SCHEDULE_CONFLICT' 
+//   | 'NOT_INTERESTED' 
+//   | 'INSUFFICIENT_INFORMATION' 
+//   | 'OTHER';
+
+// export interface AssignmentProgress {
+//   jobId: string;
+//   agentId: string;
+//   currentStatus: 'ASSIGNED' | 'ACCEPTED' | 'EN_ROUTE' | 'ON_SITE' | 'MARKING' | 'UPLOADING';
+//   checkpoints: Array<{
+//     status: string;
+//     timestamp: Date;
+//     location?: { lat: number; lng: number };
+//     notes?: string;
+//   }>;
+//   estimatedCompletion?: Date;
+//   lastUpdated: Date;
+// }
+
+// export interface AssignmentTimeSlot {
+//   assignmentId: string;
+//   jobId: string;
+//   agentId: string;
+//   startTime: Date;
+//   endTime: Date;
+//   durationMinutes: number;
+//   bufferMinutes: number; // Extra time before/after
+//   isFlexible: boolean;
+//   warnings: Array<{
+//     type: 'APPROACHING_EXPIRY' | 'OVER_TIME' | 'DELAYED_START';
+//     triggeredAt: Date;
+//     minutesRemaining?: number;
+//   }>;
+// }
+
+// export interface AssignmentConflict {
+//   jobId: string;
+//   agentId: string;
+//   conflictType: ConflictType;
+//   conflictingJobIds?: string[];
+//   detectedAt: Date;
+//   resolution?: {
+//     resolvedBy: string;
+//     resolvedAt: Date;
+//     action: 'REASSIGN' | 'ADJUST_TIME' | 'CANCEL';
+//     notes: string;
+//   };
+// }
+
+// export type ConflictType = 
+//   | 'SCHEDULE_OVERLAP' 
+//   | 'LOCATION_TOO_FAR' 
+//   | 'MAX_CAPACITY_REACHED' 
+//   | 'AGENT_UNAVAILABLE';
+
+// export interface AssignmentCompensation {
+//   jobId: string;
+//   agentId: string;
+//   baseFee: number;
+//   bonuses: Array<{
+//     type: 'SPEED_BONUS' | 'QUALITY_BONUS' | 'DIFFICULTY_BONUS';
+//     amount: number;
+//     reason: string;
+//   }>;
+//   deductions: Array<{
+//     type: 'DELAY_PENALTY' | 'QUALITY_ISSUE' | 'CANCELLATION_FEE';
+//     amount: number;
+//     reason: string;
+//   }>;
+//   totalCompensation: number;
+//   platformFee: number;
+//   netAmount: number;
+//   paymentStatus: 'PENDING' | 'HELD' | 'RELEASED' | 'PAID';
+// }
+
+// export interface AssignmentAnalytics {
+//   period: {
+//     start: Date;
+//     end: Date;
+//   };
+//   totalAssignments: number;
+//   successfulAssignments: number;
+//   failedAssignments: number;
+//   averageAssignmentTime: number; // minutes
+//   averageCompletionTime: number; // minutes
+//   reassignmentRate: number; // percentage
+//   topPerformingAgents: Array<{
+//     agentId: string;
+//     completedJobs: number;
+//     averageTime: number;
+//     successRate: number;
+//     reliabilityScore: number;
+//   }>;
+//   problematicJobs: Array<{
+//     jobId: string;
+//     reassignments: number;
+//     timeTaken: number;
+//     issues: string[];
+//   }>;
+// }
+
+// // Constants for assignment logic
+// export const ASSIGNMENT_CONSTANTS = {
+//   MAX_CONCURRENT_ASSIGNMENTS: 3,
+//   MIN_RELIABILITY_SCORE: 3.0,
+//   MAX_DISTANCE_KM: 50,
+//   ASSIGNMENT_TIMEOUT_MINUTES: 15, // Time for agent to accept
+//   DEFAULT_TIME_SLOT_MINUTES: 180, // 3 hours
+//   BUFFER_TIME_MINUTES: 30,
+//   MAX_REASSIGNMENTS: 5,
+//   PROXIMITY_BONUS_KM: 10, // Extra points for being within 10km
+//   SPEED_BONUS_THRESHOLD_MINUTES: 120, // Complete in under 2 hours
+//   QUALITY_BONUS_MIN_RATING: 4.5,
+//   WEIGHTS: {
+//     PROXIMITY: 0.3,
+//     RELIABILITY: 0.4,
+//     AVAILABILITY: 0.3,
+//   },
+// } as const;
+
+// export interface AssignmentValidation {
+//   isValid: boolean;
+//   errors: string[];
+//   warnings: string[];
+//   checks: {
+//     agentExists: boolean;
+//     agentAvailable: boolean;
+//     agentQualified: boolean;
+//     withinServiceArea: boolean;
+//     hasCapacity: boolean;
+//     meetsReliabilityThreshold: boolean;
+//   };
+// }
+
+// export interface AssignmentPreview {
+//   jobId: string;
+//   suggestedAgents: Array<{
+//     agentId: string;
+//     agentName: string;
+//     score: number;
+//     distanceKm: number;
+//     estimatedArrival: Date;
+//     estimatedCompletion: Date;
+//     reliabilityScore: number;
+//     completedJobs: number;
+//     pros: string[];
+//     cons: string[];
+//   }>;
+//   alternativeOptions: {
+//     manualAssignment: boolean;
+//     broadcastToAll: boolean;
+//     queueForLater: boolean;
+//   };
+// }
