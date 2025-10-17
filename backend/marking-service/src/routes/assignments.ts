@@ -260,3 +260,101 @@ export default router;
 // );
 
 // export default router;
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/routes/assignments.ts
+// import { Router } from "express";
+// import { authenticate } from "../../../shared/src/middleware/auth";
+// import {
+//   assignJobToAgent,
+//   acceptJobAssignment,
+//   rejectJobAssignment,
+//   getAgentAssignments,
+//   getPropertyAssignments,
+//   reassignJob,
+//   getAssignmentDetails,
+// } from "../controllers/assignmentController";
+
+// const router = Router();
+
+// /**
+//  * @route POST /api/marking-jobs/assignments/assign
+//  * @desc Assign a marking job to an agent or renter
+//  * @access Private (Admin or property owner)
+//  * @body {
+//  *   jobId: string,
+//  *   agentId: string,
+//  *   timeSlotDuration?: number (default: 180 minutes/3 hours)
+//  * }
+//  */
+// router.post("/assign", authenticate, assignJobToAgent);
+
+// /**
+//  * @route POST /api/marking-jobs/assignments/:assignmentId/accept
+//  * @desc Agent/Renter accepts job assignment
+//  * @access Private (Assigned agent/renter)
+//  * @params assignmentId: string
+//  * @body {
+//  *   estimatedArrivalTime?: Date
+//  * }
+//  */
+// router.post("/:assignmentId/accept", authenticate, acceptJobAssignment);
+
+// /**
+//  * @route POST /api/marking-jobs/assignments/:assignmentId/reject
+//  * @desc Agent/Renter rejects job assignment
+//  * @access Private (Assigned agent/renter)
+//  * @params assignmentId: string
+//  * @body {
+//  *   rejectionReason: string
+//  * }
+//  */
+// router.post("/:assignmentId/reject", authenticate, rejectJobAssignment);
+
+// /**
+//  * @route GET /api/marking-jobs/assignments/agent/:agentId
+//  * @desc Get all assignments for an agent
+//  * @access Private (Agent or admin)
+//  * @params agentId: string
+//  * @query {
+//  *   status?: string,
+//  *   page?: number,
+//  *   limit?: number
+//  * }
+//  */
+// router.get("/agent/:agentId", authenticate, getAgentAssignments);
+
+// /**
+//  * @route GET /api/marking-jobs/assignments/property/:propertyId
+//  * @desc Get all assignments for a marking job/property
+//  * @access Private (Property owner or admin)
+//  * @params propertyId: string
+//  */
+// router.get("/property/:propertyId", authenticate, getPropertyAssignments);
+
+// /**
+//  * @route GET /api/marking-jobs/assignments/:assignmentId
+//  * @desc Get assignment details
+//  * @access Private
+//  * @params assignmentId: string
+//  */
+// router.get("/:assignmentId", authenticate, getAssignmentDetails);
+
+// /**
+//  * @route PUT /api/marking-jobs/assignments/:assignmentId/reassign
+//  * @desc Reassign job to different agent (after timeout or rejection)
+//  * @access Private (Admin only)
+//  * @params assignmentId: string
+//  * @body {
+//  *   newAgentId: string
+//  * }
+//  */
+// router.put("/:assignmentId/reassign", authenticate, reassignJob);
+
+// export default router;

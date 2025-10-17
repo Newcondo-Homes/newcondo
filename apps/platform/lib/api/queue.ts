@@ -212,3 +212,217 @@ export async function getQueueStatistics(
     );
   }
 }
+
+
+
+
+
+
+
+
+
+// // apps/platform/lib/api/queue.ts
+// import { apiClient } from './client';
+
+// export interface QueuePosition {
+//   position: number;
+//   jobId: string;
+//   agentId: string;
+//   agentName: string;
+//   estimatedStartTime: string;
+//   timeSlotStart: string;
+//   timeSlotEnd: string;
+//   status: 'WAITING' | 'ACTIVE' | 'EXPIRED' | 'COMPLETED';
+//   joinedAt: string;
+// }
+
+// export interface QueueInfo {
+//   jobId: string;
+//   totalAgentsInQueue: number;
+//   currentPosition?: number;
+//   estimatedWaitTime?: number; // in minutes
+//   activeAgent?: {
+//     id: string;
+//     name: string;
+//     timeRemaining: number; // in minutes
+//   };
+//   queue: QueuePosition[];
+// }
+
+// export interface JoinQueueResponse {
+//   success: boolean;
+//   message: string;
+//   position: number;
+//   estimatedStartTime: string;
+//   queueInfo: QueueInfo;
+// }
+
+// export interface LeaveQueueResponse {
+//   success: boolean;
+//   message: string;
+// }
+
+// export interface QueueStats {
+//   totalQueued: number;
+//   averageQueueTime: number; // in minutes
+//   averageCompletionRate: number; // percentage
+//   activeQueues: number;
+// }
+
+// // Join the queue for a marking job
+// export const joinMarkingQueue = async (jobId: string): Promise<JoinQueueResponse> => {
+//   const response = await apiClient.post(`/api/marking/queue/${jobId}/join`);
+//   return response.data;
+// };
+
+// // Leave the queue for a marking job
+// export const leaveMarkingQueue = async (jobId: string): Promise<LeaveQueueResponse> => {
+//   const response = await apiClient.post(`/api/marking/queue/${jobId}/leave`);
+//   return response.data;
+// };
+
+// // Get current queue information for a job
+// export const getQueueInfo = async (jobId: string): Promise<QueueInfo> => {
+//   const response = await apiClient.get(`/api/marking/queue/${jobId}`);
+//   return response.data;
+// };
+
+// // Get agent's position in queue
+// export const getMyQueuePosition = async (jobId: string): Promise<{
+//   position: number;
+//   totalInQueue: number;
+//   estimatedStartTime: string;
+//   status: string;
+// }> => {
+//   const response = await apiClient.get(`/api/marking/queue/${jobId}/my-position`);
+//   return response.data;
+// };
+
+// // Get all queues the agent is currently in
+// export const getMyActiveQueues = async (): Promise<{
+//   queues: Array<{
+//     jobId: string;
+//     propertyId: string;
+//     position: number;
+//     status: string;
+//     joinedAt: string;
+//     estimatedStartTime: string;
+//     property: {
+//       title: string;
+//       address: string;
+//       city: string;
+//       state: string;
+//     };
+//   }>;
+// }> => {
+//   const response = await apiClient.get('/api/marking/queue/my-queues');
+//   return response.data;
+// };
+
+// // Check if agent is eligible to join queue
+// export const checkQueueEligibility = async (jobId: string): Promise<{
+//   eligible: boolean;
+//   reason?: string;
+//   requirements?: string[];
+// }> => {
+//   const response = await apiClient.get(`/api/marking/queue/${jobId}/check-eligibility`);
+//   return response.data;
+// };
+
+// // Get queue statistics
+// export const getQueueStats = async (): Promise<QueueStats> => {
+//   const response = await apiClient.get('/api/marking/queue/stats');
+//   return response.data;
+// };
+
+// // Get queue history for an agent
+// export const getQueueHistory = async (filters?: {
+//   fromDate?: string;
+//   toDate?: string;
+//   status?: string;
+//   page?: number;
+//   limit?: number;
+// }): Promise<{
+//   history: Array<{
+//     jobId: string;
+//     propertyId: string;
+//     position: number;
+//     status: string;
+//     joinedAt: string;
+//     leftAt?: string;
+//     completedAt?: string;
+//     duration?: number; // in minutes
+//     outcome: 'COMPLETED' | 'EXPIRED' | 'LEFT' | 'CANCELLED';
+//   }>;
+//   pagination: {
+//     total: number;
+//     page: number;
+//     limit: number;
+//     totalPages: number;
+//   };
+// }> => {
+//   const params = new URLSearchParams();
+  
+//   if (filters?.fromDate) params.append('fromDate', filters.fromDate);
+//   if (filters?.toDate) params.append('toDate', filters.toDate);
+//   if (filters?.status) params.append('status', filters.status);
+//   if (filters?.page) params.append('page', filters.page.toString());
+//   if (filters?.limit) params.append('limit', filters.limit.toString());
+
+//   const response = await apiClient.get(`/api/marking/queue/history?${params.toString()}`);
+//   return response.data;
+// };
+
+// // Update agent's availability for queue
+// export const updateQueueAvailability = async (isAvailable: boolean): Promise<{
+//   success: boolean;
+//   message: string;
+// }> => {
+//   const response = await apiClient.post('/api/marking/queue/availability', { isAvailable });
+//   return response.data;
+// };
+
+// // Get real-time queue updates (polling endpoint)
+// export const pollQueueUpdates = async (jobIds: string[]): Promise<{
+//   updates: Record<string, QueueInfo>;
+// }> => {
+//   const response = await apiClient.post('/api/marking/queue/poll', { jobIds });
+//   return response.data;
+// };
+
+// // Accept turn when it's agent's time slot
+// export const acceptQueueTurn = async (jobId: string): Promise<{
+//   success: boolean;
+//   message: string;
+//   timeSlotExpiry: string;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/queue/${jobId}/accept-turn`);
+//   return response.data;
+// };
+
+// // Decline turn and move to end of queue
+// export const declineQueueTurn = async (jobId: string, reason?: string): Promise<{
+//   success: boolean;
+//   message: string;
+//   newPosition?: number;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/queue/${jobId}/decline-turn`, { reason });
+//   return response.data;
+// };
+
+// // Get queue position updates via webhook (for real-time notifications)
+// export const subscribeToQueueUpdates = async (jobId: string, webhookUrl: string): Promise<{
+//   success: boolean;
+//   subscriptionId: string;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/queue/${jobId}/subscribe`, { webhookUrl });
+//   return response.data;
+// };
+
+// // Unsubscribe from queue updates
+// export const unsubscribeFromQueueUpdates = async (subscriptionId: string): Promise<{
+//   success: boolean;
+// }> => {
+//   const response = await apiClient.delete(`/api/marking/queue/subscriptions/${subscriptionId}`);
+//   return response.data;
+// };

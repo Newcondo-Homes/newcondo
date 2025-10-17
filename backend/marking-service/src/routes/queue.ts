@@ -194,3 +194,84 @@ export default router;
 // );
 
 // export default router;
+
+
+
+
+// // backend/marking-service/src/routes/queue.ts
+// import { Router } from "express";
+// import { authenticate } from "../../../shared/src/middleware/auth";
+// import {
+//   getQueueStatus,
+//   getAgentQueue,
+//   getPropertyQueue,
+//   updateQueuePosition,
+//   removeFromQueue,
+//   getQueueAnalytics,
+// } from "../controllers/queueController";
+
+// const router = Router();
+
+// /**
+//  * @route GET /api/marking-jobs/queue/:jobId
+//  * @desc Get queue status for a specific marking job
+//  * @access Private
+//  * @params jobId: string
+//  */
+// router.get("/:jobId", authenticate, getQueueStatus);
+
+// /**
+//  * @route GET /api/marking-jobs/queue/agent/:agentId
+//  * @desc Get queue positions for a specific agent
+//  * @access Private (Agent or admin)
+//  * @params agentId: string
+//  * @query {
+//  *   limit?: number,
+//  *   offset?: number,
+//  *   status?: string
+//  * }
+//  */
+// router.get("/agent/:agentId", authenticate, getAgentQueue);
+
+// /**
+//  * @route GET /api/marking-jobs/queue/property/:propertyId
+//  * @desc Get all queue entries for a specific property marking job
+//  * @access Private (Property owner or admin)
+//  * @params propertyId: string
+//  */
+// router.get("/property/:propertyId", authenticate, getPropertyQueue);
+
+// /**
+//  * @route PUT /api/marking-jobs/queue/position/:jobId
+//  * @desc Update queue position (manual admin reassignment)
+//  * @access Private (Admin only)
+//  * @params jobId: string
+//  * @body {
+//  *   newPosition: number
+//  * }
+//  */
+// router.put("/position/:jobId", authenticate, updateQueuePosition);
+
+// /**
+//  * @route DELETE /api/marking-jobs/queue/:jobId
+//  * @desc Remove agent from queue for a marking job
+//  * @access Private (Agent or admin)
+//  * @params jobId: string
+//  * @query {
+//  *   agentId?: string (optional, defaults to current user)
+//  * }
+//  */
+// router.delete("/:jobId", authenticate, removeFromQueue);
+
+// /**
+//  * @route GET /api/marking-jobs/queue/analytics
+//  * @desc Get queue analytics for admin dashboard
+//  * @access Private (Admin only)
+//  * @query {
+//  *   timeframe?: "24hours" | "7days" | "30days",
+//  *   serviceArea?: string
+//  * }
+//  */
+// router.get("/analytics", authenticate, getQueueAnalytics);
+
+// export default router;

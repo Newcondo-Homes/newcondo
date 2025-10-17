@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Assigned - Property Marking</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #27ae60;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .success-badge {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        h1 {
+            color: #27ae60;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        .success-icon {
+            font-size: 64px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .job-details {
+            background-color: #f8fff9;
+            border-left: 4px solid #27ae60;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e8f5e9;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .detail-value {
+            color: #333;
+            text-align: right;
+            max-width: 60%;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .compensation {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .compensation-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .contact-section {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .contact-section h3 {
+            color: #856404;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        .contact-info {
+            background-color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .timer-box {
+            background-color: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .timer-box h3 {
+            color: #1976d2;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        .timer-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1976d2;
+            margin: 10px 0;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        .instructions ol {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+        .instructions li {
+            margin: 10px 0;
+            color: #555;
+        }
+        .action-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            margin: 10px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+        .btn-secondary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        .info-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .warning-text {
+            color: #e74c3c;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+        .support-link {
+            color: #3498db;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+            .detail-row {
+                flex-direction: column;
+            }
+            .detail-value {
+                text-align: left;
+                max-width: 100%;
+                margin-top: 5px;
+            }
+            .compensation {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">NewCondo</div>
+            <div class="success-badge">✅ JOB ASSIGNED</div>
+        </div>
+
+        <div class="success-icon">🎉</div>
+
+        <h1>Congratulations! Job Assigned to You</h1>
+
+        <p>Hello <strong>{{agentName}}</strong>,</p>
+
+        <p>Great news! You have been assigned a property marking job. This is your opportunity to earn <strong>₦{{agentCompensation}}</strong> by completing this task.</p>
+
+        <div class="highlight-box">
+            <div class="compensation-label">YOUR COMPENSATION</div>
+            <div class="compensation">₦{{agentCompensation}}</div>
+            <div class="compensation-label">To be earned upon successful completion</div>
+        </div>
+
+        <div class="timer-box">
+            <h3>⏱️ Time Slot Allocated</h3>
+            <div class="timer-value">3 Hours</div>
+            <p style="margin: 5px 0; color: #555;">You have <strong>3 hours</strong> from now to complete this job</p>
+            <p style="margin: 5px 0; font-size: 14px; color: #666;">Time Expires: <strong>{{expiryTime}}</strong></p>
+        </div>
+
+        <div class="job-details">
+            <h3 style="margin-top: 0; color: #2c3e50;">📋 Job Information</h3>
+            <div class="detail-row">
+                <span class="detail-label">Job ID:</span>
+                <span class="detail-value">{{jobId}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Property:</span>
+                <span class="detail-value">{{propertyTitle}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Address:</span>
+                <span class="detail-value">{{propertyAddress}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">State:</span>
+                <span class="detail-value">{{propertyState}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">LGA:</span>
+                <span class="detail-value">{{propertyLGA}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Full Marking Fee:</span>
+                <span class="detail-value">₦{{markingFee}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Assignment Time:</span>
+                <span class="detail-value">{{assignedAt}}</span>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h3>📞 Contact Information (Property Access)</h3>
+            <p style="margin: 10px 0; color: #856404;">Contact this person to gain access to the property:</p>
+            <div class="contact-info">
+                <div class="detail-row">
+                    <span class="detail-label">Contact Name:</span>
+                    <span class="detail-value">{{contactPersonName}}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Phone Number:</span>
+                    <span class="detail-value"><strong>{{contactPersonPhone}}</strong></span>
+                </div>
+                {{#if accessInstructions}}
+                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f0f0f0;">
+                    <strong>Special Instructions:</strong>
+                    <p style="margin: 5px 0; color: #333;">{{accessInstructions}}</p>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>📝 How to Complete the Job</h3>
+            <ol>
+                <li><strong>Navigate to Property:</strong> Use the address above and contact the designated person for access</li>
+                <li><strong>Verify Identity:</strong> Show your NewCondo agent credentials</li>
+                <li><strong>Mark Boundaries:</strong> Use the app to mark the property boundaries on the satellite map</li>
+                <li><strong>Take Photos:</strong> Capture clear photos of key areas:
+                    <ul style="margin-top: 5px;">
+                        <li>Building exterior (front, sides, back)</li>
+                        <li>Main rooms (living room, bedrooms, kitchen, bathrooms)</li>
+                        <li>Special features or amenities</li>
+                    </ul>
+                </li>
+                <li><strong>Upload & Submit:</strong> Upload all photos and submit the completed job through the app</li>
+                <li><strong>Await Confirmation:</strong> Property owner will verify within 2-3 days</li>
+            </ol>
+        </div>
+
+        <div class="info-box">
+            <strong>💡 Important Tips:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Take clear, well-lit photos from multiple angles</li>
+                <li>Ensure property boundaries are accurately marked</li>
+                <li>Be professional and courteous when accessing the property</li>
+                <li>Complete the job within the 3-hour time slot to secure payment</li>
+            </ul>
+        </div>
+
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+            <p class="warning-text">⚠️ IMPORTANT: If you don't complete within 3 hours, the job will be reassigned!</p>
+        </div>
+
+        <div class="action-section">
+            <a href="{{startJobUrl}}" class="btn btn-primary">🚀 Start Job Now</a>
+            <a href="{{jobDetailsUrl}}" class="btn btn-secondary">📱 View Full Details</a>
+        </div>
+
+        <div style="background-color: #e8f5e9; padding: 15px; border-radius: 6px; margin-top: 20px;">
+            <strong>💰 Payment Information:</strong>
+            <p style="margin: 10px 0; color: #555;">
+                • Initial payment (₦{{initialPayment}}) will be sent after marking completion<br>
+                • Full payment (₦{{agentCompensation}}) will be released after owner confirmation<br>
+                • Funds will be credited to your virtual account/wallet
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Questions? <a href="mailto:support@newcondo.ng" class="support-link">Contact Support</a></p>
+            <p style="color: #999; font-size: 12px; margin-top: 15px;">
+                This is an automated notification from NewCondo Property Marking Service.<br>
+                Job Assignment Time: {{assignedAt}}
+            </p>
+        </div>
+    </div>
+</body>
+</html>

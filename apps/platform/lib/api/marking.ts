@@ -541,3 +541,269 @@ export const markingApi = {
 //   const response = await apiClient.get('/api/marking-jobs/stats');
 //   return response.data;
 // }
+
+
+
+
+
+// // apps/platform/lib/api/marking.ts
+// import { apiClient } from './client';
+
+// export interface CreateMarkingJobDTO {
+//   propertyId: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: string;
+//   urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+//   markingOption: 'SELF' | 'NEWCONDO' | 'SOMEONE_I_KNOW' | 'ASSIGN_TO_AGENTS';
+// }
+
+// export interface MarkingJobResponse {
+//   id: string;
+//   propertyId: string;
+//   requestedBy: string;
+//   assignedAgentId?: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: string;
+//   urgencyLevel: string;
+//   markingFee: string;
+//   paymentStatus: string;
+//   status: string;
+//   assignedAt?: string;
+//   completedAt?: string;
+//   timeSlotExpiry?: string;
+//   completionNotes?: string;
+//   completionImages: string[];
+//   boundaryData?: any;
+//   queuePosition?: number;
+//   maxCompletionTime?: string;
+//   createdAt: string;
+//   updatedAt: string;
+//   property?: any;
+//   assignedAgent?: any;
+// }
+
+// export interface UpdateMarkingJobDTO {
+//   contactPersonName?: string;
+//   contactPersonPhone?: string;
+//   accessInstructions?: string;
+//   preferredTime?: string;
+//   urgencyLevel?: string;
+// }
+
+// export interface CompleteMarkingJobDTO {
+//   completionNotes?: string;
+//   completionImages: string[];
+//   boundaryData: {
+//     coordinates: Array<{ lat: number; lng: number }>;
+//     center: { lat: number; lng: number };
+//     area?: number;
+//   };
+// }
+
+// export interface MarkingJobFilters {
+//   status?: string;
+//   urgencyLevel?: string;
+//   paymentStatus?: string;
+//   fromDate?: string;
+//   toDate?: string;
+//   page?: number;
+//   limit?: number;
+// }
+
+// export interface MarkingJobStats {
+//   total: number;
+//   queued: number;
+//   assigned: number;
+//   inProgress: number;
+//   completed: number;
+//   cancelled: number;
+//   expired: number;
+//   averageCompletionTime?: number;
+//   successRate?: number;
+// }
+
+// // Create a new marking job
+// export const createMarkingJob = async (data: CreateMarkingJobDTO): Promise<MarkingJobResponse> => {
+//   const response = await apiClient.post('/api/marking/jobs', data);
+//   return response.data;
+// };
+
+// // Get all marking jobs for the current user
+// export const getMyMarkingJobs = async (filters?: MarkingJobFilters): Promise<{
+//   jobs: MarkingJobResponse[];
+//   pagination: {
+//     total: number;
+//     page: number;
+//     limit: number;
+//     totalPages: number;
+//   };
+// }> => {
+//   const params = new URLSearchParams();
+  
+//   if (filters?.status) params.append('status', filters.status);
+//   if (filters?.urgencyLevel) params.append('urgencyLevel', filters.urgencyLevel);
+//   if (filters?.paymentStatus) params.append('paymentStatus', filters.paymentStatus);
+//   if (filters?.fromDate) params.append('fromDate', filters.fromDate);
+//   if (filters?.toDate) params.append('toDate', filters.toDate);
+//   if (filters?.page) params.append('page', filters.page.toString());
+//   if (filters?.limit) params.append('limit', filters.limit.toString());
+
+//   const response = await apiClient.get(`/api/marking/jobs/my-jobs?${params.toString()}`);
+//   return response.data;
+// };
+
+// // Get a specific marking job by ID
+// export const getMarkingJobById = async (jobId: string): Promise<MarkingJobResponse> => {
+//   const response = await apiClient.get(`/api/marking/jobs/${jobId}`);
+//   return response.data;
+// };
+
+// // Update marking job details (before assignment)
+// export const updateMarkingJob = async (
+//   jobId: string,
+//   data: UpdateMarkingJobDTO
+// ): Promise<MarkingJobResponse> => {
+//   const response = await apiClient.patch(`/api/marking/jobs/${jobId}`, data);
+//   return response.data;
+// };
+
+// // Cancel a marking job
+// export const cancelMarkingJob = async (jobId: string, reason?: string): Promise<{
+//   success: boolean;
+//   message: string;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/jobs/${jobId}/cancel`, { reason });
+//   return response.data;
+// };
+
+// // Complete a marking job (agent action)
+// export const completeMarkingJob = async (
+//   jobId: string,
+//   data: CompleteMarkingJobDTO
+// ): Promise<MarkingJobResponse> => {
+//   const response = await apiClient.post(`/api/marking/jobs/${jobId}/complete`, data);
+//   return response.data;
+// };
+
+// // Confirm marking job completion (property owner action)
+// export const confirmMarkingCompletion = async (
+//   jobId: string,
+//   approved: boolean,
+//   feedback?: string
+// ): Promise<{
+//   success: boolean;
+//   message: string;
+//   job: MarkingJobResponse;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/jobs/${jobId}/confirm`, {
+//     approved,
+//     feedback,
+//   });
+//   return response.data;
+// };
+
+// // Get marking job statistics
+// export const getMarkingJobStats = async (): Promise<MarkingJobStats> => {
+//   const response = await apiClient.get('/api/marking/jobs/stats');
+//   return response.data;
+// };
+
+// // Get marking jobs by property ID
+// export const getMarkingJobsByProperty = async (
+//   propertyId: string
+// ): Promise<MarkingJobResponse[]> => {
+//   const response = await apiClient.get(`/api/marking/jobs/property/${propertyId}`);
+//   return response.data;
+// };
+
+// // Get available marking jobs for agents
+// export const getAvailableMarkingJobs = async (filters?: {
+//   urgencyLevel?: string;
+//   maxDistance?: number;
+//   location?: { lat: number; lng: number };
+// }): Promise<MarkingJobResponse[]> => {
+//   const params = new URLSearchParams();
+  
+//   if (filters?.urgencyLevel) params.append('urgencyLevel', filters.urgencyLevel);
+//   if (filters?.maxDistance) params.append('maxDistance', filters.maxDistance.toString());
+//   if (filters?.location) {
+//     params.append('lat', filters.location.lat.toString());
+//     params.append('lng', filters.location.lng.toString());
+//   }
+
+//   const response = await apiClient.get(`/api/marking/jobs/available?${params.toString()}`);
+//   return response.data;
+// };
+
+// // Generate shareable link for marking (someone I know option)
+// export const generateMarkingLink = async (jobId: string): Promise<{
+//   shareableLink: string;
+//   expiresAt: string;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/jobs/${jobId}/generate-link`);
+//   return response.data;
+// };
+
+// // Access marking job via shareable link
+// export const accessMarkingJobByLink = async (token: string): Promise<MarkingJobResponse> => {
+//   const response = await apiClient.get(`/api/marking/jobs/link/${token}`);
+//   return response.data;
+// };
+
+// // Upload completion images
+// export const uploadCompletionImages = async (
+//   jobId: string,
+//   images: File[]
+// ): Promise<{ urls: string[] }> => {
+//   const formData = new FormData();
+//   images.forEach((image, index) => {
+//     formData.append(`images`, image);
+//   });
+
+//   const response = await apiClient.post(
+//     `/api/marking/jobs/${jobId}/upload-images`,
+//     formData,
+//     {
+//       headers: {
+//         'Content-Type': 'multipart/form-data',
+//       },
+//     }
+//   );
+//   return response.data;
+// };
+
+// // Request marking job extension
+// export const requestMarkingExtension = async (
+//   jobId: string,
+//   reason: string,
+//   additionalHours: number
+// ): Promise<{
+//   success: boolean;
+//   newTimeSlotExpiry: string;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/jobs/${jobId}/request-extension`, {
+//     reason,
+//     additionalHours,
+//   });
+//   return response.data;
+// };
+
+// // Report marking job issue
+// export const reportMarkingIssue = async (
+//   jobId: string,
+//   issueType: string,
+//   description: string
+// ): Promise<{
+//   success: boolean;
+//   ticketId: string;
+// }> => {
+//   const response = await apiClient.post(`/api/marking/jobs/${jobId}/report-issue`, {
+//     issueType,
+//     description,
+//   });
+//   return response.data;
+// };

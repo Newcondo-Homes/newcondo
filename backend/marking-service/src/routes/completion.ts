@@ -287,3 +287,96 @@ export default router;
 // );
 
 // export default router;
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/routes/completion.ts
+// import { Router } from "express";
+// import { authenticate } from "../../../shared/src/middleware/auth";
+// import {
+//   submitMarkingCompletion,
+//   getCompletionDetails,
+//   listCompletions,
+//   rejectCompletion,
+//   releasePaymentForCompletion,
+//   getCompletionAnalytics,
+// } from "../controllers/completionController";
+
+// const router = Router();
+
+// /**
+//  * @route POST /api/marking-jobs/completion/submit
+//  * @desc Agent/Renter submits marking job completion
+//  * @access Private (Assigned agent/renter)
+//  * @body {
+//  *   jobId: string,
+//  *   completionNotes: string,
+//  *   boundaryData: GeoJSON,
+//  *   completionImages: string[] (URLs of uploaded images)
+//  * }
+//  */
+// router.post("/submit", authenticate, submitMarkingCompletion);
+
+// /**
+//  * @route GET /api/marking-jobs/completion/:completionId
+//  * @desc Get completion details with verification status
+//  * @access Private
+//  * @params completionId: string
+//  */
+// router.get("/:completionId", authenticate, getCompletionDetails);
+
+// /**
+//  * @route GET /api/marking-jobs/completion
+//  * @desc List completions with filters
+//  * @access Private
+//  * @query {
+//  *   jobId?: string,
+//  *   agentId?: string,
+//  *   status?: string,
+//  *   dateFrom?: Date,
+//  *   dateTo?: Date,
+//  *   page?: number,
+//  *   limit?: number
+//  * }
+//  */
+// router.get("/", authenticate, listCompletions);
+
+// /**
+//  * @route POST /api/marking-jobs/completion/:completionId/reject
+//  * @desc Property owner rejects marking completion
+//  * @access Private (Property owner)
+//  * @params completionId: string
+//  * @body {
+//  *   rejectionReason: string,
+//  *   requiresRemarking: boolean
+//  * }
+//  */
+// router.post("/:completionId/reject", authenticate, rejectCompletion);
+
+// /**
+//  * @route POST /api/marking-jobs/completion/:completionId/release-payment
+//  * @desc Release payment to agent after property owner confirms
+//  * @access Private (Admin or automated)
+//  * @params completionId: string
+//  */
+// router.post("/:completionId/release-payment", authenticate, releasePaymentForCompletion);
+
+// /**
+//  * @route GET /api/marking-jobs/completion/analytics
+//  * @desc Get completion analytics for admin dashboard
+//  * @access Private (Admin only)
+//  * @query {
+//  *   timeframe?: "24hours" | "7days" | "30days",
+//  *   propertyId?: string,
+//  *   agentId?: string
+//  * }
+//  */
+// router.get("/analytics", authenticate, getCompletionAnalytics);
+
+// export default router;

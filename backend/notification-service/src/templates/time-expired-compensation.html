@@ -1,0 +1,376 @@
+<!-- backend/notification-service/src/templates/time-expired-compensation.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marking Job Compensation - Time Window Expired</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #f9f9f9;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            background: white;
+            padding: 30px 20px;
+            border-radius: 0 0 8px 8px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section h2 {
+            font-size: 16px;
+            color: #667eea;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        .compensation-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .compensation-amount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .compensation-note {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .job-details {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .detail-value {
+            color: #333;
+            text-align: right;
+        }
+        .status-badge {
+            display: inline-block;
+            background: #fff3cd;
+            color: #856404;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .timeline {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .timeline-item {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            border-radius: 50%;
+            margin-top: 5px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+        .timeline-time {
+            color: #999;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+        .action-box {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .action-title {
+            color: #2e7d32;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .next-steps {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+        }
+        .next-steps li {
+            padding: 8px 0;
+            padding-left: 20px;
+            position: relative;
+            color: #555;
+            font-size: 14px;
+        }
+        .next-steps li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .warning-title {
+            color: #856404;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .button:hover {
+            background: #764ba2;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
+            color: #999;
+            font-size: 12px;
+        }
+        .contact-info {
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Time Window Expired - Compensation Issued</h1>
+        </div>
+        
+        <div class="content">
+            <!-- Greeting -->
+            <div class="section">
+                <p>Hello <strong>{{agentName}}</strong>,</p>
+                <p>Thank you for your dedication to the Newcondo property marking service. We're writing to inform you about a compensation adjustment for a marking job you were assigned.</p>
+            </div>
+
+            <!-- Compensation Box -->
+            <div class="section">
+                <h2>Compensation Award</h2>
+                <div class="compensation-box">
+                    <p style="margin: 0; font-size: 14px; color: #666;">Due to the property owner not confirming within the specified time window, you've received a partial compensation:</p>
+                    <div class="compensation-amount">₦{{compensation_amount}}</div>
+                    <p class="compensation-note">
+                        Payment Status: <strong>Pending</strong><br>
+                        Transferred to: Virtual Account Wallet
+                    </p>
+                </div>
+            </div>
+
+            <!-- Job Details -->
+            <div class="section">
+                <h2>Job Details</h2>
+                <div class="job-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Marking Job ID</span>
+                        <span class="detail-value">{{jobId}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Property Location</span>
+                        <span class="detail-value">{{propertyAddress}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Marking Date</span>
+                        <span class="detail-value">{{markingDate}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Confirmation Deadline</span>
+                        <span class="detail-value">{{confirmationDeadline}}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Current Status</span>
+                        <span class="detail-value"><span class="status-badge">AWAITING OWNER CONFIRMATION</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="section">
+                <h2>What Happened</h2>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">Marking Job Assigned</div>
+                            <div class="timeline-time">{{assignmentDate}}</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">Property Successfully Marked</div>
+                            <div class="timeline-time">{{completionDate}}</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">Confirmation Window Expired (3 days)</div>
+                            <div class="timeline-time">{{expirationDate}}</div>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-label">Partial Compensation Issued</div>
+                            <div class="timeline-time">Today</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Understanding the Compensation -->
+            <div class="section">
+                <h2>Understanding Your Compensation</h2>
+                <div class="job-details">
+                    <div class="detail-row">
+                        <span class="detail-label">Full Marking Fee</span>
+                        <span class="detail-value">₦5,000</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Partial Compensation (20% of fee)</span>
+                        <span class="detail-value">₦1,000</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Remaining Balance</span>
+                        <span class="detail-value">₦4,000</span>
+                    </div>
+                </div>
+                <p style="font-size: 12px; color: #666; margin-top: 12px;">
+                    <strong>Note:</strong> The remaining balance may be released to you if the property owner confirms your marking work within a new confirmation period, or if they initiate a new marking job.
+                </p>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="section">
+                <h2>What Happens Next</h2>
+                <div class="action-box">
+                    <div class="action-title">Your Next Steps:</div>
+                    <ul class="next-steps">
+                        <li>Check your virtual account wallet for the ₦{{compensation_amount}} deposit</li>
+                        <li>View the job details in your Newcondo Agent Dashboard</li>
+                        <li>Monitor for new marking opportunities in your service area</li>
+                        <li>Continue building your reliability score with new assignments</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Important Information -->
+            <div class="section">
+                <h2>Important Information</h2>
+                <div class="warning-box">
+                    <div class="warning-title">⚠️ About This Compensation</div>
+                    <p style="margin: 8px 0; font-size: 13px;">
+                        This partial compensation is issued because the property owner did not confirm your marking work within the 3-day confirmation window. This is a standard policy to protect agents who complete their work professionally.
+                    </p>
+                    <p style="margin: 8px 0; font-size: 13px;">
+                        <strong>Withdrawal Notice:</strong> This compensation cannot be withdrawn immediately. It will be held in your virtual account and may be released as part of future job completions or after dispute resolution.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="section">
+                <p>If you have any questions about this compensation or the marking job, please don't hesitate to reach out.</p>
+                <a href="{{supportLink}}" class="button">Contact Support</a>
+            </div>
+
+            <!-- Motivational -->
+            <div class="section" style="background: #f0f8ff; padding: 15px; border-radius: 4px; border-left: 4px solid #667eea;">
+                <p style="margin: 0; color: #333; font-size: 13px;">
+                    <strong>Thank you for being part of Newcondo!</strong> Your professionalism helps property owners and renters trust our platform. We look forward to more successful marking jobs from you.
+                </p>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <p>Newcondo Property Marking Service</p>
+                <div class="contact-info">
+                    <p style="margin: 5px 0;">Questions? Email us at <strong>support@newcondo.com</strong></p>
+                    <p style="margin: 5px 0;">Phone: <strong>+234 XXX XXX XXXX</strong></p>
+                </div>
+                <p style="margin-top: 15px; font-size: 11px;">
+                    © {{currentYear}} Newcondo. All rights reserved.<br>
+                    This email was sent to {{agentEmail}}
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -258,3 +258,334 @@ export interface GeolocationResponse<T = any> {
     confidence: number;
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+// /**
+//  * Shared GPS and Proximity Types for Property Marking Service
+//  * Location: backend/shared/src/types/geolocation.ts
+//  */
+
+// /**
+//  * GPS Coordinates interface
+//  */
+// export interface Coordinates {
+//   latitude: number;
+//   longitude: number;
+// }
+
+// /**
+//  * Extended location data with optional metadata
+//  */
+// export interface LocationData extends Coordinates {
+//   accuracy?: number; // Accuracy in meters
+//   altitude?: number;
+//   altitudeAccuracy?: number;
+//   heading?: number; // Direction of travel in degrees
+//   speed?: number; // Speed in meters per second
+//   timestamp?: Date;
+// }
+
+// /**
+//  * Structured address following Nigerian geography hierarchy
+//  */
+// export interface HierarchicalAddress {
+//   state: string;
+//   lga: string; // Local Government Area
+//   city?: string;
+//   location: string; // Lowest level location/area
+//   streetAddress?: string;
+//   landmark?: string;
+//   postalCode?: string;
+// }
+
+// /**
+//  * Complete geolocation data combining coordinates and address
+//  */
+// export interface GeolocationData {
+//   coordinates: Coordinates;
+//   address: HierarchicalAddress;
+//   accuracy?: number;
+//   source?: 'GPS' | 'MANUAL' | 'GEOCODED';
+// }
+
+// /**
+//  * Distance calculation result
+//  */
+// export interface DistanceResult {
+//   distance: number; // Distance in kilometers
+//   unit: 'km' | 'm' | 'mi';
+//   fromLocation: Coordinates;
+//   toLocation: Coordinates;
+// }
+
+// /**
+//  * Proximity search parameters
+//  */
+// export interface ProximitySearchParams {
+//   center: Coordinates;
+//   radiusKm: number;
+//   minRadiusKm?: number; // For ring/donut searches
+//   limit?: number; // Maximum results to return
+//   excludeIds?: string[]; // IDs to exclude from results
+// }
+
+// /**
+//  * Proximity search result with distance information
+//  */
+// export interface ProximityResult<T = any> {
+//   item: T;
+//   distance: number; // Distance in kilometers
+//   coordinates: Coordinates;
+// }
+
+// /**
+//  * Service area definition for agents
+//  */
+// export interface ServiceArea {
+//   state: string;
+//   lgas?: string[]; // Specific LGAs, or all if undefined
+//   cities?: string[]; // Specific cities, or all if undefined
+//   locations?: string[]; // Specific locations, or all if undefined
+//   radiusKm?: number; // Optional radius from a central point
+//   centerPoint?: Coordinates; // Center point for radius-based areas
+// }
+
+// /**
+//  * Bounding box for map regions
+//  */
+// export interface BoundingBox {
+//   northEast: Coordinates;
+//   southWest: Coordinates;
+// }
+
+// /**
+//  * Map viewport definition
+//  */
+// export interface MapViewport {
+//   center: Coordinates;
+//   zoom: number;
+//   bounds?: BoundingBox;
+// }
+
+// /**
+//  * Property boundary polygon
+//  */
+// export interface PropertyBoundary {
+//   coordinates: Coordinates[]; // Array of points forming a polygon
+//   area?: number; // Area in square meters
+//   perimeter?: number; // Perimeter in meters
+//   isValid: boolean; // Whether the boundary forms a valid closed polygon
+// }
+
+// /**
+//  * Property boundary validation result
+//  */
+// export interface BoundaryValidationResult {
+//   isValid: boolean;
+//   errors?: string[];
+//   warnings?: string[];
+//   suggestedFixes?: {
+//     description: string;
+//     fixedCoordinates?: Coordinates[];
+//   }[];
+// }
+
+// /**
+//  * Proximity zone definition for agent assignment
+//  */
+// export interface ProximityZone {
+//   id: string;
+//   name: string;
+//   center: Coordinates;
+//   radiusKm: number;
+//   priority?: number; // Higher priority zones checked first
+//   isActive: boolean;
+// }
+
+// /**
+//  * Agent proximity match result
+//  */
+// export interface AgentProximityMatch {
+//   agentId: string;
+//   distance: number; // Distance in kilometers
+//   isWithinServiceArea: boolean;
+//   zone?: ProximityZone; // Matched proximity zone
+//   travelTimeEstimate?: number; // Estimated travel time in minutes
+// }
+
+// /**
+//  * Geofence definition
+//  */
+// export interface Geofence {
+//   id: string;
+//   name: string;
+//   boundary: Coordinates[] | PropertyBoundary;
+//   type: 'POLYGON' | 'CIRCLE';
+//   radius?: number; // For circular geofences in kilometers
+//   center?: Coordinates; // For circular geofences
+// }
+
+// /**
+//  * Geofence check result
+//  */
+// export interface GeofenceCheckResult {
+//   isInside: boolean;
+//   geofence: Geofence;
+//   distanceToEdge?: number; // Distance to nearest edge in meters
+//   nearestPoint?: Coordinates; // Nearest point on the boundary
+// }
+
+// /**
+//  * Route information between two points
+//  */
+// export interface RouteInfo {
+//   origin: Coordinates;
+//   destination: Coordinates;
+//   distance: number; // Distance in kilometers
+//   duration: number; // Duration in minutes
+//   polyline?: string; // Encoded polyline for route visualization
+// }
+
+// /**
+//  * Batch proximity calculation request
+//  */
+// export interface BatchProximityRequest {
+//   referencePoint: Coordinates;
+//   targetPoints: Array<{
+//     id: string;
+//     coordinates: Coordinates;
+//     metadata?: any;
+//   }>;
+//   maxDistanceKm?: number; // Only include results within this distance
+//   sortByDistance?: boolean;
+// }
+
+// /**
+//  * Batch proximity calculation result
+//  */
+// export interface BatchProximityResult {
+//   referencePoint: Coordinates;
+//   results: Array<{
+//     id: string;
+//     coordinates: Coordinates;
+//     distance: number;
+//     metadata?: any;
+//   }>;
+//   totalCount: number;
+//   withinRangeCount: number;
+// }
+
+// /**
+//  * Nigerian state codes
+//  */
+// export enum NigerianState {
+//   ABIA = 'ABIA',
+//   ADAMAWA = 'ADAMAWA',
+//   AKWA_IBOM = 'AKWA_IBOM',
+//   ANAMBRA = 'ANAMBRA',
+//   BAUCHI = 'BAUCHI',
+//   BAYELSA = 'BAYELSA',
+//   BENUE = 'BENUE',
+//   BORNO = 'BORNO',
+//   CROSS_RIVER = 'CROSS_RIVER',
+//   DELTA = 'DELTA',
+//   EBONYI = 'EBONYI',
+//   EDO = 'EDO',
+//   EKITI = 'EKITI',
+//   ENUGU = 'ENUGU',
+//   FCT = 'FCT',
+//   GOMBE = 'GOMBE',
+//   IMO = 'IMO',
+//   JIGAWA = 'JIGAWA',
+//   KADUNA = 'KADUNA',
+//   KANO = 'KANO',
+//   KATSINA = 'KATSINA',
+//   KEBBI = 'KEBBI',
+//   KOGI = 'KOGI',
+//   KWARA = 'KWARA',
+//   LAGOS = 'LAGOS',
+//   NASARAWA = 'NASARAWA',
+//   NIGER = 'NIGER',
+//   OGUN = 'OGUN',
+//   ONDO = 'ONDO',
+//   OSUN = 'OSUN',
+//   OYO = 'OYO',
+//   PLATEAU = 'PLATEAU',
+//   RIVERS = 'RIVERS',
+//   SOKOTO = 'SOKOTO',
+//   TARABA = 'TARABA',
+//   YOBE = 'YOBE',
+//   ZAMFARA = 'ZAMFARA',
+// }
+
+// /**
+//  * Constants for proximity calculations
+//  */
+// export const PROXIMITY_CONSTANTS = {
+//   // Earth radius in kilometers
+//   EARTH_RADIUS_KM: 6371,
+
+//   // Default proximity radius for agent assignment (20km)
+//   DEFAULT_AGENT_RADIUS_KM: 20,
+
+//   // Maximum reasonable proximity radius (100km)
+//   MAX_PROXIMITY_RADIUS_KM: 100,
+
+//   // Minimum proximity radius (1km)
+//   MIN_PROXIMITY_RADIUS_KM: 1,
+
+//   // Default map zoom levels
+//   DEFAULT_ZOOM: 15,
+//   MAX_ZOOM: 20,
+//   MIN_ZOOM: 5,
+
+//   // GPS accuracy thresholds (in meters)
+//   EXCELLENT_ACCURACY: 10,
+//   GOOD_ACCURACY: 50,
+//   ACCEPTABLE_ACCURACY: 100,
+//   POOR_ACCURACY: 500,
+
+//   // Property boundary constraints
+//   MIN_BOUNDARY_POINTS: 3, // Minimum points to form a polygon
+//   MAX_BOUNDARY_POINTS: 100, // Maximum points allowed
+//   MIN_PROPERTY_AREA_SQM: 10, // Minimum property area in square meters
+//   MAX_PROPERTY_AREA_SQM: 50000, // Maximum property area in square meters (5 hectares)
+// } as const;
+
+// /**
+//  * Type guard to check if coordinates are valid
+//  */
+// export function isValidCoordinates(coords: any): coords is Coordinates {
+//   return (
+//     coords &&
+//     typeof coords === 'object' &&
+//     typeof coords.latitude === 'number' &&
+//     typeof coords.longitude === 'number' &&
+//     coords.latitude >= -90 &&
+//     coords.latitude <= 90 &&
+//     coords.longitude >= -180 &&
+//     coords.longitude <= 180
+//   );
+// }
+
+// /**
+//  * Type guard to check if boundary is valid
+//  */
+// export function isValidBoundary(boundary: any): boundary is PropertyBoundary {
+//   return (
+//     boundary &&
+//     typeof boundary === 'object' &&
+//     Array.isArray(boundary.coordinates) &&
+//     boundary.coordinates.length >= PROXIMITY_CONSTANTS.MIN_BOUNDARY_POINTS &&
+//     boundary.coordinates.every(isValidCoordinates)
+//   );
+// }

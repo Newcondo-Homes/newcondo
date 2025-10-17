@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Marking Job Claimed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .email-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .email-header h1 {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .email-header p {
+            color: #e0e7ff;
+            font-size: 16px;
+        }
+        
+        .icon-container {
+            margin: 20px 0;
+        }
+        
+        .icon {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        
+        .email-body {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            font-size: 16px;
+            color: #4a5568;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        
+        .info-card {
+            background-color: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        
+        .info-card h3 {
+            color: #2d3748;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-card h3::before {
+            content: "📋";
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        
+        .info-value {
+            color: #2d3748;
+            font-size: 14px;
+            text-align: right;
+        }
+        
+        .agent-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            color: #ffffff;
+        }
+        
+        .agent-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .agent-card h3::before {
+            content: "👤";
+            margin-right: 10px;
+            font-size: 24px;
+        }
+        
+        .agent-info {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+        
+        .agent-info p {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+        
+        .agent-info strong {
+            font-weight: 600;
+        }
+        
+        .timeline-card {
+            background-color: #fff5f5;
+            border: 2px solid #feb2b2;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        
+        .timeline-card h3 {
+            color: #c53030;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .timeline-card h3::before {
+            content: "⏰";
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 12px 0;
+            font-size: 14px;
+            color: #742a2a;
+        }
+        
+        .timeline-item::before {
+            content: "•";
+            margin-right: 10px;
+            font-size: 20px;
+            line-height: 1;
+        }
+        
+        .highlight {
+            background-color: #fef5e7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .highlight p {
+            color: #92400e;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .btn-primary {
+            flex: 1;
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-secondary {
+            flex: 1;
+            display: inline-block;
+            background-color: #f7fafc;
+            color: #4a5568;
+            text-decoration: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 15px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary:hover {
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+        }
+        
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+            margin: 30px 0;
+        }
+        
+        .help-text {
+            background-color: #f7fafc;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 25px 0;
+        }
+        
+        .help-text h4 {
+            color: #2d3748;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .help-text p {
+            color: #4a5568;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .email-footer {
+            background-color: #f7fafc;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+        
+        .email-footer p {
+            color: #718096;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+        
+        .social-links {
+            margin: 20px 0;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .footer-links {
+            margin-top: 20px;
+        }
+        
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+            font-size: 13px;
+        }
+        
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            
+            .email-header {
+                padding: 30px 20px;
+            }
+            
+            .email-header h1 {
+                font-size: 24px;
+            }
+            
+            .email-body {
+                padding: 30px 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .info-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .info-value {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="email-header">
+            <div class="icon-container">
+                <div class="icon">✅</div>
+            </div>
+            <h1>Marking Job Claimed!</h1>
+            <p>An agent has accepted your property marking request</p>
+        </div>
+        
+        <div class="email-body">
+            <p class="greeting">Hello {{ownerName}},</p>
+            
+            <p class="message">
+                Great news! Your property marking job has been claimed by one of our qualified agents. 
+                The agent is currently en route to mark your property and will complete the job within the allocated time window.
+            </p>
+            
+            <div class="info-card">
+                <h3>Job Details</h3>
+                <div class="info-row">
+                    <span class="info-label">Property:</span>
+                    <span class="info-value">{{propertyTitle}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Location:</span>
+                    <span class="info-value">{{propertyAddress}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Job ID:</span>
+                    <span class="info-value">#{{jobId}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Marking Fee:</span>
+                    <span class="info-value">₦{{markingFee}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value" style="color: #48bb78; font-weight: 600;">Claimed</span>
+                </div>
+            </div>
+            
+            <div class="agent-card">
+                <h3>Assigned Agent</h3>
+                <div class="agent-info">
+                    <p><strong>Name:</strong> {{agentName}}</p>
+                    <p><strong>Rating:</strong> ⭐ {{agentRating}}/5.0 ({{completedJobs}} jobs completed)</p>
+                    <p><strong>Phone:</strong> {{agentPhone}}</p>
+                    <p><strong>Time Slot:</strong> {{timeSlotDuration}}</p>
+                </div>
+            </div>
+            
+            <div class="timeline-card">
+                <h3>Important Timeline</h3>
+                <div class="timeline-item">
+                    <span><strong>Agent Time Window:</strong> {{timeSlotDuration}} to complete marking</span>
+                </div>
+                <div class="timeline-item">
+                    <span><strong>Your Confirmation Window:</strong> {{confirmationWindow}} to verify the marking</span>
+                </div>
+                <div class="timeline-item">
+                    <span><strong>Maximum Deadline:</strong> {{maxDeadline}} from now</span>
+                </div>
+            </div>
+            
+            <div class="highlight">
+                <p>
+                    <strong>⚡ Partial Payment Released:</strong> A small portion (₦{{partialPayment}}) has been released 
+                    to the agent as a commitment fee. The remaining balance (₦{{remainingBalance}}) will be released upon 
+                    your confirmation of the completed marking.
+                </p>
+            </div>
+            
+            <div class="help-text">
+                <h4>What Happens Next?</h4>
+                <p>
+                    1. The agent will visit your property within the allocated time window<br>
+                    2. They will contact your designated person: <strong>{{contactPersonName}} ({{contactPersonPhone}})</strong><br>
+                    3. After marking, you'll receive photos and boundary data for verification<br>
+                    4. You have {{confirmationWindow}} to confirm the marking<br>
+                    5. Upon confirmation, the remaining payment will be released to the agent
+                </p>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="action-buttons">
+                <a href="{{trackJobUrl}}" class="btn-primary">Track Job Progress</a>
+                <a href="{{contactSupportUrl}}" class="btn-secondary">Contact Support</a>
+            </div>
+            
+            <div class="help-text">
+                <h4>⚠️ Important Reminder</h4>
+                <p>
+                    If you don't confirm or reject the marking within {{confirmationWindow}}, the system will automatically 
+                    compensate the agent with a portion of the fee, and you'll need to create a new marking job if needed.
+                </p>
+            </div>
+        </div>
+        
+        <div class="email-footer">
+            <p><strong>NewCondo Property Marking Service</strong></p>
+            <p>Ensuring accurate property boundaries for a transparent marketplace</p>
+            
+            <div class="social-links">
+                <a href="{{facebookUrl}}">Facebook</a>
+                <a href="{{twitterUrl}}">Twitter</a>
+                <a href="{{instagramUrl}}">Instagram</a>
+            </div>
+            
+            <div class="footer-links">
+                <a href="{{helpCenterUrl}}">Help Center</a>
+                <a href="{{termsUrl}}">Terms of Service</a>
+                <a href="{{privacyUrl}}">Privacy Policy</a>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 12px; color: #a0aec0;">
+                This is an automated notification. Please do not reply to this email.<br>
+                For support, visit our <a href="{{helpCenterUrl}}" style="color: #667eea;">Help Center</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

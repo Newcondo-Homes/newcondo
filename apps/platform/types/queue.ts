@@ -276,3 +276,238 @@ export interface QueueAnalytics {
     count: number;
   }>;
 }
+
+
+
+
+
+/**
+ * Queue Type Definitions for Property Marking Service
+ * Defines all types related to marking job queues and agent assignment
+ */
+
+export interface QueuedMarkingJob {
+  id: string;
+  propertyId: string;
+  requestedBy: string;
+  status: MarkingJobQueueStatus;
+  queuePosition: number;
+  createdAt: Date;
+  assignedAt: Date | null;
+  completedAt: Date | null;
+  timeSlotExpiry: Date | null;
+  markingFee: number;
+  propertyAddress: string;
+  city: string;
+  state: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface AgentQueuePosition {
+  agentId: string;
+  markingJobId: string;
+  position: number;
+  status: QueueStatus;
+  joinedAt: Date;
+  assignedAt: Date | null;
+  timeSlotStart: Date | null;
+  timeSlotEnd: Date | null;
+  notificationSent: boolean;
+}
+
+export interface QueueMetrics {
+  totalJobsInQueue: number;
+  averageWaitTime: number; // in minutes
+  totalActiveAgents: number;
+  jobsAssignedToday: number;
+  completionRate: number; // percentage
+  averageTimeToCompletion: number; // in hours
+}
+
+export interface AgentPerformanceMetrics {
+  agentId: string;
+  totalJobsAssigned: number;
+  completedJobs: number;
+  completionRate: number; // percentage
+  averageCompletionTime: number; // in hours
+  missedDeadlines: number;
+  reliabilityScore: number; // 0-5
+  lastJobDate: Date | null;
+  averageRating: number;
+  totalEarnings: number;
+}
+
+export interface TimeSlot {
+  jobId: string;
+  agentId: string;
+  startTime: Date;
+  endTime: Date;
+  durationMinutes: number;
+  isActive: boolean;
+  isExpired: boolean;
+  markingAttempted: boolean;
+}
+
+export interface QueueNotification {
+  id: string;
+  agentId: string;
+  jobId: string;
+  type: NotificationType;
+  message: string;
+  data: {
+    propertyAddress?: string;
+    queuePosition?: number;
+    timeSlotStart?: Date;
+    timeSlotEnd?: Date;
+    paymentAmount?: number;
+  };
+  read: boolean;
+  createdAt: Date;
+  sentVia: NotificationChannel[];
+}
+
+export interface AgentQueueStatus {
+  agentId: string;
+  isAvailable: boolean;
+  currentlyAssigned: boolean;
+  serviceAreas: string[]; // Cities/LGAs where agent operates
+  currentQueueCount: number; // Number of jobs agent is queued for
+  responseTime: number; // average response time in minutes
+  acceptanceRate: number; // percentage of jobs accepted
+  completionRate: number; // percentage of jobs completed successfully
+  averageRating: number;
+  totalMarkingJobs: number;
+}
+
+export interface QueueAssignmentPayload {
+  jobId: string;
+  agentId: string;
+  timeSlotDuration: number; // in minutes (typically 180 for 3 hours)
+  paymentAmount: number;
+  propertyDetails: {
+    address: string;
+    city: string;
+    state: string;
+    latitude: number;
+    longitude: number;
+    contactPerson: string;
+    contactPhone: string;
+    accessInstructions?: string;
+  };
+}
+
+export interface QueueFilterOptions {
+  status?: MarkingJobQueueStatus | MarkingJobQueueStatus[];
+  city?: string;
+  state?: string;
+  radius?: number; // in kilometers from agent location
+  minReliabilityScore?: number;
+  onlyAvailableAgents?: boolean;
+  urgencyLevel?: UrgencyLevel;
+}
+
+export interface QueuePosition {
+  jobId: string;
+  position: number;
+  estimatedWaitTime: number; // in minutes
+  status: QueueStatus;
+}
+
+export interface ProximityResult {
+  agentId: string;
+  name: string;
+  distance: number; // in kilometers
+  estimatedTravelTime: number; // in minutes
+  reliabilityScore: number;
+  completionRate: number;
+  isAvailable: boolean;
+  currentQueueCount: number;
+}
+
+export interface MarkingJobCompletion {
+  jobId: string;
+  agentId: string;
+  completedAt: Date;
+  completionNotes: string;
+  boundaryData: BoundaryCoordinates;
+  completionImages: string[];
+  timeSpentMinutes: number;
+  qualityRating?: number;
+}
+
+export interface BoundaryCoordinates {
+  type: "Polygon";
+  coordinates: [number, number][][];
+}
+
+export interface QueueStatistics {
+  period: "daily" | "weekly" | "monthly";
+  totalJobsQueued: number;
+  totalJobsAssigned: number;
+  totalJobsCompleted: number;
+  averageQueueTime: number; // in minutes
+  averageAssignmentTime: number; // in hours
+  totalAgentsParticipated: number;
+  topPerformingAgents: AgentPerformanceMetrics[];
+  completionRateByUrgency: {
+    LOW: number;
+    NORMAL: number;
+    HIGH: number;
+    URGENT: number;
+  };
+}
+
+// Enums
+export enum MarkingJobQueueStatus {
+  QUEUED = "QUEUED",
+  ASSIGNED = "ASSIGNED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  EXPIRED = "EXPIRED",
+}
+
+export enum QueueStatus {
+  PENDING = "PENDING", // Waiting in queue
+  ASSIGNED = "ASSIGNED", // Offered to agent, awaiting response
+  ACCEPTED = "ACCEPTED", // Agent accepted the job
+  ACTIVE = "ACTIVE", // Time slot is active
+  EXPIRED = "EXPIRED", // Time slot expired without completion
+  COMPLETED = "COMPLETED", // Job completed successfully
+  SKIPPED = "SKIPPED", // Agent skipped, moved to next
+}
+
+export enum NotificationType {
+  JOB_AVAILABLE = "JOB_AVAILABLE",
+  ASSIGNMENT_OFFERED = "ASSIGNMENT_OFFERED",
+  TIME_SLOT_STARTING = "TIME_SLOT_STARTING",
+  TIME_SLOT_EXPIRING_SOON = "TIME_SLOT_EXPIRING_SOON",
+  TIME_SLOT_EXPIRED = "TIME_SLOT_EXPIRED",
+  JOB_COMPLETED = "JOB_COMPLETED",
+  PAYMENT_RELEASED = "PAYMENT_RELEASED",
+  QUEUE_POSITION_UPDATED = "QUEUE_POSITION_UPDATED",
+  PERFORMANCE_ALERT = "PERFORMANCE_ALERT",
+}
+
+export enum NotificationChannel {
+  EMAIL = "EMAIL",
+  SMS = "SMS",
+  IN_APP = "IN_APP",
+  PUSH = "PUSH",
+}
+
+export enum UrgencyLevel {
+  LOW = "LOW",
+  NORMAL = "NORMAL",
+  HIGH = "HIGH",
+  URGENT = "URGENT",
+}
+
+export interface PaginatedQueueResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}

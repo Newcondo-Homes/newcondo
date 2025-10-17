@@ -187,3 +187,205 @@ export function useMarkingQueue() {
     sortJobs,
   };
 }
+
+
+
+
+
+
+
+// // File: apps/platform/hooks/useMarkingQueue.ts
+
+// import { useState, useCallback, useEffect } from 'react';
+// import { useAuth } from './useAuth';
+
+// interface MarkingJobQueueItem {
+//   id: string;
+//   propertyId: string;
+//   status: 'QUEUED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+//   queuePosition: number;
+//   assignedAgentId: string | null;
+//   timeSlotExpiry: string;
+//   markingFee: number;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: string;
+//   urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+//   createdAt: string;
+// }
+
+// interface QueueState {
+//   queue: MarkingJobQueueItem[];
+//   loading: boolean;
+//   error: string | null;
+// }
+
+// interface JoinQueueResponse {
+//   success: boolean;
+//   queuePosition: number;
+//   timeSlotExpiry: string;
+//   message: string;
+// }
+
+// export function useMarkingQueue() {
+//   const { user } = useAuth();
+//   const [state, setState] = useState<QueueState>({
+//     queue: [],
+//     loading: false,
+//     error: null,
+//   });
+
+//   // Fetch current queue status
+//   const fetchQueue = useCallback(async () => {
+//     if (!user?.id) return;
+
+//     setState((prev) => ({ ...prev, loading: true, error: null }));
+//     try {
+//       const res = await fetch('/api/marking/queue', {
+//         headers: {
+//           'Content-Type': 'application/json',
+//         },
+//       });
+
+//       if (!res.ok) {
+//         throw new Error(`Failed to fetch queue: ${res.statusText}`);
+//       }
+
+//       const data = await res.json();
+//       setState((prev) => ({ ...prev, queue: data.queue || [] }));
+//     } catch (err) {
+//       const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+//       setState((prev) => ({ ...prev, error: errorMsg }));
+//     } finally {
+//       setState((prev) => ({ ...prev, loading: false }));
+//     }
+//   }, [user?.id]);
+
+//   // Join a marking job queue
+//   const joinQueue = useCallback(
+//     async (markingJobId: string): Promise<JoinQueueResponse> => {
+//       if (!user?.id) {
+//         return {
+//           success: false,
+//           queuePosition: 0,
+//           timeSlotExpiry: '',
+//           message: 'User not authenticated',
+//         };
+//       }
+
+//       setState((prev) => ({ ...prev, loading: true, error: null }));
+//       try {
+//         const res = await fetch('/api/marking/queue/join', {
+//           method: 'POST',
+//           headers: {
+//             'Content-Type': 'application/json',
+//           },
+//           body: JSON.stringify({ markingJobId }),
+//         });
+
+//         if (!res.ok) {
+//           const error = await res.json();
+//           throw new Error(error.message || 'Failed to join queue');
+//         }
+
+//         const data = await res.json();
+//         await fetchQueue();
+
+//         return {
+//           success: true,
+//           queuePosition: data.queuePosition,
+//           timeSlotExpiry: data.timeSlotExpiry,
+//           message: 'Successfully joined queue',
+//         };
+//       } catch (err) {
+//         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+//         setState((prev) => ({ ...prev, error: errorMsg }));
+//         return {
+//           success: false,
+//           queuePosition: 0,
+//           timeSlotExpiry: '',
+//           message: errorMsg,
+//         };
+//       } finally {
+//         setState((prev) => ({ ...prev, loading: false }));
+//       }
+//     },
+//     [user?.id, fetchQueue]
+//   );
+
+//   // Leave/cancel queue position
+//   const leaveQueue = useCallback(
+//     async (markingJobId: string): Promise<boolean> => {
+//       if (!user?.id) return false;
+
+//       setState((prev) => ({ ...prev, loading: true, error: null }));
+//       try {
+//         const res = await fetch('/api/marking/queue/leave', {
+//           method: 'POST',
+//           headers: {
+//             'Content-Type': 'application/json',
+//           },
+//           body: JSON.stringify({ markingJobId }),
+//         });
+
+//         if (!res.ok) {
+//           throw new Error('Failed to leave queue');
+//         }
+
+//         await fetchQueue();
+//         return true;
+//       } catch (err) {
+//         const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+//         setState((prev) => ({ ...prev, error: errorMsg }));
+//         return false;
+//       } finally {
+//         setState((prev) => ({ ...prev, loading: false }));
+//       }
+//     },
+//     [user?.id, fetchQueue]
+//   );
+
+//   // Get agent's current queue position(s)
+//   const getAgentQueuePosition = useCallback(
+//     async (markingJobId: string): Promise<number | null> => {
+//       try {
+//         const res = await fetch(
+//           `/api/marking/queue/position/${markingJobId}`
+//         );
+
+//         if (!res.ok) {
+//           return null;
+//         }
+
+//         const data = await res.json();
+//         return data.queuePosition || null;
+//       } catch (err) {
+//         console.error('Error fetching queue position:', err);
+//         return null;
+//       }
+//     },
+//     []
+//   );
+
+//   // Poll queue for updates (real-time simulation)
+//   useEffect(() => {
+//     if (!user?.id || !user.isAvailableForMarking) return;
+
+//     const interval = setInterval(() => {
+//       fetchQueue();
+//     }, 30000); // Poll every 30 seconds
+
+//     return () => clearInterval(interval);
+//   }, [user?.id, user?.isAvailableForMarking, fetchQueue]);
+
+//   return {
+//     queue: state.queue,
+//     loading: state.loading,
+//     error: state.error,
+//     fetchQueue,
+//     joinQueue,
+//     leaveQueue,
+//     getAgentQueuePosition,
+//   };
+// }

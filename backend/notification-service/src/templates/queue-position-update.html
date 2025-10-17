@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Position Update</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333333;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .logo {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #3b82f6;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #1f2937;
+            font-size: 24px;
+            margin: 0 0 16px 0;
+            font-weight: 700;
+        }
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+            margin: 0 0 30px 0;
+            line-height: 1.5;
+        }
+        .queue-visual {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 24px 0;
+        }
+        .position-number {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 16px 0;
+            line-height: 1;
+        }
+        .position-label {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        .position-sublabel {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        .progress-container {
+            background-color: #f9fafb;
+            border-radius: 10px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+        .progress-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+        .progress-icon.active {
+            background-color: #10b981;
+        }
+        .progress-icon.waiting {
+            background-color: #f59e0b;
+        }
+        .progress-icon.pending {
+            background-color: #e5e7eb;
+        }
+        .progress-text {
+            flex: 1;
+        }
+        .progress-title {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        .progress-desc {
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .info-card {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .info-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 8px 0;
+        }
+        .info-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .cta-button {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-align: center;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 30px 0;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+        .tip-box {
+            background-color: #ecfdf5;
+            border-left: 4px solid #10b981;
+            padding: 16px;
+            border-radius: 6px;
+            margin: 24px 0;
+        }
+        .tip-text {
+            color: #065f46;
+            font-size: 14px;
+            margin: 0;
+            line-height: 1.6;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer-text {
+            color: #6b7280;
+            font-size: 13px;
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        @media only screen and (max-width: 600px) {
+            .content {
+                padding: 30px 20px;
+            }
+            .position-number {
+                font-size: 48px;
+            }
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="logo">🏠 Newcondo</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="status-badge">📊 Queue Status Update</div>
+            
+            <h1>Your Queue Position Has Been Updated</h1>
+            <p class="subtitle">Hi {{agentName}},</p>
+            <p class="subtitle">Good news! You've moved up in the queue for the property marking job.</p>
+
+            <!-- Queue Position Visual -->
+            <div class="queue-visual">
+                <div class="position-label">Your Current Position</div>
+                <div class="position-number">#{{queuePosition}}</div>
+                <div class="position-sublabel">{{#if isNext}}You're next in line!{{else}}Out of {{totalInQueue}} agents{{/if}}</div>
+            </div>
+
+            <!-- Job Reference -->
+            <div class="progress-container">
+                <h3 style="margin: 0 0 16px 0; color: #1f2937;">Job Details</h3>
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;"><strong>Property:</strong> {{propertyAddress}}</p>
+                <p style="margin: 0 0 8px 0; color: #6b7280; font-size: 14px;"><strong>Location:</strong> {{city}}, {{state}}</p>
+                <p style="margin: 0; color: #6b7280; font-size: 14px;"><strong>Job ID:</strong> {{jobId}}</p>
+            </div>
+
+            <!-- Info Grid -->
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-label">Estimated Wait Time</div>
+                    <div class="info-value">{{estimatedWaitTime}}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Agents Ahead</div>
+                    <div class="info-value">{{agentsAhead}}</div>
+                </div>
+            </div>
+
+            <!-- Progress Status -->
+            <div class="progress-container">
+                <h3 style="margin: 0 0 20px 0; color: #1f2937;">Queue Progress</h3>
+                
+                {{#if isNext}}
+                <div class="progress-item">
+                    <div class="progress-icon active">✓</div>
+                    <div class="progress-text">
+                        <div class="progress-title">You're Next!</div>
+                        <div class="progress-desc">Get ready to start marking as soon as the current agent completes</div>
+                    </div>
+                </div>
+                {{else}}
+                <div class="progress-item">
+                    <div class="progress-icon waiting">⏳</div>
+                    <div class="progress-text">
+                        <div class="progress-title">Waiting in Queue</div>
+                        <div class="progress-desc">Position {{queuePosition}} - {{agentsAhead}} agent(s) ahead of you</div>
+                    </div>
+                </div>
+                {{/if}}
+                
+                <div class="progress-item">
+                    <div class="progress-icon {{#if isNext}}waiting{{else}}pending{{/if}}">🎯</div>
+                    <div class="progress-text">
+                        <div class="progress-title">Your Turn</div>
+                        <div class="progress-desc">You'll have 3 hours to complete the marking once assigned</div>
+                    </div>
+                </div>
+                
+                <div class="progress-item">
+                    <div class="progress-icon pending">💰</div>
+                    <div class="progress-text">
+                        <div class="progress-title">Get Paid</div>
+                        <div class="progress-desc">Receive ₦{{compensation}} upon successful completion</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <a href="{{dashboardUrl}}" class="cta-button">View Queue Status</a>
+
+            <!-- Tip Box -->
+            <div class="tip-box">
+                <p class="tip-text"><strong>💡 Pro Tip:</strong><br>
+                {{#if isNext}}
+                Keep your phone nearby! You'll receive an immediate notification when it's your turn to start marking.
+                {{else}}
+                Check that you have all necessary equipment ready: smartphone with good camera, stable internet connection, and fully charged battery.
+                {{/if}}</p>
+            </div>
+
+            <p class="subtitle" style="margin-top: 30px;">We'll notify you immediately when it's your turn to start marking.</p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-text"><strong>Newcondo Property Marking Service</strong></p>
+            <p class="footer-text">Building the future of property rental in Nigeria</p>
+            <p class="footer-text">Questions? Contact our support team at support@newcondo.com</p>
+        </div>
+    </div>
+</body>
+</html>

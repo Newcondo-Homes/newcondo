@@ -202,3 +202,97 @@ export default router;
 // );
 
 // export default router;
+
+
+
+
+
+
+// // backend/marking-service/src/routes/markingJobs.ts
+// import { Router } from "express";
+// import { authenticate } from "../../../shared/src/middleware/auth";
+// import {
+//   createMarkingJob,
+//   getMarkingJob,
+//   listMarkingJobs,
+//   updateMarkingJob,
+//   cancelMarkingJob,
+//   confirmMarkingCompletion,
+// } from "../controllers/markingJobController";
+
+// const router = Router();
+
+// /**
+//  * @route POST /api/marking-jobs
+//  * @desc Create a new property marking job
+//  * @access Private (Property owners, listing agents)
+//  * @body {
+//  *   propertyId: string,
+//  *   contactPersonName: string,
+//  *   contactPersonPhone: string,
+//  *   accessInstructions?: string,
+//  *   preferredTime?: Date,
+//  *   urgencyLevel?: "LOW" | "NORMAL" | "HIGH" | "URGENT"
+//  * }
+//  */
+// router.post("/", authenticate, createMarkingJob);
+
+// /**
+//  * @route GET /api/marking-jobs/:jobId
+//  * @desc Get marking job details
+//  * @access Private
+//  * @params jobId: string
+//  */
+// router.get("/:jobId", authenticate, getMarkingJob);
+
+// /**
+//  * @route GET /api/marking-jobs
+//  * @desc List marking jobs with filters
+//  * @access Private
+//  * @query {
+//  *   status?: string,
+//  *   propertyId?: string,
+//  *   agentId?: string,
+//  *   requestedBy?: string,
+//  *   page?: number,
+//  *   limit?: number
+//  * }
+//  */
+// router.get("/", authenticate, listMarkingJobs);
+
+// /**
+//  * @route PUT /api/marking-jobs/:jobId
+//  * @desc Update marking job details
+//  * @access Private (Property owner or assigned agent)
+//  * @params jobId: string
+//  * @body {
+//  *   contactPersonName?: string,
+//  *   contactPersonPhone?: string,
+//  *   accessInstructions?: string,
+//  *   preferredTime?: Date,
+//  *   urgencyLevel?: string
+//  * }
+//  */
+// router.put("/:jobId", authenticate, updateMarkingJob);
+
+// /**
+//  * @route POST /api/marking-jobs/:jobId/cancel
+//  * @desc Cancel a marking job
+//  * @access Private (Property owner)
+//  * @params jobId: string
+//  */
+// router.post("/:jobId/cancel", authenticate, cancelMarkingJob);
+
+// /**
+//  * @route POST /api/marking-jobs/:jobId/confirm
+//  * @desc Property owner confirms marking completion
+//  * @access Private (Property owner)
+//  * @params jobId: string
+//  * @body {
+//  *   isConfirmed: boolean,
+//  *   rejectionReason?: string
+//  * }
+//  */
+// router.post("/:jobId/confirm", authenticate, confirmMarkingCompletion);
+
+// export default router;

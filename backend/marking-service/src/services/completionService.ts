@@ -1089,3 +1089,582 @@ export class CompletionService {
 // }
 
 // export default CompletionService;
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/completionService.ts
+// import { prisma } from '@newcondo/db';
+// import { MarkingJobStatus, PaymentStatus } from '@prisma/client';
+// import { logger } from '../utils/logger';
+
+// interface CompletionResult {
+//   jobId: string;
+//   status: string;
+//   agentCompensation: number;
+//   propertyOwnerId: string;
+//   notificationSent: boolean;
+//   timestamp: Date;
+// }
+
+// interface VerificationResult {
+//   jobId: string;
+//   isVerified: boolean;
+//   verifiedAt: Date;
+//   agentId: string;
+//   remainingBalance: number;
+// }
+
+// interface ConfirmationRequest {
+//   jobId: string;
+//   ownerId: string;
+//   isConfirmed: boolean;
+//   feedback?: string;
+// }
+
+// class CompletionService {
+//   private readonly PARTIAL_COMPENSATION = 0.05; // 5% of marking fee for first attempt
+//   private readonly AGENT_COMMISSION_PERCENT = 0.25; // 25% of marking fee to agent - NOTE: This isn't used in the provided logic, compensation is based on job.markingFee
+//   private readonly CONFIRMATION_DEADLINE_HOURS = 72; // 3 days for owner confirmation
+
+//   /**
+//    * Mark a job as completed by agent
+//    * Creates partial compensation and waits for owner verification
+//    */
+//   async markJobAsCompleted(
+//     markingJobId: string,
+//     agentId: string,
+//     completionData: {
+//       completionNotes: string;
+//       completionImages: string[];
+//       boundaryData: Record<string, any>;
+//     }
+//   ): Promise<CompletionResult> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: markingJobId },
+//         include: { property: true, requestingUser: true, assignedAgent: true },
+//       });
+
+//       if (!job) {
+//         throw new Error(`Marking job ${markingJobId} not found`);
+//       }
+
+//       if (job.assignedAgentId !== agentId) {
+//         throw new Error('Agent is not assigned to this job');
+//       }
+
+//       // Calculate compensation
+//       const partialCompensation = Number(job.markingFee) * this.PARTIAL_COMPENSATION;
+
+//       // Update job to COMPLETED status
+//       const completedJob = await prisma.propertyMarkingJob.update({
+//         where: { id: markingJobId },
+//         data: {
+//           status: MarkingJobStatus.COMPLETED,
+//           completedAt: new Date(),
+//           completionNotes: completionData.completionNotes,
+//           completionImages: completionData.completionImages,
+//           boundaryData: completionData.boundaryData,
+//           timeSlotExpiry: null, // Clear time slot
+//         },
+//         include: { property: true, requestingUser: true, assignedAgent: true },
+//       });
+
+//       // Create partial payment for agent
+//       const partialPayment = await prisma.payment.create({
+//         data: {
+//           userId: agentId,
+//           markingJobId: markingJobId,
+//           amount: partialCompensation,
+//           paymentType: 'PROPERTY_MARKING',
+//           status: PaymentStatus.HELD, // Payment held, will be released on owner confirmation
+//           description: `Partial compensation for property marking job ${markingJobId}`,
+//           confirmationPeriodEnd: new Date(Date.now() + this.CONFIRMATION_DEADLINE_HOURS * 60 * 60 * 1000),
+//         },
+//       });
+
+//       // Add partial amount to agent's virtual account (but mark as held)
+//       await prisma.virtualAccount.update({
+//         where: { userId: agentId },
+//         data: {
+//           balance: {
+//             increment: partialCompensation,
+//           },
+//         },
+//       });
+
+//       logger.info(`Marking job ${markingJobId} completed by agent ${agentId}`, {
+//         partialCompensation,
+//         propertyId: job.propertyId,
+//         paymentId: partialPayment.id,
+//       });
+
+//       return {
+//         jobId: markingJobId,
+//         status: 'COMPLETED_AWAITING_VERIFICATION',
+//         agentCompensation: partialCompensation,
+//         propertyOwnerId: job.requestedBy,
+//         notificationSent: true,
+//         timestamp: new Date(),
+//       };
+//     } catch (error) {
+//       logger.error('Error marking job as completed', { markingJobId, agentId, error });
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Owner verifies and confirms the marking job
+//    * Releases full payment to agent and completes the job
+//    */
+//   async verifyAndConfirmMarking(request: ConfirmationRequest): Promise<VerificationResult> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: request.jobId },
+//         include: {
+//           property: true,
+//           requestingUser: true,
+//           assignedAgent: true,
+//         },
+//       });
+
+//       if (!job) {
+//         throw new Error(`Marking job ${request.jobId} not found`);
+//       }
+
+//       if (job.requestedBy !== request.ownerId) {
+//         throw new Error('Only property owner can verify marking');
+//       }
+
+//       if (job.status !== MarkingJobStatus.COMPLETED) {
+//         throw new Error('Job must be in COMPLETED status to verify');
+//       }
+
+//       // Check confirmation deadline (only check if job was completed recently)
+//       const deadline = new Date(job.completedAt!.getTime() + this.CONFIRMATION_DEADLINE_HOURS * 60 * 60 * 1000);
+//       if (new Date() > deadline) {
+//         // Deadline passed - agent gets remaining compensation (even if owner tries to confirm late)
+//         // However, since the owner is explicitly confirming/rejecting, we should proceed with their action
+//         // UNLESS the job status has already been implicitly changed by a cron job checking deadlines.
+//         // Assuming this method is the primary driver and cron job will call handleVerificationDeadlineExpired
+//         // if the owner hasn't acted. If the owner acts after the deadline, we treat it as an implicit verification.
+//         // For simplicity and to ensure the agent gets paid, we proceed with confirmation logic if it's a confirmation.
+//         // If it's a rejection, we check if the job is already resolved and if not, we process the rejection.
+//       }
+
+//       if (!request.isConfirmed) {
+//         // Owner rejected - job returns to queue
+//         return await this.handleVerificationRejection(request.jobId, job.assignedAgentId!, request.feedback);
+//       }
+
+//       // Owner confirmed - release full payment to agent
+//       const partialAmount = Number(job.markingFee) * this.PARTIAL_COMPENSATION;
+//       const remainingAmount = Number(job.markingFee) - partialAmount;
+
+//       // Get partial payment record
+//       const partialPayment = await prisma.payment.findFirst({
+//         where: {
+//           markingJobId: request.jobId,
+//           userId: job.assignedAgentId,
+//           status: PaymentStatus.HELD,
+//         },
+//       });
+
+//       // Release the held payment
+//       if (partialPayment) {
+//         await prisma.payment.update({
+//           where: { id: partialPayment.id },
+//           data: {
+//             status: PaymentStatus.RELEASED,
+//             isReleased: true,
+//             releasedAt: new Date(),
+//           },
+//         });
+//       } else {
+//         // If partial payment isn't HELD (e.g., if it was already released by deadline cron, or never created)
+//         // We log a warning but proceed, assuming the balance update below will correct things.
+//         logger.warn(`Held payment not found for job ${request.jobId} during owner confirmation. Agent ID: ${job.assignedAgentId}`);
+//       }
+
+//       // Create payment for remaining amount
+//       const remainingPayment = await prisma.payment.create({
+//         data: {
+//           userId: job.assignedAgentId!,
+//           markingJobId: request.jobId,
+//           amount: remainingAmount,
+//           paymentType: 'PROPERTY_MARKING',
+//           status: PaymentStatus.RELEASED,
+//           isReleased: true,
+//           releasedAt: new Date(),
+//           description: `Final payment on owner confirmation for property marking job ${request.jobId}`,
+//         },
+//       });
+
+//       // Update agent's virtual account (only increment the remaining amount, as partial was already added as HELD)
+//       const updatedVirtualAccount = await prisma.virtualAccount.update({
+//         where: { userId: job.assignedAgentId! },
+//         data: {
+//           balance: {
+//             increment: remainingAmount,
+//           },
+//         },
+//       });
+
+//       // Update property with boundary data
+//       // Note: We use the boundary data stored on the job which was provided by the agent on completion.
+//       await prisma.property.update({
+//         where: { id: job.propertyId },
+//         data: {
+//           boundaryVerified: true,
+//           boundaryMarkedBy: job.assignedAgentId,
+//           boundaryMarkedAt: new Date(),
+//           boundaryCoordinates: job.boundaryData as any, // Cast to any to handle Prisma's JSON type
+//           boundaryImages: job.completionImages,
+//         },
+//       });
+
+//       // Mark job as fully completed (final status)
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: request.jobId },
+//         data: {
+//           status: MarkingJobStatus.COMPLETED, // The status remains COMPLETED but the verification process is over
+//           verificationConfirmedAt: new Date(),
+//           ownerFeedback: request.feedback,
+//         },
+//       });
+
+//       logger.info(`Marking job ${request.jobId} verified and confirmed by owner ${request.ownerId}`, {
+//         agentId: job.assignedAgentId,
+//         totalCompensation: Number(job.markingFee),
+//         propertyId: job.propertyId,
+//       });
+
+//       return {
+//         jobId: request.jobId,
+//         isVerified: true,
+//         verifiedAt: new Date(),
+//         agentId: job.assignedAgentId!,
+//         remainingBalance: Number(updatedVirtualAccount.balance),
+//       };
+//     } catch (error) {
+//       logger.error('Error verifying and confirming marking', { jobId: request.jobId, error });
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Handle owner rejection of marking - job returns to queue
+//    */
+//   private async handleVerificationRejection(
+//     jobId: string,
+//     agentId: string,
+//     rejectionReason?: string
+//   ): Promise<VerificationResult> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: { property: true },
+//       });
+
+//       if (!job) {
+//         throw new Error(`Job ${jobId} not found`);
+//       }
+
+//       // Agent keeps the partial compensation already credited (5% penalty for failed attempt)
+//       // The HELD payment should remain HELD for now, but since the balance was already incremented,
+//       // it means the partial compensation is already in the virtual account.
+//       // We should update the HELD payment to RELEASED to formally track that the 5% is permanent,
+//       // but no further balance increment is needed.
+//       const partialPayment = await prisma.payment.findFirst({
+//         where: {
+//           markingJobId: jobId,
+//           userId: agentId,
+//           status: PaymentStatus.HELD,
+//         },
+//       });
+
+//       if (partialPayment) {
+//         await prisma.payment.update({
+//           where: { id: partialPayment.id },
+//           data: {
+//             status: PaymentStatus.RELEASED,
+//             isReleased: true,
+//             releasedAt: new Date(),
+//             description: `Partial compensation retained after owner rejection for job ${jobId}`,
+//           },
+//         });
+//       }
+
+//       // Reset job to QUEUED status
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           status: MarkingJobStatus.QUEUED,
+//           assignedAgentId: null,
+//           timeSlotExpiry: null,
+//           queuePosition: 1, // Re-queue at the front
+//           completionNotes: `Verification rejected by owner. Reason: ${rejectionReason || 'Not provided'}`,
+//           rejectionReason: rejectionReason,
+//           rejectionCount: {
+//             increment: 1,
+//           },
+//           // Clear completion data to prepare for the next attempt
+//           completedAt: null,
+//           completionImages: [],
+//           boundaryData: null,
+//         },
+//       });
+
+//       logger.info(`Marking job ${jobId} rejected by owner ${job.requestedBy}`, {
+//         agentId,
+//         reason: rejectionReason,
+//         propertyId: job.propertyId,
+//       });
+
+//       // Get current agent's virtual account balance
+//       const virtualAccount = await prisma.virtualAccount.findUnique({
+//         where: { userId: agentId },
+//       });
+
+//       return {
+//         jobId,
+//         isVerified: false,
+//         verifiedAt: new Date(),
+//         agentId,
+//         remainingBalance: Number(virtualAccount?.balance || 0),
+//       };
+//     } catch (error) {
+//       logger.error('Error handling verification rejection', { jobId, agentId, error });
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Handle owner verification deadline expiration
+//    * Agent receives remaining compensation automatically
+//    */
+//   private async handleVerificationDeadlineExpired(
+//     jobId: string,
+//     agentId: string
+//   ): Promise<VerificationResult> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: { property: true },
+//       });
+
+//       if (!job) {
+//         throw new Error(`Job ${jobId} not found`);
+//       }
+
+//       // Calculate remaining amount
+//       const partialAmount = Number(job.markingFee) * this.PARTIAL_COMPENSATION;
+//       const remainingAmount = Number(job.markingFee) - partialAmount;
+
+//       // Release the held payment (Partial Compensation) and find any other payments
+//       const payments = await prisma.payment.findMany({
+//         where: {
+//           markingJobId: jobId,
+//           userId: agentId,
+//         },
+//       });
+
+//       let heldPaymentReleased = false;
+//       for (const payment of payments) {
+//         if (payment.status === PaymentStatus.HELD) {
+//           await prisma.payment.update({
+//             where: { id: payment.id },
+//             data: {
+//               status: PaymentStatus.RELEASED,
+//               isReleased: true,
+//               releasedAt: new Date(),
+//               description: `Partial compensation released on deadline expiration for job ${jobId}`,
+//             },
+//           });
+//           heldPaymentReleased = true;
+//           break; // Should only be one HELD payment
+//         }
+//       }
+      
+//       if (!heldPaymentReleased) {
+//            logger.warn(`Held payment not found for job ${jobId} during deadline expiration. Agent ID: ${agentId}`);
+//       }
+
+//       // Create payment for remaining amount due to deadline expiration
+//       await prisma.payment.create({
+//         data: {
+//           userId: agentId,
+//           markingJobId: jobId,
+//           amount: remainingAmount,
+//           paymentType: 'PROPERTY_MARKING',
+//           status: PaymentStatus.RELEASED,
+//           isReleased: true,
+//           releasedAt: new Date(),
+//           description: `Deadline compensation (remaining) for property marking job ${jobId} - owner did not confirm within deadline`,
+//         },
+//       });
+
+//       // Update virtual account (increment remaining amount)
+//       const updatedVirtualAccount = await prisma.virtualAccount.update({
+//         where: { userId: agentId },
+//         data: {
+//           balance: {
+//             increment: remainingAmount,
+//           },
+//         },
+//       });
+
+//       // Update property with boundary data (same as confirmation)
+//       await prisma.property.update({
+//         where: { id: job.propertyId },
+//         data: {
+//           boundaryVerified: true,
+//           boundaryMarkedBy: job.assignedAgentId,
+//           boundaryMarkedAt: new Date(),
+//           boundaryCoordinates: job.boundaryData as any,
+//           boundaryImages: job.completionImages,
+//         },
+//       });
+
+//       // Mark job as fully completed
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           status: MarkingJobStatus.COMPLETED,
+//           verificationConfirmedAt: new Date(),
+//           completionNotes: 'Owner did not verify marking within deadline - agent compensated automatically. Job is considered completed.',
+//         },
+//       });
+
+//       logger.info(`Marking job ${jobId} deadline expired - agent compensated automatically`, {
+//         agentId,
+//         compensationAmount: remainingAmount,
+//         propertyId: job.propertyId,
+//       });
+
+//       return {
+//         jobId,
+//         isVerified: true, // Job is resolved as verified due to inaction
+//         verifiedAt: new Date(),
+//         agentId,
+//         remainingBalance: Number(updatedVirtualAccount.balance),
+//       };
+//     } catch (error) {
+//       logger.error('Error handling verification deadline expiration', { jobId, agentId, error });
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get completion status for a marking job
+//    */
+//   async getCompletionStatus(jobId: string): Promise<{
+//     jobId: string;
+//     status: MarkingJobStatus;
+//     isCompleted: boolean;
+//     completedAt?: Date;
+//     verificationDeadline?: Date;
+//     agentCompensation: number;
+//     remainingCompensation: number;
+//   }> {
+//     try {
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           requestingUser: true,
+//         },
+//       });
+
+//       if (!job) {
+//         throw new Error(`Job ${jobId} not found`);
+//       }
+
+//       const payments = await prisma.payment.findMany({
+//         where: { markingJobId: jobId },
+//       });
+
+//       // Sum all HELD and RELEASED payments
+//       const agentCompensation = payments
+//         .filter((p) => p.status === PaymentStatus.RELEASED || p.status === PaymentStatus.HELD)
+//         .reduce((sum, p) => sum + Number(p.amount), 0);
+
+//       const remainingCompensation = Number(job.markingFee) - agentCompensation;
+
+//       const verificationDeadline = job.completedAt
+//         ? new Date(job.completedAt.getTime() + this.CONFIRMATION_DEADLINE_HOURS * 60 * 60 * 1000)
+//         : undefined;
+
+//       return {
+//         jobId,
+//         status: job.status,
+//         isCompleted: job.status === MarkingJobStatus.COMPLETED,
+//         completedAt: job.completedAt || undefined,
+//         verificationDeadline,
+//         agentCompensation,
+//         remainingCompensation: Math.max(0, remainingCompensation),
+//       };
+//     } catch (error) {
+//       logger.error('Error getting completion status', { jobId, error });
+//       throw error;
+//     }
+//   }
+
+//   /**
+//    * Get all pending verifications for a property owner
+//    */
+//   async getPendingVerificationsForOwner(ownerId: string): Promise<any[]> {
+//     try {
+//       const pendingJobs = await prisma.propertyMarkingJob.findMany({
+//         where: {
+//           requestedBy: ownerId,
+//           // A job is pending verification if it is COMPLETED but the verificationConfirmedAt is null
+//           // However, for simplicity and based on the provided partial code, we assume COMPLETED means AWAITING VERIFICATION
+//           // But we should filter out jobs that were completed by deadline expiration,
+//           // which is tricky without an explicit status.
+//           // The safest bet is: status is COMPLETED, and the completion date is within the deadline.
+//           // Since the owner can confirm/reject past the deadline, we rely on the status alone.
+//           status: MarkingJobStatus.COMPLETED,
+//           verificationConfirmedAt: null, // Add this field to distinguish between AWAITING and RESOLVED COMPLETED jobs
+//         },
+//         include: {
+//           property: true,
+//           assignedAgent: {
+//             select: {
+//               id: true,
+//               name: true,
+//               image: true,
+//               agentReliabilityScore: true,
+//             },
+//           },
+//         },
+//         orderBy: { completedAt: 'desc' },
+//       });
+
+//       return pendingJobs.map((job) => ({
+//         jobId: job.id,
+//         propertyId: job.propertyId,
+//         propertyTitle: job.property.title,
+//         agentName: job.assignedAgent?.name,
+//         agentImage: job.assignedAgent?.image,
+//         completedAt: job.completedAt,
+//         completionNotes: job.completionNotes,
+//         completionImages: job.completionImages,
+//         verificationDeadline: job.completedAt
+//           ? new Date(job.completedAt.getTime() + this.CONFIRMATION_DEADLINE_HOURS * 60 * 60 * 1000)
+//           : undefined,
+//         // Calculate remaining time for verification if necessary
+//       }));
+//     } catch (error) {
+//       logger.error('Error getting pending verifications for owner', { ownerId, error });
+//       throw error;
+//     }
+//   }
+// }
+
+// export const completionService = new CompletionService();

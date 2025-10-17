@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Slot Expiring Soon</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #ff6b6b;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .warning-badge {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        h1 {
+            color: #ff6b6b;
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        .job-details {
+            background-color: #fff5f5;
+            border-left: 4px solid #ff6b6b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #fee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .detail-value {
+            color: #333;
+            text-align: right;
+        }
+        .countdown {
+            text-align: center;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .countdown-time {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .countdown-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .action-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .btn {
+            display: inline-block;
+            padding: 14px 30px;
+            margin: 10px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #27ae60;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+        .btn-secondary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+        .warning-message {
+            background-color: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .warning-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+        .consequences {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .consequences h3 {
+            color: #e74c3c;
+            font-size: 16px;
+            margin-top: 0;
+        }
+        .consequences ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .consequences li {
+            color: #555;
+            margin: 8px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 14px;
+        }
+        .support-link {
+            color: #3498db;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+            }
+            .btn {
+                display: block;
+                margin: 10px 0;
+            }
+            .countdown-time {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">NewCondo</div>
+            <div class="warning-badge">⚠️ URGENT: TIME SLOT EXPIRING</div>
+        </div>
+
+        <h1>⏰ Your Time Slot is About to Expire!</h1>
+
+        <p>Hello <strong>{{agentName}}</strong>,</p>
+
+        <p>This is an urgent reminder that your time slot for the property marking job is expiring soon. You need to act quickly to complete the job before the time runs out.</p>
+
+        <div class="countdown">
+            <div class="countdown-label">TIME REMAINING</div>
+            <div class="countdown-time">{{timeRemaining}}</div>
+            <div class="countdown-label">Until your time slot expires</div>
+        </div>
+
+        <div class="job-details">
+            <h3 style="margin-top: 0; color: #2c3e50;">📋 Job Details</h3>
+            <div class="detail-row">
+                <span class="detail-label">Job ID:</span>
+                <span class="detail-value">{{jobId}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Property:</span>
+                <span class="detail-value">{{propertyTitle}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Location:</span>
+                <span class="detail-value">{{propertyAddress}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Marking Fee:</span>
+                <span class="detail-value">₦{{markingFee}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Your Compensation:</span>
+                <span class="detail-value" style="color: #27ae60; font-weight: bold;">₦{{agentCompensation}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Time Slot Started:</span>
+                <span class="detail-value">{{assignedAt}}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Time Slot Expires:</span>
+                <span class="detail-value" style="color: #e74c3c; font-weight: bold;">{{expiryTime}}</span>
+            </div>
+        </div>
+
+        <div class="warning-message">
+            <strong><span class="warning-icon">⚠️</span>Important Notice:</strong>
+            <p style="margin: 10px 0 0 0;">If you don't complete the job before the time slot expires, the job will be automatically reassigned to the next agent in the queue.</p>
+        </div>
+
+        <div class="consequences">
+            <h3>🚨 What Happens if Time Expires:</h3>
+            <ul>
+                <li>The job will be <strong>automatically reassigned</strong> to the next available agent</li>
+                <li>Your queue position will be <strong>forfeited</strong></li>
+                <li>This may <strong>impact your reliability score</strong></li>
+                <li>You will <strong>lose the compensation opportunity</strong> (₦{{agentCompensation}})</li>
+            </ul>
+        </div>
+
+        <div class="action-section">
+            <p style="font-size: 18px; font-weight: bold; margin-bottom: 20px;">Take Action Now!</p>
+            <a href="{{completeJobUrl}}" class="btn btn-primary">🎯 Complete Job Now</a>
+            <a href="{{jobDetailsUrl}}" class="btn btn-secondary">📱 View Job Details</a>
+        </div>
+
+        <div style="background-color: #e8f5e9; padding: 15px; border-radius: 6px; margin-top: 20px;">
+            <strong>✅ Quick Completion Checklist:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Navigate to the property location</li>
+                <li>Mark the property boundaries on the map</li>
+                <li>Take clear photos of key areas and rooms</li>
+                <li>Upload all required documentation</li>
+                <li>Submit the completed job</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p>Need help? <a href="mailto:support@newcondo.ng" class="support-link">Contact Support</a></p>
+            <p style="color: #999; font-size: 12px; margin-top: 15px;">
+                This is an automated notification from NewCondo Property Marking Service.<br>
+                You're receiving this because you accepted this marking job.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

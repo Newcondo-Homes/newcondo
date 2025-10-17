@@ -935,3 +935,314 @@ export interface MarkingDispute {
 //   successRate: number; // Percentage
 //   averageConfirmationTime: number; // In hours
 // }
+
+
+
+
+
+
+
+
+
+
+
+// /**
+//  * Marking Feature Type Definitions
+//  * Defines all types related to property marking and boundary marking system
+//  */
+
+// export interface MarkingJob {
+//   id: string;
+//   propertyId: string;
+//   requestedBy: string;
+//   assignedAgentId?: string;
+//   status: MarkingJobStatus;
+//   markingType: MarkingType;
+//   paymentStatus: PaymentStatus;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel: UrgencyLevel;
+//   markingFee: number;
+//   agentCompensation: number;
+//   platformFee: number;
+//   queuePosition?: number;
+//   timeSlotExpiry?: Date;
+//   completionDeadline?: Date;
+//   completionNotes?: string;
+//   completionImages?: string[];
+//   boundaryData?: BoundaryData;
+//   createdAt: Date;
+//   updatedAt: Date;
+//   completedAt?: Date;
+// }
+
+// export interface MarkingJobRequest {
+//   propertyId: string;
+//   markingType: MarkingType;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel?: UrgencyLevel;
+// }
+
+// export interface PropertyBoundary {
+//   propertyId: string;
+//   coordinates: BoundaryCoordinates;
+//   markedBy: string; // Agent ID
+//   markedAt: Date;
+//   verified: boolean;
+//   verifiedBy?: string; // Owner/Property owner ID
+//   verifiedAt?: Date;
+//   images: string[]; // Boundary marking photos
+//   fingerprint: string; // Unique identifier for duplicate detection
+// }
+
+// export interface BoundaryData {
+//   type: "Polygon";
+//   coordinates: [number, number][][];
+//   center?: {
+//     lat: number;
+//     lng: number;
+//   };
+//   area?: number; // in square meters
+//   accuracy?: string; // "HIGH" | "MEDIUM" | "LOW"
+// }
+
+// export interface BoundaryValidation {
+//   isValid: boolean;
+//   errors: ValidationError[];
+//   warnings: ValidationWarning[];
+//   suggestions?: string[];
+// }
+
+// export interface ValidationError {
+//   type: string;
+//   message: string;
+//   severity: "ERROR" | "WARNING";
+// }
+
+// export interface ValidationWarning {
+//   type: string;
+//   message: string;
+//   suggestion?: string;
+// }
+
+// export interface PropertyFingerprint {
+//   propertyId: string;
+//   gpsCoordinates: {
+//     lat: number;
+//     lng: number;
+//   };
+//   buildingFeatures: string[];
+//   boundaryArea: number;
+//   roofType?: string;
+//   colorSignatures?: string[];
+//   uniqueMarkers?: string[];
+// }
+
+// export interface DuplicateDetectionResult {
+//   isDuplicate: boolean;
+//   matchingProperties: DuplicateMatch[];
+//   confidence: number; // 0-100
+//   matchType: "EXACT" | "HIGH_PROBABILITY" | "MODERATE" | "LOW" | "NONE";
+// }
+
+// export interface DuplicateMatch {
+//   propertyId: string;
+//   title: string;
+//   address: string;
+//   matchConfidence: number; // 0-100
+//   matchReasons: string[];
+//   boundaryOverlap: number; // percentage
+//   fingerprintSimilarity: number; // 0-100
+//   owner?: {
+//     id: string;
+//     name: string;
+//   };
+// }
+
+// export interface MarkingJobOption {
+//   id: string;
+//   type: MarkingSelectionType;
+//   title: string;
+//   description: string;
+//   cost: number;
+//   estimatedDuration: string;
+//   requirements: string[];
+// }
+
+// export interface MarkingJobWithShareableLink {
+//   jobId: string;
+//   shareableLink: string;
+//   expiresAt: Date;
+//   markerEmail?: string;
+//   markerPhone?: string;
+// }
+
+// export interface SharedMarkingSession {
+//   sessionId: string;
+//   jobId: string;
+//   markerEmail: string;
+//   markerName?: string;
+//   token: string;
+//   expiresAt: Date;
+//   isActive: boolean;
+//   startedAt?: Date;
+//   completedAt?: Date;
+//   boundaryData?: BoundaryData;
+// }
+
+// export interface MarkingConfirmation {
+//   jobId: string;
+//   confirmed: boolean;
+//   confirmedBy: string;
+//   confirmedAt: Date;
+//   notes?: string;
+//   issuesIdentified?: string[];
+// }
+
+// export interface MarkingJobHistory {
+//   jobId: string;
+//   propertyId: string;
+//   previousMarkings: PreviousMarking[];
+//   lastMarking?: PreviousMarking;
+//   totalAttempts: number;
+//   successCount: number;
+//   failureCount: number;
+// }
+
+// export interface PreviousMarking {
+//   attemptNumber: number;
+//   markedBy: string; // Agent ID or "OWNER" or "CONTACT_PERSON"
+//   markedAt: Date;
+//   status: MarkingJobStatus;
+//   boundaryData?: BoundaryData;
+//   notes?: string;
+//   images?: string[];
+//   confirmationStatus?: "PENDING" | "CONFIRMED" | "REJECTED";
+//   confirmationDeadline?: Date;
+//   confirmationNotes?: string;
+// }
+
+// export interface MarkingJobPayment {
+//   jobId: string;
+//   paymentId: string;
+//   amount: number;
+//   currency: string;
+//   status: PaymentStatus;
+//   paymentMethod: string;
+//   transactionId?: string;
+//   flutterwaveRef?: string;
+//   paidAt?: Date;
+//   breakdown: {
+//     totalFee: number;
+//     agentCompensation: number; // 25% of 20,000 = 5,000
+//     platformFee: number; // 75% of 20,000 = 15,000
+//     taxes?: number;
+//   };
+// }
+
+// export interface MarkingJobAnalytics {
+//   totalJobsCreated: number;
+//   jobsByStatus: Record<MarkingJobStatus, number>;
+//   jobsByType: Record<MarkingType, number>;
+//   averageCompletionTime: number; // in hours
+//   completionRate: number; // percentage
+//   failureRate: number; // percentage
+//   averageAgentRating: number;
+//   topPerformingAgents: string[];
+//   commonIssues: string[];
+// }
+
+// export interface MarkingServiceConfig {
+//   ownerMarkingFee: number; // 20,000 NGN
+//   agentMarkingFee: number; // 25,000 NGN (for Newcondo to mark)
+//   agentCompensationPercentage: number; // 25%
+//   platformFeePercentage: number; // 75%
+//   timeSlotDuration: number; // in minutes (180 for 3 hours)
+//   confirmationDeadline: number; // in days (2-3 days)
+//   maxConfirmationAttempts: number;
+//   markingJobExpiration: number; // in days
+//   shareableLinkExpiration: number; // in hours
+// }
+
+// export interface MarkingNotificationData {
+//   jobId: string;
+//   propertyId: string;
+//   propertyAddress: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   markingFee: number;
+//   agentCompensation: number;
+//   urgencyLevel: UrgencyLevel;
+//   queuePosition?: number;
+//   timeSlotStart?: Date;
+//   timeSlotEnd?: Date;
+// }
+
+// // Enums
+// export enum MarkingJobStatus {
+//   PENDING = "PENDING", // Initial state, awaiting owner decision
+//   QUEUED = "QUEUED", // In agent queue
+//   ASSIGNED = "ASSIGNED", // Assigned to specific agent
+//   IN_PROGRESS = "IN_PROGRESS", // Agent is marking
+//   COMPLETED = "COMPLETED", // Agent completed marking
+//   CONFIRMED = "CONFIRMED", // Owner confirmed the marking
+//   REJECTED = "REJECTED", // Owner rejected the marking
+//   CANCELLED = "CANCELLED", // Job cancelled
+//   EXPIRED = "EXPIRED", // Job expired without completion
+// }
+
+// export enum MarkingType {
+//   SELF_MARK = "SELF_MARK", // Owner marks themselves
+//   CONTACT_PERSON = "CONTACT_PERSON", // Send to known contact
+//   AGENT_QUEUE = "AGENT_QUEUE", // Broadcast to agent queue (25% comp)
+//   NEWCONDO_MARK = "NEWCONDO_MARK", // Newcondo marks (25,000 fee)
+// }
+
+// export enum MarkingSelectionType {
+//   SELF_MARK = "SELF_MARK",
+//   CONTACT_PERSON = "CONTACT_PERSON",
+//   AGENT_ASSIGNMENT = "AGENT_ASSIGNMENT",
+//   NEWCONDO_SERVICE = "NEWCONDO_SERVICE",
+// }
+
+// export enum PaymentStatus {
+//   PENDING = "PENDING",
+//   SUCCESS = "SUCCESS",
+//   FAILED = "FAILED",
+//   CANCELLED = "CANCELLED",
+//   REFUNDED = "REFUNDED",
+//   HELD = "HELD",
+//   RELEASED = "RELEASED",
+// }
+
+// export enum UrgencyLevel {
+//   LOW = "LOW",
+//   NORMAL = "NORMAL",
+//   HIGH = "HIGH",
+//   URGENT = "URGENT",
+// }
+
+// export interface MarkingFormData {
+//   propertyId: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel: UrgencyLevel;
+//   images?: File[];
+// }
+
+// export interface MarkingDrawingState {
+//   isDrawing: boolean;
+//   coordinates: [number, number][];
+//   polygon?: BoundaryData;
+//   center?: { lat: number; lng: number };
+//   area?: number;
+//   isValid: boolean;
+// }

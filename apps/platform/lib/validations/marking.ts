@@ -144,3 +144,130 @@ gpsAccuracy: z.number()
 verifiedByAgentId: z.string().min(1, 'Agent ID is required'),
 verifiedAt: z.coerce.date()
 });
+
+
+
+
+
+// // apps/platform/lib/validations/marking.ts
+// import { z } from "zod";
+
+// // Marking job request validation
+// export const createMarkingJobSchema = z.object({
+//   propertyId: z.string().cuid("Invalid property ID").describe("Property ID"),
+//   contactPersonName: z
+//     .string()
+//     .min(2, "Name must be at least 2 characters")
+//     .max(100, "Name must not exceed 100 characters"),
+//   contactPersonPhone: z
+//     .string()
+//     .regex(
+//       /^(\+?234|0)[0-9]{10}$/,
+//       "Invalid Nigerian phone number"
+//     ),
+//   accessInstructions: z
+//     .string()
+//     .min(10, "Instructions must be at least 10 characters")
+//     .max(500, "Instructions must not exceed 500 characters")
+//     .optional(),
+//   preferredTime: z
+//     .string()
+//     .datetime()
+//     .optional(),
+//   urgencyLevel: z
+//     .enum(["LOW", "NORMAL", "HIGH", "URGENT"])
+//     .default("NORMAL"),
+//   markerType: z
+//     .enum(["SELF", "KNOWN_PERSON", "NEWCONDO_AGENT", "NEWCONDO_PREMIUM"])
+//     .describe("Type of marker"),
+//   addressState: z
+//     .string()
+//     .min(2, "State is required")
+//     .describe("State from hierarchical address"),
+//   addressLGA: z
+//     .string()
+//     .min(2, "LGA is required")
+//     .describe("Local Government Area"),
+//   addressCity: z
+//     .string()
+//     .min(2, "City is required")
+//     .describe("City/Town"),
+//   addressLocation: z
+//     .string()
+//     .min(2, "Specific location is required")
+//     .describe("Specific location/neighborhood"),
+// });
+
+// // Update marking job completion
+// export const completeMarkingJobSchema = z.object({
+//   markingJobId: z.string().cuid("Invalid marking job ID"),
+//   boundaryData: z
+//     .object({
+//       coordinates: z
+//         .array(
+//           z.object({
+//             lat: z.number().min(-90).max(90),
+//             lng: z.number().min(-180).max(180),
+//           })
+//         )
+//         .min(3, "Boundary must have at least 3 points"),
+//       area: z.number().positive("Area must be positive").optional(),
+//     })
+//     .describe("Property boundary coordinates"),
+//   completionNotes: z
+//     .string()
+//     .max(500, "Notes must not exceed 500 characters")
+//     .optional(),
+//   completionImages: z
+//     .array(z.string().url())
+//     .max(10, "Maximum 10 images allowed")
+//     .optional(),
+// });
+
+// // Confirm marking job (by property owner)
+// export const confirmMarkingJobSchema = z.object({
+//   markingJobId: z.string().cuid("Invalid marking job ID"),
+//   isConfirmed: z.boolean().describe("Confirm or reject the marking"),
+//   rejectionReason: z
+//     .string()
+//     .min(10, "Reason must be at least 10 characters")
+//     .max(300, "Reason must not exceed 300 characters")
+//     .optional(),
+// });
+
+// // Assign marking job to agent
+// export const assignMarkingJobSchema = z.object({
+//   markingJobId: z.string().cuid("Invalid marking job ID"),
+//   agentId: z.string().cuid("Invalid agent ID"),
+// });
+
+// // Cancel marking job
+// export const cancelMarkingJobSchema = z.object({
+//   markingJobId: z.string().cuid("Invalid marking job ID"),
+//   cancellationReason: z
+//     .string()
+//     .min(5, "Reason must be at least 5 characters")
+//     .max(300, "Reason must not exceed 300 characters"),
+// });
+
+// // Share marking job link (for known person marking)
+// export const shareMarkingLinkSchema = z.object({
+//   markingJobId: z.string().cuid("Invalid marking job ID"),
+//   markerEmail: z.string().email("Invalid email address").optional(),
+//   markerPhone: z
+//     .string()
+//     .regex(
+//       /^(\+?234|0)[0-9]{10}$/,
+//       "Invalid Nigerian phone number"
+//     )
+//     .optional(),
+// });
+
+// export type CreateMarkingJobInput = z.infer<typeof createMarkingJobSchema>;
+// export type CompleteMarkingJobInput = z.infer<
+//   typeof completeMarkingJobSchema
+// >;
+// export type ConfirmMarkingJobInput = z.infer<typeof confirmMarkingJobSchema>;
+// export type AssignMarkingJobInput = z.infer<typeof assignMarkingJobSchema>;
+// export type CancelMarkingJobInput = z.infer<typeof cancelMarkingJobSchema>;
+// export type ShareMarkingLinkInput = z.infer<typeof shareMarkingLinkSchema>;
