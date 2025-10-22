@@ -110,3 +110,178 @@ router.post(
 );
 
 export default router;
+
+
+
+
+
+
+
+
+
+// // backend/admin-service/src/routes/markingOversight.ts
+
+// import { Router } from 'express';
+// import * as markingOversightController from '../controllers/markingOversightController';
+// import { adminAuth } from '../middleware/adminAuth';
+// import { oversightValidation } from '../middleware/oversightValidation';
+
+// const router = Router();
+
+// // Apply admin authentication to all routes
+// router.use(adminAuth);
+
+// /**
+//  * GET /api/admin/marking-oversight/jobs
+//  * Get all marking jobs with filters
+//  */
+// router.get(
+//   '/jobs',
+//   markingOversightController.getAllMarkingJobs
+// );
+
+// /**
+//  * GET /api/admin/marking-oversight/jobs/:jobId
+//  * Get marking job details by ID
+//  */
+// router.get(
+//   '/jobs/:jobId',
+//   oversightValidation.validateJobId,
+//   markingOversightController.getMarkingJobById
+// );
+
+// /**
+//  * POST /api/admin/marking-oversight/jobs/:jobId/assign
+//  * Manually assign marking job to an agent
+//  */
+// router.post(
+//   '/jobs/:jobId/assign',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateAssignment,
+//   markingOversightController.assignMarkingJob
+// );
+
+// /**
+//  * POST /api/admin/marking-oversight/jobs/:jobId/reassign
+//  * Reassign marking job to another agent
+//  */
+// router.post(
+//   '/jobs/:jobId/reassign',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateReassignment,
+//   markingOversightController.reassignMarkingJob
+// );
+
+// /**
+//  * POST /api/admin/marking-oversight/jobs/:jobId/cancel
+//  * Cancel a marking job
+//  */
+// router.post(
+//   '/jobs/:jobId/cancel',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateCancellation,
+//   markingOversightController.cancelMarkingJob
+// );
+
+// /**
+//  * POST /api/admin/marking-oversight/jobs/:jobId/review
+//  * Review and approve/reject marking completion
+//  */
+// router.post(
+//   '/jobs/:jobId/review',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateReview,
+//   markingOversightController.reviewMarkingCompletion
+// );
+
+// /**
+//  * POST /api/admin/marking-oversight/jobs/:jobId/dispute
+//  * Handle marking disputes
+//  */
+// router.post(
+//   '/jobs/:jobId/dispute',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateDispute,
+//   markingOversightController.handleMarkingDispute
+// );
+
+// /**
+//  * PATCH /api/admin/marking-oversight/jobs/:jobId/urgency
+//  * Update marking job urgency level
+//  */
+// router.patch(
+//   '/jobs/:jobId/urgency',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateUrgencyUpdate,
+//   markingOversightController.updateJobUrgency
+// );
+
+// /**
+//  * PATCH /api/admin/marking-oversight/jobs/:jobId/extend
+//  * Extend marking job deadline
+//  */
+// router.patch(
+//   '/jobs/:jobId/extend',
+//   oversightValidation.validateJobId,
+//   oversightValidation.validateDeadlineExtension,
+//   markingOversightController.extendJobDeadline
+// );
+
+// /**
+//  * POST /api/admin/marking-oversight/jobs/bulk-update
+//  * Bulk update marking jobs
+//  */
+// router.post(
+//   '/jobs/bulk-update',
+//   oversightValidation.validateBulkUpdate,
+//   markingOversightController.bulkUpdateJobs
+// );
+
+// /**
+//  * GET /api/admin/marking-oversight/jobs/:jobId/history
+//  * Get marking job history
+//  */
+// router.get(
+//   '/jobs/:jobId/history',
+//   oversightValidation.validateJobId,
+//   markingOversightController.getJobHistory
+// );
+
+// /**
+//  * GET /api/admin/marking-oversight/queue
+//  * Get marking job queue status
+//  */
+// router.get(
+//   '/queue',
+//   markingOversightController.getQueueStatus
+// );
+
+// /**
+//  * GET /api/admin/marking-oversight/expired
+//  * Get expired marking jobs
+//  */
+// router.get(
+//   '/expired',
+//   markingOversightController.getExpiredJobs
+// );
+
+// /**
+//  * GET /api/admin/marking-oversight/agents/:agentId/performance
+//  * Get agent performance metrics
+//  */
+// router.get(
+//   '/agents/:agentId/performance',
+//   oversightValidation.validateAgentId,
+//   markingOversightController.getAgentPerformance
+// );
+
+// /**
+//  * GET /api/admin/marking-oversight/analytics
+//  * Get marking analytics dashboard data
+//  */
+// router.get(
+//   '/analytics',
+//   markingOversightController.getMarkingAnalytics
+// );
+
+// export default router;

@@ -311,3 +311,284 @@ export class ProximityService {
     };
   }
 }
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/proximityService.ts
+
+// import { PrismaClient } from '@prisma/client';
+
+// const prisma = new PrismaClient();
+
+// export class ProximityService {
+//   // Maximum distance in kilometers to consider for agent assignment
+//   private readonly MAX_DISTANCE_KM = 50;
+
+//   /**
+//    * Find eligible agents within reasonable proximity to property
+//    */
+//   async findEligibleAgents(
+//     propertyLat: number,
+//     propertyLng: number,
+//     city: string,
+//     state: string
+//   ) {
+//     // First, find agents who serve this city/state
+//     const serviceAreaAgents = await prisma.user.findMany({
+//       where: {
+//         OR: [
+//           {
+//             role: 'AGENT',
+//             isAvailableForMarking: true,
+//           },
+//           {
+//             role: 'RENTER',
+//             isPremium: true,
+//             isAvailableForMarking: true,
+//           },
+//         ],
+//         agentServiceAreas: {
+//           hasSome: [city, state],
+//         },
+//         agentReliabilityScore: {
+//           gte: 2.0, // Minimum reliability score
+//         },
+//       },
+//       select: {
+//         id: true,
+//         name: true,
+//         email: true,
+//         phone: true,
+//         agentReliabilityScore: true,
+//         agentServiceAreas: true,
+//         totalMarkingJobs: true,
+//         completedMarkingJobs: true,
+//       },
+//     });
+
+//     // For now, return all agents serving the area
+//     // In production, you would get agent locations and calculate distances
+//     return serviceAreaAgents;
+//   }
+
+//   /**
+//    * Calculate distance between two coordinates using Haversine formula
+//    */
+//   calculateDistance(
+//     lat1: number,
+//     lng1: number,
+//     lat2: number,
+//     lng2: number
+//   ): number {
+//     const R = 6371; // Earth's radius in kilometers
+//     const dLat = this.toRadians(lat2 - lat1);
+//     const dLng = this.toRadians(lng2 - lng1);
+
+//     const a =
+//       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+//       Math.cos(this.toRadians(lat1)) *
+//         Math.cos(this.toRadians(lat2)) *
+//         Math.sin(dLng / 2) *
+//         Math.sin(dLng / 2);
+
+//     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+//     const distance = R * c;
+
+//     return Math.round(distance * 100) / 100; // Round to 2 decimal places
+//   }
+
+//   /**
+//    * Convert degrees to radians
+//    */
+//   private toRadians(degrees: number): number {
+//     return degrees * (Math.PI / 180);
+//   }
+
+//   /**
+//    * Get agents sorted by proximity to property
+//    */
+//   async getAgentsByProximity(
+//     propertyLat: number,
+//     propertyLng: number,
+//     city: string,
+//     state: string
+//   ) {
+//     const agents = await this.findEligibleAgents(propertyLat, propertyLng, city, state);
+
+//     // In a real implementation, you would:
+//     // 1. Get agent's current or home location from their profile
+//     // 2. Calculate distance for each agent
+//     // 3. Sort by distance
+//     // 4. Filter out agents beyond MAX_DISTANCE_KM
+
+//     // For now, sort by reliability score
+//     return agents.sort((a, b) => {
+//       const scoreA = Number(a.agentReliabilityScore) || 0;
+//       const scoreB = Number(b.agentReliabilityScore) || 0;
+//       return scoreB - scoreA;
+//     });
+//   }
+
+//   /**
+//    * Check if location is within agent's service area
+//    */
+//   isWithinServiceArea(
+//     city: string,
+//     state: string,
+//     agentServiceAreas: string[]
+//   ): boolean {
+//     return agentServiceAreas.some(
+//       area =>
+//         area.toLowerCase() === city.toLowerCase() ||
+//         area.toLowerCase() === state.toLowerCase()
+//     );
+//   }
+
+//   /**
+//    * Get service area coverage statistics
+//    */
+//   async getServiceAreaCoverage() {
+//     const agents = await prisma.user.findMany({
+//       where: {
+//         OR: [
+//           {
+//             role: 'AGENT',
+//             isAvailableForMarking: true,
+//           },
+//           {
+//             role: 'RENTER',
+//             isPremium: true,
+//             isAvailableForMarking: true,
+//           },
+//         ],
+//       },
+//       select: {
+//         agentServiceAreas: true,
+//       },
+//     });
+
+//     // Count agents per service area
+//     const areaCoverage = new Map<string, number>();
+
+//     agents.forEach(agent => {
+//       agent.agentServiceAreas.forEach(area => {
+//         areaCoverage.set(area, (areaCoverage.get(area) || 0) + 1);
+//       });
+//     });
+
+//     // Convert to array and sort
+//     const coverage = Array.from(areaCoverage.entries())
+//       .map(([area, agentCount]) => ({ area, agentCount }))
+//       .sort((a, b) => b.agentCount - a.agentCount);
+
+//     return {
+//       totalAreas: areaCoverage.size,
+//       coverage,
+//       totalAgents: agents.length,
+//     };
+//   }
+
+//   /**
+//    * Suggest service areas for an agent based on demand
+//    */
+//   async suggestServiceAreas(limit = 5) {
+//     // Get all properties with marking jobs
+//     const properties = await prisma.property.findMany({
+//       where: {
+//         markingJobs: {
+//           some: {
+//             status: {
+//               in: ['QUEUED', 'ASSIGNED'],
+//             },
+//           },
+//         },
+//       },
+//       select: {
+//         city: true,
+//         state: true,
+//       },
+//     });
+
+//     // Count demand per area
+//     const areaDemand = new Map<string, number>();
+
+//     properties.forEach(property => {
+//       const cityKey = property.city;
+//       const stateKey = property.state;
+
+//       areaDemand.set(cityKey, (areaDemand.get(cityKey) || 0) + 1);
+//       areaDemand.set(stateKey, (areaDemand.get(stateKey) || 0) + 1);
+//     });
+
+//     // Get current coverage
+//     const currentCoverage = await this.getServiceAreaCoverage();
+//     const coverageMap = new Map(
+//       currentCoverage.coverage.map(c => [c.area, c.agentCount])
+//     );
+
+//     // Calculate supply/demand ratio
+//     const suggestions = Array.from(areaDemand.entries())
+//       .map(([area, demand]) => {
+//         const supply = coverageMap.get(area) || 0;
+//         const ratio = supply > 0 ? demand / supply : demand;
+
+//         return {
+//           area,
+//           demand,
+//           currentAgents: supply,
+//           needsMoreAgents: ratio > 2, // More than 2 jobs per agent
+//           priority: ratio,
+//         };
+//       })
+//       .filter(s => s.needsMoreAgents)
+//       .sort((a, b) => b.priority - a.priority)
+//       .slice(0, limit);
+
+//     return suggestions;
+//   }
+
+//   /**
+//    * Check agent availability in specific location
+//    */
+//   async checkAgentAvailability(city: string, state: string) {
+//     const agents = await this.findEligibleAgents(0, 0, city, state);
+
+//     // Count active jobs per agent
+//     const agentsWithWorkload = await Promise.all(
+//       agents.map(async agent => {
+//         const activeJobs = await prisma.propertyMarkingJob.count({
+//           where: {
+//             assignedAgentId: agent.id,
+//             status: {
+//               in: ['ASSIGNED', 'IN_PROGRESS'],
+//             },
+//           },
+//         });
+
+//         return {
+//           ...agent,
+//           activeJobs,
+//           isAvailable: activeJobs < 3, // Max 3 concurrent jobs
+//         };
+//       })
+//     );
+
+//     const availableAgents = agentsWithWorkload.filter(a => a.isAvailable);
+
+//     return {
+//       totalAgents: agents.length,
+//       availableAgents: availableAgents.length,
+//       busyAgents: agents.length - availableAgents.length,
+//       agents: agentsWithWorkload,
+//     };
+//   }
+// }
+
+// export default ProximityService;

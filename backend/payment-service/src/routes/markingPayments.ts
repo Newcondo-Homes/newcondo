@@ -592,3 +592,190 @@ export default router;
 // router.use(errorHandler);
 
 // export default router;
+
+
+
+
+
+
+
+
+
+// // backend/payment-service/src/routes/markingPayments.ts
+
+// import { Router } from 'express';
+// import { markingPaymentController } from '../controllers/markingPaymentController';
+// import { partialPaymentController } from '../controllers/partialPaymentController';
+// import { auth } from '../../../shared/src/middleware/auth';
+// import { validateRequest } from '../../../shared/src/middleware/validation';
+// import { markingPaymentValidation } from '../middleware/markingPaymentValidation';
+// import { rateLimiter } from '../../../shared/src/middleware/rateLimiter';
+
+// const router = Router();
+
+// // ==================== Marking Payment Routes ====================
+
+// /**
+//  * @route   POST /api/payments/marking/initiate
+//  * @desc    Initiate payment for a marking job
+//  * @access  Private (Property Owner/Agent)
+//  */
+// router.post(
+//   '/marking/initiate',
+//   auth,
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 10 }), // 10 requests per 15 minutes
+//   validateRequest(markingPaymentValidation.initiatePayment),
+//   markingPaymentController.initiateMarkingPayment
+// );
+
+// /**
+//  * @route   POST /api/payments/marking/webhook
+//  * @desc    Handle Flutterwave webhook for marking payments
+//  * @access  Public (Flutterwave webhook)
+//  */
+// router.post(
+//   '/marking/webhook',
+//   validateRequest(markingPaymentValidation.webhook),
+//   markingPaymentController.handleMarkingPaymentWebhook
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/verify/:paymentId
+//  * @desc    Verify marking payment status
+//  * @access  Private
+//  */
+// router.get(
+//   '/marking/verify/:paymentId',
+//   auth,
+//   markingPaymentController.verifyMarkingPayment
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/history
+//  * @desc    Get marking payment history for user
+//  * @access  Private
+//  */
+// router.get(
+//   '/marking/history',
+//   auth,
+//   markingPaymentController.getMarkingPaymentHistory
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/:paymentId
+//  * @desc    Get marking payment details
+//  * @access  Private
+//  */
+// router.get(
+//   '/marking/:paymentId',
+//   auth,
+//   markingPaymentController.getMarkingPaymentDetails
+// );
+
+// /**
+//  * @route   POST /api/payments/marking/:paymentId/cancel
+//  * @desc    Cancel marking payment
+//  * @access  Private
+//  */
+// router.post(
+//   '/marking/:paymentId/cancel',
+//   auth,
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 5 }),
+//   markingPaymentController.cancelMarkingPayment
+// );
+
+// /**
+//  * @route   POST /api/payments/marking/:paymentId/retry
+//  * @desc    Retry failed marking payment
+//  * @access  Private
+//  */
+// router.post(
+//   '/marking/:paymentId/retry',
+//   auth,
+//   rateLimiter({ windowMs: 15 * 60 * 1000, max: 3 }),
+//   markingPaymentController.retryMarkingPayment
+// );
+
+// // ==================== Partial Payment Routes ====================
+
+// /**
+//  * @route   POST /api/payments/marking/partial/process
+//  * @desc    Process partial payment (1000 naira) to agent
+//  * @access  Private (System/Admin)
+//  */
+// router.post(
+//   '/marking/partial/process',
+//   auth,
+//   validateRequest(markingPaymentValidation.processPartialPayment),
+//   partialPaymentController.processPartialPayment
+// );
+
+// /**
+//  * @route   POST /api/payments/marking/partial/release
+//  * @desc    Release remaining payment to agent
+//  * @access  Private (Property Owner)
+//  */
+// router.post(
+//   '/marking/partial/release',
+//   auth,
+//   validateRequest(markingPaymentValidation.releasePayment),
+//   partialPaymentController.releaseRemainingPayment
+// );
+
+// /**
+//  * @route   POST /api/payments/marking/partial/timeout-compensation
+//  * @desc    Process timeout compensation payment
+//  * @access  Private (System/Admin)
+//  */
+// router.post(
+//   '/marking/partial/timeout-compensation',
+//   auth,
+//   validateRequest(markingPaymentValidation.timeoutCompensation),
+//   partialPaymentController.processTimeoutCompensation
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/partial/status/:markingJobId
+//  * @desc    Get partial payment status for marking job
+//  * @access  Private
+//  */
+// router.get(
+//   '/marking/partial/status/:markingJobId',
+//   auth,
+//   partialPaymentController.getPartialPaymentStatus
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/partial/agent-history
+//  * @desc    Get agent's partial payment history
+//  * @access  Private (Agent)
+//  */
+// router.get(
+//   '/marking/partial/agent-history',
+//   auth,
+//   partialPaymentController.getAgentPartialPayments
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/partial/pending
+//  * @desc    Calculate pending partial payments for agent
+//  * @access  Private (Agent)
+//  */
+// router.get(
+//   '/marking/partial/pending',
+//   auth,
+//   partialPaymentController.calculatePendingPartialPayments
+// );
+
+// /**
+//  * @route   GET /api/payments/marking/partial/breakdown/:markingJobId
+//  * @desc    Get payment breakdown for marking job
+//  * @access  Private
+//  */
+// router.get(
+//   '/marking/partial/breakdown/:markingJobId',
+//   auth,
+//   partialPaymentController.getPaymentBreakdown
+// );
+
+// export default router;

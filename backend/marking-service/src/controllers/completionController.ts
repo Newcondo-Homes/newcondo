@@ -1762,3 +1762,672 @@ export const completionController = new CompletionController();
 //     );
 //   }
 // };
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/controllers/completionController.ts
+
+// import { Request, Response } from 'express';
+// import { PrismaClient, MarkingJobStatus, PaymentStatus } from '@prisma/client';
+// import { standardResponse } from '../../../shared/src/utils/response';
+
+// const prisma = new PrismaClient();
+
+// /**
+//  * Agent submits completion of marking job
+//  * POST /api/completion/:jobId/submit
+//  */
+// export const submitCompletion = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     const { jobId } = req.params;
+//     const { completionNotes, boundaryData, completionImages } = req.body;
+
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     // Validate required fields
+//     if (!boundaryData || !completionImages || completionImages.length === 0) {
+//       return res.status(400).json(
+//         standardResponse(
+//           false,
+//           'Boundary data and completion images are required',
+//           null
+//         )
+//       );
+//     }
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true
+//       }
+//     });
+
+//     if (!job) {
+//       return res.status(404).json(standardResponse(false, 'Marking job not found', null));
+//     }
+
+//     // Verify agent is assigned to this job
+//     if (job.assignedAgentId !== userId) {
+//       return res.status(403).json(
+//         standardResponse(false, 'You are not assigned to this marking job', null)
+//       );
+//     }
+
+//     // Check if job is in IN_PROGRESS status
+//     if (job.status !== MarkingJobStatus.IN_PROGRESS) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Job must be in progress to submit completion', null)
+//       );
+//     }
+
+//     // Check if time slot has expired
+//     if (job.timeSlotExpiry && new Date() > job.timeSlotExpiry) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Your time slot for this job has expired', null)
+//       );
+//     }
+
+//     // Update job with completion data
+//     const completedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status: MarkingJobStatus.COMPLETED,
+//         completedAt: new Date(),
+//         completionNotes,
+//         boundaryData,
+//         completionImages,
+//         property: {
+//           update: {
+//             boundaryCoordinates: boundaryData,
+//             boundaryImages: completionImages,
+//             boundaryMarkedBy: userId,
+//             boundaryMarkedAt: new Date()
+//           }
+//         }
+//       },
+//       include: {
+//         property: {
+//           select: {
+//             id: true,
+//             title: true,
+//             address: true,
+//             boundaryCoordinates: true,
+//             boundaryImages: true
+//           }
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true
+//           }
+//         }
+//       }
+//     });
+
+//     // Pay partial amount to agent (1000 NGN or configured amount)
+//     const partialPayment = 1000; // NGN
+    
+//     // Find or create agent's virtual account
+//     let virtualAccount = await prisma.virtualAccount.findFirst({
+//       where: { userId }
+//     });
+
+//     if (!virtualAccount) {
+//       // Create virtual account if doesn't exist
+//       virtualAccount = await prisma.virtualAccount.create({
+//         data: {
+//           userId,
+//           accountNumber: `VA${Date.now()}${userId.substring(0, 6)}`,
+//           accountName: `Agent ${userId}`,
+//           bankCode: '000',
+//           balance: 0
+//         }
+//       });
+//     }
+
+//     // Credit partial payment to agent's account
+//     await prisma.virtualAccount.update({
+//       where: { id: virtualAccount.id },
+//       data: {
+//         balance: {
+//           increment: partialPayment
+//         }
+//       }
+//     });
+
+//     // Create payment record for partial payment
+//     await prisma.payment.create({
+//       data: {
+//         userId,
+//         markingJobId: jobId,
+//         amount: partialPayment,
+//         currency: 'NGN',
+//         paymentType: 'PROPERTY_MARKING',
+//         status: PaymentStatus.HELD, // Payment is held until confirmation
+//         description: 'Partial payment for property marking (pending owner confirmation)',
+//         paidAt: new Date()
+//       }
+//     });
+
+//     // TODO: Send notification to property owner for confirmation
+//     // TODO: Send confirmation notification to agent
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Marking job submitted successfully. Awaiting property owner confirmation.', {
+//         job: completedJob,
+//         partialPayment: {
+//           amount: partialPayment,
+//           currency: 'NGN',
+//           status: 'HELD'
+//         }
+//       })
+//     );
+//   } catch (error) {
+//     console.error('Submit completion error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to submit completion', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Get completion details
+//  * GET /api/completion/:jobId
+//  */
+// export const getCompletionDetails = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     const { jobId } = req.params;
+
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: {
+//           include: {
+//             images: true
+//           }
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true
+//           }
+//         },
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true,
+//             agentReliabilityScore: true
+//           }
+//         }
+//       }
+//     });
+
+//     if (!job) {
+//       return res.status(404).json(standardResponse(false, 'Marking job not found', null));
+//     }
+
+//     // Check authorization
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { role: true }
+//     });
+
+//     const isAuthorized =
+//       user?.role === 'ADMIN' ||
+//       job.requestedBy === userId ||
+//       job.assignedAgentId === userId;
+
+//     if (!isAuthorized) {
+//       return res.status(403).json(
+//         standardResponse(false, 'You are not authorized to view this completion', null)
+//       );
+//     }
+
+//     // Check if job is completed
+//     if (job.status !== MarkingJobStatus.COMPLETED) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Job has not been completed yet', null)
+//       );
+//     }
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Completion details retrieved successfully', job)
+//     );
+//   } catch (error) {
+//     console.error('Get completion details error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve completion details', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Get pending completions for property owner
+//  * GET /api/completion/pending
+//  */
+// export const getPendingCompletions = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     const { page = 1, limit = 10 } = req.query;
+//     const skip = (Number(page) - 1) * Number(limit);
+
+//     // Find completed jobs awaiting confirmation
+//     const [jobs, total] = await Promise.all([
+//       prisma.propertyMarkingJob.findMany({
+//         where: {
+//           requestedBy: userId,
+//           status: MarkingJobStatus.COMPLETED,
+//           property: {
+//             boundaryVerified: false
+//           }
+//         },
+//         skip,
+//         take: Number(limit),
+//         orderBy: { completedAt: 'desc' },
+//         include: {
+//           property: {
+//             include: {
+//               images: {
+//                 take: 3,
+//                 orderBy: { order: 'asc' }
+//               }
+//             }
+//           },
+//           assignedAgent: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//               phone: true,
+//               agentReliabilityScore: true
+//             }
+//           }
+//         }
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           requestedBy: userId,
+//           status: MarkingJobStatus.COMPLETED,
+//           property: {
+//             boundaryVerified: false
+//           }
+//         }
+//       })
+//     ]);
+
+//     // Calculate time remaining for confirmation (2-3 days)
+//     const jobsWithTimeInfo = jobs.map(job => {
+//       const confirmationDeadline = new Date(job.completedAt!);
+//       confirmationDeadline.setDate(confirmationDeadline.getDate() + 3); // 3 days
+
+//       const now = new Date();
+//       const timeRemaining = Math.max(0, confirmationDeadline.getTime() - now.getTime());
+
+//       return {
+//         ...job,
+//         confirmationInfo: {
+//           deadline: confirmationDeadline,
+//           timeRemainingMs: timeRemaining,
+//           timeRemainingDays: (timeRemaining / (1000 * 60 * 60 * 24)).toFixed(2),
+//           isExpiringSoon: timeRemaining < 1000 * 60 * 60 * 24, // Less than 1 day
+//           hasExpired: timeRemaining === 0
+//         }
+//       };
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Pending completions retrieved successfully', {
+//         jobs: jobsWithTimeInfo,
+//         pagination: {
+//           total,
+//           page: Number(page),
+//           limit: Number(limit),
+//           totalPages: Math.ceil(total / Number(limit))
+//         }
+//       })
+//     );
+//   } catch (error) {
+//     console.error('Get pending completions error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve pending completions', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Update completion images/notes (agent can update before confirmation)
+//  * PATCH /api/completion/:jobId/update
+//  */
+// export const updateCompletion = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     const { jobId } = req.params;
+//     const { completionNotes, boundaryData, completionImages } = req.body;
+
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true
+//       }
+//     });
+
+//     if (!job) {
+//       return res.status(404).json(standardResponse(false, 'Marking job not found', null));
+//     }
+
+//     // Verify agent is assigned to this job
+//     if (job.assignedAgentId !== userId) {
+//       return res.status(403).json(
+//         standardResponse(false, 'You are not assigned to this marking job', null)
+//       );
+//     }
+
+//     // Can only update if COMPLETED but not yet verified
+//     if (job.status !== MarkingJobStatus.COMPLETED || job.property.boundaryVerified) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Cannot update completion at this stage', null)
+//       );
+//     }
+
+//     // Check if within update window (3 days)
+//     const completedAt = job.completedAt!;
+//     const updateDeadline = new Date(completedAt);
+//     updateDeadline.setDate(updateDeadline.getDate() + 3);
+
+//     if (new Date() > updateDeadline) {
+//       return res.status(400).json(
+//         standardResponse(false, 'Update window has expired', null)
+//       );
+//     }
+
+//     // Update completion data
+//     const updatedData: any = {};
+//     if (completionNotes) updatedData.completionNotes = completionNotes;
+//     if (boundaryData) {
+//       updatedData.boundaryData = boundaryData;
+//       updatedData.property = {
+//         update: {
+//           boundaryCoordinates: boundaryData
+//         }
+//       };
+//     }
+//     if (completionImages) {
+//       updatedData.completionImages = completionImages;
+//       updatedData.property = {
+//         update: {
+//           ...updatedData.property?.update,
+//           boundaryImages: completionImages
+//         }
+//       };
+//     }
+
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: updatedData,
+//       include: {
+//         property: {
+//           select: {
+//             id: true,
+//             title: true,
+//             boundaryCoordinates: true,
+//             boundaryImages: true
+//           }
+//         }
+//       }
+//     });
+
+//     // TODO: Send notification to property owner about update
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Completion updated successfully', updatedJob)
+//     );
+//   } catch (error) {
+//     console.error('Update completion error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to update completion', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Get completion statistics for agent
+//  * GET /api/completion/stats
+//  */
+// export const getCompletionStats = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { role: true }
+//     });
+
+//     let where: any = {};
+
+//     if (user?.role !== 'ADMIN') {
+//       // Non-admin users see only their stats
+//       where = {
+//         OR: [
+//           { assignedAgentId: userId },
+//           { requestedBy: userId }
+//         ]
+//       };
+//     }
+
+//     const [
+//       totalCompleted,
+//       awaitingConfirmation,
+//       confirmed,
+//       totalEarnings
+//     ] = await Promise.all([
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           status: MarkingJobStatus.COMPLETED
+//         }
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           status: MarkingJobStatus.COMPLETED,
+//           property: {
+//             boundaryVerified: false
+//           }
+//         }
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           status: MarkingJobStatus.COMPLETED,
+//           property: {
+//             boundaryVerified: true
+//           }
+//         }
+//       }),
+//       prisma.payment.aggregate({
+//         where: {
+//           userId,
+//           paymentType: 'PROPERTY_MARKING',
+//           status: {
+//             in: [PaymentStatus.SUCCESS, PaymentStatus.RELEASED]
+//           }
+//         },
+//         _sum: {
+//           amount: true
+//         }
+//       })
+//     ]);
+
+//     const stats = {
+//       completion: {
+//         total: totalCompleted,
+//         awaitingConfirmation,
+//         confirmed
+//       },
+//       earnings: {
+//         total: totalEarnings._sum.amount || 0,
+//         currency: 'NGN'
+//       },
+//       confirmationRate: totalCompleted > 0 ? ((confirmed / totalCompleted) * 100).toFixed(2) : 0
+//     };
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Completion statistics retrieved successfully', stats)
+//     );
+//   } catch (error) {
+//     console.error('Get completion stats error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve completion statistics', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Process automatic partial payments for expired confirmations
+//  * POST /api/completion/process-expirations (Internal/Cron job endpoint)
+//  */
+// export const processExpiredConfirmations = async (req: Request, res: Response) => {
+//   try {
+//     const now = new Date();
+//     const expirationDate = new Date();
+//     expirationDate.setDate(expirationDate.getDate() - 3); // 3 days ago
+
+//     // Find all completed jobs with expired confirmation windows
+//     const expiredJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.COMPLETED,
+//         completedAt: {
+//           lte: expirationDate
+//         },
+//         property: {
+//           boundaryVerified: false
+//         }
+//       },
+//       include: {
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true
+//           }
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true
+//           }
+//         }
+//       }
+//     });
+
+//     if (expiredJobs.length === 0) {
+//       return res.status(200).json(
+//         standardResponse(true, 'No expired confirmations found', { processedCount: 0 })
+//       );
+//     }
+
+//     const results = await Promise.all(
+//       expiredJobs.map(async (job) => {
+//         try {
+//           // Calculate payment installment (e.g., 25% of remaining fee)
+//           const totalFee = Number(job.markingFee);
+//           const partialPayment = 1000; // Already paid
+//           const remainingFee = totalFee * 0.25 - partialPayment; // 25% commission minus partial
+//           const installment = Math.min(remainingFee, 2000); // Pay 2000 NGN or remaining amount
+
+//           if (installment <= 0) {
+//             return { jobId: job.id, status: 'already_paid' };
+//           }
+
+//           // Credit installment to agent's virtual account
+//           const virtualAccount = await prisma.virtualAccount.findFirst({
+//             where: { userId: job.assignedAgentId! }
+//           });
+
+//           if (!virtualAccount) {
+//             return { jobId: job.id, status: 'no_account', error: 'Virtual account not found' };
+//           }
+
+//           await prisma.virtualAccount.update({
+//             where: { id: virtualAccount.id },
+//             data: {
+//               balance: {
+//                 increment: installment
+//               }
+//             }
+//           });
+
+//           // Create payment record
+//           await prisma.payment.create({
+//             data: {
+//               userId: job.assignedAgentId!,
+//               markingJobId: job.id,
+//               amount: installment,
+//               currency: 'NGN',
+//               paymentType: 'PROPERTY_MARKING',
+//               status: PaymentStatus.SUCCESS,
+//               description: 'Installment payment for expired confirmation window',
+//               paidAt: new Date()
+//             }
+//           });
+
+//           // TODO: Send notification to agent about payment
+//           // TODO: Send notification to property owner about expired confirmation
+
+//           return { jobId: job.id, status: 'processed', amount: installment };
+//         } catch (error) {
+//           console.error(`Failed to process job ${job.id}:`, error);
+//           return { jobId: job.id, status: 'failed', error };
+//         }
+//       })
+//     );
+
+//     const processedCount = results.filter(r => r.status === 'processed').length;
+//     const failedCount = results.filter(r => r.status === 'failed').length;
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Expired confirmations processed', {
+//         processedCount,
+//         failedCount,
+//         details: results
+//       })
+//     );
+//   } catch (error) {
+//     console.error('Process expired confirmations error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to process expired confirmations', null)
+//     );
+//   }
+// };

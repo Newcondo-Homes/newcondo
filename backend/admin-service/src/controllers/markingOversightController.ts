@@ -367,3 +367,556 @@ export const markingOversightController = {
 };
 
 export default markingOversightController;
+
+
+
+
+
+
+
+
+
+// // backend/admin-service/src/controllers/markingOversightController.ts
+
+// import { Request, Response } from 'express';
+// import { markingOversightService } from '../services/markingOversightService';
+// import { markingAnalyticsService } from '../services/markingAnalyticsService';
+
+// /**
+//  * Get all marking jobs with filters
+//  */
+// export const getAllMarkingJobs = async (req: Request, res: Response) => {
+//   try {
+//     const {
+//       status,
+//       urgencyLevel,
+//       assignedAgentId,
+//       requestedBy,
+//       startDate,
+//       endDate,
+//       page = '1',
+//       limit = '20',
+//       sortBy = 'createdAt',
+//       sortOrder = 'desc'
+//     } = req.query;
+
+//     const filters = {
+//       status: status as string,
+//       urgencyLevel: urgencyLevel as string,
+//       assignedAgentId: assignedAgentId as string,
+//       requestedBy: requestedBy as string,
+//       startDate: startDate ? new Date(startDate as string) : undefined,
+//       endDate: endDate ? new Date(endDate as string) : undefined
+//     };
+
+//     const pagination = {
+//       page: parseInt(page as string),
+//       limit: parseInt(limit as string),
+//       sortBy: sortBy as string,
+//       sortOrder: sortOrder as 'asc' | 'desc'
+//     };
+
+//     const result = await markingOversightService.getAllMarkingJobs(filters, pagination);
+
+//     res.status(200).json({
+//       success: true,
+//       data: result.jobs,
+//       pagination: {
+//         total: result.total,
+//         page: pagination.page,
+//         limit: pagination.limit,
+//         totalPages: Math.ceil(result.total / pagination.limit)
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error fetching marking jobs:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch marking jobs',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Get marking job details by ID
+//  */
+// export const getMarkingJobById = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+
+//     const job = await markingOversightService.getMarkingJobById(jobId);
+
+//     if (!job) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'Marking job not found'
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       data: job
+//     });
+//   } catch (error) {
+//     console.error('Error fetching marking job:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch marking job',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Manually assign marking job to an agent
+//  */
+// export const assignMarkingJob = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { agentId, notes } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     const result = await markingOversightService.manuallyAssignJob(
+//       jobId,
+//       agentId,
+//       adminId,
+//       notes
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Marking job assigned successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error assigning marking job:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to assign marking job',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Reassign marking job to another agent
+//  */
+// export const reassignMarkingJob = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { newAgentId, reason } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     const result = await markingOversightService.reassignJob(
+//       jobId,
+//       newAgentId,
+//       adminId,
+//       reason
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Marking job reassigned successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error reassigning marking job:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to reassign marking job',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Cancel a marking job
+//  */
+// export const cancelMarkingJob = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { reason } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     const result = await markingOversightService.cancelJob(jobId, adminId, reason);
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Marking job cancelled successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error cancelling marking job:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to cancel marking job',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Review and approve/reject marking completion
+//  */
+// export const reviewMarkingCompletion = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { approved, notes } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     if (typeof approved !== 'boolean') {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Approval status is required'
+//       });
+//     }
+
+//     const result = await markingOversightService.reviewCompletion(
+//       jobId,
+//       approved,
+//       adminId,
+//       notes
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: approved ? 'Marking approved successfully' : 'Marking rejected',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error reviewing marking completion:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to review marking completion',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Handle marking disputes
+//  */
+// export const handleMarkingDispute = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { resolution, compensateAgent, refundOwner, notes } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     const result = await markingOversightService.handleDispute(jobId, {
+//       resolution,
+//       compensateAgent: compensateAgent || false,
+//       refundOwner: refundOwner || false,
+//       adminId,
+//       notes
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Dispute resolved successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error handling marking dispute:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to handle marking dispute',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Get agent performance metrics
+//  */
+// export const getAgentPerformance = async (req: Request, res: Response) => {
+//   try {
+//     const { agentId } = req.params;
+//     const { startDate, endDate } = req.query;
+
+//     const dateRange = {
+//       startDate: startDate ? new Date(startDate as string) : undefined,
+//       endDate: endDate ? new Date(endDate as string) : undefined
+//     };
+
+//     const performance = await markingAnalyticsService.getAgentPerformance(agentId, dateRange);
+
+//     res.status(200).json({
+//       success: true,
+//       data: performance
+//     });
+//   } catch (error) {
+//     console.error('Error fetching agent performance:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch agent performance',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Get marking job queue status
+//  */
+// export const getQueueStatus = async (req: Request, res: Response) => {
+//   try {
+//     const { location } = req.query;
+
+//     const queueStatus = await markingOversightService.getQueueStatus(location as string);
+
+//     res.status(200).json({
+//       success: true,
+//       data: queueStatus
+//     });
+//   } catch (error) {
+//     console.error('Error fetching queue status:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch queue status',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Get expired marking jobs
+//  */
+// export const getExpiredJobs = async (req: Request, res: Response) => {
+//   try {
+//     const { page = '1', limit = '20' } = req.query;
+
+//     const pagination = {
+//       page: parseInt(page as string),
+//       limit: parseInt(limit as string)
+//     };
+
+//     const result = await markingOversightService.getExpiredJobs(pagination);
+
+//     res.status(200).json({
+//       success: true,
+//       data: result.jobs,
+//       pagination: {
+//         total: result.total,
+//         page: pagination.page,
+//         limit: pagination.limit,
+//         totalPages: Math.ceil(result.total / pagination.limit)
+//       }
+//     });
+//   } catch (error) {
+//     console.error('Error fetching expired jobs:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch expired jobs',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Get marking analytics dashboard data
+//  */
+// export const getMarkingAnalytics = async (req: Request, res: Response) => {
+//   try {
+//     const { startDate, endDate, groupBy = 'day' } = req.query;
+
+//     const dateRange = {
+//       startDate: startDate ? new Date(startDate as string) : undefined,
+//       endDate: endDate ? new Date(endDate as string) : undefined
+//     };
+
+//     const analytics = await markingAnalyticsService.getMarkingAnalytics(
+//       dateRange,
+//       groupBy as 'day' | 'week' | 'month'
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       data: analytics
+//     });
+//   } catch (error) {
+//     console.error('Error fetching marking analytics:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch marking analytics',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Update marking job urgency level
+//  */
+// export const updateJobUrgency = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { urgencyLevel, reason } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     const result = await markingOversightService.updateJobUrgency(
+//       jobId,
+//       urgencyLevel,
+//       adminId,
+//       reason
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Job urgency updated successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error updating job urgency:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to update job urgency',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Extend marking job deadline
+//  */
+// export const extendJobDeadline = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+//     const { extensionHours, reason } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     const result = await markingOversightService.extendJobDeadline(
+//       jobId,
+//       extensionHours,
+//       adminId,
+//       reason
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Job deadline extended successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error extending job deadline:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to extend job deadline',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Get marking job history
+//  */
+// export const getJobHistory = async (req: Request, res: Response) => {
+//   try {
+//     const { jobId } = req.params;
+
+//     const history = await markingOversightService.getJobHistory(jobId);
+
+//     res.status(200).json({
+//       success: true,
+//       data: history
+//     });
+//   } catch (error) {
+//     console.error('Error fetching job history:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Failed to fetch job history',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };
+
+// /**
+//  * Bulk update marking jobs
+//  */
+// export const bulkUpdateJobs = async (req: Request, res: Response) => {
+//   try {
+//     const { jobIds, action, data } = req.body;
+//     const adminId = req.user?.id;
+
+//     if (!adminId) {
+//       return res.status(401).json({
+//         success: false,
+//         message: 'Unauthorized'
+//       });
+//     }
+
+//     if (!Array.isArray(jobIds) || jobIds.length === 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: 'Job IDs are required'
+//       });
+//     }
+
+//     const result = await markingOversightService.bulkUpdateJobs(
+//       jobIds,
+//       action,
+//       data,
+//       adminId
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: 'Jobs updated successfully',
+//       data: result
+//     });
+//   } catch (error) {
+//     console.error('Error bulk updating jobs:', error);
+//     res.status(400).json({
+//       success: false,
+//       message: 'Failed to update jobs',
+//       error: error instanceof Error ? error.message : 'Unknown error'
+//     });
+//   }
+// };

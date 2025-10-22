@@ -982,3 +982,170 @@ export const markingPaymentController = new MarkingPaymentController();
 // }
 
 // export const markingPaymentController = new MarkingPaymentController();
+
+
+
+
+
+
+
+
+
+// // backend/payment-service/src/controllers/markingPaymentController.ts
+
+// import { Request, Response } from 'express';
+// import { markingPaymentService } from '../services/markingPaymentService';
+// import { successResponse, errorResponse } from '../../../shared/src/utils/response';
+
+// export class MarkingPaymentController {
+//   /**
+//    * Initiate payment for a marking job
+//    */
+//   async initiateMarkingPayment(req: Request, res: Response) {
+//     try {
+//       const { markingJobId } = req.body;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return errorResponse(res, 'Unauthorized', 401);
+//       }
+
+//       const result = await markingPaymentService.initiateMarkingPayment({
+//         markingJobId,
+//         userId,
+//       });
+
+//       return successResponse(res, result, 'Marking payment initiated successfully', 201);
+//     } catch (error: any) {
+//       console.error('Error initiating marking payment:', error);
+//       return errorResponse(res, error.message || 'Failed to initiate marking payment', 500);
+//     }
+//   }
+
+//   /**
+//    * Process marking payment webhook from Flutterwave
+//    */
+//   async handleMarkingPaymentWebhook(req: Request, res: Response) {
+//     try {
+//       const webhookData = req.body;
+
+//       const result = await markingPaymentService.processMarkingPaymentWebhook(webhookData);
+
+//       return successResponse(res, result, 'Webhook processed successfully');
+//     } catch (error: any) {
+//       console.error('Error processing marking payment webhook:', error);
+//       return errorResponse(res, error.message || 'Webhook processing failed', 500);
+//     }
+//   }
+
+//   /**
+//    * Verify marking payment status
+//    */
+//   async verifyMarkingPayment(req: Request, res: Response) {
+//     try {
+//       const { paymentId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return errorResponse(res, 'Unauthorized', 401);
+//       }
+
+//       const result = await markingPaymentService.verifyMarkingPayment(paymentId, userId);
+
+//       return successResponse(res, result, 'Payment verification successful');
+//     } catch (error: any) {
+//       console.error('Error verifying marking payment:', error);
+//       return errorResponse(res, error.message || 'Payment verification failed', 500);
+//     }
+//   }
+
+//   /**
+//    * Get marking payment history for a user
+//    */
+//   async getMarkingPaymentHistory(req: Request, res: Response) {
+//     try {
+//       const userId = req.user?.id;
+//       const { page = 1, limit = 10 } = req.query;
+
+//       if (!userId) {
+//         return errorResponse(res, 'Unauthorized', 401);
+//       }
+
+//       const result = await markingPaymentService.getMarkingPaymentHistory(
+//         userId,
+//         Number(page),
+//         Number(limit)
+//       );
+
+//       return successResponse(res, result, 'Payment history retrieved successfully');
+//     } catch (error: any) {
+//       console.error('Error fetching marking payment history:', error);
+//       return errorResponse(res, error.message || 'Failed to fetch payment history', 500);
+//     }
+//   }
+
+//   /**
+//    * Get marking payment details
+//    */
+//   async getMarkingPaymentDetails(req: Request, res: Response) {
+//     try {
+//       const { paymentId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return errorResponse(res, 'Unauthorized', 401);
+//       }
+
+//       const result = await markingPaymentService.getMarkingPaymentDetails(paymentId, userId);
+
+//       return successResponse(res, result, 'Payment details retrieved successfully');
+//     } catch (error: any) {
+//       console.error('Error fetching marking payment details:', error);
+//       return errorResponse(res, error.message || 'Failed to fetch payment details', 500);
+//     }
+//   }
+
+//   /**
+//    * Cancel marking payment (if not yet processed)
+//    */
+//   async cancelMarkingPayment(req: Request, res: Response) {
+//     try {
+//       const { paymentId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return errorResponse(res, 'Unauthorized', 401);
+//       }
+
+//       const result = await markingPaymentService.cancelMarkingPayment(paymentId, userId);
+
+//       return successResponse(res, result, 'Payment cancelled successfully');
+//     } catch (error: any) {
+//       console.error('Error cancelling marking payment:', error);
+//       return errorResponse(res, error.message || 'Failed to cancel payment', 500);
+//     }
+//   }
+
+//   /**
+//    * Retry failed marking payment
+//    */
+//   async retryMarkingPayment(req: Request, res: Response) {
+//     try {
+//       const { paymentId } = req.params;
+//       const userId = req.user?.id;
+
+//       if (!userId) {
+//         return errorResponse(res, 'Unauthorized', 401);
+//       }
+
+//       const result = await markingPaymentService.retryMarkingPayment(paymentId, userId);
+
+//       return successResponse(res, result, 'Payment retry initiated successfully');
+//     } catch (error: any) {
+//       console.error('Error retrying marking payment:', error);
+//       return errorResponse(res, error.message || 'Failed to retry payment', 500);
+//     }
+//   }
+// }
+
+// export const markingPaymentController = new MarkingPaymentController();

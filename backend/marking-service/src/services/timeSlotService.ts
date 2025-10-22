@@ -1053,3 +1053,439 @@ export class TimeSlotService {
 // }
 
 // export default new TimeSlotService();
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/timeSlotService.ts
+
+// import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+// import { NotificationService } from './notificationService';
+
+// const prisma = new PrismaClient();
+
+// export class TimeSlotService {
+//   private notificationService: NotificationService;
+//   private readonly TIME_SLOT_DURATION = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
+
+//   constructor() {
+//     this.notificationService = new NotificationService();
+//   }
+
+//   /**
+//    * Create a new 3-hour time slot
+//    */
+//   createTimeSlot(): Date {
+//     const now = new Date();
+//     return new Date(now.getTime() + this.TIME_SLOT_DURATION);
+//   }
+
+//   /**
+//    * Check if time slot is expired
+//    */
+//   isTimeSlotExpired(timeSlotExpiry: Date): boolean {
+//     return new Date() > timeSlotExpiry;
+//   }
+
+//   /**
+//    * Get remaining time in a time slot (in minutes)
+//    */
+//   getRemainingTime(timeSlotExpiry: Date): number {
+//     const now = Date.now();
+//     const expiryTime = timeSlotExpiry.getTime();
+//     const remainingMs = Math.max(0, expiryTime - now);
+//     return Math.floor(remainingMs / (1000 * 60));
+//   }
+
+//   /**
+//    * Check and handle expired time slots
+//    */
+//   async checkExpiredTimeSlots() {
+//     const now = new Date();
+
+//     // Find jobs with expired time slots
+//     const expiredJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: {
+//           in: [MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS],
+//         },
+//         timeSlotExpiry: {
+//           lt: now,
+//           not: null,
+//         },
+//       },
+//       include: {
+//         property: true,
+//         assignedAgent: true,
+//         requestingUser: true,
+//       },
+//     });
+
+//     let processedCount = 0;
+
+//     for (const job of expiredJobs) {
+//       try {
+//         await this.handleExpiredTimeSlot(job);
+//         processedCount++;
+//       } catch (error) {
+//         console.error(`Failed to handle expired time slot for job ${job.id}:`, error);
+//       }
+//     }
+
+//     return {
+//       processedCount,
+//       totalExpired: expiredJobs.length,
+//     };
+//   }
+
+//   /**
+//    * Handle an expired time slot
+//    */
+//   private async handleExpiredTimeSlot(job: any) {
+//     // Penalize agent
+//     if (job.assignedAgent) {
+//       const currentScore = Number(job.assignedAgent.agentReliabilityScore) || 3.0;
+//       const newScore = Math.max(0, currentScore - 0.2);
+
+//       await prisma.user.update({
+//         where: { id: job.assignedAgentId },
+//         data: {
+//           agentReliabilityScore: newScore,
+//         },
+//       });
+
+//       // Suspend agent if score too low
+//       if (newScore < 2.0) {
+//         await prisma.user.update({
+//           where: { id: job.assignedAgentId },
+//           data: {
+//             isAvailableForMarking: false,
+//           },
+//         });
+//       }
+//     }
+
+//     // Reset job to queued status
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: job.id },
+//       data: {
+//         status: MarkingJobStatus.QUEUED,
+//         assignedAgentId: null,
+//         assignedAt: null,
+//         timeSlotExpiry: null,
+//         completionNotes: `Time slot expired. Previously assigned to agent ${job.assignedAgent?.name || 'Unknown'}`,
+//       },
+//     });
+
+//     // Recalculate queue position
+//     const currentQueueSize = await prisma.propertyMarkingJob.count({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         queuePosition: { not: null },
+//       },
+//     });
+
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: job.id },
+//       data: {
+//         queuePosition: currentQueueSize + 1,
+//       },
+//     });
+
+//     // Notify agent of expiration
+//     if (job.assignedAgent) {
+//       await this.notificationService.notifyAgentTimeSlotExpired(job);
+//     }
+
+//     // Notify property owner of delay
+//     await this.notificationService.notifyPropertyOwnerTimeSlotExpired(job);
+
+//     // Broadcast job to other agents
+//     await this.notificationService.notifyJobRequeued(job);
+
+//     // Log event
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: job.assignedAgentId,
+//         type: 'TIME_SLOT_EXPIRED',
+//         metadata: {
+//           jobId: job.id,
+//           propertyId: job.propertyId,
+//           agentId: job.assignedAgentId,
+//         },
+//       },
+//     });
+//   }
+
+//   /**
+//    * Extend time slot (by admin or under special circumstances)
+//    */
+//   async extendTimeSlot(jobId: string, additionalHours: number, adminId?: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         assignedAgent: true,
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     if (!job.timeSlotExpiry) {
+//       throw new Error('Job does not have an active time slot');
+//     }
+
+//     // Check if already expired
+//     if (this.isTimeSlotExpired(job.timeSlotExpiry)) {
+//       throw new Error('Cannot extend expired time slot');
+//     }
+
+//     // Calculate new expiry time
+//     const additionalMs = additionalHours * 60 * 60 * 1000;
+//     const newExpiry = new Date(job.timeSlotExpiry.getTime() + additionalMs);
+
+//     // Update time slot
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         timeSlotExpiry: newExpiry,
+//       },
+//       include: {
+//         assignedAgent: true,
+//       },
+//     });
+
+//     // Log admin action if admin extended
+//     if (adminId) {
+//       await prisma.adminAction.create({
+//         data: {
+//           adminId,
+//           action: 'TIME_SLOT_EXTENDED',
+//           targetType: 'PropertyMarkingJob',
+//           targetId: jobId,
+//           description: `Time slot extended by ${additionalHours} hours`,
+//           metadata: {
+//             previousExpiry: job.timeSlotExpiry,
+//             newExpiry,
+//             additionalHours,
+//           },
+//         },
+//       });
+//     }
+
+//     // Notify agent
+//     if (updatedJob.assignedAgent) {
+//       await this.notificationService.notifyAgentTimeSlotExtended(
+//         updatedJob,
+//         additionalHours
+//       );
+//     }
+
+//     return {
+//       success: true,
+//       newExpiry,
+//       additionalMinutes: additionalHours * 60,
+//     };
+//   }
+
+//   /**
+//    * Get time slot status for a job
+//    */
+//   async getTimeSlotStatus(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       select: {
+//         id: true,
+//         status: true,
+//         assignedAt: true,
+//         timeSlotExpiry: true,
+//         assignedAgentId: true,
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     if (!job.timeSlotExpiry) {
+//       return {
+//         hasTimeSlot: false,
+//         status: job.status,
+//       };
+//     }
+
+//     const now = Date.now();
+//     const expiryTime = job.timeSlotExpiry.getTime();
+//     const remainingMs = Math.max(0, expiryTime - now);
+//     const remainingMinutes = Math.floor(remainingMs / (1000 * 60));
+//     const isExpired = now > expiryTime;
+
+//     // Calculate elapsed time
+//     const elapsedMs = job.assignedAt
+//       ? now - job.assignedAt.getTime()
+//       : 0;
+//     const elapsedMinutes = Math.floor(elapsedMs / (1000 * 60));
+
+//     return {
+//       hasTimeSlot: true,
+//       status: job.status,
+//       timeSlotExpiry: job.timeSlotExpiry,
+//       isExpired,
+//       remainingMinutes,
+//       remainingHours: Math.floor(remainingMinutes / 60),
+//       elapsedMinutes,
+//       elapsedHours: Math.floor(elapsedMinutes / 60),
+//       percentComplete: (elapsedMs / this.TIME_SLOT_DURATION) * 100,
+//       isUrgent: remainingMinutes < 30 && !isExpired,
+//     };
+//   }
+
+//   /**
+//    * Send warnings for time slots about to expire
+//    */
+//   async sendTimeSlotWarnings() {
+//     const warningThreshold = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+
+//     // Find jobs with time slots expiring soon
+//     const jobsNeedingWarning = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: {
+//           in: [MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS],
+//         },
+//         timeSlotExpiry: {
+//           lte: warningThreshold,
+//           gt: new Date(),
+//         },
+//       },
+//       include: {
+//         property: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     let warningsSent = 0;
+
+//     for (const job of jobsNeedingWarning) {
+//       if (job.assignedAgent) {
+//         try {
+//           const remainingMinutes = this.getRemainingTime(job.timeSlotExpiry!);
+//           await this.notificationService.notifyAgentTimeSlotWarning(
+//             job,
+//             remainingMinutes
+//           );
+//           warningsSent++;
+//         } catch (error) {
+//           console.error(`Failed to send warning for job ${job.id}:`, error);
+//         }
+//       }
+//     }
+
+//     return {
+//       warningsSent,
+//       totalJobs: jobsNeedingWarning.length,
+//     };
+//   }
+
+//   /**
+//    * Get time slot statistics
+//    */
+//   async getTimeSlotStats(agentId?: string) {
+//     const where: any = {
+//       timeSlotExpiry: { not: null },
+//     };
+
+//     if (agentId) {
+//       where.assignedAgentId = agentId;
+//     }
+
+//     const [
+//       totalWithTimeSlots,
+//       active,
+//       expired,
+//       completed,
+//       avgUtilization,
+//     ] = await Promise.all([
+//       prisma.propertyMarkingJob.count({ where }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           status: {
+//             in: [MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS],
+//           },
+//           timeSlotExpiry: { gt: new Date() },
+//         },
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           status: MarkingJobStatus.QUEUED,
+//           timeSlotExpiry: { lt: new Date() },
+//         },
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           status: MarkingJobStatus.COMPLETED,
+//         },
+//       }),
+//       this.calculateAvgTimeSlotUtilization(agentId),
+//     ]);
+
+//     return {
+//       totalWithTimeSlots,
+//       active,
+//       expired,
+//       completed,
+//       expirationRate: totalWithTimeSlots > 0 ? (expired / totalWithTimeSlots) * 100 : 0,
+//       completionRate: totalWithTimeSlots > 0 ? (completed / totalWithTimeSlots) * 100 : 0,
+//       avgUtilization,
+//     };
+//   }
+
+//   /**
+//    * Calculate average time slot utilization
+//    */
+//   private async calculateAvgTimeSlotUtilization(agentId?: string): Promise<number> {
+//     const where: any = {
+//       status: MarkingJobStatus.COMPLETED,
+//       assignedAt: { not: null },
+//       completedAt: { not: null },
+//       timeSlotExpiry: { not: null },
+//     };
+
+//     if (agentId) {
+//       where.assignedAgentId = agentId;
+//     }
+
+//     const jobs = await prisma.propertyMarkingJob.findMany({
+//       where,
+//       select: {
+//         assignedAt: true,
+//         completedAt: true,
+//       },
+//       take: 50,
+//       orderBy: { completedAt: 'desc' },
+//     });
+
+//     if (jobs.length === 0) {
+//       return 0;
+//     }
+
+//     const totalUtilization = jobs.reduce((sum, job) => {
+//       const completionTime = job.completedAt!.getTime() - job.assignedAt!.getTime();
+//       const utilization = (completionTime / this.TIME_SLOT_DURATION) * 100;
+//       return sum + Math.min(100, utilization);
+//     }, 0);
+
+//     return Math.round(totalUtilization / jobs.length);
+//   }
+// }
+
+// export default TimeSlotService;
