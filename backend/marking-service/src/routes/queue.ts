@@ -275,3 +275,119 @@ export default router;
 // router.get("/analytics", authenticate, getQueueAnalytics);
 
 // export default router;
+
+
+
+
+
+// // backend/marking-service/src/routes/queue.ts
+// import { Router } from 'express';
+// import {
+//   getJobQueue,
+//   addAgentToQueue,
+//   removeAgentFromQueue,
+//   getAgentQueuePosition,
+//   getQueueStats,
+//   processNextInQueue,
+//   clearExpiredQueueEntries,
+//   getAgentQueueHistory
+// } from '../controllers/queueController';
+// import { authenticate, authorize } from '../middleware/auth';
+// import { validateQueueEntry } from '../middleware/queueValidation';
+
+// const router = Router();
+
+// /**
+//  * @route   GET /api/marking/queue/:jobId
+//  * @desc    Get queue for a specific marking job
+//  * @access  Private (Job owner or ADMIN)
+//  */
+// router.get(
+//   '/:jobId',
+//   authenticate,
+//   getJobQueue
+// );
+
+// /**
+//  * @route   POST /api/marking/queue/:jobId/join
+//  * @desc    Join queue for a marking job (FCFS)
+//  * @access  Private (AGENT or RENTER with premium)
+//  */
+// router.post(
+//   '/:jobId/join',
+//   authenticate,
+//   authorize(['AGENT', 'RENTER']),
+//   validateQueueEntry,
+//   addAgentToQueue
+// );
+
+// /**
+//  * @route   DELETE /api/marking/queue/:jobId/leave
+//  * @desc    Leave queue for a marking job
+//  * @access  Private (AGENT or RENTER)
+//  */
+// router.delete(
+//   '/:jobId/leave',
+//   authenticate,
+//   removeAgentFromQueue
+// );
+
+// /**
+//  * @route   GET /api/marking/queue/:jobId/position
+//  * @desc    Get agent's position in queue
+//  * @access  Private
+//  */
+// router.get(
+//   '/:jobId/position',
+//   authenticate,
+//   getAgentQueuePosition
+// );
+
+// /**
+//  * @route   GET /api/marking/queue/stats/overview
+//  * @desc    Get queue statistics
+//  * @access  Private (ADMIN only)
+//  */
+// router.get(
+//   '/stats/overview',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   getQueueStats
+// );
+
+// /**
+//  * @route   POST /api/marking/queue/:jobId/process-next
+//  * @desc    Process next agent in queue (after time expiry)
+//  * @access  Private (System/ADMIN only)
+//  */
+// router.post(
+//   '/:jobId/process-next',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   processNextInQueue
+// );
+
+// /**
+//  * @route   DELETE /api/marking/queue/expired/clear
+//  * @desc    Clear expired queue entries
+//  * @access  Private (System/ADMIN only)
+//  */
+// router.delete(
+//   '/expired/clear',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   clearExpiredQueueEntries
+// );
+
+// /**
+//  * @route   GET /api/marking/queue/agent/history
+//  * @desc    Get agent's queue participation history
+//  * @access  Private
+//  */
+// router.get(
+//   '/agent/history',
+//   authenticate,
+//   getAgentQueueHistory
+// );
+
+// export default router;

@@ -380,3 +380,111 @@ export default router;
 // router.get("/analytics", authenticate, getCompletionAnalytics);
 
 // export default router;
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/routes/completion.ts
+// import { Router } from 'express';
+// import {
+//   submitCompletion,
+//   getCompletionDetails,
+//   uploadCompletionImages,
+//   updateCompletionData,
+//   getAgentCompletions,
+//   validateCompletionData,
+//   processPartialPayment
+// } from '../controllers/completionController';
+// import { authenticate, authorize } from '../middleware/auth';
+// import { validateCompletion } from '../middleware/queueValidation';
+// import { uploadMiddleware } from '../middleware/uploadMiddleware';
+
+// const router = Router();
+
+// /**
+//  * @route   POST /api/marking/completion/:jobId/submit
+//  * @desc    Submit marking job completion
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/submit',
+//   authenticate,
+//   validateCompletion,
+//   submitCompletion
+// );
+
+// /**
+//  * @route   GET /api/marking/completion/:jobId
+//  * @desc    Get completion details for a job
+//  * @access  Private
+//  */
+// router.get(
+//   '/:jobId',
+//   authenticate,
+//   getCompletionDetails
+// );
+
+// /**
+//  * @route   POST /api/marking/completion/:jobId/images
+//  * @desc    Upload completion images (boundary photos)
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/images',
+//   authenticate,
+//   uploadMiddleware.array('images', 10),
+//   uploadCompletionImages
+// );
+
+// /**
+//  * @route   PATCH /api/marking/completion/:jobId
+//  * @desc    Update completion data (before final submission)
+//  * @access  Private (Assigned agent only)
+//  */
+// router.patch(
+//   '/:jobId',
+//   authenticate,
+//   updateCompletionData
+// );
+
+// /**
+//  * @route   GET /api/marking/completion/agent/me
+//  * @desc    Get all completions by authenticated agent
+//  * @access  Private (AGENT or RENTER)
+//  */
+// router.get(
+//   '/agent/me',
+//   authenticate,
+//   authorize(['AGENT', 'RENTER']),
+//   getAgentCompletions
+// );
+
+// /**
+//  * @route   POST /api/marking/completion/:jobId/validate
+//  * @desc    Validate completion data (boundary coordinates, images)
+//  * @access  Private
+//  */
+// router.post(
+//   '/:jobId/validate',
+//   authenticate,
+//   validateCompletionData
+// );
+
+// /**
+//  * @route   POST /api/marking/completion/:jobId/partial-payment
+//  * @desc    Process partial payment to agent upon completion
+//  * @access  Private (System/ADMIN only)
+//  */
+// router.post(
+//   '/:jobId/partial-payment',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   processPartialPayment
+// );
+
+// export default router;

@@ -296,3 +296,116 @@ export default router;
 // router.post("/:jobId/confirm", authenticate, confirmMarkingCompletion);
 
 // export default router;
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/routes/markingJobs.ts
+// import { Router } from 'express';
+// import {
+//   createMarkingJob,
+//   getMarkingJob,
+//   getUserMarkingJobs,
+//   updateMarkingJob,
+//   cancelMarkingJob,
+//   getMarkingJobsByStatus,
+//   getMarkingJobStats,
+//   validateMarkingJobAccess
+// } from '../controllers/markingJobController';
+// import { authenticate, authorize } from '../middleware/auth';
+// import { validateMarkingJob } from '../middleware/markingValidation';
+
+// const router = Router();
+
+// /**
+//  * @route   POST /api/marking/jobs
+//  * @desc    Create a new marking job
+//  * @access  Private (OWNER, AGENT with premium)
+//  */
+// router.post(
+//   '/',
+//   authenticate,
+//   authorize(['OWNER', 'AGENT']),
+//   validateMarkingJob,
+//   createMarkingJob
+// );
+
+// /**
+//  * @route   GET /api/marking/jobs/:id
+//  * @desc    Get marking job details
+//  * @access  Private (Job owner or assigned agent)
+//  */
+// router.get(
+//   '/:id',
+//   authenticate,
+//   validateMarkingJobAccess,
+//   getMarkingJob
+// );
+
+// /**
+//  * @route   GET /api/marking/jobs/user/me
+//  * @desc    Get all marking jobs for authenticated user
+//  * @access  Private
+//  */
+// router.get(
+//   '/user/me',
+//   authenticate,
+//   getUserMarkingJobs
+// );
+
+// /**
+//  * @route   GET /api/marking/jobs/status/:status
+//  * @desc    Get marking jobs by status (for admins)
+//  * @access  Private (ADMIN only)
+//  */
+// router.get(
+//   '/status/:status',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   getMarkingJobsByStatus
+// );
+
+// /**
+//  * @route   GET /api/marking/jobs/stats/overview
+//  * @desc    Get marking job statistics
+//  * @access  Private (ADMIN only)
+//  */
+// router.get(
+//   '/stats/overview',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   getMarkingJobStats
+// );
+
+// /**
+//  * @route   PATCH /api/marking/jobs/:id
+//  * @desc    Update marking job details
+//  * @access  Private (Job owner only, before assignment)
+//  */
+// router.patch(
+//   '/:id',
+//   authenticate,
+//   validateMarkingJobAccess,
+//   updateMarkingJob
+// );
+
+// /**
+//  * @route   DELETE /api/marking/jobs/:id
+//  * @desc    Cancel a marking job
+//  * @access  Private (Job owner only)
+//  */
+// router.delete(
+//   '/:id',
+//   authenticate,
+//   validateMarkingJobAccess,
+//   cancelMarkingJob
+// );
+
+// export default router;

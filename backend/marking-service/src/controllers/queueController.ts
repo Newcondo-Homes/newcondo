@@ -1237,3 +1237,538 @@ export const queueController = {
 //     next(error);
 //   }
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/controllers/queueController.ts
+
+// import { Request, Response } from 'express';
+// import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+// import { standardResponse } from '../../../shared/src/utils/response';
+
+// const prisma = new PrismaClient();
+
+// /**
+//  * Get available marking jobs in queue for agents
+//  * GET /api/queue/available-jobs
+//  */
+// export const getAvailableJobs = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     // Verify user is an agent or premium renter
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: {
+//         role: true,
+//         isPremium: true,
+//         isAvailableForMarking: true,
+//         agentServiceAreas: true
+//       }
+//     });
+
+//     if (!user) {
+//       return res.status(404).json(standardResponse(false, 'User not found', null));
+//     }
+
+//     const isEligible =
+//       (user.role === 'AGENT' || (user.role === 'RENTER' && user.isPremium)) &&
+//       user.isAvailableForMarking;
+
+//     if (!isEligible) {
+//       return res.status(403).json(
+//         standardResponse(
+//           false,
+//           'You are not eligible to receive marking jobs. Ensure you are an agent or premium renter with marking availability enabled.',
+//           null
+//         )
+//       );
+//     }
+
+//     const { city, state, page = 1, limit = 20 } = req.query;
+//     const skip = (Number(page) - 1) * Number(limit);
+
+//     // Build location filter based on user's service areas
+//     let locationFilter: any = {};
+//     if (user.agentServiceAreas && user.agentServiceAreas.length > 0) {
+//       locationFilter = {
+//         property: {
+//           OR: [
+//             { city: { in: user.agentServiceAreas } },
+//             { state: { in: user.agentServiceAreas } }
+//           ]
+//         }
+//       };
+//     }
+
+//     // Apply manual filters if provided
+//     if (city) {
+//       locationFilter.property = {
+//         ...locationFilter.property,
+//         city: city as string
+//       };
+//     }
+//     if (state) {
+//       locationFilter.property = {
+//         ...locationFilter.property,
+//         state: state as string
+//       };
+//     }
+
+//     const where = {
+//       status: MarkingJobStatus.QUEUED,
+//       assignedAgentId: null,
+//       paymentStatus: 'SUCCESS', // Only show paid jobs
+//       ...locationFilter
+//     };
+
+//     const [jobs, total] = await Promise.all([
+//       prisma.propertyMarkingJob.findMany({
+//         where,
+//         skip,
+//         take: Number(limit),
+//         orderBy: [
+//           { urgencyLevel: 'desc' },
+//           { createdAt: 'asc' } // First-come-first-served
+//         ],
+//         include: {
+//           property: {
+//             select: {
+//               id: true,
+//               title: true,
+//               address: true,
+//               city: true,
+//               state: true,
+//               gpsCoordinates: true,
+//               propertyType: true,
+//               images: {
+//                 take: 3,
+//                 orderBy: { order: 'asc' }
+//               }
+//             }
+//           },
+//           requestingUser: {
+//             select: {
+//               id: true,
+//               name: true,
+//               phone: true
+//             }
+//           }
+//         }
+//       }),
+//       prisma.propertyMarkingJob.count({ where })
+//     ]);
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Available marking jobs retrieved successfully', {
+//         jobs,
+//         pagination: {
+//           total,
+//           page: Number(page),
+//           limit: Number(limit),
+//           totalPages: Math.ceil(total / Number(limit))
+//         }
+//       })
+//     );
+//   } catch (error) {
+//     console.error('Get available jobs error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve available jobs', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Get current queue position for a specific job
+//  * GET /api/queue/jobs/:id/position
+//  */
+// export const getQueuePosition = async (req: Request, res: Response) => {
+//   try {
+//     const { id } = req.params;
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id },
+//       select: {
+//         id: true,
+//         status: true,
+//         queuePosition: true,
+//         assignedAgentId: true,
+//         timeSlotExpiry: true,
+//         maxCompletionTime: true,
+//         createdAt: true
+//       }
+//     });
+
+//     if (!job) {
+//       return res.status(404).json(standardResponse(false, 'Marking job not found', null));
+//     }
+
+//     // Count jobs ahead in queue
+//     const jobsAhead = await prisma.propertyMarkingJob.count({
+//       where: {
+//         status: {
+//           in: [MarkingJobStatus.QUEUED, MarkingJobStatus.ASSIGNED]
+//         },
+//         queuePosition: {
+//           lt: job.queuePosition || 0
+//         }
+//       }
+//     });
+
+//     // Estimate wait time based on average completion time
+//     const avgCompletionTime = 3; // hours (configurable)
+//     const estimatedWaitHours = jobsAhead * avgCompletionTime;
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Queue position retrieved successfully', {
+//         job,
+//         queueInfo: {
+//           position: job.queuePosition,
+//           jobsAhead,
+//           estimatedWaitHours,
+//           isAssigned: !!job.assignedAgentId,
+//           timeSlotExpiry: job.timeSlotExpiry,
+//           maxCompletionTime: job.maxCompletionTime
+//         }
+//       })
+//     );
+//   } catch (error) {
+//     console.error('Get queue position error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve queue position', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Get agent's active queue assignments
+//  * GET /api/queue/my-assignments
+//  */
+// export const getMyAssignments = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     const { status } = req.query;
+
+//     let where: any = {
+//       assignedAgentId: userId
+//     };
+
+//     if (status) {
+//       where.status = status;
+//     } else {
+//       // By default, show active assignments
+//       where.status = {
+//         in: [MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS]
+//       };
+//     }
+
+//     const assignments = await prisma.propertyMarkingJob.findMany({
+//       where,
+//       orderBy: { timeSlotExpiry: 'asc' }, // Urgent ones first
+//       include: {
+//         property: {
+//           include: {
+//             images: {
+//               take: 5,
+//               orderBy: { order: 'asc' }
+//             }
+//           }
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             phone: true,
+//             email: true
+//           }
+//         }
+//       }
+//     });
+
+//     // Calculate time remaining for each assignment
+//     const assignmentsWithTimeInfo = assignments.map(assignment => {
+//       const now = new Date();
+//       const timeRemaining = assignment.timeSlotExpiry
+//         ? Math.max(0, assignment.timeSlotExpiry.getTime() - now.getTime())
+//         : null;
+
+//       return {
+//         ...assignment,
+//         timeRemainingMs: timeRemaining,
+//         timeRemainingHours: timeRemaining ? (timeRemaining / (1000 * 60 * 60)).toFixed(2) : null,
+//         isExpiringSoon: timeRemaining ? timeRemaining < 1000 * 60 * 60 : false // Less than 1 hour
+//       };
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Agent assignments retrieved successfully', assignmentsWithTimeInfo)
+//     );
+//   } catch (error) {
+//     console.error('Get my assignments error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve assignments', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Update agent's marking availability
+//  * PATCH /api/queue/availability
+//  */
+// export const updateMarkingAvailability = async (req: Request, res: Response) => {
+//   try {
+//     const userId = req.user?.id;
+//     if (!userId) {
+//       return res.status(401).json(standardResponse(false, 'Unauthorized', null));
+//     }
+
+//     const { isAvailable, serviceAreas } = req.body;
+
+//     // Verify user is an agent or premium renter
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { role: true, isPremium: true }
+//     });
+
+//     const isEligible =
+//       user?.role === 'AGENT' || (user?.role === 'RENTER' && user?.isPremium);
+
+//     if (!isEligible) {
+//       return res.status(403).json(
+//         standardResponse(
+//           false,
+//           'Only agents and premium renters can set marking availability',
+//           null
+//         )
+//       );
+//     }
+
+//     const updatedUser = await prisma.user.update({
+//       where: { id: userId },
+//       data: {
+//         isAvailableForMarking: isAvailable,
+//         agentServiceAreas: serviceAreas || undefined
+//       },
+//       select: {
+//         id: true,
+//         name: true,
+//         isAvailableForMarking: true,
+//         agentServiceAreas: true,
+//         agentReliabilityScore: true,
+//         totalMarkingJobs: true,
+//         completedMarkingJobs: true
+//       }
+//     });
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Marking availability updated successfully', updatedUser)
+//     );
+//   } catch (error) {
+//     console.error('Update marking availability error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to update marking availability', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Check expired time slots and rotate queue
+//  * POST /api/queue/check-expirations (Internal/Cron job endpoint)
+//  */
+// export const checkAndRotateExpiredSlots = async (req: Request, res: Response) => {
+//   try {
+//     const now = new Date();
+
+//     // Find all expired assignments
+//     const expiredJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.ASSIGNED,
+//         timeSlotExpiry: {
+//           lte: now
+//         }
+//       },
+//       include: {
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true
+//           }
+//         }
+//       }
+//     });
+
+//     if (expiredJobs.length === 0) {
+//       return res.status(200).json(
+//         standardResponse(true, 'No expired time slots found', { rotatedCount: 0 })
+//       );
+//     }
+
+//     // Process each expired job
+//     const results = await Promise.all(
+//       expiredJobs.map(async (job) => {
+//         try {
+//           // Reset job to QUEUED status
+//           await prisma.propertyMarkingJob.update({
+//             where: { id: job.id },
+//             data: {
+//               status: MarkingJobStatus.QUEUED,
+//               assignedAgentId: null,
+//               assignedAt: null,
+//               timeSlotExpiry: null
+//             }
+//           });
+
+//           // Penalize agent's reliability score slightly
+//           if (job.assignedAgentId) {
+//             await prisma.user.update({
+//               where: { id: job.assignedAgentId },
+//               data: {
+//                 agentReliabilityScore: {
+//                   decrement: 0.1 // Reduce by 0.1 points
+//                 }
+//               }
+//             });
+//           }
+
+//           // TODO: Send notification to agent about expired time slot
+//           // TODO: Send notification to property owner about reassignment
+
+//           return { jobId: job.id, status: 'rotated' };
+//         } catch (error) {
+//           console.error(`Failed to rotate job ${job.id}:`, error);
+//           return { jobId: job.id, status: 'failed', error };
+//         }
+//       })
+//     );
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Expired time slots checked and rotated', {
+//         rotatedCount: results.filter(r => r.status === 'rotated').length,
+//         failedCount: results.filter(r => r.status === 'failed').length,
+//         details: results
+//       })
+//     );
+//   } catch (error) {
+//     console.error('Check and rotate expired slots error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to check and rotate expired slots', null)
+//     );
+//   }
+// };
+
+// /**
+//  * Get queue statistics
+//  * GET /api/queue/stats
+//  */
+// export const getQueueStats = async (req: Request, res: Response) => {
+//   try {
+//     const [
+//       totalQueued,
+//       totalAssigned,
+//       totalInProgress,
+//       totalCompleted,
+//       avgCompletionTime,
+//       availableAgents
+//     ] = await Promise.all([
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.QUEUED }
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.ASSIGNED }
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.IN_PROGRESS }
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: { status: MarkingJobStatus.COMPLETED }
+//       }),
+//       prisma.propertyMarkingJob.aggregate({
+//         where: {
+//           status: MarkingJobStatus.COMPLETED,
+//           assignedAt: { not: null },
+//           completedAt: { not: null }
+//         },
+//         _avg: {
+//           id: true // We'll calculate time difference separately
+//         }
+//       }),
+//       prisma.user.count({
+//         where: {
+//           isAvailableForMarking: true,
+//           OR: [
+//             { role: 'AGENT' },
+//             { role: 'RENTER', isPremium: true }
+//           ]
+//         }
+//       })
+//     ]);
+
+//     // Calculate average completion time
+//     const completedJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.COMPLETED,
+//         assignedAt: { not: null },
+//         completedAt: { not: null }
+//       },
+//       select: {
+//         assignedAt: true,
+//         completedAt: true
+//       }
+//     });
+
+//     let averageHours = 0;
+//     if (completedJobs.length > 0) {
+//       const totalHours = completedJobs.reduce((sum, job) => {
+//         if (job.assignedAt && job.completedAt) {
+//           const hours = (job.completedAt.getTime() - job.assignedAt.getTime()) / (1000 * 60 * 60);
+//           return sum + hours;
+//         }
+//         return sum;
+//       }, 0);
+//       averageHours = totalHours / completedJobs.length;
+//     }
+
+//     const stats = {
+//       queue: {
+//         queued: totalQueued,
+//         assigned: totalAssigned,
+//         inProgress: totalInProgress,
+//         completed: totalCompleted
+//       },
+//       performance: {
+//         averageCompletionTimeHours: averageHours.toFixed(2),
+//         availableAgents
+//       },
+//       estimated: {
+//         averageWaitTimeHours: (totalQueued * averageHours).toFixed(2)
+//       }
+//     };
+
+//     return res.status(200).json(
+//       standardResponse(true, 'Queue statistics retrieved successfully', stats)
+//     );
+//   } catch (error) {
+//     console.error('Get queue stats error:', error);
+//     return res.status(500).json(
+//       standardResponse(false, 'Failed to retrieve queue statistics', null)
+//     );
+//   }
+// };

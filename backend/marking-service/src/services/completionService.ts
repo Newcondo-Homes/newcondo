@@ -1668,3 +1668,476 @@ export class CompletionService {
 // }
 
 // export const completionService = new CompletionService();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/completionService.ts
+
+// import { PrismaClient, MarkingJobStatus, PaymentStatus } from '@prisma/client';
+// import { NotificationService } from './notificationService';
+// import { QualityAssuranceService } from './qualityAssuranceService';
+// import { PaymentService } from './paymentService';
+// import { AssignmentService } from './assignmentService';
+
+// const prisma = new PrismaClient();
+
+// export class CompletionService {
+//   private notificationService: NotificationService;
+//   private qualityAssuranceService: QualityAssuranceService;
+//   private paymentService: PaymentService;
+//   private assignmentService: AssignmentService;
+
+//   constructor() {
+//     this.notificationService = new NotificationService();
+//     this.qualityAssuranceService = new QualityAssuranceService();
+//     this.paymentService = new PaymentService();
+//     this.assignmentService = new AssignmentService();
+//   }
+
+//   /**
+//    * Agent submits completed marking job
+//    */
+//   async submitMarkingCompletion(data: {
+//     jobId: string;
+//     agentId: string;
+//     boundaryData: any;
+//     completionImages: string[];
+//     completionNotes?: string;
+//   }) {
+//     const { jobId, agentId, boundaryData, completionImages, completionNotes } = data;
+
+//     // Get the job
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Marking job not found');
+//     }
+
+//     // Verify agent is assigned
+//     if (job.assignedAgentId !== agentId) {
+//       throw new Error('You are not assigned to this job');
+//     }
+
+//     // Verify job status
+//     if (job.status !== MarkingJobStatus.IN_PROGRESS && job.status !== MarkingJobStatus.ASSIGNED) {
+//       throw new Error('Job cannot be completed in current status');
+//     }
+
+//     // Validate completion data
+//     await this.validateCompletionData(boundaryData, completionImages);
+
+//     // Run quality assurance checks
+//     const qaResult = await this.qualityAssuranceService.runQualityChecks({
+//       jobId,
+//       boundaryData,
+//       completionImages,
+//       propertyCoordinates: job.property.gpsCoordinates,
+//     });
+
+//     if (!qaResult.passed) {
+//       throw new Error(`Quality check failed: ${qaResult.reason}`);
+//     }
+
+//     // Update job as completed
+//     const completedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status: MarkingJobStatus.COMPLETED,
+//         completedAt: new Date(),
+//         boundaryData,
+//         completionImages,
+//         completionNotes,
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     // Update agent stats
+//     await prisma.user.update({
+//       where: { id: agentId },
+//       data: {
+//         completedMarkingJobs: { increment: 1 },
+//       },
+//     });
+
+//     // Calculate completion time and reward agent if on time
+//     if (job.assignedAt) {
+//       const completionTime = Date.now() - job.assignedAt.getTime();
+//       const threeHours = 3 * 60 * 60 * 1000;
+      
+//       if (completionTime <= threeHours) {
+//         await this.assignmentService.rewardAgent(agentId, 'ON_TIME_COMPLETION');
+//       }
+//     }
+
+//     // Process initial payment (25% or approximately 1000 naira)
+//     await this.paymentService.processInitialAgentPayment(jobId, agentId);
+
+//     // Set confirmation deadline (2-3 days)
+//     const confirmationDeadline = new Date();
+//     confirmationDeadline.setDate(confirmationDeadline.getDate() + 2);
+
+//     // Update property with boundary data (pending confirmation)
+//     await prisma.property.update({
+//       where: { id: job.propertyId },
+//       data: {
+//         boundaryCoordinates: boundaryData,
+//         boundaryImages: completionImages,
+//         boundaryMarkedBy: agentId,
+//         boundaryMarkedAt: new Date(),
+//         boundaryVerified: false, // Will be true after owner confirmation
+//       },
+//     });
+
+//     // Notify property owner to confirm
+//     await this.notificationService.notifyPropertyOwnerToConfirm(
+//       completedJob,
+//       confirmationDeadline
+//     );
+
+//     // Create event log
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: agentId,
+//         type: 'MARKING_JOB_COMPLETED',
+//         metadata: {
+//           jobId,
+//           propertyId: job.propertyId,
+//           completionTime: job.assignedAt ? Date.now() - job.assignedAt.getTime() : null,
+//         },
+//       },
+//     });
+
+//     return {
+//       completedJob,
+//       confirmationDeadline,
+//       initialPayment: 1000,
+//       message: 'Marking submitted successfully. Awaiting property owner confirmation.',
+//     };
+//   }
+
+//   /**
+//    * Validate completion data
+//    */
+//   private async validateCompletionData(boundaryData: any, completionImages: string[]) {
+//     // Validate boundary data structure
+//     if (!boundaryData || !boundaryData.coordinates || !Array.isArray(boundaryData.coordinates)) {
+//       throw new Error('Invalid boundary data format');
+//     }
+
+//     // Validate coordinates
+//     if (boundaryData.coordinates.length < 4) {
+//       throw new Error('Boundary must have at least 4 coordinate points');
+//     }
+
+//     // Validate images
+//     if (!completionImages || completionImages.length < 3) {
+//       throw new Error('At least 3 completion images are required');
+//     }
+
+//     // Validate image URLs
+//     for (const imageUrl of completionImages) {
+//       if (!imageUrl.startsWith('http')) {
+//         throw new Error('Invalid image URL');
+//       }
+//     }
+//   }
+
+//   /**
+//    * Get completion details
+//    */
+//   async getCompletionDetails(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: {
+//           include: {
+//             images: true,
+//           },
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true,
+//           },
+//         },
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true,
+//             agentReliabilityScore: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Marking job not found');
+//     }
+
+//     // Calculate time metrics
+//     const timeMetrics = {
+//       assignedAt: job.assignedAt,
+//       completedAt: job.completedAt,
+//       timeTaken: job.assignedAt && job.completedAt
+//         ? job.completedAt.getTime() - job.assignedAt.getTime()
+//         : null,
+//       wasOnTime: job.timeSlotExpiry && job.completedAt
+//         ? job.completedAt <= job.timeSlotExpiry
+//         : null,
+//     };
+
+//     return {
+//       job,
+//       timeMetrics,
+//     };
+//   }
+
+//   /**
+//    * Get pending completions (awaiting confirmation)
+//    */
+//   async getPendingCompletions(userId?: string) {
+//     const where: any = {
+//       status: MarkingJobStatus.COMPLETED,
+//       property: {
+//         boundaryVerified: false,
+//       },
+//     };
+
+//     if (userId) {
+//       where.requestedBy = userId;
+//     }
+
+//     const jobs = await prisma.propertyMarkingJob.findMany({
+//       where,
+//       include: {
+//         property: {
+//           select: {
+//             id: true,
+//             address: true,
+//             city: true,
+//             state: true,
+//             boundaryCoordinates: true,
+//             boundaryImages: true,
+//           },
+//         },
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             phone: true,
+//             agentReliabilityScore: true,
+//           },
+//         },
+//       },
+//       orderBy: {
+//         completedAt: 'desc',
+//       },
+//     });
+
+//     // Add confirmation deadline info
+//     return jobs.map(job => ({
+//       ...job,
+//       confirmationDeadline: job.completedAt
+//         ? new Date(job.completedAt.getTime() + 2 * 24 * 60 * 60 * 1000)
+//         : null,
+//       daysRemaining: job.completedAt
+//         ? Math.ceil((new Date(job.completedAt.getTime() + 2 * 24 * 60 * 60 * 1000).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
+//         : null,
+//     }));
+//   }
+
+//   /**
+//    * Handle auto-confirmation after deadline
+//    */
+//   async processAutoConfirmation(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         assignedAgent: true,
+//       },
+//     });
+
+//     if (!job || !job.completedAt) {
+//       return;
+//     }
+
+//     const confirmationDeadline = new Date(job.completedAt);
+//     confirmationDeadline.setDate(confirmationDeadline.getDate() + 2);
+
+//     // Check if deadline has passed
+//     if (new Date() < confirmationDeadline) {
+//       return;
+//     }
+
+//     // Auto-confirm the marking
+//     await this.confirmMarking(jobId, job.requestedBy, true, 'Auto-confirmed after deadline');
+//   }
+
+//   /**
+//    * Confirm marking (called by property owner or auto-process)
+//    */
+//   private async confirmMarking(
+//     jobId: string,
+//     userId: string,
+//     isAutoConfirm: boolean,
+//     notes?: string
+//   ) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     // Update property boundary as verified
+//     await prisma.property.update({
+//       where: { id: job.propertyId },
+//       data: {
+//         boundaryVerified: true,
+//       },
+//     });
+
+//     // Release remaining payment to agent
+//     await this.paymentService.releaseRemainingPayment(jobId, job.assignedAgentId!);
+
+//     // Close the job
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         completionNotes: notes || job.completionNotes,
+//       },
+//     });
+
+//     // Notify agent of payment
+//     if (job.assignedAgent) {
+//       await this.notificationService.notifyAgentPaymentReleased(job);
+//     }
+
+//     // Log event
+//     await prisma.eventLog.create({
+//       data: {
+//         userId,
+//         type: isAutoConfirm ? 'MARKING_AUTO_CONFIRMED' : 'MARKING_CONFIRMED',
+//         metadata: {
+//           jobId,
+//           propertyId: job.propertyId,
+//           agentId: job.assignedAgentId,
+//         },
+//       },
+//     });
+//   }
+
+//   /**
+//    * Get completion statistics
+//    */
+//   async getCompletionStats(agentId?: string) {
+//     const where: any = {
+//       status: MarkingJobStatus.COMPLETED,
+//     };
+
+//     if (agentId) {
+//       where.assignedAgentId = agentId;
+//     }
+
+//     const [total, awaitingConfirmation, confirmed, avgCompletionTime] = await Promise.all([
+//       prisma.propertyMarkingJob.count({ where }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           property: {
+//             boundaryVerified: false,
+//           },
+//         },
+//       }),
+//       prisma.propertyMarkingJob.count({
+//         where: {
+//           ...where,
+//           property: {
+//             boundaryVerified: true,
+//           },
+//         },
+//       }),
+//       this.calculateAvgCompletionTime(agentId),
+//     ]);
+
+//     return {
+//       total,
+//       awaitingConfirmation,
+//       confirmed,
+//       confirmationRate: total > 0 ? (confirmed / total) * 100 : 0,
+//       avgCompletionTime,
+//     };
+//   }
+
+//   /**
+//    * Calculate average completion time
+//    */
+//   private async calculateAvgCompletionTime(agentId?: string): Promise<number> {
+//     const where: any = {
+//       status: MarkingJobStatus.COMPLETED,
+//       assignedAt: { not: null },
+//       completedAt: { not: null },
+//     };
+
+//     if (agentId) {
+//       where.assignedAgentId = agentId;
+//     }
+
+//     const jobs = await prisma.propertyMarkingJob.findMany({
+//       where,
+//       select: {
+//         assignedAt: true,
+//         completedAt: true,
+//       },
+//       take: 50,
+//       orderBy: { completedAt: 'desc' },
+//     });
+
+//     if (jobs.length === 0) {
+//       return 0;
+//     }
+
+//     const totalMinutes = jobs.reduce((sum, job) => {
+//       const duration = job.completedAt!.getTime() - job.assignedAt!.getTime();
+//       return sum + duration / (1000 * 60);
+//     }, 0);
+
+//     return Math.round(totalMinutes / jobs.length);
+//   }
+// }
+
+// export default CompletionService;

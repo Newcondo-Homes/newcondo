@@ -232,3 +232,361 @@ export default {
   PropertyConfirmationStatus,
   QueuePerformanceMetrics,
 };
+
+
+
+
+
+
+// /**
+//  * Queue Management Types
+//  * Types for the first-come-first-served queue system
+//  */
+
+// import { AgentInfo } from './marking';
+
+// // Queue Entry Types
+// export interface QueueEntryData {
+//   id: string;
+//   jobId: string;
+//   agentId: string;
+//   position: number;
+//   joinedAt: Date;
+//   status: QueueEntryStatus;
+//   priority: number; // Calculated priority score
+//   metadata?: QueueEntryMetadata;
+// }
+
+// export interface QueueEntryMetadata {
+//   distance?: number; // Distance from property in km
+//   agentLocation?: {
+//     latitude: number;
+//     longitude: number;
+//   };
+//   reliabilityScore?: number;
+//   previousCompletedJobs?: number;
+//   estimatedTravelTime?: number; // in minutes
+// }
+
+// export enum QueueEntryStatus {
+//   WAITING = 'WAITING',
+//   ACTIVE = 'ACTIVE', // Currently assigned the time slot
+//   EXPIRED = 'EXPIRED', // Time slot expired
+//   COMPLETED = 'COMPLETED', // Successfully completed the job
+//   REMOVED = 'REMOVED', // Manually removed or left queue
+// }
+
+// // Queue Management
+// export interface QueueState {
+//   jobId: string;
+//   entries: QueueEntryData[];
+//   currentAgentId?: string;
+//   currentAgentStartTime?: Date;
+//   currentAgentExpiry?: Date;
+//   totalWaiting: number;
+//   lastUpdated: Date;
+// }
+
+// export interface JoinQueueRequest {
+//   jobId: string;
+//   agentId: string;
+//   location?: {
+//     latitude: number;
+//     longitude: number;
+//   };
+// }
+
+// export interface LeaveQueueRequest {
+//   jobId: string;
+//   agentId: string;
+//   reason?: string;
+// }
+
+// export interface QueuePositionResponse {
+//   position: number;
+//   totalInQueue: number;
+//   estimatedWaitTime?: number; // in minutes
+//   isActive: boolean;
+//   timeSlotExpiry?: Date;
+// }
+
+// // Queue Operations
+// export interface MoveToNextInQueueRequest {
+//   jobId: string;
+//   reason: QueueProgressionReason;
+//   previousAgentId?: string;
+// }
+
+// export enum QueueProgressionReason {
+//   TIME_SLOT_EXPIRED = 'TIME_SLOT_EXPIRED',
+//   JOB_COMPLETED = 'JOB_COMPLETED',
+//   AGENT_REMOVED = 'AGENT_REMOVED',
+//   JOB_CANCELLED = 'JOB_CANCELLED',
+//   MANUAL_PROGRESSION = 'MANUAL_PROGRESSION',
+// }
+
+// export interface QueueProgressionResult {
+//   success: boolean;
+//   previousAgent?: string;
+//   newAgent?: string;
+//   newPosition?: number;
+//   timeSlotExpiry?: Date;
+//   queueEmpty: boolean;
+// }
+
+// // Queue Notifications
+// export interface QueueNotificationData {
+//   type: QueueNotificationType;
+//   jobId: string;
+//   agentId: string;
+//   position?: number;
+//   totalInQueue?: number;
+//   estimatedWaitTime?: number;
+//   timeSlotExpiry?: Date;
+//   propertyAddress?: string;
+// }
+
+// export enum QueueNotificationType {
+//   JOINED_QUEUE = 'JOINED_QUEUE',
+//   POSITION_UPDATED = 'POSITION_UPDATED',
+//   YOUR_TURN = 'YOUR_TURN',
+//   TIME_SLOT_EXPIRING = 'TIME_SLOT_EXPIRING',
+//   REMOVED_FROM_QUEUE = 'REMOVED_FROM_QUEUE',
+//   QUEUE_CLOSED = 'QUEUE_CLOSED',
+// }
+
+// // Queue Statistics
+// export interface QueueStatistics {
+//   jobId: string;
+//   totalJoined: number;
+//   currentWaiting: number;
+//   totalCompleted: number;
+//   totalExpired: number;
+//   totalRemoved: number;
+//   averageWaitTime: number; // in minutes
+//   averageCompletionTime: number; // in minutes
+// }
+
+// export interface AgentQueueHistory {
+//   agentId: string;
+//   totalQueuesJoined: number;
+//   totalCompleted: number;
+//   totalExpired: number;
+//   successRate: number; // percentage
+//   averagePosition: number;
+//   averageWaitTime: number; // in minutes
+// }
+
+// // Queue Filters and Sorting
+// export interface QueueFilters {
+//   jobId?: string;
+//   agentId?: string;
+//   status?: QueueEntryStatus[];
+//   minReliabilityScore?: number;
+//   maxDistance?: number; // in km
+//   dateFrom?: Date;
+//   dateTo?: Date;
+// }
+
+// export interface QueueSortOptions {
+//   sortBy: QueueSortField;
+//   sortOrder: 'asc' | 'desc';
+// }
+
+// export enum QueueSortField {
+//   POSITION = 'POSITION',
+//   JOINED_AT = 'JOINED_AT',
+//   PRIORITY = 'PRIORITY',
+//   DISTANCE = 'DISTANCE',
+//   RELIABILITY_SCORE = 'RELIABILITY_SCORE',
+// }
+
+// // Time Slot Management
+// export interface TimeSlotInfo {
+//   jobId: string;
+//   agentId: string;
+//   startTime: Date;
+//   expiryTime: Date;
+//   durationMinutes: number;
+//   remainingMinutes: number;
+//   isExpired: boolean;
+//   isActive: boolean;
+// }
+
+// export interface TimeSlotExtensionRequest {
+//   jobId: string;
+//   agentId: string;
+//   extensionMinutes: number;
+//   reason: string;
+// }
+
+// export interface TimeSlotExtensionResponse {
+//   granted: boolean;
+//   newExpiryTime?: Date;
+//   reason?: string;
+// }
+
+// // Queue Capacity and Limits
+// export interface QueueCapacityInfo {
+//   jobId: string;
+//   maxCapacity: number;
+//   currentCount: number;
+//   isAtCapacity: boolean;
+//   canJoin: boolean;
+// }
+
+// export interface QueueLimits {
+//   maxQueueSize: number;
+//   maxTimeSlotMinutes: number;
+//   minReliabilityScore: number;
+//   maxDistanceKm: number;
+//   allowDuplicateAgents: boolean;
+// }
+
+// // Queue Validation
+// export interface QueueValidation {
+//   canJoin: boolean;
+//   errors: string[];
+//   warnings: string[];
+//   suggestions?: string[];
+// }
+
+// export interface ValidateQueueJoinRequest {
+//   jobId: string;
+//   agentId: string;
+//   location?: {
+//     latitude: number;
+//     longitude: number;
+//   };
+// }
+
+// // Queue Events
+// export enum QueueEventType {
+//   AGENT_JOINED = 'AGENT_JOINED',
+//   AGENT_LEFT = 'AGENT_LEFT',
+//   AGENT_MOVED_TO_ACTIVE = 'AGENT_MOVED_TO_ACTIVE',
+//   AGENT_COMPLETED = 'AGENT_COMPLETED',
+//   AGENT_EXPIRED = 'AGENT_EXPIRED',
+//   POSITION_UPDATED = 'POSITION_UPDATED',
+//   QUEUE_CLEARED = 'QUEUE_CLEARED',
+//   QUEUE_CLOSED = 'QUEUE_CLOSED',
+// }
+
+// export interface QueueEvent {
+//   type: QueueEventType;
+//   jobId: string;
+//   agentId?: string;
+//   timestamp: Date;
+//   metadata?: Record<string, any>;
+// }
+
+// // Batch Queue Operations
+// export interface BatchQueueOperation {
+//   jobId: string;
+//   operations: Array<{
+//     type: 'add' | 'remove' | 'reorder';
+//     agentId: string;
+//     position?: number;
+//   }>;
+// }
+
+// export interface BatchQueueOperationResult {
+//   success: boolean;
+//   successCount: number;
+//   failureCount: number;
+//   errors: Array<{
+//     agentId: string;
+//     operation: string;
+//     error: string;
+//   }>;
+// }
+
+// // Queue Analytics
+// export interface QueueAnalytics {
+//   jobId: string;
+//   period: {
+//     start: Date;
+//     end: Date;
+//   };
+//   metrics: {
+//     totalAgents: number;
+//     peakQueueSize: number;
+//     averageQueueSize: number;
+//     totalCompletions: number;
+//     totalExpirations: number;
+//     completionRate: number; // percentage
+//     averageTimeToCompletion: number; // in minutes
+//     averageTimeSlotUtilization: number; // percentage
+//   };
+//   agentBreakdown: Array<{
+//     agentId: string;
+//     completions: number;
+//     expirations: number;
+//     averageWaitTime: number;
+//   }>;
+// }
+
+// // Real-time Queue Updates
+// export interface QueueUpdateSubscription {
+//   jobId: string;
+//   agentId?: string; // Optional: subscribe to specific agent updates
+//   events: QueueEventType[];
+// }
+
+// export interface QueueUpdate {
+//   jobId: string;
+//   event: QueueEventType;
+//   data: QueueState;
+//   timestamp: Date;
+// }
+
+// // Error Handling
+// export interface QueueError {
+//   code: QueueErrorCode;
+//   message: string;
+//   details?: Record<string, any>;
+// }
+
+// export enum QueueErrorCode {
+//   QUEUE_NOT_FOUND = 'QUEUE_NOT_FOUND',
+//   QUEUE_FULL = 'QUEUE_FULL',
+//   ALREADY_IN_QUEUE = 'ALREADY_IN_QUEUE',
+//   NOT_IN_QUEUE = 'NOT_IN_QUEUE',
+//   INVALID_POSITION = 'INVALID_POSITION',
+//   TIME_SLOT_EXPIRED = 'TIME_SLOT_EXPIRED',
+//   AGENT_NOT_ELIGIBLE = 'AGENT_NOT_ELIGIBLE',
+//   JOB_NOT_AVAILABLE = 'JOB_NOT_AVAILABLE',
+//   QUEUE_CLOSED = 'QUEUE_CLOSED',
+//   INVALID_OPERATION = 'INVALID_OPERATION',
+// }
+
+// // Export all types
+// export type {
+//   QueueEntryData,
+//   QueueEntryMetadata,
+//   QueueState,
+//   JoinQueueRequest,
+//   LeaveQueueRequest,
+//   QueuePositionResponse,
+//   MoveToNextInQueueRequest,
+//   QueueProgressionResult,
+//   QueueNotificationData,
+//   QueueStatistics,
+//   AgentQueueHistory,
+//   QueueFilters,
+//   QueueSortOptions,
+//   TimeSlotInfo,
+//   TimeSlotExtensionRequest,
+//   TimeSlotExtensionResponse,
+//   QueueCapacityInfo,
+//   QueueLimits,
+//   QueueValidation,
+//   ValidateQueueJoinRequest,
+//   QueueEvent,
+//   BatchQueueOperation,
+//   BatchQueueOperationResult,
+//   QueueAnalytics,
+//   QueueUpdateSubscription,
+//   QueueUpdate,
+//   QueueError,
+// };

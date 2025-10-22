@@ -996,3 +996,392 @@ export class MarkingJobService {
 //     }
 //   }
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/markingJobService.ts
+
+// import { PrismaClient, MarkingJobStatus, UrgencyLevel, PaymentStatus } from '@prisma/client';
+// import { NotificationService } from './notificationService';
+// import { QueueService } from './queueService';
+// import { PaymentService } from './paymentService';
+
+// const prisma = new PrismaClient();
+
+// export class MarkingJobService {
+//   private notificationService: NotificationService;
+//   private queueService: QueueService;
+//   private paymentService: PaymentService;
+
+//   constructor() {
+//     this.notificationService = new NotificationService();
+//     this.queueService = new QueueService();
+//     this.paymentService = new PaymentService();
+//   }
+
+//   /**
+//    * Create a new marking job
+//    */
+//   async createMarkingJob(data: {
+//     propertyId: string;
+//     requestedBy: string;
+//     contactPersonName: string;
+//     contactPersonPhone: string;
+//     accessInstructions?: string;
+//     preferredTime?: Date;
+//     urgencyLevel?: UrgencyLevel;
+//     assignmentType: 'SELF' | 'KNOWN_PERSON' | 'NEWCONDO_ADMIN' | 'AGENT_QUEUE';
+//   }) {
+//     const { assignmentType, ...jobData } = data;
+
+//     // Determine marking fee based on assignment type
+//     const markingFee = assignmentType === 'NEWCONDO_ADMIN' ? 25000 : 20000;
+
+//     // Calculate max completion time (3 days from now)
+//     const maxCompletionTime = new Date();
+//     maxCompletionTime.setDate(maxCompletionTime.getDate() + 3);
+
+//     // Create the marking job
+//     const markingJob = await prisma.propertyMarkingJob.create({
+//       data: {
+//         ...jobData,
+//         markingFee,
+//         status: MarkingJobStatus.QUEUED,
+//         urgencyLevel: jobData.urgencyLevel || UrgencyLevel.NORMAL,
+//         maxCompletionTime,
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true,
+//           },
+//         },
+//       },
+//     });
+
+//     // Handle different assignment types
+//     switch (assignmentType) {
+//       case 'AGENT_QUEUE':
+//         // Add to queue and broadcast to agents
+//         await this.queueService.addToQueue(markingJob.id);
+//         break;
+
+//       case 'NEWCONDO_ADMIN':
+//         // Notify admin team
+//         await this.notificationService.notifyAdminOfMarkingJob(markingJob);
+//         break;
+
+//       case 'KNOWN_PERSON':
+//         // Generate shareable link
+//         const shareableLink = await this.generateShareableLink(markingJob.id);
+//         await this.notificationService.notifyRequestingUserWithLink(
+//           markingJob.requestingUser,
+//           shareableLink
+//         );
+//         break;
+
+//       case 'SELF':
+//         // Update status to assigned
+//         await this.assignJobToSelf(markingJob.id, data.requestedBy);
+//         break;
+//     }
+
+//     return {
+//       markingJob,
+//       assignmentType,
+//     };
+//   }
+
+//   /**
+//    * Assign job to self (property owner marks themselves)
+//    */
+//   async assignJobToSelf(jobId: string, userId: string) {
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status: MarkingJobStatus.ASSIGNED,
+//         assignedAgentId: userId,
+//         assignedAt: new Date(),
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//       },
+//     });
+
+//     await this.notificationService.notifyJobAssigned(updatedJob);
+
+//     return updatedJob;
+//   }
+
+//   /**
+//    * Get marking job by ID
+//    */
+//   async getMarkingJobById(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: {
+//           include: {
+//             images: true,
+//           },
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true,
+//           },
+//         },
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             phone: true,
+//             agentReliabilityScore: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Marking job not found');
+//     }
+
+//     return job;
+//   }
+
+//   /**
+//    * Get marking jobs for a user (requested by them)
+//    */
+//   async getUserMarkingJobs(userId: string, status?: MarkingJobStatus) {
+//     const where: any = { requestedBy: userId };
+//     if (status) {
+//       where.status = status;
+//     }
+
+//     return prisma.propertyMarkingJob.findMany({
+//       where,
+//       include: {
+//         property: {
+//           include: {
+//             images: {
+//               where: { isPrimary: true },
+//               take: 1,
+//             },
+//           },
+//         },
+//         assignedAgent: {
+//           select: {
+//             id: true,
+//             name: true,
+//             phone: true,
+//           },
+//         },
+//       },
+//       orderBy: { createdAt: 'desc' },
+//     });
+//   }
+
+//   /**
+//    * Get marking jobs assigned to an agent
+//    */
+//   async getAgentAssignedJobs(agentId: string, status?: MarkingJobStatus) {
+//     const where: any = { assignedAgentId: agentId };
+//     if (status) {
+//       where.status = status;
+//     }
+
+//     return prisma.propertyMarkingJob.findMany({
+//       where,
+//       include: {
+//         property: {
+//           include: {
+//             images: true,
+//           },
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//             phone: true,
+//           },
+//         },
+//       },
+//       orderBy: { assignedAt: 'desc' },
+//     });
+//   }
+
+//   /**
+//    * Update marking job status
+//    */
+//   async updateJobStatus(jobId: string, status: MarkingJobStatus, metadata?: any) {
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status,
+//         ...metadata,
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     // Send notifications based on status change
+//     await this.notificationService.notifyJobStatusChange(updatedJob, status);
+
+//     return updatedJob;
+//   }
+
+//   /**
+//    * Cancel marking job
+//    */
+//   async cancelMarkingJob(jobId: string, userId: string, reason?: string) {
+//     const job = await this.getMarkingJobById(jobId);
+
+//     // Only the requesting user can cancel
+//     if (job.requestedBy !== userId) {
+//       throw new Error('Unauthorized to cancel this marking job');
+//     }
+
+//     // Cannot cancel completed jobs
+//     if (job.status === MarkingJobStatus.COMPLETED) {
+//       throw new Error('Cannot cancel completed marking jobs');
+//     }
+
+//     const cancelledJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status: MarkingJobStatus.CANCELLED,
+//         completionNotes: reason || 'Cancelled by user',
+//       },
+//       include: {
+//         assignedAgent: true,
+//         requestingUser: true,
+//       },
+//     });
+
+//     // Remove from queue if queued
+//     if (job.queuePosition !== null) {
+//       await this.queueService.removeFromQueue(jobId);
+//     }
+
+//     // Notify assigned agent if any
+//     if (cancelledJob.assignedAgent) {
+//       await this.notificationService.notifyJobCancelled(cancelledJob);
+//     }
+
+//     // Process refund if payment was made
+//     if (job.paymentStatus === PaymentStatus.SUCCESS) {
+//       await this.paymentService.processRefund(jobId, 'Job cancelled by user');
+//     }
+
+//     return cancelledJob;
+//   }
+
+//   /**
+//    * Generate shareable link for known person marking
+//    */
+//   private async generateShareableLink(jobId: string): Promise<string> {
+//     const token = Buffer.from(jobId).toString('base64url');
+//     return `${process.env.FRONTEND_URL}/marking/shared/${token}`;
+//   }
+
+//   /**
+//    * Validate shareable link and get job
+//    */
+//   async validateShareableLink(token: string) {
+//     try {
+//       const jobId = Buffer.from(token, 'base64url').toString();
+//       const job = await this.getMarkingJobById(jobId);
+
+//       // Check if job is still valid for marking
+//       if (job.status !== MarkingJobStatus.QUEUED && job.status !== MarkingJobStatus.ASSIGNED) {
+//         throw new Error('This marking job is no longer available');
+//       }
+
+//       return job;
+//     } catch (error) {
+//       throw new Error('Invalid or expired marking link');
+//     }
+//   }
+
+//   /**
+//    * Get marking job statistics
+//    */
+//   async getMarkingJobStats(userId?: string) {
+//     const where = userId ? { requestedBy: userId } : {};
+
+//     const [total, queued, assigned, inProgress, completed, cancelled] = await Promise.all([
+//       prisma.propertyMarkingJob.count({ where }),
+//       prisma.propertyMarkingJob.count({ where: { ...where, status: MarkingJobStatus.QUEUED } }),
+//       prisma.propertyMarkingJob.count({ where: { ...where, status: MarkingJobStatus.ASSIGNED } }),
+//       prisma.propertyMarkingJob.count({ where: { ...where, status: MarkingJobStatus.IN_PROGRESS } }),
+//       prisma.propertyMarkingJob.count({ where: { ...where, status: MarkingJobStatus.COMPLETED } }),
+//       prisma.propertyMarkingJob.count({ where: { ...where, status: MarkingJobStatus.CANCELLED } }),
+//     ]);
+
+//     return {
+//       total,
+//       queued,
+//       assigned,
+//       inProgress,
+//       completed,
+//       cancelled,
+//       completionRate: total > 0 ? (completed / total) * 100 : 0,
+//     };
+//   }
+
+//   /**
+//    * Check if job has expired
+//    */
+//   async checkAndMarkExpiredJobs() {
+//     const now = new Date();
+
+//     const expiredJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: {
+//           in: [MarkingJobStatus.QUEUED, MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS],
+//         },
+//         maxCompletionTime: {
+//           lt: now,
+//         },
+//       },
+//       include: {
+//         requestingUser: true,
+//         assignedAgent: true,
+//       },
+//     });
+
+//     for (const job of expiredJobs) {
+//       await this.updateJobStatus(job.id, MarkingJobStatus.EXPIRED, {
+//         completionNotes: 'Job expired - maximum completion time exceeded',
+//       });
+
+//       // Notify users
+//       await this.notificationService.notifyJobExpired(job);
+//     }
+
+//     return expiredJobs.length;
+//   }
+// }
+
+// export default MarkingJobService;

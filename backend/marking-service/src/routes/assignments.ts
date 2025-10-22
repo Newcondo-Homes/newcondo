@@ -358,3 +358,133 @@ export default router;
 // router.put("/:assignmentId/reassign", authenticate, reassignJob);
 
 // export default router;
+
+
+
+
+
+
+
+// // backend/marking-service/src/routes/assignments.ts
+// import { Router } from 'express';
+// import {
+//   assignMarkingJob,
+//   getAgentAssignments,
+//   getAssignmentDetails,
+//   startMarkingJob,
+//   updateAssignmentStatus,
+//   reassignMarkingJob,
+//   getActiveAssignments,
+//   getAssignmentHistory,
+//   checkAssignmentExpiry
+// } from '../controllers/assignmentController';
+// import { authenticate, authorize } from '../middleware/auth';
+// import { validateAssignment } from '../middleware/queueValidation';
+
+// const router = Router();
+
+// /**
+//  * @route   POST /api/marking/assignments/:jobId/assign
+//  * @desc    Assign marking job to an agent (automatic from queue)
+//  * @access  Private (System/ADMIN only)
+//  */
+// router.post(
+//   '/:jobId/assign',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   validateAssignment,
+//   assignMarkingJob
+// );
+
+// /**
+//  * @route   GET /api/marking/assignments/agent/me
+//  * @desc    Get all assignments for authenticated agent
+//  * @access  Private (AGENT or RENTER with premium)
+//  */
+// router.get(
+//   '/agent/me',
+//   authenticate,
+//   authorize(['AGENT', 'RENTER']),
+//   getAgentAssignments
+// );
+
+// /**
+//  * @route   GET /api/marking/assignments/:jobId
+//  * @desc    Get assignment details for a specific job
+//  * @access  Private
+//  */
+// router.get(
+//   '/:jobId',
+//   authenticate,
+//   getAssignmentDetails
+// );
+
+// /**
+//  * @route   POST /api/marking/assignments/:jobId/start
+//  * @desc    Mark assignment as started (agent on location)
+//  * @access  Private (Assigned agent only)
+//  */
+// router.post(
+//   '/:jobId/start',
+//   authenticate,
+//   startMarkingJob
+// );
+
+// /**
+//  * @route   PATCH /api/marking/assignments/:jobId/status
+//  * @desc    Update assignment status
+//  * @access  Private (Assigned agent only)
+//  */
+// router.patch(
+//   '/:jobId/status',
+//   authenticate,
+//   updateAssignmentStatus
+// );
+
+// /**
+//  * @route   POST /api/marking/assignments/:jobId/reassign
+//  * @desc    Reassign marking job to next agent in queue
+//  * @access  Private (System/ADMIN only)
+//  */
+// router.post(
+//   '/:jobId/reassign',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   reassignMarkingJob
+// );
+
+// /**
+//  * @route   GET /api/marking/assignments/active/all
+//  * @desc    Get all active assignments (for monitoring)
+//  * @access  Private (ADMIN only)
+//  */
+// router.get(
+//   '/active/all',
+//   authenticate,
+//   authorize(['ADMIN']),
+//   getActiveAssignments
+// );
+
+// /**
+//  * @route   GET /api/marking/assignments/history/agent
+//  * @desc    Get agent's assignment history
+//  * @access  Private
+//  */
+// router.get(
+//   '/history/agent',
+//   authenticate,
+//   getAssignmentHistory
+// );
+
+// /**
+//  * @route   GET /api/marking/assignments/:jobId/check-expiry
+//  * @desc    Check if assignment time slot has expired
+//  * @access  Private
+//  */
+// router.get(
+//   '/:jobId/check-expiry',
+//   authenticate,
+//   checkAssignmentExpiry
+// );
+
+// export default router;

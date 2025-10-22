@@ -957,3 +957,587 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction) =>
 
 //   next();
 // };
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/middleware/agentAuth.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { prisma } from '@newcondo/db';
+// import jwt from 'jsonwebtoken';
+
+// // Extend Express Request type
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       user?: {
+//         id: string;
+//         email: string;
+//         role: string;
+//         isPremium?: boolean;
+//       };
+//     }
+//   }
+// }
+
+// // JWT secret from environment
+// const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+// /**
+//  * Verify JWT token and attach user to request
+//  */
+// export const verifyToken = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     // Get token from Authorization header
+//     const authHeader = req.headers.authorization;
+    
+//     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'No token provided. Please include Authorization header',
+//       });
+//       return;
+//     }
+    
+//     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    
+//     // Verify token
+//     const decoded = jwt.verify(token, JWT_SECRET) as {
+//       userId: string;
+//       email: string;
+//       role: string;
+//     };
+    
+//     // Get user from database
+//     const user = await prisma.user.findUnique({
+//       where: { id: decoded.userId },
+//       select: {
+//         id: true,
+//         email: true,
+//         role: true,
+//         isPremium: true,
+//         verificationStatus: true,
+//         isAvailableForMarking: true,
+//       },
+//     });
+    
+//     if (!user) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'User not found. Token may be invalid',
+//       });
+//       return;
+//     }
+    
+//     // Attach user to request
+//     req.user = {
+//       id: user.id,
+//       email: user.email,
+//       role: user.role,
+//       isPremium: user.isPremium,
+//     };
+    
+//     next();
+//   } catch (error) {
+//     if (error instanceof jwt.JsonWebTokenError) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Invalid token',
+//       });
+//       return;
+//     }
+    
+//     if (error instanceof jwt.TokenExpiredError) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Token has expired. Please login again',
+//       });
+//       return;
+//     }
+    
+//     console.error('Error verifying token:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error authenticating user',
+//     });
+//   }
+// };
+
+// /**
+//  * Check if user is an agent or premium renter
+//  */
+// export const requireAgentOrPremiumRenter = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+    
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: {
+//         role: true,
+//         isPremium: true,
+//         verificationStatus: true,
+//       },
+//     });
+    
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+    
+//     const isAgent = user.role === 'AGENT';
+//     const isPremiumRenter = user.role === 'RENTER' && user.isPremium;
+    
+//     if (!isAgent && !isPremiumRenter) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Access denied. Only agents and premium renters can access marking services',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking agent/premium status:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking user permissions',
+//     });
+//   }
+// };
+
+// /**
+//  * Check if user is verified
+//  */
+// export const requireVerifiedUser = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+    
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { verificationStatus: true },
+//     });
+    
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+    
+//     if (user.verificationStatus !== 'VERIFIED') {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Account verification required. Please complete identity verification',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking verification status:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking verification status',
+//     });
+//   }
+// };
+
+// /**
+//  * Check if agent has marking service enabled
+//  */
+// export const requireMarkingServiceEnabled = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+    
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { isAvailableForMarking: true },
+//     });
+    
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+    
+//     if (!user.isAvailableForMarking) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Marking service is not enabled. Please enable it in your profile settings',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking marking service status:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking marking service status',
+//     });
+//   }
+// };
+
+// /**
+//  * Check if user is a property owner or agent for marking job requests
+//  */
+// export const requireOwnerOrAgent = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+    
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { role: true, verificationStatus: true },
+//     });
+    
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+    
+//     const isOwner = user.role === 'OWNER';
+//     const isAgent = user.role === 'AGENT';
+    
+//     if (!isOwner && !isAgent) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Access denied. Only property owners and agents can request marking services',
+//       });
+//       return;
+//     }
+    
+//     if (user.verificationStatus !== 'VERIFIED') {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Account verification required to request marking services',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking owner/agent status:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking user permissions',
+//     });
+//   }
+// };
+
+// /**
+//  * Check if user has a virtual account (required for payments)
+//  */
+// export const requireVirtualAccount = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+    
+//     const virtualAccount = await prisma.virtualAccount.findFirst({
+//       where: {
+//         userId,
+//         isActive: true,
+//       },
+//     });
+    
+//     if (!virtualAccount) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Virtual account required. Please contact support to set up your account',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking virtual account:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking virtual account',
+//     });
+//   }
+// };
+
+// /**
+//  * Check agent reliability score threshold
+//  */
+// export const checkReliabilityScore = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+//     const MIN_RELIABILITY_SCORE = 2.5; // Minimum acceptable score out of 5
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Authentication required',
+//       });
+//       return;
+//     }
+    
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: {
+//         agentReliabilityScore: true,
+//         totalMarkingJobs: true,
+//       },
+//     });
+    
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+    
+//     // Skip check for new agents (less than 5 jobs)
+//     if (user.totalMarkingJobs && user.totalMarkingJobs < 5) {
+//       next();
+//       return;
+//     }
+    
+//     // Check reliability score
+//     if (
+//       user.agentReliabilityScore &&
+//       Number(user.agentReliabilityScore) < MIN_RELIABILITY_SCORE
+//     ) {
+//       res.status(403).json({
+//         success: false,
+//         message: `Your reliability score (${user.agentReliabilityScore}) is below the minimum requirement (${MIN_RELIABILITY_SCORE}). Please improve your service quality`,
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking reliability score:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error checking reliability score',
+//     });
+//   }
+// };
+
+// /**
+//  * Verify shareable link token for anonymous markers
+//  */
+// export const verifyShareableLink = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const { token } = req.params;
+    
+//     if (!token) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Shareable link token is required',
+//       });
+//       return;
+//     }
+    
+//     try {
+//       // Decode token to get job ID
+//       const decoded = jwt.verify(token, JWT_SECRET) as {
+//         jobId: string;
+//         expiresAt: number;
+//       };
+      
+//       // Check if token has expired
+//       if (Date.now() > decoded.expiresAt) {
+//         res.status(401).json({
+//           success: false,
+//           message: 'Shareable link has expired',
+//         });
+//         return;
+//       }
+      
+//       // Verify job exists and is pending
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: decoded.jobId },
+//         select: {
+//           id: true,
+//           status: true,
+//           requestedBy: true,
+//         },
+//       });
+      
+//       if (!job) {
+//         res.status(404).json({
+//           success: false,
+//           message: 'Marking job not found',
+//         });
+//         return;
+//       }
+      
+//       if (job.status !== 'QUEUED' && job.status !== 'ASSIGNED') {
+//         res.status(400).json({
+//           success: false,
+//           message: 'This marking job is no longer available',
+//         });
+//         return;
+//       }
+      
+//       // Attach job info to request
+//       req.markingJob = {
+//         id: job.id,
+//         requestedBy: job.requestedBy,
+//       };
+      
+//       next();
+//     } catch (jwtError) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'Invalid shareable link',
+//       });
+//       return;
+//     }
+//   } catch (error) {
+//     console.error('Error verifying shareable link:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error verifying shareable link',
+//     });
+//   }
+// };
+
+// /**
+//  * Rate limiting for marking job actions
+//  */
+// export const rateLimitMarkingActions = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+    
+//     if (!userId) {
+//       next();
+//       return;
+//     }
+    
+//     // Check recent actions in the last hour
+//     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+//     const recentActions = await prisma.propertyMarkingJob.count({
+//       where: {
+//         requestedBy: userId,
+//         createdAt: {
+//           gte: oneHourAgo,
+//         },
+//       },
+//     });
+    
+//     // Limit: 5 marking job requests per hour
+//     if (recentActions >= 5) {
+//       res.status(429).json({
+//         success: false,
+//         message: 'Rate limit exceeded. Maximum 5 marking job requests per hour',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error checking rate limit:', error);
+//     // Don't block on rate limit check error
+//     next();
+//   }
+// };
+
+// // Extend Express Request to include marking job
+// declare global {
+//   namespace Express {
+//     interface Request {
+//       markingJob?: {
+//         id: string;
+//         requestedBy: string;
+//       };
+//     }
+//   }
+// }

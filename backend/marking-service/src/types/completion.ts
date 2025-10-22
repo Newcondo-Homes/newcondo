@@ -455,3 +455,89 @@ export interface CompletionMetrics {
 //     averageQuality: number;
 //   }[];
 // }
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/types/completion.ts
+
+// export interface CompletionData {
+//   jobId: string;
+//   agentId: string;
+//   completionNotes?: string;
+//   completionImages: string[];
+//   boundaryData: BoundaryCoordinates;
+//   completedAt: Date;
+// }
+
+// export interface BoundaryCoordinates {
+//   coordinates: Array<{ lat: number; lng: number }>;
+//   center: { lat: number; lng: number };
+//   area?: number; // Square meters
+//   perimeter?: number; // Meters
+// }
+
+// export interface CompletionValidation {
+//   hasImages: boolean;
+//   hasBoundary: boolean;
+//   hasNotes: boolean;
+//   imageCount: number;
+//   minimumImagesMet: boolean;
+//   boundaryValid: boolean;
+// }
+
+// export interface CompletionUpload {
+//   images: Express.Multer.File[];
+//   notes: string;
+//   boundaryData: string; // JSON string
+// }
+
+// export interface CompletionSubmission {
+//   jobId: string;
+//   agentId: string;
+//   notes?: string;
+//   imageUrls: string[];
+//   boundaryCoordinates: BoundaryCoordinates;
+// }
+
+// export interface CompletionStatus {
+//   jobId: string;
+//   status: 'pending' | 'submitted' | 'confirmed' | 'rejected';
+//   submittedAt?: Date;
+//   confirmedAt?: Date;
+//   rejectedAt?: Date;
+//   rejectionReason?: string;
+//   partialPaymentReleased: boolean;
+//   fullPaymentReleased: boolean;
+// }
+
+// export interface CompletionPhotoRequirements {
+//   minimum: number;
+//   maximum: number;
+//   requiredAngles: string[];
+//   acceptedFormats: string[];
+//   maxSizePerImage: number; // bytes
+// }
+
+// export const COMPLETION_PHOTO_REQUIREMENTS: CompletionPhotoRequirements = {
+//   minimum: 4,
+//   maximum: 20,
+//   requiredAngles: ['front', 'back', 'left', 'right', 'interior'],
+//   acceptedFormats: ['image/jpeg', 'image/png', 'image/jpg'],
+//   maxSizePerImage: 5 * 1024 * 1024, // 5MB
+// };
+
+// export interface CompletionQualityCheck {
+//   imageQuality: boolean;
+//   boundaryAccuracy: boolean;
+//   notesClarity: boolean;
+//   timestamp: boolean;
+//   gpsAccuracy: boolean;
+//   overallScore: number; // 0-100
+// }

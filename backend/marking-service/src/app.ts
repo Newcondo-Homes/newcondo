@@ -458,3 +458,87 @@ export default app;
 // app.use(errorHandler);
 
 // export default app;
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/app.ts
+
+// import express, { Application } from 'express';
+// import cors from 'cors';
+// import helmet from 'helmet';
+// import morgan from 'morgan';
+// import compression from 'compression';
+
+// // Middleware imports (from shared)
+// import { errorHandler } from '../../shared/src/middleware/errorHandler';
+// import { auth } from '../../shared/src/middleware/auth';
+// import { rateLimiter } from '../../shared/src/middleware/rateLimiter';
+// import { logger } from '../../shared/src/middleware/logger';
+
+// // Route imports
+// import markingJobRoutes from './routes/markingJobs';
+// import queueRoutes from './routes/queue';
+// import assignmentRoutes from './routes/assignments';
+// import completionRoutes from './routes/completion';
+// import confirmationRoutes from './routes/confirmation';
+// import timeSlotRoutes from './routes/timeSlots';
+// import agentLocationRoutes from './routes/agentLocation';
+
+// const app: Application = express();
+
+// // Security middleware
+// app.use(helmet());
+// app.use(cors({
+//   origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+//   credentials: true,
+// }));
+
+// // Body parsing middleware
+// app.use(express.json({ limit: '10mb' }));
+// app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// // Compression middleware
+// app.use(compression());
+
+// // Logging middleware
+// app.use(morgan('combined'));
+// app.use(logger);
+
+// // Health check endpoint
+// app.get('/health', (req, res) => {
+//   res.status(200).json({
+//     status: 'healthy',
+//     service: 'marking-service',
+//     timestamp: new Date().toISOString(),
+//     uptime: process.uptime(),
+//   });
+// });
+
+// // API Routes
+// app.use('/api/marking/jobs', auth, rateLimiter, markingJobRoutes);
+// app.use('/api/marking/queue', auth, rateLimiter, queueRoutes);
+// app.use('/api/marking/assignments', auth, rateLimiter, assignmentRoutes);
+// app.use('/api/marking/completion', auth, rateLimiter, completionRoutes);
+// app.use('/api/marking/confirmation', auth, rateLimiter, confirmationRoutes);
+// app.use('/api/marking/timeslots', auth, rateLimiter, timeSlotRoutes);
+// app.use('/api/marking/agent/location', auth, rateLimiter, agentLocationRoutes);
+
+// // 404 handler
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: 'Route not found',
+//     path: req.path,
+//   });
+// });
+
+// // Global error handler
+// app.use(errorHandler);
+
+// export default app;

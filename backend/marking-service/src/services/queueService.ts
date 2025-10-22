@@ -867,3 +867,366 @@ export class QueueService {
 //     }, {} as Record<string, number>);
 //   }
 // }
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/queueService.ts
+
+// import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+// import { ProximityService } from './proximityService';
+// import { NotificationService } from './notificationService';
+
+// const prisma = new PrismaClient();
+
+// export class QueueService {
+//   private proximityService: ProximityService;
+//   private notificationService: NotificationService;
+
+//   constructor() {
+//     this.proximityService = new ProximityService();
+//     this.notificationService = new NotificationService();
+//   }
+
+//   /**
+//    * Add marking job to queue and broadcast to eligible agents
+//    */
+//   async addToQueue(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Marking job not found');
+//     }
+
+//     // Get property coordinates
+//     const coordinates = job.property.gpsCoordinates
+//       ? JSON.parse(job.property.gpsCoordinates)
+//       : null;
+
+//     if (!coordinates) {
+//       throw new Error('Property must have GPS coordinates for queue assignment');
+//     }
+
+//     // Find eligible agents within reasonable proximity
+//     const eligibleAgents = await this.proximityService.findEligibleAgents(
+//       coordinates.lat,
+//       coordinates.lng,
+//       job.property.city,
+//       job.property.state
+//     );
+
+//     if (eligibleAgents.length === 0) {
+//       throw new Error('No agents available in the property area');
+//     }
+
+//     // Get current queue size
+//     const currentQueueSize = await prisma.propertyMarkingJob.count({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         queuePosition: { not: null },
+//       },
+//     });
+
+//     // Set queue position (last in queue)
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         queuePosition: currentQueueSize + 1,
+//       },
+//     });
+
+//     // Broadcast to eligible agents
+//     await this.notificationService.broadcastMarkingJobToAgents(job, eligibleAgents);
+
+//     return {
+//       jobId,
+//       queuePosition: currentQueueSize + 1,
+//       eligibleAgents: eligibleAgents.length,
+//     };
+//   }
+
+//   /**
+//    * Remove job from queue and adjust positions
+//    */
+//   async removeFromQueue(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//     });
+
+//     if (!job || job.queuePosition === null) {
+//       return;
+//     }
+
+//     // Remove from queue
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         queuePosition: null,
+//       },
+//     });
+
+//     // Adjust positions of jobs after this one
+//     await prisma.propertyMarkingJob.updateMany({
+//       where: {
+//         queuePosition: { gt: job.queuePosition },
+//         status: MarkingJobStatus.QUEUED,
+//       },
+//       data: {
+//         queuePosition: { decrement: 1 },
+//       },
+//     });
+//   }
+
+//   /**
+//    * Get current queue for a specific location
+//    */
+//   async getQueueForLocation(city: string, state: string) {
+//     const jobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         queuePosition: { not: null },
+//         property: {
+//           city,
+//           state,
+//         },
+//       },
+//       include: {
+//         property: {
+//           select: {
+//             id: true,
+//             address: true,
+//             city: true,
+//             state: true,
+//             gpsCoordinates: true,
+//           },
+//         },
+//         requestingUser: {
+//           select: {
+//             id: true,
+//             name: true,
+//           },
+//         },
+//       },
+//       orderBy: {
+//         queuePosition: 'asc',
+//       },
+//     });
+
+//     return jobs;
+//   }
+
+//   /**
+//    * Get queue position for a specific job
+//    */
+//   async getQueuePosition(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       select: {
+//         queuePosition: true,
+//         status: true,
+//         property: {
+//           select: {
+//             city: true,
+//             state: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     // Count jobs ahead in queue for same location
+//     const jobsAhead = await prisma.propertyMarkingJob.count({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         queuePosition: { lt: job.queuePosition || 0 },
+//         property: {
+//           city: job.property.city,
+//           state: job.property.state,
+//         },
+//       },
+//     });
+
+//     return {
+//       queuePosition: job.queuePosition,
+//       jobsAhead,
+//       status: job.status,
+//     };
+//   }
+
+//   /**
+//    * Move job to front of queue (urgent marking)
+//    */
+//   async prioritizeJob(jobId: string, adminId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//     });
+
+//     if (!job || job.queuePosition === null) {
+//       throw new Error('Job not found or not in queue');
+//     }
+
+//     // Update all jobs that were ahead to move back
+//     await prisma.propertyMarkingJob.updateMany({
+//       where: {
+//         queuePosition: { lt: job.queuePosition },
+//         status: MarkingJobStatus.QUEUED,
+//       },
+//       data: {
+//         queuePosition: { increment: 1 },
+//       },
+//     });
+
+//     // Move this job to position 1
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         queuePosition: 1,
+//         urgencyLevel: 'URGENT',
+//       },
+//     });
+
+//     // Log admin action
+//     await prisma.adminAction.create({
+//       data: {
+//         adminId,
+//         action: 'MARKING_JOB_PRIORITIZED',
+//         targetType: 'PropertyMarkingJob',
+//         targetId: jobId,
+//         description: 'Marking job moved to front of queue',
+//       },
+//     });
+
+//     return { success: true, newPosition: 1 };
+//   }
+
+//   /**
+//    * Get queue statistics
+//    */
+//   async getQueueStats(city?: string, state?: string) {
+//     const where: any = {
+//       status: MarkingJobStatus.QUEUED,
+//       queuePosition: { not: null },
+//     };
+
+//     if (city && state) {
+//       where.property = { city, state };
+//     }
+
+//     const [totalInQueue, avgWaitTime] = await Promise.all([
+//       prisma.propertyMarkingJob.count({ where }),
+//       this.calculateAverageWaitTime(city, state),
+//     ]);
+
+//     return {
+//       totalInQueue,
+//       avgWaitTime,
+//       estimatedTimeToCompletion: avgWaitTime * totalInQueue,
+//     };
+//   }
+
+//   /**
+//    * Calculate average wait time for queue
+//    */
+//   private async calculateAverageWaitTime(city?: string, state?: string): Promise<number> {
+//     const where: any = {
+//       status: MarkingJobStatus.COMPLETED,
+//       assignedAt: { not: null },
+//       completedAt: { not: null },
+//     };
+
+//     if (city && state) {
+//       where.property = { city, state };
+//     }
+
+//     const completedJobs = await prisma.propertyMarkingJob.findMany({
+//       where,
+//       select: {
+//         createdAt: true,
+//         assignedAt: true,
+//       },
+//       take: 50, // Last 50 completed jobs
+//       orderBy: { completedAt: 'desc' },
+//     });
+
+//     if (completedJobs.length === 0) {
+//       return 180; // Default 3 hours in minutes
+//     }
+
+//     const totalWaitMinutes = completedJobs.reduce((sum, job) => {
+//       const waitTime = job.assignedAt!.getTime() - job.createdAt.getTime();
+//       return sum + waitTime / (1000 * 60); // Convert to minutes
+//     }, 0);
+
+//     return Math.round(totalWaitMinutes / completedJobs.length);
+//   }
+
+//   /**
+//    * Rebalance queue (remove expired, adjust positions)
+//    */
+//   async rebalanceQueue() {
+//     // Find jobs that should no longer be in queue
+//     const expiredJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         queuePosition: { not: null },
+//         OR: [
+//           { maxCompletionTime: { lt: new Date() } },
+//           { paymentStatus: 'FAILED' },
+//         ],
+//       },
+//     });
+
+//     // Remove expired jobs
+//     for (const job of expiredJobs) {
+//       await this.removeFromQueue(job.id);
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: job.id },
+//         data: {
+//           status: MarkingJobStatus.EXPIRED,
+//         },
+//       });
+//     }
+
+//     // Reorder remaining jobs
+//     const remainingJobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         queuePosition: { not: null },
+//       },
+//       orderBy: {
+//         queuePosition: 'asc',
+//       },
+//     });
+
+//     // Update positions to be sequential
+//     for (let i = 0; i < remainingJobs.length; i++) {
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: remainingJobs[i].id },
+//         data: {
+//           queuePosition: i + 1,
+//         },
+//       });
+//     }
+
+//     return {
+//       expiredRemoved: expiredJobs.length,
+//       totalInQueue: remainingJobs.length,
+//     };
+//   }
+// }
+
+// export default QueueService;

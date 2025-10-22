@@ -663,3 +663,384 @@ export const validatePagination = (req: Request, res: Response, next: NextFuncti
   
 //   next();
 // };
+
+
+
+
+
+
+
+// // backend/marking-service/src/middleware/markingValidation.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { z } from 'zod';
+// import { PropertyMarkingJob, UrgencyLevel } from '@newcondo/db';
+
+// // Validation schemas
+// const createMarkingJobSchema = z.object({
+//   propertyId: z.string().cuid('Invalid property ID format'),
+//   contactPersonName: z
+//     .string()
+//     .min(2, 'Contact person name must be at least 2 characters')
+//     .max(100, 'Contact person name must not exceed 100 characters')
+//     .trim(),
+//   contactPersonPhone: z
+//     .string()
+//     .regex(/^(\+234|0)[789]\d{9}$/, 'Invalid Nigerian phone number format'),
+//   accessInstructions: z
+//     .string()
+//     .max(1000, 'Access instructions must not exceed 1000 characters')
+//     .trim()
+//     .optional(),
+//   preferredTime: z
+//     .string()
+//     .datetime()
+//     .refine(
+//       (date) => new Date(date) > new Date(),
+//       'Preferred time must be in the future'
+//     )
+//     .optional()
+//     .transform((date) => (date ? new Date(date) : undefined)),
+//   urgencyLevel: z
+//     .enum([
+//       UrgencyLevel.LOW,
+//       UrgencyLevel.NORMAL,
+//       UrgencyLevel.HIGH,
+//       UrgencyLevel.URGENT,
+//     ])
+//     .default(UrgencyLevel.NORMAL),
+// });
+
+// const updateMarkingJobSchema = z.object({
+//   contactPersonName: z
+//     .string()
+//     .min(2)
+//     .max(100)
+//     .trim()
+//     .optional(),
+//   contactPersonPhone: z
+//     .string()
+//     .regex(/^(\+234|0)[789]\d{9}$/)
+//     .optional(),
+//   accessInstructions: z
+//     .string()
+//     .max(1000)
+//     .trim()
+//     .optional(),
+//   preferredTime: z
+//     .string()
+//     .datetime()
+//     .refine((date) => new Date(date) > new Date())
+//     .optional()
+//     .transform((date) => (date ? new Date(date) : undefined)),
+//   urgencyLevel: z
+//     .enum([
+//       UrgencyLevel.LOW,
+//       UrgencyLevel.NORMAL,
+//       UrgencyLevel.HIGH,
+//       UrgencyLevel.URGENT,
+//     ])
+//     .optional(),
+// });
+
+// const assignAgentSchema = z.object({
+//   agentId: z.string().cuid('Invalid agent ID format'),
+//   notes: z.string().max(500).trim().optional(),
+// });
+
+// const cancelJobSchema = z.object({
+//   reason: z
+//     .string()
+//     .min(10, 'Cancellation reason must be at least 10 characters')
+//     .max(500, 'Cancellation reason must not exceed 500 characters')
+//     .trim(),
+// });
+
+// const shareableLinkSchema = z.object({
+//   expiryHours: z
+//     .number()
+//     .int()
+//     .min(1, 'Expiry must be at least 1 hour')
+//     .max(168, 'Expiry must not exceed 7 days')
+//     .default(24),
+// });
+
+// // Middleware functions
+// export const validateCreateMarkingJob = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = createMarkingJobSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// export const validateUpdateMarkingJob = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = updateMarkingJobSchema.parse(req.body);
+    
+//     // Ensure at least one field is being updated
+//     if (Object.keys(validated).length === 0) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'At least one field must be provided for update',
+//       });
+//       return;
+//     }
+    
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// export const validateAssignAgent = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = assignAgentSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// export const validateCancelJob = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = cancelJobSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// export const validateShareableLink = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = shareableLinkSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// // Validate marking job ID parameter
+// export const validateMarkingJobId = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   const { jobId } = req.params;
+  
+//   if (!jobId) {
+//     res.status(400).json({
+//       success: false,
+//       message: 'Marking job ID is required',
+//     });
+//     return;
+//   }
+  
+//   // Validate CUID format
+//   const cuidRegex = /^c[a-z0-9]{24}$/i;
+//   if (!cuidRegex.test(jobId)) {
+//     res.status(400).json({
+//       success: false,
+//       message: 'Invalid marking job ID format',
+//     });
+//     return;
+//   }
+  
+//   next();
+// };
+
+// // Validate property ownership or listing rights
+// export const validatePropertyRights = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+//     const { propertyId } = req.body;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'User authentication required',
+//       });
+//       return;
+//     }
+    
+//     // This will be implemented in the service layer
+//     // The middleware just ensures the data structure is correct
+//     next();
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error validating property rights',
+//     });
+//   }
+// };
+
+// // Validate marking fee payment
+// export const validateMarkingFee = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   const MARKING_FEE = 20000; // ₦20,000
+//   const { markingFee } = req.body;
+  
+//   if (markingFee && markingFee !== MARKING_FEE) {
+//     res.status(400).json({
+//       success: false,
+//       message: `Invalid marking fee. Expected ₦${MARKING_FEE.toLocaleString()}`,
+//     });
+//     return;
+//   }
+  
+//   next();
+// };
+
+// // Validate query parameters for listing jobs
+// const listJobsQuerySchema = z.object({
+//   status: z
+//     .enum(['QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'EXPIRED'])
+//     .optional(),
+//   page: z
+//     .string()
+//     .regex(/^\d+$/)
+//     .transform(Number)
+//     .refine((n) => n > 0, 'Page must be greater than 0')
+//     .default('1'),
+//   limit: z
+//     .string()
+//     .regex(/^\d+$/)
+//     .transform(Number)
+//     .refine((n) => n > 0 && n <= 100, 'Limit must be between 1 and 100')
+//     .default('10'),
+//   sortBy: z
+//     .enum(['createdAt', 'updatedAt', 'preferredTime', 'urgencyLevel'])
+//     .default('createdAt'),
+//   sortOrder: z.enum(['asc', 'desc']).default('desc'),
+// });
+
+// export const validateListJobsQuery = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = listJobsQuerySchema.parse(req.query);
+//     req.query = validated as any;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Invalid query parameters',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };

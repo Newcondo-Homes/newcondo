@@ -691,3 +691,480 @@ export const validateQueueMetrics = (req: Request, res: Response, next: NextFunc
 
 //   next();
 // };
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/middleware/queueValidation.ts
+
+// import { Request, Response, NextFunction } from 'express';
+// import { z } from 'zod';
+// import { prisma } from '@newcondo/db';
+
+// // Validation schemas
+// const joinQueueSchema = z.object({
+//   markingJobId: z.string().cuid('Invalid marking job ID format'),
+//   estimatedArrivalTime: z
+//     .string()
+//     .datetime()
+//     .optional()
+//     .transform((date) => (date ? new Date(date) : undefined)),
+//   notes: z
+//     .string()
+//     .max(500, 'Notes must not exceed 500 characters')
+//     .trim()
+//     .optional(),
+// });
+
+// const updateQueuePositionSchema = z.object({
+//   estimatedArrivalTime: z
+//     .string()
+//     .datetime()
+//     .refine(
+//       (date) => new Date(date) > new Date(),
+//       'Estimated arrival time must be in the future'
+//     )
+//     .optional()
+//     .transform((date) => (date ? new Date(date) : undefined)),
+//   notes: z.string().max(500).trim().optional(),
+// });
+
+// const leaveQueueSchema = z.object({
+//   reason: z
+//     .string()
+//     .min(10, 'Reason must be at least 10 characters')
+//     .max(500, 'Reason must not exceed 500 characters')
+//     .trim(),
+// });
+
+// // Middleware functions
+// export const validateJoinQueue = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = joinQueueSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// export const validateUpdateQueuePosition = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = updateQueuePositionSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// export const validateLeaveQueue = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): void => {
+//   try {
+//     const validated = leaveQueueSchema.parse(req.body);
+//     req.body = validated;
+//     next();
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Validation failed',
+//         errors: error.errors.map((err) => ({
+//           field: err.path.join('.'),
+//           message: err.message,
+//         })),
+//       });
+//       return;
+//     }
+//     res.status(500).json({
+//       success: false,
+//       message: 'Internal server error during validation',
+//     });
+//   }
+// };
+
+// // Check if agent is eligible to join queue
+// export const validateAgentEligibility = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+//     const userRole = req.user?.role;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'User authentication required',
+//       });
+//       return;
+//     }
+    
+//     // Check if user is an agent or premium renter
+//     const user = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: {
+//         role: true,
+//         isPremium: true,
+//         isAvailableForMarking: true,
+//         verificationStatus: true,
+//       },
+//     });
+    
+//     if (!user) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'User not found',
+//       });
+//       return;
+//     }
+    
+//     // Validate user is verified
+//     if (user.verificationStatus !== 'VERIFIED') {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Account must be verified to join marking queue',
+//       });
+//       return;
+//     }
+    
+//     // Check eligibility based on role
+//     const isAgent = user.role === 'AGENT';
+//     const isPremiumRenter = user.role === 'RENTER' && user.isPremium;
+    
+//     if (!isAgent && !isPremiumRenter) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'Only agents and premium renters can join the marking queue',
+//       });
+//       return;
+//     }
+    
+//     // Check if agent has enabled marking service
+//     if (!user.isAvailableForMarking) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'You must enable marking service availability in your profile',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error validating agent eligibility:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error validating agent eligibility',
+//     });
+//   }
+// };
+
+// // Check if agent is already in queue
+// export const validateNotInQueue = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+//     const { markingJobId } = req.body;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'User authentication required',
+//       });
+//       return;
+//     }
+    
+//     // Check if job exists and is in QUEUED status
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       select: {
+//         status: true,
+//         assignedAgentId: true,
+//       },
+//     });
+    
+//     if (!job) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'Marking job not found',
+//       });
+//       return;
+//     }
+    
+//     if (job.status !== 'QUEUED') {
+//       res.status(400).json({
+//         success: false,
+//         message: 'This marking job is no longer available for queue',
+//       });
+//       return;
+//     }
+    
+//     // Check if user is already assigned to this job
+//     if (job.assignedAgentId === userId) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'You are already assigned to this job',
+//       });
+//       return;
+//     }
+    
+//     // Check if user has any active assignments (max 3 concurrent)
+//     const activeAssignments = await prisma.propertyMarkingJob.count({
+//       where: {
+//         assignedAgentId: userId,
+//         status: {
+//           in: ['ASSIGNED', 'IN_PROGRESS'],
+//         },
+//       },
+//     });
+    
+//     if (activeAssignments >= 3) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'You have reached the maximum limit of 3 concurrent marking jobs',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error validating queue status:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error validating queue status',
+//     });
+//   }
+// };
+
+// // Validate queue position exists
+// export const validateQueueMembership = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+//     const { jobId } = req.params;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'User authentication required',
+//       });
+//       return;
+//     }
+    
+//     // Check if user is in queue for this job
+//     const job = await prisma.propertyMarkingJob.findFirst({
+//       where: {
+//         id: jobId,
+//         assignedAgentId: userId,
+//         status: {
+//           in: ['QUEUED', 'ASSIGNED'],
+//         },
+//       },
+//     });
+    
+//     if (!job) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'You are not in the queue for this marking job',
+//       });
+//       return;
+//     }
+    
+//     // Check if time slot has expired
+//     if (job.timeSlotExpiry && new Date() > job.timeSlotExpiry) {
+//       res.status(400).json({
+//         success: false,
+//         message: 'Your time slot for this job has expired',
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error validating queue membership:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error validating queue membership',
+//     });
+//   }
+// };
+
+// // Validate time slot availability
+// export const validateTimeSlot = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const { markingJobId } = req.body;
+    
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       select: {
+//         timeSlotExpiry: true,
+//         assignedAgentId: true,
+//         status: true,
+//       },
+//     });
+    
+//     if (!job) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'Marking job not found',
+//       });
+//       return;
+//     }
+    
+//     // If there's a current assignment, check if time slot expired
+//     if (job.assignedAgentId && job.timeSlotExpiry) {
+//       const now = new Date();
+      
+//       if (now < job.timeSlotExpiry) {
+//         const remainingMinutes = Math.ceil(
+//           (job.timeSlotExpiry.getTime() - now.getTime()) / (1000 * 60)
+//         );
+        
+//         res.status(400).json({
+//           success: false,
+//           message: `This job is currently assigned. Please wait ${remainingMinutes} minutes for the time slot to expire`,
+//         });
+//         return;
+//       }
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error validating time slot:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error validating time slot',
+//     });
+//   }
+// };
+
+// // Validate service area coverage
+// export const validateServiceArea = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ): Promise<void> => {
+//   try {
+//     const userId = req.user?.id;
+//     const { markingJobId } = req.body;
+    
+//     if (!userId) {
+//       res.status(401).json({
+//         success: false,
+//         message: 'User authentication required',
+//       });
+//       return;
+//     }
+    
+//     // Get agent's service areas
+//     const agent = await prisma.user.findUnique({
+//       where: { id: userId },
+//       select: { agentServiceAreas: true },
+//     });
+    
+//     // Get job location
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: markingJobId },
+//       include: {
+//         property: {
+//           select: {
+//             city: true,
+//             state: true,
+//           },
+//         },
+//       },
+//     });
+    
+//     if (!job) {
+//       res.status(404).json({
+//         success: false,
+//         message: 'Marking job not found',
+//       });
+//       return;
+//     }
+    
+//     // Check if agent covers this area
+//     const propertyLocation = `${job.property.city}, ${job.property.state}`;
+    
+//     if (
+//       agent?.agentServiceAreas &&
+//       agent.agentServiceAreas.length > 0 &&
+//       !agent.agentServiceAreas.some(
+//         (area) =>
+//           propertyLocation.toLowerCase().includes(area.toLowerCase()) ||
+//           area.toLowerCase().includes(job.property.city.toLowerCase()) ||
+//           area.toLowerCase().includes(job.property.state.toLowerCase())
+//       )
+//     ) {
+//       res.status(403).json({
+//         success: false,
+//         message: 'This marking job is outside your service area',
+//         propertyLocation,
+//         yourServiceAreas: agent.agentServiceAreas,
+//       });
+//       return;
+//     }
+    
+//     next();
+//   } catch (error) {
+//     console.error('Error validating service area:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Error validating service area',
+//     });
+//   }
+// };

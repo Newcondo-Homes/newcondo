@@ -493,3 +493,138 @@ export default app;
 // };
 
 // startServer();
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/server.ts
+
+// import dotenv from 'dotenv';
+// import app from './app';
+// import { PrismaClient } from '@newcondo/db';
+// import Redis from 'ioredis';
+
+// // Load environment variables
+// dotenv.config();
+
+// const PORT = process.env.MARKING_SERVICE_PORT || 4003;
+// const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// // Initialize Prisma
+// const prisma = new PrismaClient({
+//   log: NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+// });
+
+// // Initialize Redis
+// const redis = new Redis({
+//   host: process.env.REDIS_HOST || 'localhost',
+//   port: parseInt(process.env.REDIS_PORT || '6379'),
+//   password: process.env.REDIS_PASSWORD,
+//   retryStrategy: (times) => {
+//     const delay = Math.min(times * 50, 2000);
+//     return delay;
+//   },
+// });
+
+// // Handle Redis connection events
+// redis.on('connect', () => {
+//   console.log('✅ Redis connected successfully');
+// });
+
+// redis.on('error', (error) => {
+//   console.error('❌ Redis connection error:', error);
+// });
+
+// // Graceful shutdown handler
+// const gracefulShutdown = async () => {
+//   console.log('\n🛑 Received shutdown signal, closing connections...');
+
+//   try {
+//     // Close Redis connection
+//     await redis.quit();
+//     console.log('✅ Redis connection closed');
+
+//     // Disconnect Prisma
+//     await prisma.$disconnect();
+//     console.log('✅ Prisma disconnected');
+
+//     // Exit process
+//     process.exit(0);
+//   } catch (error) {
+//     console.error('❌ Error during shutdown:', error);
+//     process.exit(1);
+//   }
+// };
+
+// // Handle shutdown signals
+// process.on('SIGTERM', gracefulShutdown);
+// process.on('SIGINT', gracefulShutdown);
+
+// // Handle uncaught exceptions
+// process.on('uncaughtException', (error) => {
+//   console.error('❌ Uncaught Exception:', error);
+//   gracefulShutdown();
+// });
+
+// // Handle unhandled promise rejections
+// process.on('unhandledRejection', (reason, promise) => {
+//   console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+//   gracefulShutdown();
+// });
+
+// // Database connection check
+// async function checkDatabaseConnection() {
+//   try {
+//     await prisma.$connect();
+//     console.log('✅ Database connected successfully');
+//   } catch (error) {
+//     console.error('❌ Database connection failed:', error);
+//     process.exit(1);
+//   }
+// }
+
+// // Start server
+// async function startServer() {
+//   try {
+//     // Check database connection
+//     await checkDatabaseConnection();
+
+//     // Start listening
+//     const server = app.listen(PORT, () => {
+//       console.log(`
+// ╔════════════════════════════════════════╗
+// ║   Marking Service Started Successfully  ║
+// ╠════════════════════════════════════════╣
+// ║ Port:        ${PORT}                    
+// ║ Environment: ${NODE_ENV}                
+// ║ Time:        ${new Date().toISOString()} 
+// ╚════════════════════════════════════════╝
+//       `);
+//     });
+
+//     // Handle server errors
+//     server.on('error', (error: NodeJS.ErrnoException) => {
+//       if (error.code === 'EADDRINUSE') {
+//         console.error(`❌ Port ${PORT} is already in use`);
+//       } else {
+//         console.error('❌ Server error:', error);
+//       }
+//       process.exit(1);
+//     });
+//   } catch (error) {
+//     console.error('❌ Failed to start server:', error);
+//     process.exit(1);
+//   }
+// }
+
+// // Start the server
+// startServer();
+
+// // Export for testing
+// export { prisma, redis };
