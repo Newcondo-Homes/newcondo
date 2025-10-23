@@ -236,3 +236,162 @@ export function MarkingJobList({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/components/marking/MarkingJobList.tsx
+// "use client";
+
+// import { useState } from "react";
+// import { MarkingJobCard } from "./MarkingJobCard";
+// import { Input } from "@newcondo/ui/input";
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/select";
+// import { Search, Filter } from "lucide-react";
+// import { Button } from "@newcondo/ui/button";
+
+// interface MarkingJobListProps {
+//   jobs: any[];
+//   variant?: "agent" | "owner";
+//   onAction?: (action: string, jobId: string) => void;
+//   isLoading?: boolean;
+// }
+
+// export function MarkingJobList({ jobs, variant = "owner", onAction, isLoading }: MarkingJobListProps) {
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [statusFilter, setStatusFilter] = useState("all");
+//   const [urgencyFilter, setUrgencyFilter] = useState("all");
+
+//   const filteredJobs = jobs.filter((job) => {
+//     const matchesSearch = 
+//       job.property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       job.property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       job.property.city.toLowerCase().includes(searchQuery.toLowerCase());
+
+//     const matchesStatus = statusFilter === "all" || job.status === statusFilter;
+//     const matchesUrgency = urgencyFilter === "all" || job.urgencyLevel === urgencyFilter;
+
+//     return matchesSearch && matchesStatus && matchesUrgency;
+//   });
+
+//   if (isLoading) {
+//     return (
+//       <div className="space-y-4">
+//         {[1, 2, 3].map((i) => (
+//           <div key={i} className="h-48 bg-gray-100 animate-pulse rounded-lg" />
+//         ))}
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-6">
+//       {/* Filters */}
+//       <div className="bg-white rounded-lg border p-4 space-y-4">
+//         <div className="flex items-center gap-2">
+//           <Filter className="h-5 w-5 text-muted-foreground" />
+//           <h3 className="font-semibold">Filters</h3>
+//         </div>
+
+//         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+//           {/* Search */}
+//           <div className="relative">
+//             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//             <Input
+//               placeholder="Search properties..."
+//               value={searchQuery}
+//               onChange={(e) => setSearchQuery(e.target.value)}
+//               className="pl-9"
+//             />
+//           </div>
+
+//           {/* Status Filter */}
+//           <Select value={statusFilter} onValueChange={setStatusFilter}>
+//             <SelectTrigger>
+//               <SelectValue placeholder="All Statuses" />
+//             </SelectTrigger>
+//             <SelectContent>
+//               <SelectItem value="all">All Statuses</SelectItem>
+//               <SelectItem value="QUEUED">In Queue</SelectItem>
+//               <SelectItem value="ASSIGNED">Assigned</SelectItem>
+//               <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+//               <SelectItem value="COMPLETED">Completed</SelectItem>
+//               <SelectItem value="CANCELLED">Cancelled</SelectItem>
+//               <SelectItem value="EXPIRED">Expired</SelectItem>
+//             </SelectContent>
+//           </Select>
+
+//           {/* Urgency Filter */}
+//           <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+//             <SelectTrigger>
+//               <SelectValue placeholder="All Urgency Levels" />
+//             </SelectTrigger>
+//             <SelectContent>
+//               <SelectItem value="all">All Urgency Levels</SelectItem>
+//               <SelectItem value="LOW">Low</SelectItem>
+//               <SelectItem value="NORMAL">Normal</SelectItem>
+//               <SelectItem value="HIGH">High</SelectItem>
+//               <SelectItem value="URGENT">Urgent</SelectItem>
+//             </SelectContent>
+//           </Select>
+//         </div>
+
+//         {(searchQuery || statusFilter !== "all" || urgencyFilter !== "all") && (
+//           <div className="flex items-center justify-between pt-2 border-t">
+//             <span className="text-sm text-muted-foreground">
+//               {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} found
+//             </span>
+//             <Button
+//               variant="ghost"
+//               size="sm"
+//               onClick={() => {
+//                 setSearchQuery("");
+//                 setStatusFilter("all");
+//                 setUrgencyFilter("all");
+//               }}
+//             >
+//               Clear Filters
+//             </Button>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* Jobs Grid */}
+//       {filteredJobs.length === 0 ? (
+//         <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed">
+//           <p className="text-muted-foreground">No marking jobs found</p>
+//           {(searchQuery || statusFilter !== "all" || urgencyFilter !== "all") && (
+//             <p className="text-sm text-muted-foreground mt-2">
+//               Try adjusting your filters
+//             </p>
+//           )}
+//         </div>
+//       ) : (
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+//           {filteredJobs.map((job) => (
+//             <MarkingJobCard
+//               key={job.id}
+//               job={job}
+//               variant={variant}
+//               onAction={onAction}
+//             />
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }

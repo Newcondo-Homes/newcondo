@@ -278,3 +278,178 @@ export function MarkingJobCard({
     </Card>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/components/marking/MarkingJobCard.tsx
+// "use client";
+
+// import { Card, CardContent, CardFooter, CardHeader } from "@newcondo/ui/card";
+// import { Badge } from "@newcondo/ui/badge";
+// import { Button } from "@newcondo/ui/button";
+// import { MapPin, Clock, User, AlertCircle, CheckCircle } from "lucide-react";
+// import { formatDistanceToNow } from "date-fns";
+// import Link from "next/link";
+
+// interface MarkingJobCardProps {
+//   job: {
+//     id: string;
+//     propertyId: string;
+//     status: string;
+//     contactPersonName: string;
+//     contactPersonPhone: string;
+//     markingFee: number;
+//     urgencyLevel: string;
+//     createdAt: string;
+//     assignedAt?: string;
+//     completedAt?: string;
+//     timeSlotExpiry?: string;
+//     queuePosition?: number;
+//     property: {
+//       title: string;
+//       address: string;
+//       city: string;
+//       state: string;
+//     };
+//   };
+//   variant?: "agent" | "owner";
+//   onAction?: (action: string, jobId: string) => void;
+// }
+
+// const statusConfig = {
+//   QUEUED: { label: "In Queue", color: "bg-blue-500", icon: Clock },
+//   ASSIGNED: { label: "Assigned", color: "bg-yellow-500", icon: User },
+//   IN_PROGRESS: { label: "In Progress", color: "bg-orange-500", icon: AlertCircle },
+//   COMPLETED: { label: "Completed", color: "bg-green-500", icon: CheckCircle },
+//   CANCELLED: { label: "Cancelled", color: "bg-gray-500", icon: AlertCircle },
+//   EXPIRED: { label: "Expired", color: "bg-red-500", icon: AlertCircle },
+// };
+
+// const urgencyColors = {
+//   LOW: "bg-gray-100 text-gray-800",
+//   NORMAL: "bg-blue-100 text-blue-800",
+//   HIGH: "bg-orange-100 text-orange-800",
+//   URGENT: "bg-red-100 text-red-800",
+// };
+
+// export function MarkingJobCard({ job, variant = "owner", onAction }: MarkingJobCardProps) {
+//   const statusInfo = statusConfig[job.status as keyof typeof statusConfig];
+//   const StatusIcon = statusInfo?.icon || AlertCircle;
+
+//   return (
+//     <Card className="hover:shadow-lg transition-shadow">
+//       <CardHeader className="pb-3">
+//         <div className="flex items-start justify-between">
+//           <div className="flex-1">
+//             <h3 className="font-semibold text-lg line-clamp-1">{job.property.title}</h3>
+//             <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+//               <MapPin className="h-4 w-4" />
+//               <span className="line-clamp-1">
+//                 {job.property.address}, {job.property.city}
+//               </span>
+//             </div>
+//           </div>
+//           <Badge className={`${statusInfo?.color} text-white ml-2`}>
+//             <StatusIcon className="h-3 w-3 mr-1" />
+//             {statusInfo?.label}
+//           </Badge>
+//         </div>
+//       </CardHeader>
+
+//       <CardContent className="space-y-3">
+//         <div className="flex items-center justify-between text-sm">
+//           <span className="text-muted-foreground">Marking Fee</span>
+//           <span className="font-semibold text-lg">₦{job.markingFee.toLocaleString()}</span>
+//         </div>
+
+//         <div className="flex items-center justify-between text-sm">
+//           <span className="text-muted-foreground">Urgency</span>
+//           <Badge variant="outline" className={urgencyColors[job.urgencyLevel as keyof typeof urgencyColors]}>
+//             {job.urgencyLevel}
+//           </Badge>
+//         </div>
+
+//         {job.queuePosition && job.status === "QUEUED" && (
+//           <div className="flex items-center justify-between text-sm">
+//             <span className="text-muted-foreground">Queue Position</span>
+//             <span className="font-medium">#{job.queuePosition}</span>
+//           </div>
+//         )}
+
+//         {job.timeSlotExpiry && job.status === "ASSIGNED" && (
+//           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-2">
+//             <div className="flex items-center gap-2 text-sm text-yellow-800">
+//               <Clock className="h-4 w-4" />
+//               <span>
+//                 Expires in {formatDistanceToNow(new Date(job.timeSlotExpiry))}
+//               </span>
+//             </div>
+//           </div>
+//         )}
+
+//         {variant === "agent" && job.status !== "QUEUED" && (
+//           <div className="border-t pt-3 mt-3">
+//             <div className="text-sm">
+//               <div className="flex justify-between mb-1">
+//                 <span className="text-muted-foreground">Contact Person</span>
+//                 <span className="font-medium">{job.contactPersonName}</span>
+//               </div>
+//               <div className="flex justify-between">
+//                 <span className="text-muted-foreground">Phone</span>
+//                 <span className="font-medium">{job.contactPersonPhone}</span>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+
+//         <div className="text-xs text-muted-foreground">
+//           Created {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
+//         </div>
+//       </CardContent>
+
+//       <CardFooter className="pt-3 border-t flex gap-2">
+//         <Link href={`/dashboard/marking/${job.id}`} className="flex-1">
+//           <Button variant="outline" className="w-full">
+//             View Details
+//           </Button>
+//         </Link>
+        
+//         {variant === "agent" && job.status === "ASSIGNED" && (
+//           <Button
+//             className="flex-1"
+//             onClick={() => onAction?.("start", job.id)}
+//           >
+//             Start Marking
+//           </Button>
+//         )}
+
+//         {variant === "owner" && job.status === "COMPLETED" && (
+//           <Button
+//             className="flex-1"
+//             onClick={() => onAction?.("confirm", job.id)}
+//           >
+//             Review & Confirm
+//           </Button>
+//         )}
+//       </CardFooter>
+//     </Card>
+//   );
+// }

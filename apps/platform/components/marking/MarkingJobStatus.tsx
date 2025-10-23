@@ -1,222 +1,178 @@
 // apps/platform/components/marking/MarkingJobStatus.tsx
-'use client';
+"use client";
 
-import React, { useMemo } from 'react';
-import { format, differenceInDays, isPast } from 'date-fns';
-import { AlertCircle, Clock, CheckCircle, XCircle, Hourglass } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from "@newcondo/ui/badge";
+import { Progress } from "@newcondo/ui/progress";
+import { 
+  Clock, 
+  User, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle,
+  Loader2
+} from "lucide-react";
 
 interface MarkingJobStatusProps {
-  jobId: string;
-  propertyTitle: string;
-  status: 'QUEUED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
-  assignedAt?: Date;
-  completedAt?: Date;
-  maxCompletionTime?: Date;
-  queuePosition?: number;
-  agentName?: string;
-  agentPhone?: string;
-  onConfirmRequired?: boolean;
+  status: string;
+  queuePosition?: number;
+  timeSlotExpiry?: string;
+  showProgress?: boolean;
+  className?: string;
 }
 
-export const MarkingJobStatus: React.FC<MarkingJobStatusProps> = ({
-  jobId,
-  propertyTitle,
-  status,
-  assignedAt,
-  completedAt,
-  maxCompletionTime,
-  queuePosition,
-  agentName,
-  agentPhone,
-  onConfirmRequired,
-}) => {
-  // Status configuration
-  const statusConfig = {
-    QUEUED: {
-      label: 'In Queue',
-      icon: Hourglass,
-      color: 'bg-blue-50',
-      badge: 'bg-blue-100 text-blue-800',
-      description: 'Waiting for an agent to accept',
-    },
-    ASSIGNED: {
-      label: 'Assigned',
-      icon: Clock,
-      color: 'bg-orange-50',
-      badge: 'bg-orange-100 text-orange-800',
-      description: 'Agent is on the way',
-    },
-    IN_PROGRESS: {
-      label: 'In Progress',
-      icon: Clock,
-      color: 'bg-purple-50',
-      badge: 'bg-purple-100 text-purple-800',
-      description: 'Agent is marking your property',
-    },
-    COMPLETED: {
-      label: 'Completed',
-      icon: CheckCircle,
-      color: 'bg-green-50',
-      badge: 'bg-green-100 text-green-800',
-      description: 'Awaiting your confirmation',
-    },
-    CANCELLED: {
-      label: 'Cancelled',
-      icon: XCircle,
-      color: 'bg-red-50',
-      badge: 'bg-red-100 text-red-800',
-      description: 'Job has been cancelled',
-    },
-    EXPIRED: {
-      label: 'Expired',
-      icon: AlertCircle,
-      color: 'bg-gray-50',
-      badge: 'bg-gray-100 text-gray-800',
-      description: 'Time slot has expired',
-    },
-  };
-
-  const config = statusConfig[status];
-  const Icon = config.icon;
-
-  // Calculate time remaining for confirmation
-  const timeRemaining = useMemo(() => {
-    if (!maxCompletionTime) return null;
-    const now = new Date();
-    const daysRemaining = differenceInDays(maxCompletionTime, now);
-    const isOverdue = isPast(maxCompletionTime);
-
-    return {
-      daysRemaining: Math.max(0, daysRemaining),
-      isOverdue,
-      formattedDeadline: format(maxCompletionTime, 'MMM dd, yyyy h:mm a'),
-    };
-  }, [maxCompletionTime]);
-
-  // Timeline steps
-  const timeline = [
-    { step: 'Job Created', completed: true },
-    { step: 'Agent Assigned', completed: status !== 'QUEUED' },
-    { step: 'Marking Complete', completed: ['COMPLETED', 'EXPIRED', 'CANCELLED'].includes(status) },
-    { step: 'Your Confirmation', completed: status === 'COMPLETED' && !onConfirmRequired },
-  ];
-
-  const completedSteps = timeline.filter(t => t.completed).length;
-  const progressPercentage = (completedSteps / timeline.length) * 100;
-
-  return (
-    <Card className={`${config.color} border border-gray-200`}>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white rounded-lg">
-              <Icon className="w-5 h-5 text-gray-700" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">{config.label}</CardTitle>
-              <CardDescription>{propertyTitle}</CardDescription>
-            </div>
-          </div>
-          <Badge className={config.badge}>{config.label}</Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {/* Status Description */}
-        <p className="text-sm text-gray-600">{config.description}</p>
-
-        {/* Queue Position (only for QUEUED status) */}
-        {status === 'QUEUED' && queuePosition !== undefined && (
-          <div className="p-3 bg-white rounded-lg border border-blue-200">
-            <div className="text-sm font-medium text-gray-700">Position in Queue</div>
-            <div className="text-2xl font-bold text-blue-600 mt-1">#{queuePosition}</div>
-            <p className="text-xs text-gray-500 mt-2">
-              Agents are being notified. Expected to be assigned soon.
-            </p>
-          </div>
-        )}
-
-        {/* Agent Assignment (only for ASSIGNED and IN_PROGRESS) */}
-        {(status === 'ASSIGNED' || status === 'IN_PROGRESS') && agentName && (
-          <div className="p-3 bg-white rounded-lg border border-orange-200">
-            <div className="text-sm font-medium text-gray-700">Assigned Agent</div>
-            <div className="mt-2 space-y-1">
-              <div className="font-semibold text-gray-900">{agentName}</div>
-              {agentPhone && (
-                <div className="text-sm text-gray-600">
-                  Contact: <a href={`tel:${agentPhone}`} className="text-blue-600 hover:underline">{agentPhone}</a>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Time Remaining for Confirmation */}
-        {timeRemaining && status === 'COMPLETED' && (
-          <div className={`p-3 rounded-lg border ${timeRemaining.isOverdue ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
-            <div className="text-sm font-medium text-gray-700">
-              {timeRemaining.isOverdue ? 'Confirmation Overdue' : 'Confirm by'}
-            </div>
-            <div className="mt-1">
-              <div className={`text-lg font-bold ${timeRemaining.isOverdue ? 'text-red-600' : 'text-blue-600'}`}>
-                {timeRemaining.isOverdue ? 'Overdue' : `${timeRemaining.daysRemaining} days remaining`}
-              </div>
-              <p className="text-xs text-gray-600 mt-1">
-                Deadline: {timeRemaining.formattedDeadline}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Completion Timestamp */}
-        {completedAt && (
-          <div className="p-3 bg-white rounded-lg border border-gray-200">
-            <div className="text-sm font-medium text-gray-700">Completed At</div>
-            <div className="text-gray-900 font-medium mt-1">
-              {format(completedAt, 'MMM dd, yyyy h:mm a')}
-            </div>
-          </div>
-        )}
-
-        {/* Timeline Progress */}
-        <div className="space-y-3 pt-4 border-t">
-          <div className="space-y-1">
-            <div className="flex justify-between text-xs font-medium text-gray-600">
-              <span>Progress</span>
-              <span>{Math.round(progressPercentage)}%</span>
-            </div>
-            <Progress value={progressPercentage} className="h-2" />
-          </div>
-
-          {/* Timeline Steps */}
-          <div className="space-y-2 pt-2">
-            {timeline.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <div
-                  className={`w-4 h-4 rounded-full border-2 ${
-                    item.completed
-                      ? 'bg-green-500 border-green-500'
-                      : 'border-gray-300 bg-white'
-                  }`}
-                />
-                <span className={`text-sm ${item.completed ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-                  {item.step}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Job ID Reference */}
-        <div className="pt-4 border-t">
-          <p className="text-xs text-gray-500">
-            Job ID: <span className="font-mono text-gray-700">{jobId}</span>
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+const statusConfig = {
+  QUEUED: {
+    label: "In Queue",
+    color: "bg-blue-500",
+    textColor: "text-blue-700",
+    bgColor: "bg-blue-50",
+    icon: Clock,
+    description: "Waiting for agent assignment",
+    progress: 20,
+  },
+  ASSIGNED: {
+    label: "Assigned",
+    color: "bg-yellow-500",
+    textColor: "text-yellow-700",
+    bgColor: "bg-yellow-50",
+    icon: User,
+    description: "Agent assigned, marking pending",
+    progress: 40,
+  },
+  IN_PROGRESS: {
+    label: "In Progress",
+    color: "bg-orange-500",
+    textColor: "text-orange-700",
+    bgColor: "bg-orange-50",
+    icon: Loader2,
+    description: "Agent is marking the property",
+    progress: 70,
+  },
+  COMPLETED: {
+    label: "Completed",
+    color: "bg-green-500",
+    textColor: "text-green-700",
+    bgColor: "bg-green-50",
+    icon: CheckCircle,
+    description: "Marking completed successfully",
+    progress: 100,
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    color: "bg-gray-500",
+    textColor: "text-gray-700",
+    bgColor: "bg-gray-50",
+    icon: XCircle,
+    description: "Job cancelled",
+    progress: 0,
+  },
+  EXPIRED: {
+    label: "Expired",
+    color: "bg-red-500",
+    textColor: "text-red-700",
+    bgColor: "bg-red-50",
+    icon: AlertCircle,
+    description: "Job expired without completion",
+    progress: 0,
+  },
+  // ADDED CONFIRMATION_PENDING status as a common next step
+  CONFIRMATION_PENDING: {
+    label: "Pending Confirmation",
+    color: "bg-purple-500",
+    textColor: "text-purple-700",
+    bgColor: "bg-purple-50",
+    icon: AlertCircle,
+    description: "Awaiting customer approval or rejection",
+    progress: 90,
+  },
+  // ADDED APPROVED status
+  APPROVED: {
+    label: "Approved",
+    color: "bg-emerald-500",
+    textColor: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+    icon: CheckCircle,
+    description: "Marking approved by customer, funds released",
+    progress: 100,
+  },
 };
+
+export function MarkingJobStatus({ 
+  status, 
+  queuePosition, 
+  timeSlotExpiry,
+  showProgress = false,
+  className = "" 
+}: MarkingJobStatusProps) {
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.QUEUED;
+  const StatusIcon = config.icon;
+
+  return (
+    <div className={`space-y-3 ${className}`}>
+      {/* Status Badge */}
+      <div className="flex items-center gap-3">
+        <div className={`p-2 ${config.bgColor} rounded-lg`}>
+          <StatusIcon 
+            className={`h-5 w-5 ${config.textColor} ${status === "IN_PROGRESS" ? "animate-spin" : ""}`} 
+          />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <Badge className={`${config.color} text-white`}>
+              {config.label}
+            </Badge>
+            {queuePosition && status === "QUEUED" && (
+              <span className="text-sm text-muted-foreground">
+                Position #{queuePosition}
+              </span>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            {config.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      {showProgress && (
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Progress</span>
+            <span>{config.progress}%</span>
+          </div>
+          <Progress value={config.progress} className="h-2" />
+        </div>
+      )}
+
+      {/* Time Slot Warning */}
+      {timeSlotExpiry && status === "ASSIGNED" && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-yellow-800">Time Slot Active</p>
+              <p className="text-yellow-700 text-xs mt-1">
+                Agent must complete marking before expiry to avoid reassignment
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Queue Info */}
+      {queuePosition && queuePosition > 1 && status === "QUEUED" && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-start gap-2">
+            <Clock className="h-4 w-4 text-blue-600 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-medium text-blue-800">In Queue</p>
+              <p className="text-blue-700 text-xs mt-1">
+                {queuePosition - 1} agent{queuePosition - 1 !== 1 ? "s" : ""} ahead of you
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

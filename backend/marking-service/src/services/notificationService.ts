@@ -2074,3 +2074,432 @@ export const notificationService = new NotificationService();
 // }
 
 // export const notificationService = new NotificationService();
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/notificationService.ts
+
+// import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+
+// const prisma = new PrismaClient();
+
+// export class NotificationService {
+//   /**
+//    * Notify admin of new marking job
+//    */
+//   async notifyAdminOfMarkingJob(job: any) {
+//     // Implementation would send email/SMS to admin
+//     console.log(`Admin notified of marking job ${job.id}`);
+    
+//     // Create notification record (if you have a notifications table)
+//     await this.createNotification({
+//       userId: 'ADMIN',
+//       title: 'New Marking Job Request',
+//       message: `Property at ${job.property.address} requires marking`,
+//       type: 'MARKING_JOB_ADMIN',
+//       metadata: { jobId: job.id },
+//     });
+//   }
+
+//   /**
+//    * Notify requesting user with shareable link
+//    */
+//   async notifyRequestingUserWithLink(user: any, link: string) {
+//     console.log(`Shareable link sent to ${user.email}: ${link}`);
+    
+//     await this.createNotification({
+//       userId: user.id,
+//       title: 'Property Marking Link Ready',
+//       message: `Share this link with your contact person: ${link}`,
+//       type: 'MARKING_LINK',
+//       metadata: { link },
+//     });
+//   }
+
+//   /**
+//    * Notify when job is assigned
+//    */
+//   async notifyJobAssigned(job: any) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'New Marking Job Assigned',
+//         message: `You have been assigned to mark property at ${job.property.address}`,
+//         type: 'MARKING_ASSIGNED',
+//         metadata: { jobId: job.id },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify property owner of assignment
+//    */
+//   async notifyPropertyOwnerOfAssignment(job: any) {
+//     await this.createNotification({
+//       userId: job.requestingUser.id,
+//       title: 'Agent Assigned to Your Property',
+//       message: `${job.assignedAgent.name} will mark your property`,
+//       type: 'AGENT_ASSIGNED',
+//       metadata: { jobId: job.id, agentId: job.assignedAgent.id },
+//     });
+//   }
+
+//   /**
+//    * Broadcast marking job to eligible agents
+//    */
+//   async broadcastMarkingJobToAgents(job: any, agents: any[]) {
+//     for (const agent of agents) {
+//       await this.createNotification({
+//         userId: agent.id,
+//         title: 'New Marking Opportunity',
+//         message: `Property marking job available in ${job.property.city}. Fee: ₦${job.markingFee * 0.25}`,
+//         type: 'MARKING_OPPORTUNITY',
+//         metadata: { jobId: job.id },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify job status change
+//    */
+//   async notifyJobStatusChange(job: any, newStatus: MarkingJobStatus) {
+//     const statusMessages = {
+//       [MarkingJobStatus.IN_PROGRESS]: 'Agent has started marking your property',
+//       [MarkingJobStatus.COMPLETED]: 'Property marking completed. Please review and confirm',
+//       [MarkingJobStatus.CANCELLED]: 'Marking job has been cancelled',
+//       [MarkingJobStatus.EXPIRED]: 'Marking job has expired',
+//     };
+
+//     const message = statusMessages[newStatus] || `Job status changed to ${newStatus}`;
+
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Marking Job Update',
+//       message,
+//       type: 'JOB_STATUS_CHANGE',
+//       metadata: { jobId: job.id, status: newStatus },
+//     });
+//   }
+
+//   /**
+//    * Notify job cancelled
+//    */
+//   async notifyJobCancelled(job: any) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Marking Job Cancelled',
+//         message: `Job for ${job.property.address} has been cancelled`,
+//         type: 'JOB_CANCELLED',
+//         metadata: { jobId: job.id },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify job expired
+//    */
+//   async notifyJobExpired(job: any) {
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Marking Job Expired',
+//       message: `Your marking job for ${job.property.address} has expired`,
+//       type: 'JOB_EXPIRED',
+//       metadata: { jobId: job.id },
+//     });
+//   }
+
+//   /**
+//    * Notify property owner to confirm marking
+//    */
+//   async notifyPropertyOwnerToConfirm(job: any, deadline: Date) {
+//     await this.createNotification({
+//       userId: job.requestingUser.id,
+//       title: 'Confirm Property Marking',
+//       message: `Please review and confirm the marking for your property. Deadline: ${deadline.toLocaleDateString()}`,
+//       type: 'CONFIRM_MARKING',
+//       metadata: { jobId: job.id, deadline },
+//     });
+//   }
+
+//   /**
+//    * Notify agent of payment released
+//    */
+//   async notifyAgentPaymentReleased(job: any) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Payment Released',
+//         message: `Payment of ₦${job.markingFee * 0.25} has been released to your account`,
+//         type: 'PAYMENT_RELEASED',
+//         metadata: { jobId: job.id, amount: job.markingFee * 0.25 },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify agent marking rejected
+//    */
+//   async notifyAgentMarkingRejected(job: any, reason: string) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Marking Rejected',
+//         message: `Property owner rejected the marking. Reason: ${reason}`,
+//         type: 'MARKING_REJECTED',
+//         metadata: { jobId: job.id, reason },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify owner rejection complete
+//    */
+//   async notifyOwnerRejectionComplete(job: any) {
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Marking Rejected',
+//       message: 'You will need to create a new marking job for this property',
+//       type: 'REJECTION_COMPLETE',
+//       metadata: { jobId: job.id },
+//     });
+//   }
+
+//   /**
+//    * Notify auto-confirmation
+//    */
+//   async notifyAutoConfirmation(job: any) {
+//     // Notify owner
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Marking Auto-Confirmed',
+//       message: `Property marking was automatically confirmed after deadline`,
+//       type: 'AUTO_CONFIRMED',
+//       metadata: { jobId: job.id },
+//     });
+
+//     // Notify agent
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Marking Auto-Confirmed',
+//         message: `Your marking was auto-confirmed. Payment released.`,
+//         type: 'AUTO_CONFIRMED',
+//         metadata: { jobId: job.id },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send confirmation reminder
+//    */
+//   async sendConfirmationReminder(job: any) {
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Reminder: Confirm Property Marking',
+//       message: `Please confirm the marking for ${job.property.address} within 24 hours`,
+//       type: 'CONFIRMATION_REMINDER',
+//       metadata: { jobId: job.id },
+//     });
+//   }
+
+//   /**
+//    * Notify agent time slot expired
+//    */
+//   async notifyAgentTimeSlotExpired(job: any) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Time Slot Expired',
+//         message: `Your 3-hour time slot for ${job.property.address} has expired`,
+//         type: 'TIME_SLOT_EXPIRED',
+//         metadata: { jobId: job.id },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify property owner of time slot expiry
+//    */
+//   async notifyPropertyOwnerTimeSlotExpired(job: any) {
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Marking Delayed',
+//       message: `Agent's time slot expired. Job reassigned to queue`,
+//       type: 'MARKING_DELAYED',
+//       metadata: { jobId: job.id },
+//     });
+//   }
+
+//   /**
+//    * Notify job requeued
+//    */
+//   async notifyJobRequeued(job: any) {
+//     // This would broadcast to available agents again
+//     console.log(`Job ${job.id} requeued and broadcasted`);
+//   }
+
+//   /**
+//    * Notify agent suspended
+//    */
+//   async notifyAgentSuspended(agentId: string, score: number) {
+//     await this.createNotification({
+//       userId: agentId,
+//       title: 'Account Temporarily Suspended',
+//       message: `Your reliability score (${score.toFixed(2)}) is too low. Contact support to restore access.`,
+//       type: 'AGENT_SUSPENDED',
+//       metadata: { score },
+//     });
+//   }
+
+//   /**
+//    * Notify agent time slot extended
+//    */
+//   async notifyAgentTimeSlotExtended(job: any, hours: number) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Time Slot Extended',
+//         message: `Your time slot has been extended by ${hours} hours`,
+//         type: 'TIME_SLOT_EXTENDED',
+//         metadata: { jobId: job.id, additionalHours: hours },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify agent time slot warning
+//    */
+//   async notifyAgentTimeSlotWarning(job: any, minutesRemaining: number) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Time Slot Expiring Soon',
+//         message: `Only ${minutesRemaining} minutes remaining to complete marking for ${job.property.address}`,
+//         type: 'TIME_SLOT_WARNING',
+//         metadata: { jobId: job.id, minutesRemaining },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify admin of max rotations
+//    */
+//   async notifyAdminMaxRotations(job: any, rotations: number, ticketId: string) {
+//     await this.createNotification({
+//       userId: 'ADMIN',
+//       title: 'Marking Job Requires Intervention',
+//       message: `Job ${job.id} has rotated ${rotations} times. Support ticket ${ticketId} created.`,
+//       type: 'MAX_ROTATIONS',
+//       metadata: { jobId: job.id, rotations, ticketId },
+//     });
+//   }
+
+//   /**
+//    * Notify property owner of delay
+//    */
+//   async notifyPropertyOwnerDelayed(job: any, reason: string) {
+//     await this.createNotification({
+//       userId: job.requestedBy,
+//       title: 'Marking Job Delayed',
+//       message: `Your marking job is experiencing delays. Reason: ${reason}`,
+//       type: 'JOB_DELAYED',
+//       metadata: { jobId: job.id, reason },
+//     });
+//   }
+
+//   /**
+//    * Notify agent of forced rotation
+//    */
+//   async notifyAgentForceRotated(job: any, reason: string) {
+//     if (job.assignedAgent) {
+//       await this.createNotification({
+//         userId: job.assignedAgent.id,
+//         title: 'Job Reassigned',
+//         message: `Your assignment was removed. Reason: ${reason}`,
+//         type: 'FORCE_ROTATED',
+//         metadata: { jobId: job.id, reason },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Notify admin of extension request
+//    */
+//   async notifyAdminExtensionRequest(job: any, reason: string, ticketId: string) {
+//     await this.createNotification({
+//       userId: 'ADMIN',
+//       title: 'Confirmation Extension Request',
+//       message: `User ${job.requestingUser.name} requests extension for job ${job.id}. Reason: ${reason}. Ticket: ${ticketId}`,
+//       type: 'EXTENSION_REQUEST',
+//       metadata: { jobId: job.id, reason, ticketId },
+//     });
+//   }
+
+//   /**
+//    * Notify agent of new location submission
+//    */
+//   async notifyAgentLocationUpdated(agentId: string) {
+//     await this.createNotification({
+//       userId: agentId,
+//       title: 'Service Areas Updated',
+//       message: 'Your service areas have been updated successfully',
+//       type: 'LOCATION_UPDATED',
+//       metadata: {},
+//     });
+//   }
+
+//   /**
+//    * Notify agent of quality check failure
+//    */
+//   async notifyAgentQualityCheckFailed(agentId: string, jobId: string, reason: string) {
+//     await this.createNotification({
+//       userId: agentId,
+//       title: 'Quality Check Failed',
+//       message: `Your marking submission failed quality checks: ${reason}`,
+//       type: 'QUALITY_CHECK_FAILED',
+//       metadata: { jobId, reason },
+//     });
+//   }
+
+//   /**
+//    * Create a notification record (helper method)
+//    */
+//   private async createNotification(data: {
+//     userId: string;
+//     title: string;
+//     message: string;
+//     type: string;
+//     metadata: any;
+//   }) {
+//     // Store in EventLog for now
+//     // In production, you might have a separate Notifications table
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: data.userId === 'ADMIN' ? null : data.userId,
+//         type: data.type,
+//         metadata: {
+//           title: data.title,
+//           message: data.message,
+//           ...data.metadata,
+//         },
+//       },
+//     });
+
+//     // Here you would also:
+//     // 1. Send email via email service
+//     // 2. Send SMS via SMS service (Twilio/Termii)
+//     // 3. Send push notification
+//     // 4. Send in-app notification
+
+//     console.log(`Notification sent: ${data.title} to ${data.userId}`);
+//   }
+// }
+
+// export default NotificationService;

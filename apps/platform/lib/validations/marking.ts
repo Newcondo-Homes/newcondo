@@ -271,3 +271,232 @@ verifiedAt: z.coerce.date()
 // export type AssignMarkingJobInput = z.infer<typeof assignMarkingJobSchema>;
 // export type CancelMarkingJobInput = z.infer<typeof cancelMarkingJobSchema>;
 // export type ShareMarkingLinkInput = z.infer<typeof shareMarkingLinkSchema>;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/lib/validations/marking.ts
+// import { z } from 'zod';
+
+// // Enums
+// export const MarkingJobStatusEnum = z.enum([
+//   'QUEUED',
+//   'ASSIGNED',
+//   'IN_PROGRESS',
+//   'COMPLETED',
+//   'CANCELLED',
+//   'EXPIRED'
+// ]);
+
+// export const UrgencyLevelEnum = z.enum(['LOW', 'NORMAL', 'HIGH', 'URGENT']);
+
+// export const ImageTypeEnum = z.enum([
+//   'BOUNDARY',
+//   'EXTERIOR_FRONT',
+//   'EXTERIOR_BACK',
+//   'EXTERIOR_SIDE',
+//   'LIVING_ROOM',
+//   'BEDROOM',
+//   'KITCHEN',
+//   'BATHROOM',
+//   'COMPOUND',
+//   'STREET_VIEW',
+//   'OTHER'
+// ]);
+
+// // Phone number validation for Nigerian numbers
+// const nigerianPhoneSchema = z
+//   .string()
+//   .regex(/^(\+234|0)[789][01]\d{8}$/, 'Invalid Nigerian phone number')
+//   .or(z.string().regex(/^[789][01]\d{8}$/, 'Invalid phone number'));
+
+// // GPS coordinates validation
+// const coordinatesSchema = z.object({
+//   lat: z.number().min(-90).max(90),
+//   lng: z.number().min(-180).max(180)
+// });
+
+// // Hierarchical address schema (State > LGA > Location)
+// const hierarchicalAddressSchema = z.object({
+//   state: z.string().min(1, 'State is required'),
+//   lga: z.string().min(1, 'LGA is required'),
+//   location: z.string().min(1, 'Location is required'),
+//   streetAddress: z.string().optional(),
+//   landmark: z.string().optional()
+// });
+
+// // Create marking job schema
+// export const createMarkingJobSchema = z.object({
+//   propertyId: z.string().cuid('Invalid property ID'),
+  
+//   // Contact person details
+//   contactPersonName: z
+//     .string()
+//     .min(2, 'Contact person name must be at least 2 characters')
+//     .max(100, 'Contact person name is too long'),
+  
+//   contactPersonPhone: nigerianPhoneSchema,
+  
+//   // Property access details
+//   accessInstructions: z
+//     .string()
+//     .max(500, 'Access instructions are too long')
+//     .optional(),
+  
+//   // Hierarchical address
+//   propertyAddress: hierarchicalAddressSchema,
+  
+//   // Property images (optional, helps agent identify property)
+//   propertyImages: z
+//     .array(z.string().url())
+//     .max(10, 'Maximum 10 property images allowed')
+//     .optional(),
+  
+//   // Preferred time for marking
+//   preferredTime: z
+//     .string()
+//     .datetime()
+//     .optional()
+//     .refine(
+//       (date) => {
+//         if (!date) return true;
+//         return new Date(date) > new Date();
+//       },
+//       { message: 'Preferred time must be in the future' }
+//     ),
+  
+//   urgencyLevel: UrgencyLevelEnum.default('NORMAL'),
+  
+//   // Additional notes
+//   notes: z.string().max(1000).optional()
+// });
+
+// export type CreateMarkingJobInput = z.infer<typeof createMarkingJobSchema>;
+
+// // Update marking job schema
+// export const updateMarkingJobSchema = z.object({
+//   contactPersonName: z
+//     .string()
+//     .min(2)
+//     .max(100)
+//     .optional(),
+  
+//   contactPersonPhone: nigerianPhoneSchema.optional(),
+  
+//   accessInstructions: z.string().max(500).optional(),
+  
+//   propertyAddress: hierarchicalAddressSchema.optional(),
+  
+//   propertyImages: z.array(z.string().url()).max(10).optional(),
+  
+//   preferredTime: z
+//     .string()
+//     .datetime()
+//     .optional()
+//     .refine(
+//       (date) => {
+//         if (!date) return true;
+//         return new Date(date) > new Date();
+//       },
+//       { message: 'Preferred time must be in the future' }
+//     ),
+  
+//   urgencyLevel: UrgencyLevelEnum.optional(),
+  
+//   notes: z.string().max(1000).optional()
+// });
+
+// export type UpdateMarkingJobInput = z.infer<typeof updateMarkingJobSchema>;
+
+// // Join queue schema
+// export const joinQueueSchema = z.object({
+//   estimatedArrivalTime: z
+//     .string()
+//     .datetime()
+//     .optional()
+//     .refine(
+//       (date) => {
+//         if (!date) return true;
+//         const arrival = new Date(date);
+//         const now = new Date();
+//         const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+//         return arrival <= threeHoursFromNow;
+//       },
+//       { message: 'Estimated arrival time must be within 3 hours' }
+//     ),
+  
+//   currentLocation: coordinatesSchema.optional(),
+  
+//   notes: z.string().max(200).optional()
+// });
+
+// export type JoinQueueInput = z.infer<typeof joinQueueSchema>;
+
+// // Accept marking job schema
+// export const acceptMarkingJobSchema = z.object({
+//   estimatedStartTime: z
+//     .string()
+//     .datetime()
+//     .refine(
+//       (date) => {
+//         const start = new Date(date);
+//         const now = new Date();
+//         return start > now;
+//       },
+//       { message: 'Estimated start time must be in the future' }
+//     ),
+  
+//   currentLocation: coordinatesSchema
+// });
+
+// export type AcceptMarkingJobInput = z.infer<typeof acceptMarkingJobSchema>;
+
+// // Reject marking job schema
+// export const rejectMarkingJobSchema = z.object({
+//   reason: z
+//     .string()
+//     .min(10, 'Please provide a detailed reason (minimum 10 characters)')
+//     .max(500, 'Reason is too long')
+// });
+
+// export type RejectMarkingJobInput = z.infer<typeof rejectMarkingJobSchema>;
+
+// // Agent location update schema
+// export const updateAgentLocationSchema = z.object({
+//   coordinates: coordinatesSchema,
+//   isAvailableForMarking: z.boolean(),
+//   serviceAreas: z
+//     .array(
+//       z.object({
+//         state: z.string(),
+//         lga: z.string(),
+//         locations: z.array(z.string())
+//       })
+//     )
+//     .min(1, 'At least one service area is required')
+//     .max(5, 'Maximum 5 service areas allowed')
+// });
+
+// export type UpdateAgentLocationInput = z.infer<typeof updateAgentLocationSchema>;
+
+// // Cancel marking job schema
+// export const cancelMarkingJobSchema = z.object({
+//   reason: z
+//     .string()
+//     .min(10, 'Please provide a reason for cancellation')
+//     .max(500, 'Reason is too long'),
+  
+//   refundRequested: z.boolean().default(true)
+// });
+
+// export type CancelMarkingJobInput = z.infer<typeof cancelMarkingJobSchema>;

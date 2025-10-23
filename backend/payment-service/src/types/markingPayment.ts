@@ -785,3 +785,531 @@ export interface MarkingRefundResponse {
 //     jobsCompleted: number;
 //   }>;
 // }
+
+
+
+
+
+
+
+// // backend/payment-service/src/types/markingPayment.ts
+
+// import { Decimal } from '@prisma/client/runtime/library';
+// import { PaymentStatus, PaymentType } from '@newcondo/db';
+
+// /**
+//  * Marking Payment Initiation
+//  */
+// export interface MarkingPaymentInitiation {
+//   markingJobId: string;
+//   userId: string;
+//   amount: number;
+//   currency: string;
+// }
+
+// /**
+//  * Marking Payment Response
+//  */
+// export interface MarkingPaymentResponse {
+//   paymentId: string;
+//   paymentLink: string;
+//   amount: Decimal;
+//   currency: string;
+//   expiresAt?: Date;
+// }
+
+// /**
+//  * Flutterwave Webhook Data
+//  */
+// export interface FlutterwaveWebhookData {
+//   event: string;
+//   data: {
+//     id: number;
+//     tx_ref: string;
+//     flw_ref: string;
+//     device_fingerprint: string;
+//     amount: number;
+//     currency: string;
+//     charged_amount: number;
+//     app_fee: number;
+//     merchant_fee: number;
+//     processor_response: string;
+//     auth_model: string;
+//     ip: string;
+//     narration: string;
+//     status: 'successful' | 'failed' | 'pending';
+//     payment_type: string;
+//     created_at: string;
+//     account_id: number;
+//     customer: {
+//       id: number;
+//       name: string;
+//       phone_number: string;
+//       email: string;
+//       created_at: string;
+//     };
+//     meta?: Record<string, any>;
+//   };
+// }
+
+// /**
+//  * Payment Verification Result
+//  */
+// export interface PaymentVerificationResult {
+//   success: boolean;
+//   payment: {
+//     id: string;
+//     amount: Decimal;
+//     status: PaymentStatus;
+//     paidAt?: Date | null;
+//   };
+// }
+
+// /**
+//  * Payment History Item
+//  */
+// export interface PaymentHistoryItem {
+//   id: string;
+//   markingJobId: string | null;
+//   amount: Decimal;
+//   currency: string;
+//   status: PaymentStatus;
+//   paymentType: PaymentType;
+//   description: string | null;
+//   createdAt: Date;
+//   paidAt: Date | null;
+//   user: {
+//     id: string;
+//     name: string | null;
+//     email: string;
+//   };
+// }
+
+// /**
+//  * Payment History Response
+//  */
+// export interface PaymentHistoryResponse {
+//   payments: PaymentHistoryItem[];
+//   pagination: {
+//     total: number;
+//     page: number;
+//     limit: number;
+//     totalPages: number;
+//   };
+// }
+
+// /**
+//  * Partial Payment Processing
+//  */
+// export interface PartialPaymentProcessing {
+//   markingJobId: string;
+//   agentId: string;
+//   partialAmount: Decimal;
+//   remainingAmount: Decimal;
+//   totalCommission: Decimal;
+// }
+
+// /**
+//  * Partial Payment Response
+//  */
+// export interface PartialPaymentResponse {
+//   success: boolean;
+//   partialPayment: {
+//     id: string;
+//     amount: Decimal;
+//     status: PaymentStatus;
+//     remainingAmount: Decimal;
+//   };
+//   confirmationDeadline: Date;
+// }
+
+// /**
+//  * Remaining Payment Release
+//  */
+// export interface RemainingPaymentRelease {
+//   markingJobId: string;
+//   confirmedBy: string;
+//   agentId: string;
+//   remainingAmount: Decimal;
+// }
+
+// /**
+//  * Remaining Payment Response
+//  */
+// export interface RemainingPaymentResponse {
+//   success: boolean;
+//   message: string;
+//   payments: {
+//     partial: {
+//       id: string;
+//       amount: Decimal;
+//       status: PaymentStatus;
+//     };
+//     remaining: {
+//       id: string;
+//       amount: Decimal;
+//       status: PaymentStatus;
+//     };
+//     total: Decimal;
+//   };
+// }
+
+// /**
+//  * Timeout Compensation
+//  */
+// export interface TimeoutCompensation {
+//   markingJobId: string;
+//   agentId: string;
+//   compensationAmount: Decimal;
+//   cycleNumber: number;
+//   remainingFee: Decimal;
+// }
+
+// /**
+//  * Timeout Compensation Response
+//  */
+// export interface TimeoutCompensationResponse {
+//   success: boolean;
+//   compensation: {
+//     id: string;
+//     amount: Decimal;
+//     cycleNumber: number;
+//     remainingFee: Decimal;
+//     newDeadline: Date;
+//   };
+// }
+
+// /**
+//  * Payment Status Summary
+//  */
+// export interface PaymentStatusSummary {
+//   markingJob: {
+//     id: string;
+//     status: string;
+//     confirmationDeadline: Date | null;
+//   };
+//   payments: {
+//     partial: {
+//       id: string;
+//       amount: Decimal;
+//       status: PaymentStatus;
+//       createdAt: Date;
+//     } | null;
+//     remaining: {
+//       id: string;
+//       amount: Decimal;
+//       status: PaymentStatus;
+//       paidAt: Date | null;
+//     } | null;
+//     compensations: Array<{
+//       id: string;
+//       amount: Decimal;
+//       createdAt: Date;
+//     }>;
+//   };
+//   summary: {
+//     totalAgentCommission: Decimal;
+//     totalPaid: Decimal;
+//     remainingBalance: Decimal;
+//     isFullyPaid: boolean;
+//   };
+// }
+
+// /**
+//  * Agent Payment History
+//  */
+// export interface AgentPaymentHistory {
+//   payments: Array<{
+//     id: string;
+//     markingJobId: string | null;
+//     amount: Decimal;
+//     status: PaymentStatus;
+//     description: string | null;
+//     createdAt: Date;
+//     user: {
+//       id: string;
+//       name: string | null;
+//       email: string;
+//     };
+//   }>;
+//   pagination: {
+//     total: number;
+//     page: number;
+//     limit: number;
+//     totalPages: number;
+//   };
+// }
+
+// /**
+//  * Pending Partial Payments
+//  */
+// export interface PendingPartialPayments {
+//   heldPayments: Array<{
+//     id: string;
+//     amount: Decimal;
+//     markingJobId: string | null;
+//     createdAt: Date;
+//   }>;
+//   totalHeld: Decimal;
+//   count: number;
+// }
+
+// /**
+//  * Commission Split Breakdown
+//  */
+// export interface CommissionSplitBreakdown {
+//   totalFee: Decimal;
+//   agentEarnings: {
+//     total: Decimal;
+//     partial: Decimal;
+//     remaining: Decimal;
+//     percentage: number;
+//   };
+//   platformEarnings: {
+//     total: Decimal;
+//     percentage: number;
+//   };
+//   breakdown: Array<{
+//     description: string;
+//     amount: Decimal;
+//     percentage: string;
+//   }>;
+// }
+
+// /**
+//  * Payment Breakdown Response
+//  */
+// export interface PaymentBreakdownResponse extends CommissionSplitBreakdown {}
+
+// /**
+//  * Virtual Account Credit
+//  */
+// export interface VirtualAccountCredit {
+//   accountId: string;
+//   amount: number;
+//   description: string;
+//   isHeld: boolean;
+// }
+
+// /**
+//  * Virtual Account Release
+//  */
+// export interface VirtualAccountRelease {
+//   accountId: string;
+//   amount: number;
+// }
+
+// /**
+//  * Payment Notification Data
+//  */
+// export interface PaymentNotificationData {
+//   userId: string;
+//   markingJobId: string;
+//   amount: number;
+//   paymentType: 'PARTIAL' | 'REMAINING' | 'COMPENSATION';
+//   status: PaymentStatus;
+// }
+
+// /**
+//  * Confirmation Reminder Data
+//  */
+// export interface ConfirmationReminderData {
+//   ownerId: string;
+//   markingJobId: string;
+//   deadline: Date;
+//   daysRemaining: number;
+// }
+
+// /**
+//  * Timeout Warning Data
+//  */
+// export interface TimeoutWarningData {
+//   ownerId: string;
+//   markingJobId: string;
+//   compensationPaid: number;
+//   newDeadline: Date;
+//   cycleNumber: number;
+// }
+
+// /**
+//  * Payment Analytics
+//  */
+// export interface PaymentAnalytics {
+//   totalMarkingPayments: number;
+//   totalAmount: Decimal;
+//   successfulPayments: number;
+//   failedPayments: number;
+//   pendingPayments: number;
+//   averagePaymentAmount: Decimal;
+//   totalCommissionPaid: Decimal;
+//   totalPlatformFees: Decimal;
+// }
+
+// /**
+//  * Agent Earnings Summary
+//  */
+// export interface AgentEarningsSummary {
+//   totalEarnings: Decimal;
+//   totalPartialPayments: Decimal;
+//   totalFinalPayments: Decimal;
+//   totalCompensations: Decimal;
+//   heldAmount: Decimal;
+//   availableForWithdrawal: Decimal;
+//   completedJobs: number;
+//   pendingConfirmations: number;
+// }
+
+// /**
+//  * Payment Retry Request
+//  */
+// export interface PaymentRetryRequest {
+//   paymentId: string;
+//   userId: string;
+//   reason?: string;
+// }
+
+// /**
+//  * Payment Cancellation Request
+//  */
+// export interface PaymentCancellationRequest {
+//   paymentId: string;
+//   userId: string;
+//   reason: string;
+// }
+
+// /**
+//  * Payment Filter Options
+//  */
+// export interface PaymentFilterOptions {
+//   status?: PaymentStatus;
+//   paymentType?: PaymentType;
+//   startDate?: Date;
+//   endDate?: Date;
+//   minAmount?: number;
+//   maxAmount?: number;
+//   markingJobId?: string;
+// }
+
+// /**
+//  * Payment Search Query
+//  */
+// export interface PaymentSearchQuery extends PaymentFilterOptions {
+//   page: number;
+//   limit: number;
+//   sortBy?: 'createdAt' | 'amount' | 'status';
+//   sortOrder?: 'asc' | 'desc';
+// }
+
+// /**
+//  * Marking Fee Configuration
+//  */
+// export interface MarkingFeeConfiguration {
+//   standardFee: number; // 20,000 NGN
+//   newcondoAdminFee: number; // 25,000 NGN
+//   partialPaymentAmount: number; // 1,000 NGN
+//   agentCommissionPercentage: number; // 25%
+//   platformPercentage: number; // 75%
+//   confirmationWindowDays: number; // 2-3 days
+//   maxCompensationCycles: number;
+// }
+
+// /**
+//  * Payment Transaction Log
+//  */
+// export interface PaymentTransactionLog {
+//   id: string;
+//   paymentId: string;
+//   action: 'INITIATED' | 'PROCESSED' | 'VERIFIED' | 'RELEASED' | 'FAILED' | 'CANCELLED';
+//   previousStatus: PaymentStatus;
+//   newStatus: PaymentStatus;
+//   amount: Decimal;
+//   metadata?: Record<string, any>;
+//   performedBy: string;
+//   performedAt: Date;
+// }
+
+// /**
+//  * Payment Webhook Validation
+//  */
+// export interface PaymentWebhookValidation {
+//   isValid: boolean;
+//   signature?: string;
+//   timestamp: Date;
+//   source: string;
+// }
+
+// /**
+//  * Bulk Payment Processing
+//  */
+// export interface BulkPaymentProcessing {
+//   markingJobIds: string[];
+//   totalAmount: Decimal;
+//   successCount: number;
+//   failureCount: number;
+//   results: Array<{
+//     markingJobId: string;
+//     success: boolean;
+//     paymentId?: string;
+//     error?: string;
+//   }>;
+// }
+
+// /**
+//  * Payment Dispute
+//  */
+// export interface PaymentDispute {
+//   id: string;
+//   paymentId: string;
+//   markingJobId: string;
+//   disputedBy: string;
+//   reason: string;
+//   status: 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED' | 'REJECTED';
+//   resolution?: string;
+//   resolvedBy?: string;
+//   resolvedAt?: Date;
+// }
+
+// /**
+//  * Refund Request
+//  */
+// export interface RefundRequest {
+//   paymentId: string;
+//   markingJobId: string;
+//   requestedBy: string;
+//   amount: Decimal;
+//   reason: string;
+//   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'PROCESSED';
+// }
+
+// /**
+//  * Payment Receipt
+//  */
+// export interface PaymentReceipt {
+//   receiptNumber: string;
+//   paymentId: string;
+//   markingJobId: string;
+//   amount: Decimal;
+//   currency: string;
+//   paidBy: {
+//     id: string;
+//     name: string;
+//     email: string;
+//   };
+//   paidTo: {
+//     id: string;
+//     name: string;
+//     type: 'AGENT' | 'PLATFORM' | 'ADMIN';
+//   };
+//   paymentDate: Date;
+//   paymentMethod: string;
+//   transactionId: string;
+//   description: string;
+// }
+
+// /**
+//  * Export types for use in other modules
+//  */
+// export type {
+//   PaymentStatus,
+//   PaymentType,
+// } from '@newcondo/db';

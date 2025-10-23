@@ -358,3 +358,431 @@ export class PaymentService {
     return payment;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/paymentService.ts
+
+// import { PrismaClient, PaymentStatus, PaymentType } from '@prisma/client';
+
+// const prisma = new PrismaClient();
+
+// export class PaymentService {
+//   private readonly INITIAL_PAYMENT_PERCENTAGE = 0.05; // 5% initial (approx 1000 naira)
+//   private readonly AGENT_COMMISSION_RATE = 0.25; // 25% of marking fee
+
+//   /**
+//    * Process initial agent payment (small advance)
+//    */
+//   async processInitialAgentPayment(jobId: string, agentId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     // Calculate initial payment (approximately 1000 naira)
+//     const totalAgentEarning = Number(job.markingFee) * this.AGENT_COMMISSION_RATE;
+//     const initialPayment = totalAgentEarning * this.INITIAL_PAYMENT_PERCENTAGE;
+
+//     // Get agent's virtual account
+//     const virtualAccount = await prisma.virtualAccount.findFirst({
+//       where: { userId: agentId },
+//     });
+
+//     if (!virtualAccount) {
+//       throw new Error('Agent virtual account not found');
+//     }
+
+//     // Credit virtual account (initial payment is held, not immediately withdrawable)
+//     await prisma.virtualAccount.update({
+//       where: { id: virtualAccount.id },
+//       data: {
+//         balance: {
+//           increment: initialPayment,
+//         },
+//       },
+//     });
+
+//     // Create payment record
+//     const payment = await prisma.payment.create({
+//       data: {
+//         userId: agentId,
+//         amount: initialPayment,
+//         currency: 'NGN',
+//         paymentType: PaymentType.PROPERTY_MARKING,
+//         status: PaymentStatus.HELD,
+//         description: `Initial payment for marking job ${jobId}`,
+//         markingJobId: jobId,
+//       },
+//     });
+
+//     // Log event
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: agentId,
+//         type: 'INITIAL_PAYMENT_CREDITED',
+//         metadata: {
+//           jobId,
+//           amount: initialPayment,
+//           paymentId: payment.id,
+//         },
+//       },
+//     });
+
+//     return {
+//       payment,
+//       amount: initialPayment,
+//       status: 'HELD',
+//     };
+//   }
+
+//   /**
+//    * Release remaining payment to agent after confirmation
+//    */
+//   async releaseRemainingPayment(jobId: string, agentId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     // Calculate remaining payment
+//     const totalAgentEarning = Number(job.markingFee) * this.AGENT_COMMISSION_RATE;
+//     const initialPayment = totalAgentEarning * this.INITIAL_PAYMENT_PERCENTAGE;
+//     const remainingPayment = totalAgentEarning - initialPayment;
+
+//     // Get agent's virtual account
+//     const virtualAccount = await prisma.virtualAccount.findFirst({
+//       where: { userId: agentId },
+//     });
+
+//     if (!virtualAccount) {
+//       throw new Error('Agent virtual account not found');
+//     }
+
+//     // Credit virtual account (now withdrawable)
+//     await prisma.virtualAccount.update({
+//       where: { id: virtualAccount.id },
+//       data: {
+//         balance: {
+//           increment: remainingPayment,
+//         },
+//       },
+//     });
+
+//     // Create payment record for remaining amount
+//     const payment = await prisma.payment.create({
+//       data: {
+//         userId: agentId,
+//         amount: remainingPayment,
+//         currency: 'NGN',
+//         paymentType: PaymentType.PROPERTY_MARKING,
+//         status: PaymentStatus.RELEASED,
+//         description: `Final payment for marking job ${jobId}`,
+//         markingJobId: jobId,
+//         isReleased: true,
+//         releasedAt: new Date(),
+//       },
+//     });
+
+//     // Update initial payment status to released
+//     await prisma.payment.updateMany({
+//       where: {
+//         userId: agentId,
+//         markingJobId: jobId,
+//         status: PaymentStatus.HELD,
+//       },
+//       data: {
+//         status: PaymentStatus.RELEASED,
+//         isReleased: true,
+//         releasedAt: new Date(),
+//       },
+//     });
+
+//     // Log event
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: agentId,
+//         type: 'FINAL_PAYMENT_RELEASED',
+//         metadata: {
+//           jobId,
+//           amount: remainingPayment,
+//           totalEarning: totalAgentEarning,
+//           paymentId: payment.id,
+//         },
+//       },
+//     });
+
+//     return {
+//       payment,
+//       amount: remainingPayment,
+//       totalEarning: totalAgentEarning,
+//       status: 'RELEASED',
+//     };
+//   }
+
+//   /**
+//    * Process refund for cancelled job
+//    */
+//   async processRefund(jobId: string, reason: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         requestingUser: true,
+//       },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     // Find the original payment
+//     const originalPayment = await prisma.payment.findFirst({
+//       where: {
+//         markingJobId: jobId,
+//         paymentType: PaymentType.PROPERTY_MARKING,
+//         userId: job.requestedBy,
+//       },
+//       orderBy: {
+//         createdAt: 'desc',
+//       },
+//     });
+
+//     if (!originalPayment) {
+//       throw new Error('Original payment not found');
+//     }
+
+//     // Create refund payment record
+//     const refund = await prisma.payment.create({
+//       data: {
+//         userId: job.requestedBy,
+//         amount: originalPayment.amount,
+//         currency: 'NGN',
+//         paymentType: PaymentType.PROPERTY_MARKING,
+//         status: PaymentStatus.REFUNDED,
+//         description: `Refund for cancelled marking job. Reason: ${reason}`,
+//         markingJobId: jobId,
+//       },
+//     });
+
+//     // Update original payment status
+//     await prisma.payment.update({
+//       where: { id: originalPayment.id },
+//       data: {
+//         status: PaymentStatus.REFUNDED,
+//       },
+//     });
+
+//     // Credit user's virtual account
+//     const virtualAccount = await prisma.virtualAccount.findFirst({
+//       where: { userId: job.requestedBy },
+//     });
+
+//     if (virtualAccount) {
+//       await prisma.virtualAccount.update({
+//         where: { id: virtualAccount.id },
+//         data: {
+//           balance: {
+//             increment: Number(originalPayment.amount),
+//           },
+//         },
+//       });
+//     }
+
+//     // Log event
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: job.requestedBy,
+//         type: 'MARKING_PAYMENT_REFUNDED',
+//         metadata: {
+//           jobId,
+//           amount: Number(originalPayment.amount),
+//           reason,
+//           refundId: refund.id,
+//         },
+//       },
+//     });
+
+//     return {
+//       refund,
+//       amount: Number(originalPayment.amount),
+//       status: 'REFUNDED',
+//     };
+//   }
+
+//   /**
+//    * Calculate marking fee breakdown
+//    */
+//   calculateMarkingFeeBreakdown(markingFee: number) {
+//     const agentEarning = markingFee * this.AGENT_COMMISSION_RATE; // 25%
+//     const platformFee = markingFee - agentEarning; // 75%
+//     const initialPayment = agentEarning * this.INITIAL_PAYMENT_PERCENTAGE;
+//     const finalPayment = agentEarning - initialPayment;
+
+//     return {
+//       totalFee: markingFee,
+//       agentEarning,
+//       platformFee,
+//       initialPayment,
+//       finalPayment,
+//       agentCommissionRate: `${this.AGENT_COMMISSION_RATE * 100}%`,
+//     };
+//   }
+
+//   /**
+//    * Get payment history for marking jobs
+//    */
+//   async getMarkingPaymentHistory(userId: string, role: 'AGENT' | 'OWNER') {
+//     if (role === 'AGENT') {
+//       // Get payments received by agent
+//       return prisma.payment.findMany({
+//         where: {
+//           userId,
+//           paymentType: PaymentType.PROPERTY_MARKING,
+//         },
+//         orderBy: {
+//           createdAt: 'desc',
+//         },
+//       });
+//     } else {
+//       // Get payments made by property owner
+//       return prisma.payment.findMany({
+//         where: {
+//           userId,
+//           paymentType: PaymentType.PROPERTY_MARKING,
+//         },
+//         orderBy: {
+//           createdAt: 'desc',
+//         },
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get agent earnings summary
+//    */
+//   async getAgentEarningsSummary(agentId: string) {
+//     const payments = await prisma.payment.findMany({
+//       where: {
+//         userId: agentId,
+//         paymentType: PaymentType.PROPERTY_MARKING,
+//         status: {
+//           in: [PaymentStatus.HELD, PaymentStatus.RELEASED],
+//         },
+//       },
+//     });
+
+//     const totalEarnings = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+//     const heldAmount = payments
+//       .filter(p => p.status === PaymentStatus.HELD)
+//       .reduce((sum, p) => sum + Number(p.amount), 0);
+//     const releasedAmount = payments
+//       .filter(p => p.status === PaymentStatus.RELEASED)
+//       .reduce((sum, p) => sum + Number(p.amount), 0);
+
+//     return {
+//       totalEarnings,
+//       heldAmount,
+//       releasedAmount,
+//       availableForWithdrawal: releasedAmount,
+//       pendingConfirmation: heldAmount,
+//       totalJobs: payments.length,
+//     };
+//   }
+
+//   /**
+//    * Process platform fee collection
+//    */
+//   async processPlatformFee(jobId: string) {
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//     });
+
+//     if (!job) {
+//       throw new Error('Job not found');
+//     }
+
+//     const agentEarning = Number(job.markingFee) * this.AGENT_COMMISSION_RATE;
+//     const platformFee = Number(job.markingFee) - agentEarning;
+
+//     // Log platform fee collection
+//     await prisma.eventLog.create({
+//       data: {
+//         userId: null,
+//         type: 'PLATFORM_FEE_COLLECTED',
+//         metadata: {
+//           jobId,
+//           amount: platformFee,
+//           markingFee: Number(job.markingFee),
+//           agentEarning,
+//         },
+//       },
+//     });
+
+//     return {
+//       platformFee,
+//       markingFee: Number(job.markingFee),
+//       agentEarning,
+//     };
+//   }
+
+//   /**
+//    * Get payment statistics
+//    */
+//   async getPaymentStats(userId?: string) {
+//     const where: any = {
+//       paymentType: PaymentType.PROPERTY_MARKING,
+//     };
+
+//     if (userId) {
+//       where.userId = userId;
+//     }
+
+//     const [totalPayments, totalAmount, heldPayments, releasedPayments, refunded] = await Promise.all([
+//       prisma.payment.count({ where }),
+//       prisma.payment.aggregate({
+//         where,
+//         _sum: { amount: true },
+//       }),
+//       prisma.payment.count({
+//         where: { ...where, status: PaymentStatus.HELD },
+//       }),
+//       prisma.payment.count({
+//         where: { ...where, status: PaymentStatus.RELEASED },
+//       }),
+//       prisma.payment.count({
+//         where: { ...where, status: PaymentStatus.REFUNDED },
+//       }),
+//     ]);
+
+//     return {
+//       totalPayments,
+//       totalAmount: Number(totalAmount._sum.amount) || 0,
+//       heldPayments,
+//       releasedPayments,
+//       refunded,
+//       releaseRate: totalPayments > 0 ? (releasedPayments / totalPayments) * 100 : 0,
+//     };
+//   }
+// }
+
+// export default PaymentService;

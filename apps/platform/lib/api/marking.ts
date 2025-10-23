@@ -807,3 +807,153 @@ export const markingApi = {
 //   });
 //   return response.data;
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/lib/api/marking.ts
+// import { client } from './client';
+// import type {
+//   MarkingJob,
+//   CreateMarkingJobRequest,
+//   UpdateMarkingJobRequest,
+//   MarkingJobResponse,
+//   MarkingJobListResponse,
+//   MarkingJobStatsResponse
+// } from '@/types/marking';
+
+// /**
+//  * Fetch all marking jobs for the authenticated user
+//  * @param filters - Optional filters for marking jobs
+//  */
+// export async function getMarkingJobs(filters?: {
+//   status?: string;
+//   propertyId?: string;
+//   page?: number;
+//   limit?: number;
+// }): Promise<MarkingJobListResponse> {
+//   const params = new URLSearchParams();
+  
+//   if (filters?.status) params.append('status', filters.status);
+//   if (filters?.propertyId) params.append('propertyId', filters.propertyId);
+//   if (filters?.page) params.append('page', filters.page.toString());
+//   if (filters?.limit) params.append('limit', filters.limit.toString());
+
+//   return client.get(`/marking-jobs?${params.toString()}`);
+// }
+
+// /**
+//  * Fetch a specific marking job by ID
+//  * @param jobId - The marking job ID
+//  */
+// export async function getMarkingJobById(jobId: string): Promise<MarkingJobResponse> {
+//   return client.get(`/marking-jobs/${jobId}`);
+// }
+
+// /**
+//  * Create a new marking job
+//  * @param data - Marking job creation data
+//  */
+// export async function createMarkingJob(
+//   data: CreateMarkingJobRequest
+// ): Promise<MarkingJobResponse> {
+//   return client.post('/marking-jobs', data);
+// }
+
+// /**
+//  * Update an existing marking job
+//  * @param jobId - The marking job ID
+//  * @param data - Updated marking job data
+//  */
+// export async function updateMarkingJob(
+//   jobId: string,
+//   data: UpdateMarkingJobRequest
+// ): Promise<MarkingJobResponse> {
+//   return client.put(`/marking-jobs/${jobId}`, data);
+// }
+
+// /**
+//  * Cancel a marking job
+//  * @param jobId - The marking job ID
+//  */
+// export async function cancelMarkingJob(jobId: string): Promise<MarkingJobResponse> {
+//   return client.post(`/marking-jobs/${jobId}/cancel`);
+// }
+
+// /**
+//  * Get marking job statistics for the user
+//  */
+// export async function getMarkingJobStats(): Promise<MarkingJobStatsResponse> {
+//   return client.get('/marking-jobs/stats');
+// }
+
+// /**
+//  * Get available marking jobs for agents (within proximity)
+//  * @param latitude - Agent's current latitude
+//  * @param longitude - Agent's current longitude
+//  * @param radius - Search radius in kilometers
+//  */
+// export async function getAvailableMarkingJobs(
+//   latitude: number,
+//   longitude: number,
+//   radius: number = 10
+// ): Promise<MarkingJobListResponse> {
+//   return client.get(
+//     `/marking-jobs/available?lat=${latitude}&lng=${longitude}&radius=${radius}`
+//   );
+// }
+
+// /**
+//  * Accept a marking job (for agents)
+//  * @param jobId - The marking job ID
+//  */
+// export async function acceptMarkingJob(jobId: string): Promise<MarkingJobResponse> {
+//   return client.post(`/marking-jobs/${jobId}/accept`);
+// }
+
+// /**
+//  * Reject a marking job assignment (for agents)
+//  * @param jobId - The marking job ID
+//  * @param reason - Reason for rejection
+//  */
+// export async function rejectMarkingJob(
+//   jobId: string,
+//   reason?: string
+// ): Promise<MarkingJobResponse> {
+//   return client.post(`/marking-jobs/${jobId}/reject`, { reason });
+// }
+
+// /**
+//  * Get marking jobs assigned to the current agent
+//  */
+// export async function getMyAssignedJobs(): Promise<MarkingJobListResponse> {
+//   return client.get('/marking-jobs/my-assignments');
+// }
+
+// /**
+//  * Get marking jobs requested by the current user
+//  */
+// export async function getMyRequestedJobs(): Promise<MarkingJobListResponse> {
+//   return client.get('/marking-jobs/my-requests');
+// }
+
+// /**
+//  * Get marking job time slot expiry
+//  * @param jobId - The marking job ID
+//  */
+// export async function getJobTimeSlot(jobId: string): Promise<{
+//   timeSlotExpiry: string;
+//   remainingTime: number; // in seconds
+//   isExpired: boolean;
+// }> {
+//   return client.get(`/marking-jobs/${jobId}/time-slot`);
+// }
