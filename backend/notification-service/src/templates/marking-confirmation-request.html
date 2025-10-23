@@ -1,0 +1,202 @@
+<!-- backend/notification-service/src/templates/marking-confirmation-request.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder: Confirm Property Marking</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ff9800;
+        }
+        .header h1 {
+            color: #ff9800;
+            margin: 0;
+            font-size: 24px;
+        }
+        .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .property-details {
+            background-color: #f9f9f9;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .property-details h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .detail-row {
+            margin: 10px 0;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #666;
+        }
+        .urgency-box {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .urgency-box .countdown {
+            font-size: 36px;
+            font-weight: bold;
+            color: #f44336;
+            margin: 15px 0;
+        }
+        .urgency-box p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .consequence-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .consequence-box h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .consequence-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #ff9800;
+            color: #ffffff;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .cta-button:hover {
+            background-color: #f57c00;
+        }
+        .button-container {
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        .steps {
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .steps h4 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .steps ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">⏰</div>
+            <h1>Confirmation Reminder</h1>
+        </div>
+
+        <div class="content">
+            <p>Hi <strong>{{ownerName}}</strong>,</p>
+            
+            <p>This is a reminder that you need to confirm the property marking for your listing. Time is running out!</p>
+
+            <div class="property-details">
+                <h3>📍 Property Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Property:</span> {{propertyTitle}}
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Address:</span> {{propertyAddress}}
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Job ID:</span> {{markingJobId}}
+                </div>
+            </div>
+
+            <div class="urgency-box">
+                <p><strong>⚠️ TIME REMAINING</strong></p>
+                <div class="countdown">{{hoursRemaining}} Hours</div>
+                <p>Deadline: <strong>{{confirmationDeadline}}</strong></p>
+            </div>
+
+            <div class="consequence-box">
+                <h4>⚡ What Happens If You Don't Confirm?</h4>
+                <ul>
+                    <li>A partial payment will be automatically released to the agent as compensation</li>
+                    <li>This process will repeat until the full marking fee is paid out</li>
+                    <li>You'll need to initiate a new marking job (and pay again) if you want to remark the property</li>
+                    <li>Your property listing will remain incomplete</li>
+                </ul>
+            </div>
+
+            <div class="steps">
+                <h4>🎯 Quick Confirmation Steps:</h4>
+                <ol>
+                    <li>Click the button below to view the marking details</li>
+                    <li>Review the property boundaries on the map</li>
+                    <li>Check the uploaded property images</li>
+                    <li>If everything looks correct, click "Confirm Marking"</li>
+                    <li>If something is wrong, you can request corrections</li>
+                </ol>
+            </div>
+
+            <div class="button-container">
+                <a href="{{confirmationUrl}}" class="cta-button">Confirm Marking Now</a>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
+                <strong>Need Help?</strong><br>
+                If you're having trouble confirming or have questions about the marking,<br>
+                please contact our support team immediately.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated reminder from Newcondo.</p>
+            <p>You're receiving this because a property marking job needs your confirmation.</p>
+            <p>&copy; 2025 Newcondo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

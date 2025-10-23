@@ -253,3 +253,343 @@ export class MarkingNotificationController {
     }
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/notification-service/src/controllers/markingNotificationController.ts
+
+// import { Request, Response } from 'express';
+// import { markingNotificationService } from '../services/markingNotificationService';
+// import { agentBroadcastService } from '../services/agentBroadcastService';
+
+// class MarkingNotificationController {
+//   /**
+//    * Send marking job assignment notification to agent
+//    */
+//   async sendAssignmentNotification(req: Request, res: Response) {
+//     try {
+//       const { agentId, markingJobId, propertyDetails, timeSlotExpiry } = req.body;
+
+//       if (!agentId || !markingJobId || !propertyDetails) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendAssignmentNotification({
+//         agentId,
+//         markingJobId,
+//         propertyDetails,
+//         timeSlotExpiry,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Assignment notification sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending assignment notification:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send assignment notification',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send marking completion notification to property owner
+//    */
+//   async sendCompletionNotification(req: Request, res: Response) {
+//     try {
+//       const { ownerId, markingJobId, propertyDetails, agentDetails, completionData } = req.body;
+
+//       if (!ownerId || !markingJobId || !propertyDetails) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendCompletionNotification({
+//         ownerId,
+//         markingJobId,
+//         propertyDetails,
+//         agentDetails,
+//         completionData,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Completion notification sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending completion notification:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send completion notification',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send confirmation request notification to property owner
+//    */
+//   async sendConfirmationRequest(req: Request, res: Response) {
+//     try {
+//       const { ownerId, markingJobId, propertyDetails, confirmationDeadline } = req.body;
+
+//       if (!ownerId || !markingJobId || !propertyDetails || !confirmationDeadline) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendConfirmationRequest({
+//         ownerId,
+//         markingJobId,
+//         propertyDetails,
+//         confirmationDeadline,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Confirmation request sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending confirmation request:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send confirmation request',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send payment release notification to agent
+//    */
+//   async sendPaymentReleaseNotification(req: Request, res: Response) {
+//     try {
+//       const { agentId, markingJobId, paymentAmount, propertyDetails } = req.body;
+
+//       if (!agentId || !markingJobId || !paymentAmount) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendPaymentReleaseNotification({
+//         agentId,
+//         markingJobId,
+//         paymentAmount,
+//         propertyDetails,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Payment release notification sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending payment release notification:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send payment release notification',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send queue position update to agents
+//    */
+//   async sendQueuePositionUpdate(req: Request, res: Response) {
+//     try {
+//       const { agentId, markingJobId, queuePosition, estimatedWaitTime, propertyDetails } = req.body;
+
+//       if (!agentId || !markingJobId || queuePosition === undefined) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendQueuePositionUpdate({
+//         agentId,
+//         markingJobId,
+//         queuePosition,
+//         estimatedWaitTime,
+//         propertyDetails,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Queue position update sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending queue position update:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send queue position update',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send time expiry warning to agent
+//    */
+//   async sendTimeExpiryWarning(req: Request, res: Response) {
+//     try {
+//       const { agentId, markingJobId, timeRemaining, propertyDetails } = req.body;
+
+//       if (!agentId || !markingJobId || !timeRemaining) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendTimeExpiryWarning({
+//         agentId,
+//         markingJobId,
+//         timeRemaining,
+//         propertyDetails,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Time expiry warning sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending time expiry warning:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send time expiry warning',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Broadcast new marking job to eligible agents
+//    */
+//   async broadcastMarkingJob(req: Request, res: Response) {
+//     try {
+//       const { markingJobId, propertyDetails, location, fee } = req.body;
+
+//       if (!markingJobId || !propertyDetails || !location) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       const result = await agentBroadcastService.broadcastNewMarkingJob({
+//         markingJobId,
+//         propertyDetails,
+//         location,
+//         fee,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Marking job broadcast successfully',
+//         data: result,
+//       });
+//     } catch (error) {
+//       console.error('Error broadcasting marking job:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to broadcast marking job',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send job cancellation notification
+//    */
+//   async sendJobCancellationNotification(req: Request, res: Response) {
+//     try {
+//       const { recipientId, markingJobId, reason, propertyDetails } = req.body;
+
+//       if (!recipientId || !markingJobId) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendJobCancellationNotification({
+//         recipientId,
+//         markingJobId,
+//         reason,
+//         propertyDetails,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Cancellation notification sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending cancellation notification:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send cancellation notification',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+
+//   /**
+//    * Send partial payment notification to agent (for timeout compensation)
+//    */
+//   async sendPartialPaymentNotification(req: Request, res: Response) {
+//     try {
+//       const { agentId, markingJobId, amount, reason, propertyDetails } = req.body;
+
+//       if (!agentId || !markingJobId || !amount) {
+//         return res.status(400).json({
+//           success: false,
+//           message: 'Missing required fields',
+//         });
+//       }
+
+//       await markingNotificationService.sendPartialPaymentNotification({
+//         agentId,
+//         markingJobId,
+//         amount,
+//         reason,
+//         propertyDetails,
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: 'Partial payment notification sent successfully',
+//       });
+//     } catch (error) {
+//       console.error('Error sending partial payment notification:', error);
+//       return res.status(500).json({
+//         success: false,
+//         message: 'Failed to send partial payment notification',
+//         error: error instanceof Error ? error.message : 'Unknown error',
+//       });
+//     }
+//   }
+// }
+
+// export const markingNotificationController = new MarkingNotificationController();

@@ -1,10 +1,10 @@
-<!-- backend/notification-service/src/templates/marking-assignment.html -->
+<!-- backend/notification-service/src/templates/marking-completion.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Property Marking Job Assigned</title>
+    <title>Property Marking Completed</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -55,19 +55,44 @@
             font-weight: bold;
             color: #666;
         }
-        .time-warning {
+        .agent-info {
+            background-color: #e8f5e9;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .agent-info h4 {
+            margin-top: 0;
+            color: #2e7d32;
+        }
+        .completion-images {
+            margin: 20px 0;
+        }
+        .completion-images h4 {
+            color: #333;
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .image-grid img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 2px solid #ddd;
+        }
+        .warning-box {
             background-color: #fff3cd;
             border: 1px solid #ffc107;
             border-radius: 4px;
             padding: 15px;
             margin: 20px 0;
-            text-align: center;
         }
-        .time-warning .timer {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ff6b6b;
-            margin: 10px 0;
+        .warning-box strong {
+            color: #856404;
         }
         .cta-button {
             display: inline-block;
@@ -94,36 +119,32 @@
             color: #666;
             font-size: 12px;
         }
-        .instructions {
-            background-color: #e3f2fd;
-            border-left: 4px solid #2196F3;
+        .notes-section {
+            background-color: #f5f5f5;
             padding: 15px;
+            border-radius: 4px;
             margin: 20px 0;
         }
-        .instructions h4 {
+        .notes-section h4 {
             margin-top: 0;
-            color: #2196F3;
-        }
-        .instructions ol {
-            margin: 10px 0;
-            padding-left: 20px;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="icon">🎯</div>
-            <h1>New Marking Job Assigned!</h1>
+            <div class="icon">✅</div>
+            <h1>Property Marking Completed!</h1>
         </div>
 
         <div class="content">
-            <p>Hi <strong>{{agentName}}</strong>,</p>
+            <p>Hi <strong>{{ownerName}}</strong>,</p>
             
-            <p>Congratulations! You've been assigned a property marking job. Please complete this task within your allocated time slot to earn your payment.</p>
+            <p>Great news! The property marking for your listing has been completed by our agent. Please review the marking details and confirm that everything is correct.</p>
 
             <div class="property-details">
-                <h3>📍 Property Details</h3>
+                <h3>📍 Property Information</h3>
                 <div class="detail-row">
                     <span class="detail-label">Property:</span> {{propertyTitle}}
                 </div>
@@ -131,40 +152,54 @@
                     <span class="detail-label">Address:</span> {{propertyAddress}}
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">City:</span> {{propertyCity}}
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">State:</span> {{propertyState}}
-                </div>
-                <div class="detail-row">
                     <span class="detail-label">Job ID:</span> {{markingJobId}}
                 </div>
             </div>
 
-            <div class="time-warning">
-                <p><strong>⏰ Time Limit:</strong></p>
-                <div class="timer">{{timeSlotHours}} Hours</div>
-                <p>Complete by: <strong>{{timeSlotExpiry}}</strong></p>
-                <p style="margin-bottom: 0; font-size: 14px;">If you don't complete within this time, the job will be reassigned to the next agent in queue.</p>
+            <div class="agent-info">
+                <h4>👤 Agent Information</h4>
+                <div class="detail-row">
+                    <span class="detail-label">Agent Name:</span> {{agentName}}
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Contact:</span> {{agentPhone}}
+                </div>
             </div>
 
-            <div class="instructions">
-                <h4>📋 What You Need to Do:</h4>
-                <ol>
-                    <li>Visit the property at the address provided</li>
-                    <li>Contact the property owner/guide using the details in your dashboard</li>
-                    <li>Mark the property boundaries on the satellite map in the app</li>
-                    <li>Take photos of key rooms and building features</li>
-                    <li>Upload the photos and confirm completion</li>
-                </ol>
+            {{#if completionImages}}
+            <div class="completion-images">
+                <h4>📸 Property Images</h4>
+                <p>The agent has uploaded the following images of your property:</p>
+                <div class="image-grid">
+                    {{#each completionImages}}
+                    <img src="{{this}}" alt="Property image">
+                    {{/each}}
+                </div>
+            </div>
+            {{/if}}
+
+            {{#if completionNotes}}
+            <div class="notes-section">
+                <h4>📝 Agent's Notes</h4>
+                <p>{{completionNotes}}</p>
+            </div>
+            {{/if}}
+
+            <div class="warning-box">
+                <p><strong>⚠️ Action Required:</strong></p>
+                <p>Please confirm the marking within <strong>2-3 days</strong>. If you don't confirm within this period, a partial payment will be automatically released to the agent, and you may need to request a new marking job.</p>
             </div>
 
             <div class="button-container">
-                <a href="{{dashboardUrl}}" class="cta-button">View Job Details</a>
+                <a href="{{confirmationUrl}}" class="cta-button">Review & Confirm Marking</a>
             </div>
 
             <p style="margin-top: 30px; font-size: 14px; color: #666;">
-                <strong>Important:</strong> Make sure you have the Newcondo mobile app installed for easy property marking. The app provides GPS-enabled boundary marking and photo upload features.
+                <strong>What happens next?</strong><br>
+                • Review the boundary marking and images in your dashboard<br>
+                • If everything looks good, confirm the marking<br>
+                • Once confirmed, the full payment will be released to the agent<br>
+                • Your property will then be ready for listing
             </p>
         </div>
 

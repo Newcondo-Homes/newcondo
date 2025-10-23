@@ -1246,3 +1246,351 @@ export interface MarkingDispute {
 //   area?: number;
 //   isValid: boolean;
 // }
+
+
+
+
+
+
+
+
+
+// // apps/platform/types/marking.ts
+
+// // Enums
+// export type MarkingJobStatus =
+//   | 'QUEUED'
+//   | 'ASSIGNED'
+//   | 'IN_PROGRESS'
+//   | 'COMPLETED'
+//   | 'CANCELLED'
+//   | 'EXPIRED';
+
+// export type UrgencyLevel = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+// export type PaymentStatus = 'PENDING' | 'SUCCESS' | 'FAILED' | 'HELD' | 'RELEASED';
+
+// export type ImageType =
+//   | 'BOUNDARY'
+//   | 'EXTERIOR_FRONT'
+//   | 'EXTERIOR_BACK'
+//   | 'EXTERIOR_SIDE'
+//   | 'LIVING_ROOM'
+//   | 'BEDROOM'
+//   | 'KITCHEN'
+//   | 'BATHROOM'
+//   | 'COMPOUND'
+//   | 'STREET_VIEW'
+//   | 'OTHER';
+
+// export type PropertyCondition =
+//   | 'EXCELLENT'
+//   | 'GOOD'
+//   | 'FAIR'
+//   | 'POOR'
+//   | 'UNDER_CONSTRUCTION';
+
+// // Core Types
+// export interface Coordinates {
+//   lat: number;
+//   lng: number;
+// }
+
+// export interface HierarchicalAddress {
+//   state: string;
+//   lga: string;
+//   location: string;
+//   streetAddress?: string;
+//   landmark?: string;
+// }
+
+// export interface ServiceArea {
+//   state: string;
+//   lga: string;
+//   locations: string[];
+// }
+
+// // Marking Job
+// export interface MarkingJob {
+//   id: string;
+//   propertyId: string;
+//   requestedBy: string;
+//   assignedAgentId?: string;
+  
+//   // Job details
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   propertyAddress: HierarchicalAddress;
+//   propertyImages?: string[];
+//   preferredTime?: string;
+//   urgencyLevel: UrgencyLevel;
+  
+//   // Pricing
+//   markingFee: number;
+//   paymentStatus: PaymentStatus;
+  
+//   // Status
+//   status: MarkingJobStatus;
+//   assignedAt?: string;
+//   completedAt?: string;
+//   timeSlotExpiry?: string;
+  
+//   // Completion data
+//   completionNotes?: string;
+//   completionImages?: CompletionImage[];
+//   boundaryData?: BoundaryData;
+  
+//   // Queue
+//   queuePosition?: number;
+//   maxCompletionTime?: string;
+  
+//   // Relations
+//   property?: PropertyBasic;
+//   requestingUser?: UserBasic;
+//   assignedAgent?: AgentBasic;
+  
+//   createdAt: string;
+//   updatedAt: string;
+// }
+
+// export interface CompletionImage {
+//   id: string;
+//   url: string;
+//   type: ImageType;
+//   description?: string;
+//   uploadedAt: string;
+// }
+
+// export interface BoundaryData {
+//   coordinates: Coordinates[];
+//   centerPoint: Coordinates;
+//   buildingArea?: number;
+//   buildingHeight?: number;
+//   numberOfFloors?: number;
+//   accuracyLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+//   notes?: string;
+// }
+
+// export interface PropertyBasic {
+//   id: string;
+//   title: string;
+//   address: string;
+//   city: string;
+//   state: string;
+//   gpsCoordinates?: string;
+//   images?: string[];
+// }
+
+// export interface UserBasic {
+//   id: string;
+//   name: string;
+//   email: string;
+//   phone?: string;
+//   image?: string;
+// }
+
+// export interface AgentBasic extends UserBasic {
+//   agentReliabilityScore?: number;
+//   totalMarkingJobs: number;
+//   completedMarkingJobs: number;
+//   serviceAreas?: ServiceArea[];
+// }
+
+// // Request/Response Types
+// export interface CreateMarkingJobRequest {
+//   propertyId: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   propertyAddress: HierarchicalAddress;
+//   propertyImages?: string[];
+//   preferredTime?: string;
+//   urgencyLevel?: UrgencyLevel;
+//   notes?: string;
+// }
+
+// export interface UpdateMarkingJobRequest {
+//   contactPersonName?: string;
+//   contactPersonPhone?: string;
+//   accessInstructions?: string;
+//   propertyAddress?: HierarchicalAddress;
+//   propertyImages?: string[];
+//   preferredTime?: string;
+//   urgencyLevel?: UrgencyLevel;
+//   notes?: string;
+// }
+
+// export interface MarkingJobResponse {
+//   success: boolean;
+//   data: MarkingJob;
+//   message?: string;
+// }
+
+// export interface MarkingJobListResponse {
+//   success: boolean;
+//   data: MarkingJob[];
+//   pagination?: {
+//     page: number;
+//     limit: number;
+//     total: number;
+//     pages: number;
+//   };
+//   message?: string;
+// }
+
+// export interface MarkingJobStatsResponse {
+//   success: boolean;
+//   data: {
+//     total: number;
+//     queued: number;
+//     assigned: number;
+//     inProgress: number;
+//     completed: number;
+//     cancelled: number;
+//     expired: number;
+//     totalSpent: number;
+//     averageCompletionTime: number;
+//   };
+// }
+
+// // Completion Types
+// export interface UploadCompletionImagesRequest {
+//   images: Array<{
+//     file: File;
+//     type: ImageType;
+//     description?: string;
+//   }>;
+//   notes?: string;
+// }
+
+// export interface CompletionImagesResponse {
+//   success: boolean;
+//   data: {
+//     images: CompletionImage[];
+//     totalUploaded: number;
+//   };
+//   message?: string;
+// }
+
+// export interface SubmitBoundaryDataRequest {
+//   boundaryCoordinates: Coordinates[];
+//   centerPoint: Coordinates;
+//   buildingArea?: number;
+//   buildingHeight?: number;
+//   numberOfFloors?: number;
+//   accuracyLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+//   notes?: string;
+// }
+
+// export interface BoundaryDataResponse {
+//   success: boolean;
+//   data: BoundaryData;
+//   message?: string;
+// }
+
+// export interface CompleteMarkingJobRequest {
+//   completionNotes: string;
+//   boundaryMarked: boolean;
+//   imagesUploaded: boolean;
+//   propertyCondition: PropertyCondition;
+//   isOccupied: boolean;
+//   accessIssues?: string;
+//   observations?: string;
+//   completedAt: string;
+// }
+
+// export interface MarkingCompletionResponse {
+//   success: boolean;
+//   data: MarkingJob;
+//   message?: string;
+//   paymentInfo?: {
+//     partialPayment: number;
+//     remainingPayment: number;
+//     confirmationRequired: boolean;
+//     confirmationDeadline: string;
+//   };
+// }
+
+// // Confirmation Types
+// export interface ConfirmMarkingRequest {
+//   rating: number;
+//   feedback?: string;
+//   aspectRatings?: {
+//     accuracy: number;
+//     timeliness: number;
+//     communication: number;
+//     professionalism: number;
+//   };
+//   boundaryAccurate: boolean;
+//   imagesQualityAcceptable: boolean;
+//   wouldRecommend?: boolean;
+//   additionalComments?: string;
+// }
+
+// export interface RejectMarkingRequest {
+//   primaryReason:
+//     | 'INCORRECT_PROPERTY'
+//     | 'POOR_BOUNDARY_MARKING'
+//     | 'INSUFFICIENT_IMAGES'
+//     | 'POOR_IMAGE_QUALITY'
+//     | 'WRONG_LOCATION'
+//     | 'INCOMPLETE_MARKING'
+//     | 'UNPROFESSIONAL_CONDUCT'
+//     | 'OTHER';
+//   detailedExplanation: string;
+//   issues: Array<{
+//     type: 'BOUNDARY' | 'IMAGES' | 'LOCATION' | 'COMMUNICATION' | 'ACCESS' | 'OTHER';
+//     description: string;
+//   }>;
+//   evidenceImages?: string[];
+//   requestReMarking?: boolean;
+//   requestRefund?: boolean;
+// }
+
+// export interface RequestRevisionRequest {
+//   revisionType:
+//     | 'BOUNDARY_ADJUSTMENT'
+//     | 'ADDITIONAL_IMAGES'
+//     | 'BETTER_IMAGE_QUALITY'
+//     | 'CORRECT_LOCATION'
+//     | 'COMPLETE_MISSING_AREAS'
+//     | 'OTHER';
+//   revisionRequests: Array<{
+//     area: 'BOUNDARY' | 'EXTERIOR' | 'INTERIOR' | 'COMPOUND' | 'STREET_VIEW' | 'OTHER';
+//     instruction: string;
+//   }>;
+//   revisionNotes: string;
+//   priority?: 'LOW' | 'NORMAL' | 'HIGH';
+//   revisionDeadline?: string;
+// }
+
+// export interface MarkingConfirmationResponse {
+//   success: boolean;
+//   data: {
+//     jobId: string;
+//     status: string;
+//     confirmedAt?: string;
+//     rejectedAt?: string;
+//     paymentReleased?: boolean;
+//     agentRating?: number;
+//   };
+//   message?: string;
+// }
+
+// export interface ConfirmationStatusResponse {
+//   success: boolean;
+//   data: {
+//     jobId: string;
+//     isConfirmed: boolean;
+//     isRejected: boolean;
+//     confirmationDeadline: string;
+//     hoursRemaining: number;
+//     daysRemaining: number;
+//     isExpired: boolean;
+//     canConfirm: boolean;
+//     canReject: boolean;
+//     canRequestRevision: boolean;
+//   };
+//   message?: string;
+// }

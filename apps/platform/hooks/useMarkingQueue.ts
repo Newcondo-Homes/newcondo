@@ -389,3 +389,200 @@ export function useMarkingQueue() {
 //     getAgentQueuePosition,
 //   };
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/hooks/useMarkingQueue.ts
+// import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// import { toast } from 'sonner';
+// import {
+//   joinMarkingQueue,
+//   leaveMarkingQueue,
+//   getQueuePosition,
+//   getQueueStatus,
+//   getMyQueuePositions,
+//   getQueueHistory,
+//   isInQueue,
+//   getQueueStats
+// } from '@/lib/api/markingQueue';
+// import type { JoinQueueRequest } from '@/types/queue';
+
+// // Query keys
+// export const queueKeys = {
+//   all: ['marking-queue'] as const,
+//   position: (jobId: string) => [...queueKeys.all, 'position', jobId] as const,
+//   status: (jobId: string) => [...queueKeys.all, 'status', jobId] as const,
+//   myPositions: () => [...queueKeys.all, 'my-positions'] as const,
+//   history: (jobId: string) => [...queueKeys.all, 'history', jobId] as const,
+//   check: (jobId: string) => [...queueKeys.all, 'check', jobId] as const,
+//   stats: () => [...queueKeys.all, 'stats'] as const,
+// };
+
+// // Get queue position for a job
+// export function useQueuePosition(jobId: string, enabled: boolean = true) {
+//   return useQuery({
+//     queryKey: queueKeys.position(jobId),
+//     queryFn: () => getQueuePosition(jobId),
+//     enabled: enabled && !!jobId,
+//     staleTime: 15000, // 15 seconds
+//     refetchInterval: 30000, // Refetch every 30 seconds
+//   });
+// }
+
+// // Get queue status for a job
+// export function useQueueStatus(jobId: string, enabled: boolean = true) {
+//   return useQuery({
+//     queryKey: queueKeys.status(jobId),
+//     queryFn: () => getQueueStatus(jobId),
+//     enabled: enabled && !!jobId,
+//     staleTime: 10000, // 10 seconds
+//     refetchInterval: 20000, // Refetch every 20 seconds
+//   });
+// }
+
+// // Get all queue positions for current user
+// export function useMyQueuePositions() {
+//   return useQuery({
+//     queryKey: queueKeys.myPositions(),
+//     queryFn: getMyQueuePositions,
+//     staleTime: 20000, // 20 seconds
+//     refetchInterval: 30000, // Refetch every 30 seconds
+//   });
+// }
+
+// // Get queue history for a job
+// export function useQueueHistory(jobId: string, enabled: boolean = true) {
+//   return useQuery({
+//     queryKey: queueKeys.history(jobId),
+//     queryFn: () => getQueueHistory(jobId),
+//     enabled: enabled && !!jobId,
+//     staleTime: 30000, // 30 seconds
+//   });
+// }
+
+// // Check if user is in queue
+// export function useIsInQueue(jobId: string, enabled: boolean = true) {
+//   return useQuery({
+//     queryKey: queueKeys.check(jobId),
+//     queryFn: () => isInQueue(jobId),
+//     enabled: enabled && !!jobId,
+//     staleTime: 10000, // 10 seconds
+//   });
+// }
+
+// // Get queue statistics
+// export function useQueueStats() {
+//   return useQuery({
+//     queryKey: queueKeys.stats(),
+//     queryFn: getQueueStats,
+//     staleTime: 60000, // 1 minute
+//   });
+// }
+
+// // Join queue mutation
+// export function useJoinQueue(jobId: string) {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: (data?: JoinQueueRequest) => joinMarkingQueue(jobId, data),
+//     onSuccess: (response) => {
+//       toast.success(
+//         `You've joined the queue at position ${response.data.positionInQueue}`
+//       );
+      
+//       // Invalidate relevant queries
+//       queryClient.invalidateQueries({ queryKey: queueKeys.position(jobId) });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.status(jobId) });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.myPositions() });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.check(jobId) });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.stats() });
+//     },
+//     onError: (error: any) => {
+//       toast.error(error.message || 'Failed to join queue');
+//     },
+//   });
+// }
+
+// // Leave queue mutation
+// export function useLeaveQueue(jobId: string) {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: () => leaveMarkingQueue(jobId),
+//     onSuccess: () => {
+//       toast.success('You have left the queue');
+      
+//       // Invalidate relevant queries
+//       queryClient.invalidateQueries({ queryKey: queueKeys.position(jobId) });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.status(jobId) });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.myPositions() });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.check(jobId) });
+//       queryClient.invalidateQueries({ queryKey: queueKeys.stats() });
+//     },
+//     onError: (error: any) => {
+//       toast.error(error.message || 'Failed to leave queue');
+//     },
+//   });
+// }
+
+// // Helper hook to calculate estimated wait time
+// export function useEstimatedWaitTime(jobId: string) {
+//   const { data: queueStatus, isLoading } = useQueueStatus(jobId);
+
+//   if (isLoading || !queueStatus?.data) {
+//     return { waitTime: 0, formattedWaitTime: 'Calculating...', isReady: false };
+//   }
+
+//   const waitTime = queueStatus.data.averageWaitTime;
+//   const hours = Math.floor(waitTime / 60);
+//   const minutes = waitTime % 60;
+
+//   let formattedWaitTime = '';
+//   if (hours > 0) {
+//     formattedWaitTime = `${hours}h ${minutes}m`;
+//   } else {
+//     formattedWaitTime = `${minutes}m`;
+//   }
+
+//   return { waitTime, formattedWaitTime, isReady: true };
+// }
+
+// // Helper hook to check if user's turn is coming soon
+// export function useIsTurnSoon(jobId: string) {
+//   const { data: position, isLoading } = useQueuePosition(jobId);
+
+//   if (isLoading || !position) {
+//     return { isSoon: false, position: 0, isActive: false };
+//   }
+
+//   const isSoon = position.position <= 3 && position.position > 1;
+//   const isActive = position.position === 1 && position.status === 'ACTIVE';
+
+//   return { isSoon, position: position.position, isActive };
+// }
+
+// // Helper hook for queue status badge
+// export function useQueueStatusBadge(status: string): {
+//   color: string;
+//   label: string;
+// } {
+//   const statusConfig: Record<string, { color: string; label: string }> = {
+//     WAITING: { color: 'bg-blue-100 text-blue-800', label: 'Waiting' },
+//     ACTIVE: { color: 'bg-green-100 text-green-800', label: 'Your Turn' },
+//     EXPIRED: { color: 'bg-red-100 text-red-800', label: 'Expired' },
+//     COMPLETED: { color: 'bg-gray-100 text-gray-800', label: 'Completed' },
+//     CANCELLED: { color: 'bg-gray-100 text-gray-800', label: 'Cancelled' },
+//     SKIPPED: { color: 'bg-yellow-100 text-yellow-800', label: 'Skipped' },
+//   };
+
+//   return statusConfig[status] || { color: 'bg-gray-100 text-gray-800', label: status };
+// }

@@ -345,3 +345,218 @@ function CardLoadingSkeleton() {
     </Card>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/admin/src/app/(dashboard)/marking-oversight/page.tsx
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import { useRouter } from "next/navigation";
+// import { Loader2, AlertCircle, RefreshCw } from "lucide-react";
+// import MarkingJobsTable from "@/components/admin/MarkingJobsTable";
+// import QueueMonitor from "@/components/admin/QueueMonitor";
+// import AgentPerformanceTable from "@/components/admin/AgentPerformanceTable";
+// import { Button } from "@newcondo/ui/button";
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/card";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/tabs";
+// import { Alert, AlertDescription } from "@newcondo/ui/alert";
+// import { markingOversightApi } from "@/lib/api/markingOversight";
+// import type { 
+//   MarkingJobOverview, 
+//   QueueStats, 
+//   AgentPerformanceMetrics 
+// } from "@/types/admin";
+
+// export default function MarkingOversightPage() {
+//   const router = useRouter();
+//   const [loading, setLoading] = useState(true);
+//   const [refreshing, setRefreshing] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+//   const [activeTab, setActiveTab] = useState("jobs");
+
+//   // Data states
+//   const [jobs, setJobs] = useState<MarkingJobOverview[]>([]);
+//   const [queueStats, setQueueStats] = useState<QueueStats | null>(null);
+//   const [agentMetrics, setAgentMetrics] = useState<AgentPerformanceMetrics[]>([]);
+//   const [stats, setStats] = useState({
+//     totalJobs: 0,
+//     activeJobs: 0,
+//     completedJobs: 0,
+//     queuedJobs: 0,
+//     averageCompletionTime: 0,
+//     successRate: 0
+//   });
+
+//   // Filters
+//   const [filters, setFilters] = useState({
+//     status: "all",
+//     dateRange: "7d",
+//     urgency: "all"
+//   });
+
+//   useEffect(() => {
+//     fetchData();
+//   }, [filters]);
+
+//   const fetchData = async () => {
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       const [jobsData, queueData, metricsData, statsData] = await Promise.all([
+//         markingOversightApi.getMarkingJobs(filters),
+//         markingOversightApi.getQueueStats(),
+//         markingOversightApi.getAgentMetrics(),
+//         markingOversightApi.getOverviewStats()
+//       ]);
+
+//       setJobs(jobsData);
+//       setQueueStats(queueData);
+//       setAgentMetrics(metricsData);
+//       setStats(statsData);
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : "Failed to fetch data");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleRefresh = async () => {
+//     setRefreshing(true);
+//     await fetchData();
+//     setRefreshing(false);
+//   };
+
+//   const handleJobClick = (jobId: string) => {
+//     router.push(`/marking-oversight/${jobId}`);
+//   };
+
+//   if (loading && !refreshing) {
+//     return (
+//       <div className="flex items-center justify-center h-96">
+//         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-6 p-6">
+//       {/* Header */}
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold tracking-tight">Marking Oversight</h1>
+//           <p className="text-muted-foreground">
+//             Monitor and manage property marking jobs and agent performance
+//           </p>
+//         </div>
+//         <Button 
+//           onClick={handleRefresh} 
+//           disabled={refreshing}
+//           variant="outline"
+//         >
+//           <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+//           Refresh
+//         </Button>
+//       </div>
+
+//       {/* Error Alert */}
+//       {error && (
+//         <Alert variant="destructive">
+//           <AlertCircle className="h-4 w-4" />
+//           <AlertDescription>{error}</AlertDescription>
+//         </Alert>
+//       )}
+
+//       {/* Stats Cards */}
+//       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-2xl font-bold">{stats.totalJobs}</div>
+//             <p className="text-xs text-muted-foreground">
+//               All time marking jobs
+//             </p>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-2xl font-bold">{stats.activeJobs}</div>
+//             <p className="text-xs text-muted-foreground">
+//               Currently in progress
+//             </p>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-2xl font-bold">{stats.successRate}%</div>
+//             <p className="text-xs text-muted-foreground">
+//               Completed successfully
+//             </p>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Avg. Completion</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-2xl font-bold">{stats.averageCompletionTime}h</div>
+//             <p className="text-xs text-muted-foreground">
+//               Average completion time
+//             </p>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* Main Content Tabs */}
+//       <Tabs value={activeTab} onValueChange={setActiveTab}>
+//         <TabsList>
+//           <TabsTrigger value="jobs">Marking Jobs</TabsTrigger>
+//           <TabsTrigger value="queue">Queue Monitor</TabsTrigger>
+//           <TabsTrigger value="agents">Agent Performance</TabsTrigger>
+//         </TabsList>
+
+//         <TabsContent value="jobs" className="space-y-4">
+//           <MarkingJobsTable 
+//             jobs={jobs}
+//             onJobClick={handleJobClick}
+//             onFilterChange={setFilters}
+//             filters={filters}
+//           />
+//         </TabsContent>
+
+//         <TabsContent value="queue" className="space-y-4">
+//           {queueStats && <QueueMonitor stats={queueStats} />}
+//         </TabsContent>
+
+//         <TabsContent value="agents" className="space-y-4">
+//           <AgentPerformanceTable metrics={agentMetrics} />
+//         </TabsContent>
+//       </Tabs>
+//     </div>
+//   );
+// }

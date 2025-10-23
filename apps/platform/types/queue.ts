@@ -511,3 +511,122 @@ export interface PaginatedQueueResponse<T> {
   pageSize: number;
   hasMore: boolean;
 }
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/types/queue.ts
+// import type { Coordinates, AgentBasic } from './marking';
+
+// export interface QueuePosition {
+//   id: string;
+//   jobId: string;
+//   agentId: string;
+//   position: number;
+//   joinedAt: string;
+//   estimatedArrivalTime?: string;
+//   currentLocation?: Coordinates;
+//   status: QueuePositionStatus;
+//   timeSlotStart?: string;
+//   timeSlotEnd?: string;
+//   isActive: boolean;
+//   agent?: AgentBasic;
+// }
+
+// export type QueuePositionStatus =
+//   | 'WAITING'
+//   | 'ACTIVE'
+//   | 'EXPIRED'
+//   | 'COMPLETED'
+//   | 'CANCELLED'
+//   | 'SKIPPED';
+
+// export interface QueueStatusResponse {
+//   success: boolean;
+//   data: {
+//     jobId: string;
+//     totalInQueue: number;
+//     currentAgent?: QueuePosition;
+//     nextAgent?: QueuePosition;
+//     queuePositions: QueuePosition[];
+//     averageWaitTime: number; // in minutes
+//     lastUpdated: string;
+//   };
+//   message?: string;
+// }
+
+// export interface QueueHistoryResponse {
+//   success: boolean;
+//   data: {
+//     jobId: string;
+//     history: Array<{
+//       agentId: string;
+//       agentName: string;
+//       position: number;
+//       joinedAt: string;
+//       leftAt?: string;
+//       status: QueuePositionStatus;
+//       reason?: string;
+//     }>;
+//   };
+//   message?: string;
+// }
+
+// export interface JoinQueueRequest {
+//   estimatedArrivalTime?: string;
+//   currentLocation?: Coordinates;
+//   notes?: string;
+// }
+
+// export interface JoinQueueResponse {
+//   success: boolean;
+//   data: {
+//     queuePosition: QueuePosition;
+//     estimatedWaitTime: number; // in minutes
+//     positionInQueue: number;
+//     timeSlotInfo?: {
+//       willStartAt: string;
+//       duration: number; // in hours
+//       expiresAt: string;
+//     };
+//   };
+//   message?: string;
+// }
+
+// export interface QueueNotification {
+//   id: string;
+//   type: QueueNotificationType;
+//   jobId: string;
+//   agentId: string;
+//   message: string;
+//   data?: any;
+//   createdAt: string;
+//   readAt?: string;
+// }
+
+// export type QueueNotificationType =
+//   | 'QUEUE_JOINED'
+//   | 'POSITION_CHANGED'
+//   | 'TIME_SLOT_STARTING'
+//   | 'TIME_SLOT_EXPIRING'
+//   | 'TIME_SLOT_EXPIRED'
+//   | 'PROMOTED_IN_QUEUE'
+//   | 'REMOVED_FROM_QUEUE'
+//   | 'JOB_COMPLETED_BY_OTHER'
+//   | 'JOB_CANCELLED';
+
+// export interface QueueMetrics {
+//   totalQueues: number;
+//   totalAgentsWaiting: number;
+//   averageQueueLength: number;
+//   averageWaitTime: number;
+//   completionRate: number;
+//   timeoutRate: number;
+// }
