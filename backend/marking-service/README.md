@@ -454,3 +454,444 @@ For issues, questions, or contributions:
 ## License
 
 Copyright © 2024 NewCondo. All rights reserved.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- # Property Marking Service
+
+The Property Marking Service handles the complete workflow for property boundary marking, agent assignment, queue management, and job completion tracking.
+
+## Overview
+
+This service enables property owners to have their properties professionally marked on satellite maps by verified agents. It includes:
+
+- **Job Creation & Payment Processing**
+- **Agent Queue Management** with time-slot rotation
+- **Real-time Job Assignment & Tracking**
+- **Photo & Boundary Data Upload**
+- **Performance Metrics & Analytics**
+- **Automated Notifications** (Email/SMS)
+
+---
+
+## Features
+
+### 1. Job Management
+- Create marking jobs with property and contact details
+- Payment processing integration with Flutterwave
+- Multiple marking options (self, friend, agent, admin)
+- Job status tracking (QUEUED, ASSIGNED, IN_PROGRESS, COMPLETED, CANCELLED)
+
+### 2. Agent Queue System
+- First-come-first-served queue implementation
+- 3-hour time slot per agent
+- Automatic rotation on timeout
+- Proximity-based agent matching
+- Reliability score filtering
+
+### 3. Completion Workflow
+- Photo evidence upload (minimum 5 photos)
+- Boundary coordinate submission
+- Initial payment release (5% = ₦1,000)
+- Owner confirmation system (48-hour window)
+- Final payment release on confirmation
+
+### 4. Performance Tracking
+- Agent statistics and metrics
+- Reliability scoring (0-5.00)
+- Completion rate tracking
+- Earnings history
+- Job history with filters
+
+---
+
+## Tech Stack
+
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Express.js
+- **Database**: PostgreSQL (via Prisma ORM)
+- **Cache**: Redis (for queue management)
+- **Payment**: Flutterwave API
+- **Maps**: Google Maps API
+- **Notifications**: Twilio (SMS), Resend/SendGrid (Email)
+- **File Upload**: Cloudinary or AWS S3
+
+---
+
+## Installation
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 6+
+- pnpm (package manager)
+
+### Setup
+
+1. **Install dependencies**
+```bash
+cd backend/marking-service
+pnpm install
+```
+
+2. **Configure environment**
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+3. **Run database migrations**
+```bash
+pnpm prisma migrate dev
+```
+
+4. **Start the service**
+```bash
+# Development
+pnpm dev
+
+# Production
+pnpm build
+pnpm start
+```
+
+The service will start on `http://localhost:3006`
+
+---
+
+## API Endpoints
+
+### Job Management
+
+#### Create Marking Job
+```http
+POST /api/marking/jobs
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "propertyId": "string",
+  "markingOption": "AGENT_ASSIGNMENT", // or "SELF", "FRIEND", "ADMIN"
+  "contactPersonName": "string",
+  "contactPersonPhone": "string",
+  "accessInstructions": "string",
+  "preferredTime": "2025-10-25T10:00:00Z"
+}
+```
+
+#### Get Job Details
+```http
+GET /api/marking/jobs/:jobId
+Authorization: Bearer {token}
+```
+
+#### Update Job Status
+```http
+PATCH /api/marking/jobs/:jobId/status
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}
+```
+
+### Queue Management
+
+#### Get Available Jobs (Agents)
+```http
+GET /api/marking/queue/available
+Authorization: Bearer {token}
+Query Params:
+  - latitude: number
+  - longitude: number
+  - radius: number (optional, default: 50km)
+```
+
+#### Join Queue
+```http
+POST /api/marking/queue/:jobId/join
+Authorization: Bearer {token}
+```
+
+#### Get Queue Status
+```http
+GET /api/marking/queue/:jobId/status
+Authorization: Bearer {token}
+```
+
+### Completion
+
+#### Upload Completion Data
+```http
+POST /api/marking/jobs/:jobId/complete
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+{
+  "boundaryData": JSON,
+  "completionNotes": "string",
+  "images": File[] (min 5 images)
+}
+```
+
+#### Confirm Marking (Owner)
+```http
+POST /api/marking/jobs/:jobId/confirm
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "isApproved": boolean,
+  "feedback": "string",
+  "rating": number (1-5)
+}
+```
+
+### Agent Management
+
+#### Get Agent Statistics
+```http
+GET /api/marking/agents/:agentId/statistics
+Authorization: Bearer {token}
+```
+
+#### Get Performance Metrics
+```http
+GET /api/marking/agents/:agentId/performance
+Authorization: Bearer {token}
+```
+
+#### Get Job History
+```http
+GET /api/marking/agents/:agentId/history
+Authorization: Bearer {token}
+Query Params:
+  - status: string (optional)
+  - dateFrom: string (optional)
+  - dateTo: string (optional)
+  - page: number (optional)
+  - limit: number (optional)
+```
+
+#### Update Service Areas
+```http
+PUT /api/marking/agents/:agentId/service-areas
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "serviceAreas": ["Lagos", "Abuja", "Port Harcourt"]
+}
+```
+
+### Notifications
+
+#### Get Notifications
+```http
+GET /api/marking/notifications
+Authorization: Bearer {token}
+Query Params:
+  - unreadOnly: boolean (optional)
+  - page: number (optional)
+```
+
+#### Mark as Read
+```http
+PATCH /api/marking/notifications/:notificationId/read
+Authorization: Bearer {token}
+```
+
+---
+
+## Business Logic
+
+### Marking Fee Structure
+
+| Option | Cost (NGN) | Agent Commission | Platform Fee |
+|--------|------------|------------------|--------------|
+| Self Mark | 0 | 0 | 0 |
+| Friend Mark | 0 | 0 | 0 |
+| Agent Assignment | 20,000 | 5,000 (25%) | 15,000 (75%) |
+| Admin Mark | 25,000 | 0 | 25,000 |
+
+### Payment Flow
+
+1. **Initial Payment (On Assignment)**
+   - Agent receives 5% (₦1,000) immediately
+   - Held in virtual account (non-withdrawable)
+
+2. **Confirmation Period**
+   - Owner has 48 hours to confirm
+   - Up to 3 confirmation cycles
+
+3. **Final Payment**
+   - On owner confirmation: Full 25% (₦5,000) released
+   - After 3 failed confirmations: Full payout to agent
+
+### Queue Time Management
+
+- **Time Slot**: 3 hours per agent
+- **Auto-Rotation**: If agent doesn't complete within 3 hours, next agent gets the job
+- **Max Completion Time**: 3 days from initial assignment
+- **Queue Position**: First-come-first-served
+
+### Agent Eligibility
+
+- Must be verified agent or premium renter
+- Reliability score ≥ 2.5
+- Must have service area matching property location
+- Must have `isAvailableForMarking` = true
+
+---
+
+## Error Handling
+
+### Common Error Codes
+
+| Code | Message | Description |
+|------|---------|-------------|
+| 400 | Invalid request | Malformed request body |
+| 401 | Unauthorized | Missing or invalid token |
+| 403 | Forbidden | Insufficient permissions |
+| 404 | Not found | Resource doesn't exist |
+| 409 | Conflict | Duplicate or conflicting action |
+| 422 | Validation error | Invalid input data |
+| 429 | Too many requests | Rate limit exceeded |
+| 500 | Server error | Internal server error |
+
+### Error Response Format
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": {
+      "field": "contactPersonPhone",
+      "issue": "Invalid phone number format"
+    }
+  },
+  "timestamp": "2025-10-24T10:30:00Z"
+}
+```
+
+---
+
+## Testing
+
+### Run Tests
+```bash
+# Unit tests
+pnpm test
+
+# Integration tests
+pnpm test:integration
+
+# E2E tests
+pnpm test:e2e
+
+# Test coverage
+pnpm test:coverage
+```
+
+### Test Database
+```bash
+# Setup test database
+pnpm prisma migrate dev --name init
+
+# Seed test data
+pnpm prisma db seed
+```
+
+---
+
+## Monitoring & Logging
+
+### Log Levels
+- **ERROR**: Critical errors requiring immediate attention
+- **WARN**: Warning messages for potential issues
+- **INFO**: General informational messages
+- **DEBUG**: Detailed debugging information
+
+### Metrics Tracked
+- Job creation rate
+- Queue wait times
+- Completion rates
+- Payment processing times
+- Agent performance scores
+- API response times
+
+---
+
+## Security
+
+### Authentication
+- JWT-based authentication
+- Token expiration: 1 hour
+- Refresh token expiration: 7 days
+
+### Authorization
+- Role-based access control (RBAC)
+- Agent verification required
+- Premium subscription check for renters
+
+### Data Protection
+- PII encryption at rest
+- HTTPS for all communications
+- Rate limiting on all endpoints
+- Input validation and sanitization
+
+---
+
+## Deployment
+
+### Production Checklist
+- [ ] Update environment variables
+- [ ] Configure database connection
+- [ ] Setup Redis cluster
+- [ ] Configure CDN for images
+- [ ] Setup monitoring (Sentry, DataDog)
+- [ ] Configure backup strategy
+- [ ] Setup CI/CD pipeline
+- [ ] Load testing completed
+- [ ] Security audit completed
+
+### Environment Variables
+See `.env.example` for all required variables.
+
+---
+
+## Support
+
+For issues or questions:
+- **Email**: dev@newcondo.com
+- **Documentation**: https://docs.newcondo.com/marking-service
+- **GitHub Issues**: https://github.com/newcondo/monorepo/issues
+
+---
+
+## License
+
+Proprietary - NewCondo Platform © 2025 -->

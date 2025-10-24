@@ -387,3 +387,417 @@ export default function DisputeResolution({ className }: DisputeResolutionProps)
     </Card>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/admin/src/components/admin/DisputeResolution.tsx
+// "use client";
+
+// import { useState } from "react";
+// import { 
+//   AlertTriangle, 
+//   CheckCircle2, 
+//   XCircle, 
+//   MessageSquare,
+//   Image as ImageIcon,
+//   User,
+//   Calendar
+// } from "lucide-react";
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/card";
+// import { Button } from "@newcondo/ui/button";
+// import { Badge } from "@newcondo/ui/badge";
+// import { Textarea } from "@newcondo/ui/textarea";
+// import { Label } from "@newcondo/ui/label";
+// import { Separator } from "@newcondo/ui/separator";
+// import { Alert, AlertDescription } from "@newcondo/ui/alert";
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from "@newcondo/ui/dialog";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@newcondo/ui/select";
+// import { markingOversightApi } from "@/lib/api/markingOversight";
+// import { formatDate } from "@/lib/utils/format";
+// import type { DisputeInfo } from "@/types/admin";
+
+// interface DisputeResolutionProps {
+//   dispute: DisputeInfo;
+//   jobId: string;
+//   onResolve: () => void;
+// }
+
+// export default function DisputeResolution({ 
+//   dispute, 
+//   jobId, 
+//   onResolve 
+// }: DisputeResolutionProps) {
+//   const [resolution, setResolution] = useState<"approve" | "reject" | "">("");
+//   const [resolutionNotes, setResolutionNotes] = useState("");
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+//   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+//   const handleResolve = async () => {
+//     if (!resolution) {
+//       setError("Please select a resolution");
+//       return;
+//     }
+
+//     if (!resolutionNotes.trim()) {
+//       setError("Please provide resolution notes");
+//       return;
+//     }
+
+//     try {
+//       setLoading(true);
+//       setError(null);
+
+//       await markingOversightApi.resolveDispute(dispute.id, {
+//         resolution,
+//         notes: resolutionNotes
+//       });
+
+//       onResolve();
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : "Failed to resolve dispute");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const getDisputeTypeBadge = (type: string) => {
+//     const variants: Record<string, "default" | "secondary" | "destructive"> = {
+//       WRONG_PROPERTY: "destructive",
+//       POOR_QUALITY: "destructive",
+//       INCOMPLETE: "destructive",
+//       BOUNDARY_ISSUE: "secondary",
+//       OTHER: "default"
+//     };
+//     return <Badge variant={variants[type] || "default"}>{type.replace("_", " ")}</Badge>;
+//   };
+
+//   return (
+//     <div className="space-y-6">
+//       {/* Dispute Overview */}
+//       <Card className="border-destructive">
+//         <CardHeader>
+//           <div className="flex items-center justify-between">
+//             <CardTitle className="flex items-center gap-2">
+//               <AlertTriangle className="w-5 h-5 text-destructive" />
+//               Dispute Details
+//             </CardTitle>
+//             {getDisputeTypeBadge(dispute.type)}
+//           </div>
+//           <CardDescription>
+//             Review and resolve marking job dispute
+//           </CardDescription>
+//         </CardHeader>
+//         <CardContent className="space-y-4">
+//           <Alert variant="destructive">
+//             <AlertTriangle className="h-4 w-4" />
+//             <AlertDescription>
+//               This marking job is under dispute. Please review all information carefully before making a decision.
+//             </AlertDescription>
+//           </Alert>
+
+//           <div className="grid grid-cols-2 gap-4">
+//             <div>
+//               <div className="flex items-center gap-2 mb-2">
+//                 <User className="w-4 h-4 text-muted-foreground" />
+//                 <span className="text-sm font-medium">Reported By</span>
+//               </div>
+//               <p className="text-sm">{dispute.reportedBy.name}</p>
+//               <p className="text-xs text-muted-foreground">{dispute.reportedBy.email}</p>
+//             </div>
+//             <div>
+//               <div className="flex items-center gap-2 mb-2">
+//                 <Calendar className="w-4 h-4 text-muted-foreground" />
+//                 <span className="text-sm font-medium">Reported On</span>
+//               </div>
+//               <p className="text-sm">{formatDate(dispute.reportedAt)}</p>
+//             </div>
+//           </div>
+
+//           <Separator />
+
+//           <div className="space-y-2">
+//             <Label className="text-sm font-medium">Dispute Reason</Label>
+//             <p className="text-sm text-muted-foreground">
+//               {dispute.reason}
+//             </p>
+//           </div>
+
+//           {dispute.description && (
+//             <>
+//               <Separator />
+//               <div className="space-y-2">
+//                 <Label className="text-sm font-medium">Detailed Description</Label>
+//                 <p className="text-sm text-muted-foreground">
+//                   {dispute.description}
+//                 </p>
+//               </div>
+//             </>
+//           )}
+//         </CardContent>
+//       </Card>
+
+//       {/* Evidence Provided */}
+//       {dispute.evidenceImages && dispute.evidenceImages.length > 0 && (
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="flex items-center gap-2">
+//               <ImageIcon className="w-5 h-5" />
+//               Evidence
+//             </CardTitle>
+//             <CardDescription>
+//               Images provided by the disputing party
+//             </CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="grid grid-cols-4 gap-2">
+//               {dispute.evidenceImages.map((image, index) => (
+//                 <Dialog key={index}>
+//                   <DialogTrigger asChild>
+//                     <div 
+//                       className="relative aspect-square rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity border-2 border-destructive"
+//                       onClick={() => setSelectedImage(image)}
+//                     >
+//                       <img
+//                         src={image}
+//                         alt={`Evidence ${index + 1}`}
+//                         className="w-full h-full object-cover"
+//                       />
+//                     </div>
+//                   </DialogTrigger>
+//                   <DialogContent className="max-w-4xl">
+//                     <DialogHeader>
+//                       <DialogTitle>Evidence Photo {index + 1}</DialogTitle>
+//                     </DialogHeader>
+//                     <img
+//                       src={image}
+//                       alt={`Evidence ${index + 1}`}
+//                       className="w-full h-auto rounded-md"
+//                     />
+//                   </DialogContent>
+//                 </Dialog>
+//               ))}
+//             </div>
+//           </CardContent>
+//         </Card>
+//       )}
+
+//       {/* Original Marking Photos */}
+//       {dispute.originalMarkingImages && dispute.originalMarkingImages.length > 0 && (
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>Original Marking Photos</CardTitle>
+//             <CardDescription>
+//               Photos submitted by the agent during marking
+//             </CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="grid grid-cols-4 gap-2">
+//               {dispute.originalMarkingImages.map((image, index) => (
+//                 <Dialog key={index}>
+//                   <DialogTrigger asChild>
+//                     <div 
+//                       className="relative aspect-square rounded-md overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+//                       onClick={() => setSelectedImage(image)}
+//                     >
+//                       <img
+//                         src={image}
+//                         alt={`Original marking ${index + 1}`}
+//                         className="w-full h-full object-cover"
+//                       />
+//                     </div>
+//                   </DialogTrigger>
+//                   <DialogContent className="max-w-4xl">
+//                     <DialogHeader>
+//                       <DialogTitle>Original Marking Photo {index + 1}</DialogTitle>
+//                     </DialogHeader>
+//                     <img
+//                       src={image}
+//                       alt={`Original marking ${index + 1}`}
+//                       className="w-full h-auto rounded-md"
+//                     />
+//                   </DialogContent>
+//                 </Dialog>
+//               ))}
+//             </div>
+//           </CardContent>
+//         </Card>
+//       )}
+
+//       {/* Agent Response */}
+//       {dispute.agentResponse && (
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="flex items-center gap-2">
+//               <MessageSquare className="w-5 h-5" />
+//               Agent Response
+//             </CardTitle>
+//             <CardDescription>
+//               Response from the assigned agent
+//             </CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <p className="text-sm text-muted-foreground">
+//               {dispute.agentResponse}
+//             </p>
+//           </CardContent>
+//         </Card>
+//       )}
+
+//       {/* Resolution Section */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Resolve Dispute</CardTitle>
+//           <CardDescription>
+//             Make a decision on this dispute case
+//           </CardDescription>
+//         </CardHeader>
+//         <CardContent className="space-y-4">
+//           {error && (
+//             <Alert variant="destructive">
+//               <AlertTriangle className="h-4 w-4" />
+//               <AlertDescription>{error}</AlertDescription>
+//             </Alert>
+//           )}
+
+//           <div className="space-y-2">
+//             <Label>Resolution Decision</Label>
+//             <Select value={resolution} onValueChange={(value: any) => setResolution(value)}>
+//               <SelectTrigger>
+//                 <SelectValue placeholder="Select resolution" />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 <SelectItem value="approve">
+//                   Approve Agent's Work (Dispute Invalid)
+//                 </SelectItem>
+//                 <SelectItem value="reject">
+//                   Reject Agent's Work (Dispute Valid)
+//                 </SelectItem>
+//               </SelectContent>
+//             </Select>
+//           </div>
+
+//           <div className="space-y-2">
+//             <Label>Resolution Notes</Label>
+//             <Textarea
+//               placeholder="Provide detailed notes about your decision..."
+//               value={resolutionNotes}
+//               onChange={(e) => setResolutionNotes(e.target.value)}
+//               rows={5}
+//               className="resize-none"
+//             />
+//             <p className="text-xs text-muted-foreground">
+//               These notes will be visible to both the property owner and the agent.
+//             </p>
+//           </div>
+
+//           {resolution && (
+//             <Alert variant={resolution === "approve" ? "default" : "destructive"}>
+//               <AlertDescription>
+//                 {resolution === "approve" ? (
+//                   <>
+//                     <strong>Approving the agent's work will:</strong>
+//                     <ul className="list-disc list-inside mt-2 space-y-1">
+//                       <li>Release payment to the agent</li>
+//                       <li>Mark the marking job as completed</li>
+//                       <li>Close the dispute</li>
+//                       <li>Update the agent's reliability score positively</li>
+//                     </ul>
+//                   </>
+//                 ) : (
+//                   <>
+//                     <strong>Rejecting the agent's work will:</strong>
+//                     <ul className="list-disc list-inside mt-2 space-y-1">
+//                       <li>Refund payment to the property owner</li>
+//                       <li>Reassign the job to a new agent</li>
+//                       <li>Update the agent's reliability score negatively</li>
+//                       <li>Send notifications to all parties</li>
+//                     </ul>
+//                   </>
+//                 )}
+//               </AlertDescription>
+//             </Alert>
+//           )}
+
+//           <Separator />
+
+//           <div className="flex gap-2">
+//             <Button
+//               onClick={handleResolve}
+//               disabled={loading || !resolution || !resolutionNotes.trim()}
+//               className="flex-1"
+//               variant={resolution === "approve" ? "default" : "destructive"}
+//             >
+//               {loading ? (
+//                 "Processing..."
+//               ) : resolution === "approve" ? (
+//                 <>
+//                   <CheckCircle2 className="w-4 h-4 mr-2" />
+//                   Approve Agent's Work
+//                 </>
+//               ) : (
+//                 <>
+//                   <XCircle className="w-4 h-4 mr-2" />
+//                   Reject Agent's Work
+//                 </>
+//               )}
+//             </Button>
+//           </div>
+//         </CardContent>
+//       </Card>
+
+//       {/* Previous Disputes (if any) */}
+//       {dispute.previousDisputes && dispute.previousDisputes.length > 0 && (
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>Previous Disputes</CardTitle>
+//             <CardDescription>
+//               History of disputes involving this agent
+//             </CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="space-y-3">
+//               {dispute.previousDisputes.map((prev, index) => (
+//                 <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+//                   <div>
+//                     <p className="text-sm font-medium">{prev.type.replace("_", " ")}</p>
+//                     <p className="text-xs text-muted-foreground">
+//                       {formatDate(prev.date)} • Resolved: {prev.resolution}
+//                     </p>
+//                   </div>
+//                   <Badge variant={prev.resolution === "APPROVED" ? "default" : "destructive"}>
+//                     {prev.resolution}
+//                   </Badge>
+//                 </div>
+//               ))}
+//             </div>
+//           </CardContent>
+//         </Card>
+//       )}
+//     </div>
+//   );
+// }
