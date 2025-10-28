@@ -288,3 +288,121 @@ export default function PaymentsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/admin/src/app/(dashboard)/payments/page.tsx
+// import { Suspense } from 'react';
+// import { PaymentList } from '@/components/admin/payments/PaymentList';
+// import { PaymentFilters } from '@/components/admin/payments/PaymentFilters';
+// import { PaymentStats } from '@/components/admin/payments/PaymentStats';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
+
+// export const metadata = {
+//   title: 'Payments | Admin Dashboard',
+//   description: 'Monitor and manage all platform transactions',
+// };
+
+// export default function PaymentsPage({
+//   searchParams,
+// }: {
+//   searchParams: { 
+//     status?: string;
+//     type?: string;
+//     dateFrom?: string;
+//     dateTo?: string;
+//     search?: string;
+//     page?: string;
+//   };
+// }) {
+//   return (
+//     <div className="space-y-6">
+//       {/* Header */}
+//       <div>
+//         <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
+//         <p className="text-muted-foreground mt-2">
+//           Monitor transactions, process refunds, and manage payment confirmations
+//         </p>
+//       </div>
+
+//       {/* Stats Overview */}
+//       <Suspense fallback={<StatsLoading />}>
+//         <PaymentStats />
+//       </Suspense>
+
+//       {/* Filters */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Filter Payments</CardTitle>
+//           <CardDescription>
+//             Search and filter transactions by status, type, date range, and more
+//           </CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <PaymentFilters />
+//         </CardContent>
+//       </Card>
+
+//       {/* Payment List */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>All Transactions</CardTitle>
+//           <CardDescription>
+//             {searchParams.status && `Showing ${searchParams.status} payments`}
+//             {searchParams.type && ` • ${searchParams.type} transactions`}
+//           </CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<PaymentListLoading />}>
+//             <PaymentList searchParams={searchParams} />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }
+
+// function StatsLoading() {
+//   return (
+//     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+//       {[...Array(4)].map((_, i) => (
+//         <Card key={i}>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+//             <div className="h-8 w-8 bg-muted animate-pulse rounded" />
+//           </CardHeader>
+//           <CardContent>
+//             <div className="h-8 w-32 bg-muted animate-pulse rounded mb-2" />
+//             <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+//           </CardContent>
+//         </Card>
+//       ))}
+//     </div>
+//   );
+// }
+
+// function PaymentListLoading() {
+//   return (
+//     <div className="space-y-4">
+//       {[...Array(5)].map((_, i) => (
+//         <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg">
+//           <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
+//           <div className="flex-1 space-y-2">
+//             <div className="h-4 w-1/4 bg-muted animate-pulse rounded" />
+//             <div className="h-3 w-1/3 bg-muted animate-pulse rounded" />
+//           </div>
+//           <div className="h-6 w-20 bg-muted animate-pulse rounded" />
+//         </div>
+//       ))}
+//     </div>
+//   );
+// }

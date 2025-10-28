@@ -639,35 +639,3 @@ Turn marking availability on or off.
 }
 ```
 
----
-
-## Notifications
-
-### Get Marking Notifications
-Get all notifications related to marking jobs.
-
-**Endpoint:** `GET /notifications`
-
-**Query Parameters:**
-- `unreadOnly` (optional): Only unread notifications (default: false)
-- `page` (optional): Page number
-- `limit` (optional): Items per page
-
-**Response:** `200 OK`
-```json
-{
-  "success": true,
-  "data": {
-    "notifications": [
-      {
-        "id": "notif_123",
-        "type": "JOB_AVAILABLE",
-        "title": "New Marking Job Available",
-        "message": "A new marking job is available 2.5km from you",
-        "jobId": "job_456def",
-        "priority": "NORMAL",
-        "isRead": false,
-        "createdAt": "2025-10-25T08:00:00Z"
-      },
-      {
-        "i
