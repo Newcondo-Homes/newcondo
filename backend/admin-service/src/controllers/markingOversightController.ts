@@ -920,3 +920,577 @@ export default markingOversightController;
 //     });
 //   }
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/admin-service/src/controllers/markingOversightController.ts
+
+// import { Request, Response } from 'express';
+// import { PrismaClient, MarkingJobStatus } from '@newcondo/db';
+// import { successResponse, errorResponse } from '../../../shared/src/utils/response';
+// import { adminController } from './adminController';
+
+// const prisma = new PrismaClient();
+
+// export class MarkingOversightController {
+//   // Get all marking jobs
+//   async getAllMarkingJobs(req: Request, res: Response) {
+//     try {
+//       const {
+//         page = 1,
+//         limit = 20,
+//         status,
+//         agentId,
+//         sortBy = 'createdAt',
+//         order = 'desc'
+//       } = req.query;
+
+//       const skip = (Number(page) - 1) * Number(limit);
+
+//       const where: any = {};
+
+//       if (status) {
+//         where.status = status;
+//       }
+
+//       if (agentId) {
+//         where.assignedAgentId = agentId;
+//       }
+
+//       const [jobs, total] = await Promise.all([
+//         prisma.propertyMarkingJob.findMany({
+//           where,
+//           skip,
+//           take: Number(limit),
+//           orderBy: { [sortBy as string]: order },
+//           include: {
+//             property: {
+//               select: {
+//                 id: true,
+//                 title: true,
+//                 address: true,
+//                 city: true,
+//                 state: true
+//               }
+//             },
+//             requestingUser: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//                 email: true,
+//                 phone: true
+//               }
+//             },
+//             assignedAgent: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//                 email: true,
+//                 phone: true,
+//                 agentReliabilityScore: true
+//               }
+//             }
+//           }
+//         }),
+//         prisma.propertyMarkingJob.count({ where })
+//       ]);
+
+//       return successResponse(res, {
+//         jobs,
+//         pagination: {
+//           total,
+//           page: Number(page),
+//           limit: Number(limit),
+//           pages: Math.ceil(total / Number(limit))
+//         }
+//       }, 'Marking jobs retrieved successfully');
+//     } catch (error) {
+//       console.error('Get all marking jobs error:', error);
+//       return errorResponse(res, 'Failed to retrieve marking jobs', 500);
+//     }
+//   }
+
+//   // Get marking job details
+//   async getMarkingJobDetails(req: Request, res: Response) {
+//     try {
+//       const { jobId } = req.params;
+
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           property: {
+//             include: {
+//               owner: {
+//                 select: {
+//                   id: true,
+//                   name: true,
+//                   email: true,
+//                   phone: true
+//                 }
+//               },
+//               images: true
+//             }
+//           },
+//           requestingUser: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//               phone: true,
+//               role: true
+//             }
+//           },
+//           assignedAgent: {
+//             select: {
+//               id: true,
+//               name: true,
+//               email: true,
+//               phone: true,
+//               agentReliabilityScore: true,
+//               totalMarkingJobs: true,
+//               completedMarkingJobs: true
+//             }
+//           }
+//         }
+//       });
+
+//       if (!job) {
+//         return errorResponse(res, 'Marking job not found', 404);
+//       }
+
+//       return successResponse(res, job, 'Marking job details retrieved successfully');
+//     } catch (error) {
+//       console.error('Get marking job details error:', error);
+//       return errorResponse(res, 'Failed to retrieve marking job details', 500);
+//     }
+//   }
+
+//   // Approve completed marking job
+//   async approveMarkingJob(req: Request, res: Response) {
+//     try {
+//       const adminId = req.user?.id;
+//       const { jobId } = req.params;
+//       const { notes } = req.body;
+
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           property: true,
+//           assignedAgent: true
+//         }
+//       });
+
+//       if (!job) {
+//         return errorResponse(res, 'Marking job not found', 404);
+//       }
+
+//       if (job.status !== 'COMPLETED') {
+//         return errorResponse(res, 'Only completed jobs can be approved', 400);
+//       }
+
+//       // Update property with verified boundary
+//       await prisma.property.update({
+//         where: { id: job.propertyId },
+//         data: {
+//           boundaryVerified: true,
+//           boundaryMarkedBy: job.assignedAgentId,
+//           boundaryMarkedAt: job.completedAt,
+//           boundaryCoordinates: job.boundaryData || undefined
+//         }
+//       });
+
+//       // Update agent stats
+//       if (job.assignedAgent) {
+//         await prisma.user.update({
+//           where: { id: job.assignedAgentId! },
+//           data: {
+//             completedMarkingJobs: {
+//               increment: 1
+//             }
+//           }
+//         });
+//       }
+
+//       // Log admin action
+//       await adminController.logAdminAction(
+//         adminId!,
+//         'BOUNDARY_DISPUTE_RESOLVED',
+//         'PropertyMarkingJob',
+//         jobId,
+//         `Approved marking job for property: ${job.property.title}`,
+//         { notes }
+//       );
+
+//       // TODO: Release payment to agent
+
+//       return successResponse(res, job, 'Marking job approved successfully');
+//     } catch (error) {
+//       console.error('Approve marking job error:', error);
+//       return errorResponse(res, 'Failed to approve marking job', 500);
+//     }
+//   }
+
+//   // Reject completed marking job
+//   async rejectMarkingJob(req: Request, res: Response) {
+//     try {
+//       const adminId = req.user?.id;
+//       const { jobId } = req.params;
+//       const { reason } = req.body;
+
+//       if (!reason) {
+//         return errorResponse(res, 'Rejection reason is required', 400);
+//       }
+
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           property: true
+//         }
+//       });
+
+//       if (!job) {
+//         return errorResponse(res, 'Marking job not found', 404);
+//       }
+
+//       if (job.status !== 'COMPLETED') {
+//         return errorResponse(res, 'Only completed jobs can be rejected', 400);
+//       }
+
+//       // Update job to require rework
+//       const updatedJob = await prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           status: 'IN_PROGRESS',
+//           completionNotes: `Admin rejection: ${reason}`
+//         }
+//       });
+
+//       // Log admin action
+//       await adminController.logAdminAction(
+//         adminId!,
+//         'BOUNDARY_DISPUTE_RESOLVED',
+//         'PropertyMarkingJob',
+//         jobId,
+//         `Rejected marking job for property: ${job.property.title}`,
+//         { reason }
+//       );
+
+//       // TODO: Notify agent to redo the job
+
+//       return successResponse(res, updatedJob, 'Marking job rejected - rework required');
+//     } catch (error) {
+//       console.error('Reject marking job error:', error);
+//       return errorResponse(res, 'Failed to reject marking job', 500);
+//     }
+//   }
+
+//   // Reassign marking job
+//   async reassignMarkingJob(req: Request, res: Response) {
+//     try {
+//       const adminId = req.user?.id;
+//       const { jobId } = req.params;
+//       const { newAgentId, reason } = req.body;
+
+//       if (!newAgentId) {
+//         return errorResponse(res, 'New agent ID is required', 400);
+//       }
+
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           property: true,
+//           assignedAgent: true
+//         }
+//       });
+
+//       if (!job) {
+//         return errorResponse(res, 'Marking job not found', 404);
+//       }
+
+//       // Check if new agent exists
+//       const newAgent = await prisma.user.findUnique({
+//         where: { id: newAgentId }
+//       });
+
+//       if (!newAgent || !newAgent.isAvailableForMarking) {
+//         return errorResponse(res, 'Invalid agent or agent not available for marking', 400);
+//       }
+
+//       // Reassign job
+//       const updatedJob = await prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           assignedAgentId: newAgentId,
+//           status: 'ASSIGNED',
+//           assignedAt: new Date(),
+//           timeSlotExpiry: new Date(Date.now() + 3 * 60 * 60 * 1000), // 3 hours from now
+//           completionNotes: reason
+//         }
+//       });
+
+//       // Log admin action
+//       await adminController.logAdminAction(
+//         adminId!,
+//         'BOUNDARY_DISPUTE_RESOLVED',
+//         'PropertyMarkingJob',
+//         jobId,
+//         `Reassigned marking job from ${job.assignedAgent?.name} to ${newAgent.name}`,
+//         { oldAgentId: job.assignedAgentId, newAgentId, reason }
+//       );
+
+//       // TODO: Notify both agents
+
+//       return successResponse(res, updatedJob, 'Marking job reassigned successfully');
+//     } catch (error) {
+//       console.error('Reassign marking job error:', error);
+//       return errorResponse(res, 'Failed to reassign marking job', 500);
+//     }
+//   }
+
+//   // Cancel marking job
+//   async cancelMarkingJob(req: Request, res: Response) {
+//     try {
+//       const adminId = req.user?.id;
+//       const { jobId } = req.params;
+//       const { reason } = req.body;
+
+//       if (!reason) {
+//         return errorResponse(res, 'Cancellation reason is required', 400);
+//       }
+
+//       const job = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: jobId },
+//         include: {
+//           property: true
+//         }
+//       });
+
+//       if (!job) {
+//         return errorResponse(res, 'Marking job not found', 404);
+//       }
+
+//       if (job.status === 'COMPLETED') {
+//         return errorResponse(res, 'Cannot cancel completed jobs', 400);
+//       }
+
+//       // Cancel job
+//       const updatedJob = await prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           status: 'CANCELLED',
+//           completionNotes: `Admin cancellation: ${reason}`
+//         }
+//       });
+
+//       // Log admin action
+//       await adminController.logAdminAction(
+//         adminId!,
+//         'BOUNDARY_DISPUTE_RESOLVED',
+//         'PropertyMarkingJob',
+//         jobId,
+//         `Cancelled marking job for property: ${job.property.title}`,
+//         { reason }
+//       );
+
+//       // TODO: Process refund if payment was made
+
+//       return successResponse(res, updatedJob, 'Marking job cancelled successfully');
+//     } catch (error) {
+//       console.error('Cancel marking job error:', error);
+//       return errorResponse(res, 'Failed to cancel marking job', 500);
+//     }
+//   }
+
+//   // Get marking job statistics
+//   async getMarkingJobStatistics(req: Request, res: Response) {
+//     try {
+//       const { period = '30d' } = req.query;
+
+//       const endDate = new Date();
+//       const startDate = new Date();
+      
+//       switch (period) {
+//         case '7d':
+//           startDate.setDate(endDate.getDate() - 7);
+//           break;
+//         case '30d':
+//           startDate.setDate(endDate.getDate() - 30);
+//           break;
+//         case '90d':
+//           startDate.setDate(endDate.getDate() - 90);
+//           break;
+//         default:
+//           startDate.setDate(endDate.getDate() - 30);
+//       }
+
+//       const [
+//         statusBreakdown,
+//         completionRate,
+//         averageCompletionTime,
+//         topAgents,
+//         jobsByUrgency
+//       ] = await Promise.all([
+//         prisma.propertyMarkingJob.groupBy({
+//           by: ['status'],
+//           _count: { status: true },
+//           where: {
+//             createdAt: {
+//               gte: startDate,
+//               lte: endDate
+//             }
+//           }
+//         }),
+//         prisma.propertyMarkingJob.count({
+//           where: {
+//             status: 'COMPLETED',
+//             createdAt: {
+//               gte: startDate,
+//               lte: endDate
+//             }
+//           }
+//         }).then(completed =>
+//           prisma.propertyMarkingJob.count({
+//             where: {
+//               createdAt: {
+//                 gte: startDate,
+//                 lte: endDate
+//               }
+//             }
+//           }).then(total => ({
+//             completed,
+//             total,
+//             rate: total > 0 ? (completed / total) * 100 : 0
+//           }))
+//         ),
+//         prisma.propertyMarkingJob.findMany({
+//           where: {
+//             status: 'COMPLETED',
+//             completedAt: { not: null },
+//             assignedAt: { not: null },
+//             createdAt: {
+//               gte: startDate,
+//               lte: endDate
+//             }
+//           },
+//           select: {
+//             assignedAt: true,
+//             completedAt: true
+//           }
+//         }).then(jobs => {
+//           if (jobs.length === 0) return 0;
+//           const totalTime = jobs.reduce((sum, job) => {
+//             const time = job.completedAt!.getTime() - job.assignedAt!.getTime();
+//             return sum + time;
+//           }, 0);
+//           return totalTime / jobs.length / (1000 * 60 * 60); // Hours
+//         }),
+//         prisma.user.findMany({
+//           where: {
+//             completedMarkingJobs: { gt: 0 },
+//             isAvailableForMarking: true
+//           },
+//           select: {
+//             id: true,
+//             name: true,
+//             email: true,
+//             completedMarkingJobs: true,
+//             totalMarkingJobs: true,
+//             agentReliabilityScore: true
+//           },
+//           orderBy: {
+//             completedMarkingJobs: 'desc'
+//           },
+//           take: 10
+//         }),
+//         prisma.propertyMarkingJob.groupBy({
+//           by: ['urgencyLevel'],
+//           _count: { urgencyLevel: true },
+//           where: {
+//             createdAt: {
+//               gte: startDate,
+//               lte: endDate
+//             }
+//           }
+//         })
+//       ]);
+
+//       return successResponse(res, {
+//         period,
+//         dateRange: { startDate, endDate },
+//         statistics: {
+//           statusBreakdown,
+//           completionRate,
+//           averageCompletionTime,
+//           topAgents,
+//           jobsByUrgency
+//         }
+//       }, 'Marking job statistics retrieved successfully');
+//     } catch (error) {
+//       console.error('Get marking job statistics error:', error);
+//       return errorResponse(res, 'Failed to retrieve marking job statistics', 500);
+//     }
+//   }
+
+//   // Update agent reliability score
+//   async updateAgentReliability(req: Request, res: Response) {
+//     try {
+//       const adminId = req.user?.id;
+//       const { agentId } = req.params;
+//       const { score, reason } = req.body;
+
+//       if (score < 0 || score > 5) {
+//         return errorResponse(res, 'Score must be between 0 and 5', 400);
+//       }
+
+//       const agent = await prisma.user.findUnique({
+//         where: { id: agentId }
+//       });
+
+//       if (!agent) {
+//         return errorResponse(res, 'Agent not found', 404);
+//       }
+
+//       if (!agent.isAvailableForMarking) {
+//         return errorResponse(res, 'User is not a marking agent', 400);
+//       }
+
+//       // Update agent reliability score
+//       const updatedAgent = await prisma.user.update({
+//         where: { id: agentId },
+//         data: {
+//           agentReliabilityScore: score
+//         }
+//       });
+
+//       // Log admin action
+//       await adminController.logAdminAction(
+//         adminId!,
+//         'AGENT_SUSPENDED',
+//         'User',
+//         agentId,
+//         `Updated reliability score for agent: ${agent.name}`,
+//         { oldScore: agent.agentReliabilityScore, newScore: score, reason }
+//       );
+
+//       return successResponse(res, updatedAgent, 'Agent reliability score updated successfully');
+//     } catch (error) {
+//       console.error('Update agent reliability error:', error);
+//       return errorResponse(res, 'Failed to update agent reliability score', 500);
+//     }
+//   }
+// }
+
+// export const markingOversightController = new MarkingOversightController();

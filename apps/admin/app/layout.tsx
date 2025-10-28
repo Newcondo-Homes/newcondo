@@ -32,3 +32,39 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+
+
+
+
+// import type { Metadata } from "next";
+// import { Inter } from "next/font/google";
+// import "./globals.css";
+// import { Toaster } from "@newcondo/ui/components/toaster";
+
+// const inter = Inter({ subsets: ["latin"] });
+
+// export const metadata: Metadata = {
+//   title: {
+//     default: "Newcondo Admin Dashboard",
+//     template: "%s | Newcondo Admin",
+//   },
+//   description: "Administrative dashboard for Newcondo platform management",
+//   keywords: ["admin", "dashboard", "property management", "newcondo"],
+// };
+
+// export default function RootLayout({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <html lang="en" suppressHydrationWarning>
+//       <body className={inter.className}>
+//         {children}
+//         <Toaster />
+//       </body>
+//     </html>
+//   );
+// }
