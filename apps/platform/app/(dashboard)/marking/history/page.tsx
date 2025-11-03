@@ -376,3 +376,33 @@ export default function MarkingHistoryPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// import { Suspense } from "react";
+// import { Metadata } from "next";
+// import CommissionsLoading from "../../agent/commissions/loading";
+// import MarkingServiceHistory from "@/components/marking/MarkingServiceHistory";
+
+// export const metadata: Metadata = {
+//   title: "Marking Service History | NewCondo",
+//   description: "View your property marking service history and status",
+// };
+
+// export default function MarkingHistoryPage() {
+//   return (
+//     <div className="container mx-auto p-6">
+//       <Suspense fallback={<CommissionsLoading />}>
+//         <MarkingServiceHistory />
+//       </Suspense>
+//     </div>
+//   );
+// }

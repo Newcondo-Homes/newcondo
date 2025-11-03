@@ -880,3 +880,173 @@ enum AdminActionType {
   TICKET_RESOLVED
   AGENT_SUSPENDED
 }
+
+
+
+// Add these models to your Prisma schema (packages/db/prisma/schema.prisma)
+
+// Agent Referral Tracking
+model AgentReferral {
+  id         String   @id @default(cuid())
+  agentId    String   // Sub-agent or listing agent
+  propertyId String
+  
+  // Referral link
+  referralCode String   @unique
+  referralLink String
+  
+  // Tracking metrics
+  clicks       Int      @default(0)
+  uniqueClicks Int      @default(0)
+  conversions  Int      @default(0) // Successful payments
+  totalEarnings Decimal @default(0) @db.Decimal(15, 2)
+  
+  // Status
+  isActive     Boolean  @default(true)
+  
+  // Relations
+  agent    User     @relation("AgentReferrals", fields: [agentId], references: [id])
+  property Property @relation("PropertyReferrals", fields: [propertyId], references: [id])
+  referralClicks   ReferralClick[]
+  referralConversions ReferralConversion[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([agentId, propertyId])
+  @@index([agentId])
+  @@index([propertyId])
+  @@index([referralCode])
+}
+
+// Referral Click Tracking
+model ReferralClick {
+  id            String   @id @default(cuid())
+  referralId    String
+  
+  // Click details
+  ipAddress     String?
+  userAgent     String?
+  referrerUrl   String?
+  
+  // Geolocation (optional)
+  country       String?
+  city          String?
+  
+  // Relations
+  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([referralId])
+  @@index([createdAt])
+  @@index([ipAddress])
+}
+
+// Referral Conversion Tracking
+model ReferralConversion {
+  id            String   @id @default(cuid())
+  referralId    String
+  paymentId     String   @unique
+  
+  // Conversion details
+  amount        Decimal  @db.Decimal(10, 2)
+  commission    Decimal  @db.Decimal(10, 2) // Agent's commission from this conversion
+  
+  // Status
+  isPaid        Boolean  @default(false)
+  paidAt        DateTime?
+  
+  // Relations
+  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  payment  Payment       @relation(fields: [paymentId], references: [id])
+  
+  createdAt DateTime @default(now())
+  
+  @@index([referralId])
+  @@index([paymentId])
+  @@index([createdAt])
+}
+
+// Sub-Agent Promotion Requests
+model PromotionRequest {
+  id         String   @id @default(cuid())
+  agentId    String   // Agent requesting to promote
+  propertyId String
+  ownerId    String   // Property owner or listing agent
+  
+  // Request details
+  message    String?
+  status     PromotionRequestStatus @default(PENDING)
+  
+  // Response
+  rejectionReason String?
+  respondedAt     DateTime?
+  respondedBy     String? // User ID who responded
+  
+  // Relations
+  agent    User     @relation("PromotionRequester", fields: [agentId], references: [id])
+  property Property @relation("PromotionRequests", fields: [propertyId], references: [id])
+  owner    User     @relation("PromotionOwner", fields: [ownerId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([agentId, propertyId])
+  @@index([agentId])
+  @@index([propertyId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+enum PromotionRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Property Promotion Settings
+model PropertyPromotionSettings {
+  id         String   @id @default(cuid())
+  propertyId String   @unique
+  
+  // Promotion type
+  promotionType PropertyPromotionType @default(RESTRICTED)
+  
+  // Settings
+  allowPublicSharing      Boolean @default(false)
+  requireApproval         Boolean @default(true)
+  autoApproveAgents       Boolean @default(false)
+  maxSubAgents            Int?    // Optional limit on number of sub-agents
+  
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([propertyId])
+}
+
+enum PropertyPromotionType {
+  PUBLIC              // Anyone can share with 'share' button
+  PERMISSION_BASED    // Agents must request and get approved
+  RESTRICTED          // No external promotion allowed
+  REQUEST_BASED       // Only specific requested agents
+}
+
+// Update User model to add these relations
+// Add these to the User model relations:
+// agentReferrals       AgentReferral[]      @relation("AgentReferrals")
+// promotionRequests    PromotionRequest[]   @relation("PromotionRequester")
+// ownedPromotionReqs   PromotionRequest[]   @relation("PromotionOwner")
+
+// Update Property model to add these relations
+// Add these to the Property model relations:
+// referrals            AgentReferral[]      @relation("PropertyReferrals")
+// promotionRequests    PromotionRequest[]   @relation("PromotionRequests")
+// promotionSettings    PropertyPromotionSettings?
+
+// Update Payment model to add this relation
+// Add this to the Payment model relations:
+// referralConversion   ReferralConversion?

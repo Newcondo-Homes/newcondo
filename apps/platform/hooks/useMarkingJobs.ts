@@ -457,3 +457,199 @@ export function useMarkingJobs() {
 
 //   return statusColors[status] || 'bg-gray-100 text-gray-800';
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/hooks/useMarkingJobs.ts
+// import { useMutation, useQueryClient } from '@tanstack/react-query';
+// import {
+//   createMarkingJob,
+//   acceptMarkingJob,
+//   completeMarkingJob,
+//   cancelMarkingJob,
+//   confirmMarkingCompletion,
+// } from '@/lib/api/markingHistory';
+// import { useToast } from '@/hooks/useToast';
+// import { useRouter } from 'next/navigation';
+
+// export interface CreateMarkingJobData {
+//   propertyId: string;
+//   assignmentType: 'SELF' | 'NEWCONDO_ADMIN' | 'SEND_LINK' | 'ASSIGN_AGENTS';
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+//   shareableLink?: string; // For 'SEND_LINK' option
+// }
+
+// export interface CompleteMarkingData {
+//   completionNotes?: string;
+//   completionImages: string[];
+//   boundaryCoordinates: any;
+//   buildingFingerprint?: string;
+// }
+
+// export const useMarkingJobs = () => {
+//   const queryClient = useQueryClient();
+//   const { toast } = useToast();
+//   const router = useRouter();
+
+//   // Create marking job mutation
+//   const createJobMutation = useMutation({
+//     mutationFn: (data: CreateMarkingJobData) => createMarkingJob(data),
+//     onSuccess: (data) => {
+//       queryClient.invalidateQueries({ queryKey: ['marking-history'] });
+//       queryClient.invalidateQueries({ queryKey: ['property-management'] });
+      
+//       toast({
+//         title: 'Success',
+//         description: 'Marking job created successfully',
+//       });
+      
+//       // Redirect to marking job details or payment
+//       if (data.jobId) {
+//         router.push(`/dashboard/marking-jobs/${data.jobId}`);
+//       }
+//     },
+//     onError: (error: any) => {
+//       toast({
+//         title: 'Error',
+//         description: error.message || 'Failed to create marking job',
+//         variant: 'destructive',
+//       });
+//     },
+//   });
+
+//   // Accept marking job mutation (for agents)
+//   const acceptJobMutation = useMutation({
+//     mutationFn: (jobId: string) => acceptMarkingJob(jobId),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['marking-history'] });
+//       queryClient.invalidateQueries({ queryKey: ['agent-queue'] });
+      
+//       toast({
+//         title: 'Success',
+//         description: 'Marking job accepted. You have 3 hours to complete it.',
+//       });
+//     },
+//     onError: (error: any) => {
+//       toast({
+//         title: 'Error',
+//         description: error.message || 'Failed to accept marking job',
+//         variant: 'destructive',
+//       });
+//     },
+//   });
+
+//   // Complete marking job mutation (for agents)
+//   const completeJobMutation = useMutation({
+//     mutationFn: ({ jobId, data }: { jobId: string; data: CompleteMarkingData }) =>
+//       completeMarkingJob(jobId, data),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['marking-history'] });
+//       queryClient.invalidateQueries({ queryKey: ['marking-job-details'] });
+//       queryClient.invalidateQueries({ queryKey: ['agent-queue'] });
+      
+//       toast({
+//         title: 'Success',
+//         description: 'Marking job completed. Awaiting property owner confirmation.',
+//       });
+//     },
+//     onError: (error: any) => {
+//       toast({
+//         title: 'Error',
+//         description: error.message || 'Failed to complete marking job',
+//         variant: 'destructive',
+//       });
+//     },
+//   });
+
+//   // Cancel marking job mutation
+//   const cancelJobMutation = useMutation({
+//     mutationFn: ({ jobId, reason }: { jobId: string; reason?: string }) =>
+//       cancelMarkingJob(jobId, reason),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['marking-history'] });
+//       queryClient.invalidateQueries({ queryKey: ['marking-job-details'] });
+      
+//       toast({
+//         title: 'Success',
+//         description: 'Marking job cancelled successfully',
+//       });
+//     },
+//     onError: (error: any) => {
+//       toast({
+//         title: 'Error',
+//         description: error.message || 'Failed to cancel marking job',
+//         variant: 'destructive',
+//       });
+//     },
+//   });
+
+//   // Confirm marking completion mutation (for property owners)
+//   const confirmCompletionMutation = useMutation({
+//     mutationFn: ({ jobId, approved, feedback }: { 
+//       jobId: string; 
+//       approved: boolean;
+//       feedback?: string;
+//     }) => confirmMarkingCompletion(jobId, approved, feedback),
+//     onSuccess: (_, variables) => {
+//       queryClient.invalidateQueries({ queryKey: ['marking-history'] });
+//       queryClient.invalidateQueries({ queryKey: ['marking-job-details'] });
+//       queryClient.invalidateQueries({ queryKey: ['property-details'] });
+      
+//       toast({
+//         title: 'Success',
+//         description: variables.approved 
+//           ? 'Marking confirmed. Payment released to agent.'
+//           : 'Marking rejected. Feedback sent to agent.',
+//       });
+//     },
+//     onError: (error: any) => {
+//       toast({
+//         title: 'Error',
+//         description: error.message || 'Failed to confirm marking completion',
+//         variant: 'destructive',
+//       });
+//     },
+//   });
+
+//   return {
+//     // Actions
+//     createJob: createJobMutation.mutate,
+//     createJobAsync: createJobMutation.mutateAsync,
+//     acceptJob: acceptJobMutation.mutate,
+//     completeJob: completeJobMutation.mutate,
+//     cancelJob: cancelJobMutation.mutate,
+//     confirmCompletion: confirmCompletionMutation.mutate,
+    
+//     // States
+//     isCreating: createJobMutation.isPending,
+//     isAccepting: acceptJobMutation.isPending,
+//     isCompleting: completeJobMutation.isPending,
+//     isCancelling: cancelJobMutation.isPending,
+//     isConfirming: confirmCompletionMutation.isPending,
+    
+//     // Data
+//     createdJob: createJobMutation.data,
+    
+//     // Errors
+//     createError: createJobMutation.error,
+//     acceptError: acceptJobMutation.error,
+//     completeError: completeJobMutation.error,
+//     cancelError: cancelJobMutation.error,
+//     confirmError: confirmCompletionMutation.error,
+//   };
+// };
