@@ -347,3 +347,156 @@ export const COMMISSION_CONSTANTS = {
 //   allowNegativeCommission: false,
 //   roundingMethod: 'ROUND_HALF_UP' as const
 // } as const;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// /**
+//  * Commission rates and rules for the Newcondo platform
+//  */
+
+// // Platform commission rates
+// export const PLATFORM_COMMISSION_RATE = 0.20; // 20% of rent
+// export const LISTING_AGENT_SHARE = 0.50; // 50% of platform commission
+// export const SUB_AGENT_SHARE = 0.50; // 50% of listing agent's share
+
+// // Marking service rates
+// export const MARKING_SERVICE_AGENT_COMMISSION = 0.25; // 25% of marking fee
+// export const MARKING_SERVICE_PLATFORM_SHARE = 0.75; // 75% of marking fee
+
+// // Marking service fees
+// export const PROPERTY_OWNER_MARKING_FEE = 20000; // 20,000 NGN
+// export const NEWCONDO_ADMIN_MARKING_FEE = 25000; // 25,000 NGN
+// export const MARKING_FEE_INITIAL_PAYMENT = 1000; // 1,000 NGN upfront to agent
+
+// // Payment confirmation and release
+// export const PAYMENT_HOLD_PERIOD_HOURS = 24; // 24 hours hold period
+// export const CONFIRMATION_DEADLINE_HOURS = 24; // 24 hours to confirm
+// export const AUTO_RELEASE_AFTER_CONFIRMATION_HOURS = 0; // Release immediately after confirmation
+
+// // Commission distribution timing
+// export const COMMISSION_RELEASE_DELAY_HOURS = 24; // Release after 24 hours hold period
+
+// // Refund processing
+// export const PLATFORM_FEE_NON_REFUNDABLE = true;
+// export const REFUND_PROCESSING_FEE_MULTIPLIER = 2; // Charge 2x Flutterwave fee for refunds
+
+// // Virtual account settings
+// export const VIRTUAL_ACCOUNT_CURRENCY = 'NGN';
+// export const VIRTUAL_ACCOUNT_BANK_CODE = '000'; // Flutterwave bank code
+
+// // Commission thresholds
+// export const MINIMUM_COMMISSION_AMOUNT = 100; // Minimum commission in NGN
+// export const MAXIMUM_COMMISSION_PERCENTAGE = 0.50; // Maximum 50% commission
+
+// // Payment splitting
+// export const OWNER_RECEIVES_AFTER_COMMISSION = true; // Owner gets rent minus commission
+// export const AGENT_COMMISSION_PAID_SEPARATELY = true; // Agent commission paid to their account
+
+// // Dispute settings
+// export const DISPUTE_PERIOD_DAYS = 7; // Days to raise a dispute
+// export const DISPUTE_RESOLUTION_DAYS = 14; // Days to resolve a dispute
+
+// // Commission calculation rules
+// export const COMMISSION_CALCULATION_RULES = {
+//   // When property has listing agent
+//   WITH_LISTING_AGENT: {
+//     platformTakes: PLATFORM_COMMISSION_RATE,
+//     listingAgentGets: PLATFORM_COMMISSION_RATE * LISTING_AGENT_SHARE,
+//     newcondoGets: PLATFORM_COMMISSION_RATE * (1 - LISTING_AGENT_SHARE),
+//   },
+//   // When property has listing agent and sub-agent
+//   WITH_SUB_AGENT: {
+//     platformTakes: PLATFORM_COMMISSION_RATE,
+//     listingAgentGets: PLATFORM_COMMISSION_RATE * LISTING_AGENT_SHARE * SUB_AGENT_SHARE,
+//     subAgentGets: PLATFORM_COMMISSION_RATE * LISTING_AGENT_SHARE * SUB_AGENT_SHARE,
+//     newcondoGets: PLATFORM_COMMISSION_RATE * (1 - LISTING_AGENT_SHARE),
+//   },
+//   // When property has no agent (owner direct listing)
+//   NO_AGENT: {
+//     platformTakes: PLATFORM_COMMISSION_RATE,
+//     newcondoGets: PLATFORM_COMMISSION_RATE,
+//   },
+// } as const;
+
+// // Marking service commission rules
+// export const MARKING_SERVICE_RULES = {
+//   AGENT_MARKING: {
+//     agentGets: PROPERTY_OWNER_MARKING_FEE * MARKING_SERVICE_AGENT_COMMISSION,
+//     platformGets: PROPERTY_OWNER_MARKING_FEE * MARKING_SERVICE_PLATFORM_SHARE,
+//   },
+//   NEWCONDO_MARKING: {
+//     platformGets: NEWCONDO_ADMIN_MARKING_FEE,
+//   },
+// } as const;
+
+// // Commission status values
+// export const COMMISSION_STATUS = {
+//   PENDING: 'PENDING',
+//   HELD: 'HELD',
+//   RELEASED: 'RELEASED',
+//   CANCELLED: 'CANCELLED',
+//   DISPUTED: 'DISPUTED',
+//   REFUNDED: 'REFUNDED',
+// } as const;
+
+// // Commission types
+// export const COMMISSION_TYPES = {
+//   LISTING_AGENT: 'listing_agent',
+//   SUB_AGENT: 'sub_agent',
+//   PLATFORM: 'platform',
+//   MARKING_SERVICE: 'marking_service',
+// } as const;
+
+// // Virtual account naming conventions
+// export const VIRTUAL_ACCOUNT_NAMING = {
+//   OWNER_PREFIX: 'OWN',
+//   AGENT_PREFIX: 'AGT',
+//   PLATFORM_PREFIX: 'PLT',
+//   PROPERTY_PREFIX: 'PROP',
+// } as const;
+
+// // Commission calculation precision
+// export const COMMISSION_DECIMAL_PLACES = 2;
+// export const COMMISSION_ROUNDING_METHOD = 'round' as const; // 'round', 'floor', 'ceil'
+
+// // Flutterwave transaction fees (estimate)
+// export const FLUTTERWAVE_TRANSACTION_FEE_PERCENTAGE = 0.014; // 1.4%
+// export const FLUTTERWAVE_TRANSACTION_FEE_CAP = 2000; // 2,000 NGN cap
+// export const FLUTTERWAVE_TRANSACTION_FEE_MINIMUM = 10; // 10 NGN minimum
+
+// // Service charge calculation
+// export const calculateServiceCharge = (amount: number): number => {
+//   const feePercentage = amount * FLUTTERWAVE_TRANSACTION_FEE_PERCENTAGE;
+//   const fee = Math.min(feePercentage, FLUTTERWAVE_TRANSACTION_FEE_CAP);
+//   return Math.max(fee, FLUTTERWAVE_TRANSACTION_FEE_MINIMUM);
+// };
+
+// // Double service charge for refunds
+// export const calculateRefundServiceCharge = (amount: number): number => {
+//   return calculateServiceCharge(amount) * REFUND_PROCESSING_FEE_MULTIPLIER;
+// };
+
+// // Commission error codes
+// export const COMMISSION_ERROR_CODES = {
+//   INVALID_AMOUNT: 'COMMISSION_INVALID_AMOUNT',
+//   INVALID_RATE: 'COMMISSION_INVALID_RATE',
+//   INSUFFICIENT_FUNDS: 'COMMISSION_INSUFFICIENT_FUNDS',
+//   ALREADY_RELEASED: 'COMMISSION_ALREADY_RELEASED',
+//   HOLD_PERIOD_ACTIVE: 'COMMISSION_HOLD_PERIOD_ACTIVE',
+//   DISPUTE_PENDING: 'COMMISSION_DISPUTE_PENDING',
+//   CALCULATION_ERROR: 'COMMISSION_CALCULATION_ERROR',
+//   DISTRIBUTION_FAILED: 'COMMISSION_DISTRIBUTION_FAILED',
+// } as const;

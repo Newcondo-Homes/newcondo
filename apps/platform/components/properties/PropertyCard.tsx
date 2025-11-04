@@ -253,3 +253,373 @@ const PropertyCard = memo(function PropertyCard({
 PropertyCard.displayName = 'PropertyCard';
 
 export default PropertyCard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// "use client";
+
+// import { useState } from "react";
+// import Image from "next/image";
+// import { useRouter } from "next/navigation";
+// import {
+//   MoreVertical,
+//   Edit,
+//   Eye,
+//   Share2,
+//   MapPin,
+//   Bed,
+//   Bath,
+//   Ruler,
+//   TrendingUp,
+// } from "lucide-react";
+// import { Card, CardContent, CardFooter } from "@/components/ui/card";
+// import { Badge } from "@/components/ui/badge";
+// import { Button } from "@/components/ui/button";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/components/ui/dropdown-menu";
+// import { formatCurrency } from "@/lib/utils/format";
+// import { toast } from "sonner";
+
+// interface Property {
+//   id: string;
+//   title: string;
+//   description: string;
+//   price: number;
+//   currency: string;
+//   address: string;
+//   city: string;
+//   state: string;
+//   propertyType: string;
+//   bedrooms?: number;
+//   bathrooms?: number;
+//   area?: string;
+//   status: string;
+//   adminApprovalStatus: string;
+//   isAvailable: boolean;
+//   viewCount: number;
+//   images: Array<{ url: string; isPrimary: boolean }>;
+//   structure: string;
+//   totalUnits?: number;
+//   availableUnits?: number;
+// }
+
+// interface PropertyCardProps {
+//   property: Property;
+//   viewMode: "grid" | "list";
+//   onClick: () => void;
+//   onRefetch: () => void;
+// }
+
+// export default function PropertyCard({
+//   property,
+//   viewMode,
+//   onClick,
+//   onRefetch,
+// }: PropertyCardProps) {
+//   const router = useRouter();
+//   const [isSharing, setIsSharing] = useState(false);
+
+//   const primaryImage =
+//     property.images.find((img) => img.isPrimary)?.url ||
+//     property.images[0]?.url ||
+//     "/images/placeholders/property.jpg";
+
+//   const getStatusColor = (status: string) => {
+//     switch (status.toUpperCase()) {
+//       case "PUBLISHED":
+//         return "bg-green-500/10 text-green-700 border-green-500/20";
+//       case "DRAFT":
+//         return "bg-gray-500/10 text-gray-700 border-gray-500/20";
+//       case "RENTED":
+//         return "bg-purple-500/10 text-purple-700 border-purple-500/20";
+//       case "PENDING":
+//         return "bg-yellow-500/10 text-yellow-700 border-yellow-500/20";
+//       case "UNAVAILABLE":
+//         return "bg-red-500/10 text-red-700 border-red-500/20";
+//       default:
+//         return "bg-gray-500/10 text-gray-700 border-gray-500/20";
+//     }
+//   };
+
+//   const getApprovalBadge = () => {
+//     if (property.adminApprovalStatus === "APPROVED") {
+//       return (
+//         <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">
+//           Approved
+//         </Badge>
+//       );
+//     }
+//     if (property.adminApprovalStatus === "REJECTED") {
+//       return (
+//         <Badge variant="outline" className="bg-red-500/10 text-red-700 border-red-500/20">
+//           Rejected
+//         </Badge>
+//       );
+//     }
+//     return (
+//       <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 border-yellow-500/20">
+//         Pending Review
+//       </Badge>
+//     );
+//   };
+
+//   const handleEdit = (e: React.MouseEvent) => {
+//     e.stopPropagation();
+//     router.push(`/dashboard/properties/my-properties/${property.id}/edit`);
+//   };
+
+//   const handleViewAnalytics = (e: React.MouseEvent) => {
+//     e.stopPropagation();
+//     router.push(`/dashboard/properties/my-properties/${property.id}/analytics`);
+//   };
+
+//   const handleShare = async (e: React.MouseEvent) => {
+//     e.stopPropagation();
+//     setIsSharing(true);
+
+//     try {
+//       const shareUrl = `${window.location.origin}/properties/${property.id}`;
+      
+//       if (navigator.share) {
+//         await navigator.share({
+//           title: property.title,
+//           text: property.description,
+//           url: shareUrl,
+//         });
+//         toast.success("Shared successfully");
+//       } else {
+//         await navigator.clipboard.writeText(shareUrl);
+//         toast.success("Link copied to clipboard");
+//       }
+//     } catch (error) {
+//       if (error instanceof Error && error.name !== "AbortError") {
+//         toast.error("Failed to share property");
+//       }
+//     } finally {
+//       setIsSharing(false);
+//     }
+//   };
+
+//   const renderPropertyDetails = () => (
+//     <>
+//       {property.structure === "MULTI_FAMILY" ? (
+//         <div className="flex items-center gap-4 text-sm text-muted-foreground">
+//           <span className="flex items-center gap-1">
+//             <Building2 className="h-4 w-4" />
+//             {property.totalUnits} units
+//           </span>
+//           <span className="flex items-center gap-1">
+//             <CheckCircle className="h-4 w-4" />
+//             {property.availableUnits} available
+//           </span>
+//         </div>
+//       ) : (
+//         <div className="flex items-center gap-4 text-sm text-muted-foreground">
+//           {property.bedrooms && (
+//             <span className="flex items-center gap-1">
+//               <Bed className="h-4 w-4" />
+//               {property.bedrooms}
+//             </span>
+//           )}
+//           {property.bathrooms && (
+//             <span className="flex items-center gap-1">
+//               <Bath className="h-4 w-4" />
+//               {property.bathrooms}
+//             </span>
+//           )}
+//           {property.area && (
+//             <span className="flex items-center gap-1">
+//               <Ruler className="h-4 w-4" />
+//               {property.area}
+//             </span>
+//           )}
+//         </div>
+//       )}
+//     </>
+//   );
+
+//   if (viewMode === "list") {
+//     return (
+//       <Card
+//         className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+//         onClick={onClick}
+//       >
+//         <div className="flex flex-col sm:flex-row">
+//           <div className="relative w-full sm:w-64 h-48 sm:h-auto">
+//             <Image
+//               src={primaryImage}
+//               alt={property.title}
+//               fill
+//               className="object-cover"
+//             />
+//             <div className="absolute top-2 right-2 flex gap-2">
+//               <Badge className={getStatusColor(property.status)}>
+//                 {property.status}
+//               </Badge>
+//             </div>
+//           </div>
+
+//           <div className="flex-1 p-4">
+//             <div className="flex justify-between items-start mb-2">
+//               <div className="flex-1">
+//                 <h3 className="text-xl font-semibold line-clamp-1">
+//                   {property.title}
+//                 </h3>
+//                 <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+//                   <MapPin className="h-3 w-3" />
+//                   {property.city}, {property.state}
+//                 </p>
+//               </div>
+//               {getApprovalBadge()}
+//             </div>
+
+//             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+//               {property.description}
+//             </p>
+
+//             {renderPropertyDetails()}
+
+//             <div className="flex items-center justify-between mt-4 pt-4 border-t">
+//               <div>
+//                 <p className="text-2xl font-bold">
+//                   {formatCurrency(property.price, property.currency)}
+//                 </p>
+//                 <p className="text-xs text-muted-foreground flex items-center gap-1">
+//                   <Eye className="h-3 w-3" />
+//                   {property.viewCount} views
+//                 </p>
+//               </div>
+
+//               <div className="flex gap-2">
+//                 <Button variant="outline" size="sm" onClick={handleEdit}>
+//                   <Edit className="h-4 w-4 mr-1" />
+//                   Edit
+//                 </Button>
+//                 <Button variant="outline" size="sm" onClick={handleViewAnalytics}>
+//                   <TrendingUp className="h-4 w-4 mr-1" />
+//                   Analytics
+//                 </Button>
+//                 <DropdownMenu>
+//                   <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+//                     <Button variant="outline" size="sm">
+//                       <MoreVertical className="h-4 w-4" />
+//                     </Button>
+//                   </DropdownMenuTrigger>
+//                   <DropdownMenuContent align="end">
+//                     <DropdownMenuItem onClick={handleShare}>
+//                       <Share2 className="h-4 w-4 mr-2" />
+//                       Share
+//                     </DropdownMenuItem>
+//                   </DropdownMenuContent>
+//                 </DropdownMenu>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </Card>
+//     );
+//   }
+
+//   return (
+//     <Card
+//       className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+//       onClick={onClick}
+//     >
+//       <div className="relative h-48">
+//         <Image
+//           src={primaryImage}
+//           alt={property.title}
+//           fill
+//           className="object-cover"
+//         />
+//         <div className="absolute top-2 left-2 right-2 flex justify-between items-start">
+//           <Badge className={getStatusColor(property.status)}>
+//             {property.status}
+//           </Badge>
+//           {getApprovalBadge()}
+//         </div>
+//       </div>
+
+//       <CardContent className="p-4">
+//         <h3 className="text-lg font-semibold line-clamp-1 mb-1">
+//           {property.title}
+//         </h3>
+//         <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
+//           <MapPin className="h-3 w-3" />
+//           {property.city}, {property.state}
+//         </p>
+
+//         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+//           {property.description}
+//         </p>
+
+//         {renderPropertyDetails()}
+
+//         <div className="flex justify-between items-center pt-3 mt-3 border-t">
+//           <div>
+//             <p className="text-xl font-bold">
+//               {formatCurrency(property.price, property.currency)}
+//             </p>
+//             <p className="text-xs text-muted-foreground flex items-center gap-1">
+//               <Eye className="h-3 w-3" />
+//               {property.viewCount} views
+//             </p>
+//           </div>
+//         </div>
+//       </CardContent>
+
+//       <CardFooter className="p-4 pt-0 flex gap-2">
+//         <Button
+//           variant="outline"
+//           size="sm"
+//           className="flex-1"
+//           onClick={handleEdit}
+//         >
+//           <Edit className="h-4 w-4 mr-1" />
+//           Edit
+//         </Button>
+//         <Button
+//           variant="outline"
+//           size="sm"
+//           className="flex-1"
+//           onClick={handleViewAnalytics}
+//         >
+//           <TrendingUp className="h-4 w-4 mr-1" />
+//           Analytics
+//         </Button>
+//         <DropdownMenu>
+//           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+//             <Button variant="outline" size="sm">
+//               <MoreVertical className="h-4 w-4" />
+//             </Button>
+//           </DropdownMenuTrigger>
+//           <DropdownMenuContent align="end">
+//             <DropdownMenuItem onClick={handleShare}>
+//               <Share2 className="h-4 w-4 mr-2" />
+//               Share
+//             </DropdownMenuItem>
+//           </DropdownMenuContent>
+//         </DropdownMenu>
+//       </CardFooter>
+//     </Card>
+//   );
+// }

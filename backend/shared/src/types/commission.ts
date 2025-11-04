@@ -311,3 +311,175 @@ export class CommissionError extends Error {
 //   FLUTTERWAVE_FIXED_FEE: 100, // 100 NGN
 //   FLUTTERWAVE_FEE_CAP: 2000, // 2000 NGN maximum
 // } as const;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// export interface CommissionRates {
+//   platformCommissionRate: number;
+//   listingAgentShare: number;
+//   subAgentShare: number;
+//   markingServiceAgentCommission: number;
+//   markingServicePlatformShare: number;
+// }
+
+// export interface CommissionBreakdown {
+//   totalRentAmount: number;
+//   platformCommission: number;
+//   listingAgentCommission: number;
+//   subAgentCommission: number;
+//   ownerAmount: number;
+//   newCondoAmount: number;
+// }
+
+// export interface MarkingServiceCommissionBreakdown {
+//   totalMarkingFee: number;
+//   agentCommission: number;
+//   platformAmount: number;
+// }
+
+// export interface CommissionPaymentData {
+//   paymentId: string;
+//   rentalId: string;
+//   propertyId: string;
+//   rentAmount: number;
+//   breakdown: CommissionBreakdown;
+//   status: CommissionPaymentStatus;
+//   scheduledReleaseDate?: Date;
+//   releasedDate?: Date;
+// }
+
+// export enum CommissionPaymentStatus {
+//   PENDING = 'PENDING',
+//   HELD = 'HELD',
+//   RELEASED = 'RELEASED',
+//   CANCELLED = 'CANCELLED',
+//   DISPUTED = 'DISPUTED',
+// }
+
+// export interface AgentCommissionSummary {
+//   agentId: string;
+//   agentName: string;
+//   totalEarnings: number;
+//   listingCommissions: number;
+//   subAgentCommissions: number;
+//   markingServiceEarnings: number;
+//   pendingCommissions: number;
+//   paidCommissions: number;
+//   commissionsByProperty: Array<{
+//     propertyId: string;
+//     propertyTitle: string;
+//     commission: number;
+//   }>;
+// }
+
+// export interface OwnerCommissionSummary {
+//   ownerId: string;
+//   ownerName: string;
+//   totalRevenue: number;
+//   totalCommissionsPaid: number;
+//   netRevenue: number;
+//   platformFees: number;
+//   revenueByProperty: Array<{
+//     propertyId: string;
+//     propertyTitle: string;
+//     revenue: number;
+//     commissionsPaid: number;
+//   }>;
+// }
+
+// export interface PlatformCommissionSummary {
+//   totalRevenue: number;
+//   rentalCommissions: number;
+//   markingServiceRevenue: number;
+//   totalAgentCommissionsPaid: number;
+//   netRevenue: number;
+//   revenueByMonth: Array<{
+//     month: string;
+//     revenue: number;
+//   }>;
+// }
+
+// export interface CommissionDispute {
+//   disputeId: string;
+//   paymentId: string;
+//   rentalId: string;
+//   propertyId: string;
+//   disputedBy: string;
+//   disputeReason: string;
+//   disputeAmount: number;
+//   status: DisputeStatus;
+//   createdAt: Date;
+//   resolvedAt?: Date;
+//   resolution?: string;
+// }
+
+// export enum DisputeStatus {
+//   OPEN = 'OPEN',
+//   UNDER_REVIEW = 'UNDER_REVIEW',
+//   RESOLVED = 'RESOLVED',
+//   REJECTED = 'REJECTED',
+// }
+
+// export interface CommissionCalculationInput {
+//   rentAmount: number;
+//   hasListingAgent: boolean;
+//   hasSubAgent: boolean;
+//   propertyId: string;
+//   ownerId: string;
+//   listingAgentId?: string;
+//   subAgentId?: string;
+// }
+
+// export interface CommissionDistributionPlan {
+//   ownerId: string;
+//   ownerAmount: number;
+//   ownerVirtualAccountId: string;
+//   listingAgentId?: string;
+//   listingAgentAmount?: number;
+//   listingAgentVirtualAccountId?: string;
+//   subAgentId?: string;
+//   subAgentAmount?: number;
+//   subAgentVirtualAccountId?: string;
+//   platformAmount: number;
+//   platformVirtualAccountId: string;
+//   scheduledReleaseDate: Date;
+// }
+
+// export interface CommissionReleaseSchedule {
+//   paymentId: string;
+//   rentalId: string;
+//   holdPeriodHours: number;
+//   scheduledReleaseDate: Date;
+//   confirmationDeadline: Date;
+//   isConfirmed: boolean;
+//   canBeReleased: boolean;
+// }
+
+// export interface CommissionRefundData {
+//   paymentId: string;
+//   rentalId: string;
+//   originalAmount: number;
+//   refundAmount: number;
+//   platformFeeRetained: number;
+//   refundReason: string;
+//   refundedAt: Date;
+//   distributionReversal: {
+//     ownerRefund: number;
+//     agentRefund?: number;
+//     subAgentRefund?: number;
+//   };
+// }
