@@ -340,3 +340,195 @@ export function exceedsDailyLimit(
 ): boolean {
   return dailyTotal + amount > WITHDRAWAL_SETTINGS.DAILY_LIMIT;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/lib/constants/commission.ts
+
+// /**
+//  * Commission Constants
+//  * Defines commission rates and splits for the platform
+//  */
+
+// // Platform commission rate (20% of rent)
+// export const PLATFORM_COMMISSION_RATE = 0.20;
+
+// // Commission split for listing agent (50% of platform commission)
+// export const LISTING_AGENT_COMMISSION_SPLIT = 0.50;
+
+// // Commission split for sub-agent (50% of platform commission when involved)
+// export const SUB_AGENT_COMMISSION_SPLIT = 0.50;
+
+// // Platform's share when only listing agent is involved (50% of 20%)
+// export const PLATFORM_SHARE_WITH_LISTING_AGENT = 0.50;
+
+// // Platform's share when no agent is involved (100% of 20%)
+// export const PLATFORM_SHARE_NO_AGENT = 1.00;
+
+// // Property marking service fees
+// export const MARKING_SERVICE_FEES = {
+//   OWNER_PAYMENT: 20000, // Amount property owner pays for marking service
+//   AGENT_COMPENSATION_RATE: 0.25, // 25% of marking fee goes to agent
+//   PLATFORM_SHARE_RATE: 0.75, // 75% of marking fee goes to platform
+//   NEWCONDO_ADMIN_MARKING_FEE: 25000, // Fee when Newcondo admin marks the property
+//   INITIAL_AGENT_PAYMENT: 1000, // Small payment to agent after marking (before confirmation)
+// } as const;
+
+// // Calculate derived marking service amounts
+// export const MARKING_SERVICE_AMOUNTS = {
+//   AGENT_TOTAL_COMPENSATION: MARKING_SERVICE_FEES.OWNER_PAYMENT * MARKING_SERVICE_FEES.AGENT_COMPENSATION_RATE,
+//   PLATFORM_SHARE: MARKING_SERVICE_FEES.OWNER_PAYMENT * MARKING_SERVICE_FEES.PLATFORM_SHARE_RATE,
+//   AGENT_INITIAL_PAYMENT: MARKING_SERVICE_FEES.INITIAL_AGENT_PAYMENT,
+//   AGENT_FINAL_PAYMENT: (MARKING_SERVICE_FEES.OWNER_PAYMENT * MARKING_SERVICE_FEES.AGENT_COMPENSATION_RATE) - MARKING_SERVICE_FEES.INITIAL_AGENT_PAYMENT,
+// } as const;
+
+// // Commission calculation helpers
+// export const calculatePlatformCommission = (rentAmount: number): number => {
+//   return rentAmount * PLATFORM_COMMISSION_RATE;
+// };
+
+// export const calculateListingAgentCommission = (rentAmount: number, hasSubAgent: boolean): number => {
+//   const platformCommission = calculatePlatformCommission(rentAmount);
+  
+//   if (hasSubAgent) {
+//     // Split 50/50 between listing agent and sub-agent
+//     return platformCommission * LISTING_AGENT_COMMISSION_SPLIT;
+//   }
+  
+//   // Listing agent gets full 50% of platform commission
+//   return platformCommission * LISTING_AGENT_COMMISSION_SPLIT;
+// };
+
+// export const calculateSubAgentCommission = (rentAmount: number): number => {
+//   const platformCommission = calculatePlatformCommission(rentAmount);
+//   return platformCommission * SUB_AGENT_COMMISSION_SPLIT;
+// };
+
+// export const calculatePlatformShare = (rentAmount: number, hasListingAgent: boolean, hasSubAgent: boolean): number => {
+//   const platformCommission = calculatePlatformCommission(rentAmount);
+  
+//   if (!hasListingAgent) {
+//     // No agents involved - platform gets 100% of commission
+//     return platformCommission * PLATFORM_SHARE_NO_AGENT;
+//   }
+  
+//   if (hasSubAgent) {
+//     // Both listing agent and sub-agent involved - platform gets 0%
+//     return 0;
+//   }
+  
+//   // Only listing agent involved - platform gets 50% of commission
+//   return platformCommission * PLATFORM_SHARE_WITH_LISTING_AGENT;
+// };
+
+// export const calculateOwnerAmount = (rentAmount: number): number => {
+//   const platformCommission = calculatePlatformCommission(rentAmount);
+//   return rentAmount - platformCommission;
+// };
+
+// // Commission breakdown type
+// export interface CommissionBreakdown {
+//   rentAmount: number;
+//   platformCommission: number;
+//   listingAgentCommission: number;
+//   subAgentCommission: number;
+//   platformShare: number;
+//   ownerAmount: number;
+// }
+
+// export const calculateFullCommissionBreakdown = (
+//   rentAmount: number,
+//   hasListingAgent: boolean,
+//   hasSubAgent: boolean
+// ): CommissionBreakdown => {
+//   const platformCommission = calculatePlatformCommission(rentAmount);
+//   const listingAgentCommission = hasListingAgent 
+//     ? calculateListingAgentCommission(rentAmount, hasSubAgent) 
+//     : 0;
+//   const subAgentCommission = hasSubAgent 
+//     ? calculateSubAgentCommission(rentAmount) 
+//     : 0;
+//   const platformShare = calculatePlatformShare(rentAmount, hasListingAgent, hasSubAgent);
+//   const ownerAmount = calculateOwnerAmount(rentAmount);
+
+//   return {
+//     rentAmount,
+//     platformCommission,
+//     listingAgentCommission,
+//     subAgentCommission,
+//     platformShare,
+//     ownerAmount,
+//   };
+// };
+
+// // Commission status
+// export const COMMISSION_STATUS = {
+//   PENDING: 'pending',
+//   HELD: 'held',
+//   RELEASED: 'released',
+//   PAID: 'paid',
+// } as const;
+
+// export type CommissionStatus = typeof COMMISSION_STATUS[keyof typeof COMMISSION_STATUS];
+
+// // Commission status labels
+// export const COMMISSION_STATUS_LABELS: Record<CommissionStatus, string> = {
+//   [COMMISSION_STATUS.PENDING]: 'Pending',
+//   [COMMISSION_STATUS.HELD]: 'Held (Confirmation Period)',
+//   [COMMISSION_STATUS.RELEASED]: 'Released',
+//   [COMMISSION_STATUS.PAID]: 'Paid',
+// };
+
+// // Minimum withdrawal amount
+// export const MIN_WITHDRAWAL_AMOUNT = 1000; // NGN
+
+// // Auto-transfer options
+// export const AUTO_TRANSFER_OPTIONS = {
+//   IMMEDIATE: 'immediate',
+//   DAILY: 'daily',
+//   WEEKLY: 'weekly',
+//   MONTHLY: 'monthly',
+//   MANUAL: 'manual',
+// } as const;
+
+// export type AutoTransferOption = typeof AUTO_TRANSFER_OPTIONS[keyof typeof AUTO_TRANSFER_OPTIONS];
+
+// // Auto-transfer labels
+// export const AUTO_TRANSFER_LABELS: Record<AutoTransferOption, string> = {
+//   [AUTO_TRANSFER_OPTIONS.IMMEDIATE]: 'Immediate (After Confirmation)',
+//   [AUTO_TRANSFER_OPTIONS.DAILY]: 'Daily',
+//   [AUTO_TRANSFER_OPTIONS.WEEKLY]: 'Weekly',
+//   [AUTO_TRANSFER_OPTIONS.MONTHLY]: 'Monthly',
+//   [AUTO_TRANSFER_OPTIONS.MANUAL]: 'Manual Only',
+// };
+
+// // Export all constants
+// export default {
+//   PLATFORM_COMMISSION_RATE,
+//   LISTING_AGENT_COMMISSION_SPLIT,
+//   SUB_AGENT_COMMISSION_SPLIT,
+//   PLATFORM_SHARE_WITH_LISTING_AGENT,
+//   PLATFORM_SHARE_NO_AGENT,
+//   MARKING_SERVICE_FEES,
+//   MARKING_SERVICE_AMOUNTS,
+//   COMMISSION_STATUS,
+//   COMMISSION_STATUS_LABELS,
+//   MIN_WITHDRAWAL_AMOUNT,
+//   AUTO_TRANSFER_OPTIONS,
+//   AUTO_TRANSFER_LABELS,
+//   calculatePlatformCommission,
+//   calculateListingAgentCommission,
+//   calculateSubAgentCommission,
+//   calculatePlatformShare,
+//   calculateOwnerAmount,
+//   calculateFullCommissionBreakdown,
+// };

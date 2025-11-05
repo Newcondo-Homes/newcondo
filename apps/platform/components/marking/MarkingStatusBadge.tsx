@@ -245,3 +245,132 @@ export function MarkingStatusBadge({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/components/marking/MarkingStatusBadge.tsx
+// 'use client';
+
+// import { Badge } from '@/components/ui/badge';
+// import { cn } from '@/lib/utils';
+// import {
+//   Clock,
+//   CheckCircle,
+//   XCircle,
+//   AlertCircle,
+//   UserCheck,
+//   Loader2,
+// } from 'lucide-react';
+
+// type MarkingJobStatus =
+//   | 'QUEUED'
+//   | 'ASSIGNED'
+//   | 'IN_PROGRESS'
+//   | 'COMPLETED'
+//   | 'CANCELLED'
+//   | 'EXPIRED';
+
+// interface MarkingStatusBadgeProps {
+//   status: MarkingJobStatus;
+//   isConfirmed?: boolean;
+//   size?: 'sm' | 'default' | 'lg';
+//   showIcon?: boolean;
+//   className?: string;
+// }
+
+// export function MarkingStatusBadge({
+//   status,
+//   isConfirmed,
+//   size = 'default',
+//   showIcon = true,
+//   className,
+// }: MarkingStatusBadgeProps) {
+//   const getStatusConfig = () => {
+//     switch (status) {
+//       case 'COMPLETED':
+//         if (isConfirmed) {
+//           return {
+//             label: 'Confirmed',
+//             icon: CheckCircle,
+//             className: 'bg-green-500 hover:bg-green-600',
+//           };
+//         }
+//         return {
+//           label: 'Awaiting Confirmation',
+//           icon: AlertCircle,
+//           className: 'bg-yellow-500 hover:bg-yellow-600',
+//         };
+//       case 'IN_PROGRESS':
+//         return {
+//           label: 'In Progress',
+//           icon: Loader2,
+//           className: 'bg-blue-500 hover:bg-blue-600',
+//         };
+//       case 'ASSIGNED':
+//         return {
+//           label: 'Assigned',
+//           icon: UserCheck,
+//           className: 'bg-purple-500 hover:bg-purple-600',
+//         };
+//       case 'QUEUED':
+//         return {
+//           label: 'Queued',
+//           icon: Clock,
+//           className: 'border-yellow-500 bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
+//           variant: 'outline' as const,
+//         };
+//       case 'CANCELLED':
+//         return {
+//           label: 'Cancelled',
+//           icon: XCircle,
+//           className: '',
+//           variant: 'destructive' as const,
+//         };
+//       case 'EXPIRED':
+//         return {
+//           label: 'Expired',
+//           icon: Clock,
+//           className: 'border-gray-500 bg-gray-50 text-gray-700 hover:bg-gray-100',
+//           variant: 'outline' as const,
+//         };
+//     }
+//   };
+
+//   const config = getStatusConfig();
+//   const Icon = config.icon;
+
+//   const sizeClasses = {
+//     sm: 'text-xs h-5',
+//     default: 'text-sm h-6',
+//     lg: 'text-base h-7',
+//   };
+
+//   const iconSizeClasses = {
+//     sm: 'h-3 w-3',
+//     default: 'h-3.5 w-3.5',
+//     lg: 'h-4 w-4',
+//   };
+
+//   return (
+//     <Badge
+//       variant={config.variant || 'default'}
+//       className={cn(
+//         sizeClasses[size],
+//         config.className,
+//         showIcon && 'gap-1',
+//         className
+//       )}
+//     >
+//       {showIcon && <Icon className={cn(iconSizeClasses[size], status === 'IN_PROGRESS' && 'animate-spin')} />}
+//       {config.label}
+//     </Badge>
+//   );
+// }

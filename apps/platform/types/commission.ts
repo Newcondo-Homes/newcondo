@@ -288,3 +288,375 @@ export interface GetCommissionHistoryResponse {
   total: number;
   hasMore: boolean;
 }
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/types/commission.ts
+
+// import type { CommissionStatus, AutoTransferOption } from '@/lib/constants/commission';
+
+// /**
+//  * Commission Types
+//  * Type definitions for commission tracking and earnings management
+//  */
+
+// // Commission earning record
+// export interface CommissionEarning {
+//   id: string;
+//   userId: string;
+//   propertyId: string;
+//   rentalId: string;
+//   paymentId: string;
+  
+//   // Amounts
+//   rentAmount: number;
+//   platformCommission: number;
+//   agentCommission: number;
+//   netEarning: number;
+//   currency: string;
+  
+//   // Role in transaction
+//   role: 'listing_agent' | 'sub_agent' | 'owner';
+//   hasSubAgent: boolean;
+  
+//   // Status tracking
+//   status: CommissionStatus;
+//   heldUntil?: Date;
+//   releasedAt?: Date;
+//   paidAt?: Date;
+  
+//   // Virtual account details
+//   virtualAccountId?: string;
+//   virtualAccountBalance?: number;
+  
+//   // Property details
+//   propertyTitle: string;
+//   propertyAddress: string;
+//   unitNumber?: string;
+  
+//   // Renter details
+//   renterName?: string;
+//   renterEmail?: string;
+  
+//   // Timestamps
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// // Commission summary
+// export interface CommissionSummary {
+//   userId: string;
+//   timePeriod: {
+//     startDate: Date;
+//     endDate: Date;
+//   };
+  
+//   // Totals
+//   totalEarnings: number;
+//   totalPending: number;
+//   totalHeld: number;
+//   totalReleased: number;
+//   totalPaid: number;
+//   totalWithdrawn: number;
+  
+//   // Breakdown
+//   earningsAsListingAgent: number;
+//   earningsAsSubAgent: number;
+//   earningsAsOwner: number;
+//   markingServiceEarnings: number;
+  
+//   // Statistics
+//   totalTransactions: number;
+//   averageCommission: number;
+//   highestCommission: number;
+  
+//   // Virtual account
+//   virtualAccountBalance: number;
+//   pendingConfirmations: number;
+// }
+
+// // Commission breakdown for a specific property
+// export interface PropertyCommissionBreakdown {
+//   propertyId: string;
+//   propertyTitle: string;
+//   rentAmount: number;
+  
+//   // Commission split
+//   platformCommission: number;
+//   platformCommissionRate: number;
+  
+//   // Agent earnings
+//   listingAgentCommission?: number;
+//   listingAgentId?: string;
+//   listingAgentName?: string;
+  
+//   subAgentCommission?: number;
+//   subAgentId?: string;
+//   subAgentName?: string;
+  
+//   // Owner earnings
+//   ownerAmount: number;
+//   ownerId: string;
+//   ownerName: string;
+  
+//   // Platform share
+//   platformShare: number;
+  
+//   // Status
+//   status: CommissionStatus;
+//   confirmationDeadline?: Date;
+//   releaseDate?: Date;
+// }
+
+// // Commission transaction
+// export interface CommissionTransaction {
+//   id: string;
+//   userId: string;
+//   type: 'earning' | 'withdrawal' | 'refund' | 'adjustment';
+//   amount: number;
+//   currency: string;
+//   description: string;
+//   status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  
+//   // Related entities
+//   propertyId?: string;
+//   rentalId?: string;
+//   paymentId?: string;
+  
+//   // Banking details (for withdrawals)
+//   bankName?: string;
+//   accountNumber?: string;
+//   accountName?: string;
+  
+//   // Flutterwave details
+//   flutterwaveReference?: string;
+//   transactionId?: string;
+  
+//   // Error handling
+//   failureReason?: string;
+//   retryCount?: number;
+  
+//   // Timestamps
+//   initiatedAt: Date;
+//   completedAt?: Date;
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// // Commission earnings dashboard
+// export interface CommissionDashboard {
+//   summary: CommissionSummary;
+//   recentEarnings: CommissionEarning[];
+//   recentTransactions: CommissionTransaction[];
+//   upcomingReleases: {
+//     amount: number;
+//     releaseDate: Date;
+//     count: number;
+//   }[];
+//   earningsChart: {
+//     date: string;
+//     earnings: number;
+//   }[];
+//   topEarningProperties: {
+//     propertyId: string;
+//     propertyTitle: string;
+//     earnings: number;
+//     transactions: number;
+//   }[];
+// }
+
+// // Withdrawal request
+// export interface WithdrawalRequest {
+//   userId: string;
+//   amount: number;
+//   currency: string;
+  
+//   // Banking details
+//   bankName: string;
+//   bankCode: string;
+//   accountNumber: string;
+//   accountName: string;
+  
+//   // Virtual account
+//   virtualAccountId: string;
+//   availableBalance: number;
+  
+//   // Optional fields
+//   narration?: string;
+//   reference?: string;
+// }
+
+// // Withdrawal response
+// export interface WithdrawalResponse {
+//   success: boolean;
+//   transactionId?: string;
+//   reference?: string;
+//   amount: number;
+//   fee?: number;
+//   netAmount: number;
+//   status: 'pending' | 'processing' | 'completed' | 'failed';
+//   estimatedCompletionTime?: Date;
+//   message?: string;
+// }
+
+// // Auto-transfer settings
+// export interface AutoTransferSettings {
+//   userId: string;
+//   enabled: boolean;
+//   option: AutoTransferOption;
+  
+//   // Banking details
+//   bankName: string;
+//   bankCode: string;
+//   accountNumber: string;
+//   accountName: string;
+  
+//   // Thresholds
+//   minimumAmount?: number;
+  
+//   // Schedule (for non-immediate transfers)
+//   dayOfWeek?: number; // 0-6 for weekly
+//   dayOfMonth?: number; // 1-31 for monthly
+//   timeOfDay?: string; // HH:MM format
+  
+//   // Status
+//   lastTransferAt?: Date;
+//   nextTransferAt?: Date;
+//   totalTransfers: number;
+  
+//   // Timestamps
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// // Commission filter options
+// export interface CommissionFilters {
+//   startDate?: Date;
+//   endDate?: Date;
+//   status?: CommissionStatus[];
+//   role?: ('listing_agent' | 'sub_agent' | 'owner')[];
+//   propertyIds?: string[];
+//   minAmount?: number;
+//   maxAmount?: number;
+//   searchQuery?: string;
+// }
+
+// // Commission export options
+// export interface CommissionExportOptions {
+//   format: 'csv' | 'pdf' | 'excel';
+//   filters: CommissionFilters;
+//   includeBreakdown: boolean;
+//   includeTransactions: boolean;
+//   groupBy?: 'property' | 'month' | 'status';
+// }
+
+// // Virtual account details
+// export interface VirtualAccountDetails {
+//   id: string;
+//   userId: string;
+//   accountNumber: string;
+//   accountName: string;
+//   bankCode: string;
+//   bankName: string;
+  
+//   // Balance
+//   balance: number;
+//   pendingBalance: number;
+//   availableBalance: number;
+//   currency: string;
+  
+//   // Status
+//   isActive: boolean;
+//   isFrozen: boolean;
+//   freezeReason?: string;
+  
+//   // Auto-transfer
+//   autoTransferEnabled: boolean;
+//   autoTransferSettings?: AutoTransferSettings;
+  
+//   // Statistics
+//   totalDeposits: number;
+//   totalWithdrawals: number;
+//   transactionCount: number;
+  
+//   // Timestamps
+//   createdAt: Date;
+//   lastTransactionAt?: Date;
+// }
+
+// // Marking service commission
+// export interface MarkingServiceCommission {
+//   id: string;
+//   markingJobId: string;
+//   propertyId: string;
+//   agentId: string;
+  
+//   // Amounts
+//   totalFee: number;
+//   agentCompensation: number;
+//   platformShare: number;
+//   initialPayment: number;
+//   finalPayment: number;
+  
+//   // Status
+//   status: CommissionStatus;
+//   initialPaymentReleased: boolean;
+//   finalPaymentReleased: boolean;
+  
+//   // Owner confirmation
+//   ownerConfirmedAt?: Date;
+//   confirmationDeadline?: Date;
+  
+//   // Timestamps
+//   createdAt: Date;
+//   updatedAt: Date;
+// }
+
+// // Commission API responses
+// export interface CommissionApiResponse<T> {
+//   success: boolean;
+//   data?: T;
+//   error?: string;
+//   message?: string;
+// }
+
+// // Commission context type
+// export interface CommissionContextType {
+//   summary: CommissionSummary | null;
+//   earnings: CommissionEarning[];
+//   transactions: CommissionTransaction[];
+//   virtualAccount: VirtualAccountDetails | null;
+//   loading: boolean;
+//   error: string | null;
+//   fetchCommissionData: (filters?: CommissionFilters) => Promise<void>;
+//   withdrawFunds: (request: WithdrawalRequest) => Promise<WithdrawalResponse>;
+//   updateAutoTransfer: (settings: AutoTransferSettings) => Promise<void>;
+//   refreshData: () => Promise<void>;
+// }
+
+// // Commission notification
+// export interface CommissionNotification {
+//   id: string;
+//   userId: string;
+//   type: 'earning_released' | 'withdrawal_completed' | 'payment_held' | 'confirmation_pending';
+//   title: string;
+//   message: string;
+//   amount?: number;
+//   propertyId?: string;
+//   transactionId?: string;
+//   read: boolean;
+//   createdAt: Date;
+// }
+
+// // Export all types
+// export type {
+//   CommissionStatus,
+//   AutoTransferOption,
+// };

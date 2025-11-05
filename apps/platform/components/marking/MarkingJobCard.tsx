@@ -453,3 +453,278 @@ export function MarkingJobCard({
 //     </Card>
 //   );
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/components/marking/MarkingJobCard.tsx
+// 'use client';
+
+// import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Badge } from '@/components/ui/badge';
+// import { Button } from '@/components/ui/button';
+// import { Separator } from '@/components/ui/separator';
+// import {
+//   MapPin,
+//   User,
+//   Phone,
+//   Clock,
+//   DollarSign,
+//   CheckCircle,
+//   XCircle,
+//   AlertCircle,
+// } from 'lucide-react';
+
+// type MarkingJobStatus =
+//   | 'QUEUED'
+//   | 'ASSIGNED'
+//   | 'IN_PROGRESS'
+//   | 'COMPLETED'
+//   | 'CANCELLED'
+//   | 'EXPIRED';
+
+// interface MarkingJobCardProps {
+//   job: {
+//     id: string;
+//     propertyTitle: string;
+//     propertyAddress: string;
+//     status: MarkingJobStatus;
+//     markingFee: number;
+//     assignedAgentName?: string;
+//     assignedAgentPhone?: string;
+//     contactPersonName: string;
+//     contactPersonPhone: string;
+//     accessInstructions?: string;
+//     requestedAt: Date;
+//     completedAt?: Date;
+//     timeSlotExpiry?: Date;
+//     isConfirmed: boolean;
+//   };
+//   currency?: string;
+//   onConfirm?: () => void;
+//   onReject?: () => void;
+//   onViewImages?: () => void;
+// }
+
+// export function MarkingJobCard({
+//   job,
+//   currency = 'NGN',
+//   onConfirm,
+//   onReject,
+//   onViewImages,
+// }: MarkingJobCardProps) {
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('en-NG', {
+//       style: 'currency',
+//       currency,
+//       minimumFractionDigits: 0,
+//     }).format(amount);
+//   };
+
+//   const formatDate = (date: Date) => {
+//     return new Date(date).toLocaleString('en-US', {
+//       year: 'numeric',
+//       month: 'long',
+//       day: 'numeric',
+//       hour: '2-digit',
+//       minute: '2-digit',
+//     });
+//   };
+
+//   const getStatusBadge = () => {
+//     switch (job.status) {
+//       case 'COMPLETED':
+//         return <Badge className="bg-green-500">Completed</Badge>;
+//       case 'IN_PROGRESS':
+//         return <Badge className="bg-blue-500">In Progress</Badge>;
+//       case 'ASSIGNED':
+//         return <Badge className="bg-purple-500">Assigned</Badge>;
+//       case 'QUEUED':
+//         return (
+//           <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+//             Queued
+//           </Badge>
+//         );
+//       case 'CANCELLED':
+//         return <Badge variant="destructive">Cancelled</Badge>;
+//       case 'EXPIRED':
+//         return (
+//           <Badge variant="outline" className="bg-gray-50 text-gray-700">
+//             Expired
+//           </Badge>
+//         );
+//     }
+//   };
+
+//   const showConfirmationButtons =
+//     job.status === 'COMPLETED' && !job.isConfirmed && onConfirm && onReject;
+
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <div className="flex items-start justify-between">
+//           <div>
+//             <CardTitle className="text-xl mb-2">{job.propertyTitle}</CardTitle>
+//             <div className="flex items-center gap-2 text-sm text-muted-foreground">
+//               <MapPin className="h-4 w-4" />
+//               <span>{job.propertyAddress}</span>
+//             </div>
+//           </div>
+//           {getStatusBadge()}
+//         </div>
+//       </CardHeader>
+//       <CardContent className="space-y-4">
+//         {/* Marking Fee */}
+//         <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+//           <div className="flex items-center gap-2">
+//             <DollarSign className="h-5 w-5 text-muted-foreground" />
+//             <span className="font-medium">Marking Fee</span>
+//           </div>
+//           <span className="text-xl font-bold">{formatCurrency(job.markingFee)}</span>
+//         </div>
+
+//         <Separator />
+
+//         {/* Agent Information */}
+//         {job.assignedAgentName && (
+//           <>
+//             <div className="space-y-2">
+//               <h4 className="font-semibold flex items-center gap-2">
+//                 <User className="h-4 w-4" />
+//                 Assigned Agent
+//               </h4>
+//               <div className="pl-6 space-y-1">
+//                 <p className="text-sm">{job.assignedAgentName}</p>
+//                 {job.assignedAgentPhone && (
+//                   <a
+//                     href={`tel:${job.assignedAgentPhone}`}
+//                     className="flex items-center gap-2 text-sm text-muted-foreground hover:underline"
+//                   >
+//                     <Phone className="h-3 w-3" />
+//                     {job.assignedAgentPhone}
+//                   </a>
+//                 )}
+//               </div>
+//             </div>
+//             <Separator />
+//           </>
+//         )}
+
+//         {/* Contact Person */}
+//         <div className="space-y-2">
+//           <h4 className="font-semibold flex items-center gap-2">
+//             <User className="h-4 w-4" />
+//             Contact Person
+//           </h4>
+//           <div className="pl-6 space-y-1">
+//             <p className="text-sm">{job.contactPersonName}</p>
+//             <a
+//               href={`tel:${job.contactPersonPhone}`}
+//               className="flex items-center gap-2 text-sm text-muted-foreground hover:underline"
+//             >
+//               <Phone className="h-3 w-3" />
+//               {job.contactPersonPhone}
+//             </a>
+//           </div>
+//         </div>
+
+//         {/* Access Instructions */}
+//         {job.accessInstructions && (
+//           <>
+//             <Separator />
+//             <div className="space-y-2">
+//               <h4 className="font-semibold flex items-center gap-2">
+//                 <AlertCircle className="h-4 w-4" />
+//                 Access Instructions
+//               </h4>
+//               <p className="text-sm text-muted-foreground pl-6">
+//                 {job.accessInstructions}
+//               </p>
+//             </div>
+//           </>
+//         )}
+
+//         <Separator />
+
+//         {/* Timeline */}
+//         <div className="space-y-2">
+//           <div className="flex items-center gap-2 text-sm">
+//             <Clock className="h-4 w-4 text-muted-foreground" />
+//             <span className="text-muted-foreground">Requested:</span>
+//             <span className="font-medium">{formatDate(job.requestedAt)}</span>
+//           </div>
+//           {job.completedAt && (
+//             <div className="flex items-center gap-2 text-sm">
+//               <Clock className="h-4 w-4 text-muted-foreground" />
+//               <span className="text-muted-foreground">Completed:</span>
+//               <span className="font-medium">{formatDate(job.completedAt)}</span>
+//             </div>
+//           )}
+//           {job.timeSlotExpiry && job.status === 'ASSIGNED' && (
+//             <div className="flex items-center gap-2 text-sm">
+//               <Clock className="h-4 w-4 text-orange-500" />
+//               <span className="text-muted-foreground">Time Slot Expires:</span>
+//               <span className="font-medium text-orange-600">
+//                 {formatDate(job.timeSlotExpiry)}
+//               </span>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* Confirmation Status */}
+//         {job.status === 'COMPLETED' && (
+//           <>
+//             <Separator />
+//             <div className="flex items-center gap-2">
+//               {job.isConfirmed ? (
+//                 <>
+//                   <CheckCircle className="h-5 w-5 text-green-500" />
+//                   <span className="text-sm font-medium text-green-700">
+//                     Marking Confirmed
+//                   </span>
+//                 </>
+//               ) : (
+//                 <>
+//                   <AlertCircle className="h-5 w-5 text-yellow-500" />
+//                   <span className="text-sm font-medium text-yellow-700">
+//                     Awaiting Your Confirmation
+//                   </span>
+//                 </>
+//               )}
+//             </div>
+//           </>
+//         )}
+
+//         {/* Action Buttons */}
+//         {showConfirmationButtons && (
+//           <div className="flex gap-2 pt-4">
+//             <Button onClick={onConfirm} className="flex-1">
+//               <CheckCircle className="h-4 w-4 mr-2" />
+//               Confirm Marking
+//             </Button>
+//             <Button onClick={onReject} variant="destructive" className="flex-1">
+//               <XCircle className="h-4 w-4 mr-2" />
+//               Reject
+//             </Button>
+//           </div>
+//         )}
+
+//         {job.status === 'COMPLETED' && onViewImages && (
+//           <Button onClick={onViewImages} variant="outline" className="w-full">
+//             View Completion Images
+//           </Button>
+//         )}
+//       </CardContent>
+//     </Card>
+//   );
+// }

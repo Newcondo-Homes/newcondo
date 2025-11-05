@@ -1,0 +1,321 @@
+// apps/platform/components/properties/PropertyEditForm.tsx
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { Save, X } from 'lucide-react';
+
+interface PropertyEditFormProps {
+  property: {
+    id: string;
+    title: string;
+    description: string;
+    propertyType: string;
+    price: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    area?: string;
+    features: string[];
+    address: string;
+    city: string;
+    state: string;
+    structure: 'SINGLE_UNIT' | 'MULTI_FAMILY';
+  };
+  onSave: (data: any) => Promise<void>;
+  onCancel: () => void;
+}
+
+const propertyTypes = [
+  'APARTMENT',
+  'HOUSE',
+  'DUPLEX',
+  'ROOM',
+  'SHARED_APARTMENT',
+  'OFFICE',
+  'SHOP',
+  'WAREHOUSE',
+];
+
+const nigerianStates = [
+  'Lagos',
+  'Abuja',
+  'Kano',
+  'Rivers',
+  'Oyo',
+  'Kaduna',
+  'Enugu',
+  'Delta',
+  'Ogun',
+  'Edo',
+];
+
+const commonFeatures = [
+  'Parking',
+  'Generator',
+  'Security',
+  'Water Supply',
+  'Internet',
+  'Swimming Pool',
+  'Gym',
+  'Garden',
+  'Balcony',
+  'Elevator',
+];
+
+export function PropertyEditForm({
+  property,
+  onSave,
+  onCancel,
+}: PropertyEditFormProps) {
+  const [formData, setFormData] = useState(property);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  const handleChange = (field: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleFeatureToggle = (feature: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      features: prev.features.includes(feature)
+        ? prev.features.filter((f) => f !== feature)
+        : [...prev.features, feature],
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setIsSaving(true);
+      await onSave(formData);
+      toast({
+        title: 'Property updated',
+        description: 'Your property has been updated successfully',
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: 'Save failed',
+        description: 'Failed to update property',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Property</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Basic Information</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Property Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => handleChange('title', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description *</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleChange('description', e.target.value)}
+                rows={4}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="propertyType">Property Type *</Label>
+                <Select
+                  value={formData.propertyType}
+                  onValueChange={(value) => handleChange('propertyType', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {propertyTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type.replace('_', ' ')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price">Price (NGN) *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={(e) =>
+                    handleChange('price', parseFloat(e.target.value))
+                  }
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Property Details */}
+          {formData.structure === 'SINGLE_UNIT' && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Property Details</h3>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Bedrooms</Label>
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    min="0"
+                    value={formData.bedrooms || ''}
+                    onChange={(e) =>
+                      handleChange('bedrooms', parseInt(e.target.value))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bathrooms">Bathrooms</Label>
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    min="0"
+                    value={formData.bathrooms || ''}
+                    onChange={(e) =>
+                      handleChange('bathrooms', parseInt(e.target.value))
+                    }
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="area">Area (sqm)</Label>
+                  <Input
+                    id="area"
+                    value={formData.area || ''}
+                    onChange={(e) => handleChange('area', e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Features */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Features & Amenities</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {commonFeatures.map((feature) => (
+                <div key={feature} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={feature}
+                    checked={formData.features.includes(feature)}
+                    onCheckedChange={() => handleFeatureToggle(feature)}
+                  />
+                  <Label
+                    htmlFor={feature}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {feature}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Location */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Location</h3>
+
+            <div className="space-y-2">
+              <Label htmlFor="address">Address *</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City *</Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => handleChange('city', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="state">State *</Label>
+                <Select
+                  value={formData.state}
+                  onValueChange={(value) => handleChange('state', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nigerianStates.map((state) => (
+                      <SelectItem key={state} value={state}>
+                        {state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSaving}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSaving}>
+              <Save className="h-4 w-4 mr-2" />
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </form>
+  );
+}

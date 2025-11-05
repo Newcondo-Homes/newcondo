@@ -94,3 +94,133 @@ export default function PropertyStatsCards({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+// // apps/platform/components/properties/PropertyStatsCards.tsx
+// 'use client';
+
+// import { StatCard } from '@/components/shared/StatCard';
+// import {
+//   Home,
+//   CheckCircle,
+//   Clock,
+//   Eye,
+//   DollarSign,
+//   TrendingUp,
+// } from 'lucide-react';
+
+// interface PropertyStatsCardsProps {
+//   stats: {
+//     total: number;
+//     published: number;
+//     rented: number;
+//     pending: number;
+//     totalViews: number;
+//     totalRevenue: number;
+//   };
+//   userRole: 'OWNER' | 'AGENT';
+//   previousStats?: {
+//     totalViews: number;
+//     totalRevenue: number;
+//   };
+// }
+
+// export function PropertyStatsCards({
+//   stats,
+//   userRole,
+//   previousStats,
+// }: PropertyStatsCardsProps) {
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('en-NG', {
+//       style: 'currency',
+//       currency: 'NGN',
+//       minimumFractionDigits: 0,
+//       notation: 'compact',
+//     }).format(amount);
+//   };
+
+//   const calculateGrowth = (current: number, previous: number) => {
+//     if (previous === 0) return 0;
+//     return ((current - previous) / previous) * 100;
+//   };
+
+//   const viewsGrowth = previousStats
+//     ? calculateGrowth(stats.totalViews, previousStats.totalViews)
+//     : 0;
+
+//   const revenueGrowth = previousStats
+//     ? calculateGrowth(stats.totalRevenue, previousStats.totalRevenue)
+//     : 0;
+
+//   return (
+//     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+//       <StatCard
+//         title="Total Properties"
+//         value={stats.total}
+//         icon={Home}
+//         description={`${stats.published} published`}
+//       />
+//       <StatCard
+//         title="Published"
+//         value={stats.published}
+//         icon={CheckCircle}
+//         description="Active listings"
+//         className="border-green-200 bg-green-50"
+//       />
+//       <StatCard
+//         title="Rented"
+//         value={stats.rented}
+//         icon={TrendingUp}
+//         description="Currently occupied"
+//         className="border-blue-200 bg-blue-50"
+//       />
+//       <StatCard
+//         title="Pending"
+//         value={stats.pending}
+//         icon={Clock}
+//         description="Awaiting approval"
+//         className="border-yellow-200 bg-yellow-50"
+//       />
+//       <StatCard
+//         title="Total Views"
+//         value={stats.totalViews.toLocaleString()}
+//         icon={Eye}
+//         description="All-time views"
+//         trend={
+//           previousStats
+//             ? {
+//                 value: viewsGrowth,
+//                 isPositive: viewsGrowth >= 0,
+//               }
+//             : undefined
+//         }
+//       />
+//       {userRole === 'AGENT' && (
+//         <StatCard
+//           title="Total Revenue"
+//           value={formatCurrency(stats.totalRevenue)}
+//           icon={DollarSign}
+//           description="Commission earned"
+//           trend={
+//             previousStats
+//               ? {
+//                   value: revenueGrowth,
+//                   isPositive: revenueGrowth >= 0,
+//                 }
+//               : undefined
+//           }
+//           className="border-green-200 bg-green-50"
+//         />
+//       )}
+//     </div>
+//   );
+// }
