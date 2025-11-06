@@ -316,3 +316,198 @@ export default function PropertyAnalyticsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Suspense } from 'react';
+// import { Metadata } from 'next';
+// import PropertyStatsChart from '@/components/analytics/PropertyStatsChart';
+// import PropertyPerformanceTable from '@/components/analytics/PropertyPerformanceTable';
+// import DateRangeFilter from '@/components/analytics/DateRangeFilter';
+// import CategoryFilter from '@/components/analytics/CategoryFilter';
+// import ExportOptions from '@/components/analytics/ExportOptions';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Skeleton } from '@/components/ui/skeleton';
+// import { Building2, Home, CheckCircle, XCircle } from 'lucide-react';
+
+// export const metadata: Metadata = {
+//   title: 'Property Analytics | Newcondo Admin',
+//   description: 'Property listing and performance metrics',
+// };
+
+// export default function PropertyAnalyticsPage() {
+//   return (
+//     <div className="container mx-auto py-6 space-y-6">
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold tracking-tight">Property Analytics</h1>
+//           <p className="text-muted-foreground">
+//             Track property listings, performance, and market trends
+//           </p>
+//         </div>
+//         <div className="flex gap-2">
+//           <DateRangeFilter />
+//           <CategoryFilter />
+//           <ExportOptions />
+//         </div>
+//       </div>
+
+//       {/* Property KPIs */}
+//       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
+//             <Building2 className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">8,456</div>
+//               <p className="text-xs text-muted-foreground">
+//                 <span className="text-green-600">+412</span> this month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Published Properties</CardTitle>
+//             <CheckCircle className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">6,234</div>
+//               <p className="text-xs text-muted-foreground">
+//                 73.7% of total
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Rented Properties</CardTitle>
+//             <Home className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">2,145</div>
+//               <p className="text-xs text-muted-foreground">
+//                 34.4% of published
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
+//             <XCircle className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">456</div>
+//               <p className="text-xs text-muted-foreground">
+//                 Requires review
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* Property Stats Chart */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Property Listing Trends</CardTitle>
+//           <CardDescription>New listings and rental activity over time</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<Skeleton className="h-80" />}>
+//             <PropertyStatsChart />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+
+//       {/* Property Type Distribution */}
+//       <div className="grid gap-6 md:grid-cols-2">
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>Property Types</CardTitle>
+//             <CardDescription>Distribution by property type</CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="space-y-4">
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Apartments</span>
+//                 <span className="text-sm text-muted-foreground">4,523 (53.5%)</span>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Houses</span>
+//                 <span className="text-sm text-muted-foreground">2,145 (25.4%)</span>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Duplexes</span>
+//                 <span className="text-sm text-muted-foreground">987 (11.7%)</span>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Rooms</span>
+//                 <span className="text-sm text-muted-foreground">801 (9.4%)</span>
+//               </div>
+//             </div>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>Top Locations</CardTitle>
+//             <CardDescription>Properties by location</CardDescription>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="space-y-4">
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Lagos</span>
+//                 <span className="text-sm text-muted-foreground">3,245 properties</span>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Abuja</span>
+//                 <span className="text-sm text-muted-foreground">1,892 properties</span>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Port Harcourt</span>
+//                 <span className="text-sm text-muted-foreground">1,134 properties</span>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <span className="text-sm font-medium">Ibadan</span>
+//                 <span className="text-sm text-muted-foreground">892 properties</span>
+//               </div>
+//             </div>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* Property Performance Table */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Top Performing Properties</CardTitle>
+//           <CardDescription>Properties with highest engagement and rental rates</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<Skeleton className="h-96" />}>
+//             <PropertyPerformanceTable />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }

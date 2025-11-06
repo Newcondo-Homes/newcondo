@@ -600,3 +600,132 @@ export class AnalyticsController {
 }
 
 export const analyticsController = new AnalyticsController();
+
+
+
+
+
+
+
+
+
+
+// import { Request, Response } from 'express';
+// import { analyticsService } from '../services/analyticsService';
+// import { sendSuccess, sendError } from '../../../shared/src/utils/response';
+
+// export class AnalyticsController {
+//   /**
+//    * Get comprehensive analytics dashboard data
+//    */
+//   async getDashboardAnalytics(req: Request, res: Response) {
+//     try {
+//       const { timeframe = '30d', startDate, endDate } = req.query;
+
+//       const analytics = await analyticsService.getDashboardAnalytics({
+//         timeframe: timeframe as string,
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       return sendSuccess(res, analytics, 'Dashboard analytics retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching dashboard analytics:', error);
+//       return sendError(res, 'Failed to fetch dashboard analytics', 500);
+//     }
+//   }
+
+//   /**
+//    * Get platform overview statistics
+//    */
+//   async getPlatformOverview(req: Request, res: Response) {
+//     try {
+//       const overview = await analyticsService.getPlatformOverview();
+
+//       return sendSuccess(res, overview, 'Platform overview retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching platform overview:', error);
+//       return sendError(res, 'Failed to fetch platform overview', 500);
+//     }
+//   }
+
+//   /**
+//    * Get growth metrics over time
+//    */
+//   async getGrowthMetrics(req: Request, res: Response) {
+//     try {
+//       const { period = 'daily', startDate, endDate } = req.query;
+
+//       const metrics = await analyticsService.getGrowthMetrics({
+//         period: period as 'daily' | 'weekly' | 'monthly',
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       return sendSuccess(res, metrics, 'Growth metrics retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching growth metrics:', error);
+//       return sendError(res, 'Failed to fetch growth metrics', 500);
+//     }
+//   }
+
+//   /**
+//    * Get conversion funnel analytics
+//    */
+//   async getConversionFunnel(req: Request, res: Response) {
+//     try {
+//       const { startDate, endDate } = req.query;
+
+//       const funnel = await analyticsService.getConversionFunnel({
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       return sendSuccess(res, funnel, 'Conversion funnel retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching conversion funnel:', error);
+//       return sendError(res, 'Failed to fetch conversion funnel', 500);
+//     }
+//   }
+
+//   /**
+//    * Get user engagement metrics
+//    */
+//   async getUserEngagement(req: Request, res: Response) {
+//     try {
+//       const { timeframe = '30d' } = req.query;
+
+//       const engagement = await analyticsService.getUserEngagement(timeframe as string);
+
+//       return sendSuccess(res, engagement, 'User engagement retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching user engagement:', error);
+//       return sendError(res, 'Failed to fetch user engagement', 500);
+//     }
+//   }
+
+//   /**
+//    * Export analytics report
+//    */
+//   async exportReport(req: Request, res: Response) {
+//     try {
+//       const { reportType, format = 'csv', startDate, endDate } = req.query;
+
+//       const report = await analyticsService.exportAnalyticsReport({
+//         reportType: reportType as string,
+//         format: format as 'csv' | 'pdf' | 'excel',
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       res.setHeader('Content-Type', report.mimeType);
+//       res.setHeader('Content-Disposition', `attachment; filename="${report.filename}"`);
+//       return res.send(report.data);
+//     } catch (error) {
+//       console.error('Error exporting report:', error);
+//       return sendError(res, 'Failed to export report', 500);
+//     }
+//   }
+// }
+
+// export const analyticsController = new AnalyticsController();

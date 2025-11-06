@@ -285,3 +285,172 @@ export const useAnalytics = (dateRange?: DateRange) => {
     clearError: () => setError(null)
   };
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { useQuery } from '@tanstack/react-query';
+// import { useAnalyticsStore } from '@/store/analyticsStore';
+// import {
+//   getOverviewMetrics,
+//   getUserAnalytics,
+//   getPropertyAnalytics,
+//   getRevenueAnalytics,
+//   getTrafficAnalytics,
+//   getConversionMetrics,
+//   getGeographicDistribution,
+//   getTimeSeriesData,
+// } from '@/lib/api/analytics';
+// import type { DateRange } from '@/types/analytics';
+
+// export function useAnalytics(dateRange: DateRange) {
+//   const { setMetrics, setLoading, setError } = useAnalyticsStore();
+
+//   // Overview metrics
+//   const overviewQuery = useQuery({
+//     queryKey: ['analytics', 'overview', dateRange],
+//     queryFn: () => getOverviewMetrics(dateRange),
+//     onSuccess: (data) => {
+//       setMetrics('overview', data);
+//       setLoading(false);
+//     },
+//     onError: (error) => {
+//       setError(error instanceof Error ? error.message : 'Failed to fetch overview metrics');
+//       setLoading(false);
+//     },
+//   });
+
+//   // User analytics
+//   const userAnalyticsQuery = useQuery({
+//     queryKey: ['analytics', 'users', dateRange],
+//     queryFn: () => getUserAnalytics(dateRange),
+//     onSuccess: (data) => {
+//       setMetrics('users', data);
+//     },
+//     onError: (error) => {
+//       setError(error instanceof Error ? error.message : 'Failed to fetch user analytics');
+//     },
+//   });
+
+//   // Property analytics
+//   const propertyAnalyticsQuery = useQuery({
+//     queryKey: ['analytics', 'properties', dateRange],
+//     queryFn: () => getPropertyAnalytics(dateRange),
+//     onSuccess: (data) => {
+//       setMetrics('properties', data);
+//     },
+//   });
+
+//   // Revenue analytics
+//   const revenueAnalyticsQuery = useQuery({
+//     queryKey: ['analytics', 'revenue', dateRange],
+//     queryFn: () => getRevenueAnalytics(dateRange),
+//     onSuccess: (data) => {
+//       setMetrics('revenue', data);
+//     },
+//   });
+
+//   // Traffic analytics
+//   const trafficAnalyticsQuery = useQuery({
+//     queryKey: ['analytics', 'traffic', dateRange],
+//     queryFn: () => getTrafficAnalytics(dateRange),
+//   });
+
+//   // Conversion metrics
+//   const conversionMetricsQuery = useQuery({
+//     queryKey: ['analytics', 'conversions', dateRange],
+//     queryFn: () => getConversionMetrics(dateRange),
+//   });
+
+//   // Geographic distribution
+//   const geographicQuery = useQuery({
+//     queryKey: ['analytics', 'geographic', dateRange],
+//     queryFn: () => getGeographicDistribution(dateRange),
+//   });
+
+//   // Time series data
+//   const timeSeriesQuery = useQuery({
+//     queryKey: ['analytics', 'timeseries', dateRange],
+//     queryFn: () => getTimeSeriesData(dateRange),
+//   });
+
+//   return {
+//     overview: overviewQuery.data,
+//     userAnalytics: userAnalyticsQuery.data,
+//     propertyAnalytics: propertyAnalyticsQuery.data,
+//     revenueAnalytics: revenueAnalyticsQuery.data,
+//     trafficAnalytics: trafficAnalyticsQuery.data,
+//     conversionMetrics: conversionMetricsQuery.data,
+//     geographic: geographicQuery.data,
+//     timeSeries: timeSeriesQuery.data,
+//     isLoading:
+//       overviewQuery.isLoading ||
+//       userAnalyticsQuery.isLoading ||
+//       propertyAnalyticsQuery.isLoading ||
+//       revenueAnalyticsQuery.isLoading,
+//     isError:
+//       overviewQuery.isError ||
+//       userAnalyticsQuery.isError ||
+//       propertyAnalyticsQuery.isError ||
+//       revenueAnalyticsQuery.isError,
+//     refetch: () => {
+//       overviewQuery.refetch();
+//       userAnalyticsQuery.refetch();
+//       propertyAnalyticsQuery.refetch();
+//       revenueAnalyticsQuery.refetch();
+//       trafficAnalyticsQuery.refetch();
+//       conversionMetricsQuery.refetch();
+//       geographicQuery.refetch();
+//       timeSeriesQuery.refetch();
+//     },
+//   };
+// }
+
+// export function useMetricComparison(metric: string, dateRange: DateRange) {
+//   return useQuery({
+//     queryKey: ['analytics', 'comparison', metric, dateRange],
+//     queryFn: async () => {
+//       // Calculate previous period for comparison
+//       const duration = dateRange.endDate.getTime() - dateRange.startDate.getTime();
+//       const previousDateRange = {
+//         startDate: new Date(dateRange.startDate.getTime() - duration),
+//         endDate: dateRange.startDate,
+//       };
+
+//       const [current, previous] = await Promise.all([
+//         getOverviewMetrics(dateRange),
+//         getOverviewMetrics(previousDateRange),
+//       ]);
+
+//       return {
+//         current: current[metric],
+//         previous: previous[metric],
+//         change: ((current[metric] - previous[metric]) / previous[metric]) * 100,
+//         trend: current[metric] > previous[metric] ? 'up' : 'down',
+//       };
+//     },
+//   });
+// }
+
+// export function useRealTimeAnalytics() {
+//   return useQuery({
+//     queryKey: ['analytics', 'realtime'],
+//     queryFn: () => getOverviewMetrics({ 
+//       startDate: new Date(Date.now() - 3600000), // Last hour
+//       endDate: new Date() 
+//     }),
+//     refetchInterval: 30000, // Refresh every 30 seconds
+//   });
+// }

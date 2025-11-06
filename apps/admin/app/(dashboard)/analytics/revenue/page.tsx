@@ -251,3 +251,139 @@ export default function RevenueAnalyticsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+// import { Suspense } from 'react';
+// import { Metadata } from 'next';
+// import RevenueChart from '@/components/analytics/RevenueChart';
+// import RevenueBreakdownTable from '@/components/analytics/RevenueBreakdownTable';
+// import DateRangeFilter from '@/components/analytics/DateRangeFilter';
+// import MetricFilter from '@/components/analytics/MetricFilter';
+// import ExportOptions from '@/components/analytics/ExportOptions';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Skeleton } from '@/components/ui/skeleton';
+// import { DollarSign, TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+
+// export const metadata: Metadata = {
+//   title: 'Revenue Analytics | Newcondo Admin',
+//   description: 'Revenue tracking and forecasting',
+// };
+
+// export default function RevenuePage() {
+//   return (
+//     <div className="container mx-auto py-6 space-y-6">
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold tracking-tight">Revenue Analytics</h1>
+//           <p className="text-muted-foreground">
+//             Track revenue streams and financial performance
+//           </p>
+//         </div>
+//         <div className="flex gap-2">
+//           <DateRangeFilter />
+//           <MetricFilter />
+//           <ExportOptions />
+//         </div>
+//       </div>
+
+//       {/* Revenue KPIs */}
+//       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+//             <DollarSign className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">₦12,450,000</div>
+//               <p className="text-xs text-muted-foreground flex items-center gap-1">
+//                 <TrendingUp className="h-3 w-3 text-green-600" />
+//                 <span className="text-green-600">+20.1%</span> from last month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Commission Earned</CardTitle>
+//             <Wallet className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">₦2,490,000</div>
+//               <p className="text-xs text-muted-foreground flex items-center gap-1">
+//                 <TrendingUp className="h-3 w-3 text-green-600" />
+//                 <span className="text-green-600">+12.5%</span> from last month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Agent Commission</CardTitle>
+//             <DollarSign className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">₦1,245,000</div>
+//               <p className="text-xs text-muted-foreground flex items-center gap-1">
+//                 <TrendingUp className="h-3 w-3 text-green-600" />
+//                 <span className="text-green-600">+8.2%</span> from last month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Marking Service Revenue</CardTitle>
+//             <DollarSign className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">₦750,000</div>
+//               <p className="text-xs text-muted-foreground flex items-center gap-1">
+//                 <TrendingDown className="h-3 w-3 text-red-600" />
+//                 <span className="text-red-600">-3.1%</span> from last month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* Revenue Chart */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Revenue Trend</CardTitle>
+//           <CardDescription>Monthly revenue breakdown by source</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<Skeleton className="h-80" />}>
+//             <RevenueChart />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+
+//       {/* Revenue Breakdown Table */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>Revenue Breakdown</CardTitle>
+//           <CardDescription>Detailed breakdown by revenue source</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<Skeleton className="h-96" />}>
+//             <RevenueBreakdownTable />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }

@@ -549,3 +549,180 @@ export class TransactionController {
 }
 
 export const transactionController = new TransactionController();
+
+
+
+
+
+
+
+
+
+
+// import { Request, Response } from 'express';
+// import { transactionService } from '../services/transactionService';
+// import { sendSuccess, sendError } from '../../../shared/src/utils/response';
+
+// export class TransactionController {
+//   /**
+//    * Get all transactions with filtering
+//    */
+//   async getTransactions(req: Request, res: Response) {
+//     try {
+//       const {
+//         page = '1',
+//         limit = '50',
+//         status,
+//         paymentType,
+//         userId,
+//         startDate,
+//         endDate,
+//         minAmount,
+//         maxAmount,
+//         search,
+//       } = req.query;
+
+//       const transactions = await transactionService.getTransactions({
+//         page: parseInt(page as string),
+//         limit: parseInt(limit as string),
+//         status: status as string,
+//         paymentType: paymentType as string,
+//         userId: userId as string,
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//         minAmount: minAmount ? parseFloat(minAmount as string) : undefined,
+//         maxAmount: maxAmount ? parseFloat(maxAmount as string) : undefined,
+//         search: search as string,
+//       });
+
+//       return sendSuccess(res, transactions, 'Transactions retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching transactions:', error);
+//       return sendError(res, 'Failed to fetch transactions', 500);
+//     }
+//   }
+
+//   /**
+//    * Get transaction details
+//    */
+//   async getTransactionDetails(req: Request, res: Response) {
+//     try {
+//       const { id } = req.params;
+
+//       const transaction = await transactionService.getTransactionDetails(id);
+
+//       if (!transaction) {
+//         return sendError(res, 'Transaction not found', 404);
+//       }
+
+//       return sendSuccess(res, transaction, 'Transaction details retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching transaction details:', error);
+//       return sendError(res, 'Failed to fetch transaction details', 500);
+//     }
+//   }
+
+//   /**
+//    * Get transaction statistics
+//    */
+//   async getTransactionStats(req: Request, res: Response) {
+//     try {
+//       const { startDate, endDate, groupBy = 'day' } = req.query;
+
+//       const stats = await transactionService.getTransactionStats({
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//         groupBy: groupBy as 'day' | 'week' | 'month',
+//       });
+
+//       return sendSuccess(res, stats, 'Transaction statistics retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching transaction stats:', error);
+//       return sendError(res, 'Failed to fetch transaction statistics', 500);
+//     }
+//   }
+
+//   /**
+//    * Get failed transactions for review
+//    */
+//   async getFailedTransactions(req: Request, res: Response) {
+//     try {
+//       const { page = '1', limit = '50', startDate, endDate } = req.query;
+
+//       const failed = await transactionService.getFailedTransactions({
+//         page: parseInt(page as string),
+//         limit: parseInt(limit as string),
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       return sendSuccess(res, failed, 'Failed transactions retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching failed transactions:', error);
+//       return sendError(res, 'Failed to fetch failed transactions', 500);
+//     }
+//   }
+
+//   /**
+//    * Get suspicious transactions
+//    */
+//   async getSuspiciousTransactions(req: Request, res: Response) {
+//     try {
+//       const { page = '1', limit = '50' } = req.query;
+
+//       const suspicious = await transactionService.getSuspiciousTransactions({
+//         page: parseInt(page as string),
+//         limit: parseInt(limit as string),
+//       });
+
+//       return sendSuccess(res, suspicious, 'Suspicious transactions retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching suspicious transactions:', error);
+//       return sendError(res, 'Failed to fetch suspicious transactions', 500);
+//     }
+//   }
+
+//   /**
+//    * Manually process refund
+//    */
+//   async processRefund(req: Request, res: Response) {
+//     try {
+//       const { id } = req.params;
+//       const { reason, amount } = req.body;
+//       const adminId = req.user?.id;
+
+//       const result = await transactionService.processRefund({
+//         transactionId: id,
+//         adminId: adminId!,
+//         reason,
+//         amount: amount ? parseFloat(amount) : undefined,
+//       });
+
+//       return sendSuccess(res, result, 'Refund processed successfully');
+//     } catch (error) {
+//       console.error('Error processing refund:', error);
+//       return sendError(res, 'Failed to process refund', 500);
+//     }
+//   }
+
+//   /**
+//    * Get payment method breakdown
+//    */
+//   async getPaymentMethodBreakdown(req: Request, res: Response) {
+//     try {
+//       const { startDate, endDate } = req.query;
+
+//       const breakdown = await transactionService.getPaymentMethodBreakdown({
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined,
+//       });
+
+//       return sendSuccess(res, breakdown, 'Payment method breakdown retrieved successfully');
+//     } catch (error) {
+//       console.error('Error fetching payment method breakdown:', error);
+//       return sendError(res, 'Failed to fetch payment method breakdown', 500);
+//     }
+//   }
+// }
+
+// export const transactionController = new TransactionController();

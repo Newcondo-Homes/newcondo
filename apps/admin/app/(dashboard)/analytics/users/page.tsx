@@ -291,3 +291,172 @@ export default function UserAnalyticsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Suspense } from 'react';
+// import { Metadata } from 'next';
+// import UserGrowthChart from '@/components/analytics/UserGrowthChart';
+// import UserActivityTable from '@/components/analytics/UserActivityTable';
+// import DateRangeFilter from '@/components/analytics/DateRangeFilter';
+// import CategoryFilter from '@/components/analytics/CategoryFilter';
+// import ExportOptions from '@/components/analytics/ExportOptions';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Skeleton } from '@/components/ui/skeleton';
+// import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';
+
+// export const metadata: Metadata = {
+//   title: 'User Analytics | Newcondo Admin',
+//   description: 'User growth and activity metrics',
+// };
+
+// export default function UserAnalyticsPage() {
+//   return (
+//     <div className="container mx-auto py-6 space-y-6">
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-3xl font-bold tracking-tight">User Analytics</h1>
+//           <p className="text-muted-foreground">
+//             Track user growth, engagement, and demographics
+//           </p>
+//         </div>
+//         <div className="flex gap-2">
+//           <DateRangeFilter />
+//           <CategoryFilter />
+//           <ExportOptions />
+//         </div>
+//       </div>
+
+//       {/* User KPIs */}
+//       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+//             <Users className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">45,231</div>
+//               <p className="text-xs text-muted-foreground">
+//                 <span className="text-green-600">+2,350</span> this month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">New Users</CardTitle>
+//             <UserPlus className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">2,350</div>
+//               <p className="text-xs text-muted-foreground">
+//                 <span className="text-green-600">+180.1%</span> from last month
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Verified Users</CardTitle>
+//             <UserCheck className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">32,418</div>
+//               <p className="text-xs text-muted-foreground">
+//                 71.7% of total users
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+//             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+//             <Users className="h-4 w-4 text-muted-foreground" />
+//           </CardHeader>
+//           <CardContent>
+//             <Suspense fallback={<Skeleton className="h-8 w-24" />}>
+//               <div className="text-2xl font-bold">18,573</div>
+//               <p className="text-xs text-muted-foreground">
+//                 41.1% of total users
+//               </p>
+//             </Suspense>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* User Growth Chart */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>User Growth Trend</CardTitle>
+//           <CardDescription>User acquisition and retention over time</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<Skeleton className="h-80" />}>
+//             <UserGrowthChart />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+
+//       {/* User Breakdown by Role */}
+//       <div className="grid gap-6 md:grid-cols-3">
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="text-base">Property Owners</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">12,450</div>
+//             <p className="text-sm text-muted-foreground">27.5% of users</p>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="text-base">Agents</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">8,721</div>
+//             <p className="text-sm text-muted-foreground">19.3% of users</p>
+//           </CardContent>
+//         </Card>
+
+//         <Card>
+//           <CardHeader>
+//             <CardTitle className="text-base">Renters</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="text-3xl font-bold">24,060</div>
+//             <p className="text-sm text-muted-foreground">53.2% of users</p>
+//           </CardContent>
+//         </Card>
+//       </div>
+
+//       {/* User Activity Table */}
+//       <Card>
+//         <CardHeader>
+//           <CardTitle>User Activity</CardTitle>
+//           <CardDescription>Recent user engagement and actions</CardDescription>
+//         </CardHeader>
+//         <CardContent>
+//           <Suspense fallback={<Skeleton className="h-96" />}>
+//             <UserActivityTable />
+//           </Suspense>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }

@@ -404,3 +404,66 @@ export default function AnalyticsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Suspense } from 'react';
+// import { Metadata } from 'next';
+// import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
+// import { Skeleton } from '@/components/ui/skeleton';
+
+// export const metadata: Metadata = {
+//   title: 'Analytics Dashboard | Newcondo Admin',
+//   description: 'Comprehensive analytics and insights',
+// };
+
+// export default function AnalyticsPage() {
+//   return (
+//     <div className="container mx-auto py-6 space-y-6">
+//       <div>
+//         <h1 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h1>
+//         <p className="text-muted-foreground">
+//           Comprehensive insights into platform performance and metrics
+//         </p>
+//       </div>
+
+//       <Suspense fallback={<DashboardSkeleton />}>
+//         <AnalyticsDashboard />
+//       </Suspense>
+//     </div>
+//   );
+// }
+
+// function DashboardSkeleton() {
+//   return (
+//     <div className="space-y-6">
+//       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+//         {[...Array(4)].map((_, i) => (
+//           <Skeleton key={i} className="h-32" />
+//         ))}
+//       </div>
+//       <div className="grid gap-4 md:grid-cols-2">
+//         {[...Array(4)].map((_, i) => (
+//           <Skeleton key={i} className="h-80" />
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
