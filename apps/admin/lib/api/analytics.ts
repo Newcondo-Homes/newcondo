@@ -342,3 +342,204 @@ export async function getRealTimeMetrics() {
   }>('/admin/analytics/realtime');
   return response.data;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { apiClient } from './client';
+// import type { DateRange } from '@/types/analytics';
+
+// export interface OverviewMetrics {
+//   totalUsers: number;
+//   totalProperties: number;
+//   totalTransactions: number;
+//   totalRevenue: number;
+//   activeRentals: number;
+//   pendingVerifications: number;
+//   listingsGrowth: number;
+//   revenueGrowth: number;
+//   userGrowth: number;
+//   conversionRate: number;
+// }
+
+// export interface UserAnalytics {
+//   totalUsers: number;
+//   activeUsers: number;
+//   newUsers: number;
+//   usersByRole: Array<{ role: string; count: number }>;
+//   usersByVerificationStatus: Array<{ status: string; count: number }>;
+//   userGrowthTrend: Array<{ date: string; count: number }>;
+//   topUsersByActivity: Array<{ id: string; name: string; activityScore: number }>;
+// }
+
+// export interface PropertyAnalytics {
+//   totalProperties: number;
+//   publishedProperties: number;
+//   rentedProperties: number;
+//   propertiesByType: Array<{ type: string; count: number }>;
+//   propertiesByStatus: Array<{ status: string; count: number }>;
+//   propertiesByCity: Array<{ city: string; count: number }>;
+//   averagePrice: number;
+//   averageDaysToRent: number;
+//   propertyGrowthTrend: Array<{ date: string; count: number }>;
+// }
+
+// export interface RevenueAnalytics {
+//   totalRevenue: number;
+//   rentRevenue: number;
+//   commissionRevenue: number;
+//   markingRevenue: number;
+//   revenueBySource: Array<{ source: string; amount: number }>;
+//   revenueByMonth: Array<{ month: string; amount: number }>;
+//   averageTransactionValue: number;
+//   recurringRevenue: number;
+// }
+
+// export interface TrafficAnalytics {
+//   totalViews: number;
+//   uniqueVisitors: number;
+//   pageViews: number;
+//   averageSessionDuration: number;
+//   bounceRate: number;
+//   topPages: Array<{ page: string; views: number }>;
+//   trafficSources: Array<{ source: string; visits: number }>;
+//   deviceDistribution: Array<{ device: string; percentage: number }>;
+// }
+
+// export interface ConversionMetrics {
+//   signupConversionRate: number;
+//   listingConversionRate: number;
+//   paymentConversionRate: number;
+//   verificationConversionRate: number;
+//   funnelData: Array<{ stage: string; count: number; conversionRate: number }>;
+// }
+
+// export interface GeographicDistribution {
+//   byState: Array<{ state: string; count: number; revenue: number }>;
+//   byCity: Array<{ city: string; count: number; revenue: number }>;
+//   topLocations: Array<{ location: string; properties: number; users: number }>;
+// }
+
+// export interface TimeSeriesData {
+//   daily: Array<{ date: string; value: number }>;
+//   weekly: Array<{ week: string; value: number }>;
+//   monthly: Array<{ month: string; value: number }>;
+// }
+
+// // Get overview metrics
+// export async function getOverviewMetrics(dateRange: DateRange): Promise<OverviewMetrics> {
+//   const response = await apiClient.get('/admin/analytics/overview', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get user analytics
+// export async function getUserAnalytics(dateRange: DateRange): Promise<UserAnalytics> {
+//   const response = await apiClient.get('/admin/analytics/users', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get property analytics
+// export async function getPropertyAnalytics(dateRange: DateRange): Promise<PropertyAnalytics> {
+//   const response = await apiClient.get('/admin/analytics/properties', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get revenue analytics
+// export async function getRevenueAnalytics(dateRange: DateRange): Promise<RevenueAnalytics> {
+//   const response = await apiClient.get('/admin/analytics/revenue', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get traffic analytics
+// export async function getTrafficAnalytics(dateRange: DateRange): Promise<TrafficAnalytics> {
+//   const response = await apiClient.get('/admin/analytics/traffic', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get conversion metrics
+// export async function getConversionMetrics(dateRange: DateRange): Promise<ConversionMetrics> {
+//   const response = await apiClient.get('/admin/analytics/conversions', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get geographic distribution
+// export async function getGeographicDistribution(dateRange: DateRange): Promise<GeographicDistribution> {
+//   const response = await apiClient.get('/admin/analytics/geographic', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Get time series data
+// export async function getTimeSeriesData(dateRange: DateRange): Promise<TimeSeriesData> {
+//   const response = await apiClient.get('/admin/analytics/timeseries', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//     },
+//   });
+//   return response.data;
+// }
+
+// // Export analytics report
+// export async function exportAnalyticsReport(
+//   dateRange: DateRange,
+//   format: 'csv' | 'pdf' | 'excel'
+// ): Promise<Blob> {
+//   const response = await apiClient.get('/admin/analytics/export', {
+//     params: {
+//       startDate: dateRange.startDate.toISOString(),
+//       endDate: dateRange.endDate.toISOString(),
+//       format,
+//     },
+//     responseType: 'blob',
+//   });
+//   return response.data;
+// }

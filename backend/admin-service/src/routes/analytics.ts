@@ -122,3 +122,64 @@ router.post('/export', analyticsController.exportAnalyticsData);
 router.get('/real-time', analyticsController.getRealTimeMetrics);
 
 export default router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Router } from 'express';
+// import { analyticsController } from '../controllers/analyticsController';
+// import { authMiddleware } from '../../../shared/src/middleware/auth';
+// import { adminAuth } from '../middleware/adminAnalyticsAuth';
+// import { analyticsValidation } from '../middleware/analyticsValidation';
+
+// const router = Router();
+
+// // All routes require authentication and admin role
+// router.use(authMiddleware);
+// router.use(adminAuth);
+
+// // Dashboard analytics
+// router.get(
+//   '/dashboard',
+//   analyticsValidation.validateDashboardQuery,
+//   analyticsController.getDashboardAnalytics
+// );
+
+// // Platform overview
+// router.get('/overview', analyticsController.getPlatformOverview);
+
+// // Growth metrics
+// router.get(
+//   '/growth',
+//   analyticsValidation.validateGrowthQuery,
+//   analyticsController.getGrowthMetrics
+// );
+
+// // Conversion funnel
+// router.get(
+//   '/funnel',
+//   analyticsValidation.validateDateRange,
+//   analyticsController.getConversionFunnel
+// );
+
+// // User engagement
+// router.get('/engagement', analyticsController.getUserEngagement);
+
+// // Export report
+// router.get(
+//   '/export',
+//   analyticsValidation.validateExportQuery,
+//   analyticsController.exportReport
+// );
+
+// export default router;

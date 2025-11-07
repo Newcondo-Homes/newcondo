@@ -137,3 +137,66 @@ router.get('/flagged', transactionController.getFlaggedTransactions);
 router.post('/export', transactionController.exportTransactions);
 
 export default router;
+
+
+
+
+
+
+// import { Router } from 'express';
+// import { transactionController } from '../controllers/transactionController';
+// import { authMiddleware } from '../../../shared/src/middleware/auth';
+// import { adminAuth } from '../middleware/adminAnalyticsAuth';
+// import { analyticsValidation } from '../middleware/analyticsValidation';
+
+// const router = Router();
+
+// router.use(authMiddleware);
+// router.use(adminAuth);
+
+// // Get all transactions
+// router.get(
+//   '/',
+//   analyticsValidation.validateTransactionQuery,
+//   transactionController.getTransactions
+// );
+
+// // Get transaction details
+// router.get('/:id', transactionController.getTransactionDetails);
+
+// // Get transaction statistics
+// router.get(
+//   '/stats/overview',
+//   analyticsValidation.validateDateRange,
+//   transactionController.getTransactionStats
+// );
+
+// // Get failed transactions
+// router.get(
+//   '/failed/list',
+//   analyticsValidation.validatePagination,
+//   transactionController.getFailedTransactions
+// );
+
+// // Get suspicious transactions
+// router.get(
+//   '/suspicious/list',
+//   analyticsValidation.validatePagination,
+//   transactionController.getSuspiciousTransactions
+// );
+
+// // Process refund
+// router.post(
+//   '/:id/refund',
+//   analyticsValidation.validateRefund,
+//   transactionController.processRefund
+// );
+
+// // Get payment method breakdown
+// router.get(
+//   '/stats/payment-methods',
+//   analyticsValidation.validateDateRange,
+//   transactionController.getPaymentMethodBreakdown
+// );
+
+// export default router;

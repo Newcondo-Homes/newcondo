@@ -222,3 +222,153 @@ export default function AnalyticsDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 'use client';
+
+// import { useState } from 'react';
+// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+// import KPICards from './KPICards';
+// import RevenueChart from './RevenueChart';
+// import UserGrowthChart from './UserGrowthChart';
+// import PropertyStatsChart from './PropertyStatsChart';
+// import TransactionChart from './TransactionChart';
+// import AgentPerformanceChart from './AgentPerformanceChart';
+// import TransactionTable from './TransactionTable';
+// import DateRangeFilter from './DateRangeFilter';
+
+// export default function AnalyticsDashboard() {
+//   const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
+
+//   return (
+//     <div className="space-y-6">
+//       {/* KPI Overview */}
+//       <KPICards dateRange={dateRange} />
+
+//       {/* Main Analytics Tabs */}
+//       <Tabs defaultValue="overview" className="space-y-4">
+//         <TabsList>
+//           <TabsTrigger value="overview">Overview</TabsTrigger>
+//           <TabsTrigger value="revenue">Revenue</TabsTrigger>
+//           <TabsTrigger value="users">Users</TabsTrigger>
+//           <TabsTrigger value="properties">Properties</TabsTrigger>
+//           <TabsTrigger value="transactions">Transactions</TabsTrigger>
+//         </TabsList>
+
+//         <TabsContent value="overview" className="space-y-4">
+//           <div className="grid gap-4 md:grid-cols-2">
+//             <RevenueChart dateRange={dateRange} />
+//             <UserGrowthChart dateRange={dateRange} />
+//           </div>
+//           <div className="grid gap-4 md:grid-cols-2">
+//             <PropertyStatsChart dateRange={dateRange} />
+//             <TransactionChart dateRange={dateRange} />
+//           </div>
+//         </TabsContent>
+
+//         <TabsContent value="revenue" className="space-y-4">
+//           <RevenueChart dateRange={dateRange} detailed />
+//           <Card>
+//             <CardHeader>
+//               <CardTitle>Revenue Breakdown</CardTitle>
+//               <CardDescription>Detailed revenue analysis by source</CardDescription>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="space-y-4">
+//                 <RevenueBreakdownRow 
+//                   source="Rent Commissions" 
+//                   amount={2490000} 
+//                   percentage={60.5}
+//                   trend={12.3}
+//                 />
+//                 <RevenueBreakdownRow 
+//                   source="Property Marking" 
+//                   amount={750000} 
+//                   percentage={18.2}
+//                   trend={-3.1}
+//                 />
+//                 <RevenueBreakdownRow 
+//                   source="Premium Subscriptions" 
+//                   amount={582000} 
+//                   percentage={14.1}
+//                   trend={8.7}
+//                 />
+//                 <RevenueBreakdownRow 
+//                   source="Service Fees" 
+//                   amount={298000} 
+//                   percentage={7.2}
+//                   trend={5.4}
+//                 />
+//               </div>
+//             </CardContent>
+//           </Card>
+//         </TabsContent>
+
+//         <TabsContent value="users" className="space-y-4">
+//           <UserGrowthChart dateRange={dateRange} detailed />
+//           <AgentPerformanceChart dateRange={dateRange} />
+//         </TabsContent>
+
+//         <TabsContent value="properties" className="space-y-4">
+//           <PropertyStatsChart dateRange={dateRange} detailed />
+//         </TabsContent>
+
+//         <TabsContent value="transactions" className="space-y-4">
+//           <TransactionChart dateRange={dateRange} detailed />
+//           <TransactionTable />
+//         </TabsContent>
+//       </Tabs>
+//     </div>
+//   );
+// }
+
+// function RevenueBreakdownRow({ 
+//   source, 
+//   amount, 
+//   percentage, 
+//   trend 
+// }: { 
+//   source: string; 
+//   amount: number; 
+//   percentage: number; 
+//   trend: number;
+// }) {
+//   const isPositive = trend > 0;
+  
+//   return (
+//     <div className="flex items-center justify-between">
+//       <div className="flex-1">
+//         <div className="flex items-center justify-between mb-2">
+//           <span className="text-sm font-medium">{source}</span>
+//           <span className="text-sm font-semibold">₦{amount.toLocaleString()}</span>
+//         </div>
+//         <div className="flex items-center gap-2">
+//           <div className="flex-1 bg-secondary rounded-full h-2">
+//             <div 
+//               className="bg-primary h-2 rounded-full" 
+//               style={{ width: `${percentage}%` }} 
+//             />
+//           </div>
+//           <span className={`text-xs ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+//             {isPositive ? '+' : ''}{trend}%
+//           </span>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }

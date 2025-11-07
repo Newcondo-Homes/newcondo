@@ -435,3 +435,68 @@ export const useAnalyticsStore = create<AnalyticsState>()(
     { name: 'AnalyticsStore' }
   )
 );
+
+
+
+
+
+
+
+
+
+
+
+
+// import { create } from 'zustand';
+// import { devtools } from 'zustand/middleware';
+
+// interface AnalyticsMetrics {
+//   overview?: any;
+//   users?: any;
+//   properties?: any;
+//   revenue?: any;
+//   traffic?: any;
+// }
+
+// interface AnalyticsState {
+//   metrics: AnalyticsMetrics;
+//   isLoading: boolean;
+//   error: string | null;
+//   selectedMetric: string | null;
+  
+//   // Actions
+//   setMetrics: (key: keyof AnalyticsMetrics, data: any) => void;
+//   setLoading: (isLoading: boolean) => void;
+//   setError: (error: string | null) => void;
+//   setSelectedMetric: (metric: string | null) => void;
+//   reset: () => void;
+// }
+
+// const initialState = {
+//   metrics: {},
+//   isLoading: false,
+//   error: null,
+//   selectedMetric: null,
+// };
+
+// export const useAnalyticsStore = create<AnalyticsState>()(
+//   devtools(
+//     (set) => ({
+//       ...initialState,
+
+//       setMetrics: (key, data) =>
+//         set((state) => ({
+//           metrics: { ...state.metrics, [key]: data },
+//         })),
+
+//       setLoading: (isLoading) => set({ isLoading }),
+
+//       setError: (error) => set({ error }),
+
+//       setSelectedMetric: (metric) => set({ selectedMetric: metric }),
+
+//       reset: () => set(initialState),
+//     }),
+//     { name: 'Analytics Store' }
+//   )
+// );
