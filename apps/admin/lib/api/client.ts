@@ -265,3 +265,152 @@ export default apiClient;
 // };
 
 // export default apiClient;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+// import { toast } from 'sonner';
+
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
+// // Create axios instance
+// export const apiClient: AxiosInstance = axios.create({
+//   baseURL: API_BASE_URL,
+//   timeout: 30000,
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+// });
+
+// // Request interceptor
+// apiClient.interceptors.request.use(
+//   (config: InternalAxiosRequestConfig) => {
+//     // Get token from localStorage or session
+//     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
+
+//     if (token && config.headers) {
+//       config.headers.Authorization = `Bearer ${token}`;
+//     }
+
+//     return config;
+//   },
+//   (error: AxiosError) => {
+//     return Promise.reject(error);
+//   }
+// );
+
+// // Response interceptor
+// apiClient.interceptors.response.use(
+//   (response) => {
+//     return response;
+//   },
+//   (error: AxiosError) => {
+//     // Handle different error status codes
+//     if (error.response) {
+//       const status = error.response.status;
+//       const data = error.response.data as any;
+
+//       switch (status) {
+//         case 401:
+//           // Unauthorized - redirect to login
+//           if (typeof window !== 'undefined') {
+//             localStorage.removeItem('admin_token');
+//             window.location.href = '/login';
+//           }
+//           toast.error('Session expired. Please login again.');
+//           break;
+
+//         case 403:
+//           // Forbidden
+//           toast.error('You do not have permission to perform this action.');
+//           break;
+
+//         case 404:
+//           // Not found
+//           toast.error(data?.message || 'Resource not found.');
+//           break;
+
+//         case 422:
+//           // Validation error
+//           if (data?.errors) {
+//             Object.values(data.errors).forEach((errorMsg: any) => {
+//               toast.error(errorMsg);
+//             });
+//           } else {
+//             toast.error(data?.message || 'Validation error.');
+//           }
+//           break;
+
+//         case 429:
+//           // Too many requests
+//           toast.error('Too many requests. Please try again later.');
+//           break;
+
+//         case 500:
+//           // Server error
+//           toast.error(data?.message || 'Internal server error. Please try again later.');
+//           break;
+
+//         case 503:
+//           // Service unavailable
+//           toast.error('Service temporarily unavailable. Please try again later.');
+//           break;
+
+//         default:
+//           toast.error(data?.message || 'An error occurred. Please try again.');
+//       }
+//     } else if (error.request) {
+//       // Request was made but no response received
+//       toast.error('Network error. Please check your connection.');
+//     } else {
+//       // Something happened in setting up the request
+//       toast.error('An unexpected error occurred.');
+//     }
+
+//     return Promise.reject(error);
+//   }
+// );
+
+// // Helper function to set auth token
+// export function setAuthToken(token: string) {
+//   if (typeof window !== 'undefined') {
+//     localStorage.setItem('admin_token', token);
+//   }
+// }
+
+// // Helper function to remove auth token
+// export function removeAuthToken() {
+//   if (typeof window !== 'undefined') {
+//     localStorage.removeItem('admin_token');
+//   }
+// }
+
+// // Helper function to get auth token
+// export function getAuthToken(): string | null {
+//   if (typeof window !== 'undefined') {
+//     return localStorage.getItem('admin_token');
+//   }
+//   return null;
+// }
+
+// // Helper function to check if user is authenticated
+// export function isAuthenticated(): boolean {
+//   return !!getAuthToken();
+// }
+
+// // Export default instance
+// export default apiClient;

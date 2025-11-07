@@ -356,3 +356,505 @@ export interface GeneratedReport {
   generatedAt: Date;
   expiresAt: Date;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// // apps/admin/src/types/analytics.ts
+
+// /**
+//  * Base analytics response
+//  */
+// export interface AnalyticsResponse<T = any> {
+//   success: boolean;
+//   data: T;
+//   metadata?: {
+//     period: string;
+//     startDate: string;
+//     endDate: string;
+//     generatedAt: string;
+//     dataPoints: number;
+//   };
+//   error?: string;
+// }
+
+// /**
+//  * Time series data point
+//  */
+// export interface TimeSeriesDataPoint {
+//   timestamp: string;
+//   date: string;
+//   value: number;
+//   label?: string;
+//   metadata?: Record<string, any>;
+// }
+
+// /**
+//  * Metric value with comparison
+//  */
+// export interface MetricValue {
+//   current: number;
+//   previous?: number;
+//   change?: number;
+//   changePercentage?: number;
+//   trend?: 'up' | 'down' | 'neutral';
+//   status?: 'excellent' | 'good' | 'fair' | 'poor';
+// }
+
+// /**
+//  * Analytics metric
+//  */
+// export interface AnalyticsMetric {
+//   id: string;
+//   name: string;
+//   value: MetricValue;
+//   format: 'number' | 'currency' | 'percentage' | 'duration';
+//   icon?: string;
+//   color?: string;
+//   description?: string;
+// }
+
+// /**
+//  * Dashboard overview data
+//  */
+// export interface DashboardOverview {
+//   summary: {
+//     totalUsers: MetricValue;
+//     activeUsers: MetricValue;
+//     totalRevenue: MetricValue;
+//     totalProperties: MetricValue;
+//     activeListings: MetricValue;
+//     totalTransactions: MetricValue;
+//     successRate: MetricValue;
+//     averageTransactionValue: MetricValue;
+//   };
+//   charts: {
+//     revenueTimeSeries: TimeSeriesDataPoint[];
+//     userGrowth: TimeSeriesDataPoint[];
+//     transactionVolume: TimeSeriesDataPoint[];
+//     propertyStats: TimeSeriesDataPoint[];
+//   };
+//   topPerformers: {
+//     agents: AgentPerformanceSummary[];
+//     properties: PropertyPerformanceSummary[];
+//     locations: LocationPerformanceSummary[];
+//   };
+//   recentActivity: ActivityLog[];
+//   alerts: PlatformAlert[];
+// }
+
+// /**
+//  * Revenue analytics data
+//  */
+// export interface RevenueAnalytics {
+//   summary: {
+//     grossRevenue: MetricValue;
+//     netRevenue: MetricValue;
+//     rentRevenue: MetricValue;
+//     markingRevenue: MetricValue;
+//     commissionRevenue: MetricValue;
+//     platformFees: MetricValue;
+//     transactionFees: MetricValue;
+//     refunds: MetricValue;
+//   };
+//   breakdown: {
+//     byPaymentType: Array<{
+//       type: string;
+//       amount: number;
+//       percentage: number;
+//       count: number;
+//     }>;
+//     byAgent: Array<{
+//       agentId: string;
+//       agentName: string;
+//       amount: number;
+//       percentage: number;
+//       transactions: number;
+//     }>;
+//     byLocation: Array<{
+//       state: string;
+//       city?: string;
+//       amount: number;
+//       percentage: number;
+//       transactions: number;
+//     }>;
+//   };
+//   timeSeries: TimeSeriesDataPoint[];
+//   projections?: TimeSeriesDataPoint[];
+// }
+
+// /**
+//  * User analytics data
+//  */
+// export interface UserAnalytics {
+//   summary: {
+//     totalUsers: MetricValue;
+//     newUsers: MetricValue;
+//     activeUsers: MetricValue;
+//     verifiedUsers: MetricValue;
+//     premiumUsers: MetricValue;
+//     retentionRate: MetricValue;
+//     churnRate: MetricValue;
+//     averageSessionDuration: MetricValue;
+//   };
+//   usersByType: Array<{
+//     type: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
+//     count: number;
+//     percentage: number;
+//     growth: number;
+//   }>;
+//   verificationStatus: Array<{
+//     status: 'PENDING' | 'VERIFIED' | 'REJECTED';
+//     count: number;
+//     percentage: number;
+//   }>;
+//   registrationTrend: TimeSeriesDataPoint[];
+//   geographicDistribution: Array<{
+//     state: string;
+//     count: number;
+//     percentage: number;
+//   }>;
+//   engagementMetrics: {
+//     dailyActiveUsers: number;
+//     weeklyActiveUsers: number;
+//     monthlyActiveUsers: number;
+//     averageSessionsPerUser: number;
+//   };
+// }
+
+// /**
+//  * Property analytics data
+//  */
+// export interface PropertyAnalytics {
+//   summary: {
+//     totalProperties: MetricValue;
+//     activeListings: MetricValue;
+//     rentedProperties: MetricValue;
+//     occupancyRate: MetricValue;
+//     averageTimeToRent: MetricValue;
+//     averagePrice: MetricValue;
+//     boundaryVerified: MetricValue;
+//   };
+//   propertyTypes: Array<{
+//     type: string;
+//     count: number;
+//     percentage: number;
+//     averagePrice: number;
+//   }>;
+//   propertyStatus: Array<{
+//     status: string;
+//     count: number;
+//     percentage: number;
+//   }>;
+//   locationDistribution: Array<{
+//     state: string;
+//     city?: string;
+//     count: number;
+//     percentage: number;
+//     averagePrice: number;
+//   }>;
+//   listingPerformance: {
+//     totalViews: number;
+//     averageViewsPerListing: number;
+//     conversionRate: number;
+//   };
+//   pricingAnalysis: {
+//     priceRanges: Array<{
+//       range: string;
+//       count: number;
+//       percentage: number;
+//     }>;
+//     averageByType: Record<string, number>;
+//   };
+// }
+
+// /**
+//  * Agent performance summary
+//  */
+// export interface AgentPerformanceSummary {
+//   agentId: string;
+//   agentName: string;
+//   email: string;
+//   phone?: string;
+//   performanceScore: number;
+//   reliabilityScore?: number;
+//   totalListings: number;
+//   activeListings: number;
+//   rentedProperties: number;
+//   totalCommissions: number;
+//   markingJobs: {
+//     total: number;
+//     completed: number;
+//     inProgress: number;
+//     completionRate: number;
+//   };
+//   averageResponseTime: number;
+//   rating?: number;
+//   joinedDate: string;
+// }
+
+// /**
+//  * Property performance summary
+//  */
+// export interface PropertyPerformanceSummary {
+//   propertyId: string;
+//   title: string;
+//   type: string;
+//   location: {
+//     city: string;
+//     state: string;
+//   };
+//   price: number;
+//   views: number;
+//   favorites: number;
+//   inquiries: number;
+//   status: string;
+//   daysListed: number;
+//   conversionRate?: number;
+// }
+
+// /**
+//  * Location performance summary
+//  */
+// export interface LocationPerformanceSummary {
+//   state: string;
+//   city?: string;
+//   totalProperties: number;
+//   rentedProperties: number;
+//   averagePrice: number;
+//   totalRevenue: number;
+//   occupancyRate: number;
+// }
+
+// /**
+//  * Transaction analytics data
+//  */
+// export interface TransactionAnalytics {
+//   summary: {
+//     totalTransactions: MetricValue;
+//     successfulTransactions: MetricValue;
+//     failedTransactions: MetricValue;
+//     pendingTransactions: MetricValue;
+//     successRate: MetricValue;
+//     averageValue: MetricValue;
+//     totalVolume: MetricValue;
+//   };
+//   transactionsByType: Array<{
+//     type: string;
+//     count: number;
+//     amount: number;
+//     percentage: number;
+//     successRate: number;
+//   }>;
+//   transactionsByStatus: Array<{
+//     status: string;
+//     count: number;
+//     percentage: number;
+//   }>;
+//   failureAnalysis: Array<{
+//     reason: string;
+//     count: number;
+//     percentage: number;
+//     estimatedLoss: number;
+//   }>;
+//   refundSummary: {
+//     totalRefunds: number;
+//     totalAmount: number;
+//     averageAmount: number;
+//     refundRate: number;
+//   };
+//   timeSeries: TimeSeriesDataPoint[];
+// }
+
+// /**
+//  * Agent performance analytics
+//  */
+// export interface AgentPerformanceAnalytics {
+//   summary: {
+//     totalAgents: MetricValue;
+//     activeAgents: MetricValue;
+//     averagePerformanceScore: MetricValue;
+//     totalCommissions: MetricValue;
+//     averageEarnings: MetricValue;
+//   };
+//   topPerformers: AgentPerformanceSummary[];
+//   performanceDistribution: Array<{
+//     range: string;
+//     count: number;
+//     percentage: number;
+//   }>;
+//   commissionBreakdown: Array<{
+//     agentId: string;
+//     agentName: string;
+//     listingCommission: number;
+//     subAgentCommission: number;
+//     markingCommission: number;
+//     totalCommission: number;
+//   }>;
+//   markingJobMetrics: {
+//     totalJobs: number;
+//     completedJobs: number;
+//     averageCompletionTime: number;
+//     successRate: number;
+//   };
+// }
+
+// /**
+//  * Activity log entry
+//  */
+// export interface ActivityLog {
+//   id: string;
+//   type: string;
+//   title: string;
+//   description: string;
+//   userId?: string;
+//   userName?: string;
+//   metadata?: Record<string, any>;
+//   timestamp: string;
+//   severity?: 'info' | 'warning' | 'error';
+// }
+
+// /**
+//  * Platform alert
+//  */
+// export interface PlatformAlert {
+//   id: string;
+//   type: 'info' | 'warning' | 'critical';
+//   title: string;
+//   message: string;
+//   metric?: string;
+//   currentValue?: number;
+//   threshold?: number;
+//   timestamp: string;
+//   isRead: boolean;
+//   actionRequired?: boolean;
+//   actionUrl?: string;
+// }
+
+// /**
+//  * Comparison analytics
+//  */
+// export interface ComparisonAnalytics {
+//   currentPeriod: {
+//     startDate: string;
+//     endDate: string;
+//     metrics: Record<string, number>;
+//   };
+//   previousPeriod: {
+//     startDate: string;
+//     endDate: string;
+//     metrics: Record<string, number>;
+//   };
+//   changes: Record<string, {
+//     absolute: number;
+//     percentage: number;
+//     trend: 'up' | 'down' | 'neutral';
+//   }>;
+// }
+
+// /**
+//  * Cohort analysis data
+//  */
+// export interface CohortAnalysis {
+//   cohortType: 'registration' | 'first_payment' | 'first_listing';
+//   cohorts: Array<{
+//     cohortDate: string;
+//     cohortSize: number;
+//     periods: Array<{
+//       period: number;
+//       value: number;
+//       percentage: number;
+//     }>;
+//   }>;
+//   metric: 'retention' | 'revenue' | 'activity';
+// }
+
+// /**
+//  * Funnel analysis data
+//  */
+// export interface FunnelAnalysis {
+//   funnelType: 'user_registration' | 'property_listing' | 'rental_process';
+//   steps: Array<{
+//     stepName: string;
+//     count: number;
+//     percentage: number;
+//     dropoffCount?: number;
+//     dropoffPercentage?: number;
+//     dropoffReasons?: Array<{
+//       reason: string;
+//       count: number;
+//     }>;
+//   }>;
+//   overallConversionRate: number;
+// }
+
+// /**
+//  * Market insights
+//  */
+// export interface MarketInsights {
+//   priceInsights: {
+//     averagePrice: number;
+//     medianPrice: number;
+//     priceGrowth: number;
+//     priceByLocation: Array<{
+//       location: string;
+//       averagePrice: number;
+//       trend: 'up' | 'down' | 'stable';
+//     }>;
+//   };
+//   demandSupplyRatio: number;
+//   popularPropertyTypes: Array<{
+//     type: string;
+//     demand: number;
+//     supply: number;
+//     ratio: number;
+//   }>;
+//   seasonalTrends: TimeSeriesDataPoint[];
+//   competitiveAnalysis?: {
+//     marketShare: number;
+//     competitors: Array<{
+//       name: string;
+//       estimatedShare: number;
+//     }>;
+//   };
+// }
+
+// /**
+//  * Real-time analytics
+//  */
+// export interface RealTimeAnalytics {
+//   activeUsers: number;
+//   ongoingTransactions: number;
+//   recentListings: number;
+//   activeAgents: number;
+//   pendingVerifications: number;
+//   systemLoad: {
+//     cpu: number;
+//     memory: number;
+//     apiResponseTime: number;
+//   };
+//   recentEvents: ActivityLog[];
+//   lastUpdated: string;
+// }
+
+// /**
+//  * Export analytics options
+//  */
+// export interface ExportAnalyticsOptions {
+//   format: 'csv' | 'pdf' | 'excel' | 'json';
+//   includeCharts: boolean;
+//   includeRawData: boolean;
+//   dateRange: {
+//     startDate: string;
+//     endDate: string;
+//   };
+//   metrics: string[];
+// }
