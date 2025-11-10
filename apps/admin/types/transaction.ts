@@ -394,3 +394,306 @@ export interface FlutterwaveWebhookData {
     };
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Decimal } from '@prisma/client/runtime/library';
+// import { PaymentStatus, PaymentType } from '@newcondo/db';
+
+// /**
+//  * Transaction summary
+//  */
+// export interface TransactionSummary {
+//   totalTransactions: number;
+//   totalVolume: Decimal;
+//   averageTransactionValue: Decimal;
+//   successfulTransactions: number;
+//   failedTransactions: number;
+//   pendingTransactions: number;
+//   refundedTransactions: number;
+  
+//   // By payment type
+//   byPaymentType: {
+//     type: PaymentType;
+//     count: number;
+//     volume: Decimal;
+//     percentage: number;
+//   }[];
+  
+//   // By status
+//   byStatus: {
+//     status: PaymentStatus;
+//     count: number;
+//     volume: Decimal;
+//   }[];
+  
+//   // Success rate
+//   successRate: number;
+//   failureRate: number;
+//   refundRate: number;
+// }
+
+// /**
+//  * Transaction details
+//  */
+// export interface TransactionDetails {
+//   id: string;
+//   userId: string;
+//   userName: string;
+//   userEmail: string;
+//   amount: Decimal;
+//   currency: string;
+//   paymentType: PaymentType;
+//   status: PaymentStatus;
+//   paymentMethod?: string;
+//   flutterwaveRef?: string;
+//   transactionId?: string;
+//   description?: string;
+//   failureReason?: string;
+  
+//   // Related entities
+//   rentalId?: string;
+//   propertyId?: string;
+//   propertyTitle?: string;
+  
+//   // Timestamps
+//   createdAt: Date;
+//   paidAt?: Date;
+//   updatedAt: Date;
+  
+//   // Commission breakdown
+//   commissionBreakdown?: {
+//     agentCommission?: Decimal;
+//     platformFee?: Decimal;
+//     ownerAmount?: Decimal;
+//   };
+  
+//   // Metadata
+//   ipAddress?: string;
+//   userAgent?: string;
+// }
+
+// /**
+//  * Transaction analytics
+//  */
+// export interface TransactionAnalytics {
+//   startDate: Date;
+//   endDate: Date;
+  
+//   summary: TransactionSummary;
+  
+//   // Time series data
+//   timeSeries: {
+//     date: Date;
+//     transactions: number;
+//     volume: Decimal;
+//     successRate: number;
+//   }[];
+  
+//   // Peak transaction times
+//   peakTimes: {
+//     hour: number;
+//     dayOfWeek: number;
+//     averageTransactions: number;
+//   }[];
+  
+//   // Top properties by transaction volume
+//   topProperties: {
+//     propertyId: string;
+//     propertyTitle: string;
+//     transactions: number;
+//     totalVolume: Decimal;
+//   }[];
+  
+//   // Top users by transaction volume
+//   topUsers: {
+//     userId: string;
+//     userName: string;
+//     transactions: number;
+//     totalVolume: Decimal;
+//     userRole: string;
+//   }[];
+  
+//   // Geographic distribution
+//   byLocation: {
+//     state: string;
+//     city: string;
+//     transactions: number;
+//     volume: Decimal;
+//   }[];
+  
+//   // Payment method distribution
+//   byPaymentMethod: {
+//     method: string;
+//     count: number;
+//     volume: Decimal;
+//     successRate: number;
+//   }[];
+// }
+
+// /**
+//  * Transaction monitoring alert
+//  */
+// export interface TransactionAlert {
+//   id: string;
+//   type: 'high_value' | 'unusual_pattern' | 'high_failure_rate' | 'duplicate_attempt' | 'fraud_suspicion';
+//   severity: 'low' | 'medium' | 'high' | 'critical';
+//   transactionId?: string;
+//   userId?: string;
+//   description: string;
+//   metadata: Record<string, any>;
+//   timestamp: Date;
+//   acknowledged: boolean;
+//   acknowledgedBy?: string;
+//   acknowledgedAt?: Date;
+// }
+
+// /**
+//  * Transaction filters
+//  */
+// export interface TransactionFilters {
+//   startDate?: Date;
+//   endDate?: Date;
+//   status?: PaymentStatus | 'all';
+//   paymentType?: PaymentType | 'all';
+//   minAmount?: number;
+//   maxAmount?: number;
+//   userId?: string;
+//   propertyId?: string;
+//   city?: string;
+//   state?: string;
+//   paymentMethod?: string;
+// }
+
+// /**
+//  * Transaction reconciliation
+//  */
+// export interface TransactionReconciliation {
+//   period: {
+//     startDate: Date;
+//     endDate: Date;
+//   };
+  
+//   // Expected vs actual
+//   expected: {
+//     totalTransactions: number;
+//     totalVolume: Decimal;
+//   };
+  
+//   actual: {
+//     totalTransactions: number;
+//     totalVolume: Decimal;
+//   };
+  
+//   // Discrepancies
+//   discrepancies: {
+//     missingTransactions: string[];
+//     duplicateTransactions: string[];
+//     amountMismatches: {
+//       transactionId: string;
+//       expected: Decimal;
+//       actual: Decimal;
+//       difference: Decimal;
+//     }[];
+//   };
+  
+//   // Reconciliation status
+//   status: 'matched' | 'discrepancies_found' | 'pending_review';
+//   reconciledBy?: string;
+//   reconciledAt?: Date;
+//   notes?: string;
+// }
+
+// /**
+//  * Transaction export
+//  */
+// export interface TransactionExport {
+//   transactions: TransactionDetails[];
+//   summary: TransactionSummary;
+//   filters: TransactionFilters;
+//   exportedAt: Date;
+//   exportedBy: string;
+//   format: 'csv' | 'xlsx' | 'pdf' | 'json';
+// }
+
+// /**
+//  * Payment gateway statistics
+//  */
+// export interface PaymentGatewayStats {
+//   provider: 'flutterwave';
+  
+//   // Performance metrics
+//   totalRequests: number;
+//   successfulRequests: number;
+//   failedRequests: number;
+//   averageResponseTime: number;
+//   uptime: number;
+  
+//   // Error analysis
+//   errors: {
+//     errorCode: string;
+//     errorMessage: string;
+//     count: number;
+//     lastOccurrence: Date;
+//   }[];
+  
+//   // Status breakdown
+//   statusBreakdown: {
+//     status: string;
+//     count: number;
+//     percentage: number;
+//   }[];
+  
+//   // Health status
+//   healthStatus: 'healthy' | 'degraded' | 'down';
+//   lastHealthCheck: Date;
+// }
+
+// /**
+//  * Refund request
+//  */
+// export interface RefundRequest {
+//   id: string;
+//   transactionId: string;
+//   userId: string;
+//   amount: Decimal;
+//   reason: string;
+//   status: 'pending' | 'approved' | 'rejected' | 'completed';
+//   requestedAt: Date;
+//   processedAt?: Date;
+//   processedBy?: string;
+//   rejectionReason?: string;
+//   refundTransactionId?: string;
+// }
+
+// /**
+//  * Transaction dispute
+//  */
+// export interface TransactionDispute {
+//   id: string;
+//   transactionId: string;
+//   userId: string;
+//   disputeType: 'unauthorized' | 'property_mismatch' | 'service_not_received' | 'amount_incorrect' | 'other';
+//   description: string;
+//   evidence: string[];
+//   status: 'open' | 'investigating' | 'resolved' | 'closed';
+//   resolution?: string;
+//   resolvedBy?: string;
+//   resolvedAt?: Date;
+//   createdAt: Date;
+//   updatedAt: Date;
+// }

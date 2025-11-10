@@ -858,3 +858,348 @@ export interface GeneratedReport {
 //   };
 //   metrics: string[];
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Decimal } from '@prisma/client/runtime/library';
+
+// /**
+//  * Base analytics interface
+//  */
+// export interface BaseAnalytics {
+//   startDate: Date;
+//   endDate: Date;
+//   period: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all';
+//   generatedAt: Date;
+// }
+
+// /**
+//  * Time series data point
+//  */
+// export interface TimeSeriesDataPoint {
+//   timestamp: Date;
+//   value: number;
+//   label?: string;
+//   metadata?: Record<string, any>;
+// }
+
+// /**
+//  * Metric comparison interface
+//  */
+// export interface MetricComparison {
+//   current: number;
+//   previous: number;
+//   change: number;
+//   changePercentage: number;
+//   trend: 'up' | 'down' | 'stable';
+// }
+
+// /**
+//  * Platform overview analytics
+//  */
+// export interface PlatformOverviewAnalytics extends BaseAnalytics {
+//   totalUsers: number;
+//   activeUsers: number;
+//   newUsers: number;
+//   totalProperties: number;
+//   activeProperties: number;
+//   totalTransactions: number;
+//   totalRevenue: Decimal;
+//   conversionRate: number;
+//   averageSessionDuration: number;
+//   bounceRate: number;
+  
+//   // Comparisons with previous period
+//   comparisons: {
+//     users: MetricComparison;
+//     properties: MetricComparison;
+//     transactions: MetricComparison;
+//     revenue: MetricComparison;
+//   };
+  
+//   // Time series data
+//   timeSeries: {
+//     users: TimeSeriesDataPoint[];
+//     properties: TimeSeriesDataPoint[];
+//     transactions: TimeSeriesDataPoint[];
+//     revenue: TimeSeriesDataPoint[];
+//   };
+// }
+
+// /**
+//  * User analytics breakdown
+//  */
+// export interface UserAnalytics extends BaseAnalytics {
+//   totalUsers: number;
+//   activeUsers: number;
+//   newUsers: number;
+  
+//   // User segmentation
+//   byRole: {
+//     owners: number;
+//     agents: number;
+//     renters: number;
+//     admins: number;
+//   };
+  
+//   byVerificationStatus: {
+//     pending: number;
+//     verified: number;
+//     rejected: number;
+//   };
+  
+//   byPremiumStatus: {
+//     premium: number;
+//     free: number;
+//   };
+  
+//   // User engagement
+//   engagement: {
+//     dailyActiveUsers: number;
+//     weeklyActiveUsers: number;
+//     monthlyActiveUsers: number;
+//     averageSessionsPerUser: number;
+//     averageTimeOnPlatform: number;
+//   };
+  
+//   // User retention
+//   retention: {
+//     day1: number;
+//     day7: number;
+//     day30: number;
+//     day90: number;
+//   };
+  
+//   // Geographic distribution
+//   byLocation: {
+//     state: string;
+//     city: string;
+//     count: number;
+//   }[];
+  
+//   // User acquisition channels
+//   acquisitionChannels: {
+//     channel: string;
+//     count: number;
+//     percentage: number;
+//   }[];
+// }
+
+// /**
+//  * Property analytics
+//  */
+// export interface PropertyAnalytics extends BaseAnalytics {
+//   totalProperties: number;
+//   activeListings: number;
+//   rentedProperties: number;
+  
+//   // Property status breakdown
+//   byStatus: {
+//     draft: number;
+//     pending: number;
+//     published: number;
+//     rented: number;
+//     unavailable: number;
+//   };
+  
+//   // Property type distribution
+//   byType: {
+//     type: string;
+//     count: number;
+//     averagePrice: Decimal;
+//     averageViewCount: number;
+//   }[];
+  
+//   // Geographic distribution
+//   byLocation: {
+//     state: string;
+//     city: string;
+//     count: number;
+//     averagePrice: Decimal;
+//   }[];
+  
+//   // Property performance
+//   performance: {
+//     averageTimeToRent: number; // in days
+//     averageViewsBeforeRent: number;
+//     listingSuccessRate: number;
+//     averagePropertyValue: Decimal;
+//   };
+  
+//   // Boundary verification stats
+//   boundaryStats: {
+//     totalMarked: number;
+//     totalVerified: number;
+//     pendingVerification: number;
+//     duplicatesDetected: number;
+//   };
+  
+//   // Multi-family vs single unit
+//   structureDistribution: {
+//     singleUnit: number;
+//     multiFamily: number;
+//     totalUnits: number;
+//   };
+// }
+
+// /**
+//  * Dashboard summary
+//  */
+// export interface DashboardSummary {
+//   // Key metrics
+//   totalUsers: number;
+//   totalProperties: number;
+//   totalTransactions: number;
+//   totalRevenue: Decimal;
+  
+//   // Today's activity
+//   todayActivity: {
+//     newUsers: number;
+//     newProperties: number;
+//     newTransactions: number;
+//     revenue: Decimal;
+//   };
+  
+//   // Pending actions
+//   pendingActions: {
+//     verificationRequests: number;
+//     propertyApprovals: number;
+//     supportTickets: number;
+//     duplicateReports: number;
+//     boundaryDisputes: number;
+//   };
+  
+//   // Quick stats
+//   quickStats: {
+//     activeUsers24h: number;
+//     propertiesListedToday: number;
+//     transactionsToday: number;
+//     averageTransactionValue: Decimal;
+//   };
+  
+//   // Recent activity
+//   recentActivity: {
+//     type: string;
+//     description: string;
+//     timestamp: Date;
+//     userId?: string;
+//     propertyId?: string;
+//   }[];
+  
+//   // Alerts
+//   alerts: {
+//     type: 'warning' | 'error' | 'info';
+//     message: string;
+//     priority: 'low' | 'medium' | 'high';
+//     timestamp: Date;
+//   }[];
+// }
+
+// /**
+//  * Analytics filters
+//  */
+// export interface AnalyticsFilters {
+//   startDate?: Date;
+//   endDate?: Date;
+//   period?: 'day' | 'week' | 'month' | 'quarter' | 'year' | 'all';
+//   cities?: string[];
+//   states?: string[];
+//   propertyTypes?: string[];
+//   userRoles?: string[];
+//   paymentStatuses?: string[];
+//   verificationStatuses?: string[];
+// }
+
+// /**
+//  * Analytics export options
+//  */
+// export interface AnalyticsExportOptions {
+//   format: 'json' | 'csv' | 'xlsx' | 'pdf';
+//   includeCharts: boolean;
+//   includeRawData: boolean;
+//   filename?: string;
+// }
+
+// /**
+//  * Cohort analysis
+//  */
+// export interface CohortAnalysis {
+//   cohortDate: Date;
+//   cohortSize: number;
+//   retention: {
+//     week0: number;
+//     week1: number;
+//     week2: number;
+//     week3: number;
+//     week4: number;
+//     [key: string]: number;
+//   };
+//   revenue: {
+//     week0: Decimal;
+//     week1: Decimal;
+//     week2: Decimal;
+//     week3: Decimal;
+//     week4: Decimal;
+//     [key: string]: Decimal;
+//   };
+// }
+
+// /**
+//  * Funnel analysis
+//  */
+// export interface FunnelAnalysis {
+//   stage: string;
+//   users: number;
+//   conversionRate: number;
+//   dropOffRate: number;
+//   averageTimeInStage: number;
+// }
+
+// /**
+//  * A/B test results
+//  */
+// export interface ABTestResults {
+//   testId: string;
+//   testName: string;
+//   startDate: Date;
+//   endDate: Date;
+//   variants: {
+//     name: string;
+//     users: number;
+//     conversions: number;
+//     conversionRate: number;
+//     revenue: Decimal;
+//     isControl: boolean;
+//   }[];
+//   winner?: string;
+//   confidence: number;
+//   status: 'running' | 'completed' | 'cancelled';
+// }
+
+// /**
+//  * Real-time analytics
+//  */
+// export interface RealTimeAnalytics {
+//   timestamp: Date;
+//   activeUsers: number;
+//   ongoingTransactions: number;
+//   activeListings: number;
+//   cpuUsage: number;
+//   memoryUsage: number;
+//   requestsPerSecond: number;
+//   averageResponseTime: number;
+//   errorRate: number;
+// }
