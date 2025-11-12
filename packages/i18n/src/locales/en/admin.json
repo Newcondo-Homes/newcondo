@@ -1,0 +1,207 @@
+{
+  "admin": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome back, Admin",
+    
+    "navigation": {
+      "dashboard": "Dashboard",
+      "users": "Users",
+      "properties": "Properties",
+      "verifications": "Verifications",
+      "payments": "Payments",
+      "marking": "Marking Jobs",
+      "disputes": "Disputes",
+      "analytics": "Analytics",
+      "support": "Support",
+      "settings": "Settings"
+    },
+    
+    "dashboard": {
+      "overview": "Overview",
+      "totalUsers": "Total Users",
+      "activeProperties": "Active Properties",
+      "pendingVerifications": "Pending Verifications",
+      "totalRevenue": "Total Revenue",
+      "recentActivity": "Recent Activity",
+      "quickActions": "Quick Actions"
+    },
+    
+    "users": {
+      "title": "User Management",
+      "totalUsers": "Total Users",
+      "activeUsers": "Active Users",
+      "pendingVerification": "Pending Verification",
+      "searchPlaceholder": "Search users by name, email, or phone",
+      "filterByRole": "Filter by Role",
+      "filterByStatus": "Filter by Status",
+      "viewDetails": "View Details",
+      "verifyUser": "Verify User",
+      "rejectUser": "Reject User",
+      "suspendUser": "Suspend User",
+      "deleteUser": "Delete User",
+      "userDetails": "User Details",
+      "verificationDocuments": "Verification Documents",
+      "activityLog": "Activity Log"
+    },
+    
+    "properties": {
+      "title": "Property Management",
+      "pendingApproval": "Pending Approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "searchPlaceholder": "Search properties",
+      "filterByType": "Filter by Type",
+      "filterByStatus": "Filter by Status",
+      "viewProperty": "View Property",
+      "approveProperty": "Approve Property",
+      "rejectProperty": "Reject Property",
+      "viewBoundary": "View Boundary",
+      "propertyDetails": "Property Details",
+      "ownerInfo": "Owner Information",
+      "agentInfo": "Agent Information",
+      "legalDocuments": "Legal Documents",
+      "boundaryVerification": "Boundary Verification"
+    },
+    
+    "verifications": {
+      "title": "Document Verification",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "documentType": "Document Type",
+      "uploadDate": "Upload Date",
+      "viewDocument": "View Document",
+      "approveDocument": "Approve",
+      "rejectDocument": "Reject",
+      "rejectionReason": "Rejection Reason",
+      "rejectionReasonPlaceholder": "Enter reason for rejection",
+      "verificationNotes": "Verification Notes",
+      "notesPlaceholder": "Add notes about this verification"
+    },
+    
+    "payments": {
+      "title": "Payment Management",
+      "totalTransactions": "Total Transactions",
+      "successfulPayments": "Successful",
+      "failedPayments": "Failed",
+      "pendingPayments": "Pending",
+      "searchPlaceholder": "Search by transaction ID or user",
+      "filterByType": "Filter by Type",
+      "filterByStatus": "Filter by Status",
+      "viewTransaction": "View Transaction",
+      "processRefund": "Process Refund",
+      "releasePayment": "Release Payment",
+      "transactionDetails": "Transaction Details",
+      "paymentBreakdown": "Payment Breakdown"
+    },
+    
+    "marking": {
+      "title": "Marking Job Oversight",
+      "pendingJobs": "Pending Jobs",
+      "activeJobs": "Active Jobs",
+      "completedJobs": "Completed Jobs",
+      "assignJob": "Assign Job to Newcondo Agent",
+      "viewQueue": "View Queue",
+      "jobDetails": "Job Details",
+      "agentPerformance": "Agent Performance",
+      "completionRate": "Completion Rate",
+      "averageRating": "Average Rating"
+    },
+    
+    "disputes": {
+      "title": "Dispute Management",
+      "boundaryDisputes": "Boundary Disputes",
+      "duplicateReports": "Duplicate Reports",
+      "paymentDisputes": "Payment Disputes",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "viewDispute": "View Dispute",
+      "resolveDispute": "Resolve Dispute",
+      "disputeDetails": "Dispute Details",
+      "resolution": "Resolution",
+      "resolutionNotes": "Resolution Notes"
+    },
+    
+    "analytics": {
+      "title": "Analytics & Reports",
+      "platformMetrics": "Platform Metrics",
+      "userGrowth": "User Growth",
+      "propertyMetrics": "Property Metrics",
+      "revenueMetrics": "Revenue Metrics",
+      "conversionRates": "Conversion Rates",
+      "exportReport": "Export Report",
+      "selectDateRange": "Select Date Range",
+      "generateReport": "Generate Report"
+    },
+    
+    "support": {
+      "title": "Support Tickets",
+      "openTickets": "Open Tickets",
+      "inProgress": "In Progress",
+      "resolvedTickets": "Resolved",
+      "ticketDetails": "Ticket Details",
+      "assignTo": "Assign To",
+      "respond": "Respond",
+      "closeTicket": "Close Ticket",
+      "reopenTicket": "Reopen Ticket",
+      "priority": "Priority",
+      "category": "Category"
+    },
+    
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "suspend": "Suspend",
+      "delete": "Delete",
+      "restore": "Restore",
+      "assign": "Assign",
+      "resolve": "Resolve",
+      "export": "Export",
+      "filter": "Filter",
+      "search": "Search",
+      "refresh": "Refresh",
+      "viewAll": "View All"
+    },
+    
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "suspended": "Suspended",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    
+    "notifications": {
+      "newUser": "New user registered",
+      "newProperty": "New property listed",
+      "verificationRequest": "New verification request",
+      "disputeRaised": "New dispute raised",
+      "paymentIssue": "Payment issue reported",
+      "markingJobRequested": "New marking job requested"
+    },
+    
+    "success": {
+      "userApproved": "User approved successfully",
+      "userRejected": "User rejected successfully",
+      "propertyApproved": "Property approved successfully",
+      "propertyRejected": "Property rejected successfully",
+      "documentVerified": "Document verified successfully",
+      "paymentProcessed": "Payment processed successfully",
+      "disputeResolved": "Dispute resolved successfully",
+      "ticketClosed": "Support ticket closed successfully"
+    },
+    
+    "errors": {
+      "approvalFailed": "Approval failed",
+      "rejectionFailed": "Rejection failed",
+      "verificationFailed": "Verification failed",
+      "paymentFailed": "Payment processing failed",
+      "disputeResolutionFailed": "Dispute resolution failed",
+      "unauthorized": "Unauthorized access",
+      "notFound": "Resource not found"
+    }
+  }
+}

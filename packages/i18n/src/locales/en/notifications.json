@@ -1,0 +1,141 @@
+{
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark All as Read",
+    "clearAll": "Clear All",
+    "noNotifications": "No notifications",
+    "viewAll": "View All Notifications",
+    
+    "types": {
+      "info": "Information",
+      "success": "Success",
+      "warning": "Warning",
+      "error": "Error"
+    },
+    
+    "auth": {
+      "welcomeTitle": "Welcome to Newcondo!",
+      "welcomeMessage": "Your account has been created successfully",
+      "verificationSentTitle": "Verification Code Sent",
+      "verificationSentMessage": "Check your {{method}} for verification code",
+      "verifiedTitle": "Account Verified",
+      "verifiedMessage": "Your account has been verified successfully",
+      "loginTitle": "Login Successful",
+      "loginMessage": "Welcome back to Newcondo"
+    },
+    
+    "property": {
+      "listedTitle": "Property Listed",
+      "listedMessage": "Your property '{{title}}' has been submitted for review",
+      "approvedTitle": "Property Approved",
+      "approvedMessage": "Your property '{{title}}' has been approved and is now live",
+      "rejectedTitle": "Property Rejected",
+      "rejectedMessage": "Your property '{{title}}' was rejected. Reason: {{reason}}",
+      "rentedTitle": "Property Rented",
+      "rentedMessage": "Your property '{{title}}' has been rented",
+      "viewRequestTitle": "New Viewing Request",
+      "viewRequestMessage": "{{name}} requested to view '{{title}}'",
+      "expiringTitle": "Listing Expiring Soon",
+      "expiringMessage": "Your property '{{title}}' listing expires in {{days}} days"
+    },
+    
+    "payment": {
+      "receivedTitle": "Payment Received",
+      "receivedMessage": "Payment of {{amount}} received for '{{property}}'",
+      "confirmedTitle": "Payment Confirmed",
+      "confirmedMessage": "Your rent payment of {{amount}} has been confirmed",
+      "releasedTitle": "Payment Released",
+      "releasedMessage": "{{amount}} has been released to your account",
+      "refundedTitle": "Payment Refunded",
+      "refundedMessage": "{{amount}} has been refunded to your account",
+      "confirmationReminderTitle": "Confirm Your Payment",
+      "confirmationReminderMessage": "Confirm your rent payment by {{date}}",
+      "confirmationDeadlineTitle": "Confirmation Deadline Approaching",
+      "confirmationDeadlineMessage": "{{hours}} hours left to confirm your payment"
+    },
+    
+    "marking": {
+      "jobAssignedTitle": "Marking Job Assigned",
+      "jobAssignedMessage": "New marking job assigned for '{{property}}'",
+      "jobAcceptedTitle": "Agent Accepted Job",
+      "jobAcceptedMessage": "{{agent}} accepted your marking job",
+      "jobCompletedTitle": "Marking Completed",
+      "jobCompletedMessage": "Property marking completed. Please review and confirm",
+      "confirmationRequiredTitle": "Confirmation Required",
+      "confirmationRequiredMessage": "Review marking for '{{property}}' by {{date}}",
+      "confirmationDeadlineTitle": "Confirmation Deadline",
+      "confirmationDeadlineMessage": "{{hours}} hours left to confirm marking",
+      "paymentReceivedTitle": "Marking Payment Received",
+      "paymentReceivedMessage": "Received {{amount}} for marking '{{property}}'",
+      "timeSlotExpiringTitle": "Time Slot Expiring",
+      "timeSlotExpiringMessage": "Your time slot expires in {{minutes}} minutes",
+      "jobExpiredTitle": "Job Expired",
+      "jobExpiredMessage": "Marking job for '{{property}}' has expired"
+    },
+    
+    "verification": {
+      "documentsSubmittedTitle": "Documents Submitted",
+      "documentsSubmittedMessage": "Your verification documents are under review",
+      "documentApprovedTitle": "Document Approved",
+      "documentApprovedMessage": "Your {{documentType}} has been approved",
+      "documentRejectedTitle": "Document Rejected",
+      "documentRejectedMessage": "Your {{documentType}} was rejected. Reason: {{reason}}",
+      "accountVerifiedTitle": "Account Verified",
+      "accountVerifiedMessage": "Your account has been verified. You can now list properties"
+    },
+    
+    "referral": {
+      "newReferralTitle": "New Referral",
+      "newReferralMessage": "{{name}} signed up using your referral code!",
+      "rewardEarnedTitle": "Reward Earned",
+      "rewardEarnedMessage": "You earned {{amount}} from your referral",
+      "rewardPaidTitle": "Reward Paid",
+      "rewardPaidMessage": "Referral reward of {{amount}} paid to your account",
+      "milestoneReachedTitle": "Milestone Reached",
+      "milestoneReachedMessage": "Congratulations! You've reached {{count}} referrals"
+    },
+    
+    "agent": {
+      "newJobAvailableTitle": "New Job Available",
+      "newJobAvailableMessage": "New marking job available in {{location}}",
+      "jobAssignedTitle": "Job Assigned",
+      "jobAssignedMessage": "You've been assigned a marking job for '{{property}}'",
+      "paymentReceivedTitle": "Payment Received",
+      "paymentReceivedMessage": "Received {{amount}} for your work on '{{property}}'",
+      "ratingReceivedTitle": "New Rating",
+      "ratingReceivedMessage": "You received a {{rating}}-star rating from {{user}}"
+    },
+    
+    "system": {
+      "maintenanceTitle": "Scheduled Maintenance",
+      "maintenanceMessage": "System maintenance scheduled for {{date}}",
+      "updateAvailableTitle": "Update Available",
+      "updateAvailableMessage": "A new version of the app is available",
+      "securityAlertTitle": "Security Alert",
+      "securityAlertMessage": "Unusual activity detected on your account",
+      "policyUpdateTitle": "Policy Update",
+      "policyUpdateMessage": "Our terms and conditions have been updated"
+    },
+    
+    "settings": {
+      "title": "Notification Settings",
+      "subtitle": "Manage your notification preferences",
+      "emailNotifications": "Email Notifications",
+      "smsNotifications": "SMS Notifications",
+      "pushNotifications": "Push Notifications",
+      "inAppNotifications": "In-App Notifications",
+      
+      "categories": {
+        "payments": "Payments",
+        "properties": "Properties",
+        "marking": "Marking Jobs",
+        "verification": "Verification",
+        "marketing": "Marketing",
+        "system": "System Updates"
+      },
+      
+      "save": "Save Preferences",
+      "saved": "Preferences saved successfully"
+    }
+  }
+}

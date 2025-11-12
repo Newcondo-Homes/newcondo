@@ -1,0 +1,91 @@
+{
+  "referrals": {
+    "title": "Referral Program",
+    "subtitle": "Earn rewards by referring friends and family",
+    "myCode": "My Referral Code",
+    "copyCode": "Copy Code",
+    "codeCopied": "Code Copied!",
+    "shareLink": "Share Referral Link",
+    "linkCopied": "Link Copied!",
+    
+    "stats": {
+      "title": "Referral Statistics",
+      "totalReferrals": "Total Referrals",
+      "activeReferrals": "Active Referrals",
+      "totalEarned": "Total Earned",
+      "pendingRewards": "Pending Rewards",
+      "availableBalance": "Available Balance"
+    },
+    
+    "howItWorks": {
+      "title": "How It Works",
+      "step1Title": "Share Your Code",
+      "step1Desc": "Share your unique referral code or link with friends",
+      "step2Title": "They Sign Up",
+      "step2Desc": "Your friend signs up using your referral code",
+      "step3Title": "Earn Rewards",
+      "step3Desc": "Earn rewards when they complete qualifying actions"
+    },
+    
+    "rewards": {
+      "title": "Reward Structure",
+      "signupBonus": "Sign-up Bonus",
+      "firstListing": "First Property Listed",
+      "firstRent": "First Rent Payment",
+      "markingJob": "Property Marking Completed",
+      "premiumUpgrade": "Premium Upgrade"
+    },
+    
+    "history": {
+      "title": "Referral History",
+      "date": "Date",
+      "name": "Referred User",
+      "status": "Status",
+      "reward": "Reward",
+      "action": "Action",
+      "pending": "Pending",
+      "completed": "Completed",
+      "paid": "Paid",
+      "noReferrals": "No referrals yet"
+    },
+    
+    "share": {
+      "title": "Share Your Code",
+      "viaWhatsApp": "Share via WhatsApp",
+      "viaSMS": "Share via SMS",
+      "viaEmail": "Share via Email",
+      "copyLink": "Copy Link",
+      "message": "Join Newcondo using my referral code {{code}} and find your perfect home!"
+    },
+    
+    "terms": {
+      "title": "Referral Terms",
+      "condition1": "Rewards are paid after successful completion of qualifying actions",
+      "condition2": "Self-referrals are not allowed and will be disqualified",
+      "condition3": "Referral codes can only be used once per user",
+      "condition4": "Newcondo reserves the right to modify or cancel the program",
+      "condition5": "Fraudulent activity will result in account suspension"
+    },
+    
+    "status": {
+      "pending": "Pending",
+      "qualified": "Qualified",
+      "paid": "Paid",
+      "cancelled": "Cancelled"
+    },
+    
+    "notifications": {
+      "newReferral": "New referral: {{name}} signed up!",
+      "rewardEarned": "You earned ₦{{amount}} from referral!",
+      "rewardPaid": "Referral reward paid to your account",
+      "milestoneReached": "Congratulations! {{count}} referrals milestone reached"
+    },
+    
+    "errors": {
+      "invalidCode": "Invalid referral code",
+      "ownCode": "You cannot use your own referral code",
+      "codeUsed": "Referral code already used",
+      "notEligible": "Not eligible for referral rewards"
+    }
+  }
+}

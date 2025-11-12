@@ -1019,3 +1019,369 @@ export const flutterwaveService = new FlutterwaveService();
 //     return 'An unknown error occurred.';
 //   }
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/payment-service/src/services/flutterwaveService.ts
+
+// import axios from 'axios';
+// import crypto from 'crypto';
+// import { getTranslation } from '../utils/i18n';
+
+// interface InitiatePaymentParams {
+//   amount: number;
+//   currency: string;
+//   email: string;
+//   paymentId: string;
+//   locale: string;
+// }
+
+// export class FlutterwaveService {
+//   private baseUrl: string;
+//   private secretKey: string;
+//   private publicKey: string;
+//   private webhookSecret: string;
+
+//   constructor() {
+//     this.baseUrl = process.env.FLUTTERWAVE_BASE_URL || 'https://api.flutterwave.com/v3';
+//     this.secretKey = process.env.FLUTTERWAVE_SECRET_KEY!;
+//     this.publicKey = process.env.FLUTTERWAVE_PUBLIC_KEY!;
+//     this.webhookSecret = process.env.FLUTTERWAVE_WEBHOOK_SECRET!;
+//   }
+
+//   /**
+//    * Initiate payment with Flutterwave
+//    */
+//   async initiatePayment(params: InitiatePaymentParams) {
+//     const { amount, currency, email, paymentId, locale } = params;
+
+//     const payload = {
+//       tx_ref: paymentId,
+//       amount,
+//       currency,
+//       redirect_url: `${process.env.FRONTEND_URL}/payments/verify`,
+//       customer: {
+//         email,
+//         phonenumber: '',
+//         name: ''
+//       },
+//       customizations: {
+//         title: getTranslation('payment.title', locale),
+//         description: getTranslation('payment.description', locale),
+//         logo: `${process.env.FRONTEND_URL}/logo.png`
+//       },
+//       payment_options: 'card,banktransfer,ussd',
+//       meta: {
+//         paymentId,
+//         locale
+//       }
+//     };
+
+//     try {
+//       const response = await axios.post(
+//         `${this.baseUrl}/payments`,
+//         payload,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`,
+//             'Content-Type': 'application/json'
+//           }
+//         }
+//       );
+
+//       return {
+//         link: response.data.data.link,
+//         reference: response.data.data.tx_ref,
+//         transactionId: response.data.data.id
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave initiate payment error:', error.response?.data);
+//       throw new Error(getTranslation('payment.initiation_failed', locale));
+//     }
+//   }
+
+//   /**
+//    * Verify payment status
+//    */
+//   async verifyPayment(transactionId: string) {
+//     try {
+//       const response = await axios.get(
+//         `${this.baseUrl}/transactions/${transactionId}/verify`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`
+//           }
+//         }
+//       );
+
+//       const { status, amount, currency, customer } = response.data.data;
+
+//       return {
+//         status,
+//         amount,
+//         currency,
+//         customer,
+//         failureReason: status !== 'successful' ? response.data.data.processor_response : null
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave verify payment error:', error.response?.data);
+//       throw new Error('Payment verification failed');
+//     }
+//   }
+
+//   /**
+//    * Initiate refund
+//    */
+//   async initiateRefund(transactionId: string, reason: string) {
+//     try {
+//       const response = await axios.post(
+//         `${this.baseUrl}/transactions/${transactionId}/refund`,
+//         {
+//           amount: '', // Full refund
+//           comments: reason
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`,
+//             'Content-Type': 'application/json'
+//           }
+//         }
+//       );
+
+//       return {
+//         refundId: response.data.data.id,
+//         status: response.data.data.status,
+//         amount: response.data.data.amount,
+//         currency: response.data.data.currency
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave refund error:', error.response?.data);
+//       throw new Error('Refund initiation failed');
+//     }
+//   }
+
+//   /**
+//    * Create virtual account
+//    */
+//   async createVirtualAccount(params: {
+//     email: string;
+//     firstName: string;
+//     lastName: string;
+//     phoneNumber: string;
+//     bvn?: string;
+//   }) {
+//     try {
+//       const response = await axios.post(
+//         `${this.baseUrl}/virtual-account-numbers`,
+//         {
+//           email: params.email,
+//           is_permanent: true,
+//           bvn: params.bvn,
+//           tx_ref: `VA-${Date.now()}`,
+//           firstname: params.firstName,
+//           lastname: params.lastName,
+//           narration: `Newcondo ${params.firstName} ${params.lastName}`
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`,
+//             'Content-Type': 'application/json'
+//           }
+//         }
+//       );
+
+//       const data = response.data.data;
+
+//       return {
+//         accountNumber: data.account_number,
+//         bankName: data.bank_name,
+//         accountName: data.account_name,
+//         flutterwaveAccountId: data.id
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave create virtual account error:', error.response?.data);
+//       throw new Error('Virtual account creation failed');
+//     }
+//   }
+
+//   /**
+//    * Get virtual account balance
+//    */
+//   async getVirtualAccountBalance(accountId: string) {
+//     try {
+//       const response = await axios.get(
+//         `${this.baseUrl}/virtual-account-numbers/${accountId}`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`
+//           }
+//         }
+//       );
+
+//       return {
+//         balance: response.data.data.available_balance,
+//         currency: response.data.data.currency
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave get balance error:', error.response?.data);
+//       throw new Error('Failed to get virtual account balance');
+//     }
+//   }
+
+//   /**
+//    * Transfer funds from virtual account
+//    */
+//   async transferFunds(params: {
+//     accountNumber: string;
+//     bankCode: string;
+//     amount: number;
+//     narration: string;
+//     reference: string;
+//   }) {
+//     try {
+//       const response = await axios.post(
+//         `${this.baseUrl}/transfers`,
+//         {
+//           account_bank: params.bankCode,
+//           account_number: params.accountNumber,
+//           amount: params.amount,
+//           narration: params.narration,
+//           currency: 'NGN',
+//           reference: params.reference,
+//           callback_url: `${process.env.BACKEND_URL}/payments/transfer-callback`,
+//           debit_currency: 'NGN'
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`,
+//             'Content-Type': 'application/json'
+//           }
+//         }
+//       );
+
+//       return {
+//         transferId: response.data.data.id,
+//         reference: response.data.data.reference,
+//         status: response.data.data.status
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave transfer error:', error.response?.data);
+//       throw new Error('Fund transfer failed');
+//     }
+//   }
+
+//   /**
+//    * Get list of Nigerian banks
+//    */
+//   async getBankList() {
+//     try {
+//       const response = await axios.get(
+//         `${this.baseUrl}/banks/NG`,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`
+//           }
+//         }
+//       );
+
+//       return response.data.data.map((bank: any) => ({
+//         code: bank.code,
+//         name: bank.name
+//       }));
+//     } catch (error: any) {
+//       console.error('Flutterwave get banks error:', error.response?.data);
+//       throw new Error('Failed to get bank list');
+//     }
+//   }
+
+//   /**
+//    * Verify bank account
+//    */
+//   async verifyBankAccount(accountNumber: string, bankCode: string) {
+//     try {
+//       const response = await axios.post(
+//         `${this.baseUrl}/accounts/resolve`,
+//         {
+//           account_number: accountNumber,
+//           account_bank: bankCode
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${this.secretKey}`,
+//             'Content-Type': 'application/json'
+//           }
+//         }
+//       );
+
+//       return {
+//         accountName: response.data.data.account_name,
+//         accountNumber: response.data.data.account_number
+//       };
+//     } catch (error: any) {
+//       console.error('Flutterwave verify account error:', error.response?.data);
+//       throw new Error('Bank account verification failed');
+//     }
+//   }
+
+//   /**
+//    * Verify webhook signature
+//    */
+//   verifyWebhookSignature(payload: any, signature: string): boolean {
+//     const hash = crypto
+//       .createHmac('sha256', this.webhookSecret)
+//       .update(JSON.stringify(payload))
+//       .digest('hex');
+
+//     return hash === signature;
+//   }
+
+//   /**
+//    * Get transaction fees
+//    */
+//   calculateTransactionFee(amount: number, currency: string = 'NGN'): number {
+//     // Flutterwave fee structure for NGN
+//     if (currency === 'NGN') {
+//       return (amount * 0.014) + 100; // 1.4% + ₦100
+//     }
+
+//     // For other currencies, use a flat 3.8%
+//     return amount * 0.038;
+//   }
+
+//   /**
+//    * Get supported currencies
+//    */
+//   getSupportedCurrencies(): string[] {
+//     return ['NGN', 'USD', 'EUR', 'GBP', 'XAF', 'XOF'];
+//   }
+
+//   /**
+//    * Get payment methods available for a currency
+//    */
+//   getPaymentMethods(currency: string): string[] {
+//     const methods: Record<string, string[]> = {
+//       NGN: ['card', 'account', 'ussd', 'bank_transfer', 'qr'],
+//       USD: ['card', 'bank_transfer'],
+//       EUR: ['card', 'bank_transfer'],
+//       GBP: ['card', 'bank_transfer'],
+//       XAF: ['mobilemoney', 'card'],
+//       XOF: ['mobilemoney', 'card']
+//     };
+
+//     return methods[currency] || ['card'];
+//   }
+// }
+
+// export const flutterwaveService = new FlutterwaveService();

@@ -1,0 +1,194 @@
+{
+  "marking": {
+    "title": "Property Marking Service",
+    "subtitle": "Professional property boundary marking and verification",
+    "requestJob": "Request Marking Service",
+    "myJobs": "My Marking Jobs",
+    "availableJobs": "Available Jobs",
+    "jobHistory": "Job History",
+    
+    "options": {
+      "title": "Choose Marking Option",
+      "subtitle": "Select how you'd like to mark your property",
+      "markYourself": "Mark Yourself",
+      "markYourselfDesc": "Use your device to mark the property boundaries",
+      "assignNewcondo": "Assign to Newcondo",
+      "assignNewcondoDesc": "Our team will mark your property for ₦25,000",
+      "sendSomeone": "Send Someone You Know",
+      "sendSomeoneDesc": "Share a link with someone to mark on your behalf",
+      "assignAgent": "Assign to Nearby Agent",
+      "assignAgentDesc": "Broadcast to agents near your property for ₦20,000"
+    },
+    
+    "payment": {
+      "title": "Marking Service Payment",
+      "serviceFee": "Service Fee",
+      "agentCompensation": "Agent Compensation",
+      "newcondoFee": "Newcondo Fee",
+      "total": "Total Amount",
+      "payNow": "Pay Now",
+      "paymentPending": "Payment Pending",
+      "paymentSuccess": "Payment Successful",
+      "paymentFailed": "Payment Failed"
+    },
+    
+    "contactPerson": {
+      "title": "Contact Person Details",
+      "subtitle": "Provide details of someone who can grant access to the property",
+      "name": "Contact Person Name",
+      "namePlaceholder": "Enter full name",
+      "phone": "Contact Phone Number",
+      "phonePlaceholder": "Enter phone number",
+      "relationship": "Relationship",
+      "relationshipPlaceholder": "e.g., Caretaker, Relative",
+      "instructions": "Access Instructions",
+      "instructionsPlaceholder": "Any special instructions for accessing the property"
+    },
+    
+    "address": {
+      "title": "Property Address",
+      "selectState": "Select State",
+      "selectLga": "Select LGA",
+      "selectLocation": "Select Location",
+      "streetAddress": "Street Address",
+      "streetPlaceholder": "Enter street address",
+      "landmark": "Nearby Landmark",
+      "landmarkPlaceholder": "Enter a nearby landmark"
+    },
+    
+    "queue": {
+      "title": "Agent Queue",
+      "position": "Queue Position",
+      "timeRemaining": "Time Remaining",
+      "timeSlot": "Time Slot",
+      "waitingForAgent": "Waiting for Agent",
+      "agentAssigned": "Agent Assigned",
+      "inProgress": "In Progress",
+      "agentName": "Agent Name",
+      "agentRating": "Agent Rating",
+      "contactAgent": "Contact Agent"
+    },
+    
+    "jobStatus": {
+      "queued": "Queued",
+      "assigned": "Assigned",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "pending": "Pending Confirmation",
+      "confirmed": "Confirmed"
+    },
+    
+    "completion": {
+      "title": "Mark Completion",
+      "uploadPhotos": "Upload Completion Photos",
+      "uploadPhotosDesc": "Upload photos of key areas and rooms",
+      "boundaryData": "Boundary Data",
+      "boundaryDataDesc": "Draw property boundaries on the map",
+      "notes": "Completion Notes",
+      "notesPlaceholder": "Add any notes about the marking",
+      "submit": "Submit Completion",
+      "submitSuccess": "Marking submitted successfully",
+      "awaitingConfirmation": "Awaiting owner confirmation"
+    },
+    
+    "confirmation": {
+      "title": "Confirm Marking",
+      "subtitle": "Review and confirm the property marking",
+      "photos": "Completion Photos",
+      "boundary": "Property Boundary",
+      "notes": "Agent Notes",
+      "confirmProperty": "Confirm This is Your Property",
+      "rejectMarking": "Reject Marking",
+      "confirmSuccess": "Property marking confirmed",
+      "rejectSuccess": "Marking rejected",
+      "deadline": "Confirmation Deadline",
+      "timeRemaining": "Time Remaining to Confirm"
+    },
+    
+    "shareLink": {
+      "title": "Share Marking Link",
+      "subtitle": "Share this link with someone to mark your property",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link Copied!",
+      "sendViaWhatsApp": "Send via WhatsApp",
+      "sendViaSMS": "Send via SMS",
+      "instructions": "Share this link with a trusted person. They can use it to mark your property when they arrive."
+    },
+    
+    "agent": {
+      "dashboard": "Agent Dashboard",
+      "availableJobs": "Available Jobs",
+      "myJobs": "My Active Jobs",
+      "earnings": "Total Earnings",
+      "completedJobs": "Completed Jobs",
+      "rating": "Rating",
+      "acceptJob": "Accept Job",
+      "startMarking": "Start Marking",
+      "viewDetails": "View Details",
+      "jobAccepted": "Job Accepted",
+      "timeSlotExpired": "Time slot expired",
+      "compensation": "Compensation"
+    },
+    
+    "notifications": {
+      "jobAssigned": "New marking job assigned",
+      "jobAccepted": "Agent accepted your marking job",
+      "jobCompleted": "Marking job completed",
+      "confirmationRequired": "Confirmation required for marking",
+      "confirmationDeadline": "Confirmation deadline approaching",
+      "paymentReceived": "Payment received for marking",
+      "timeSlotExpiring": "Time slot expiring soon",
+      "jobExpired": "Marking job expired",
+      "jobCancelled": "Marking job cancelled"
+    },
+    
+    "errors": {
+      "paymentFailed": "Payment failed. Please try again.",
+      "jobNotFound": "Marking job not found",
+      "unauthorized": "You are not authorized for this action",
+      "timeSlotExpired": "Time slot has expired",
+      "alreadyAssigned": "Job already assigned to another agent",
+      "invalidContactDetails": "Invalid contact person details",
+      "invalidAddress": "Invalid property address",
+      "uploadFailed": "Photo upload failed",
+      "confirmationExpired": "Confirmation period expired"
+    },
+    
+    "success": {
+      "jobRequested": "Marking job requested successfully",
+      "paymentCompleted": "Payment completed successfully",
+      "linkShared": "Link shared successfully",
+      "jobAccepted": "Job accepted successfully",
+      "markingSubmitted": "Marking submitted successfully",
+      "confirmationSubmitted": "Confirmation submitted successfully"
+    },
+    
+    "timeline": {
+      "requested": "Job Requested",
+      "paymentReceived": "Payment Received",
+      "agentAssigned": "Agent Assigned",
+      "markingStarted": "Marking Started",
+      "markingCompleted": "Marking Completed",
+      "ownerConfirmed": "Owner Confirmed",
+      "paymentReleased": "Payment Released"
+    },
+    
+    "urgency": {
+      "low": "Low Priority",
+      "normal": "Normal",
+      "high": "High Priority",
+      "urgent": "Urgent"
+    },
+    
+    "instructions": {
+      "markingGuide": "Marking Guide",
+      "step1": "Locate the property using the provided address",
+      "step2": "Contact the provided person for access",
+      "step3": "Take photos of key areas and rooms",
+      "step4": "Mark property boundaries on the map",
+      "step5": "Submit completion and wait for owner confirmation"
+    }
+  }
+}

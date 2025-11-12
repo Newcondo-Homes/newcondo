@@ -1,0 +1,218 @@
+{
+  "validation": {
+    "common": {
+      "required": "{{field}} is required",
+      "invalid": "Invalid {{field}}",
+      "tooShort": "{{field}} must be at least {{min}} characters",
+      "tooLong": "{{field}} must not exceed {{max}} characters",
+      "minValue": "{{field}} must be at least {{min}}",
+      "maxValue": "{{field}} must not exceed {{max}}",
+      "mustMatch": "{{field}} must match {{matchField}}",
+      "invalidFormat": "Invalid {{field}} format"
+    },
+    
+    "auth": {
+      "email": {
+        "required": "Email is required",
+        "invalid": "Please enter a valid email address",
+        "taken": "This email is already registered"
+      },
+      "password": {
+        "required": "Password is required",
+        "tooShort": "Password must be at least 8 characters",
+        "tooWeak": "Password must contain uppercase, lowercase, number, and special character",
+        "mismatch": "Passwords do not match"
+      },
+      "phone": {
+        "required": "Phone number is required",
+        "invalid": "Please enter a valid Nigerian phone number",
+        "taken": "This phone number is already registered"
+      },
+      "name": {
+        "required": "Name is required",
+        "tooShort": "Name must be at least 2 characters",
+        "tooLong": "Name must not exceed 100 characters"
+      },
+      "otp": {
+        "required": "Verification code is required",
+        "invalid": "Verification code must be 6 digits"
+      }
+    },
+    
+    "property": {
+      "title": {
+        "required": "Property title is required",
+        "tooShort": "Title must be at least 10 characters",
+        "tooLong": "Title must not exceed 200 characters"
+      },
+      "description": {
+        "required": "Description is required",
+        "tooShort": "Description must be at least 50 characters",
+        "tooLong": "Description must not exceed 2000 characters"
+      },
+      "price": {
+        "required": "Price is required",
+        "invalid": "Price must be a valid number",
+        "tooLow": "Price must be at least ₦10,000",
+        "tooHigh": "Price must not exceed ₦50,000,000"
+      },
+      "address": {
+        "required": "Address is required",
+        "invalid": "Please enter a valid address"
+      },
+      "city": {
+        "required": "City is required"
+      },
+      "state": {
+        "required": "State is required"
+      },
+      "propertyType": {
+        "required": "Property type is required"
+      },
+      "bedrooms": {
+        "required": "Number of bedrooms is required",
+        "invalid": "Bedrooms must be a number between 0 and 20"
+      },
+      "bathrooms": {
+        "required": "Number of bathrooms is required",
+        "invalid": "Bathrooms must be a number between 0 and 10"
+      },
+      "images": {
+        "required": "At least one property image is required",
+        "tooMany": "Maximum 20 images allowed",
+        "invalidType": "Only JPEG, PNG, and WebP images are allowed",
+        "tooLarge": "Each image must be less than 5MB"
+      },
+      "boundary": {
+        "required": "Property boundary is required",
+        "invalid": "Invalid boundary coordinates",
+        "tooSmall": "Boundary area is too small",
+        "tooLarge": "Boundary area is too large"
+      },
+      "unitNumber": {
+        "required": "Unit number is required",
+        "duplicate": "This unit number already exists"
+      }
+    },
+    
+    "payment": {
+      "amount": {
+        "required": "Payment amount is required",
+        "invalid": "Invalid payment amount",
+        "tooLow": "Minimum payment amount is ₦1,000"
+      },
+      "agreementCheckbox": {
+        "required": "You must agree to the terms before proceeding"
+      }
+    },
+    
+    "marking": {
+      "contactName": {
+        "required": "Contact person name is required",
+        "tooShort": "Name must be at least 2 characters"
+      },
+      "contactPhone": {
+        "required": "Contact phone number is required",
+        "invalid": "Please enter a valid phone number"
+      },
+      "accessInstructions": {
+        "tooLong": "Instructions must not exceed 500 characters"
+      },
+      "completionPhotos": {
+        "required": "At least 3 completion photos are required",
+        "tooMany": "Maximum 15 photos allowed"
+      },
+      "boundaryData": {
+        "required": "Property boundary data is required"
+      },
+      "completionNotes": {
+        "tooLong": "Notes must not exceed 500 characters"
+      }
+    },
+    
+    "verification": {
+      "documentType": {
+        "required": "Document type is required"
+      },
+      "documentNumber": {
+        "required": "Document number is required",
+        "invalid": "Invalid document number format"
+      },
+      "documentFile": {
+        "required": "Document file is required",
+        "invalidType": "Only PDF, JPEG, and PNG files are allowed",
+        "tooLarge": "File must be less than 10MB"
+      },
+      "selfie": {
+        "required": "Selfie image is required",
+        "invalidType": "Only JPEG and PNG images are allowed"
+      },
+      "nin": {
+        "required": "NIN is required",
+        "invalid": "NIN must be 11 digits"
+      },
+      "bvn": {
+        "required": "BVN is required",
+        "invalid": "BVN must be 11 digits"
+      }
+    },
+    
+    "profile": {
+      "dateOfBirth": {
+        "required": "Date of birth is required",
+        "invalid": "Invalid date",
+        "tooYoung": "You must be at least 18 years old",
+        "future": "Date cannot be in the future"
+      },
+      "address": {
+        "required": "Address is required"
+      },
+      "companyName": {
+        "required": "Company name is required for B2B accounts"
+      },
+      "businessRegNumber": {
+        "required": "Business registration number is required",
+        "invalid": "Invalid registration number format"
+      }
+    },
+    
+    "referral": {
+      "code": {
+        "required": "Referral code is required",
+        "invalid": "Invalid referral code format",
+        "notFound": "Referral code not found",
+        "ownCode": "You cannot use your own referral code"
+      }
+    },
+    
+    "support": {
+      "title": {
+        "required": "Ticket title is required",
+        "tooShort": "Title must be at least 10 characters",
+        "tooLong": "Title must not exceed 200 characters"
+      },
+      "description": {
+        "required": "Description is required",
+        "tooShort": "Description must be at least 20 characters",
+        "tooLong": "Description must not exceed 2000 characters"
+      },
+      "category": {
+        "required": "Category is required"
+      }
+    },
+    
+    "admin": {
+      "rejectionReason": {
+        "required": "Rejection reason is required",
+        "tooShort": "Reason must be at least 20 characters"
+      },
+      "resolution": {
+        "required": "Resolution details are required",
+        "tooShort": "Resolution must be at least 20 characters"
+      },
+      "verificationNotes": {
+        "tooLong": "Notes must not exceed 500 characters"
+      }
+    }
+  }
+}

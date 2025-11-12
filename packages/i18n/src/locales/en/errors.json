@@ -1,0 +1,146 @@
+{
+  "errors": {
+    "general": {
+      "unknown": "An unknown error occurred",
+      "serverError": "Server error. Please try again later",
+      "networkError": "Network error. Please check your connection",
+      "timeout": "Request timed out. Please try again",
+      "notFound": "Resource not found",
+      "unauthorized": "You are not authorized to perform this action",
+      "forbidden": "Access forbidden",
+      "badRequest": "Invalid request"
+    },
+    
+    "auth": {
+      "invalidCredentials": "Invalid email or password",
+      "emailExists": "Email already registered",
+      "phoneExists": "Phone number already registered",
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "weakPassword": "Password is too weak",
+      "passwordMismatch": "Passwords do not match",
+      "invalidOTP": "Invalid verification code",
+      "expiredOTP": "Verification code has expired",
+      "maxOTPAttempts": "Maximum verification attempts exceeded",
+      "sessionExpired": "Your session has expired. Please login again",
+      "accountSuspended": "Your account has been suspended",
+      "accountNotVerified": "Please verify your account first",
+      "invalidToken": "Invalid or expired token"
+    },
+    
+    "property": {
+      "notFound": "Property not found",
+      "alreadyRented": "Property is already rented",
+      "notAvailable": "Property is not available",
+      "invalidBoundary": "Invalid property boundary data",
+      "boundaryOverlap": "Property boundary overlaps with existing property",
+      "duplicateProperty": "This property has already been listed",
+      "missingDocuments": "Required documents are missing",
+      "invalidDocuments": "Invalid or expired documents",
+      "rejectedProperty": "Property was rejected",
+      "uploadFailed": "Failed to upload property images",
+      "invalidAddress": "Invalid property address",
+      "invalidPrice": "Invalid price amount",
+      "missingFields": "Required fields are missing",
+      "paymentLocked": "Property is locked for payment by another user"
+    },
+    
+    "payment": {
+      "failed": "Payment failed. Please try again",
+      "insufficientFunds": "Insufficient funds",
+      "invalidAmount": "Invalid payment amount",
+      "transactionFailed": "Transaction failed",
+      "refundFailed": "Refund processing failed",
+      "alreadyPaid": "Payment has already been made",
+      "confirmationExpired": "Payment confirmation period has expired",
+      "notConfirmed": "Payment has not been confirmed",
+      "invalidPaymentMethod": "Invalid payment method",
+      "gatewayError": "Payment gateway error",
+      "duplicateTransaction": "Duplicate transaction detected"
+    },
+    
+    "marking": {
+      "jobNotFound": "Marking job not found",
+      "alreadyAssigned": "Job is already assigned to another agent",
+      "timeSlotExpired": "Time slot has expired",
+      "notEligible": "You are not eligible for this job",
+      "paymentRequired": "Payment is required before requesting marking",
+      "invalidContactDetails": "Invalid contact person details",
+      "invalidAddress": "Invalid property address",
+      "uploadFailed": "Failed to upload completion photos",
+      "confirmationExpired": "Confirmation period has expired",
+      "alreadyConfirmed": "Marking has already been confirmed",
+      "jobExpired": "Marking job has expired",
+      "jobCancelled": "Marking job has been cancelled",
+      "noAgentsAvailable": "No agents available in your area"
+    },
+    
+    "verification": {
+      "documentRejected": "Document was rejected",
+      "invalidDocument": "Invalid document format",
+      "documentExpired": "Document has expired",
+      "uploadFailed": "Failed to upload document",
+      "verificationFailed": "Verification failed",
+      "pendingVerification": "Verification is pending",
+      "documentRequired": "This document is required",
+      "fileTooBig": "File size exceeds maximum limit",
+      "invalidFileType": "Invalid file type"
+    },
+    
+    "referral": {
+      "invalidCode": "Invalid referral code",
+      "ownCode": "You cannot use your own referral code",
+      "codeUsed": "Referral code has already been used",
+      "notEligible": "You are not eligible for referral rewards",
+      "rewardFailed": "Failed to process referral reward"
+    },
+    
+    "virtualAccount": {
+      "creationFailed": "Failed to create virtual account",
+      "notFound": "Virtual account not found",
+      "insufficientBalance": "Insufficient account balance",
+      "withdrawalFailed": "Withdrawal failed",
+      "accountInactive": "Virtual account is inactive",
+      "transferFailed": "Transfer failed"
+    },
+    
+    "upload": {
+      "failed": "Upload failed",
+      "fileTooBig": "File size exceeds {{maxSize}}MB",
+      "invalidFileType": "Invalid file type. Allowed: {{allowedTypes}}",
+      "tooManyFiles": "Too many files. Maximum: {{maxFiles}}",
+      "uploadTimeout": "Upload timed out. Please try again"
+    },
+    
+    "validation": {
+      "required": "This field is required",
+      "invalidFormat": "Invalid format",
+      "tooShort": "Too short. Minimum {{min}} characters",
+      "tooLong": "Too long. Maximum {{max}} characters",
+      "invalidEmail": "Invalid email address",
+      "invalidPhone": "Invalid phone number",
+      "invalidUrl": "Invalid URL",
+      "invalidDate": "Invalid date",
+      "pastDate": "Date must be in the future",
+      "futureDate": "Date must be in the past",
+      "minValue": "Minimum value is {{min}}",
+      "maxValue": "Maximum value is {{max}}",
+      "invalidNumber": "Must be a valid number",
+      "invalidChoice": "Invalid selection"
+    },
+    
+    "permissions": {
+      "denied": "Permission denied",
+      "locationRequired": "Location permission is required",
+      "cameraRequired": "Camera permission is required",
+      "storageRequired": "Storage permission is required",
+      "notificationRequired": "Notification permission is required"
+    },
+    
+    "rateLimit": {
+      "tooManyRequests": "Too many requests. Please try again later",
+      "loginAttempts": "Too many login attempts. Try again in {{minutes}} minutes",
+      "otpAttempts": "Too many OTP requests. Try again in {{minutes}} minutes"
+    }
+  }
+}

@@ -920,3 +920,593 @@ export const paymentService = new PaymentService();
 //     return user?.name || user?.email?.split('@')[0] || 'User';
 //   }
 // }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/payment-service/src/services/paymentService.ts
+
+// import { PrismaClient, PaymentType, PaymentStatus } from '@prisma/client';
+// import { flutterwaveService } from './flutterwaveService';
+// import { getTranslation } from '../utils/i18n';
+// import { convertCurrency } from '../utils/currencyConverter';
+
+// const prisma = new PrismaClient();
+
+// interface InitiatePaymentParams {
+//   userId: string;
+//   rentalId?: string;
+//   markingJobId?: string;
+//   amount: number;
+//   currency: string;
+//   paymentType: PaymentType;
+//   locale: string;
+// }
+
+// interface ConfirmPaymentParams {
+//   paymentId: string;
+//   userId: string;
+//   confirmed: boolean;
+//   locale: string;
+// }
+
+// export class PaymentService {
+//   /**
+//    * Initiate a new payment
+//    */
+//   async initiatePayment(params: InitiatePaymentParams) {
+//     const { userId, rentalId, markingJobId, amount, currency, paymentType, locale } = params;
+
+//     // Validate payment amount
+//     if (amount <= 0) {
+//       throw new Error(getTranslation('payment.invalid_amount', locale));
+//     }
+
+//     // Check if rental/marking job exists and is valid
+//     if (rentalId) {
+//       const rental = await prisma.rental.findUnique({
+//         where: { id: rentalId },
+//         include: { property: true, unit: true }
+//       });
+
+//       if (!rental) {
+//         throw new Error(getTranslation('payment.rental_not_found', locale));
+//       }
+
+//       // Check if property is locked by another payment
+//       if (rental.property.isPaymentLocked) {
+//         throw new Error(getTranslation('payment.property_locked', locale));
+//       }
+//     }
+
+//     if (markingJobId) {
+//       const markingJob = await prisma.propertyMarkingJob.findUnique({
+//         where: { id: markingJobId }
+//       });
+
+//       if (!markingJob) {
+//         throw new Error(getTranslation('payment.marking_job_not_found', locale));
+//       }
+
+//       if (markingJob.paymentStatus === 'SUCCESS') {
+//         throw new Error(getTranslation('payment.already_paid', locale));
+//       }
+//     }
+
+//     // Calculate fees
+//     const platformFeePercentage = 0.015; // 1.5% platform fee
+//     const flutterwaveFee = this.calculateFlutterwaveFee(amount);
+//     const platformFee = amount * platformFeePercentage;
+//     const totalAmount = amount + flutterwaveFee + platformFee;
+
+//     // Create payment record
+//     const payment = await prisma.payment.create({
+//       data: {
+//         userId,
+//         rentalId,
+//         markingJobId,
+//         amount: totalAmount,
+//         currency,
+//         paymentType,
+//         status: PaymentStatus.PENDING,
+//         platformFee,
+//         description: this.generatePaymentDescription(paymentType, locale)
+//       }
+//     });
+
+//     // Lock property if it's a rental payment
+//     if (rentalId) {
+//       const rental = await prisma.rental.findUnique({
+//         where: { id: rentalId }
+//       });
+
+//       if (rental?.propertyId) {
+//         await prisma.property.update({
+//           where: { id: rental.propertyId },
+//           data: {
+//             isPaymentLocked: true,
+//             paymentLockExpiry: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+//           }
+//         });
+//       }
+
+//       if (rental?.unitId) {
+//         await prisma.propertyUnit.update({
+//           where: { id: rental.unitId },
+//           data: {
+//             isPaymentLocked: true,
+//             paymentLockExpiry: new Date(Date.now() + 15 * 60 * 1000)
+//           }
+//         });
+//       }
+//     }
+
+//     // Initiate payment with Flutterwave
+//     const paymentLink = await flutterwaveService.initiatePayment({
+//       amount: totalAmount,
+//       currency,
+//       email: (await prisma.user.findUnique({ where: { id: userId } }))!.email,
+//       paymentId: payment.id,
+//       locale
+//     });
+
+//     await prisma.payment.update({
+//       where: { id: payment.id },
+//       data: {
+//         flutterwaveRef: paymentLink.reference,
+//         transactionId: paymentLink.transactionId
+//       }
+//     });
+
+//     return {
+//       ...payment,
+//       paymentLink: paymentLink.link
+//     };
+//   }
+
+//   /**
+//    * Verify payment after Flutterwave callback
+//    */
+//   async verifyPayment(transactionId: string, locale: string) {
+//     const payment = await prisma.payment.findUnique({
+//       where: { transactionId },
+//       include: { rental: { include: { property: true, unit: true } } }
+//     });
+
+//     if (!payment) {
+//       throw new Error(getTranslation('payment.not_found', locale));
+//     }
+
+//     // Verify with Flutterwave
+//     const verification = await flutterwaveService.verifyPayment(transactionId);
+
+//     if (verification.status === 'successful') {
+//       await this.handleSuccessfulPayment(payment, locale);
+//     } else {
+//       await this.handleFailedPayment(payment, verification.failureReason, locale);
+//     }
+
+//     return prisma.payment.findUnique({
+//       where: { id: payment.id },
+//       include: { rental: true }
+//     });
+//   }
+
+//   /**
+//    * Handle successful payment
+//    */
+//   private async handleSuccessfulPayment(payment: any, locale: string) {
+//     const confirmationPeriodEnd = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+//     await prisma.payment.update({
+//       where: { id: payment.id },
+//       data: {
+//         status: PaymentStatus.HELD,
+//         paidAt: new Date(),
+//         confirmationPeriodEnd
+//       }
+//     });
+
+//     // Update rental status
+//     if (payment.rentalId) {
+//       await prisma.rental.update({
+//         where: { id: payment.rentalId },
+//         data: {
+//           status: 'PENDING_CONFIRMATION',
+//           confirmationDeadline: confirmationPeriodEnd
+//         }
+//       });
+
+//       // Unlock and mark property as rented
+//       if (payment.rental?.propertyId) {
+//         await prisma.property.update({
+//           where: { id: payment.rental.propertyId },
+//           data: {
+//             isPaymentLocked: false,
+//             paymentLockExpiry: null,
+//             isAvailable: false,
+//             status: 'RENTED'
+//           }
+//         });
+//       }
+
+//       if (payment.rental?.unitId) {
+//         await prisma.propertyUnit.update({
+//           where: { id: payment.rental.unitId },
+//           data: {
+//             isPaymentLocked: false,
+//             paymentLockExpiry: null,
+//             isAvailable: false,
+//             status: 'OCCUPIED'
+//           }
+//         });
+//       }
+//     }
+
+//     // Update marking job status
+//     if (payment.markingJobId) {
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: payment.markingJobId },
+//         data: {
+//           paymentStatus: 'SUCCESS'
+//         }
+//       });
+//     }
+
+//     // TODO: Send confirmation notification
+//   }
+
+//   /**
+//    * Handle failed payment
+//    */
+//   private async handleFailedPayment(payment: any, reason: string, locale: string) {
+//     await prisma.payment.update({
+//       where: { id: payment.id },
+//       data: {
+//         status: PaymentStatus.FAILED,
+//         failureReason: reason
+//       }
+//     });
+
+//     // Unlock property
+//     if (payment.rentalId && payment.rental?.propertyId) {
+//       await prisma.property.update({
+//         where: { id: payment.rental.propertyId },
+//         data: {
+//           isPaymentLocked: false,
+//           paymentLockExpiry: null
+//         }
+//       });
+//     }
+
+//     if (payment.rental?.unitId) {
+//       await prisma.propertyUnit.update({
+//         where: { id: payment.rental.unitId },
+//         data: {
+//           isPaymentLocked: false,
+//           paymentLockExpiry: null
+//         }
+//       });
+//     }
+//   }
+
+//   /**
+//    * Confirm rental payment (renter confirms property is as expected)
+//    */
+//   async confirmRentalPayment(params: ConfirmPaymentParams) {
+//     const { paymentId, userId, confirmed, locale } = params;
+
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId },
+//       include: { rental: { include: { property: true, unit: true } } }
+//     });
+
+//     if (!payment) {
+//       throw new Error(getTranslation('payment.not_found', locale));
+//     }
+
+//     if (payment.userId !== userId) {
+//       throw new Error(getTranslation('payment.unauthorized', locale));
+//     }
+
+//     if (payment.status !== PaymentStatus.HELD) {
+//       throw new Error(getTranslation('payment.cannot_confirm', locale));
+//     }
+
+//     if (confirmed) {
+//       // Release funds to virtual accounts
+//       await this.releaseFunds(payment, locale);
+
+//       await prisma.payment.update({
+//         where: { id: paymentId },
+//         data: {
+//           status: PaymentStatus.RELEASED,
+//           isReleased: true,
+//           releasedAt: new Date()
+//         }
+//       });
+
+//       await prisma.rental.update({
+//         where: { id: payment.rentalId! },
+//         data: {
+//           status: 'ACTIVE',
+//           isConfirmed: true,
+//           confirmedAt: new Date()
+//         }
+//       });
+
+//       return { confirmed: true, message: getTranslation('payment.funds_released', locale) };
+//     } else {
+//       // Initiate refund process
+//       await this.requestRefund({
+//         paymentId,
+//         userId,
+//         reason: 'Property not as described',
+//         locale
+//       });
+
+//       return { confirmed: false, message: getTranslation('payment.refund_initiated', locale) };
+//     }
+//   }
+
+//   /**
+//    * Release funds to virtual accounts
+//    */
+//   private async releaseFunds(payment: any, locale: string) {
+//     const rental = payment.rental;
+//     const property = rental.property;
+
+//     // Calculate commission split
+//     const rentAmount = payment.amount - (payment.platformFee || 0);
+//     const commissionPercentage = 0.20; // 20% commission
+//     const totalCommission = rentAmount * commissionPercentage;
+    
+//     let agentCommission = 0;
+//     let ownerAmount = rentAmount - totalCommission;
+
+//     // If there's an agent, split the commission
+//     if (property.agentId) {
+//       agentCommission = totalCommission * 0.50; // Agent gets 50% of commission
+//       const platformCommission = totalCommission - agentCommission;
+
+//       // Credit agent's virtual account
+//       await this.creditVirtualAccount(property.agentId, agentCommission, 'NGN');
+//       // Credit platform virtual account
+//       await this.creditPlatformAccount(platformCommission, 'NGN');
+//     } else {
+//       // No agent, platform gets full commission
+//       await this.creditPlatformAccount(totalCommission, 'NGN');
+//     }
+
+//     // Credit owner's virtual account
+//     await this.creditVirtualAccount(property.ownerId, ownerAmount, 'NGN');
+
+//     // Update payment record with split details
+//     await prisma.payment.update({
+//       where: { id: payment.id },
+//       data: {
+//         agentCommission: agentCommission > 0 ? agentCommission : null,
+//         platformFee: totalCommission - agentCommission,
+//         ownerAmount
+//       }
+//     });
+//   }
+
+//   /**
+//    * Credit user's virtual account
+//    */
+//   private async creditVirtualAccount(userId: string, amount: number, currency: string) {
+//     await prisma.virtualAccount.updateMany({
+//       where: { userId },
+//       data: {
+//         balance: { increment: amount }
+//       }
+//     });
+//   }
+
+//   /**
+//    * Credit platform account
+//    */
+//   private async creditPlatformAccount(amount: number, currency: string) {
+//     // TODO: Implement platform account crediting
+//     console.log(`Platform credited: ${amount} ${currency}`);
+//   }
+
+//   /**
+//    * Request refund
+//    */
+//   async requestRefund(params: { paymentId: string; userId: string; reason: string; locale: string }) {
+//     const { paymentId, userId, reason, locale } = params;
+
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId }
+//     });
+
+//     if (!payment) {
+//       throw new Error(getTranslation('payment.not_found', locale));
+//     }
+
+//     if (payment.userId !== userId) {
+//       throw new Error(getTranslation('payment.unauthorized', locale));
+//     }
+
+//     // Initiate refund with Flutterwave
+//     const refund = await flutterwaveService.initiateRefund(payment.transactionId!, reason);
+
+//     await prisma.payment.update({
+//       where: { id: paymentId },
+//       data: {
+//         status: PaymentStatus.REFUNDED,
+//         failureReason: reason
+//       }
+//     });
+
+//     return refund;
+//   }
+
+//   /**
+//    * Get payment history
+//    */
+//   async getPaymentHistory(params: {
+//     userId: string;
+//     page: number;
+//     limit: number;
+//     status?: string;
+//     paymentType?: string;
+//   }) {
+//     const { userId, page, limit, status, paymentType } = params;
+//     const skip = (page - 1) * limit;
+
+//     const where: any = { userId };
+//     if (status) where.status = status;
+//     if (paymentType) where.paymentType = paymentType;
+
+//     const [payments, total] = await Promise.all([
+//       prisma.payment.findMany({
+//         where,
+//         skip,
+//         take: limit,
+//         orderBy: { createdAt: 'desc' },
+//         include: { rental: { include: { property: true } } }
+//       }),
+//       prisma.payment.count({ where })
+//     ]);
+
+//     return {
+//       payments,
+//       pagination: {
+//         page,
+//         limit,
+//         total,
+//         totalPages: Math.ceil(total / limit)
+//       }
+//     };
+//   }
+
+//   /**
+//    * Get payment statistics
+//    */
+//   async getPaymentStats(params: {
+//     userId: string;
+//     startDate?: Date;
+//     endDate?: Date;
+//   }) {
+//     const { userId, startDate, endDate } = params;
+
+//     const where: any = { userId };
+//     if (startDate || endDate) {
+//       where.createdAt = {};
+//       if (startDate) where.createdAt.gte = startDate;
+//       if (endDate) where.createdAt.lte = endDate;
+//     }
+
+//     const [totalEarnings, pendingPayments, releasedPayments, commissionEarned] = await Promise.all([
+//       prisma.payment.aggregate({
+//         where: { ...where, status: { in: ['SUCCESS', 'HELD', 'RELEASED'] } },
+//         _sum: { amount: true }
+//       }),
+//       prisma.payment.aggregate({
+//         where: { ...where, status: 'HELD' },
+//         _sum: { amount: true }
+//       }),
+//       prisma.payment.aggregate({
+//         where: { ...where, status: 'RELEASED' },
+//         _sum: { amount: true }
+//       }),
+//       prisma.payment.aggregate({
+//         where: { ...where, status: 'RELEASED' },
+//         _sum: { agentCommission: true }
+//       })
+//     ]);
+
+//     return {
+//       totalEarnings: totalEarnings._sum.amount || 0,
+//       pendingPayments: pendingPayments._sum.amount || 0,
+//       releasedPayments: releasedPayments._sum.amount || 0,
+//       commissionEarned: commissionEarned._sum.agentCommission || 0
+//     };
+//   }
+
+//   /**
+//    * Handle Flutterwave webhook
+//    */
+//   async handleWebhook(payload: any, signature: string) {
+//     // Verify webhook signature
+//     const isValid = flutterwaveService.verifyWebhookSignature(payload, signature);
+//     if (!isValid) {
+//       throw new Error('Invalid webhook signature');
+//     }
+
+//     const { event, data } = payload;
+
+//     if (event === 'charge.completed') {
+//       await this.verifyPayment(data.tx_ref, 'en');
+//     }
+//   }
+
+//   /**
+//    * Retry failed payment
+//    */
+//   async retryPayment(paymentId: string, userId: string, locale: string) {
+//     const payment = await prisma.payment.findUnique({
+//       where: { id: paymentId }
+//     });
+
+//     if (!payment) {
+//       throw new Error(getTranslation('payment.not_found', locale));
+//     }
+
+//     if (payment.userId !== userId) {
+//       throw new Error(getTranslation('payment.unauthorized', locale));
+//     }
+
+//     if (payment.status !== PaymentStatus.FAILED) {
+//       throw new Error(getTranslation('payment.cannot_retry', locale));
+//     }
+
+//     // Create new payment with same details
+//     return this.initiatePayment({
+//       userId,
+//       rentalId: payment.rentalId || undefined,
+//       markingJobId: payment.markingJobId || undefined,
+//       amount: Number(payment.amount),
+//       currency: payment.currency,
+//       paymentType: payment.paymentType,
+//       locale
+//     });
+//   }
+
+//   /**
+//    * Calculate Flutterwave transaction fee
+//    */
+//   private calculateFlutterwaveFee(amount: number): number {
+//     // Flutterwave charges 1.4% + NGN 100 for local cards
+//     return (amount * 0.014) + 100;
+//   }
+
+//   /**
+//    * Generate payment description
+//    */
+//   private generatePaymentDescription(paymentType: PaymentType, locale: string): string {
+//     const descriptions: Record<PaymentType, string> = {
+//       RENT: getTranslation('payment.type.rent', locale),
+//       DEPOSIT: getTranslation('payment.type.deposit', locale),
+//       AGENT_COMMISSION: getTranslation('payment.type.commission', locale),
+//       PREMIUM_UPGRADE: getTranslation('payment.type.premium', locale),
+//       PROPERTY_MARKING: getTranslation('payment.type.marking', locale)
+//     };
+
+//     return descriptions[paymentType] || paymentType;
+//   }
+// }
+
+// export const paymentService = new PaymentService();

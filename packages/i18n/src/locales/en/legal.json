@@ -1,0 +1,247 @@
+{
+  "legal": {
+    "termsOfService": {
+      "title": "Terms of Service",
+      "lastUpdated": "Last Updated: {{date}}",
+      "acceptTerms": "I accept the Terms of Service",
+      
+      "sections": {
+        "introduction": {
+          "title": "1. Introduction",
+          "content": "Welcome to Newcondo. By accessing our platform, you agree to be bound by these Terms of Service."
+        },
+        "definitions": {
+          "title": "2. Definitions",
+          "platform": "Platform: The Newcondo website and mobile applications",
+          "user": "User: Any person who accesses or uses the Platform",
+          "property": "Property: Real estate listed on the Platform",
+          "services": "Services: All services provided by Newcondo"
+        },
+        "eligibility": {
+          "title": "3. Eligibility",
+          "content": "You must be at least 18 years old and have legal capacity to enter into binding contracts to use our services."
+        },
+        "userAccounts": {
+          "title": "4. User Accounts",
+          "registration": "You must provide accurate and complete information during registration",
+          "security": "You are responsible for maintaining the security of your account",
+          "termination": "We reserve the right to suspend or terminate accounts that violate these terms"
+        },
+        "propertyListings": {
+          "title": "5. Property Listings",
+          "accuracy": "Property owners must provide accurate information about their properties",
+          "documentation": "All required legal documents must be submitted",
+          "verification": "Properties are subject to verification by Newcondo",
+          "removal": "Newcondo may remove listings that violate our policies"
+        },
+        "payments": {
+          "title": "6. Payments and Fees",
+          "commission": "Newcondo charges a 20% commission on successful rentals",
+          "processing": "Payment processing fees apply to all transactions",
+          "refunds": "Refund policy: Refunds available within 24-hour cancellation period",
+          "nonRefundable": "Service fees are non-refundable"
+        },
+        "markingService": {
+          "title": "7. Property Marking Service",
+          "fee": "Property marking service fee: ₦20,000 for agent marking",
+          "newcondoFee": "Newcondo direct marking fee: ₦25,000",
+          "agentCompensation": "Agent compensation: 25% of marking fee",
+          "timeLimit": "Agents have 3 hours to complete marking",
+          "confirmation": "Property owners have 2-3 days to confirm marking",
+          "quality": "Newcondo does not guarantee marking quality",
+          "liability": "Users assume responsibility for granting property access"
+        },
+        "cancellation": {
+          "title": "8. Cancellation and Refunds",
+          "period": "24-hour cancellation/confirmation period for rent payments",
+          "serviceFee": "Service fees are non-refundable",
+          "refundProcess": "Refund processing: 5-7 business days",
+          "disputes": "Disputes must be raised within the cancellation period"
+        },
+        "liabilityLimitations": {
+          "title": "9. Limitation of Liability",
+          "noWarranty": "Services are provided \"as is\" without warranties",
+          "userResponsibility": "Users are responsible for verifying property information",
+          "indemnification": "Users agree to indemnify Newcondo against claims",
+          "damages": "Newcondo is not liable for indirect or consequential damages"
+        },
+        "intellectualProperty": {
+          "title": "10. Intellectual Property",
+          "ownership": "Newcondo owns all platform intellectual property",
+          "userContent": "Users retain rights to their content but grant Newcondo license to use it",
+          "restrictions": "Users may not copy, modify, or distribute platform content"
+        },
+        "privacy": {
+          "title": "11. Privacy",
+          "dataCollection": "We collect and process personal data as described in our Privacy Policy",
+          "dataProtection": "We implement security measures to protect user data",
+          "thirdParty": "We may share data with third-party service providers"
+        },
+        "disputeResolution": {
+          "title": "12. Dispute Resolution",
+          "negotiation": "Parties agree to attempt negotiation first",
+          "mediation": "Unresolved disputes may be referred to mediation",
+          "jurisdiction": "Governed by the laws of the Federal Republic of Nigeria"
+        },
+        "modifications": {
+          "title": "13. Modifications to Terms",
+          "content": "We reserve the right to modify these terms at any time. Continued use constitutes acceptance of modified terms."
+        }
+      }
+    },
+    
+    "privacyPolicy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "Last Updated: {{date}}",
+      
+      "sections": {
+        "introduction": {
+          "title": "1. Introduction",
+          "content": "This Privacy Policy explains how Newcondo collects, uses, and protects your personal information."
+        },
+        "dataCollection": {
+          "title": "2. Information We Collect",
+          "personal": "Personal information: name, email, phone number",
+          "identification": "Identification documents for verification",
+          "financial": "Payment and banking information",
+          "location": "GPS coordinates and property location data",
+          "usage": "Platform usage and interaction data",
+          "device": "Device information and IP addresses"
+        },
+        "dataUse": {
+          "title": "3. How We Use Your Information",
+          "services": "To provide and improve our services",
+          "verification": "To verify identity and prevent fraud",
+          "payments": "To process payments and transactions",
+          "communication": "To communicate important updates",
+          "legal": "To comply with legal obligations"
+        },
+        "dataSharing": {
+          "title": "4. Information Sharing",
+          "thirdParty": "We share data with payment processors and service providers",
+          "legal": "We may disclose data when required by law",
+          "consent": "We will not sell your data without consent"
+        },
+        "dataSecurity": {
+          "title": "5. Data Security",
+          "measures": "We implement industry-standard security measures",
+          "encryption": "Data is encrypted in transit and at rest",
+          "access": "Limited access to personal data by authorized personnel"
+        },
+        "userRights": {
+          "title": "6. Your Rights",
+          "access": "Right to access your personal data",
+          "correction": "Right to correct inaccurate data",
+          "deletion": "Right to request data deletion",
+          "portability": "Right to data portability",
+          "objection": "Right to object to processing"
+        },
+        "cookies": {
+          "title": "7. Cookies and Tracking",
+          "usage": "We use cookies to improve user experience",
+          "types": "Essential, functional, and analytical cookies",
+          "control": "You can control cookie preferences in your browser"
+        },
+        "children": {
+          "title": "8. Children's Privacy",
+          "content": "Our services are not intended for users under 18 years of age"
+        },
+        "changes": {
+          "title": "9. Changes to Privacy Policy",
+          "content": "We may update this policy and will notify users of significant changes"
+        },
+        "contact": {
+          "title": "10. Contact Us",
+          "content": "For privacy concerns, contact us at privacy@newcondo.com"
+        }
+      }
+    },
+    
+    "cookiePolicy": {
+      "title": "Cookie Policy",
+      "accept": "Accept All Cookies",
+      "reject": "Reject Non-Essential",
+      "customize": "Customize Settings",
+      
+      "types": {
+        "essential": {
+          "title": "Essential Cookies",
+          "description": "Required for basic platform functionality",
+          "required": "Always active"
+        },
+        "functional": {
+          "title": "Functional Cookies",
+          "description": "Remember your preferences and settings"
+        },
+        "analytics": {
+          "title": "Analytics Cookies",
+          "description": "Help us understand how you use the platform"
+        },
+        "marketing": {
+          "title": "Marketing Cookies",
+          "description": "Used to deliver relevant advertisements"
+        }
+      }
+    },
+    
+    "markingServiceTerms": {
+      "title": "Property Marking Service Terms",
+      
+      "sections": {
+        "overview": {
+          "title": "1. Service Overview",
+          "content": "The Property Marking Service enables remote property boundary verification and duplicate prevention."
+        },
+        "fees": {
+          "title": "2. Service Fees",
+          "agentMarking": "Agent marking: ₦20,000",
+          "newcondoMarking": "Newcondo direct marking: ₦25,000",
+          "agentCompensation": "Agent receives 25% of marking fee (₦5,000)",
+          "platformFee": "Newcondo retains 75% (₦15,000)",
+          "nonRefundable": "All marking fees are non-refundable once service begins"
+        },
+        "process": {
+          "title": "3. Marking Process",
+          "assignment": "Jobs assigned on first-come-first-served basis",
+          "timeLimit": "3-hour time slot for completion",
+          "confirmation": "2-3 day owner confirmation period",
+          "payment": "Payment held until owner confirms marking"
+        },
+        "responsibilities": {
+          "title": "4. User Responsibilities",
+          "propertyOwner": "Property owners must provide accurate contact information and property access details",
+          "agent": "Agents must complete marking within time slot and provide accurate boundary data",
+          "contactPerson": "Contact persons must be available to grant property access"
+        },
+        "liabilities": {
+          "title": "5. Liability and Indemnification",
+          "platformLiability": "Newcondo is not liable for property damage or access disputes",
+          "userLiability": "Users assume all risks related to property access",
+          "agentLiability": "Agents work as independent contractors",
+          "indemnification": "Users indemnify Newcondo against all claims arising from marking service"
+        },
+        "dataAccuracy": {
+          "title": "6. Data Accuracy",
+          "verification": "Boundary data is user-generated and not verified by Newcondo",
+          "disputes": "Boundary disputes handled through dispute resolution process",
+          "modification": "Newcondo may modify or reject boundary data that appears fraudulent"
+        },
+        "cancellation": {
+          "title": "7. Cancellation Policy",
+          "beforeAssignment": "Full refund if cancelled before agent assignment",
+          "afterAssignment": "No refund after agent accepts job",
+          "agentCancellation": "Job reassigned if agent cancels within time limit",
+          "ownerRejection": "Partial agent compensation if owner rejects valid marking"
+        }
+      }
+    },
+    
+    "consent": {
+      "dataProcessing": "I consent to the processing of my personal data",
+      "marketing": "I agree to receive marketing communications",
+      "thirdParty": "I agree to data sharing with third-party service providers",
+      "terms": "I have read and agree to the Terms of Service",
+      "privacy": "I have read and understand the Privacy Policy"
+    }
+  }
+}

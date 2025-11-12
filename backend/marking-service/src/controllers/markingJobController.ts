@@ -1776,3 +1776,392 @@ export class MarkingJobController {
 //     );
 //   }
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/controllers/markingJobController.ts
+
+// import { Request, Response } from 'express';
+// import { markingJobService } from '../services/markingJobService';
+// import { getTranslation } from '../utils/i18n';
+
+// export class MarkingJobController {
+//   /**
+//    * Create a new marking job request
+//    */
+//   async createMarkingJob(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const {
+//         propertyId,
+//         contactPersonName,
+//         contactPersonPhone,
+//         accessInstructions,
+//         preferredTime,
+//         urgencyLevel,
+//         markingOption // 'self', 'newcondo', 'someone_i_know', 'assign_to_agent'
+//       } = req.body;
+
+//       const markingJob = await markingJobService.createMarkingJob({
+//         propertyId,
+//         requestedBy: userId,
+//         contactPersonName,
+//         contactPersonPhone,
+//         accessInstructions,
+//         preferredTime,
+//         urgencyLevel,
+//         markingOption,
+//         locale
+//       });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: getTranslation('marking.job_created', locale),
+//         data: markingJob
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.creation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get marking job by ID
+//    */
+//   async getMarkingJob(req: Request, res: Response) {
+//     try {
+//       const { jobId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const markingJob = await markingJobService.getMarkingJobById(jobId);
+
+//       if (!markingJob) {
+//         return res.status(404).json({
+//           success: false,
+//           message: getTranslation('marking.job_not_found', locale)
+//         });
+//       }
+
+//       return res.status(200).json({
+//         success: true,
+//         data: markingJob
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get marking jobs for a user (property owner or agent)
+//    */
+//   async getMyMarkingJobs(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const userRole = req.user!.role;
+//       const locale = req.locale || 'en';
+//       const { status, page = 1, limit = 10 } = req.query;
+
+//       const result = await markingJobService.getUserMarkingJobs({
+//         userId,
+//         userRole,
+//         status: status as string,
+//         page: Number(page),
+//         limit: Number(limit)
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.jobs_retrieved', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Accept marking job (agent accepts from queue)
+//    */
+//   async acceptMarkingJob(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { jobId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const result = await markingJobService.acceptMarkingJob({
+//         jobId,
+//         agentId: userId,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.job_accepted', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.acceptance_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Complete marking job (upload boundary data and images)
+//    */
+//   async completeMarkingJob(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { jobId } = req.params;
+//       const locale = req.locale || 'en';
+//       const { boundaryData, completionImages, completionNotes } = req.body;
+
+//       const result = await markingJobService.completeMarkingJob({
+//         jobId,
+//         agentId: userId,
+//         boundaryData,
+//         completionImages,
+//         completionNotes,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.job_completed', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.completion_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Confirm marking job (property owner confirms the marking)
+//    */
+//   async confirmMarkingJob(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { jobId } = req.params;
+//       const locale = req.locale || 'en';
+//       const { confirmed, rejectionReason } = req.body;
+
+//       const result = await markingJobService.confirmMarkingJob({
+//         jobId,
+//         propertyOwnerId: userId,
+//         confirmed,
+//         rejectionReason,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: confirmed 
+//           ? getTranslation('marking.job_confirmed', locale)
+//           : getTranslation('marking.job_rejected', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.confirmation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Cancel marking job
+//    */
+//   async cancelMarkingJob(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { jobId } = req.params;
+//       const locale = req.locale || 'en';
+//       const { reason } = req.body;
+
+//       await markingJobService.cancelMarkingJob({
+//         jobId,
+//         userId,
+//         reason,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.job_cancelled', locale)
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.cancellation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get available marking jobs for agents (queue)
+//    */
+//   async getAvailableJobs(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { latitude, longitude, radius = 10 } = req.query;
+
+//       const jobs = await markingJobService.getAvailableJobsForAgent({
+//         agentId: userId,
+//         latitude: Number(latitude),
+//         longitude: Number(longitude),
+//         radius: Number(radius),
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.available_jobs_retrieved', locale),
+//         data: jobs
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get marking job statistics
+//    */
+//   async getMarkingStats(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const userRole = req.user!.role;
+//       const locale = req.locale || 'en';
+
+//       const stats = await markingJobService.getMarkingStats({
+//         userId,
+//         userRole
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.stats_retrieved', locale),
+//         data: stats
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Generate shareable marking link (for "someone I know" option)
+//    */
+//   async generateShareableLink(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { jobId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const link = await markingJobService.generateShareableLink({
+//         jobId,
+//         propertyOwnerId: userId,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.link_generated', locale),
+//         data: { link }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.link_generation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Mark property via shareable link
+//    */
+//   async markViaLink(req: Request, res: Response) {
+//     try {
+//       const { token } = req.params;
+//       const locale = req.locale || 'en';
+//       const { boundaryData, completionImages, markerName, markerPhone } = req.body;
+
+//       const result = await markingJobService.markViaShareableLink({
+//         token,
+//         boundaryData,
+//         completionImages,
+//         markerName,
+//         markerPhone,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('marking.completed_via_link', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('marking.link_marking_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+// }
+
+// export const markingJobController = new MarkingJobController();

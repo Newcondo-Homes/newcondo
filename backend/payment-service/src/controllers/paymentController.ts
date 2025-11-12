@@ -410,3 +410,297 @@ export class PaymentController {
     }
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/payment-service/src/controllers/paymentController.ts
+
+// import { Request, Response } from 'express';
+// import { paymentService } from '../services/paymentService';
+// import { getTranslation } from '../utils/i18n';
+// import { formatCurrency } from '../utils/currencyConverter';
+
+// export class PaymentController {
+//   /**
+//    * Initiate payment for rental or marking job
+//    */
+//   async initiatePayment(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { rentalId, markingJobId, amount, currency, paymentType } = req.body;
+
+//       const payment = await paymentService.initiatePayment({
+//         userId,
+//         rentalId,
+//         markingJobId,
+//         amount,
+//         currency: currency || 'NGN',
+//         paymentType,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('payment.initiated', locale),
+//         data: {
+//           ...payment,
+//           formattedAmount: formatCurrency(payment.amount, payment.currency, locale)
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('payment.initiation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Verify payment status
+//    */
+//   async verifyPayment(req: Request, res: Response) {
+//     try {
+//       const locale = req.locale || 'en';
+//       const { transactionId } = req.params;
+
+//       const payment = await paymentService.verifyPayment(transactionId, locale);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('payment.verified', locale),
+//         data: {
+//           ...payment,
+//           formattedAmount: formatCurrency(payment.amount, payment.currency, locale)
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('payment.verification_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get payment history
+//    */
+//   async getPaymentHistory(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { page = 1, limit = 10, status, paymentType } = req.query;
+
+//       const result = await paymentService.getPaymentHistory({
+//         userId,
+//         page: Number(page),
+//         limit: Number(limit),
+//         status: status as string,
+//         paymentType: paymentType as string
+//       });
+
+//       // Format amounts in user's locale
+//       const formattedPayments = result.payments.map(payment => ({
+//         ...payment,
+//         formattedAmount: formatCurrency(payment.amount, payment.currency, locale),
+//         formattedAgentCommission: payment.agentCommission 
+//           ? formatCurrency(payment.agentCommission, payment.currency, locale)
+//           : null,
+//         formattedPlatformFee: payment.platformFee
+//           ? formatCurrency(payment.platformFee, payment.currency, locale)
+//           : null,
+//         formattedOwnerAmount: payment.ownerAmount
+//           ? formatCurrency(payment.ownerAmount, payment.currency, locale)
+//           : null
+//       }));
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('payment.history_retrieved', locale),
+//         data: {
+//           payments: formattedPayments,
+//           pagination: result.pagination
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Request refund
+//    */
+//   async requestRefund(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { paymentId, reason } = req.body;
+
+//       const refund = await paymentService.requestRefund({
+//         paymentId,
+//         userId,
+//         reason,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('payment.refund_requested', locale),
+//         data: {
+//           ...refund,
+//           formattedAmount: formatCurrency(refund.amount, refund.currency, locale)
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('payment.refund_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Confirm rental payment (renter confirms property is as expected)
+//    */
+//   async confirmRentalPayment(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { paymentId } = req.params;
+//       const { confirmed } = req.body;
+
+//       const result = await paymentService.confirmRentalPayment({
+//         paymentId,
+//         userId,
+//         confirmed,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: confirmed 
+//           ? getTranslation('payment.confirmed', locale)
+//           : getTranslation('payment.disputed', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('payment.confirmation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get payment statistics (for owners/agents)
+//    */
+//   async getPaymentStats(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { startDate, endDate } = req.query;
+
+//       const stats = await paymentService.getPaymentStats({
+//         userId,
+//         startDate: startDate ? new Date(startDate as string) : undefined,
+//         endDate: endDate ? new Date(endDate as string) : undefined
+//       });
+
+//       // Format all currency values
+//       const formattedStats = {
+//         ...stats,
+//         totalEarnings: formatCurrency(stats.totalEarnings, 'NGN', locale),
+//         pendingPayments: formatCurrency(stats.pendingPayments, 'NGN', locale),
+//         releasedPayments: formatCurrency(stats.releasedPayments, 'NGN', locale),
+//         commissionEarned: formatCurrency(stats.commissionEarned, 'NGN', locale)
+//       };
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('payment.stats_retrieved', locale),
+//         data: formattedStats
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Handle payment webhook from Flutterwave
+//    */
+//   async handleWebhook(req: Request, res: Response) {
+//     try {
+//       const signature = req.headers['verif-hash'] as string;
+//       const payload = req.body;
+
+//       await paymentService.handleWebhook(payload, signature);
+
+//       return res.status(200).json({ success: true });
+//     } catch (error: any) {
+//       console.error('Webhook error:', error);
+//       return res.status(500).json({
+//         success: false,
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Retry failed payment
+//    */
+//   async retryPayment(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { paymentId } = req.params;
+
+//       const payment = await paymentService.retryPayment(paymentId, userId, locale);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('payment.retry_initiated', locale),
+//         data: {
+//           ...payment,
+//           formattedAmount: formatCurrency(payment.amount, payment.currency, locale)
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('payment.retry_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+// }
+
+// export const paymentController = new PaymentController();

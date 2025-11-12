@@ -1385,3 +1385,600 @@ export class MarkingJobService {
 // }
 
 // export default MarkingJobService;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/marking-service/src/services/markingJobService.ts
+
+// import { PrismaClient, MarkingJobStatus, UrgencyLevel } from '@prisma/client';
+// import { getTranslation } from '../utils/i18n';
+// import crypto from 'crypto';
+
+// const prisma = new PrismaClient();
+
+// interface CreateMarkingJobParams {
+//   propertyId: string;
+//   requestedBy: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   preferredTime?: Date;
+//   urgencyLevel: UrgencyLevel;
+//   markingOption: string;
+//   locale: string;
+// }
+
+// export class MarkingJobService {
+//   /**
+//    * Create a new marking job
+//    */
+//   async createMarkingJob(params: CreateMarkingJobParams) {
+//     const {
+//       propertyId,
+//       requestedBy,
+//       contactPersonName,
+//       contactPersonPhone,
+//       accessInstructions,
+//       preferredTime,
+//       urgencyLevel,
+//       markingOption,
+//       locale
+//     } = params;
+
+//     // Check if property exists
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId },
+//       include: { owner: true }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     // Check if user is authorized (owner or listing agent)
+//     if (property.ownerId !== requestedBy && property.agentId !== requestedBy) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Calculate marking fee based on option
+//     let markingFee = 0;
+//     if (markingOption === 'newcondo') {
+//       markingFee = 25000; // Newcondo marks for ₦25,000
+//     } else if (markingOption === 'assign_to_agent') {
+//       markingFee = 20000; // Agent marks for ₦20,000
+//     }
+
+//     // Calculate max completion time (3 days for agent marking)
+//     const maxCompletionTime = new Date();
+//     if (markingOption === 'assign_to_agent') {
+//       maxCompletionTime.setDate(maxCompletionTime.getDate() + 3);
+//     }
+
+//     // Create marking job
+//     const markingJob = await prisma.propertyMarkingJob.create({
+//       data: {
+//         propertyId,
+//         requestedBy,
+//         contactPersonName,
+//         contactPersonPhone,
+//         accessInstructions,
+//         preferredTime,
+//         urgencyLevel,
+//         markingFee,
+//         status: markingOption === 'self' ? MarkingJobStatus.IN_PROGRESS : MarkingJobStatus.QUEUED,
+//         maxCompletionTime: markingOption === 'assign_to_agent' ? maxCompletionTime : undefined
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true
+//       }
+//     });
+
+//     // If assigning to agents, broadcast to available agents
+//     if (markingOption === 'assign_to_agent') {
+//       await this.broadcastToAgents(markingJob, locale);
+//     }
+
+//     return markingJob;
+//   }
+
+//   /**
+//    * Broadcast marking job to available agents
+//    */
+//   private async broadcastToAgents(markingJob: any, locale: string) {
+//     // Get property coordinates
+//     const coordinates = markingJob.property.gpsCoordinates 
+//       ? JSON.parse(markingJob.property.gpsCoordinates)
+//       : null;
+
+//     if (!coordinates) {
+//       throw new Error(getTranslation('errors.no_coordinates', locale));
+//     }
+
+//     // Find available agents within reasonable proximity (10km radius)
+//     const availableAgents = await prisma.user.findMany({
+//       where: {
+//         role: 'AGENT',
+//         isAvailableForMarking: true,
+//         agentServiceAreas: {
+//           has: markingJob.property.city
+//         }
+//       }
+//     });
+
+//     // TODO: Send notifications to agents
+//     console.log(`Broadcasting marking job ${markingJob.id} to ${availableAgents.length} agents`);
+//   }
+
+//   /**
+//    * Get marking job by ID
+//    */
+//   async getMarkingJobById(jobId: string) {
+//     return prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//         assignedAgent: true
+//       }
+//     });
+//   }
+
+//   /**
+//    * Get user's marking jobs
+//    */
+//   async getUserMarkingJobs(params: {
+//     userId: string;
+//     userRole: string;
+//     status?: string;
+//     page: number;
+//     limit: number;
+//   }) {
+//     const { userId, userRole, status, page, limit } = params;
+//     const skip = (page - 1) * limit;
+
+//     const where: any = {};
+
+//     // Filter based on user role
+//     if (userRole === 'OWNER' || userRole === 'AGENT') {
+//       where.requestedBy = userId;
+//     } else if (userRole === 'AGENT') {
+//       where.OR = [
+//         { requestedBy: userId },
+//         { assignedAgentId: userId }
+//       ];
+//     }
+
+//     if (status) {
+//       where.status = status;
+//     }
+
+//     const [jobs, total] = await Promise.all([
+//       prisma.propertyMarkingJob.findMany({
+//         where,
+//         skip,
+//         take: limit,
+//         orderBy: { createdAt: 'desc' },
+//         include: {
+//           property: true,
+//           requestingUser: true,
+//           assignedAgent: true
+//         }
+//       }),
+//       prisma.propertyMarkingJob.count({ where })
+//     ]);
+
+//     return {
+//       jobs,
+//       pagination: {
+//         page,
+//         limit,
+//         total,
+//         totalPages: Math.ceil(total / limit)
+//       }
+//     };
+//   }
+
+//   /**
+//    * Agent accepts marking job
+//    */
+//   async acceptMarkingJob(params: { jobId: string; agentId: string; locale: string }) {
+//     const { jobId, agentId, locale } = params;
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId }
+//     });
+
+//     if (!job) {
+//       throw new Error(getTranslation('errors.marking_job_not_found', locale));
+//     }
+
+//     if (job.status !== MarkingJobStatus.QUEUED) {
+//       throw new Error(getTranslation('errors.job_not_available', locale));
+//     }
+
+//     // Set 3-hour time slot expiry
+//     const timeSlotExpiry = new Date();
+//     timeSlotExpiry.setHours(timeSlotExpiry.getHours() + 3);
+
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         assignedAgentId: agentId,
+//         status: MarkingJobStatus.ASSIGNED,
+//         assignedAt: new Date(),
+//         timeSlotExpiry
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true,
+//         assignedAgent: true
+//       }
+//     });
+
+//     // TODO: Send notification to property owner
+
+//     return updatedJob;
+//   }
+
+//   /**
+//    * Complete marking job
+//    */
+//   async completeMarkingJob(params: {
+//     jobId: string;
+//     agentId: string;
+//     boundaryData: any;
+//     completionImages: string[];
+//     completionNotes?: string;
+//     locale: string;
+//   }) {
+//     const { jobId, agentId, boundaryData, completionImages, completionNotes, locale } = params;
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: { property: true }
+//     });
+
+//     if (!job) {
+//       throw new Error(getTranslation('errors.marking_job_not_found', locale));
+//     }
+
+//     if (job.assignedAgentId !== agentId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Update job status
+//     const updatedJob = await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status: MarkingJobStatus.COMPLETED,
+//         completedAt: new Date(),
+//         boundaryData,
+//         completionImages,
+//         completionNotes
+//       }
+//     });
+
+//     // Update property with boundary data
+//     await prisma.property.update({
+//       where: { id: job.propertyId },
+//       data: {
+//         boundaryCoordinates: boundaryData,
+//         boundaryMarkedBy: agentId,
+//         boundaryMarkedAt: new Date(),
+//         boundaryImages: completionImages
+//       }
+//     });
+
+//     // Calculate and hold partial payment (₦1,000 initial)
+//     const initialPayment = 1000;
+//     await this.creditAgentPartialPayment(agentId, initialPayment, jobId);
+
+//     // Set confirmation deadline (2-3 days)
+//     const confirmationDeadline = new Date();
+//     confirmationDeadline.setDate(confirmationDeadline.getDate() + 2);
+
+//     // TODO: Send notification to property owner for confirmation
+
+//     return updatedJob;
+//   }
+
+//   /**
+//    * Property owner confirms marking
+//    */
+//   async confirmMarkingJob(params: {
+//     jobId: string;
+//     propertyOwnerId: string;
+//     confirmed: boolean;
+//     rejectionReason?: string;
+//     locale: string;
+//   }) {
+//     const { jobId, propertyOwnerId, confirmed, rejectionReason, locale } = params;
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: { property: true }
+//     });
+
+//     if (!job) {
+//       throw new Error(getTranslation('errors.marking_job_not_found', locale));
+//     }
+
+//     if (job.property.ownerId !== propertyOwnerId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     if (confirmed) {
+//       // Release full payment to agent
+//       await this.releaseFullPaymentToAgent(job);
+
+//       // Mark property boundary as verified
+//       await prisma.property.update({
+//         where: { id: job.propertyId },
+//         data: {
+//           boundaryVerified: true
+//         }
+//       });
+
+//       // Update agent stats
+//       if (job.assignedAgentId) {
+//         await prisma.user.update({
+//           where: { id: job.assignedAgentId },
+//           data: {
+//             completedMarkingJobs: { increment: 1 }
+//           }
+//         });
+//       }
+//     } else {
+//       // Job rejected, give agent partial compensation
+//       // Allow property owner to request new marking
+
+//       await prisma.propertyMarkingJob.update({
+//         where: { id: jobId },
+//         data: {
+//           status: MarkingJobStatus.CANCELLED,
+//           completionNotes: rejectionReason
+//         }
+//       });
+//     }
+
+//     return { confirmed, message: confirmed 
+//       ? getTranslation('marking.job_confirmed', locale)
+//       : getTranslation('marking.job_rejected', locale)
+//     };
+//   }
+
+//   /**
+//    * Cancel marking job
+//    */
+//   async cancelMarkingJob(params: {
+//     jobId: string;
+//     userId: string;
+//     reason: string;
+//     locale: string;
+//   }) {
+//     const { jobId, userId, reason, locale } = params;
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId }
+//     });
+
+//     if (!job) {
+//       throw new Error(getTranslation('errors.marking_job_not_found', locale));
+//     }
+
+//     if (job.requestedBy !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     await prisma.propertyMarkingJob.update({
+//       where: { id: jobId },
+//       data: {
+//         status: MarkingJobStatus.CANCELLED,
+//         completionNotes: reason
+//       }
+//     });
+//   }
+
+//   /**
+//    * Get available jobs for agent
+//    */
+//   async getAvailableJobsForAgent(params: {
+//     agentId: string;
+//     latitude: number;
+//     longitude: number;
+//     radius: number;
+//     locale: string;
+//   }) {
+//     // Get queued jobs within agent's service area
+//     const jobs = await prisma.propertyMarkingJob.findMany({
+//       where: {
+//         status: MarkingJobStatus.QUEUED,
+//         property: {
+//           city: {
+//             in: (await prisma.user.findUnique({ 
+//               where: { id: params.agentId },
+//               select: { agentServiceAreas: true }
+//             }))?.agentServiceAreas || []
+//           }
+//         }
+//       },
+//       include: {
+//         property: true,
+//         requestingUser: true
+//       },
+//       orderBy: {
+//         createdAt: 'asc' // First-come-first-served
+//       }
+//     });
+
+//     return jobs;
+//   }
+
+//   /**
+//    * Get marking statistics
+//    */
+//   async getMarkingStats(params: { userId: string; userRole: string }) {
+//     const { userId, userRole } = params;
+
+//     if (userRole === 'AGENT') {
+//       const [total, completed, earnings] = await Promise.all([
+//         prisma.propertyMarkingJob.count({
+//           where: { assignedAgentId: userId }
+//         }),
+//         prisma.propertyMarkingJob.count({
+//           where: { 
+//             assignedAgentId: userId,
+//             status: MarkingJobStatus.COMPLETED
+//           }
+//         }),
+//         prisma.propertyMarkingJob.aggregate({
+//           where: {
+//             assignedAgentId: userId,
+//             status: MarkingJobStatus.COMPLETED
+//           },
+//           _sum: { markingFee: true }
+//         })
+//       ]);
+
+//       return {
+//         totalJobs: total,
+//         completedJobs: completed,
+//         totalEarnings: (earnings._sum.markingFee || 0) * 0.25 // Agent gets 25%
+//       };
+//     } else {
+//       const [total, completed, pending] = await Promise.all([
+//         prisma.propertyMarkingJob.count({
+//           where: { requestedBy: userId }
+//         }),
+//         prisma.propertyMarkingJob.count({
+//           where: { 
+//             requestedBy: userId,
+//             status: MarkingJobStatus.COMPLETED
+//           }
+//         }),
+//         prisma.propertyMarkingJob.count({
+//           where: {
+//             requestedBy: userId,
+//             status: { in: [MarkingJobStatus.QUEUED, MarkingJobStatus.ASSIGNED, MarkingJobStatus.IN_PROGRESS] }
+//           }
+//         })
+//       ]);
+
+//       return {
+//         totalRequests: total,
+//         completed,
+//         pending
+//       };
+//     }
+//   }
+
+//   /**
+//    * Generate shareable marking link
+//    */
+//   async generateShareableLink(params: {
+//     jobId: string;
+//     propertyOwnerId: string;
+//     locale: string;
+//   }) {
+//     const { jobId, propertyOwnerId, locale } = params;
+
+//     const job = await prisma.propertyMarkingJob.findUnique({
+//       where: { id: jobId },
+//       include: { property: true }
+//     });
+
+//     if (!job) {
+//       throw new Error(getTranslation('errors.marking_job_not_found', locale));
+//     }
+
+//     if (job.property.ownerId !== propertyOwnerId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Generate secure token
+//     const token = crypto.randomBytes(32).toString('hex');
+    
+//     // Store token (in production, use Redis or database)
+//     // For now, return link with token
+//     const link = `${process.env.FRONTEND_URL}/mark-property/${token}`;
+
+//     return link;
+//   }
+
+//   /**
+//    * Mark property via shareable link
+//    */
+//   async markViaShareableLink(params: {
+//     token: string;
+//     boundaryData: any;
+//     completionImages: string[];
+//     markerName: string;
+//     markerPhone: string;
+//     locale: string;
+//   }) {
+//     const { token, boundaryData, completionImages, markerName, markerPhone, locale } = params;
+
+//     // Verify token and get job (in production, validate from Redis/database)
+//     // For now, mock validation
+
+//     // Update job and property
+//     // TODO: Implement full token validation and job completion
+
+//     return {
+//       success: true,
+//       message: getTranslation('marking.completed_via_link', locale)
+//     };
+//   }
+
+//   /**
+//    * Credit agent partial payment
+//    */
+//   private async creditAgentPartialPayment(agentId: string, amount: number, jobId: string) {
+//     await prisma.virtualAccount.updateMany({
+//       where: { userId: agentId },
+//       data: {
+//         balance: { increment: amount }
+//       }
+//     });
+//   }
+
+//   /**
+//    * Release full payment to agent
+//    */
+//   private async releaseFullPaymentToAgent(job: any) {
+//     if (!job.assignedAgentId) return;
+
+//     const agentShare = Number(job.markingFee) * 0.25; // 25% of marking fee
+//     const remainingAmount = agentShare - 1000; // Subtract initial payment
+
+//     if (remainingAmount > 0) {
+//       await prisma.virtualAccount.updateMany({
+//         where: { userId: job.assignedAgentId },
+//         data: {
+//           balance: { increment: remainingAmount }
+//         }
+//       });
+//     }
+
+//     // Credit Newcondo (75%)
+//     const platformShare = Number(job.markingFee) * 0.75;
+//     // TODO: Credit platform account
+//     console.log(`Platform credited: ₦${platformShare}`);
+//   }
+// }
+
+// export const markingJobService = new MarkingJobService();
