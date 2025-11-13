@@ -1,0 +1,341 @@
+{
+  "properties": {
+    "title": "Properties",
+    "browse": "Browse Properties",
+    "myListings": "My Listings",
+    "myFavorites": "My Favorites",
+    "recentlyViewed": "Recently Viewed",
+    "featured": "Featured Properties",
+    "newListings": "New Listings",
+    "popularProperties": "Popular Properties",
+    
+    "search": {
+      "title": "Find Your Perfect Home",
+      "placeholder": "Search by location, property type, or keywords",
+      "searchButton": "Search",
+      "advancedSearch": "Advanced Search",
+      "filters": "Filters",
+      "clearFilters": "Clear Filters",
+      "applyFilters": "Apply Filters",
+      "noResults": "No properties found",
+      "tryAdjustingFilters": "Try adjusting your search filters",
+      "searchResults": "{{count}} properties found",
+      "searchResultsSingle": "{{count}} property found"
+    },
+    
+    "filters": {
+      "propertyType": "Property Type",
+      "priceRange": "Price Range",
+      "minPrice": "Min Price",
+      "maxPrice": "Max Price",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "location": "Location",
+      "city": "City",
+      "state": "State",
+      "area": "Area",
+      "features": "Features & Amenities",
+      "availability": "Availability",
+      "dateAvailable": "Available From",
+      "status": "Status"
+    },
+    
+    "types": {
+      "apartment": "Apartment",
+      "house": "House",
+      "duplex": "Duplex",
+      "room": "Room",
+      "sharedApartment": "Shared Apartment",
+      "office": "Office Space",
+      "shop": "Shop",
+      "warehouse": "Warehouse"
+    },
+    
+    "structure": {
+      "singleUnit": "Single Unit",
+      "multiFamily": "Multi-Family Building",
+      "units": "{{count}} Units",
+      "unit": "Unit",
+      "selectUnit": "Select Unit",
+      "viewUnits": "View Units",
+      "availableUnits": "{{count}} units available"
+    },
+    
+    "features": {
+      "parking": "Parking",
+      "generator": "Generator",
+      "security": "24/7 Security",
+      "waterSupply": "Water Supply",
+      "gatedCommunity": "Gated Community",
+      "elevator": "Elevator",
+      "gym": "Gym",
+      "pool": "Swimming Pool",
+      "garden": "Garden",
+      "balcony": "Balcony",
+      "furnished": "Furnished",
+      "petFriendly": "Pet Friendly",
+      "airConditioning": "Air Conditioning",
+      "internet": "Internet/WiFi",
+      "cctv": "CCTV",
+      "borehole": "Borehole",
+      "playground": "Playground",
+      "serviced": "Serviced"
+    },
+    
+    "details": {
+      "title": "Property Details",
+      "overview": "Overview",
+      "description": "Description",
+      "features": "Features & Amenities",
+      "location": "Location",
+      "pricing": "Pricing",
+      "availability": "Availability",
+      "landlordInfo": "Landlord Information",
+      "agentInfo": "Agent Information",
+      "similarProperties": "Similar Properties",
+      "shareProperty": "Share Property",
+      "reportProperty": "Report Property",
+      "propertyId": "Property ID",
+      "listedDate": "Listed Date",
+      "lastUpdated": "Last Updated",
+      "views": "{{count}} views",
+      "favorites": "{{count}} favorites"
+    },
+    
+    "pricing": {
+      "rentPerMonth": "Rent per Month",
+      "rentPerYear": "Rent per Year",
+      "deposit": "Security Deposit",
+      "agentFee": "Agent Fee",
+      "legalFee": "Legal Fee",
+      "cautionFee": "Caution Fee",
+      "serviceFee": "Service Fee",
+      "totalCost": "Total Cost",
+      "paymentTerms": "Payment Terms",
+      "negotiable": "Negotiable"
+    },
+    
+    "actions": {
+      "viewDetails": "View Details",
+      "rentNow": "Rent Now",
+      "contactOwner": "Contact Owner",
+      "contactAgent": "Contact Agent",
+      "scheduleViewing": "Schedule Viewing",
+      "addToFavorites": "Add to Favorites",
+      "removeFromFavorites": "Remove from Favorites",
+      "shareProperty": "Share Property",
+      "reportProperty": "Report Property",
+      "editListing": "Edit Listing",
+      "deleteListing": "Delete Listing",
+      "promoteProperty": "Promote Property",
+      "renewListing": "Renew Listing",
+      "markAsRented": "Mark as Rented",
+      "markAsAvailable": "Mark as Available"
+    },
+    
+    "create": {
+      "title": "List Your Property",
+      "subtitle": "Create a new property listing",
+      "step1": "Basic Information",
+      "step2": "Property Details",
+      "step3": "Location & Boundary",
+      "step4": "Images & Media",
+      "step5": "Legal Documents",
+      "step6": "Review & Submit",
+      
+      "basicInfo": {
+        "title": "Basic Information",
+        "propertyTitle": "Property Title",
+        "propertyTitlePlaceholder": "e.g., Spacious 3 Bedroom Apartment in Lekki",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe your property in detail...",
+        "propertyType": "Property Type",
+        "selectPropertyType": "Select property type",
+        "structure": "Property Structure",
+        "singleUnit": "Single Unit",
+        "multiFamily": "Multi-Family Building",
+        "totalUnits": "Total Number of Units",
+        "listingType": "Listing Type",
+        "ownerListing": "I am the property owner",
+        "agentListing": "I am listing as an agent"
+      },
+      
+      "propertyDetails": {
+        "title": "Property Details",
+        "bedrooms": "Bedrooms",
+        "bathrooms": "Bathrooms",
+        "area": "Property Area",
+        "areaPlaceholder": "e.g., 120 sqm",
+        "price": "Rent Price (Monthly)",
+        "pricePlaceholder": "Enter amount",
+        "currency": "Currency",
+        "features": "Features & Amenities",
+        "selectFeatures": "Select all that apply",
+        "availableFrom": "Available From",
+        "selectDate": "Select date"
+      },
+      
+      "units": {
+        "title": "Property Units",
+        "addUnit": "Add Unit",
+        "unitNumber": "Unit Number",
+        "unitNumberPlaceholder": "e.g., A1, Flat 2",
+        "floor": "Floor",
+        "floorPlaceholder": "Floor number",
+        "editUnit": "Edit Unit",
+        "deleteUnit": "Delete Unit",
+        "unitsList": "Units List",
+        "noUnits": "No units added yet"
+      },
+      
+      "location": {
+        "title": "Location & Boundary",
+        "address": "Street Address",
+        "addressPlaceholder": "Enter street address",
+        "city": "City/LGA",
+        "selectCity": "Select city",
+        "state": "State",
+        "selectState": "Select state",
+        "country": "Country",
+        "landmark": "Nearby Landmark",
+        "landmarkPlaceholder": "e.g., Near Shoprite",
+        "markBoundary": "Mark Property Boundary",
+        "markBoundaryDesc": "Draw the boundary of your property on the map",
+        "boundaryMarked": "Boundary marked successfully",
+        "markingOptions": "Property Marking Options",
+        "markYourself": "Mark Yourself",
+        "requestMarking": "Request Marking Service"
+      },
+      
+      "images": {
+        "title": "Property Images",
+        "uploadImages": "Upload Images",
+        "dragDrop": "Drag and drop images here",
+        "orBrowse": "or browse",
+        "primaryImage": "Primary Image",
+        "setPrimary": "Set as primary",
+        "deleteImage": "Delete image",
+        "imageAlt": "Image description",
+        "imageAltPlaceholder": "Enter image description",
+        "reorderImages": "Drag to reorder images",
+        "minImages": "At least {{count}} images required",
+        "maxImages": "Maximum {{count}} images allowed",
+        "uploadProgress": "Uploading... {{percent}}%"
+      },
+      
+      "legal": {
+        "title": "Legal Documents",
+        "ownershipProof": "Proof of Ownership",
+        "ownershipProofDesc": "Upload property ownership documents",
+        "consentDocument": "Consent Document",
+        "consentDocumentDesc": "Required for agent listings",
+        "undertaking": "Legal Undertaking",
+        "undertakingDesc": "Sign and upload legal undertaking",
+        "agreementCheckbox": "I confirm that all information provided is accurate",
+        "legalNotice": "All documents will be verified by Newcondo admin",
+        "uploadDocument": "Upload Document",
+        "documentUploaded": "Document uploaded",
+        "viewDocument": "View Document",
+        "replaceDocument": "Replace Document"
+      },
+      
+      "review": {
+        "title": "Review Your Listing",
+        "subtitle": "Please review all information before submitting",
+        "basicInfo": "Basic Information",
+        "propertyDetails": "Property Details",
+        "location": "Location",
+        "images": "Images",
+        "legalDocuments": "Legal Documents",
+        "editSection": "Edit",
+        "submitListing": "Submit Listing",
+        "saveDraft": "Save as Draft",
+        "submitSuccess": "Property listed successfully!",
+        "submitFailed": "Failed to submit listing"
+      }
+    },
+    
+    "edit": {
+      "title": "Edit Property",
+      "subtitle": "Update your property information",
+      "saveChanges": "Save Changes",
+      "discardChanges": "Discard Changes",
+      "updateSuccess": "Property updated successfully",
+      "updateFailed": "Failed to update property"
+    },
+    
+    "status": {
+      "draft": "Draft",
+      "pending": "Pending Approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "published": "Published",
+      "rented": "Rented",
+      "unavailable": "Unavailable",
+      "expired": "Expired"
+    },
+    
+    "boundary": {
+      "title": "Property Boundary",
+      "marked": "Boundary Marked",
+      "notMarked": "Boundary Not Marked",
+      "verified": "Verified",
+      "notVerified": "Not Verified",
+      "viewBoundary": "View Boundary",
+      "editBoundary": "Edit Boundary",
+      "drawBoundary": "Draw Property Boundary",
+      "instructions": "Click on the map to draw your property boundary",
+      "saveAs": "Save Boundary",
+      "overlappingWarning": "Warning: This property overlaps with an existing listing",
+      "alreadyMarked": "This property has already been marked by another user",
+      "duplicateDetected": "Duplicate Property Detected"
+    },
+    
+    "promotion": {
+      "title": "Property Promotion",
+      "subtitle": "Increase your property's visibility",
+      "shareLink": "Share Link",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link copied to clipboard",
+      "promoteProperty": "Promote This Property",
+      "promotionSettings": "Promotion Settings",
+      "allowPromotion": "Allow other agents to promote",
+      "publicPromotion": "Public Promotion",
+      "permissionBased": "Permission-Based Promotion",
+      "restricted": "Restricted",
+      "requestBased": "Request-Based",
+      "promotionRequests": "Promotion Requests",
+      "approveRequest": "Approve",
+      "denyRequest": "Deny"
+    },
+    
+    "rent": {
+      "title": "Rent This Property",
+      "subtitle": "Complete the rental process",
+      "propertyInfo": "Property Information",
+      "rentalPeriod": "Rental Period",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "paymentSummary": "Payment Summary",
+      "monthlyRent": "Monthly Rent",
+      "serviceFee": "Service Fee",
+      "totalAmount": "Total Amount",
+      "confirmationPeriod": "24-hour confirmation period applies",
+      "agreementCheckbox": "I confirm that I have viewed this property and agree to the rental terms",
+      "proceedToPayment": "Proceed to Payment",
+      "rentSuccess": "Rental payment successful!",
+      "rentFailed": "Rental payment failed"
+    },
+    
+    "notifications": {
+      "newListing": "New property listed",
+      "listingApproved": "Your property has been approved",
+      "listingRejected": "Your property was rejected",
+      "listingExpiring": "Your listing is expiring soon",
+      "propertyRented": "Your property has been rented",
+      "viewingRequest": "New viewing request",
+      "promotionRequest": "New promotion request",
+      "boundaryDispute": "Boundary dispute reported"
+    }
+  }
+}

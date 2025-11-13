@@ -765,3 +765,645 @@ export class PropertyService {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/property-service/src/services/propertyService.ts
+
+// import { PrismaClient, PropertyStatus, PropertyStructure } from '@prisma/client';
+// import { getTranslation } from '../utils/i18n';
+// import crypto from 'crypto';
+
+// const prisma = new PrismaClient();
+
+// interface CreatePropertyParams {
+//   title: string;
+//   description: string;
+//   structure: PropertyStructure;
+//   price?: number;
+//   address: string;
+//   city: string;
+//   state: string;
+//   propertyType: string;
+//   bedrooms?: number;
+//   bathrooms?: number;
+//   features: string[];
+//   ownerId: string;
+//   agentId?: string;
+//   isOwnerListing: boolean;
+//   locale: string;
+// }
+
+// export class PropertyService {
+//   /**
+//    * Create new property
+//    */
+//   async createProperty(params: CreatePropertyParams) {
+//     const { locale, ownerId, ...propertyData } = params;
+
+//     // Validate required fields
+//     if (!propertyData.title || !propertyData.description) {
+//       throw new Error(getTranslation('errors.required_fields', locale));
+//     }
+
+//     // Check if user exists and is authorized
+//     const user = await prisma.user.findUnique({
+//       where: { id: ownerId }
+//     });
+
+//     if (!user) {
+//       throw new Error(getTranslation('errors.user_not_found', locale));
+//     }
+
+//     if (user.role !== 'OWNER' && user.role !== 'AGENT') {
+//       throw new Error(getTranslation('errors.unauthorized_role', locale));
+//     }
+
+//     // Create property
+//     const property = await prisma.property.create({
+//       data: {
+//         ...propertyData,
+//         ownerId,
+//         status: PropertyStatus.DRAFT,
+//         adminApprovalStatus: 'PENDING',
+//         currency: 'NGN'
+//       },
+//       include: {
+//         owner: true,
+//         agent: true
+//       }
+//     });
+
+//     // Create virtual account for property
+//     await this.createPropertyVirtualAccount(property.id, ownerId);
+
+//     return property;
+//   }
+
+//   /**
+//    * Get property by ID
+//    */
+//   async getPropertyById(propertyId: string, locale: string) {
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId },
+//       include: {
+//         owner: true,
+//         agent: true,
+//         images: {
+//           orderBy: { order: 'asc' }
+//         },
+//         units: {
+//           include: {
+//             images: true
+//           }
+//         }
+//       }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     return property;
+//   }
+
+//   /**
+//    * Update property
+//    */
+//   async updateProperty(params: {
+//     propertyId: string;
+//     userId: string;
+//     updateData: any;
+//     locale: string;
+//   }) {
+//     const { propertyId, userId, updateData, locale } = params;
+
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     // Check authorization
+//     if (property.ownerId !== userId && property.agentId !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     const updatedProperty = await prisma.property.update({
+//       where: { id: propertyId },
+//       data: updateData,
+//       include: {
+//         owner: true,
+//         agent: true,
+//         images: true
+//       }
+//     });
+
+//     return updatedProperty;
+//   }
+
+//   /**
+//    * Delete property
+//    */
+//   async deleteProperty(params: {
+//     propertyId: string;
+//     userId: string;
+//     locale: string;
+//   }) {
+//     const { propertyId, userId, locale } = params;
+
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     if (property.ownerId !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Check if property has active rentals
+//     const activeRentals = await prisma.rental.count({
+//       where: {
+//         propertyId,
+//         status: 'ACTIVE'
+//       }
+//     });
+
+//     if (activeRentals > 0) {
+//       throw new Error(getTranslation('errors.property_has_active_rentals', locale));
+//     }
+
+//     await prisma.property.delete({
+//       where: { id: propertyId }
+//     });
+//   }
+
+//   /**
+//    * Search properties
+//    */
+//   async searchProperties(params: {
+//     city?: string;
+//     state?: string;
+//     propertyType?: string;
+//     minPrice?: number;
+//     maxPrice?: number;
+//     bedrooms?: number;
+//     bathrooms?: number;
+//     page: number;
+//     limit: number;
+//     locale: string;
+//   }) {
+//     const { city, state, propertyType, minPrice, maxPrice, bedrooms, bathrooms, page, limit } = params;
+//     const skip = (page - 1) * limit;
+
+//     const where: any = {
+//       status: PropertyStatus.PUBLISHED,
+//       adminApprovalStatus: 'APPROVED',
+//       isAvailable: true
+//     };
+
+//     if (city) where.city = city;
+//     if (state) where.state = state;
+//     if (propertyType) where.propertyType = propertyType;
+//     if (bedrooms) where.bedrooms = bedrooms;
+//     if (bathrooms) where.bathrooms = bathrooms;
+
+//     if (minPrice || maxPrice) {
+//       where.price = {};
+//       if (minPrice) where.price.gte = minPrice;
+//       if (maxPrice) where.price.lte = maxPrice;
+//     }
+
+//     const [properties, total] = await Promise.all([
+//       prisma.property.findMany({
+//         where,
+//         skip,
+//         take: limit,
+//         orderBy: { createdAt: 'desc' },
+//         include: {
+//           owner: {
+//             select: {
+//               id: true,
+//               name: true,
+//               image: true
+//             }
+//           },
+//           agent: {
+//             select: {
+//               id: true,
+//               name: true,
+//               image: true
+//             }
+//           },
+//           images: {
+//             where: { isPrimary: true },
+//             take: 1
+//           }
+//         }
+//       }),
+//       prisma.property.count({ where })
+//     ]);
+
+//     return {
+//       properties,
+//       pagination: {
+//         page,
+//         limit,
+//         total,
+//         totalPages: Math.ceil(total / limit)
+//       }
+//     };
+//   }
+
+//   /**
+//    * Get user's properties
+//    */
+//   async getUserProperties(params: {
+//     userId: string;
+//     status?: string;
+//     page: number;
+//     limit: number;
+//   }) {
+//     const { userId, status, page, limit } = params;
+//     const skip = (page - 1) * limit;
+
+//     const where: any = {
+//       OR: [
+//         { ownerId: userId },
+//         { agentId: userId }
+//       ]
+//     };
+
+//     if (status) {
+//       where.status = status;
+//     }
+
+//     const [properties, total] = await Promise.all([
+//       prisma.property.findMany({
+//         where,
+//         skip,
+//         take: limit,
+//         orderBy: { createdAt: 'desc' },
+//         include: {
+//           images: true,
+//           units: true
+//         }
+//       }),
+//       prisma.property.count({ where })
+//     ]);
+
+//     return {
+//       properties,
+//       pagination: {
+//         page,
+//         limit,
+//         total,
+//         totalPages: Math.ceil(total / limit)
+//       }
+//     };
+//   }
+
+//   /**
+//    * Publish property
+//    */
+//   async publishProperty(params: {
+//     propertyId: string;
+//     userId: string;
+//     locale: string;
+//   }) {
+//     const { propertyId, userId, locale } = params;
+
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     if (property.ownerId !== userId && property.agentId !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Validate property has boundary marked
+//     if (!property.boundaryVerified) {
+//       throw new Error(getTranslation('errors.boundary_not_verified', locale));
+//     }
+
+//     // Validate property has images
+//     const imageCount = await prisma.propertyImage.count({
+//       where: { propertyId }
+//     });
+
+//     if (imageCount === 0) {
+//       throw new Error(getTranslation('errors.no_images', locale));
+//     }
+
+//     const updatedProperty = await prisma.property.update({
+//       where: { id: propertyId },
+//       data: {
+//         status: PropertyStatus.PENDING,
+//         isAvailable: true
+//       }
+//     });
+
+//     // TODO: Notify admin for approval
+
+//     return updatedProperty;
+//   }
+
+//   /**
+//    * Mark property boundary
+//    */
+//   async markPropertyBoundary(params: {
+//     propertyId: string;
+//     userId: string;
+//     boundaryCoordinates: any;
+//     boundaryImages: string[];
+//     locale: string;
+//   }) {
+//     const { propertyId, userId, boundaryCoordinates, boundaryImages, locale } = params;
+
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     if (property.ownerId !== userId && property.agentId !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Check for duplicate
+//     const duplicate = await this.checkDuplicateProperty(boundaryCoordinates, locale);
+//     if (duplicate) {
+//       throw new Error(getTranslation('errors.duplicate_property', locale));
+//     }
+
+//     // Generate building fingerprint
+//     const fingerprint = this.generateBuildingFingerprint(boundaryCoordinates);
+
+//     const updatedProperty = await prisma.property.update({
+//       where: { id: propertyId },
+//       data: {
+//         boundaryCoordinates,
+//         boundaryImages,
+//         boundaryMarkedBy: userId,
+//         boundaryMarkedAt: new Date(),
+//         boundaryVerified: true,
+//         buildingFingerprint: fingerprint
+//       }
+//     });
+
+//     return updatedProperty;
+//   }
+
+//   /**
+//    * Check for duplicate property
+//    */
+//   async checkDuplicateProperty(boundaryCoordinates: any, locale: string) {
+//     const fingerprint = this.generateBuildingFingerprint(boundaryCoordinates);
+
+//     const duplicate = await prisma.property.findFirst({
+//       where: {
+//         buildingFingerprint: fingerprint,
+//         status: { not: PropertyStatus.DRAFT }
+//       },
+//       include: {
+//         owner: {
+//           select: {
+//             id: true,
+//             name: true
+//           }
+//         }
+//       }
+//     });
+
+//     return duplicate;
+//   }
+
+//   /**
+//    * Generate building fingerprint
+//    */
+//   private generateBuildingFingerprint(boundaryCoordinates: any): string {
+//     const coordinateString = JSON.stringify(boundaryCoordinates);
+//     return crypto
+//       .createHash('sha256')
+//       .update(coordinateString)
+//       .digest('hex')
+//       .substring(0, 32);
+//   }
+
+//   /**
+//    * Increment view count
+//    */
+//   async incrementViewCount(propertyId: string) {
+//     await prisma.property.update({
+//       where: { id: propertyId },
+//       data: {
+//         viewCount: { increment: 1 }
+//       }
+//     });
+//   }
+
+//   /**
+//    * Get property statistics
+//    */
+//   async getPropertyStats(userId: string) {
+//     const [total, published, rented, draft, totalViews] = await Promise.all([
+//       prisma.property.count({
+//         where: {
+//           OR: [{ ownerId: userId }, { agentId: userId }]
+//         }
+//       }),
+//       prisma.property.count({
+//         where: {
+//           OR: [{ ownerId: userId }, { agentId: userId }],
+//           status: PropertyStatus.PUBLISHED
+//         }
+//       }),
+//       prisma.property.count({
+//         where: {
+//           OR: [{ ownerId: userId }, { agentId: userId }],
+//           status: PropertyStatus.RENTED
+//         }
+//       }),
+//       prisma.property.count({
+//         where: {
+//           OR: [{ ownerId: userId }, { agentId: userId }],
+//           status: PropertyStatus.DRAFT
+//         }
+//       }),
+//       prisma.property.aggregate({
+//         where: {
+//           OR: [{ ownerId: userId }, { agentId: userId }]
+//         },
+//         _sum: { viewCount: true }
+//       })
+//     ]);
+
+//     return {
+//       total,
+//       published,
+//       rented,
+//       draft,
+//       totalViews: totalViews._sum.viewCount || 0
+//     };
+//   }
+
+//   /**
+//    * Create property unit
+//    */
+//   async createPropertyUnit(params: {
+//     propertyId: string;
+//     userId: string;
+//     unitData: any;
+//     locale: string;
+//   }) {
+//     const { propertyId, userId, unitData, locale } = params;
+
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     if (property.ownerId !== userId && property.agentId !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     if (property.structure !== PropertyStructure.MULTI_FAMILY) {
+//       throw new Error(getTranslation('errors.not_multi_family', locale));
+//     }
+
+//     const unit = await prisma.propertyUnit.create({
+//       data: {
+//         ...unitData,
+//         propertyId,
+//         currency: 'NGN'
+//       }
+//     });
+
+//     // Update available units count
+//     await prisma.property.update({
+//       where: { id: propertyId },
+//       data: {
+//         availableUnits: { increment: 1 },
+//         totalUnits: { increment: 1 }
+//       }
+//     });
+
+//     return unit;
+//   }
+
+//   /**
+//    * Get property units
+//    */
+//   async getPropertyUnits(propertyId: string) {
+//     return prisma.propertyUnit.findMany({
+//       where: { propertyId },
+//       include: {
+//         images: true
+//       },
+//       orderBy: { unitNumber: 'asc' }
+//     });
+//   }
+
+//   /**
+//    * Generate shareable link
+//    */
+//   async generateShareableLink(params: {
+//     propertyId: string;
+//     userId: string;
+//     locale: string;
+//   }) {
+//     const { propertyId, userId, locale } = params;
+
+//     const property = await prisma.property.findUnique({
+//       where: { id: propertyId }
+//     });
+
+//     if (!property) {
+//       throw new Error(getTranslation('errors.property_not_found', locale));
+//     }
+
+//     if (property.ownerId !== userId && property.agentId !== userId) {
+//       throw new Error(getTranslation('errors.unauthorized', locale));
+//     }
+
+//     // Generate unique share link
+//     const shareToken = crypto.randomBytes(16).toString('hex');
+//     const shareableLink = `${process.env.FRONTEND_URL}/properties/${propertyId}?ref=${shareToken}`;
+
+//     await prisma.property.update({
+//       where: { id: propertyId },
+//       data: { shareableLink }
+//     });
+
+//     return shareableLink;
+//   }
+
+//   /**
+//    * Create virtual account for property
+//    */
+//   private async createPropertyVirtualAccount(propertyId: string, ownerId: string) {
+//     const owner = await prisma.user.findUnique({
+//       where: { id: ownerId }
+//     });
+
+//     if (!owner) return;
+
+//     // Check if virtual account already exists
+//     const existing = await prisma.virtualAccount.findFirst({
+//       where: { propertyId }
+//     });
+
+//     if (existing) return;
+
+//     // Generate account details
+//     const accountName = `${owner.name}_${propertyId.substring(0, 8)}`;
+//     const accountNumber = this.generateAccountNumber();
+
+//     await prisma.virtualAccount.create({
+//       data: {
+//         accountNumber,
+//         accountName,
+//         bankCode: '000',
+//         userId: ownerId,
+//         propertyId,
+//         currency: 'NGN'
+//       }
+//     });
+//   }
+
+//   /**
+//    * Generate account number
+//    */
+//   private generateAccountNumber(): string {
+//     return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+//   }
+// }
+
+// export const propertyService = new PropertyService();

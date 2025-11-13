@@ -378,3 +378,481 @@ export class PropertyController {
 }
 
 export const propertyController = new PropertyController();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // backend/property-service/src/controllers/propertyController.ts
+
+// import { Request, Response } from 'express';
+// import { propertyService } from '../services/propertyService';
+// import { 
+//   getTranslation, 
+//   getPropertyStatusTranslation,
+//   formatPropertyAddress,
+//   getAvailabilityMessage 
+// } from '../utils/i18n';
+
+// export class PropertyController {
+//   /**
+//    * Create new property listing
+//    */
+//   async createProperty(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const propertyData = req.body;
+
+//       const property = await propertyService.createProperty({
+//         ...propertyData,
+//         ownerId: userId,
+//         locale
+//       });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: getTranslation('property.created', locale),
+//         data: {
+//           ...property,
+//           statusText: getPropertyStatusTranslation(property.status, locale),
+//           formattedAddress: formatPropertyAddress(
+//             property.address,
+//             property.city,
+//             property.state,
+//             property.country,
+//             locale
+//           )
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.creation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get property by ID
+//    */
+//   async getProperty(req: Request, res: Response) {
+//     try {
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const property = await propertyService.getPropertyById(propertyId, locale);
+
+//       if (!property) {
+//         return res.status(404).json({
+//           success: false,
+//           message: getTranslation('property.not_found', locale)
+//         });
+//       }
+
+//       // Increment view count
+//       await propertyService.incrementViewCount(propertyId);
+
+//       return res.status(200).json({
+//         success: true,
+//         data: {
+//           ...property,
+//           statusText: getPropertyStatusTranslation(property.status, locale),
+//           availabilityMessage: getAvailabilityMessage(
+//             property.isAvailable,
+//             property.availableFrom || undefined,
+//             locale
+//           )
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Update property
+//    */
+//   async updateProperty(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+//       const updateData = req.body;
+
+//       const property = await propertyService.updateProperty({
+//         propertyId,
+//         userId,
+//         updateData,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.updated', locale),
+//         data: property
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.update_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Delete property
+//    */
+//   async deleteProperty(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       await propertyService.deleteProperty({
+//         propertyId,
+//         userId,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.deleted', locale)
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.deletion_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Search properties
+//    */
+//   async searchProperties(req: Request, res: Response) {
+//     try {
+//       const locale = req.locale || 'en';
+//       const {
+//         city,
+//         state,
+//         propertyType,
+//         minPrice,
+//         maxPrice,
+//         bedrooms,
+//         bathrooms,
+//         page = 1,
+//         limit = 20
+//       } = req.query;
+
+//       const result = await propertyService.searchProperties({
+//         city: city as string,
+//         state: state as string,
+//         propertyType: propertyType as string,
+//         minPrice: minPrice ? Number(minPrice) : undefined,
+//         maxPrice: maxPrice ? Number(maxPrice) : undefined,
+//         bedrooms: bedrooms ? Number(bedrooms) : undefined,
+//         bathrooms: bathrooms ? Number(bathrooms) : undefined,
+//         page: Number(page),
+//         limit: Number(limit),
+//         locale
+//       });
+
+//       // Add localized fields to each property
+//       const localizedProperties = result.properties.map(property => ({
+//         ...property,
+//         statusText: getPropertyStatusTranslation(property.status, locale),
+//         availabilityMessage: getAvailabilityMessage(
+//           property.isAvailable,
+//           property.availableFrom || undefined,
+//           locale
+//         )
+//       }));
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.search_results', locale),
+//         data: {
+//           properties: localizedProperties,
+//           pagination: result.pagination
+//         }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.search_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get user's properties
+//    */
+//   async getMyProperties(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+//       const { status, page = 1, limit = 10 } = req.query;
+
+//       const result = await propertyService.getUserProperties({
+//         userId,
+//         status: status as string,
+//         page: Number(page),
+//         limit: Number(limit)
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.list_retrieved', locale),
+//         data: result
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Publish property (change from draft to pending)
+//    */
+//   async publishProperty(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const property = await propertyService.publishProperty({
+//         propertyId,
+//         userId,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.published', locale),
+//         data: property
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.publish_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Mark property boundary
+//    */
+//   async markPropertyBoundary(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+//       const { boundaryCoordinates, boundaryImages } = req.body;
+
+//       const property = await propertyService.markPropertyBoundary({
+//         propertyId,
+//         userId,
+//         boundaryCoordinates,
+//         boundaryImages,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.boundary_marked', locale),
+//         data: property
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.boundary_marking_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Check for duplicate properties
+//    */
+//   async checkDuplicate(req: Request, res: Response) {
+//     try {
+//       const locale = req.locale || 'en';
+//       const { boundaryCoordinates } = req.body;
+
+//       const duplicate = await propertyService.checkDuplicateProperty(
+//         boundaryCoordinates,
+//         locale
+//       );
+
+//       if (duplicate) {
+//         return res.status(200).json({
+//           success: true,
+//           isDuplicate: true,
+//           message: getTranslation('property.duplicate_found', locale),
+//           data: duplicate
+//         });
+//       }
+
+//       return res.status(200).json({
+//         success: true,
+//         isDuplicate: false,
+//         message: getTranslation('property.no_duplicate', locale)
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get property statistics
+//    */
+//   async getPropertyStats(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const locale = req.locale || 'en';
+
+//       const stats = await propertyService.getPropertyStats(userId);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.stats_retrieved', locale),
+//         data: stats
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Create property unit (for multi-family properties)
+//    */
+//   async createPropertyUnit(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+//       const unitData = req.body;
+
+//       const unit = await propertyService.createPropertyUnit({
+//         propertyId,
+//         userId,
+//         unitData,
+//         locale
+//       });
+
+//       return res.status(201).json({
+//         success: true,
+//         message: getTranslation('property.unit_created', locale),
+//         data: unit
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.unit_creation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Get property units
+//    */
+//   async getPropertyUnits(req: Request, res: Response) {
+//     try {
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const units = await propertyService.getPropertyUnits(propertyId);
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.units_retrieved', locale),
+//         data: units
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('common.error', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+
+//   /**
+//    * Generate shareable property link
+//    */
+//   async generateShareableLink(req: Request, res: Response) {
+//     try {
+//       const userId = req.user!.id;
+//       const { propertyId } = req.params;
+//       const locale = req.locale || 'en';
+
+//       const link = await propertyService.generateShareableLink({
+//         propertyId,
+//         userId,
+//         locale
+//       });
+
+//       return res.status(200).json({
+//         success: true,
+//         message: getTranslation('property.link_generated', locale),
+//         data: { link }
+//       });
+//     } catch (error: any) {
+//       const locale = req.locale || 'en';
+//       return res.status(500).json({
+//         success: false,
+//         message: getTranslation('property.link_generation_failed', locale),
+//         error: error.message
+//       });
+//     }
+//   }
+// }
+
+// export const propertyController = new PropertyController();
