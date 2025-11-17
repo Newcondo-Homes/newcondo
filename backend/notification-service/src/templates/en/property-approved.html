@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Approved</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #10b981;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #10b981;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1e293b;
+            font-size: 24px;
+            margin: 0 0 10px 0;
+        }
+        .success-icon {
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        .alert-box {
+            background-color: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .property-card {
+            background-color: #f8fafc;
+            border: 2px solid #10b981;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .property-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .property-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .property-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #10b981;
+            margin: 10px 0;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #475569;
+            min-width: 120px;
+        }
+        .info-value {
+            color: #1e293b;
+            flex: 1;
+        }
+        .button {
+            display: inline-block;
+            background-color: #10b981;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px 5px;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #059669;
+        }
+        .button-secondary {
+            background-color: #2563eb;
+        }
+        .button-secondary:hover {
+            background-color: #1d4ed8;
+        }
+        .next-steps {
+            background-color: #fffbeb;
+            border: 1px solid #fbbf24;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .next-steps h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+        .next-steps ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin-bottom: 10px;
+        }
+        .tips-box {
+            background-color: #dbeafe;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .tips-box h3 {
+            margin-top: 0;
+            color: #1e40af;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .share-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f9ff;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">NewCondo</div>
+            <div class="success-icon">🎉</div>
+            <h1>Property Approved!</h1>
+        </div>
+
+        <div class="alert-box">
+            <strong>Congratulations!</strong> Your property listing has been approved and is now live on NewCondo.
+        </div>
+
+        <p>Hello <strong>{{ownerName}}</strong>,</p>
+
+        <p>Great news! After careful review, your property listing has been approved by our admin team and is now visible to thousands of potential renters on our platform.</p>
+
+        <div class="property-card">
+            {{#propertyImage}}
+            <img src="{{propertyImage}}" alt="{{propertyTitle}}" class="property-image">
+            {{/propertyImage}}
+            
+            <div class="property-title">{{propertyTitle}}</div>
+            
+            <div class="property-price">₦{{propertyPrice}}/month</div>
+            
+            <div class="info-row">
+                <span class="info-label">Property ID:</span>
+                <span class="info-value">{{propertyId}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Location:</span>
+                <span class="info-value">{{propertyAddress}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Type:</span>
+                <span class="info-value">{{propertyType}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Approved on:</span>
+                <span class="info-value">{{approvalDate}}</span>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{propertyLink}}" class="button">View Your Listing</a>
+            <a href="{{dashboardLink}}" class="button button-secondary">Go to Dashboard</a>
+        </div>
+
+        <div class="share-section">
+            <h3 style="margin-top: 0; color: #1e40af;">📢 Share Your Property</h3>
+            <p>Increase your property's visibility by sharing it on social media!</p>
+            <p style="font-size: 14px; color: #475569;">
+                <strong>Your Shareable Link:</strong><br>
+                <code style="background-color: #e0f2fe; padding: 5px 10px; border-radius: 4px; font-size: 12px;">{{shareableLink}}</code>
+            </p>
+        </div>
+
+        <div class="next-steps">
+            <h3>📋 What Happens Next?</h3>
+            <ul>
+                <li><strong>Listing is Live:</strong> Your property is now searchable and visible to all renters</li>
+                <li><strong>Receive Inquiries:</strong> You'll get notifications when renters show interest</li>
+                <li><strong>Payment Notifications:</strong> We'll alert you immediately when someone pays for your property</li>
+                <li><strong>24-Hour Confirmation:</strong> After payment, renters have 24 hours to confirm the property matches the listing</li>
+                <li><strong>Fund Release:</strong> Once confirmed, your funds will be released to your virtual account</li>
+            </ul>
+        </div>
+
+        <div class="tips-box">
+            <h3>💡 Tips to Attract Renters</h3>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Respond quickly to inquiries (aim for under 2 hours)</li>
+                <li>Keep your property photos updated and high-quality</li>
+                <li>Update availability status regularly</li>
+                <li>Share your listing on social media for wider reach</li>
+                <li>Consider allowing property promotion by agents for increased visibility</li>
+                <li>Maintain accurate and detailed property descriptions</li>
+            </ul>
+        </div>
+
+        <div class="alert-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+            <strong>🔔 Stay Updated:</strong> Make sure your notification settings are enabled to receive alerts about:
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Property views and favorites</li>
+                <li>Payment attempts and successful rentals</li>
+                <li>Renter confirmation status</li>
+                <li>Fund releases to your account</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Making Property Rental Seamless</p>
+            <p>Questions? Contact us at <a href="mailto:support@newcondo.ng">support@newcondo.ng</a></p>
+            <p style="font-size: 12px; color: #94a3b8;">
+                This is an automated notification. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

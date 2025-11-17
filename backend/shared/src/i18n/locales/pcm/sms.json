@@ -1,0 +1,42 @@
+{
+  "sms": {
+    "verification": {
+      "phone_otp": "Your Newcondo verification code na {{code}}. Valid for {{minutes}} minutes. No share this code.",
+      "phone_verified": "Dem don verify your phone number successfully. Welcome to Newcondo!"
+    },
+    "payment": {
+      "success": "Payment of {{amount}} {{currency}} successful for {{propertyTitle}}. Transaction ID: {{transactionId}}",
+      "failed": "Payment of {{amount}} {{currency}} fail. Try again or contact support.",
+      "confirmation_required": "Confirm your rent payment within {{hours}}hrs for {{propertyTitle}}. Visit: {{confirmUrl}}",
+      "released": "{{amount}} {{currency}} don release to your account. View balance for {{dashboardUrl}}"
+    },
+    "marking": {
+      "job_assigned": "New marking job for {{location}}. Fee: {{fee}} {{currency}}. Time slot: {{timeSlot}}. Accept: {{acceptUrl}}",
+      "agent_assigned": "Agent {{agentName}} don assign to mark your property. Contact: {{agentPhone}}. Track: {{trackUrl}}",
+      "job_completed": "Property mark by {{agentName}}. Review and confirm within {{days}} days: {{reviewUrl}}",
+      "time_slot_expiring": "Your marking job time slot go expire for {{minutes}} min. Complete now: {{jobUrl}}"
+    },
+    "property": {
+      "approved": "Dem don approve your property '{{propertyTitle}}'! View listing: {{listingUrl}}",
+      "rejected": "Property '{{propertyTitle}}' reject. Reason: {{reason}}. Edit: {{editUrl}}",
+      "rented": "{{renterName}} don rent your property '{{propertyTitle}}'. Details: {{detailsUrl}}"
+    },
+    "rental": {
+      "new_rental": "{{renterName}} wan rent '{{propertyTitle}}'. View request: {{requestUrl}}",
+      "confirmed": "Dem don confirm your rental for '{{propertyTitle}}'. Lease start {{startDate}}.",
+      "expiring": "Your lease for '{{propertyTitle}}' go expire on {{date}}. Renew: {{renewUrl}}"
+    },
+    "referral": {
+      "reward_earned": "Referral reward earn! {{referredName}} don sign up. Reward: {{amount}} {{currency}}. View: {{dashboardUrl}}"
+    },
+    "admin": {
+      "urgent_action": "Urgent: {{actionType}} need admin attention. Details: {{adminUrl}}"
+    },
+    "password_reset": {
+      "otp": "Your password reset code na {{code}}. Valid for {{minutes}} minutes. If you no request this, contact support immediately."
+    },
+    "otp": {
+      "login": "Your Newcondo login code na {{code}}. Valid for {{minutes}} minutes. Keep this code confidential."
+    }
+  }
+}

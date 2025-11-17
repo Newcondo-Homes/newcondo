@@ -1,0 +1,147 @@
+{
+  "errors": {
+    "general": {
+      "internal_server_error": "Something don happen for server side. Abeg try again later.",
+      "validation_error": "Error don happen for validation.",
+      "not_found": "We no fit find wetin you dey find.",
+      "unauthorized": "You no get permission to do this thing.",
+      "forbidden": "You no fit access this thing.",
+      "bad_request": "Your request no correct. Check wetin you enter well well.",
+      "conflict": "Problem don happen. Maybe the thing don already dey.",
+      "rate_limit_exceeded": "You don send too many request. Abeg try again later.",
+      "service_unavailable": "Service no dey available now. Try again later abeg."
+    },
+    "auth": {
+      "invalid_credentials": "Your email or password no correct.",
+      "account_not_found": "We no fit find your account.",
+      "account_already_exists": "Account with this email don already exist.",
+      "email_not_verified": "Abeg verify your email make you fit continue.",
+      "phone_not_verified": "Abeg verify your phone number make you fit continue.",
+      "invalid_token": "The token no valid or e don expire.",
+      "token_expired": "Your session don expire. Login again abeg.",
+      "otp_invalid": "The OTP code no correct.",
+      "otp_expired": "OTP code don expire. Request new one abeg.",
+      "otp_max_attempts": "You don try OTP too many times. Request new code.",
+      "password_weak": "Your password too weak. Use at least 8 characters with letters and numbers.",
+      "password_mismatch": "The passwords no match.",
+      "account_suspended": "Dem don suspend your account. Contact support for help.",
+      "insufficient_permissions": "You no get permission to do this thing."
+    },
+    "user": {
+      "not_found": "We no fit find the user.",
+      "update_failed": "We no fit update your profile.",
+      "verification_pending": "Your account verification still dey pending.",
+      "verification_rejected": "Dem reject your account verification: {{reason}}",
+      "invalid_user_type": "The user type no correct.",
+      "duplicate_email": "This email don already dey registered.",
+      "duplicate_phone": "This phone number don already dey registered.",
+      "profile_incomplete": "Complete your profile make you fit continue."
+    },
+    "property": {
+      "not_found": "We no fit find the property.",
+      "creation_failed": "We no fit create the property listing.",
+      "update_failed": "We no fit update the property.",
+      "delete_failed": "We no fit delete the property.",
+      "already_rented": "Somebody don already rent this property.",
+      "not_available": "This property no dey available for rent.",
+      "boundary_not_marked": "You must mark property boundary before you list am.",
+      "boundary_overlap": "The property boundary dey overlap with another property.",
+      "duplicate_detected": "E be like say this property don already dey listed.",
+      "invalid_coordinates": "The GPS coordinates wey you provide no correct.",
+      "insufficient_images": "Upload at least {{count}} images abeg.",
+      "image_upload_failed": "We no fit upload the property image.",
+      "unauthorized_access": "You no get permission to access this property.",
+      "approval_pending": "Property still dey wait for admin approval.",
+      "rejected_listing": "Dem reject your property listing: {{reason}}",
+      "payment_locked": "Another person dey process payment for this property now.",
+      "invalid_unit": "The property unit wey you specify no correct.",
+      "unit_not_available": "This unit no dey available.",
+      "missing_documents": "Some required property documents no dey."
+    },
+    "payment": {
+      "failed": "Payment no work. Try again abeg.",
+      "invalid_amount": "The payment amount no correct.",
+      "insufficient_funds": "Money for your virtual account no reach.",
+      "transaction_not_found": "We no fit find the transaction.",
+      "already_paid": "Dem don already process this payment.",
+      "refund_failed": "We no fit process the refund.",
+      "gateway_error": "Payment gateway get problem: {{message}}",
+      "confirmation_period_expired": "Payment confirmation time don expire.",
+      "invalid_payment_method": "The payment method no correct.",
+      "duplicate_transaction": "We don see this transaction before.",
+      "virtual_account_error": "Virtual account operation no work.",
+      "commission_calculation_error": "We no fit calculate commission.",
+      "release_failed": "We no fit release the payment."
+    },
+    "marking": {
+      "job_not_found": "We no fit find the marking job.",
+      "creation_failed": "We no fit create marking job.",
+      "assignment_failed": "We no fit assign marking job.",
+      "no_available_agents": "No agent dey available for this area.",
+      "time_slot_expired": "Your time slot for this job don expire.",
+      "already_assigned": "Dem don already assign this job to another agent.",
+      "completion_failed": "We no fit complete marking job.",
+      "invalid_boundary_data": "The boundary data wey you provide no correct.",
+      "insufficient_images": "Upload at least {{count}} completion images.",
+      "unauthorized_completion": "You no get permission to complete this job.",
+      "job_already_completed": "This marking job don already complete.",
+      "payment_required": "You must pay before dem fit assign job.",
+      "queue_full": "Marking queue don full now. Try again later abeg."
+    },
+    "booking": {
+      "double_booking_prevented": "Another person dey book this property now. Try again.",
+      "lock_acquisition_failed": "We no fit lock the property. Try again.",
+      "booking_expired": "Your booking session don expire.",
+      "property_unavailable": "Property no dey available again.",
+      "invalid_dates": "The booking dates wey you provide no correct.",
+      "date_conflict": "The dates wey you choose dey conflict with another booking."
+    },
+    "referral": {
+      "invalid_code": "The referral code no correct.",
+      "self_referral": "You no fit use your own referral code.",
+      "already_referred": "Somebody don already refer this user.",
+      "reward_calculation_failed": "We no fit calculate referral reward.",
+      "code_not_found": "We no fit find the referral code."
+    },
+    "document": {
+      "upload_failed": "We no fit upload the document.",
+      "invalid_format": "The document format no correct. Accepted formats: {{formats}}",
+      "file_too_large": "File size too big pass maximum of {{maxSize}}MB.",
+      "verification_pending": "Document verification still dey pending.",
+      "verification_rejected": "Dem reject the document: {{reason}}",
+      "required_document_missing": "One required document no dey: {{documentType}}",
+      "expired_document": "Document don expire. Upload new one abeg.",
+      "invalid_document_type": "The document type no correct."
+    },
+    "admin": {
+      "action_failed": "We no fit do admin action.",
+      "invalid_status_transition": "The status transition no correct.",
+      "approval_failed": "We no fit approve the item.",
+      "rejection_failed": "We no fit reject the item.",
+      "dispute_resolution_failed": "We no fit resolve the dispute.",
+      "insufficient_admin_permissions": "Your admin permissions no reach."
+    },
+    "validation": {
+      "required_field": "{{field}} na required field.",
+      "invalid_email": "The email address no correct.",
+      "invalid_phone": "The phone number no correct.",
+      "invalid_format": "{{field}} format no correct.",
+      "min_length": "{{field}} must be at least {{min}} characters.",
+      "max_length": "{{field}} no fit pass {{max}} characters.",
+      "invalid_range": "{{field}} must dey between {{min}} and {{max}}.",
+      "invalid_date": "Date format no correct.",
+      "future_date_required": "Date must dey for future.",
+      "past_date_required": "Date must dey for past.",
+      "invalid_currency": "Currency code no correct.",
+      "invalid_coordinates": "GPS coordinates no correct."
+    },
+    "notification": {
+      "send_failed": "We no fit send notification.",
+      "invalid_recipient": "Notification recipient no correct.",
+      "template_not_found": "We no fit find notification template.",
+      "email_send_failed": "We no fit send email notification.",
+      "sms_send_failed": "We no fit send SMS notification.",
+      "push_send_failed": "We no fit send push notification."
+    }
+  }
+}

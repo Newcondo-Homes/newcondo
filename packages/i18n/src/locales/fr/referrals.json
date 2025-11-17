@@ -1,0 +1,129 @@
+{
+  "title": "Programme de parrainage",
+  "dashboard": {
+    "title": "Tableau de bord de parrainage",
+    "myCode": "Mon code de parrainage",
+    "totalReferrals": "Total des parrainages",
+    "activeReferrals": "Parrainages actifs",
+    "totalEarnings": "Gains totaux",
+    "pendingRewards": "Récompenses en attente"
+  },
+  "share": {
+    "title": "Partagez votre code de parrainage",
+    "description": "Invitez des amis et gagnez des récompenses",
+    "copyCode": "Copier le code",
+    "copyLink": "Copier le lien",
+    "shareVia": "Partager via",
+    "whatsapp": "WhatsApp",
+    "email": "Email",
+    "sms": "SMS",
+    "copied": "Copié dans le presse-papiers"
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "step1": {
+      "title": "Partagez votre code",
+      "description": "Envoyez votre code de parrainage unique à vos amis"
+    },
+    "step2": {
+      "title": "Ils s'inscrivent",
+      "description": "Votre ami s'inscrit en utilisant votre code"
+    },
+    "step3": {
+      "title": "Vous gagnez tous les deux",
+      "description": "Recevez des récompenses lorsque votre ami effectue sa première transaction"
+    }
+  },
+  "rewards": {
+    "title": "Récompenses",
+    "forYou": "Pour vous",
+    "forFriend": "Pour votre ami",
+    "bonus": "Bonus",
+    "perReferral": "par parrainage",
+    "earned": "Gagné",
+    "pending": "En attente"
+  },
+  "history": {
+    "title": "Historique des parrainages",
+    "noReferrals": "Aucun parrainage trouvé",
+    "name": "Nom",
+    "status": "Statut",
+    "reward": "Récompense",
+    "date": "Date",
+    "active": "Actif",
+    "pending": "En attente",
+    "completed": "Terminé"
+  },
+  "property": {
+    "promote": {
+      "title": "Promouvoir cette propriété",
+      "description": "Gagnez une commission en promouvant cette propriété",
+      "button": "Obtenir le lien de promotion",
+      "linkCopied": "Lien de promotion copié",
+      "commission": "Commission",
+      "share": "Partager la propriété"
+    },
+    "stats": {
+      "title": "Statistiques de promotion",
+      "views": "Vues",
+      "clicks": "Clics",
+      "conversions": "Conversions",
+      "earnings": "Gains"
+    },
+    "types": {
+      "public": "Promotion publique",
+      "permissionBased": "Basé sur l'autorisation",
+      "restricted": "Restreint",
+      "requestBased": "Basé sur la demande"
+    }
+  },
+  "agent": {
+    "dashboard": {
+      "title": "Tableau de bord de l'agent",
+      "listingAgent": "Agent inscripteur",
+      "subAgent": "Sous-agent",
+      "properties": "Propriétés promues",
+      "totalEarnings": "Gains totaux",
+      "pendingCommission": "Commission en attente"
+    },
+    "commission": {
+      "title": "Distribution de commission",
+      "platformFee": "Frais de plateforme (20%)",
+      "listingAgentShare": "Part de l'agent inscripteur (50%)",
+      "subAgentShare": "Part du sous-agent (50%)",
+      "breakdown": "Répartition de la commission"
+    },
+    "tracking": {
+      "title": "Suivi des parrainages",
+      "propertyViews": "Vues de propriété",
+      "rentalPayments": "Paiements de location",
+      "totalCommission": "Commission totale",
+      "conversionRate": "Taux de conversion"
+    }
+  },
+  "settings": {
+    "title": "Paramètres de parrainage",
+    "autoWithdraw": "Retrait automatique",
+    "minWithdrawal": "Montant minimum de retrait",
+    "notifications": "Notifications de parrainage",
+    "emailAlerts": "Alertes email",
+    "smsAlerts": "Alertes SMS"
+  },
+  "terms": {
+    "title": "Conditions du parrainage",
+    "description": "Veuillez lire et accepter les conditions du programme de parrainage",
+    "accept": "Accepter les conditions",
+    "view": "Voir les conditions complètes"
+  },
+  "errors": {
+    "invalidCode": "Code de parrainage invalide",
+    "selfReferral": "Vous ne pouvez pas utiliser votre propre code",
+    "alreadyReferred": "Vous avez déjà été parrainé",
+    "codeExpired": "Le code de parrainage a expiré"
+  },
+  "success": {
+    "codeApplied": "Code de parrainage appliqué avec succès",
+    "rewardClaimed": "Récompense réclamée",
+    "linkGenerated": "Lien de promotion généré"
+  }
+}

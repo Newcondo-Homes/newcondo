@@ -1,0 +1,210 @@
+{
+  "notifications": {
+    "welcome": {
+      "title": "Welcome to Newcondo!",
+      "message": "Thank you for joining Newcondo. Complete your profile to get started.",
+      "cta": "Complete Profile"
+    },
+    "verification": {
+      "email_sent": {
+        "title": "Verify Your Email",
+        "message": "We've sent a verification code to {{email}}. Please check your inbox.",
+        "cta": "Enter Code"
+      },
+      "phone_sent": {
+        "title": "Verify Your Phone",
+        "message": "We've sent a verification code to {{phone}}. Please enter it below.",
+        "cta": "Enter Code"
+      },
+      "approved": {
+        "title": "Verification Approved!",
+        "message": "Your account has been verified successfully. You can now access all features.",
+        "cta": "Explore Properties"
+      },
+      "rejected": {
+        "title": "Verification Rejected",
+        "message": "Your verification was rejected. Reason: {{reason}}. Please resubmit your documents.",
+        "cta": "Resubmit Documents"
+      }
+    },
+    "property": {
+      "created": {
+        "title": "Property Listed",
+        "message": "Your property '{{propertyTitle}}' has been submitted for approval.",
+        "cta": "View Property"
+      },
+      "approved": {
+        "title": "Property Approved!",
+        "message": "Your property '{{propertyTitle}}' has been approved and is now live.",
+        "cta": "View Listing"
+      },
+      "rejected": {
+        "title": "Property Rejected",
+        "message": "Your property '{{propertyTitle}}' was rejected. Reason: {{reason}}",
+        "cta": "Edit Property"
+      },
+      "rented": {
+        "title": "Property Rented",
+        "message": "Your property '{{propertyTitle}}' has been rented by {{renterName}}.",
+        "cta": "View Details"
+      },
+      "duplicate_detected": {
+        "title": "Duplicate Property Detected",
+        "message": "The property you're trying to list appears to already exist on our platform.",
+        "cta": "View Existing Listing"
+      },
+      "boundary_marked": {
+        "title": "Property Boundary Marked",
+        "message": "The boundary for '{{propertyTitle}}' has been marked successfully.",
+        "cta": "Review Boundary"
+      }
+    },
+    "payment": {
+      "success": {
+        "title": "Payment Successful",
+        "message": "Your payment of {{amount}} {{currency}} was processed successfully.",
+        "cta": "View Receipt"
+      },
+      "failed": {
+        "title": "Payment Failed",
+        "message": "Your payment of {{amount}} {{currency}} could not be processed. Please try again.",
+        "cta": "Retry Payment"
+      },
+      "received": {
+        "title": "Payment Received",
+        "message": "You've received a payment of {{amount}} {{currency}} for '{{propertyTitle}}'.",
+        "cta": "View Transaction"
+      },
+      "held": {
+        "title": "Payment on Hold",
+        "message": "Payment of {{amount}} {{currency}} is held pending confirmation ({{hours}} hours remaining).",
+        "cta": "View Status"
+      },
+      "released": {
+        "title": "Payment Released",
+        "message": "Payment of {{amount}} {{currency}} has been released to your account.",
+        "cta": "View Balance"
+      },
+      "refunded": {
+        "title": "Payment Refunded",
+        "message": "Your payment of {{amount}} {{currency}} has been refunded.",
+        "cta": "View Details"
+      },
+      "confirmation_required": {
+        "title": "Confirm Your Payment",
+        "message": "Please confirm your rent payment within {{hours}} hours to complete the transaction.",
+        "cta": "Confirm Now"
+      }
+    },
+    "marking": {
+      "job_created": {
+        "title": "Marking Job Created",
+        "message": "Your marking job for '{{propertyTitle}}' has been created and queued.",
+        "cta": "Track Progress"
+      },
+      "job_assigned": {
+        "title": "New Marking Job Available",
+        "message": "A new marking job is available in {{location}}. Fee: {{fee}} {{currency}}",
+        "cta": "Accept Job"
+      },
+      "agent_assigned": {
+        "title": "Agent Assigned",
+        "message": "{{agentName}} has been assigned to mark your property. Expected completion: {{date}}",
+        "cta": "View Agent Details"
+      },
+      "job_completed": {
+        "title": "Marking Job Completed",
+        "message": "Your property '{{propertyTitle}}' has been marked. Please review and confirm.",
+        "cta": "Review Marking"
+      },
+      "time_slot_expiring": {
+        "title": "Time Slot Expiring",
+        "message": "Your time slot for marking job expires in {{minutes}} minutes.",
+        "cta": "Complete Now"
+      },
+      "job_expired": {
+        "title": "Marking Job Expired",
+        "message": "Your time slot for the marking job has expired and reassigned.",
+        "cta": "View Status"
+      },
+      "payment_partial": {
+        "title": "Partial Payment Received",
+        "message": "You've received {{amount}} {{currency}} for completing the marking job.",
+        "cta": "View Balance"
+      },
+      "confirmation_pending": {
+        "title": "Confirmation Required",
+        "message": "Please confirm the marking for '{{propertyTitle}}' within {{days}} days.",
+        "cta": "Confirm Marking"
+      }
+    },
+    "rental": {
+      "new_rental": {
+        "title": "New Rental Request",
+        "message": "{{renterName}} wants to rent your property '{{propertyTitle}}'.",
+        "cta": "View Request"
+      },
+      "rental_confirmed": {
+        "title": "Rental Confirmed",
+        "message": "Your rental for '{{propertyTitle}}' has been confirmed.",
+        "cta": "View Details"
+      },
+      "rental_expiring": {
+        "title": "Rental Expiring Soon",
+        "message": "Your rental for '{{propertyTitle}}' expires on {{date}}.",
+        "cta": "Renew Lease"
+      },
+      "rental_expired": {
+        "title": "Rental Expired",
+        "message": "Your rental for '{{propertyTitle}}' has expired.",
+        "cta": "View History"
+      }
+    },
+    "referral": {
+      "signup_complete": {
+        "title": "Referral Successful!",
+        "message": "{{referredName}} signed up using your referral code. You've earned {{reward}} {{currency}}!",
+        "cta": "View Rewards"
+      },
+      "reward_earned": {
+        "title": "Referral Reward Earned",
+        "message": "You've earned {{amount}} {{currency}} from your referral program.",
+        "cta": "View Balance"
+      }
+    },
+    "admin": {
+      "new_verification": {
+        "title": "New Verification Request",
+        "message": "{{userName}} has submitted documents for verification.",
+        "cta": "Review Documents"
+      },
+      "new_property_submission": {
+        "title": "New Property Submission",
+        "message": "A new property '{{propertyTitle}}' requires approval.",
+        "cta": "Review Property"
+      },
+      "dispute_reported": {
+        "title": "New Dispute Reported",
+        "message": "A boundary dispute has been reported for '{{propertyTitle}}'.",
+        "cta": "Resolve Dispute"
+      },
+      "support_ticket": {
+        "title": "New Support Ticket",
+        "message": "{{userName}} created a support ticket: {{ticketTitle}}",
+        "cta": "View Ticket"
+      }
+    },
+    "system": {
+      "maintenance": {
+        "title": "Scheduled Maintenance",
+        "message": "System maintenance scheduled for {{date}}. Some features may be unavailable.",
+        "cta": "Learn More"
+      },
+      "feature_update": {
+        "title": "New Features Available",
+        "message": "We've added new features to improve your experience!",
+        "cta": "Explore Features"
+      }
+    }
+  }
+}

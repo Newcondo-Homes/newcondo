@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attribution de marquage de propriété</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1e293b;
+            font-size: 24px;
+            margin: 0 0 10px 0;
+        }
+        .alert-box {
+            background-color: #dbeafe;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .compensation {
+            background-color: #d1fae5;
+            border: 2px solid #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .compensation-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #065f46;
+            margin: 10px 0;
+        }
+        .time-slot {
+            background-color: #fef3c7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+        .info-grid {
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #475569;
+            min-width: 160px;
+        }
+        .info-value {
+            color: #1e293b;
+            flex: 1;
+        }
+        .button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .instructions {
+            background-color: #fffbeb;
+            border: 1px solid #fbbf24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">NewCondo</div>
+            <h1>🎯 Attribution de tâche de marquage</h1>
+        </div>
+
+        <div class="alert-box">
+            <strong>Félicitations !</strong> Une tâche de marquage de propriété vous a été attribuée.
+        </div>
+
+        <p>Bonjour <strong>{{agentName}}</strong>,</p>
+
+        <p>Vous avez été sélectionné pour une mission de marquage de propriété. C'est une excellente opportunité de gagner de l'argent tout en aidant les propriétaires à vérifier leurs annonces sur notre plateforme.</p>
+
+        <div class="compensation">
+            <div>Votre rémunération</div>
+            <div class="compensation-amount">₦{{compensationAmount}}</div>
+            <div style="font-size: 14px; color: #065f46;">Paiement après achèvement réussi</div>
+        </div>
+
+        <div class="time-slot">
+            ⏰ <strong>Créneau horaire :</strong> Vous avez <strong>3 heures</strong> à partir de maintenant pour terminer ce travail
+            <br>
+            <span style="font-size: 14px;">Expire à : {{expiryTime}}</span>
+        </div>
+
+        <div class="info-grid">
+            <h3 style="margin-top: 0; color: #1e293b;">Détails de la propriété</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Adresse de la propriété :</span>
+                <span class="info-value">{{propertyAddress}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Ville/État :</span>
+                <span class="info-value">{{city}}, {{state}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">ID de la tâche :</span>
+                <span class="info-value">{{jobId}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Position dans la file :</span>
+                <span class="info-value">#{{queuePosition}}</span>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <h3 style="margin-top: 0; color: #1e293b;">Personne de contact</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Nom :</span>
+                <span class="info-value">{{contactName}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Téléphone :</span>
+                <span class="info-value">{{contactPhone}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Meilleur moment pour visiter :</span>
+                <span class="info-value">{{preferredTime}}</span>
+            </div>
+            
+            {{#accessInstructions}}
+            <div class="info-row">
+                <span class="info-label">Instructions d'accès :</span>
+                <span class="info-value">{{accessInstructions}}</span>
+            </div>
+            {{/accessInstructions}}
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Instructions de marquage</h3>
+            <ul>
+                <li><strong>Contactez la personne</strong> en utilisant le numéro fourni avant la visite</li>
+                <li><strong>Vérifiez l'emplacement</strong> à l'aide de l'adresse et des photos fournies</li>
+                <li><strong>Marquez les limites de la propriété</strong> avec précision sur la carte dans l'application</li>
+                <li><strong>Prenez des photos claires</strong> de :
+                    <ul>
+                        <li>Extérieur du bâtiment sous plusieurs angles</li>
+                        <li>Pièces intérieures principales (salon, chambres, cuisine, salles de bains)</li>
+                        <li>Caractéristiques et équipements uniques</li>
+                        <li>Limites/repères de la propriété</li>
+                    </ul>
+                </li>
+                <li><strong>Téléchargez les photos immédiatement</strong> après avoir terminé le marquage</li>
+                <li><strong>Ajoutez des notes pertinentes</strong> sur l'état de la propriété</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{appLink}}" class="button">Commencer la tâche</a>
+        </div>
+
+        <div class="alert-box" style="background-color: #fee2e2; border-left-color: #dc2626;">
+            <strong>⚠️ Rappels importants :</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Vous devez terminer ce travail dans les <strong>3 heures</strong></li>
+                <li>Si vous ne pouvez pas le terminer, la tâche sera réattribuée au prochain agent dans la file</li>
+                <li>Le paiement sera libéré après confirmation du propriétaire</li>
+                <li>Prenez des photos professionnelles de haute qualité pour de meilleures chances d'approbation</li>
+                <li>Soyez respectueux et professionnel lors de l'interaction avec la personne de contact</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Simplifier la location immobilière</p>
+            <p>Besoin d'aide ? Contactez le support à <a href="mailto:support@newcondo.ng">support@newcondo.ng</a></p>
+            <p style="font-size: 12px; color: #94a3b8;">
+                Ceci est une notification automatique. Veuillez ne pas répondre à cet e-mail.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

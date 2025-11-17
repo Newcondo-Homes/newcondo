@@ -1,0 +1,210 @@
+{
+  "notifications": {
+    "welcome": {
+      "title": "Welcome to Newcondo!",
+      "message": "Thank you say you join Newcondo. Complete your profile make you start.",
+      "cta": "Complete Profile"
+    },
+    "verification": {
+      "email_sent": {
+        "title": "Verify Your Email",
+        "message": "We don send verification code to {{email}}. Check your inbox.",
+        "cta": "Enter Code"
+      },
+      "phone_sent": {
+        "title": "Verify Your Phone",
+        "message": "We don send verification code to {{phone}}. Enter am below.",
+        "cta": "Enter Code"
+      },
+      "approved": {
+        "title": "Verification Approve!",
+        "message": "Dem don verify your account successfully. You fit access all features now.",
+        "cta": "Explore Properties"
+      },
+      "rejected": {
+        "title": "Verification Reject",
+        "message": "Dem reject your verification. Reason: {{reason}}. Resubmit your documents abeg.",
+        "cta": "Resubmit Documents"
+      }
+    },
+    "property": {
+      "created": {
+        "title": "Property Listed",
+        "message": "Dem don submit your property '{{propertyTitle}}' for approval.",
+        "cta": "View Property"
+      },
+      "approved": {
+        "title": "Property Approve!",
+        "message": "Dem don approve your property '{{propertyTitle}}' and e don dey live now.",
+        "cta": "View Listing"
+      },
+      "rejected": {
+        "title": "Property Reject",
+        "message": "Dem reject your property '{{propertyTitle}}'. Reason: {{reason}}",
+        "cta": "Edit Property"
+      },
+      "rented": {
+        "title": "Property Rent",
+        "message": "{{renterName}} don rent your property '{{propertyTitle}}'.",
+        "cta": "View Details"
+      },
+      "duplicate_detected": {
+        "title": "Duplicate Property Detect",
+        "message": "The property wey you wan list don already dey for our platform.",
+        "cta": "View Existing Listing"
+      },
+      "boundary_marked": {
+        "title": "Property Boundary Mark",
+        "message": "Dem don successfully mark boundary for '{{propertyTitle}}'.",
+        "cta": "Review Boundary"
+      }
+    },
+    "payment": {
+      "success": {
+        "title": "Payment Successful",
+        "message": "Dem don successfully process your payment of {{amount}} {{currency}}.",
+        "cta": "View Receipt"
+      },
+      "failed": {
+        "title": "Payment Fail",
+        "message": "Dem no fit process your payment of {{amount}} {{currency}}. Try again abeg.",
+        "cta": "Retry Payment"
+      },
+      "received": {
+        "title": "Payment Receive",
+        "message": "You don receive payment of {{amount}} {{currency}} for '{{propertyTitle}}'.",
+        "cta": "View Transaction"
+      },
+      "held": {
+        "title": "Payment Dey Hold",
+        "message": "Dem dey hold payment of {{amount}} {{currency}} until you confirm ({{hours}} hours remain).",
+        "cta": "View Status"
+      },
+      "released": {
+        "title": "Payment Release",
+        "message": "Dem don release payment of {{amount}} {{currency}} to your account.",
+        "cta": "View Balance"
+      },
+      "refunded": {
+        "title": "Payment Refund",
+        "message": "Dem don refund your payment of {{amount}} {{currency}}.",
+        "cta": "View Details"
+      },
+      "confirmation_required": {
+        "title": "Confirm Your Payment",
+        "message": "Confirm your rent payment within {{hours}} hours make transaction complete.",
+        "cta": "Confirm Now"
+      }
+    },
+    "marking": {
+      "job_created": {
+        "title": "Marking Job Create",
+        "message": "Dem don create your marking job for '{{propertyTitle}}' and put am for queue.",
+        "cta": "Track Progress"
+      },
+      "job_assigned": {
+        "title": "New Marking Job Dey Available",
+        "message": "New marking job dey available for {{location}}. Fee: {{fee}} {{currency}}",
+        "cta": "Accept Job"
+      },
+      "agent_assigned": {
+        "title": "Agent Assign",
+        "message": "Dem don assign {{agentName}} to mark your property. Expected completion: {{date}}",
+        "cta": "View Agent Details"
+      },
+      "job_completed": {
+        "title": "Marking Job Complete",
+        "message": "Dem don mark your property '{{propertyTitle}}'. Review and confirm am.",
+        "cta": "Review Marking"
+      },
+      "time_slot_expiring": {
+        "title": "Time Slot Dey Expire",
+        "message": "Your time slot for marking job go expire for {{minutes}} minutes.",
+        "cta": "Complete Now"
+      },
+      "job_expired": {
+        "title": "Marking Job Expire",
+        "message": "Your time slot for the marking job don expire and dem don reassign am.",
+        "cta": "View Status"
+      },
+      "payment_partial": {
+        "title": "Partial Payment Receive",
+        "message": "You don receive {{amount}} {{currency}} for completing the marking job.",
+        "cta": "View Balance"
+      },
+      "confirmation_pending": {
+        "title": "Confirmation Require",
+        "message": "Confirm the marking for '{{propertyTitle}}' within {{days}} days.",
+        "cta": "Confirm Marking"
+      }
+    },
+    "rental": {
+      "new_rental": {
+        "title": "New Rental Request",
+        "message": "{{renterName}} wan rent your property '{{propertyTitle}}'.",
+        "cta": "View Request"
+      },
+      "rental_confirmed": {
+        "title": "Rental Confirm",
+        "message": "Dem don confirm your rental for '{{propertyTitle}}'.",
+        "cta": "View Details"
+      },
+      "rental_expiring": {
+        "title": "Rental Dey Expire Soon",
+        "message": "Your rental for '{{propertyTitle}}' go expire on {{date}}.",
+        "cta": "Renew Lease"
+      },
+      "rental_expired": {
+        "title": "Rental Expire",
+        "message": "Your rental for '{{propertyTitle}}' don expire.",
+        "cta": "View History"
+      }
+    },
+    "referral": {
+      "signup_complete": {
+        "title": "Referral Successful!",
+        "message": "{{referredName}} don signup using your referral code. You don earn {{reward}} {{currency}}!",
+        "cta": "View Rewards"
+      },
+      "reward_earned": {
+        "title": "Referral Reward Earn",
+        "message": "You don earn {{amount}} {{currency}} from your referral program.",
+        "cta": "View Balance"
+      }
+    },
+    "admin": {
+      "new_verification": {
+        "title": "New Verification Request",
+        "message": "{{userName}} don submit documents for verification.",
+        "cta": "Review Documents"
+      },
+      "new_property_submission": {
+        "title": "New Property Submission",
+        "message": "New property '{{propertyTitle}}' need approval.",
+        "cta": "Review Property"
+      },
+      "dispute_reported": {
+        "title": "New Dispute Report",
+        "message": "Dem don report boundary dispute for '{{propertyTitle}}'.",
+        "cta": "Resolve Dispute"
+      },
+      "support_ticket": {
+        "title": "New Support Ticket",
+        "message": "{{userName}} create support ticket: {{ticketTitle}}",
+        "cta": "View Ticket"
+      }
+    },
+    "system": {
+      "maintenance": {
+        "title": "Scheduled Maintenance",
+        "message": "System maintenance schedule for {{date}}. Some features fit no dey available.",
+        "cta": "Learn More"
+      },
+      "feature_update": {
+        "title": "New Features Dey Available",
+        "message": "We don add new features to improve your experience!",
+        "cta": "Explore Features"
+      }
+    }
+  }
+}

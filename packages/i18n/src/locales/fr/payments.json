@@ -1,0 +1,121 @@
+{
+  "title": "Paiements",
+  "history": {
+    "title": "Historique des paiements",
+    "noTransactions": "Aucune transaction trouvée",
+    "transactionId": "ID de transaction",
+    "date": "Date",
+    "amount": "Montant",
+    "status": "Statut",
+    "method": "Méthode",
+    "viewDetails": "Voir les détails"
+  },
+  "types": {
+    "RENT": "Loyer",
+    "DEPOSIT": "Dépôt",
+    "AGENT_COMMISSION": "Commission d'agent",
+    "PREMIUM_UPGRADE": "Mise à niveau premium",
+    "PROPERTY_MARKING": "Marquage de propriété"
+  },
+  "status": {
+    "PENDING": "En attente",
+    "SUCCESS": "Réussi",
+    "FAILED": "Échoué",
+    "CANCELLED": "Annulé",
+    "REFUNDED": "Remboursé",
+    "HELD": "Retenu",
+    "RELEASED": "Libéré"
+  },
+  "methods": {
+    "card": "Carte",
+    "bankTransfer": "Virement bancaire",
+    "ussd": "USSD",
+    "mobileMoney": "Mobile Money"
+  },
+  "rent": {
+    "title": "Payer le loyer",
+    "property": "Propriété",
+    "unit": "Unité",
+    "monthlyRent": "Loyer mensuel",
+    "serviceFee": "Frais de service",
+    "platformFee": "Frais de plateforme",
+    "total": "Montant total",
+    "confirmation": {
+      "title": "Confirmer le paiement",
+      "checkbox": "J'ai vérifié et confirmé que cette propriété est disponible et correspond à la description",
+      "notice": "Note : Les frais de service ne sont pas remboursables",
+      "period": "Période de confirmation de 24 heures"
+    },
+    "proceed": "Procéder au paiement"
+  },
+  "virtualAccount": {
+    "title": "Compte virtuel",
+    "accountNumber": "Numéro de compte",
+    "accountName": "Nom du compte",
+    "bankName": "Nom de la banque",
+    "balance": "Solde",
+    "withdraw": "Retirer des fonds",
+    "autoTransfer": "Transfert automatique",
+    "transactionHistory": "Historique des transactions"
+  },
+  "commission": {
+    "title": "Distribution de commission",
+    "platformFee": "Frais de plateforme (20%)",
+    "listingAgent": "Agent inscripteur (50% de la commission)",
+    "subAgent": "Sous-agent (50% de la commission)",
+    "propertyOwner": "Propriétaire (80%)",
+    "breakdown": "Répartition",
+    "total": "Total"
+  },
+  "refund": {
+    "title": "Demander un remboursement",
+    "reason": "Raison du remboursement",
+    "description": "Description",
+    "submit": "Soumettre la demande",
+    "processing": "Traitement du remboursement",
+    "notice": "Les remboursements prennent 5-7 jours ouvrables",
+    "serviceFeeNote": "Note : Les frais de service ne sont pas remboursables"
+  },
+  "receipt": {
+    "title": "Reçu de paiement",
+    "download": "Télécharger le reçu",
+    "print": "Imprimer",
+    "transactionDetails": "Détails de la transaction",
+    "paymentMethod": "Méthode de paiement",
+    "reference": "Référence"
+  },
+  "confirmation": {
+    "title": "Confirmation du paiement",
+    "deadline": "Date limite de confirmation",
+    "confirm": "Confirmer la propriété",
+    "dispute": "Contester le paiement",
+    "expired": "Période de confirmation expirée",
+    "confirmed": "Paiement confirmé",
+    "released": "Fonds libérés"
+  },
+  "locking": {
+    "propertyLocked": "Propriété verrouillée pour le paiement",
+    "expiry": "Le verrouillage expire dans",
+    "completePayment": "Veuillez terminer votre paiement",
+    "lockExpired": "Verrouillage de paiement expiré"
+  },
+  "marking": {
+    "fee": "Frais de marquage de propriété",
+    "agentCompensation": "Compensation de l'agent (25%)",
+    "newcondoShare": "Part de Newcondo (75%)",
+    "payNow": "Payer maintenant"
+  },
+  "errors": {
+    "paymentFailed": "Le paiement a échoué",
+    "insufficientFunds": "Fonds insuffisants",
+    "invalidCard": "Carte invalide",
+    "transactionTimeout": "Délai de transaction expiré",
+    "propertyUnavailable": "Propriété non disponible",
+    "duplicatePayment": "Paiement en double détecté"
+  },
+  "success": {
+    "paymentComplete": "Paiement terminé avec succès",
+    "receiptSent": "Reçu envoyé à votre email",
+    "confirmationPending": "En attente de confirmation"
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "title": "Service de marquage de propriété",
+  "options": {
+    "title": "Comment souhaitez-vous marquer cette propriété ?",
+    "self": {
+      "title": "Marquer moi-même",
+      "description": "Marquez la propriété vous-même en utilisant votre appareil",
+      "cost": "Gratuit"
+    },
+    "friend": {
+      "title": "Envoyer à quelqu'un que je connais",
+      "description": "Partagez un lien avec quelqu'un pour marquer la propriété",
+      "cost": "Gratuit"
+    },
+    "agent": {
+      "title": "Assigner à un agent Newcondo",
+      "description": "Un agent vérifié marquera votre propriété",
+      "cost": "₦20,000"
+    },
+    "newcondo": {
+      "title": "Laisser Newcondo marquer",
+      "description": "L'équipe Newcondo marquera votre propriété",
+      "cost": "₦25,000"
+    }
+  },
+  "contactDetails": {
+    "title": "Détails du contact",
+    "name": "Nom de la personne de contact",
+    "phone": "Numéro de téléphone",
+    "instructions": "Instructions d'accès",
+    "instructionsPlaceholder": "Fournissez des détails sur l'accès à la propriété..."
+  },
+  "scheduling": {
+    "title": "Planification",
+    "preferredTime": "Heure préférée pour le marquage",
+    "urgency": "Niveau d'urgence",
+    "availability": "Disponibilité de la propriété"
+  },
+  "payment": {
+    "title": "Payer pour le service de marquage",
+    "fee": "Frais de marquage",
+    "breakdown": {
+      "agentCompensation": "Compensation de l'agent (25%)",
+      "platformFee": "Frais de plateforme (75%)"
+    },
+    "total": "Montant total",
+    "proceed": "Procéder au paiement"
+  },
+  "queue": {
+    "title": "File d'attente de marquage",
+    "position": "Position dans la file",
+    "estimatedTime": "Temps estimé",
+    "maxDuration": "Durée maximale : 3 jours",
+    "timeSlot": "Créneau horaire : 3 heures",
+    "waiting": "En attente d'un agent...",
+    "assigned": "Agent assigné",
+    "inProgress": "Marquage en cours"
+  },
+  "agent": {
+    "dashboard": {
+      "title": "Tableau de bord des travaux de marquage",
+      "available": "Travaux disponibles",
+      "assigned": "Mes travaux assignés",
+      "completed": "Travaux terminés",
+      "earnings": "Gains"
+    },
+    "job": {
+      "accept": "Accepter le travail",
+      "decline": "Refuser",
+      "viewDetails": "Voir les détails",
+      "startMarking": "Commencer le marquage",
+      "complete": "Terminer le travail",
+      "timeRemaining": "Temps restant"
+    },
+    "notification": {
+      "newJob": "Nouveau travail de marquage disponible",
+      "jobAssigned": "Travail de marquage assigné",
+      "timeSlotExpiring": "Votre créneau horaire expire bientôt",
+      "jobCancelled": "Travail annulé",
+      "paymentReceived": "Paiement reçu"
+    },
+    "performance": {
+      "title": "Performance",
+      "reliabilityScore": "Score de fiabilité",
+      "totalJobs": "Total des travaux",
+      "completedJobs": "Travaux terminés",
+      "completionRate": "Taux de réussite",
+      "averageTime": "Temps moyen"
+    }
+  },
+  "completion": {
+    "title": "Terminer le marquage",
+    "uploadPhotos": "Télécharger des photos de la propriété",
+    "photoRequirements": "Photos requises : extérieur, salon, chambres, cuisine, salle de bain",
+    "boundaryData": "Données de limite",
+    "notes": "Notes de réalisation",
+    "notesPlaceholder": "Toute information supplémentaire...",
+    "submit": "Soumettre pour vérification"
+  },
+  "verification": {
+    "title": "Vérifier le marquage",
+    "pending": "Vérification en attente",
+    "deadline": "Date limite de vérification",
+    "confirm": "Confirmer le marquage",
+    "reject": "Rejeter et demander un nouveau marquage",
+    "viewPhotos": "Voir les photos",
+    "viewBoundary": "Voir les limites",
+    "feedback": "Commentaires",
+    "confirmed": "Marquage confirmé",
+    "rejected": "Marquage rejeté"
+  },
+  "status": {
+    "QUEUED": "En file d'attente",
+    "ASSIGNED": "Assigné",
+    "IN_PROGRESS": "En cours",
+    "COMPLETED": "Terminé",
+    "CANCELLED": "Annulé",
+    "EXPIRED": "Expiré"
+  },
+  "shareLink": {
+    "title": "Lien de partage de marquage",
+    "copy": "Copier le lien",
+    "share": "Partager le lien",
+    "instructions": "Partagez ce lien avec la personne qui marquera votre propriété",
+    "expires": "Expire dans 7 jours",
+    "copied": "Lien copié dans le presse-papiers"
+  },
+  "history": {
+    "title": "Historique de marquage",
+    "noJobs": "Aucun travail de marquage trouvé",
+    "viewAll": "Voir tout",
+    "filter": {
+      "all": "Tous",
+      "pending": "En attente",
+      "completed": "Terminé",
+      "cancelled": "Annulé"
+    }
+  },
+  "errors": {
+    "noAgentsAvailable": "Aucun agent disponible dans votre région",
+    "paymentRequired": "Paiement requis pour continuer",
+    "timeSlotExpired": "Créneau horaire expiré",
+    "jobCancelled": "Travail annulé",
+    "verificationFailed": "Échec de la vérification"
+  },
+  "success": {
+    "jobCreated": "Travail de marquage créé avec succès",
+    "jobAccepted": "Travail accepté",
+    "jobCompleted": "Travail terminé avec succès",
+    "paymentProcessed": "Paiement traité",
+    "verified": "Marquage vérifié avec succès"
+  }
+}

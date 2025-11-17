@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vérification du Compte</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1e293b;
+            font-size: 24px;
+            margin: 0 0 10px 0;
+        }
+        .otp-box {
+            background-color: #dbeafe;
+            border: 2px solid #2563eb;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+        .otp-code {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #1e40af;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        .warning-box {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .expiry-notice {
+            text-align: center;
+            color: #dc2626;
+            font-weight: 600;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">NewCondo</div>
+            <h1>Vérification de votre compte</h1>
+        </div>
+
+        <p>Bonjour <strong>{{userName}}</strong>,</p>
+
+        <p>Merci de vous être inscrit sur NewCondo ! Pour finaliser la création de votre compte, veuillez vérifier votre {{verificationType}}.</p>
+
+        <div class="otp-box">
+            <div style="font-size: 16px; color: #475569; margin-bottom: 10px;">
+                Votre code de vérification
+            </div>
+            <div class="otp-code">{{otpCode}}</div>
+            <div class="expiry-notice">
+                ⏰ Expire dans {{expiryMinutes}} minutes
+            </div>
+        </div>
+
+        <p style="text-align: center;">
+            Entrez ce code dans l'application pour vérifier votre compte.
+        </p>
+
+        <div style="text-align: center;">
+            <a href="{{verificationLink}}" class="button">Vérifier maintenant</a>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ Important :</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Ce code est valable pour <strong>{{expiryMinutes}} minutes</strong> seulement</li>
+                <li>Ne partagez jamais ce code avec qui que ce soit</li>
+                <li>L'équipe NewCondo ne vous demandera jamais ce code</li>
+                <li>Si vous n'avez pas demandé ce code, ignorez cet e-mail</li>
+            </ul>
+        </div>
+
+        <p style="font-size: 14px; color: #64748b; text-align: center;">
+            Vous n'arrivez pas à vérifier ? <a href="{{supportLink}}" style="color: #2563eb;">Contactez le support</a>
+        </p>
+
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Simplifier la location immobilière</p>
+            <p>Besoin d'aide ? Contactez-nous à <a href="mailto:support@newcondo.ng">support@newcondo.ng</a></p>
+            <p style="font-size: 12px; color: #94a3b8;">
+                Ceci est une notification automatique. Veuillez ne pas répondre à cet e-mail.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

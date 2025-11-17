@@ -167,3 +167,62 @@ export const config = {
     "/((?!api|_next/static|_next/image|favicon.ico|public|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
+
+
+
+
+
+
+
+
+
+
+
+
+// import createMiddleware from 'next-intl/middleware';
+// import { NextRequest, NextResponse } from 'next/server';
+// import { locales, defaultLocale } from './i18n';
+
+// // Create i18n middleware
+// const i18nMiddleware = createMiddleware({
+//   locales,
+//   defaultLocale,
+//   localePrefix: 'always', // Always show locale in URL
+//   localeDetection: true, // Auto-detect from Accept-Language header
+// });
+
+// export default async function middleware(request: NextRequest) {
+//   const { pathname } = request.nextUrl;
+
+//   // Skip middleware for static files and API routes
+//   const shouldSkip =
+//     pathname.startsWith('/_next') ||
+//     pathname.startsWith('/api') ||
+//     pathname.includes('/favicon.ico') ||
+//     pathname.includes('/images/') ||
+//     pathname.includes('/public/');
+
+//   if (shouldSkip) {
+//     return NextResponse.next();
+//   }
+
+//   // Handle locale routing
+//   const response = i18nMiddleware(request);
+
+//   // Add custom headers for locale info
+//   const locale = pathname.split('/')[1];
+//   if (locales.includes(locale as any)) {
+//     response.headers.set('x-locale', locale);
+//   }
+
+//   return response;
+// }
+
+// export const config = {
+//   // Match all pathnames except for
+//   // - /api routes
+//   // - /_next (Next.js internals)
+//   // - /_static (inside /public)
+//   // - all root files inside /public (e.g. /favicon.ico)
+//   matcher: ['/((?!api|_next|_static|.*\\..*).*)'],
+// };

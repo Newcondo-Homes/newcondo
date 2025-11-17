@@ -1,0 +1,143 @@
+{
+  "dashboard": {
+    "title": "Referral Program",
+    "subtitle": "Invite friends, earn money",
+    "yourCode": "Your Referral Code",
+    "copyCode": "Copy Code",
+    "copyLink": "Copy Referral Link",
+    "shareLink": "Share Link",
+    "codeCopied": "Code copied!",
+    "linkCopied": "Link copied!",
+    "shareVia": "Share Via",
+    "whatsapp": "WhatsApp",
+    "twitter": "Twitter",
+    "facebook": "Facebook",
+    "email": "Email",
+    "sms": "SMS"
+  },
+  "stats": {
+    "title": "Your Referral Stats",
+    "totalReferrals": "Total Referrals",
+    "activeReferrals": "Active Referrals",
+    "totalEarnings": "Total Earnings",
+    "pendingRewards": "Pending Rewards",
+    "conversions": "Successful Conversions"
+  },
+  "howItWorks": {
+    "title": "How E Dey Work",
+    "step1": {
+      "title": "Share Your Link",
+      "description": "Copy your unique referral link or code share with friends"
+    },
+    "step2": {
+      "title": "Dem Sign Up",
+      "description": "Your friend sign up using your link or code"
+    },
+    "step3": {
+      "title": "Dem Complete Action",
+      "description": "When dem list property or make rental payment"
+    },
+    "step4": {
+      "title": "You Earn Money",
+      "description": "Collect your reward for your virtual account"
+    }
+  },
+  "rewards": {
+    "title": "Reward Structure",
+    "subtitle": "Wetin you go collect for different actions",
+    "newUser": "New User Signup",
+    "newUserAmount": "₦{{amount}}",
+    "firstListing": "First Property Listing",
+    "firstListingAmount": "₦{{amount}}",
+    "firstRental": "First Rental Payment",
+    "firstRentalAmount": "{{percentage}}% of commission",
+    "premiumUpgrade": "Premium Upgrade",
+    "premiumAmount": "₦{{amount}}"
+  },
+  "referralList": {
+    "title": "Your Referrals",
+    "subtitle": "People wey you don refer",
+    "name": "Name",
+    "joinedDate": "Joined Date",
+    "status": "Status",
+    "reward": "Reward",
+    "statuses": {
+      "pending": "Pending",
+      "active": "Active",
+      "completed": "Completed",
+      "expired": "Expired"
+    },
+    "filters": {
+      "all": "All Referrals",
+      "active": "Active",
+      "completed": "Completed",
+      "pending": "Pending"
+    },
+    "noReferrals": "You never refer anybody yet",
+    "noReferralsHint": "Start dey share your referral link make you earn money"
+  },
+  "earnings": {
+    "title": "Referral Earnings",
+    "subtitle": "Money wey you don collect from referrals",
+    "totalEarned": "Total Amount Earned",
+    "withdrawn": "Withdrawn",
+    "available": "Available Balance",
+    "pending": "Pending Rewards",
+    "withdrawNow": "Withdraw Now",
+    "history": "Earnings History",
+    "table": {
+      "date": "Date",
+      "referral": "Referral",
+      "action": "Action",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "actions": {
+      "signup": "Signed Up",
+      "listing": "Listed Property",
+      "rental": "Made Rental Payment",
+      "premium": "Upgraded to Premium"
+    },
+    "noEarnings": "No earnings yet",
+    "noEarningsHint": "When your referrals take action, your earnings go show here"
+  },
+  "promote": {
+    "title": "Promote Properties",
+    "subtitle": "Share properties, earn commission",
+    "howItWorks": "How Property Promotion Work",
+    "step1": "Click 'Promote' button on any property",
+    "step2": "Get unique promotion link for that property",
+    "step3": "Share link on social media or with friends",
+    "step4": "Earn commission when somebody rent through your link",
+    "commission": "Your Commission",
+    "commissionAmount": "{{percentage}}% of platform fee",
+    "commissionNote": "For rent of ₦{{rent}}, you go collect ₦{{commission}}",
+    "myPromotions": "My Promoted Properties",
+    "property": "Property",
+    "views": "Views",
+    "clicks": "Clicks",
+    "conversions": "Conversions",
+    "earned": "Earned",
+    "promotionLink": "Promotion Link",
+    "copyLink": "Copy Link",
+    "shareLink": "Share",
+    "stopPromoting": "Stop Promoting",
+    "noPromotions": "You never promote any property",
+    "noPromotionsHint": "Browse properties and click 'Promote' make you start earn"
+  },
+  "terms": {
+    "title": "Referral Program Terms",
+    "subtitle": "Important information",
+    "terms": [
+      "Referral rewards dey paid after successful action completion",
+      "You no fit refer yourself or create fake accounts",
+      "Rewards dey paid to virtual account within 24 hours",
+      "Minimum withdrawal amount na ₦1,000",
+      "Newcondo fit change reward amounts with notice",
+      "Abuse of referral system go result in account suspension",
+      "Referral links dey valid for 30 days",
+      "Only first referral dey count if person use multiple links"
+    ],
+    "acceptTerms": "I understand and accept the terms"
+  }
+}

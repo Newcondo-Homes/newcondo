@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Marking Assignment</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1e293b;
+            font-size: 24px;
+            margin: 0 0 10px 0;
+        }
+        .alert-box {
+            background-color: #dbeafe;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .alert-box.urgent {
+            background-color: #fee2e2;
+            border-left-color: #dc2626;
+        }
+        .info-grid {
+            background-color: #f8fafc;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .info-row {
+            display: flex;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #475569;
+            min-width: 140px;
+        }
+        .info-value {
+            color: #1e293b;
+            flex: 1;
+        }
+        .button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .button:hover {
+            background-color: #1d4ed8;
+        }
+        .instructions {
+            background-color: #fffbeb;
+            border: 1px solid #fbbf24;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #92400e;
+        }
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        .compensation {
+            background-color: #d1fae5;
+            border: 2px solid #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .compensation-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #065f46;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+        }
+        .warning {
+            color: #dc2626;
+            font-weight: 600;
+        }
+        .time-slot {
+            background-color: #fef3c7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">NewCondo</div>
+            <h1>🎯 Property Marking Job Assignment</h1>
+        </div>
+
+        <div class="alert-box {{urgencyClass}}">
+            <strong>Congratulations!</strong> You have been assigned a property marking job.
+        </div>
+
+        <p>Hello <strong>{{agentName}}</strong>,</p>
+
+        <p>You have been selected for a property marking assignment. This is a great opportunity to earn while helping property owners verify their listings on our platform.</p>
+
+        <div class="compensation">
+            <div>Your Compensation</div>
+            <div class="compensation-amount">₦{{compensationAmount}}</div>
+            <div style="font-size: 14px; color: #065f46;">Payment upon successful completion</div>
+        </div>
+
+        <div class="time-slot">
+            ⏰ <strong>Time Slot:</strong> You have <strong>3 hours</strong> from now to complete this job
+            <br>
+            <span style="font-size: 14px;">Expires at: {{expiryTime}}</span>
+        </div>
+
+        <div class="info-grid">
+            <h3 style="margin-top: 0; color: #1e293b;">Property Details</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Property Address:</span>
+                <span class="info-value">{{propertyAddress}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">City/State:</span>
+                <span class="info-value">{{city}}, {{state}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Job ID:</span>
+                <span class="info-value">{{jobId}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Queue Position:</span>
+                <span class="info-value">#{{queuePosition}}</span>
+            </div>
+        </div>
+
+        <div class="info-grid">
+            <h3 style="margin-top: 0; color: #1e293b;">Contact Person</h3>
+            
+            <div class="info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{contactName}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Phone:</span>
+                <span class="info-value">{{contactPhone}}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Best Time to Visit:</span>
+                <span class="info-value">{{preferredTime}}</span>
+            </div>
+            
+            {{#accessInstructions}}
+            <div class="info-row">
+                <span class="info-label">Access Instructions:</span>
+                <span class="info-value">{{accessInstructions}}</span>
+            </div>
+            {{/accessInstructions}}
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Instructions for Marking</h3>
+            <ul>
+                <li><strong>Contact the person</strong> using the provided phone number before visiting</li>
+                <li><strong>Verify the location</strong> using the address and any photos provided</li>
+                <li><strong>Mark the property boundary</strong> accurately on the map within the app</li>
+                <li><strong>Take clear photos</strong> of:
+                    <ul>
+                        <li>Building exterior from multiple angles</li>
+                        <li>Key interior rooms (living room, bedrooms, kitchen, bathrooms)</li>
+                        <li>Unique features and amenities</li>
+                        <li>Property boundaries/landmarks</li>
+                    </ul>
+                </li>
+                <li><strong>Upload photos immediately</strong> after completing the marking</li>
+                <li><strong>Add any relevant notes</strong> about the property condition</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{appLink}}" class="button">Start Marking Job</a>
+        </div>
+
+        <div class="alert-box urgent">
+            <strong>⚠️ Important Reminders:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>You must complete this job within <strong>3 hours</strong></li>
+                <li>If you cannot complete it, the job will be reassigned to the next agent in queue</li>
+                <li>Payment will be released after property owner confirms your work</li>
+                <li>Take professional, high-quality photos for better approval chances</li>
+                <li>Be respectful and professional when interacting with the contact person</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Making Property Rental Seamless</p>
+            <p>Need help? Contact support at <a href="mailto:support@newcondo.ng">support@newcondo.ng</a></p>
+            <p style="font-size: 12px; color: #94a3b8;">
+                This is an automated notification. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

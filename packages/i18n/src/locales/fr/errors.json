@@ -1,0 +1,141 @@
+{
+  "title": "Erreurs",
+  "general": {
+    "unknown": "Une erreur inattendue s'est produite",
+    "serverError": "Erreur du serveur. Veuillez réessayer plus tard",
+    "networkError": "Erreur réseau. Vérifiez votre connexion Internet",
+    "timeout": "La demande a expiré. Veuillez réessayer",
+    "notFound": "Ressource non trouvée",
+    "unauthorized": "Non autorisé. Veuillez vous connecter",
+    "forbidden": "Vous n'avez pas la permission d'accéder à cette ressource",
+    "badRequest": "Demande invalide",
+    "serviceUnavailable": "Service temporairement indisponible"
+  },
+  "auth": {
+    "invalidCredentials": "Email ou mot de passe invalide",
+    "emailExists": "L'email existe déjà",
+    "phoneExists": "Le numéro de téléphone existe déjà",
+    "invalidOTP": "Code OTP invalide",
+    "expiredOTP": "Code OTP expiré",
+    "maxAttemptsExceeded": "Nombre maximum de tentatives dépassé",
+    "accountSuspended": "Votre compte a été suspendu",
+    "accountNotVerified": "Veuillez vérifier votre compte",
+    "weakPassword": "Le mot de passe est trop faible",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "invalidToken": "Jeton invalide ou expiré",
+    "sessionExpired": "Session expirée. Veuillez vous reconnecter"
+  },
+  "validation": {
+    "required": "{{field}} est requis",
+    "invalid": "{{field}} est invalide",
+    "tooShort": "{{field}} est trop court",
+    "tooLong": "{{field}} est trop long",
+    "min": "{{field}} doit être au moins {{min}}",
+    "max": "{{field}} ne doit pas dépasser {{max}}",
+    "email": "Adresse email invalide",
+    "phone": "Numéro de téléphone invalide",
+    "url": "URL invalide",
+    "date": "Date invalide",
+    "number": "Doit être un nombre",
+    "positive": "Doit être un nombre positif",
+    "integer": "Doit être un nombre entier"
+  },
+  "property": {
+    "notFound": "Propriété non trouvée",
+    "unavailable": "Propriété non disponible",
+    "alreadyRented": "Propriété déjà louée",
+    "invalidBoundary": "Limites de propriété invalides",
+    "duplicateDetected": "Propriété en double détectée",
+    "insufficientDocuments": "Documents insuffisants",
+    "rejectedByAdmin": "Rejetée par l'administrateur",
+    "pendingApproval": "En attente d'approbation",
+    "invalidLocation": "Emplacement invalide",
+    "invalidPrice": "Prix invalide",
+    "missingImages": "Images de propriété manquantes",
+    "oversizedBoundary": "Limites de propriété surdimensionnées",
+    "overlappingBoundary": "Limites qui se chevauchent avec une autre propriété",
+    "unitNotFound": "Unité non trouvée",
+    "unitUnavailable": "Unité non disponible"
+  },
+  "payment": {
+    "failed": "Le paiement a échoué",
+    "insufficientFunds": "Fonds insuffisants",
+    "invalidCard": "Détails de carte invalides",
+    "expiredCard": "Carte expirée",
+    "declinedCard": "Carte refusée",
+    "invalidAmount": "Montant de paiement invalide",
+    "duplicateTransaction": "Transaction en double détectée",
+    "propertyLocked": "Propriété actuellement verrouillée pour le paiement",
+    "refundFailed": "Le remboursement a échoué",
+    "alreadyPaid": "Paiement déjà effectué",
+    "confirmationExpired": "Période de confirmation expirée",
+    "cannotRefund": "Impossible de rembourser ce paiement"
+  },
+  "marking": {
+    "jobNotFound": "Travail de marquage non trouvé",
+    "noAgentsAvailable": "Aucun agent disponible dans votre région",
+    "paymentRequired": "Paiement requis pour le service de marquage",
+    "timeSlotExpired": "Créneau horaire expiré",
+    "alreadyAssigned": "Travail déjà assigné à un autre agent",
+    "cannotAccept": "Impossible d'accepter ce travail",
+    "cannotComplete": "Impossible de terminer le travail",
+    "invalidPhotos": "Photos invalides ou insuffisantes",
+    "invalidBoundaryData": "Données de limite invalides",
+    "verificationFailed": "Échec de la vérification du marquage",
+    "maxAttemptsReached": "Nombre maximum de tentatives de marquage atteint",
+    "jobCancelled": "Travail de marquage annulé",
+    "jobExpired": "Travail de marquage expiré"
+  },
+  "upload": {
+    "fileTooLarge": "Le fichier est trop volumineux",
+    "invalidFileType": "Type de fichier invalide",
+    "uploadFailed": "Échec du téléchargement",
+    "tooManyFiles": "Trop de fichiers",
+    "noFileSelected": "Aucun fichier sélectionné",
+    "corruptedFile": "Le fichier est corrompu"
+  },
+  "verification": {
+    "pending": "Vérification en attente",
+    "rejected": "Documents de vérification rejetés",
+    "expired": "Le document a expiré",
+    "invalidDocument": "Document invalide",
+    "poorQuality": "Qualité du document insuffisante",
+    "mismatch": "Les détails du document ne correspondent pas"
+  },
+  "referral": {
+    "invalidCode": "Code de parrainage invalide",
+    "codeExpired": "Le code de parrainage a expiré",
+    "alreadyReferred": "Vous avez déjà été parrainé",
+    "cannotSelfRefer": "Vous ne pouvez pas utiliser votre propre code de parrainage",
+    "maxReferralsReached": "Nombre maximum de parrainages atteint"
+  },
+  "agent": {
+    "notAvailable": "Agent non disponible",
+    "notVerified": "Agent non vérifié",
+    "suspended": "Agent suspendu",
+    "outOfServiceArea": "Hors de la zone de service",
+    "lowReliabilityScore": "Score de fiabilité trop bas"
+  },
+  "admin": {
+    "accessDenied": "Accès refusé",
+    "insufficientPermissions": "Permissions insuffisantes",
+    "cannotDeleteUser": "Impossible de supprimer cet utilisateur",
+    "cannotApprove": "Impossible d'approuver cette ressource",
+    "invalidAction": "Action invalide"
+  },
+  "boundaries": {
+    "notMarked": "Limites de propriété non marquées",
+    "invalidCoordinates": "Coordonnées invalides",
+    "tooSmall": "Zone de propriété trop petite",
+    "tooLarge": "Zone de propriété trop grande",
+    "overlapping": "Chevauchement avec une propriété existante",
+    "outsideBounds": "En dehors des limites géographiques valides"
+  },
+  "actions": {
+    "retry": "Réessayer",
+    "goBack": "Retour",
+    "contactSupport": "Contacter le support",
+    "dismiss": "Ignorer",
+    "refresh": "Actualiser"
+  }
+}

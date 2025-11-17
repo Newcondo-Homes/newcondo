@@ -1,0 +1,300 @@
+{
+  "queue": {
+    "title": "Agent Queue for Property Marking",
+    "subtitle": "Available marking jobs near you",
+    "availableJobs": "Available Jobs",
+    "myQueue": "My Queue",
+    "completed": "Completed Jobs",
+    "noJobs": "No available jobs right now",
+    "noJobsHint": "We go notify you when new marking jobs dey available for your area",
+    "jobCard": {
+      "location": "Location",
+      "fee": "Payment",
+      "distance": "Distance",
+      "urgent": "Urgent",
+      "queuePosition": "Queue Position: {{position}}",
+      "timeRemaining": "Time Remaining: {{time}}",
+      "acceptJob": "Accept Job",
+      "viewDetails": "View Details",
+      "startMarking": "Start Marking"
+    },
+    "filters": {
+      "all": "All Jobs",
+      "nearby": "Nearby (Within {{distance}}km)",
+      "urgent": "Urgent Only",
+      "highPay": "High Payment First"
+    }
+  },
+  "jobDetails": {
+    "title": "Marking Job Details",
+    "propertyInfo": "Property Information",
+    "address": "Full Address",
+    "propertyType": "Property Type",
+    "contactPerson": "Contact Person",
+    "contactPhone": "Contact Number",
+    "accessInstructions": "Access Instructions",
+    "preferredTime": "Preferred Time",
+    "urgency": "Urgency Level",
+    "urgencyLevels": {
+      "low": "Low Priority (5-7 days)",
+      "normal": "Normal (2-3 days)",
+      "high": "High Priority (1-2 days)",
+      "urgent": "Very Urgent (Same day)"
+    },
+    "compensation": "Compensation",
+    "markingFee": "Total Marking Fee",
+    "yourEarning": "Your Earning (25%)",
+    "platformFee": "Platform Fee",
+    "paymentTerms": "Payment Terms",
+    "terms": {
+      "advance": "₦{{amount}} advance after marking",
+      "balance": "₦{{amount}} balance after owner confirms",
+      "timeLimit": "Complete within 3 hours",
+      "confirmation": "Owner get 2-3 days to confirm"
+    },
+    "queueInfo": "Queue Information",
+    "yourPosition": "Your Position",
+    "totalInQueue": "Total in Queue",
+    "timeSlot": "Your Time Slot",
+    "expiresAt": "Expires At",
+    "instructions": "Marking Instructions",
+    "step1": "Contact the contact person",
+    "step2": "Go to the property location",
+    "step3": "Use the app mark property boundary on map",
+    "step4": "Take clear photos of key areas",
+    "step5": "Submit for owner confirmation",
+    "acceptJob": "Accept This Job",
+    "declineJob": "Decline Job",
+    "startMarking": "Start Marking Now",
+    "confirmAccept": "You sure say you fit reach within 3 hours?",
+    "acceptWarning": "If you no complete on time, next person for queue go collect the job",
+    "confirmButton": "Yes, I Go Do Am",
+    "cancelButton": "No, Forget Am"
+  },
+  "marking": {
+    "title": "Mark Property Boundary",
+    "subtitle": "Use the map mark the exact property location",
+    "instructions": {
+      "title": "How to Mark",
+      "step1": "Wait make map load your location",
+      "step2": "Zoom in to see the property clearly",
+      "step3": "Draw box around the property boundary",
+      "step4": "Adjust the corners make e fit well",
+      "step5": "Take photos of important areas",
+      "step6": "Add notes and submit"
+    },
+    "mapControls": {
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "satellite": "Satellite View",
+      "map": "Map View",
+      "myLocation": "My Location",
+      "startDrawing": "Start Drawing Boundary",
+      "clearDrawing": "Clear and Start Again",
+      "adjustBoundary": "Adjust Boundary"
+    },
+    "photos": {
+      "title": "Property Photos",
+      "subtitle": "Take or upload clear photos",
+      "required": "Required Photos (Minimum 4)",
+      "categories": {
+        "exterior": "Building Exterior (Front view)",
+        "entrance": "Main Entrance/Gate",
+        "compound": "Compound/Surroundings",
+        "landmark": "Nearby Landmark",
+        "interior": "Interior (Optional)"
+      },
+      "takePhoto": "Take Photo",
+      "uploadPhoto": "Upload Photo",
+      "retake": "Retake",
+      "addMore": "Add More Photos",
+      "photoCount": "{{current}}/{{minimum}} photos",
+      "qualityHint": "Make sure photos clear and bright"
+    },
+    "notes": {
+      "title": "Additional Notes",
+      "placeholder": "Add any important information about the property, location challenges, or special features...",
+      "challenges": "Any Challenge?",
+      "challengesPlaceholder": "E.g., Hard to find, security gate, contact person no show..."
+    },
+    "validation": {
+      "checkingDuplicate": "Checking for duplicates...",
+      "duplicateFound": "Warning! Dis property don mark already",
+      "duplicateWarning": "Another property dey overlap with your marking. Check well make you sure say na the correct boundary.",
+      "boundaryTooLarge": "Boundary too big. Maximum na {{max}} square meters",
+      "boundaryTooSmall": "Boundary too small. Minimum na {{min}} square meters",
+      "photosMissing": "Add at least {{count}} photos",
+      "contactNotReached": "Mark say you no fit contact the contact person"
+    },
+    "submit": {
+      "reviewTitle": "Review Your Marking",
+      "boundaryArea": "Marked Area",
+      "photosCount": "Photos Uploaded",
+      "location": "Coordinates",
+      "confirmSubmit": "Submit for Owner Confirmation",
+      "submitButton": "Submit Marking",
+      "submitting": "Dey submit...",
+      "success": {
+        "title": "Marking Submitted! ✓",
+        "message": "You don successfully mark the property",
+        "advance": "Advance Payment",
+        "advanceAmount": "₦{{amount}} don dey your virtual account",
+        "note": "Note: You no fit withdraw yet until owner confirm",
+        "waitingTime": "Waiting Period",
+        "waitingMessage": "Owner get 2-3 days to confirm. We go notify you.",
+        "goToDashboard": "Go to Dashboard"
+      }
+    }
+  },
+  "confirmation": {
+    "title": "Confirm Property Marking",
+    "subtitle": "Review the marking wey agent do",
+    "agentInfo": "Agent Information",
+    "agentName": "Agent Name",
+    "agentRating": "Agent Rating",
+    "completedJobs": "Completed Jobs",
+    "markedOn": "Marked On",
+    "markedBoundary": "Marked Boundary",
+    "viewOnMap": "View on Map",
+    "propertyPhotos": "Property Photos",
+    "agentNotes": "Agent Notes",
+    "decision": "Your Decision",
+    "confirmMarking": "Approve Marking",
+    "rejectMarking": "Reject Marking",
+    "confirmDesc": "The marking correct, approve am",
+    "rejectDesc": "The marking no correct, request new marking",
+    "confirmModal": {
+      "title": "Approve Property Marking?",
+      "message": "You sure say the marking correct and property dey your control?",
+      "warning": "After you approve, we go release payment to agent and your property go dey ready for listing.",
+      "confirm": "Yes, Approve",
+      "cancel": "Let Me Check Again"
+    },
+    "rejectModal": {
+      "title": "Reject Property Marking",
+      "reason": "Why you dey reject the marking?",
+      "reasons": {
+        "wrongProperty": "Wrong property/location",
+        "incorrectBoundary": "Boundary no correct",
+        "poorPhotos": "Photos no clear",
+        "notMyProperty": "Na another person property",
+        "other": "Other reason"
+      },
+      "details": "More Details (Optional)",
+      "detailsPlaceholder": "Explain wetin no correct...",
+      "compensation": "Agent Compensation",
+      "compensationNote": "Agent go still collect ₦{{amount}} for effort",
+      "newMarking": "Request New Marking",
+      "newMarkingNote": "You go pay again for new marking job",
+      "submit": "Submit Rejection",
+      "cancel": "Cancel"
+    },
+    "approved": {
+      "title": "Marking Approved! ✓",
+      "message": "You don approve the property marking",
+      "paymentReleased": "We don release payment to agent",
+      "nextSteps": "Wetin to Do Next",
+      "step1": "Complete your property listing",
+      "step2": "Add more photos and details",
+      "step3": "Submit for admin approval",
+      "continueButton": "Continue Property Listing"
+    },
+    "rejected": {
+      "title": "Marking Rejected",
+      "message": "You don reject the marking",
+      "compensation": "Agent go collect compensation of ₦{{amount}}",
+      "nextOptions": "Wetin You Wan Do?",
+      "requestNew": "Request New Marking Agent",
+      "markMyself": "I Go Mark Am Myself",
+      "cancel": "Cancel Listing Process"
+    },
+    "expired": {
+      "title": "Confirmation Period Don Expire",
+      "message": "You no confirm or reject within 2-3 days",
+      "autoApproved": "We don automatically approve the marking",
+      "compensationPaid": "Agent don collect partial payment of ₦{{amount}}",
+      "canRestartTitle": "You Fit Start Again",
+      "canRestartMessage": "If you no like the marking, you fit request new one",
+      "requestNewMarking": "Request New Marking"
+    }
+  },
+  "history": {
+    "title": "Marking Job History",
+    "subtitle": "All your marking jobs",
+    "stats": {
+      "totalJobs": "Total Jobs",
+      "completed": "Completed",
+      "pending": "Pending",
+      "totalEarnings": "Total Earnings",
+      "rating": "Average Rating"
+    },
+    "filters": {
+      "all": "All Jobs",
+      "completed": "Completed",
+      "pending": "Pending",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "table": {
+      "date": "Date",
+      "property": "Property",
+      "location": "Location",
+      "fee": "Fee Earned",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "queued": "In Queue",
+      "assigned": "Assigned to You",
+      "inProgress": "Marking In Progress",
+      "submitted": "Waiting Confirmation",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "expired": "Time Expired",
+      "cancelled": "Cancelled"
+    },
+    "viewDetails": "View Details",
+    "noJobs": "No marking jobs yet",
+    "noJobsHint": "Accept jobs from queue make dem show here"
+  },
+  "notifications": {
+    "newJob": "New marking job available near you!",
+    "jobAssigned": "Job assigned to you. You get 3 hours complete am.",
+    "timeWarning": "You get {{minutes}} minutes left to complete marking!",
+    "nextInQueue": "You be next for queue! Prepare to start soon.",
+    "jobExpired": "Your time slot don expire. Job reassigned.",
+    "ownerConfirmed": "Owner don confirm your marking! Payment released.",
+    "ownerRejected": "Owner reject marking. Check details for reason.",
+    "advancePaid": "Advance payment of ₦{{amount}} don reach your account",
+    "balanceReleased": "Balance payment of ₦{{amount}} released to your account",
+    "autoApproved": "Marking automatically approved! Full payment released."
+  },
+  "settings": {
+    "title": "Marking Service Settings",
+    "availability": "Availability",
+    "availableForJobs": "Available for Marking Jobs",
+    "availabilityNote": "You go receive notifications for new jobs when available",
+    "serviceAreas": "Service Areas",
+    "serviceAreasHint": "Select areas where you fit work",
+    "addArea": "Add Area",
+    "removeArea": "Remove",
+    "maxDistance": "Maximum Distance",
+    "maxDistanceHint": "How far you fit travel for jobs?",
+    "distances": {
+      "5km": "Within 5km",
+      "10km": "Within 10km",
+      "20km": "Within 20km",
+      "50km": "Within 50km",
+      "anyDistance": "Any Distance"
+    },
+    "notifications": "Notification Preferences",
+    "emailNotifications": "Email Notifications",
+    "smsNotifications": "SMS Notifications",
+    "pushNotifications": "Push Notifications",
+    "notifyNewJobs": "Notify me for new jobs",
+    "notifyAssignment": "Notify me when job dey assigned",
+    "notifyConfirmation": "Notify me when owner confirm",
+    "saveSettings": "Save Settings",
+    "settingsSaved": "Settings saved successfully"
+  }
+}

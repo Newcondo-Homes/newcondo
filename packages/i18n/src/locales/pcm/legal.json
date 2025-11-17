@@ -1,0 +1,193 @@
+{
+  "terms": {
+    "title": "Terms and Conditions",
+    "lastUpdated": "Last Updated: {{date}}",
+    "acceptance": {
+      "title": "1. Acceptance of Terms",
+      "content": "By using Newcondo platform, you agree say you don read, understand, and agree to follow all these terms and conditions. If you no agree, make you no use the platform."
+    },
+    "definitions": {
+      "title": "2. Definitions",
+      "platform": "Platform: Newcondo website, mobile app, and all related services",
+      "user": "User: Any person wey register and use Newcondo services",
+      "owner": "Property Owner: Person wey own property and list am for rent",
+      "agent": "Agent: Person wey represent property owner or promote properties",
+      "renter": "Renter: Person wey rent property through platform",
+      "listing": "Listing: Property advertisement for rent on platform"
+    },
+    "eligibility": {
+      "title": "3. User Eligibility",
+      "content": "You must be at least 18 years old and legally capable to enter contract for Nigeria. You must provide correct and complete information during registration."
+    },
+    "accounts": {
+      "title": "4. User Accounts",
+      "registration": "You must register and create account to use plenty platform features.",
+      "security": "You responsible for maintaining security of your account credentials.",
+      "accuracy": "You must provide accurate, current, and complete information.",
+      "unauthorized": "Notify us immediately if you suspect unauthorized access to your account.",
+      "termination": "We fit suspend or terminate your account if you violate these terms."
+    },
+    "propertyListings": {
+      "title": "5. Property Listings",
+      "ownership": "You must own property or get proper authorization from owner before you list am.",
+      "accuracy": "All listing information must accurate and truthful.",
+      "documentation": "You must provide valid ownership documents or consent letters.",
+      "photos": "Property photos must be real, current, and represent the actual property.",
+      "pricing": "Rent prices must reasonable and no deceive people.",
+      "removal": "Newcondo fit remove any listing wey violate these terms."
+    },
+    "marking": {
+      "title": "6. Property Marking Service",
+      "purpose": "Property marking dey mandatory to prevent duplicate listings and verify property location.",
+      "payment": "Marking service fees no dey refundable after agent assignment.",
+      "accuracy": "Property owners must provide accurate access information for marking.",
+      "confirmation": "Property owners must confirm or reject marking within specified timeframe.",
+      "compensation": "Agents go collect partial compensation if owner no respond on time.",
+      "liability": "Newcondo no responsible for delays or issues caused by property owner or contact person."
+    },
+    "payments": {
+      "title": "7. Payments and Fees",
+      "processing": "All payments dey processed through Flutterwave payment gateway.",
+      "commission": "Newcondo collect {{percentage}}% commission on successful rentals.",
+      "serviceFee": "Service fees dey apply to all transactions and no dey refundable.",
+      "confirmation": "Renters get {{days}} days to confirm rental or request refund.",
+      "refunds": "Refund requests must have valid reason and dey subject to review.",
+      "virtualAccount": "Funds dey held in virtual accounts during confirmation period.",
+      "disputes": "Payment disputes must be reported within {{days}} days of transaction."
+    },
+    "referrals": {
+      "title": "8. Referral Program",
+      "eligibility": "All verified users fit participate in referral program.",
+      "abuse": "Creating fake accounts or abusing referral system go result in account suspension.",
+      "rewards": "Referral rewards dey paid after successful completion of required actions.",
+      "changes": "Newcondo fit change referral reward amounts with prior notice."
+    },
+    "prohibited": {
+      "title": "9. Prohibited Activities",
+      "fraud": "Fraudulent activities, scams, or deceptive practices",
+      "duplicate": "Listing same property multiple times",
+      "false": "Providing false information or fake documents",
+      "harassment": "Harassing, threatening, or abusing other users",
+      "spam": "Sending unsolicited messages or spam",
+      "illegal": "Any illegal activities or violation of Nigerian law",
+      "circumvent": "Attempting to bypass platform fees or direct transactions",
+      "automated": "Using automated tools or bots without permission"
+    },
+    "liability": {
+      "title": "10. Limitation of Liability",
+      "content": "Newcondo na facilitator between property owners and renters. We no responsible for:\n- Quality, safety, or legality of listed properties\n- Truth or accuracy of listings\n- Ability of users to complete transactions\n- Disputes between users\n- Damages or losses from using platform\n\nUsers agree to use platform at their own risk."
+    },
+    "indemnification": {
+      "title": "11. Indemnification",
+      "content": "You agree to defend, indemnify, and hold Newcondo harmless from any claims, damages, losses, or expenses arising from your use of platform, violation of these terms, or violation of any rights of another person."
+    },
+    "termination": {
+      "title": "12. Termination",
+      "content": "We fit suspend or terminate your account at any time if:\n- You violate these terms and conditions\n- You provide false or misleading information\n- You engage in fraudulent or illegal activities\n- We receive complaints from other users\n- Required by law or regulation"
+    },
+    "changes": {
+      "title": "13. Changes to Terms",
+      "content": "We fit update these terms from time to time. We go notify users of significant changes. Continuing to use platform after changes means you accept the new terms."
+    },
+    "governing": {
+      "title": "14. Governing Law",
+      "content": "These terms dey governed by laws of Federal Republic of Nigeria. Any disputes go be resolved for Nigerian courts."
+    },
+    "contact": {
+      "title": "15. Contact Information",
+      "content": "For questions about these terms, contact us at:\nEmail: legal@newcondo.com\nPhone: +234 XXX XXX XXXX"
+    }
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last Updated: {{date}}",
+    "introduction": {
+      "title": "Introduction",
+      "content": "Newcondo respect your privacy. This policy explain how we collect, use, and protect your personal information."
+    },
+    "collection": {
+      "title": "Information We Collect",
+      "personal": "Personal Information: Name, email, phone number, date of birth, address",
+      "identity": "Identity Verification: ID documents, selfies, BVN",
+      "property": "Property Information: Property details, photos, documents, GPS coordinates",
+      "payment": "Payment Information: Bank account details, transaction history",
+      "usage": "Usage Data: IP address, browser type, device information, activity logs",
+      "location": "Location Data: GPS coordinates for property marking"
+    },
+    "usage": {
+      "title": "How We Use Your Information",
+      "services": "Provide and maintain our services",
+      "verification": "Verify user identity and property ownership",
+      "payments": "Process payments and manage virtual accounts",
+      "communication": "Communicate with you about platform activities",
+      "improvement": "Improve platform features and user experience",
+      "security": "Detect and prevent fraud and security issues",
+      "legal": "Comply with legal obligations"
+    },
+    "sharing": {
+      "title": "Information Sharing",
+      "users": "With other users as necessary for transactions",
+      "service": "With service providers (payment processors, SMS providers)",
+      "legal": "With law enforcement when required by law",
+      "consent": "With your explicit consent",
+      "noSale": "We NEVER sell your personal information to third parties"
+    },
+    "security": {
+      "title": "Data Security",
+      "content": "We use industry-standard security measures to protect your data:\n- Encrypted data transmission (SSL/TLS)\n- Secure password storage (hashing and salting)\n- Regular security audits\n- Access controls and monitoring\n- However, no system is 100% secure. Use platform at your own risk."
+    },
+    "retention": {
+      "title": "Data Retention",
+      "content": "We keep your data for as long as your account dey active or as needed to provide services. You fit request deletion of your data, but we fit keep some information for legal or security reasons."
+    },
+    "rights": {
+      "title": "Your Rights",
+      "access": "Access your personal information",
+      "correct": "Correct inaccurate information",
+      "delete": "Request deletion of your data",
+      "object": "Object to certain data processing",
+      "portability": "Request data portability",
+      "withdraw": "Withdraw consent at any time"
+    },
+    "cookies": {
+      "title": "Cookies",
+      "content": "We use cookies and similar technologies to improve user experience, analyze usage, and provide personalized content. You fit control cookies through your browser settings."
+    },
+    "children": {
+      "title": "Children's Privacy",
+      "content": "Newcondo no dey for children under 18. We no knowingly collect information from minors."
+    },
+    "changes": {
+      "title": "Changes to Privacy Policy",
+      "content": "We fit update this policy from time to time. We go notify you of significant changes."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "content": "For privacy questions or to exercise your rights, contact us at:\nEmail: privacy@newcondo.com\nPhone: +234 XXX XXX XXXX"
+    }
+  },
+  "consent": {
+    "marking": {
+      "title": "Property Marking Service Consent",
+      "content": "I consent to Newcondo property marking service and understand that:\n- Marking service fees dey non-refundable after agent assignment\n- I must provide accurate access information\n- I must confirm or reject marking within 2-3 days\n- Agent go collect partial compensation if I no respond\n- My property coordinates and boundary information go be stored\n- This information go be used to prevent duplicate listings"
+    },
+    "payment": {
+      "title": "Payment Processing Consent",
+      "content": "I consent to payment processing and understand that:\n- Payments dey processed through Flutterwave\n- Service fees dey non-refundable\n- I get {{days}} days to confirm rental or request refund\n- Funds dey held in virtual accounts during confirmation period\n- Platform commission go be deducted from payments\n- Refund requests must have valid reason"
+    },
+    "dataSharing": {
+      "title": "Data Sharing Consent",
+      "content": "I consent to sharing my information with:\n- Property owners/agents for rental transactions\n- Marking agents for property verification\n- Payment processors for transaction processing\n- Other users as necessary for platform services"
+    }
+  },
+  "undertaking": {
+    "property": {
+      "title": "Property Listing Undertaking",
+      "content": "I, {{name}}, hereby declare and undertake that:\n\n1. I be the rightful owner of the property or get proper authorization from owner to list am\n2. All information provided dey accurate and truthful\n3. The property photos and description represent current state of property\n4. I get all necessary legal documents (Certificate of Occupancy, Deed of Assignment, etc.)\n5. The property no dey any legal dispute\n6. I go maintain the property in habitable condition\n7. I go fulfill all obligations as property owner/agent\n8. I understand say false information fit result in account suspension or legal action\n\nDate: {{date}}\nSignature: ___________________"
+    },
+    "agent": {
+      "title": "Agent Authorization Undertaking",
+      "content": "I, {{agentName}}, hereby declare that:\n\n1. I get written consent from property owner ({{ownerName}}) to list this property\n2. I get authorization to receive payments on behalf of owner\n3. All information about property na wetin owner provide or I verify personally\n4. I go remit owner's portion of rent according to our agreement\n5. I go act in owner's best interest throughout rental process\n6. I understand say misrepresentation or fraud fit result in legal consequences\n\nProperty Owner Details:\nName: {{ownerName}}\nPhone: {{ownerPhone}}\nEmail: {{ownerEmail}}\n\nDate: {{date}}\nAgent Signature: ___________________"
+    }
+  }
+}

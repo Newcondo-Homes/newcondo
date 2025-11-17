@@ -1,0 +1,253 @@
+{
+  "rent": {
+    "title": "Pay Rent for {{propertyTitle}}",
+    "subtitle": "Complete your payment make you secure the property",
+    "summary": "Payment Summary",
+    "monthlyRent": "Monthly Rent",
+    "serviceFee": "Service Fee ({{percentage}}%)",
+    "processingFee": "Processing Fee",
+    "totalAmount": "Total Amount",
+    "paymentMethod": "Payment Method",
+    "methods": {
+      "card": "Debit/Credit Card",
+      "bankTransfer": "Bank Transfer",
+      "ussd": "USSD",
+      "bankAccount": "Bank Account"
+    },
+    "propertyDetails": "Property Details",
+    "location": "Location",
+    "bedrooms": "Bedrooms",
+    "confirmationPeriod": "7-Day Confirmation Period",
+    "confirmationNotice": "After payment, you get 7 days check say the property correct. If e no correct, we go refund you minus service fee.",
+    "agreement": "Payment Agreement",
+    "agreeTerms": "I don check the property and I confirm say:",
+    "terms": {
+      "viewed": "I don see the property or pictures",
+      "accurate": "The information correct",
+      "available": "The property dey available",
+      "serviceFee": "I understand say service fee no dey refundable"
+    },
+    "proceedPayment": "Proceed to Payment",
+    "processing": "Dey process payment...",
+    "doNotRefresh": "No close or refresh dis page",
+    "success": {
+      "title": "Payment Successful! 🎉",
+      "message": "Your payment don successful",
+      "reference": "Payment Reference",
+      "amount": "Amount Paid",
+      "property": "Property",
+      "nextSteps": "Wetin to Do Next",
+      "step1": "Check your email for payment receipt",
+      "step2": "You get 7 days verify the property",
+      "step3": "Contact owner/agent schedule viewing",
+      "step4": "Confirm or request refund before {{date}}",
+      "viewReceipt": "View Receipt",
+      "contactOwner": "Contact Owner",
+      "goToDashboard": "Go to Dashboard"
+    },
+    "failed": {
+      "title": "Payment Failed",
+      "message": "We no fit process your payment",
+      "reason": "Reason",
+      "tryAgain": "Try Again",
+      "contactSupport": "Contact Support",
+      "changMethod": "Try Another Payment Method"
+    },
+    "errors": {
+      "propertyUnavailable": "Property no dey available again",
+      "insufficientFunds": "Funds no reach",
+      "cardDeclined": "Dem decline your card",
+      "networkError": "Network problem. Try again",
+      "invalidAmount": "Invalid amount",
+      "sessionExpired": "Payment session don expire",
+      "alreadyPaid": "You don pay for dis property already"
+    }
+  },
+  "confirmation": {
+    "title": "Confirm Your Rental Payment",
+    "subtitle": "You get until {{deadline}} make you confirm or request refund",
+    "timeRemaining": "Time Remaining",
+    "days": "{{count}} day",
+    "days_plural": "{{count}} days",
+    "hours": "{{count}} hour",
+    "hours_plural": "{{count}} hours",
+    "propertyInfo": "Property Information",
+    "paymentInfo": "Payment Information",
+    "amountPaid": "Amount Paid",
+    "datePaid": "Date Paid",
+    "reference": "Reference",
+    "confirmationOptions": "Your Options",
+    "confirmRental": "Confirm Rental",
+    "confirmDesc": "The property correct, I don see am",
+    "requestRefund": "Request Refund",
+    "refundDesc": "The property no correct or no dey available",
+    "confirmButton": "Confirm Payment",
+    "refundButton": "Request Refund",
+    "confirmModal": {
+      "title": "Confirm Rental Payment?",
+      "message": "You sure say the property correct and you wan proceed?",
+      "warning": "Dis action no fit reverse. After you confirm, we go release money to owner/agent.",
+      "confirm": "Yes, Confirm",
+      "cancel": "No, Wait"
+    },
+    "refundModal": {
+      "title": "Request Refund",
+      "reason": "Why you dey request refund?",
+      "reasonPlaceholder": "Tell us wetin happen...",
+      "reasons": {
+        "notAvailable": "Property no dey available",
+        "differentFromListing": "Property different from pictures/description",
+        "badCondition": "Property condition no good",
+        "locationIssue": "Problem with location/area",
+        "ownerIssue": "Problem with owner/agent",
+        "other": "Other reason"
+      },
+      "additionalInfo": "Additional Information (Optional)",
+      "additionalInfoPlaceholder": "Give us more details...",
+      "refundAmount": "Refund Amount",
+      "serviceFeeNote": "Service fee (₦{{fee}}) no dey refundable",
+      "submit": "Submit Refund Request",
+      "cancel": "Cancel"
+    },
+    "confirmed": {
+      "title": "Rental Confirmed! ✓",
+      "message": "You don confirm the rental payment",
+      "releaseMessage": "We don release the money to owner/agent",
+      "nextSteps": "Wetin to Do Next",
+      "step1": "Collect keys and move in",
+      "step2": "Keep payment receipt safe",
+      "step3": "Contact support if you get any issue",
+      "goToProperties": "View My Rentals"
+    },
+    "refunded": {
+      "title": "Refund Processed",
+      "message": "Your refund request don approve",
+      "refundAmount": "Refund Amount",
+      "refundMethod": "Refund Method",
+      "processingTime": "Processing Time",
+      "processingTimeValue": "3-5 business days",
+      "note": "You go receive the money for your original payment method",
+      "browseProperties": "Browse Other Properties"
+    },
+    "expired": {
+      "title": "Confirmation Period Don Expire",
+      "message": "You no confirm or request refund within 7 days",
+      "autoConfirmed": "We don automatically confirm the rental and release money to owner/agent",
+      "contactSupport": "If you get complaint, contact support"
+    }
+  },
+  "history": {
+    "title": "Payment History",
+    "subtitle": "All your payments and transactions",
+    "filters": {
+      "all": "All Payments",
+      "rent": "Rent Payments",
+      "marking": "Marking Service",
+      "refunded": "Refunded",
+      "pending": "Pending"
+    },
+    "table": {
+      "date": "Date",
+      "property": "Property",
+      "amount": "Amount",
+      "type": "Type",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "types": {
+      "rent": "Rent Payment",
+      "deposit": "Security Deposit",
+      "marking": "Property Marking",
+      "premium": "Premium Upgrade"
+    },
+    "status": {
+      "pending": "Pending",
+      "success": "Successful",
+      "failed": "Failed",
+      "refunded": "Refunded",
+      "held": "On Hold",
+      "released": "Released"
+    },
+    "viewReceipt": "View Receipt",
+    "downloadReceipt": "Download Receipt",
+    "noPayments": "No payments yet",
+    "noPaymentsHint": "Your payment history go show here"
+  },
+  "virtualAccount": {
+    "title": "Virtual Account",
+    "subtitle": "Your personal account for collections",
+    "accountDetails": "Account Details",
+    "accountNumber": "Account Number",
+    "accountName": "Account Name",
+    "bankName": "Bank Name",
+    "balance": "Available Balance",
+    "withdraw": "Withdraw Funds",
+    "autoTransfer": "Auto-Transfer Settings",
+    "withdrawModal": {
+      "title": "Withdraw to Bank Account",
+      "amount": "Amount to Withdraw",
+      "amountPlaceholder": "Enter amount",
+      "bankAccount": "Bank Account",
+      "selectAccount": "Select bank account",
+      "addNewAccount": "Add New Bank Account",
+      "withdrawButton": "Withdraw",
+      "processing": "Processing withdrawal...",
+      "success": "Withdrawal successful!",
+      "successMessage": "Money go reach your account in 1-2 business days"
+    },
+    "autoTransferModal": {
+      "title": "Auto-Transfer Settings",
+      "enable": "Enable Auto-Transfer",
+      "frequency": "Transfer Frequency",
+      "frequencies": {
+        "immediate": "Immediate (After confirmation period)",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      },
+      "bankAccount": "Default Bank Account",
+      "save": "Save Settings",
+      "success": "Auto-transfer settings saved"
+    },
+    "addBankModal": {
+      "title": "Add Bank Account",
+      "bankName": "Bank Name",
+      "selectBank": "Select your bank",
+      "accountNumber": "Account Number",
+      "accountNumberPlaceholder": "Enter 10-digit account number",
+      "accountName": "Account Name",
+      "verifying": "Dey verify account...",
+      "add": "Add Account",
+      "success": "Bank account added successfully"
+    }
+  },
+  "marking": {
+    "title": "Property Marking Payment",
+    "subtitle": "Pay for property marking service",
+    "serviceSummary": "Service Summary",
+    "markingFee": "Marking Service Fee",
+    "agentCompensation": "Agent Compensation",
+    "platformFee": "Platform Fee",
+    "total": "Total Payment",
+    "propertyInfo": "Property Information",
+    "address": "Address",
+    "contactPerson": "Contact Person",
+    "estimatedTime": "Estimated Time",
+    "timeEstimate": "Maximum 3 days",
+    "paymentTerms": "Payment Terms",
+    "terms": {
+      "agentPaid": "Agent go collect {{amount}} after successful marking",
+      "confirmation": "You get 2-3 days confirm the marking",
+      "refund": "If marking no correct, agent go collect small compensation and you fit request another marking"
+    },
+    "proceedPayment": "Pay ₦{{amount}}",
+    "success": {
+      "title": "Payment Successful!",
+      "message": "We don notify available agents",
+      "queueInfo": "Agents go queue first-come-first-served",
+      "timeWindow": "Each agent get 3 hours complete the marking",
+      "maxTime": "Maximum 3 days for completion",
+      "tracking": "You fit track progress for your dashboard"
+    }
+  }
+}

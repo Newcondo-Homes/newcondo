@@ -287,3 +287,128 @@ const Navbar: React.FC<NavbarProps> = ({ className, transparent = false }) => {
 };
 
 export default Navbar;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 'use client';
+
+// import { useTranslations } from 'next-intl';
+// import Link from 'next/link';
+// import { useSession, signOut } from 'next-auth/react';
+// import { Button } from '@/components/ui/button';
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from '@/components/ui/dropdown-menu';
+// import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+// import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+// import { Bell, User, Settings, LogOut, Home } from 'lucide-react';
+
+// interface NavbarProps {
+//   locale: string;
+// }
+
+// export function Navbar({ locale }: NavbarProps) {
+//   const t = useTranslations('navigation');
+//   const { data: session } = useSession();
+
+//   const getInitials = (name?: string | null) => {
+//     if (!name) return 'U';
+//     return name
+//       .split(' ')
+//       .map((n) => n[0])
+//       .join('')
+//       .toUpperCase()
+//       .slice(0, 2);
+//   };
+
+//   return (
+//     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+//       <div className="container flex h-16 items-center justify-between px-4">
+//         {/* Logo */}
+//         <Link href={`/${locale}/dashboard`} className="flex items-center gap-2">
+//           <Home className="h-6 w-6 text-primary" />
+//           <span className="text-xl font-bold">Newcondo</span>
+//         </Link>
+
+//         {/* Right side actions */}
+//         <div className="flex items-center gap-4">
+//           {/* Language Switcher */}
+//           <LanguageSwitcher />
+
+//           {/* Notifications */}
+//           <Button variant="ghost" size="icon" className="relative">
+//             <Bell className="h-5 w-5" />
+//             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
+//               3
+//             </span>
+//           </Button>
+
+//           {/* User Menu */}
+//           <DropdownMenu>
+//             <DropdownMenuTrigger asChild>
+//               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+//                 <Avatar className="h-10 w-10">
+//                   <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
+//                   <AvatarFallback>{getInitials(session?.user?.name)}</AvatarFallback>
+//                 </Avatar>
+//               </Button>
+//             </DropdownMenuTrigger>
+//             <DropdownMenuContent align="end" className="w-56">
+//               <DropdownMenuLabel className="font-normal">
+//                 <div className="flex flex-col space-y-1">
+//                   <p className="text-sm font-medium leading-none">
+//                     {session?.user?.name || 'User'}
+//                   </p>
+//                   <p className="text-xs leading-none text-muted-foreground">
+//                     {session?.user?.email}
+//                   </p>
+//                 </div>
+//               </DropdownMenuLabel>
+//               <DropdownMenuSeparator />
+//               <DropdownMenuItem asChild>
+//                 <Link href={`/${locale}/profile`} className="cursor-pointer">
+//                   <User className="mr-2 h-4 w-4" />
+//                   <span>{t('profile')}</span>
+//                 </Link>
+//               </DropdownMenuItem>
+//               <DropdownMenuItem asChild>
+//                 <Link href={`/${locale}/profile/settings`} className="cursor-pointer">
+//                   <Settings className="mr-2 h-4 w-4" />
+//                   <span>{t('settings')}</span>
+//                 </Link>
+//               </DropdownMenuItem>
+//               <DropdownMenuSeparator />
+//               <DropdownMenuItem
+//                 onClick={() => signOut({ callbackUrl: `/${locale}/login` })}
+//                 className="cursor-pointer text-destructive focus:text-destructive"
+//               >
+//                 <LogOut className="mr-2 h-4 w-4" />
+//                 <span>{t('logout')}</span>
+//               </DropdownMenuItem>
+//             </DropdownMenuContent>
+//           </DropdownMenu>
+//         </div>
+//       </div>
+//     </header>
+//   );
+// }

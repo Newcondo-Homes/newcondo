@@ -1,0 +1,210 @@
+{
+  "notifications": {
+    "welcome": {
+      "title": "Bienvenue chez Newcondo !",
+      "message": "Merci de rejoindre Newcondo. Complétez votre profil pour commencer.",
+      "cta": "Compléter le profil"
+    },
+    "verification": {
+      "email_sent": {
+        "title": "Vérifiez votre email",
+        "message": "Nous avons envoyé un code de vérification à {{email}}. Veuillez vérifier votre boîte de réception.",
+        "cta": "Entrer le code"
+      },
+      "phone_sent": {
+        "title": "Vérifiez votre téléphone",
+        "message": "Nous avons envoyé un code de vérification au {{phone}}. Veuillez le saisir ci-dessous.",
+        "cta": "Entrer le code"
+      },
+      "approved": {
+        "title": "Vérification approuvée !",
+        "message": "Votre compte a été vérifié avec succès. Vous pouvez maintenant accéder à toutes les fonctionnalités.",
+        "cta": "Explorer les propriétés"
+      },
+      "rejected": {
+        "title": "Vérification rejetée",
+        "message": "Votre vérification a été rejetée. Raison : {{reason}}. Veuillez soumettre à nouveau vos documents.",
+        "cta": "Resoumettre les documents"
+      }
+    },
+    "property": {
+      "created": {
+        "title": "Propriété répertoriée",
+        "message": "Votre propriété '{{propertyTitle}}' a été soumise pour approbation.",
+        "cta": "Voir la propriété"
+      },
+      "approved": {
+        "title": "Propriété approuvée !",
+        "message": "Votre propriété '{{propertyTitle}}' a été approuvée et est maintenant en ligne.",
+        "cta": "Voir l'annonce"
+      },
+      "rejected": {
+        "title": "Propriété rejetée",
+        "message": "Votre propriété '{{propertyTitle}}' a été rejetée. Raison : {{reason}}",
+        "cta": "Modifier la propriété"
+      },
+      "rented": {
+        "title": "Propriété louée",
+        "message": "Votre propriété '{{propertyTitle}}' a été louée par {{renterName}}.",
+        "cta": "Voir les détails"
+      },
+      "duplicate_detected": {
+        "title": "Propriété en double détectée",
+        "message": "La propriété que vous essayez de répertorier semble déjà exister sur notre plateforme.",
+        "cta": "Voir l'annonce existante"
+      },
+      "boundary_marked": {
+        "title": "Délimitation de propriété marquée",
+        "message": "La délimitation pour '{{propertyTitle}}' a été marquée avec succès.",
+        "cta": "Réviser la délimitation"
+      }
+    },
+    "payment": {
+      "success": {
+        "title": "Paiement réussi",
+        "message": "Votre paiement de {{amount}} {{currency}} a été traité avec succès.",
+        "cta": "Voir le reçu"
+      },
+      "failed": {
+        "title": "Paiement échoué",
+        "message": "Votre paiement de {{amount}} {{currency}} n'a pas pu être traité. Veuillez réessayer.",
+        "cta": "Réessayer le paiement"
+      },
+      "received": {
+        "title": "Paiement reçu",
+        "message": "Vous avez reçu un paiement de {{amount}} {{currency}} pour '{{propertyTitle}}'.",
+        "cta": "Voir la transaction"
+      },
+      "held": {
+        "title": "Paiement en attente",
+        "message": "Le paiement de {{amount}} {{currency}} est en attente de confirmation ({{hours}} heures restantes).",
+        "cta": "Voir l'état"
+      },
+      "released": {
+        "title": "Paiement libéré",
+        "message": "Le paiement de {{amount}} {{currency}} a été libéré sur votre compte.",
+        "cta": "Voir le solde"
+      },
+      "refunded": {
+        "title": "Paiement remboursé",
+        "message": "Votre paiement de {{amount}} {{currency}} a été remboursé.",
+        "cta": "Voir les détails"
+      },
+      "confirmation_required": {
+        "title": "Confirmez votre paiement",
+        "message": "Veuillez confirmer votre paiement de loyer dans {{hours}} heures pour finaliser la transaction.",
+        "cta": "Confirmer maintenant"
+      }
+    },
+    "marking": {
+      "job_created": {
+        "title": "Tâche de marquage créée",
+        "message": "Votre tâche de marquage pour '{{propertyTitle}}' a été créée et mise en file d'attente.",
+        "cta": "Suivre la progression"
+      },
+      "job_assigned": {
+        "title": "Nouvelle tâche de marquage disponible",
+        "message": "Une nouvelle tâche de marquage est disponible à {{location}}. Frais : {{fee}} {{currency}}",
+        "cta": "Accepter la tâche"
+      },
+      "agent_assigned": {
+        "title": "Agent assigné",
+        "message": "{{agentName}} a été assigné pour marquer votre propriété. Achèvement prévu : {{date}}",
+        "cta": "Voir les détails de l'agent"
+      },
+      "job_completed": {
+        "title": "Tâche de marquage terminée",
+        "message": "Votre propriété '{{propertyTitle}}' a été marquée. Veuillez réviser et confirmer.",
+        "cta": "Réviser le marquage"
+      },
+      "time_slot_expiring": {
+        "title": "Créneau horaire expirant",
+        "message": "Votre créneau pour la tâche de marquage expire dans {{minutes}} minutes.",
+        "cta": "Terminer maintenant"
+      },
+      "job_expired": {
+        "title": "Tâche de marquage expirée",
+        "message": "Votre créneau pour la tâche de marquage a expiré et a été réattribué.",
+        "cta": "Voir l'état"
+      },
+      "payment_partial": {
+        "title": "Paiement partiel reçu",
+        "message": "Vous avez reçu {{amount}} {{currency}} pour avoir terminé la tâche de marquage.",
+        "cta": "Voir le solde"
+      },
+      "confirmation_pending": {
+        "title": "Confirmation requise",
+        "message": "Veuillez confirmer le marquage pour '{{propertyTitle}}' dans {{days}} jours.",
+        "cta": "Confirmer le marquage"
+      }
+    },
+    "rental": {
+      "new_rental": {
+        "title": "Nouvelle demande de location",
+        "message": "{{renterName}} souhaite louer votre propriété '{{propertyTitle}}'.",
+        "cta": "Voir la demande"
+      },
+      "rental_confirmed": {
+        "title": "Location confirmée",
+        "message": "Votre location pour '{{propertyTitle}}' a été confirmée.",
+        "cta": "Voir les détails"
+      },
+      "rental_expiring": {
+        "title": "Location expirant bientôt",
+        "message": "Votre location pour '{{propertyTitle}}' expire le {{date}}.",
+        "cta": "Renouveler le bail"
+      },
+      "rental_expired": {
+        "title": "Location expirée",
+        "message": "Votre location pour '{{propertyTitle}}' a expiré.",
+        "cta": "Voir l'historique"
+      }
+    },
+    "referral": {
+      "signup_complete": {
+        "title": "Parrainage réussi !",
+        "message": "{{referredName}} s'est inscrit avec votre code de parrainage. Vous avez gagné {{reward}} {{currency}} !",
+        "cta": "Voir les récompenses"
+      },
+      "reward_earned": {
+        "title": "Récompense de parrainage gagnée",
+        "message": "Vous avez gagné {{amount}} {{currency}} grâce à votre programme de parrainage.",
+        "cta": "Voir le solde"
+      }
+    },
+    "admin": {
+      "new_verification": {
+        "title": "Nouvelle demande de vérification",
+        "message": "{{userName}} a soumis des documents pour vérification.",
+        "cta": "Réviser les documents"
+      },
+      "new_property_submission": {
+        "title": "Nouvelle soumission de propriété",
+        "message": "Une nouvelle propriété '{{propertyTitle}}' nécessite une approbation.",
+        "cta": "Réviser la propriété"
+      },
+      "dispute_reported": {
+        "title": "Nouveau litige signalé",
+        "message": "Un litige de délimitation a été signalé pour '{{propertyTitle}}'.",
+        "cta": "Résoudre le litige"
+      },
+      "support_ticket": {
+        "title": "Nouveau ticket de support",
+        "message": "{{userName}} a créé un ticket de support : {{ticketTitle}}",
+        "cta": "Voir le ticket"
+      }
+    },
+    "system": {
+      "maintenance": {
+        "title": "Maintenance programmée",
+        "message": "Maintenance du système programmée pour {{date}}. Certaines fonctionnalités peuvent être indisponibles.",
+        "cta": "En savoir plus"
+      },
+      "feature_update": {
+        "title": "Nouvelles fonctionnalités disponibles",
+        "message": "Nous avons ajouté de nouvelles fonctionnalités pour améliorer votre expérience !",
+        "cta": "Explorer les fonctionnalités"
+      }
+    }
+  }
+}

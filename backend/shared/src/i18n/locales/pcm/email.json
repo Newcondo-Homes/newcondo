@@ -1,0 +1,191 @@
+{
+  "email": {
+    "common": {
+      "greeting": "Hello {{name}}",
+      "default_greeting": "Hello",
+      "closing": "Best regards,<br/>The Newcondo Team",
+      "footer": "© {{year}} Newcondo. All rights reserved.",
+      "unsubscribe": "You no wan receive these emails? <a href='{{unsubscribeUrl}}'>Unsubscribe</a>",
+      "help": "You need help? <a href='{{supportUrl}}'>Contact Support</a>",
+      "button": "{{text}}"
+    },
+    "verification": {
+      "email_otp": {
+        "subject": "Verify Your Email - OTP Code",
+        "title": "Verify Your Email Address",
+        "message": "Thank you say you sign up with Newcondo. Use the code below to verify your email address:",
+        "otp_label": "Your verification code:",
+        "expires": "This code go expire for {{minutes}} minutes.",
+        "no_request": "If you no request this code, abeg ignore this email.",
+        "cta": "Verify Email"
+      },
+      "phone_otp": {
+        "subject": "Verify Your Phone Number - OTP Code",
+        "title": "Verify Your Phone Number",
+        "message": "Use the code below to verify your phone number:",
+        "otp_label": "Your verification code:",
+        "expires": "This code go expire for {{minutes}} minutes."
+      },
+      "approved": {
+        "subject": "Account Verify Successfully!",
+        "title": "Verification Approve",
+        "message": "Congratulations! Dem don verify your Newcondo account. You get full access to all our features now.",
+        "cta": "Explore Properties"
+      },
+      "rejected": {
+        "subject": "Account Verification Reject",
+        "title": "Verification Reject",
+        "message": "Unfortunately, we no fit verify your account this time.",
+        "reason": "Reason: {{reason}}",
+        "next_steps": "Resubmit your verification documents with these corrections:",
+        "cta": "Resubmit Documents"
+      }
+    },
+    "property": {
+      "approved": {
+        "subject": "Property Listing Approve - {{propertyTitle}}",
+        "title": "Your Property Dey Live!",
+        "message": "Good news! Dem don approve your property listing '{{propertyTitle}}' and e don dey visible to potential renters.",
+        "details": "Property Details:",
+        "location": "Location: {{address}}",
+        "price": "Price: {{price}} {{currency}}/month",
+        "cta": "View Listing"
+      },
+      "rejected": {
+        "subject": "Property Listing Reject - {{propertyTitle}}",
+        "title": "Property Listing Need Updates",
+        "message": "Your property listing '{{propertyTitle}}' need some updates before approval.",
+        "reason": "Reason for rejection: {{reason}}",
+        "next_steps": "Make the necessary changes and resubmit your listing.",
+        "cta": "Edit Listing"
+      },
+      "rented": {
+        "subject": "Your Property Don Rent - {{propertyTitle}}",
+        "title": "Congratulations on Your New Tenant!",
+        "message": "Dem don successfully rent your property '{{propertyTitle}}'.",
+        "renter": "Renter: {{renterName}}",
+        "start_date": "Lease Start Date: {{startDate}}",
+        "amount": "Monthly Rent: {{amount}} {{currency}}",
+        "cta": "View Rental Details"
+      }
+    },
+    "payment": {
+      "receipt": {
+        "subject": "Payment Receipt - {{transactionId}}",
+        "title": "Payment Confirmation",
+        "message": "Thank you for your payment. Na the details be this:",
+        "transaction_id": "Transaction ID: {{transactionId}}",
+        "amount": "Amount: {{amount}} {{currency}}",
+        "date": "Date: {{date}}",
+        "property": "Property: {{propertyTitle}}",
+        "method": "Payment Method: {{method}}",
+        "cta": "Download Receipt"
+      },
+      "confirmation_required": {
+        "subject": "Action Require: Confirm Your Payment",
+        "title": "Please Confirm Your Payment",
+        "message": "You get {{hours}} hours remaining to confirm your rent payment for '{{propertyTitle}}'.",
+        "warning": "If you no confirm within this period, dem go refund your payment minus transaction fees.",
+        "steps": "To confirm:",
+        "step1": "1. Visit the property and verify say e match the listing",
+        "step2": "2. Check all amenities and features",
+        "step3": "3. Click the confirmation button for your dashboard",
+        "cta": "Confirm Payment Now"
+      },
+      "released": {
+        "subject": "Payment Release - {{amount}} {{currency}}",
+        "title": "Funds Release",
+        "message": "Dem don release your payment of {{amount}} {{currency}} and e dey available for your virtual account now.",
+        "property": "Property: {{propertyTitle}}",
+        "commission": "Your Commission: {{commission}} {{currency}}",
+        "cta": "View Balance"
+      },
+      "refunded": {
+        "subject": "Payment Refund - {{transactionId}}",
+        "title": "Refund Process",
+        "message": "Dem don refund your payment to your original payment method.",
+        "amount": "Refund Amount: {{amount}} {{currency}}",
+        "reason": "Reason: {{reason}}",
+        "processing_time": "Allow 5-10 business days make the refund show for your account.",
+        "cta": "View Transaction"
+      }
+    },
+    "marking": {
+      "job_assigned": {
+        "subject": "New Marking Job Dey Available - {{location}}",
+        "title": "New Marking Opportunity",
+        "message": "New property marking job dey available for your area:",
+        "location": "Location: {{address}}",
+        "fee": "Fee: {{fee}} {{currency}}",
+        "deadline": "Time Slot: {{timeSlot}}",
+        "contact": "Contact Person: {{contactName}} - {{contactPhone}}",
+        "cta": "Accept Job"
+      },
+      "agent_assigned": {
+        "subject": "Agent Assign to Mark Your Property",
+        "title": "Marking Job Assign",
+        "message": "Dem don assign agent to mark your property '{{propertyTitle}}'.",
+        "agent": "Agent: {{agentName}}",
+        "expected_completion": "Expected Completion: {{date}}",
+        "contact": "Agent Contact: {{agentPhone}}",
+        "cta": "Track Progress"
+      },
+      "job_completed": {
+        "subject": "Property Marking Complete - Action Require",
+        "title": "Please Confirm Property Marking",
+        "message": "Dem don mark your property '{{propertyTitle}}'. Review and confirm within {{days}} days.",
+        "agent": "Marked by: {{agentName}}",
+        "completion_date": "Complete on: {{date}}",
+        "warning": "If you no confirm, e go result in partial payments to the agent until marking fee finish.",
+        "cta": "Review & Confirm"
+      }
+    },
+    "referral": {
+      "reward_earned": {
+        "subject": "You Don Earn Referral Reward!",
+        "title": "Referral Reward Credit",
+        "message": "Congratulations! {{referredName}} complete their registration using your referral code.",
+        "reward": "Reward Amount: {{amount}} {{currency}}",
+        "total_referrals": "Total Successful Referrals: {{count}}",
+        "cta": "View Referral Dashboard"
+      }
+    },
+    "admin": {
+      "new_verification": {
+        "subject": "New Verification Request - {{userName}}",
+        "title": "New Verification Pending",
+        "message": "{{userName}} don submit documents for account verification.",
+        "user_type": "User Type: {{userType}}",
+        "submitted": "Submitted: {{date}}",
+        "cta": "Review Documents"
+      },
+      "new_property": {
+        "subject": "New Property Submission - {{propertyTitle}}",
+        "title": "Property Approval Require",
+        "message": "New property listing need your review.",
+        "property": "Property: {{propertyTitle}}",
+        "owner": "Owner: {{ownerName}}",
+        "location": "Location: {{address}}",
+        "submitted": "Submitted: {{date}}",
+        "cta": "Review Property"
+      },
+      "dispute_reported": {
+        "subject": "Boundary Dispute Report - {{propertyTitle}}",
+        "title": "Dispute Resolution Require",
+        "message": "Dem don report boundary dispute for property '{{propertyTitle}}'.",
+        "reported_by": "Reported by: {{reporterName}}",
+        "date": "Reported on: {{date}}",
+        "cta": "Review Dispute"
+      }
+    },
+    "password_reset": {
+      "subject": "Reset Your Password",
+      "title": "Password Reset Request",
+      "message": "We receive request to reset your password. Use the code below:",
+      "otp_label": "Reset Code:",
+      "expires": "This code go expire for {{minutes}} minutes.",
+      "no_request": "If you no request password reset, ignore this email and your password go remain unchanged.",
+      "cta": "Reset Password"
+    }
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "errors": {
+    "general": {
+      "internal_server_error": "An internal server error occurred. Please try again later.",
+      "validation_error": "Validation error occurred.",
+      "not_found": "Resource not found.",
+      "unauthorized": "You are not authorized to perform this action.",
+      "forbidden": "Access to this resource is forbidden.",
+      "bad_request": "Invalid request. Please check your input.",
+      "conflict": "A conflict occurred. The resource may already exist.",
+      "rate_limit_exceeded": "Too many requests. Please try again later.",
+      "service_unavailable": "Service temporarily unavailable. Please try again later."
+    },
+    "auth": {
+      "invalid_credentials": "Invalid email or password.",
+      "account_not_found": "Account not found.",
+      "account_already_exists": "An account with this email already exists.",
+      "email_not_verified": "Please verify your email address to continue.",
+      "phone_not_verified": "Please verify your phone number to continue.",
+      "invalid_token": "Invalid or expired token.",
+      "token_expired": "Your session has expired. Please login again.",
+      "otp_invalid": "Invalid OTP code.",
+      "otp_expired": "OTP code has expired. Please request a new one.",
+      "otp_max_attempts": "Maximum OTP attempts reached. Please request a new code.",
+      "password_weak": "Password is too weak. Use at least 8 characters with letters and numbers.",
+      "password_mismatch": "Passwords do not match.",
+      "account_suspended": "Your account has been suspended. Contact support for assistance.",
+      "insufficient_permissions": "You don't have permission to perform this action."
+    },
+    "user": {
+      "not_found": "User not found.",
+      "update_failed": "Failed to update user profile.",
+      "verification_pending": "Account verification is pending.",
+      "verification_rejected": "Account verification was rejected: {{reason}}",
+      "invalid_user_type": "Invalid user type.",
+      "duplicate_email": "This email is already registered.",
+      "duplicate_phone": "This phone number is already registered.",
+      "profile_incomplete": "Please complete your profile to continue."
+    },
+    "property": {
+      "not_found": "Property not found.",
+      "creation_failed": "Failed to create property listing.",
+      "update_failed": "Failed to update property.",
+      "delete_failed": "Failed to delete property.",
+      "already_rented": "This property is already rented.",
+      "not_available": "This property is not available for rent.",
+      "boundary_not_marked": "Property boundary must be marked before listing.",
+      "boundary_overlap": "Property boundary overlaps with an existing property.",
+      "duplicate_detected": "This property appears to be already listed.",
+      "invalid_coordinates": "Invalid GPS coordinates provided.",
+      "insufficient_images": "Please upload at least {{count}} images.",
+      "image_upload_failed": "Failed to upload property image.",
+      "unauthorized_access": "You don't have permission to access this property.",
+      "approval_pending": "Property is pending admin approval.",
+      "rejected_listing": "Property listing was rejected: {{reason}}",
+      "payment_locked": "This property is currently locked for another transaction.",
+      "invalid_unit": "Invalid property unit specified.",
+      "unit_not_available": "This unit is not available.",
+      "missing_documents": "Required property documents are missing."
+    },
+    "payment": {
+      "failed": "Payment failed. Please try again.",
+      "invalid_amount": "Invalid payment amount.",
+      "insufficient_funds": "Insufficient funds in virtual account.",
+      "transaction_not_found": "Transaction not found.",
+      "already_paid": "This payment has already been processed.",
+      "refund_failed": "Failed to process refund.",
+      "gateway_error": "Payment gateway error: {{message}}",
+      "confirmation_period_expired": "Payment confirmation period has expired.",
+      "invalid_payment_method": "Invalid payment method.",
+      "duplicate_transaction": "Duplicate transaction detected.",
+      "virtual_account_error": "Virtual account operation failed.",
+      "commission_calculation_error": "Failed to calculate commission.",
+      "release_failed": "Failed to release payment."
+    },
+    "marking": {
+      "job_not_found": "Marking job not found.",
+      "creation_failed": "Failed to create marking job.",
+      "assignment_failed": "Failed to assign marking job.",
+      "no_available_agents": "No agents available in this area.",
+      "time_slot_expired": "Your time slot for this job has expired.",
+      "already_assigned": "This job is already assigned to another agent.",
+      "completion_failed": "Failed to complete marking job.",
+      "invalid_boundary_data": "Invalid boundary data provided.",
+      "insufficient_images": "Please upload at least {{count}} completion images.",
+      "unauthorized_completion": "You are not authorized to complete this job.",
+      "job_already_completed": "This marking job is already completed.",
+      "payment_required": "Payment is required before job assignment.",
+      "queue_full": "Marking queue is currently full. Please try again later."
+    },
+    "booking": {
+      "double_booking_prevented": "This property is being booked by another user. Please try again.",
+      "lock_acquisition_failed": "Failed to acquire property lock. Please try again.",
+      "booking_expired": "Your booking session has expired.",
+      "property_unavailable": "Property is no longer available.",
+      "invalid_dates": "Invalid booking dates provided.",
+      "date_conflict": "Selected dates conflict with existing booking."
+    },
+    "referral": {
+      "invalid_code": "Invalid referral code.",
+      "self_referral": "You cannot use your own referral code.",
+      "already_referred": "This user has already been referred.",
+      "reward_calculation_failed": "Failed to calculate referral reward.",
+      "code_not_found": "Referral code not found."
+    },
+    "document": {
+      "upload_failed": "Failed to upload document.",
+      "invalid_format": "Invalid document format. Accepted formats: {{formats}}",
+      "file_too_large": "File size exceeds maximum limit of {{maxSize}}MB.",
+      "verification_pending": "Document verification is pending.",
+      "verification_rejected": "Document was rejected: {{reason}}",
+      "required_document_missing": "Required document is missing: {{documentType}}",
+      "expired_document": "Document has expired. Please upload a new one.",
+      "invalid_document_type": "Invalid document type."
+    },
+    "admin": {
+      "action_failed": "Failed to perform admin action.",
+      "invalid_status_transition": "Invalid status transition.",
+      "approval_failed": "Failed to approve item.",
+      "rejection_failed": "Failed to reject item.",
+      "dispute_resolution_failed": "Failed to resolve dispute.",
+      "insufficient_admin_permissions": "Insufficient admin permissions."
+    },
+    "validation": {
+      "required_field": "{{field}} is required.",
+      "invalid_email": "Invalid email address.",
+      "invalid_phone": "Invalid phone number.",
+      "invalid_format": "Invalid {{field}} format.",
+      "min_length": "{{field}} must be at least {{min}} characters.",
+      "max_length": "{{field}} must not exceed {{max}} characters.",
+      "invalid_range": "{{field}} must be between {{min}} and {{max}}.",
+      "invalid_date": "Invalid date format.",
+      "future_date_required": "Date must be in the future.",
+      "past_date_required": "Date must be in the past.",
+      "invalid_currency": "Invalid currency code.",
+      "invalid_coordinates": "Invalid GPS coordinates."
+    },
+    "notification": {
+      "send_failed": "Failed to send notification.",
+      "invalid_recipient": "Invalid notification recipient.",
+      "template_not_found": "Notification template not found.",
+      "email_send_failed": "Failed to send email notification.",
+      "sms_send_failed": "Failed to send SMS notification.",
+      "push_send_failed": "Failed to send push notification."
+    }
+  }
+}

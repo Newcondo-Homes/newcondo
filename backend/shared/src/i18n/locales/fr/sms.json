@@ -1,0 +1,42 @@
+{
+  "sms": {
+    "verification": {
+      "phone_otp": "Votre code de vérification Newcondo est {{code}}. Valide pendant {{minutes}} minutes. Ne partagez pas ce code.",
+      "phone_verified": "Votre numéro de téléphone a été vérifié avec succès. Bienvenue chez Newcondo !"
+    },
+    "payment": {
+      "success": "Paiement de {{amount}} {{currency}} réussi pour {{propertyTitle}}. ID de transaction : {{transactionId}}",
+      "failed": "Paiement de {{amount}} {{currency}} échoué. Veuillez réessayer ou contacter le support.",
+      "confirmation_required": "Confirmez votre paiement de loyer dans {{hours}}h pour {{propertyTitle}}. Visitez : {{confirmUrl}}",
+      "released": "{{amount}} {{currency}} a été libéré sur votre compte. Voir le solde sur {{dashboardUrl}}"
+    },
+    "marking": {
+      "job_assigned": "Nouvelle tâche de marquage à {{location}}. Frais : {{fee}} {{currency}}. Créneau : {{timeSlot}}. Accepter : {{acceptUrl}}",
+      "agent_assigned": "Agent {{agentName}} assigné pour marquer votre propriété. Contact : {{agentPhone}}. Suivre : {{trackUrl}}",
+      "job_completed": "Propriété marquée par {{agentName}}. Réviser et confirmer dans {{days}} jours : {{reviewUrl}}",
+      "time_slot_expiring": "Votre créneau de tâche de marquage expire dans {{minutes}} min. Terminer maintenant : {{jobUrl}}"
+    },
+    "property": {
+      "approved": "Votre propriété '{{propertyTitle}}' a été approuvée ! Voir l'annonce : {{listingUrl}}",
+      "rejected": "Propriété '{{propertyTitle}}' rejetée. Raison : {{reason}}. Modifier : {{editUrl}}",
+      "rented": "Votre propriété '{{propertyTitle}}' a été louée par {{renterName}}. Détails : {{detailsUrl}}"
+    },
+    "rental": {
+      "new_rental": "{{renterName}} souhaite louer '{{propertyTitle}}'. Voir la demande : {{requestUrl}}",
+      "confirmed": "Votre location pour '{{propertyTitle}}' confirmée. Le bail commence le {{startDate}}.",
+      "expiring": "Votre bail pour '{{propertyTitle}}' expire le {{date}}. Renouveler : {{renewUrl}}"
+    },
+    "referral": {
+      "reward_earned": "Récompense de parrainage gagnée ! {{referredName}} s'est inscrit. Récompense : {{amount}} {{currency}}. Voir : {{dashboardUrl}}"
+    },
+    "admin": {
+      "urgent_action": "Urgent : {{actionType}} nécessite l'attention de l'admin. Détails : {{adminUrl}}"
+    },
+    "password_reset": {
+      "otp": "Votre code de réinitialisation de mot de passe est {{code}}. Valide pendant {{minutes}} minutes. Si vous n'avez pas demandé cela, contactez le support immédiatement."
+    },
+    "otp": {
+      "login": "Votre code de connexion Newcondo est {{code}}. Valide pendant {{minutes}} minutes. Gardez ce code confidentiel."
+    }
+  }
+}

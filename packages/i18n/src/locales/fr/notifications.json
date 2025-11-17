@@ -1,0 +1,134 @@
+{
+  "title": "Notifications",
+  "settings": {
+    "title": "Paramètres de notification",
+    "email": "Notifications par email",
+    "sms": "Notifications par SMS",
+    "push": "Notifications push",
+    "inApp": "Notifications dans l'application"
+  },
+  "categories": {
+    "all": "Toutes",
+    "payments": "Paiements",
+    "properties": "Propriétés",
+    "marking": "Marquage",
+    "referrals": "Parrainages",
+    "system": "Système"
+  },
+  "auth": {
+    "welcome": "Bienvenue sur Newcondo !",
+    "verifyEmail": "Veuillez vérifier votre adresse email",
+    "verifyPhone": "Veuillez vérifier votre numéro de téléphone",
+    "otpSent": "Code OTP envoyé",
+    "emailVerified": "Email vérifié avec succès",
+    "phoneVerified": "Téléphone vérifié avec succès",
+    "passwordReset": "Demande de réinitialisation de mot de passe",
+    "passwordChanged": "Mot de passe modifié avec succès"
+  },
+  "verification": {
+    "submitted": "Documents soumis pour vérification",
+    "approved": "Votre compte a été vérifié",
+    "rejected": "Vérification rejetée",
+    "moreDocsRequired": "Documents supplémentaires requis",
+    "underReview": "Vos documents sont en cours de révision"
+  },
+  "property": {
+    "created": "Propriété créée avec succès",
+    "submitted": "Propriété soumise pour approbation",
+    "approved": "Votre propriété a été approuvée",
+    "rejected": "Propriété rejetée",
+    "rented": "Votre propriété a été louée",
+    "available": "Votre propriété est maintenant disponible",
+    "expired": "Annonce de propriété expirée",
+    "duplicateDetected": "Propriété en double détectée",
+    "boundaryDispute": "Litige de limite soulevé",
+    "viewIncreased": "Votre propriété a reçu {{count}} nouvelles vues"
+  },
+  "payment": {
+    "received": "Paiement reçu",
+    "success": "Paiement réussi",
+    "failed": "Paiement échoué",
+    "pending": "Paiement en attente",
+    "held": "Paiement retenu pendant 24 heures",
+    "released": "Paiement libéré",
+    "refunded": "Paiement remboursé",
+    "confirmationPending": "Confirmation de paiement en attente",
+    "confirmationDeadline": "Date limite de confirmation : {{date}}",
+    "commissionReceived": "Commission reçue",
+    "withdrawalProcessed": "Retrait traité"
+  },
+  "marking": {
+    "jobCreated": "Travail de marquage créé",
+    "jobAvailable": "Nouveau travail de marquage disponible",
+    "jobAssigned": "Travail de marquage assigné",
+    "agentEnRoute": "L'agent est en route",
+    "jobCompleted": "Travail de marquage terminé",
+    "verificationRequired": "Vérification de marquage requise",
+    "verified": "Marquage vérifié",
+    "rejected": "Marquage rejeté",
+    "timeSlotExpiring": "Votre créneau horaire expire dans {{minutes}} minutes",
+    "jobCancelled": "Travail de marquage annulé",
+    "paymentReceived": "Paiement de marquage reçu"
+  },
+  "referral": {
+    "newReferral": "Nouveau parrainage !",
+    "referralSignedUp": "{{name}} s'est inscrit avec votre code",
+    "rewardEarned": "Vous avez gagné ₦{{amount}} en récompense de parrainage",
+    "rewardPending": "Récompense de parrainage en attente",
+    "propertypromoted": "Votre propriété a été promue par {{name}}",
+    "conversionEarned": "Commission gagnée sur une conversion de parrainage"
+  },
+  "rental": {
+    "newRental": "Nouvelle demande de location",
+    "rentalConfirmed": "Location confirmée",
+    "rentalExpiring": "Votre location expire dans {{days}} jours",
+    "renewalReminder": "Rappel de renouvellement de location",
+    "moveInReminder": "Rappel d'emménagement",
+    "moveOutReminder": "Rappel de déménagement"
+  },
+  "admin": {
+    "newUserRegistration": "Nouvel utilisateur inscrit",
+    "newPropertySubmission": "Nouvelle propriété soumise",
+    "verificationPending": "Documents en attente de vérification",
+    "disputeRaised": "Litige soulevé",
+    "paymentIssue": "Problème de paiement signalé",
+    "fraudAlert": "Alerte de fraude",
+    "systemAlert": "Alerte système"
+  },
+  "system": {
+    "maintenance": "Maintenance système planifiée",
+    "updateAvailable": "Mise à jour disponible",
+    "securityAlert": "Alerte de sécurité",
+    "policyUpdate": "Mise à jour de la politique",
+    "featureAnnouncement": "Nouvelle fonctionnalité disponible"
+  },
+  "actions": {
+    "view": "Voir",
+    "dismiss": "Ignorer",
+    "markAsRead": "Marquer comme lu",
+    "markAllAsRead": "Tout marquer comme lu",
+    "delete": "Supprimer",
+    "clearAll": "Tout effacer"
+  },
+  "status": {
+    "unread": "Non lu",
+    "read": "Lu",
+    "new": "Nouveau"
+  },
+  "empty": {
+    "title": "Aucune notification",
+    "description": "Vous êtes à jour !",
+    "noUnread": "Aucune notification non lue"
+  },
+  "time": {
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {{count}} minute",
+    "minutesAgo_plural": "Il y a {{count}} minutes",
+    "hoursAgo": "Il y a {{count}} heure",
+    "hoursAgo_plural": "Il y a {{count}} heures",
+    "daysAgo": "Il y a {{count}} jour",
+    "daysAgo_plural": "Il y a {{count}} jours",
+    "weeksAgo": "Il y a {{count}} semaine",
+    "weeksAgo_plural": "Il y a {{count}} semaines"
+  }
+}

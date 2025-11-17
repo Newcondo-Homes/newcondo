@@ -92,3 +92,100 @@ export default nextConfig;
 // };
 
 // module.exports = nextConfig;
+
+
+
+
+
+
+
+
+
+
+// const createNextIntlPlugin = require('next-intl/plugin');
+
+// const withNextIntl = createNextIntlPlugin('./i18n.ts');
+
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {
+//   // Enable React strict mode for better development experience
+//   reactStrictMode: true,
+
+//   // Image optimization configuration
+//   images: {
+//     domains: [
+//       'res.cloudinary.com', // Cloudinary for property images
+//       'utfs.io', // UploadThing
+//       'lh3.googleusercontent.com', // Google profile images
+//     ],
+//     formats: ['image/avif', 'image/webp'],
+//   },
+
+//   // Environment variables to expose to the browser
+//   env: {
+//     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+//     NEXT_PUBLIC_ADMIN_SERVICE_URL: process.env.NEXT_PUBLIC_ADMIN_SERVICE_URL,
+//   },
+
+//   // Internationalization
+//   i18n: {
+//     locales: ['en', 'fr', 'pcm'],
+//     defaultLocale: 'en',
+//   },
+
+//   // Webpack configuration
+//   webpack: (config, { isServer }) => {
+//     // Fix for canvas package issues
+//     if (!isServer) {
+//       config.resolve.fallback = {
+//         ...config.resolve.fallback,
+//         canvas: false,
+//       };
+//     }
+//     return config;
+//   },
+
+//   // Experimental features
+//   experimental: {
+//     // Enable server actions
+//     serverActions: {
+//       bodySizeLimit: '10mb',
+//     },
+//   },
+
+//   // Security headers
+//   async headers() {
+//     return [
+//       {
+//         source: '/:path*',
+//         headers: [
+//           {
+//             key: 'X-Frame-Options',
+//             value: 'DENY',
+//           },
+//           {
+//             key: 'X-Content-Type-Options',
+//             value: 'nosniff',
+//           },
+//           {
+//             key: 'Referrer-Policy',
+//             value: 'strict-origin-when-cross-origin',
+//           },
+//         ],
+//       },
+//     ];
+//   },
+
+//   // Redirects
+//   async redirects() {
+//     return [
+//       {
+//         source: '/',
+//         destination: '/en/dashboard',
+//         permanent: false,
+//       },
+//     ];
+//   },
+// };
+
+// module.exports = withNextIntl(nextConfig);

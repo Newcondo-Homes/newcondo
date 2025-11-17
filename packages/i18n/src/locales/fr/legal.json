@@ -1,0 +1,182 @@
+{
+  "title": "Juridique",
+  "termsAndConditions": {
+    "title": "Conditions Générales d'Utilisation",
+    "lastUpdated": "Dernière mise à jour : {{date}}",
+    "accept": "J'accepte les Conditions Générales d'Utilisation",
+    "sections": {
+      "introduction": "Introduction",
+      "serviceDescription": "Description du Service",
+      "userResponsibilities": "Responsabilités de l'Utilisateur",
+      "propertyListings": "Annonces de Propriétés",
+      "payments": "Paiements et Frais",
+      "cancellation": "Politique d'Annulation",
+      "liability": "Limitation de Responsabilité",
+      "disputeResolution": "Résolution des Litiges",
+      "termination": "Résiliation"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Politique de Confidentialité",
+    "lastUpdated": "Dernière mise à jour : {{date}}",
+    "sections": {
+      "dataCollection": "Collecte de Données",
+      "dataUsage": "Utilisation des Données",
+      "dataSecurity": "Sécurité des Données",
+      "dataSharing": "Partage des Données",
+      "userRights": "Droits des Utilisateurs",
+      "cookies": "Politique de Cookies",
+      "thirdParty": "Services Tiers",
+      "changes": "Modifications de la Politique"
+    }
+  },
+  "propertyMarking": {
+    "title": "Conditions du Service de Marquage de Propriété",
+    "description": "Veuillez lire attentivement avant d'utiliser notre service de marquage de propriété",
+    "sections": {
+      "overview": {
+        "title": "Aperçu du Service",
+        "content": "Le service de marquage de propriété Newcondo permet aux propriétaires de marquer et vérifier les limites de leurs propriétés pour prévenir les doublons et assurer l'exactitude des annonces."
+      },
+      "eligibility": {
+        "title": "Éligibilité",
+        "content": "Seuls les propriétaires vérifiés et les agents avec des autorisations appropriées peuvent demander des services de marquage."
+      },
+      "fees": {
+        "title": "Frais et Paiements",
+        "ownerMarking": "Marquage auto : Gratuit",
+        "friendMarking": "Marquage par un ami : Gratuit",
+        "agentMarking": "Marquage par un agent Newcondo : ₦20,000",
+        "newcondoMarking": "Marquage par Newcondo : ₦25,000",
+        "agentCompensation": "Compensation de l'agent : 25% des frais de marquage",
+        "platformShare": "Part de la plateforme : 75% des frais de marquage"
+      },
+      "process": {
+        "title": "Processus de Marquage",
+        "steps": [
+          "Sélectionner une option de marquage",
+          "Fournir les détails du contact et les instructions d'accès",
+          "Effectuer le paiement (le cas échéant)",
+          "L'agent marque la propriété dans un délai de 3 heures",
+          "Le propriétaire vérifie le marquage dans les 2-3 jours",
+          "Les fonds sont libérés après confirmation"
+        ]
+      },
+      "responsibilities": {
+        "title": "Responsabilités du Propriétaire",
+        "propertyAccess": "Assurer l'accès à la propriété pour l'agent",
+        "contactInfo": "Fournir des informations de contact précises",
+        "verification": "Vérifier le marquage dans le délai imparti",
+        "accuracy": "Assurer l'exactitude des informations de propriété"
+      },
+      "agentResponsibilities": {
+        "title": "Responsabilités de l'Agent",
+        "timeSlot": "Terminer le marquage dans un délai de 3 heures",
+        "accuracy": "Fournir un marquage précis des limites",
+        "photos": "Télécharger des photos claires de la propriété",
+        "professionalism": "Maintenir un comportement professionnel",
+        "communication": "Communiquer avec le propriétaire en cas de problèmes"
+      },
+      "verification": {
+        "title": "Processus de Vérification",
+        "deadline": "Les propriétaires disposent de 2-3 jours pour vérifier",
+        "partialPayment": "Un paiement partiel (₦1,000) est versé à l'achèvement",
+        "fullPayment": "Le paiement complet après confirmation du propriétaire",
+        "rejection": "Le propriétaire peut rejeter et demander un nouveau marquage",
+        "attempts": "Multiple tentatives entraînent des frais supplémentaires"
+      },
+      "cancellation": {
+        "title": "Politique d'Annulation",
+        "beforeAssignment": "Remboursement complet si annulé avant l'assignation de l'agent",
+        "afterAssignment": "Pas de remboursement après l'assignation de l'agent",
+        "agentCancellation": "L'agent peut annuler dans un délai d'1 heure sans pénalité",
+        "expiration": "Les travaux expirent après 3 jours maximum"
+      },
+      "disputes": {
+        "title": "Résolution des Litiges",
+        "process": "Les litiges sont traités par l'équipe d'administration Newcondo",
+        "evidence": "Les deux parties doivent fournir des preuves",
+        "timeline": "Résolution dans les 5-7 jours ouvrables",
+        "appeal": "Les décisions peuvent être contestées dans les 14 jours"
+      },
+      "liability": {
+        "title": "Limitation de Responsabilité",
+        "platformRole": "Newcondo agit en tant qu'intermédiaire",
+        "agentActions": "Les agents sont responsables de leurs actions",
+        "propertyDamage": "Les propriétaires doivent signaler les dommages immédiatement",
+        "dataAccuracy": "Les utilisateurs sont responsables de l'exactitude des données"
+      },
+      "dataPrivacy": {
+        "title": "Confidentialité des Données",
+        "content": "Les informations de contact et les détails de propriété sont partagés uniquement avec les agents assignés. Toutes les données sont protégées conformément à notre Politique de Confidentialité."
+      }
+    },
+    "acceptance": {
+      "checkbox": "J'ai lu et j'accepte les Conditions du Service de Marquage de Propriété",
+      "required": "Vous devez accepter les conditions pour continuer"
+    }
+  },
+  "refundPolicy": {
+    "title": "Politique de Remboursement",
+    "sections": {
+      "rentPayments": {
+        "title": "Paiements de Loyer",
+        "confirmationPeriod": "Période de confirmation de 24 heures",
+        "serviceFeeNonRefundable": "Les frais de service ne sont pas remboursables",
+        "fullRefund": "Remboursement complet si annulé pendant la période de confirmation",
+        "processingTime": "Les remboursements prennent 5-7 jours ouvrables"
+      },
+      "markingFees": {
+        "title": "Frais de Marquage",
+        "beforeAssignment": "Remboursement complet avant l'assignation de l'agent",
+        "afterCompletion": "Pas de remboursement après l'achèvement du marquage",
+        "partialRefund": "Remboursement partiel en cas de non-achèvement de l'agent"
+      },
+      "premiumSubscription": {
+        "title": "Abonnement Premium",
+        "proRated": "Remboursement au prorata pour annulation anticipée",
+        "noRefund": "Pas de remboursement après 14 jours"
+      }
+    }
+  },
+  "userAgreement": {
+    "title": "Accord d'Utilisation",
+    "propertyOwner": {
+      "title": "Accord de Propriétaire",
+      "ownership": "Je certifie que je suis le propriétaire légal de cette propriété",
+      "authorization": "J'autorise Newcondo à lister ma propriété",
+      "accuracy": "Toutes les informations fournies sont exactes",
+      "compliance": "Je respecterai toutes les lois locales applicables"
+    },
+    "agent": {
+      "title": "Accord d'Agent",
+      "authorization": "J'ai l'autorisation du propriétaire pour lister cette propriété",
+      "consent": "J'ai des documents de consentement appropriés",
+      "commission": "Je comprends la structure de commission",
+      "professionalism": "Je maintiendrai des normes professionnelles"
+    },
+    "renter": {
+      "title": "Accord de Locataire",
+      "verification": "Je vérifierai la propriété avant paiement",
+      "confirmation": "Je confirmerai dans les 24 heures après le paiement",
+      "compliance": "Je respecterai les termes de location",
+      "payment": "Je comprends la politique de paiement"
+    }
+  },
+  "consent": {
+    "title": "Formulaire de Consentement",
+    "dataProcessing": "Traitement des Données",
+    "marketing": "Communications Marketing",
+    "thirdParty": "Partage avec des Tiers",
+    "location": "Services de Localisation",
+    "notifications": "Notifications Push"
+  },
+  "actions": {
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "read": "Lire Plus",
+    "download": "Télécharger PDF",
+    "print": "Imprimer",
+    "acknowledge": "Reconnaître"
+  }
+}

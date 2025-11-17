@@ -1,0 +1,140 @@
+{
+  "title": "Propriétés",
+  "search": {
+    "placeholder": "Rechercher des propriétés par emplacement, type...",
+    "noResults": "Aucune propriété trouvée",
+    "filters": "Filtres",
+    "sortBy": "Trier par"
+  },
+  "create": {
+    "title": "Créer une annonce",
+    "structure": {
+      "label": "Type de structure",
+      "singleUnit": "Unité unique",
+      "multiFamily": "Immeuble à plusieurs unités"
+    },
+    "details": {
+      "title": "Détails de la propriété",
+      "propertyTitle": "Titre de la propriété",
+      "description": "Description",
+      "type": "Type de propriété",
+      "bedrooms": "Chambres",
+      "bathrooms": "Salles de bain",
+      "area": "Superficie",
+      "price": "Prix mensuel",
+      "features": "Caractéristiques",
+      "totalUnits": "Nombre total d'unités",
+      "buildingFeatures": "Équipements du bâtiment"
+    },
+    "location": {
+      "title": "Emplacement",
+      "address": "Adresse",
+      "state": "État",
+      "city": "Ville",
+      "lga": "Gouvernement local",
+      "gpsCoordinates": "Coordonnées GPS"
+    },
+    "boundary": {
+      "title": "Marquage des limites",
+      "mark": "Marquer la propriété",
+      "verify": "Vérifier les limites",
+      "options": {
+        "self": "Marquer moi-même",
+        "friend": "Envoyer à quelqu'un que je connais",
+        "agent": "Assigner à un agent Newcondo",
+        "newcondo": "Laisser Newcondo marquer"
+      },
+      "instructions": "Dessinez un masque sur votre propriété dans la vue satellite",
+      "verified": "Limites vérifiées",
+      "pending": "Marquage en attente"
+    },
+    "images": {
+      "title": "Photos de la propriété",
+      "upload": "Télécharger des images",
+      "primary": "Image principale",
+      "max": "Maximum {{count}} images"
+    },
+    "legal": {
+      "title": "Documents légaux",
+      "ownership": "Preuve de propriété",
+      "consent": "Document de consentement",
+      "undertaking": "Engagement"
+    },
+    "submit": "Soumettre pour approbation",
+    "draft": "Enregistrer comme brouillon"
+  },
+  "units": {
+    "title": "Unités",
+    "add": "Ajouter une unité",
+    "unitNumber": "Numéro d'unité",
+    "floor": "Étage",
+    "available": "Disponible",
+    "occupied": "Occupée",
+    "maintenance": "Maintenance",
+    "reserved": "Réservée"
+  },
+  "status": {
+    "draft": "Brouillon",
+    "pending": "En attente",
+    "published": "Publiée",
+    "rented": "Louée",
+    "unavailable": "Indisponible"
+  },
+  "types": {
+    "APARTMENT": "Appartement",
+    "HOUSE": "Maison",
+    "DUPLEX": "Duplex",
+    "ROOM": "Chambre",
+    "SHARED_APARTMENT": "Appartement partagé",
+    "OFFICE": "Bureau",
+    "SHOP": "Boutique",
+    "WAREHOUSE": "Entrepôt"
+  },
+  "details": {
+    "overview": "Aperçu",
+    "location": "Emplacement",
+    "amenities": "Équipements",
+    "availability": "Disponibilité",
+    "owner": "Propriétaire",
+    "agent": "Agent",
+    "viewOnMap": "Voir sur la carte",
+    "shareProperty": "Partager la propriété",
+    "reportDuplicate": "Signaler un doublon",
+    "contactOwner": "Contacter le propriétaire"
+  },
+  "actions": {
+    "rent": "Louer maintenant",
+    "promote": "Promouvoir",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "approve": "Approuver",
+    "reject": "Rejeter"
+  },
+  "duplicate": {
+    "detected": "Propriété en double détectée",
+    "alreadyMarked": "Cette propriété a déjà été marquée",
+    "report": "Signaler comme doublon",
+    "confirm": "Confirmer le doublon"
+  },
+  "marking": {
+    "fee": "Frais de marquage",
+    "payment": "Payer les frais de marquage",
+    "contactPerson": "Personne de contact",
+    "accessInstructions": "Instructions d'accès",
+    "preferredTime": "Heure préférée",
+    "urgency": {
+      "low": "Faible",
+      "normal": "Normal",
+      "high": "Élevé",
+      "urgent": "Urgent"
+    },
+    "status": {
+      "queued": "En file d'attente",
+      "assigned": "Assigné",
+      "inProgress": "En cours",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "expired": "Expiré"
+    }
+  }
+}

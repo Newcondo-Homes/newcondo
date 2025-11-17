@@ -1,0 +1,255 @@
+{
+  "dashboard": {
+    "title": "Admin Dashboard",
+    "welcome": "Welcome back, {{name}}",
+    "overview": "Platform Overview",
+    "stats": {
+      "totalUsers": "Total Users",
+      "totalProperties": "Total Properties",
+      "pendingApprovals": "Pending Approvals",
+      "totalRevenue": "Total Revenue",
+      "activeRentals": "Active Rentals",
+      "pendingVerifications": "Pending Verifications"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "approveProperties": "Approve Properties",
+      "verifyUsers": "Verify Users",
+      "handleDisputes": "Handle Disputes",
+      "viewReports": "View Reports"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "newUsers": "New User Registrations",
+      "newListings": "New Property Listings",
+      "payments": "Recent Payments",
+      "disputes": "New Disputes"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage all platform users",
+    "totalUsers": "Total Users",
+    "filters": {
+      "all": "All Users",
+      "owners": "Property Owners",
+      "agents": "Agents",
+      "renters": "Renters",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "suspended": "Suspended"
+    },
+    "search": "Search users by name, email, or phone...",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "role": "Role",
+      "status": "Status",
+      "joinedDate": "Joined",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View Profile",
+      "verify": "Verify User",
+      "suspend": "Suspend User",
+      "delete": "Delete User",
+      "sendMessage": "Send Message"
+    },
+    "status": {
+      "pending": "Pending Verification",
+      "verified": "Verified",
+      "rejected": "Rejected",
+      "suspended": "Suspended"
+    },
+    "noUsers": "No users found"
+  },
+  "verification": {
+    "title": "User Verification",
+    "subtitle": "Review and verify user documents",
+    "pending": "Pending Verifications",
+    "userInfo": "User Information",
+    "documents": "Submitted Documents",
+    "idDocument": "ID Document",
+    "selfie": "Selfie Photo",
+    "businessDocs": "Business Documents",
+    "viewDocument": "View Document",
+    "downloadDocument": "Download",
+    "verificationStatus": "Verification Status",
+    "approve": "Approve Verification",
+    "reject": "Reject Verification",
+    "rejectReason": "Rejection Reason",
+    "rejectReasons": {
+      "poorQuality": "Document quality too poor",
+      "notReadable": "Document no clear/readable",
+      "expired": "Document don expire",
+      "mismatch": "Information no match",
+      "fake": "Document look fake",
+      "incomplete": "Incomplete information",
+      "other": "Other reason"
+    },
+    "additionalNotes": "Additional Notes",
+    "notesPlaceholder": "Add any comments for the user...",
+    "confirmApprove": "Approve dis user?",
+    "confirmReject": "Reject dis user?",
+    "approveButton": "Approve",
+    "rejectButton": "Reject",
+    "approved": "User verified successfully",
+    "rejected": "User verification rejected"
+  },
+  "properties": {
+    "title": "Property Management",
+    "subtitle": "Review and approve property listings",
+    "pendingApproval": "Pending Approval",
+    "filters": {
+      "all": "All Properties",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "flagged": "Flagged"
+    },
+    "propertyDetails": "Property Details",
+    "ownerInfo": "Owner Information",
+    "agentInfo": "Agent Information",
+    "boundaryInfo": "Boundary Information",
+    "boundaryVerified": "Boundary Verified",
+    "viewBoundary": "View on Map",
+    "legalDocuments": "Legal Documents",
+    "viewDocument": "View Document",
+    "approve": "Approve Property",
+    "reject": "Reject Property",
+    "flag": "Flag Property",
+    "rejectionReason": "Rejection Reason",
+    "rejectionReasons": {
+      "incompleteInfo": "Incomplete information",
+      "poorPhotos": "Photos quality no good",
+      "invalidDocs": "Legal documents no valid",
+      "suspiciousListing": "Listing look suspicious",
+      "pricingIssue": "Pricing no reasonable",
+      "boundaryIssue": "Boundary marking get problem",
+      "duplicate": "Na duplicate property",
+      "other": "Other reason"
+    },
+    "confirmApprove": "Approve dis property for listing?",
+    "confirmReject": "Reject dis property?",
+    "approved": "Property approved successfully",
+    "rejected": "Property rejected"
+  },
+  "disputes": {
+    "title": "Dispute Management",
+    "subtitle": "Handle boundary disputes and complaints",
+    "pending": "Pending Disputes",
+    "types": {
+      "boundary": "Boundary Dispute",
+      "duplicate": "Duplicate Property",
+      "payment": "Payment Dispute",
+      "quality": "Quality Complaint",
+      "other": "Other"
+    },
+    "disputeDetails": "Dispute Details",
+    "reportedBy": "Reported By",
+    "reportedDate": "Reported Date",
+    "propertyInvolved": "Property Involved",
+    "description": "Description",
+    "evidence": "Evidence Submitted",
+    "resolution": "Resolution",
+    "resolutionNotes": "Resolution Notes",
+    "notesPlaceholder": "Enter your resolution notes...",
+    "resolve": "Resolve Dispute",
+    "escalate": "Escalate to Senior Admin",
+    "contactParties": "Contact Parties",
+    "resolved": "Dispute resolved successfully"
+  },
+  "analytics": {
+    "title": "Platform Analytics",
+    "subtitle": "View platform metrics and insights",
+    "dateRange": "Date Range",
+    "exportReport": "Export Report",
+    "userMetrics": {
+      "title": "User Metrics",
+      "newUsers": "New Users",
+      "activeUsers": "Active Users",
+      "verifiedUsers": "Verified Users",
+      "userGrowth": "User Growth Rate"
+    },
+    "propertyMetrics": {
+      "title": "Property Metrics",
+      "totalListings": "Total Listings",
+      "activeListings": "Active Listings",
+      "rentedProperties": "Rented Properties",
+      "averagePrice": "Average Rent"
+    },
+    "revenueMetrics": {
+      "title": "Revenue Metrics",
+      "totalRevenue": "Total Revenue",
+      "markingRevenue": "From Marking Service",
+      "commissionRevenue": "From Commissions",
+      "premiumRevenue": "From Premium Subscriptions"
+    },
+    "performanceMetrics": {
+      "title": "Performance Metrics",
+      "conversionRate": "Conversion Rate",
+      "averageTimeToRent": "Average Time to Rent",
+      "userSatisfaction": "User Satisfaction",
+      "platformUptime": "Platform Uptime"
+    }
+  },
+  "marking": {
+    "title": "Marking Service Oversight",
+    "subtitle": "Monitor property marking jobs",
+    "activeJobs": "Active Marking Jobs",
+    "completedJobs": "Completed Jobs",
+    "jobDetails": "Job Details",
+    "assignedAgent": "Assigned Agent",
+    "requestedBy": "Requested By",
+    "status": "Status",
+    "timeline": "Timeline",
+    "reassignJob": "Reassign Job",
+    "cancelJob": "Cancel Job",
+    "viewMarking": "View Marking Details",
+    "agentPerformance": "Agent Performance",
+    "reliability": "Reliability Score",
+    "completionRate": "Completion Rate",
+    "averageTime": "Average Completion Time"
+  },
+  "support": {
+    "title": "Support Tickets",
+    "subtitle": "Handle user support requests",
+    "open": "Open Tickets",
+    "inProgress": "In Progress",
+    "resolved": "Resolved",
+    "ticketDetails": "Ticket Details",
+    "user": "User",
+    "category": "Category",
+    "priority": "Priority",
+    "createdDate": "Created",
+    "description": "Description",
+    "response": "Your Response",
+    "responsePlaceholder": "Type your response...",
+    "assignTo": "Assign To",
+    "changeStatus": "Change Status",
+    "sendResponse": "Send Response",
+    "closeTicket": "Close Ticket",
+    "responseSent": "Response sent successfully",
+    "ticketClosed": "Ticket closed successfully"
+  },
+  "settings": {
+    "title": "Platform Settings",
+    "subtitle": "Configure platform parameters",
+    "general": "General Settings",
+    "payments": "Payment Settings",
+    "fees": "Fees & Commissions",
+    "notifications": "Notification Templates",
+    "security": "Security Settings",
+    "platformName": "Platform Name",
+    "platformEmail": "Platform Email",
+    "supportPhone": "Support Phone",
+    "commissionRate": "Commission Rate (%)",
+    "serviceFee": "Service Fee (%)",
+    "markingFee": "Marking Service Fee",
+    "agentCommission": "Agent Commission (%)",
+    "confirmationPeriod": "Payment Confirmation Period (days)",
+    "saveSettings": "Save Settings",
+    "settingsSaved": "Settings saved successfully"
+  }
+}

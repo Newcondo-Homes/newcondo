@@ -1,0 +1,191 @@
+{
+  "email": {
+    "common": {
+      "greeting": "Bonjour {{name}}",
+      "default_greeting": "Bonjour",
+      "closing": "Cordialement,<br/>L'équipe Newcondo",
+      "footer": "© {{year}} Newcondo. Tous droits réservés.",
+      "unsubscribe": "Vous ne voulez plus recevoir ces emails ? <a href='{{unsubscribeUrl}}'>Se désabonner</a>",
+      "help": "Besoin d'aide ? <a href='{{supportUrl}}'>Contacter le support</a>",
+      "button": "{{text}}"
+    },
+    "verification": {
+      "email_otp": {
+        "subject": "Vérifiez votre email - Code OTP",
+        "title": "Vérifiez votre adresse email",
+        "message": "Merci de vous être inscrit chez Newcondo. Veuillez utiliser le code ci-dessous pour vérifier votre adresse email :",
+        "otp_label": "Votre code de vérification :",
+        "expires": "Ce code expire dans {{minutes}} minutes.",
+        "no_request": "Si vous n'avez pas demandé ce code, veuillez ignorer cet email.",
+        "cta": "Vérifier l'email"
+      },
+      "phone_otp": {
+        "subject": "Vérifiez votre numéro de téléphone - Code OTP",
+        "title": "Vérifiez votre numéro de téléphone",
+        "message": "Veuillez utiliser le code ci-dessous pour vérifier votre numéro de téléphone :",
+        "otp_label": "Votre code de vérification :",
+        "expires": "Ce code expire dans {{minutes}} minutes."
+      },
+      "approved": {
+        "subject": "Compte vérifié avec succès !",
+        "title": "Vérification approuvée",
+        "message": "Félicitations ! Votre compte Newcondo a été vérifié. Vous avez maintenant un accès complet à toutes nos fonctionnalités.",
+        "cta": "Explorer les propriétés"
+      },
+      "rejected": {
+        "subject": "Vérification du compte rejetée",
+        "title": "Vérification rejetée",
+        "message": "Malheureusement, nous n'avons pas pu vérifier votre compte pour le moment.",
+        "reason": "Raison : {{reason}}",
+        "next_steps": "Veuillez soumettre à nouveau vos documents de vérification avec les corrections suivantes :",
+        "cta": "Resoumettre les documents"
+      }
+    },
+    "property": {
+      "approved": {
+        "subject": "Annonce de propriété approuvée - {{propertyTitle}}",
+        "title": "Votre propriété est en ligne !",
+        "message": "Bonne nouvelle ! Votre annonce '{{propertyTitle}}' a été approuvée et est maintenant visible aux locataires potentiels.",
+        "details": "Détails de la propriété :",
+        "location": "Emplacement : {{address}}",
+        "price": "Prix : {{price}} {{currency}}/mois",
+        "cta": "Voir l'annonce"
+      },
+      "rejected": {
+        "subject": "Annonce de propriété rejetée - {{propertyTitle}}",
+        "title": "L'annonce de propriété nécessite des mises à jour",
+        "message": "Votre annonce '{{propertyTitle}}' nécessite quelques mises à jour avant approbation.",
+        "reason": "Raison du rejet : {{reason}}",
+        "next_steps": "Veuillez apporter les modifications nécessaires et soumettre à nouveau votre annonce.",
+        "cta": "Modifier l'annonce"
+      },
+      "rented": {
+        "subject": "Votre propriété a été louée - {{propertyTitle}}",
+        "title": "Félicitations pour votre nouveau locataire !",
+        "message": "Votre propriété '{{propertyTitle}}' a été louée avec succès.",
+        "renter": "Locataire : {{renterName}}",
+        "start_date": "Date de début du bail : {{startDate}}",
+        "amount": "Loyer mensuel : {{amount}} {{currency}}",
+        "cta": "Voir les détails de location"
+      }
+    },
+    "payment": {
+      "receipt": {
+        "subject": "Reçu de paiement - {{transactionId}}",
+        "title": "Confirmation de paiement",
+        "message": "Merci pour votre paiement. Voici les détails :",
+        "transaction_id": "ID de transaction : {{transactionId}}",
+        "amount": "Montant : {{amount}} {{currency}}",
+        "date": "Date : {{date}}",
+        "property": "Propriété : {{propertyTitle}}",
+        "method": "Méthode de paiement : {{method}}",
+        "cta": "Télécharger le reçu"
+      },
+      "confirmation_required": {
+        "subject": "Action requise : Confirmez votre paiement",
+        "title": "Veuillez confirmer votre paiement",
+        "message": "Il vous reste {{hours}} heures pour confirmer votre paiement de loyer pour '{{propertyTitle}}'.",
+        "warning": "Si non confirmé dans ce délai, votre paiement sera remboursé moins les frais de transaction.",
+        "steps": "Pour confirmer :",
+        "step1": "1. Visitez la propriété et vérifiez qu'elle correspond à l'annonce",
+        "step2": "2. Vérifiez toutes les commodités et caractéristiques",
+        "step3": "3. Cliquez sur le bouton de confirmation dans votre tableau de bord",
+        "cta": "Confirmer le paiement maintenant"
+      },
+      "released": {
+        "subject": "Paiement libéré - {{amount}} {{currency}}",
+        "title": "Fonds libérés",
+        "message": "Votre paiement de {{amount}} {{currency}} a été libéré et est maintenant disponible dans votre compte virtuel.",
+        "property": "Propriété : {{propertyTitle}}",
+        "commission": "Votre commission : {{commission}} {{currency}}",
+        "cta": "Voir le solde"
+      },
+      "refunded": {
+        "subject": "Paiement remboursé - {{transactionId}}",
+        "title": "Remboursement traité",
+        "message": "Votre paiement a été remboursé sur votre méthode de paiement d'origine.",
+        "amount": "Montant du remboursement : {{amount}} {{currency}}",
+        "reason": "Raison : {{reason}}",
+        "processing_time": "Veuillez prévoir 5 à 10 jours ouvrables pour que le remboursement apparaisse sur votre compte.",
+        "cta": "Voir la transaction"
+      }
+    },
+    "marking": {
+      "job_assigned": {
+        "subject": "Nouvelle tâche de marquage disponible - {{location}}",
+        "title": "Nouvelle opportunité de marquage",
+        "message": "Une nouvelle tâche de marquage de propriété est disponible dans votre région :",
+        "location": "Emplacement : {{address}}",
+        "fee": "Frais : {{fee}} {{currency}}",
+        "deadline": "Créneau horaire : {{timeSlot}}",
+        "contact": "Personne de contact : {{contactName}} - {{contactPhone}}",
+        "cta": "Accepter la tâche"
+      },
+      "agent_assigned": {
+        "subject": "Agent assigné pour marquer votre propriété",
+        "title": "Tâche de marquage assignée",
+        "message": "Un agent a été assigné pour marquer votre propriété '{{propertyTitle}}'.",
+        "agent": "Agent : {{agentName}}",
+        "expected_completion": "Achèvement prévu : {{date}}",
+        "contact": "Contact de l'agent : {{agentPhone}}",
+        "cta": "Suivre la progression"
+      },
+      "job_completed": {
+        "subject": "Marquage de propriété terminé - Action requise",
+        "title": "Veuillez confirmer le marquage de la propriété",
+        "message": "Votre propriété '{{propertyTitle}}' a été marquée. Veuillez réviser et confirmer dans {{days}} jours.",
+        "agent": "Marqué par : {{agentName}}",
+        "completion_date": "Terminé le : {{date}}",
+        "warning": "Le non-confirmation entraînera des paiements partiels à l'agent jusqu'à épuisement des frais de marquage.",
+        "cta": "Réviser et confirmer"
+      }
+    },
+    "referral": {
+      "reward_earned": {
+        "subject": "Vous avez gagné une récompense de parrainage !",
+        "title": "Récompense de parrainage créditée",
+        "message": "Félicitations ! {{referredName}} a complété son inscription avec votre code de parrainage.",
+        "reward": "Montant de la récompense : {{amount}} {{currency}}",
+        "total_referrals": "Total de parrainages réussis : {{count}}",
+        "cta": "Voir le tableau de bord des parrainages"
+      }
+    },
+    "admin": {
+      "new_verification": {
+        "subject": "Nouvelle demande de vérification - {{userName}}",
+        "title": "Nouvelle vérification en attente",
+        "message": "{{userName}} a soumis des documents pour vérification de compte.",
+        "user_type": "Type d'utilisateur : {{userType}}",
+        "submitted": "Soumis : {{date}}",
+        "cta": "Réviser les documents"
+      },
+      "new_property": {
+        "subject": "Nouvelle soumission de propriété - {{propertyTitle}}",
+        "title": "Approbation de propriété requise",
+        "message": "Une nouvelle annonce nécessite votre révision.",
+        "property": "Propriété : {{propertyTitle}}",
+        "owner": "Propriétaire : {{ownerName}}",
+        "location": "Emplacement : {{address}}",
+        "submitted": "Soumis : {{date}}",
+        "cta": "Réviser la propriété"
+      },
+      "dispute_reported": {
+        "subject": "Litige de délimitation signalé - {{propertyTitle}}",
+        "title": "Résolution de litige requise",
+        "message": "Un litige de délimitation a été signalé pour la propriété '{{propertyTitle}}'.",
+        "reported_by": "Signalé par : {{reporterName}}",
+        "date": "Signalé le : {{date}}",
+        "cta": "Réviser le litige"
+      }
+    },
+    "password_reset": {
+      "subject": "Réinitialisez votre mot de passe",
+      "title": "Demande de réinitialisation de mot de passe",
+      "message": "Nous avons reçu une demande de réinitialisation de votre mot de passe. Utilisez le code ci-dessous :",
+      "otp_label": "Code de réinitialisation :",
+      "expires": "Ce code expire dans {{minutes}} minutes.",
+      "no_request": "Si vous n'avez pas demandé de réinitialisation de mot de passe, veuillez ignorer cet email et votre mot de passe restera inchangé.",
+      "cta": "Réinitialiser le mot de passe"
+    }
+  }
+}

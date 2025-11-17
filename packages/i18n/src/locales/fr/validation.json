@@ -1,0 +1,169 @@
+{
+  "required": "{{field}} est requis",
+  "invalid": "{{field}} n'est pas valide",
+  "email": {
+    "required": "L'adresse email est requise",
+    "invalid": "Veuillez entrer une adresse email valide",
+    "exists": "Cette adresse email est déjà enregistrée"
+  },
+  "phone": {
+    "required": "Le numéro de téléphone est requis",
+    "invalid": "Veuillez entrer un numéro de téléphone valide",
+    "exists": "Ce numéro de téléphone est déjà enregistré",
+    "format": "Le format du numéro de téléphone doit être +234XXXXXXXXXX"
+  },
+  "password": {
+    "required": "Le mot de passe est requis",
+    "minLength": "Le mot de passe doit contenir au moins {{min}} caractères",
+    "maxLength": "Le mot de passe ne doit pas dépasser {{max}} caractères",
+    "weak": "Le mot de passe est trop faible",
+    "mismatch": "Les mots de passe ne correspondent pas",
+    "requirements": "Le mot de passe doit contenir au moins une lettre majuscule, une lettre minuscule, un chiffre et un caractère spécial"
+  },
+  "name": {
+    "required": "Le nom est requis",
+    "minLength": "Le nom doit contenir au moins {{min}} caractères",
+    "maxLength": "Le nom ne doit pas dépasser {{max}} caractères",
+    "invalid": "Le nom ne doit contenir que des lettres et des espaces"
+  },
+  "property": {
+    "title": {
+      "required": "Le titre de la propriété est requis",
+      "minLength": "Le titre doit contenir au moins {{min}} caractères",
+      "maxLength": "Le titre ne doit pas dépasser {{max}} caractères"
+    },
+    "description": {
+      "required": "La description est requise",
+      "minLength": "La description doit contenir au moins {{min}} caractères",
+      "maxLength": "La description ne doit pas dépasser {{max}} caractères"
+    },
+    "price": {
+      "required": "Le prix est requis",
+      "positive": "Le prix doit être supérieur à 0",
+      "max": "Le prix ne peut pas dépasser ₦{{max}}",
+      "invalid": "Veuillez entrer un prix valide"
+    },
+    "address": {
+      "required": "L'adresse est requise",
+      "invalid": "Veuillez entrer une adresse valide"
+    },
+    "state": {
+      "required": "L'état est requis",
+      "invalid": "Veuillez sélectionner un état valide"
+    },
+    "city": {
+      "required": "La ville est requise",
+      "invalid": "Veuillez sélectionner une ville valide"
+    },
+    "type": {
+      "required": "Le type de propriété est requis",
+      "invalid": "Veuillez sélectionner un type valide"
+    },
+    "bedrooms": {
+      "required": "Le nombre de chambres est requis",
+      "min": "Doit être au moins {{min}}",
+      "max": "Ne peut pas dépasser {{max}}"
+    },
+    "bathrooms": {
+      "required": "Le nombre de salles de bain est requis",
+      "min": "Doit être au moins {{min}}",
+      "max": "Ne peut pas dépasser {{max}}"
+    },
+    "images": {
+      "required": "Au moins une image est requise",
+      "min": "Veuillez télécharger au moins {{min}} images",
+      "max": "Vous ne pouvez pas télécharger plus de {{max}} images"
+    },
+    "totalUnits": {
+      "required": "Le nombre total d'unités est requis",
+      "min": "Doit être au moins {{min}}",
+      "max": "Ne peut pas dépasser {{max}}"
+    },
+    "unitNumber": {
+      "required": "Le numéro d'unité est requis",
+      "duplicate": "Ce numéro d'unité existe déjà"
+    }
+  },
+  "marking": {
+    "contactName": {
+      "required": "Le nom du contact est requis",
+      "minLength": "Le nom doit contenir au moins {{min}} caractères"
+    },
+    "contactPhone": {
+      "required": "Le numéro de téléphone du contact est requis",
+      "invalid": "Veuillez entrer un numéro de téléphone valide"
+    },
+    "accessInstructions": {
+      "maxLength": "Les instructions ne doivent pas dépasser {{max}} caractères"
+    },
+    "photos": {
+      "required": "Des photos de la propriété sont requises",
+      "min": "Veuillez télécharger au moins {{min}} photos"
+    },
+    "boundaryData": {
+      "required": "Les données de limite sont requises",
+      "invalid": "Données de limite invalides"
+    }
+  },
+  "payment": {
+    "amount": {
+      "required": "Le montant est requis",
+      "positive": "Le montant doit être supérieur à 0",
+      "insufficient": "Solde insuffisant"
+    },
+    "method": {
+      "required": "La méthode de paiement est requise"
+    },
+    "confirmation": {
+      "required": "Vous devez confirmer que vous avez vérifié la propriété"
+    }
+  },
+  "verification": {
+    "documentType": {
+      "required": "Le type de document est requis"
+    },
+    "documentNumber": {
+      "required": "Le numéro de document est requis",
+      "invalid": "Numéro de document invalide"
+    },
+    "document": {
+      "required": "Le document est requis",
+      "fileType": "Type de fichier non autorisé. Veuillez télécharger {{types}}",
+      "fileSize": "La taille du fichier ne doit pas dépasser {{max}}",
+      "quality": "La qualité de l'image est insuffisante. Veuillez télécharger une image plus claire"
+    }
+  },
+  "referral": {
+    "code": {
+      "required": "Le code de parrainage est requis",
+      "invalid": "Code de parrainage invalide",
+      "expired": "Code de parrainage expiré"
+    }
+  },
+  "date": {
+    "required": "La date est requise",
+    "invalid": "Date invalide",
+    "past": "La date ne peut pas être dans le passé",
+    "future": "La date ne peut pas être dans le futur",
+    "range": "La date doit être entre {{min}} et {{max}}"
+  },
+  "file": {
+    "required": "Le fichier est requis",
+    "type": "Type de fichier non autorisé",
+    "size": "Le fichier est trop volumineux. Taille maximale : {{max}}",
+    "dimension": "Dimensions d'image invalides",
+    "corrupt": "Le fichier semble être corrompu"
+  },
+  "general": {
+    "required": "Ce champ est requis",
+    "invalid": "Valeur invalide",
+    "tooShort": "Trop court. Minimum {{min}} caractères",
+    "tooLong": "Trop long. Maximum {{max}} caractères",
+    "min": "La valeur minimum est {{min}}",
+    "max": "La valeur maximum est {{max}}",
+    "numeric": "Doit être un nombre",
+    "alphanumeric": "Doit contenir uniquement des lettres et des chiffres",
+    "url": "URL invalide",
+    "duplicate": "Cette valeur existe déjà"
+  }
+}

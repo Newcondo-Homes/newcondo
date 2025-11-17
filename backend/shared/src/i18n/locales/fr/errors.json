@@ -1,0 +1,147 @@
+{
+  "errors": {
+    "general": {
+      "internal_server_error": "Une erreur interne du serveur s'est produite. Veuillez réessayer plus tard.",
+      "validation_error": "Erreur de validation.",
+      "not_found": "Ressource introuvable.",
+      "unauthorized": "Vous n'êtes pas autorisé à effectuer cette action.",
+      "forbidden": "L'accès à cette ressource est interdit.",
+      "bad_request": "Requête invalide. Veuillez vérifier votre saisie.",
+      "conflict": "Un conflit s'est produit. La ressource existe peut-être déjà.",
+      "rate_limit_exceeded": "Trop de requêtes. Veuillez réessayer plus tard.",
+      "service_unavailable": "Service temporairement indisponible. Veuillez réessayer plus tard."
+    },
+    "auth": {
+      "invalid_credentials": "Email ou mot de passe invalide.",
+      "account_not_found": "Compte introuvable.",
+      "account_already_exists": "Un compte avec cet email existe déjà.",
+      "email_not_verified": "Veuillez vérifier votre adresse email pour continuer.",
+      "phone_not_verified": "Veuillez vérifier votre numéro de téléphone pour continuer.",
+      "invalid_token": "Jeton invalide ou expiré.",
+      "token_expired": "Votre session a expiré. Veuillez vous reconnecter.",
+      "otp_invalid": "Code OTP invalide.",
+      "otp_expired": "Le code OTP a expiré. Veuillez en demander un nouveau.",
+      "otp_max_attempts": "Nombre maximum de tentatives OTP atteint. Veuillez demander un nouveau code.",
+      "password_weak": "Mot de passe trop faible. Utilisez au moins 8 caractères avec des lettres et des chiffres.",
+      "password_mismatch": "Les mots de passe ne correspondent pas.",
+      "account_suspended": "Votre compte a été suspendu. Contactez le support pour obtenir de l'aide.",
+      "insufficient_permissions": "Vous n'avez pas la permission d'effectuer cette action."
+    },
+    "user": {
+      "not_found": "Utilisateur introuvable.",
+      "update_failed": "Échec de la mise à jour du profil utilisateur.",
+      "verification_pending": "La vérification du compte est en attente.",
+      "verification_rejected": "La vérification du compte a été rejetée : {{reason}}",
+      "invalid_user_type": "Type d'utilisateur invalide.",
+      "duplicate_email": "Cet email est déjà enregistré.",
+      "duplicate_phone": "Ce numéro de téléphone est déjà enregistré.",
+      "profile_incomplete": "Veuillez compléter votre profil pour continuer."
+    },
+    "property": {
+      "not_found": "Propriété introuvable.",
+      "creation_failed": "Échec de la création de l'annonce immobilière.",
+      "update_failed": "Échec de la mise à jour de la propriété.",
+      "delete_failed": "Échec de la suppression de la propriété.",
+      "already_rented": "Cette propriété est déjà louée.",
+      "not_available": "Cette propriété n'est pas disponible à la location.",
+      "boundary_not_marked": "La délimitation de la propriété doit être marquée avant la mise en ligne.",
+      "boundary_overlap": "La délimitation de la propriété chevauche une propriété existante.",
+      "duplicate_detected": "Cette propriété semble être déjà répertoriée.",
+      "invalid_coordinates": "Coordonnées GPS invalides fournies.",
+      "insufficient_images": "Veuillez télécharger au moins {{count}} images.",
+      "image_upload_failed": "Échec du téléchargement de l'image de propriété.",
+      "unauthorized_access": "Vous n'avez pas la permission d'accéder à cette propriété.",
+      "approval_pending": "La propriété est en attente d'approbation admin.",
+      "rejected_listing": "L'annonce de propriété a été rejetée : {{reason}}",
+      "payment_locked": "Cette propriété est actuellement verrouillée pour une autre transaction.",
+      "invalid_unit": "Unité de propriété invalide spécifiée.",
+      "unit_not_available": "Cette unité n'est pas disponible.",
+      "missing_documents": "Les documents de propriété requis sont manquants."
+    },
+    "payment": {
+      "failed": "Le paiement a échoué. Veuillez réessayer.",
+      "invalid_amount": "Montant de paiement invalide.",
+      "insufficient_funds": "Fonds insuffisants dans le compte virtuel.",
+      "transaction_not_found": "Transaction introuvable.",
+      "already_paid": "Ce paiement a déjà été traité.",
+      "refund_failed": "Échec du traitement du remboursement.",
+      "gateway_error": "Erreur de passerelle de paiement : {{message}}",
+      "confirmation_period_expired": "La période de confirmation du paiement a expiré.",
+      "invalid_payment_method": "Méthode de paiement invalide.",
+      "duplicate_transaction": "Transaction en double détectée.",
+      "virtual_account_error": "L'opération du compte virtuel a échoué.",
+      "commission_calculation_error": "Échec du calcul de la commission.",
+      "release_failed": "Échec de la libération du paiement."
+    },
+    "marking": {
+      "job_not_found": "Tâche de marquage introuvable.",
+      "creation_failed": "Échec de la création de la tâche de marquage.",
+      "assignment_failed": "Échec de l'attribution de la tâche de marquage.",
+      "no_available_agents": "Aucun agent disponible dans cette région.",
+      "time_slot_expired": "Votre créneau horaire pour cette tâche a expiré.",
+      "already_assigned": "Cette tâche est déjà attribuée à un autre agent.",
+      "completion_failed": "Échec de l'achèvement de la tâche de marquage.",
+      "invalid_boundary_data": "Données de délimitation invalides fournies.",
+      "insufficient_images": "Veuillez télécharger au moins {{count}} images de complétion.",
+      "unauthorized_completion": "Vous n'êtes pas autorisé à terminer cette tâche.",
+      "job_already_completed": "Cette tâche de marquage est déjà terminée.",
+      "payment_required": "Le paiement est requis avant l'attribution de la tâche.",
+      "queue_full": "La file d'attente de marquage est actuellement pleine. Veuillez réessayer plus tard."
+    },
+    "booking": {
+      "double_booking_prevented": "Cette propriété est en cours de réservation par un autre utilisateur. Veuillez réessayer.",
+      "lock_acquisition_failed": "Échec de l'acquisition du verrou de propriété. Veuillez réessayer.",
+      "booking_expired": "Votre session de réservation a expiré.",
+      "property_unavailable": "La propriété n'est plus disponible.",
+      "invalid_dates": "Dates de réservation invalides fournies.",
+      "date_conflict": "Les dates sélectionnées entrent en conflit avec une réservation existante."
+    },
+    "referral": {
+      "invalid_code": "Code de parrainage invalide.",
+      "self_referral": "Vous ne pouvez pas utiliser votre propre code de parrainage.",
+      "already_referred": "Cet utilisateur a déjà été parrainé.",
+      "reward_calculation_failed": "Échec du calcul de la récompense de parrainage.",
+      "code_not_found": "Code de parrainage introuvable."
+    },
+    "document": {
+      "upload_failed": "Échec du téléchargement du document.",
+      "invalid_format": "Format de document invalide. Formats acceptés : {{formats}}",
+      "file_too_large": "La taille du fichier dépasse la limite maximale de {{maxSize}}MB.",
+      "verification_pending": "La vérification du document est en attente.",
+      "verification_rejected": "Le document a été rejeté : {{reason}}",
+      "required_document_missing": "Document requis manquant : {{documentType}}",
+      "expired_document": "Le document a expiré. Veuillez en télécharger un nouveau.",
+      "invalid_document_type": "Type de document invalide."
+    },
+    "admin": {
+      "action_failed": "Échec de l'exécution de l'action admin.",
+      "invalid_status_transition": "Transition d'état invalide.",
+      "approval_failed": "Échec de l'approbation de l'élément.",
+      "rejection_failed": "Échec du rejet de l'élément.",
+      "dispute_resolution_failed": "Échec de la résolution du litige.",
+      "insufficient_admin_permissions": "Autorisations admin insuffisantes."
+    },
+    "validation": {
+      "required_field": "{{field}} est requis.",
+      "invalid_email": "Adresse email invalide.",
+      "invalid_phone": "Numéro de téléphone invalide.",
+      "invalid_format": "Format {{field}} invalide.",
+      "min_length": "{{field}} doit contenir au moins {{min}} caractères.",
+      "max_length": "{{field}} ne doit pas dépasser {{max}} caractères.",
+      "invalid_range": "{{field}} doit être entre {{min}} et {{max}}.",
+      "invalid_date": "Format de date invalide.",
+      "future_date_required": "La date doit être dans le futur.",
+      "past_date_required": "La date doit être dans le passé.",
+      "invalid_currency": "Code de devise invalide.",
+      "invalid_coordinates": "Coordonnées GPS invalides."
+    },
+    "notification": {
+      "send_failed": "Échec de l'envoi de la notification.",
+      "invalid_recipient": "Destinataire de notification invalide.",
+      "template_not_found": "Modèle de notification introuvable.",
+      "email_send_failed": "Échec de l'envoi de la notification par email.",
+      "sms_send_failed": "Échec de l'envoi de la notification SMS.",
+      "push_send_failed": "Échec de l'envoi de la notification push."
+    }
+  }
+}

@@ -1,0 +1,219 @@
+{
+  "title": "Administration",
+  "dashboard": {
+    "title": "Tableau de bord administrateur",
+    "overview": "Aperçu",
+    "users": "Utilisateurs",
+    "properties": "Propriétés",
+    "payments": "Paiements",
+    "analytics": "Analyses"
+  },
+  "users": {
+    "title": "Gestion des utilisateurs",
+    "list": "Liste des utilisateurs",
+    "details": "Détails de l'utilisateur",
+    "verification": "Vérification",
+    "suspend": "Suspendre",
+    "activate": "Activer",
+    "delete": "Supprimer",
+    "filter": {
+      "all": "Tous",
+      "owners": "Propriétaires",
+      "agents": "Agents",
+      "renters": "Locataires",
+      "verified": "Vérifiés",
+      "pending": "En attente"
+    },
+    "actions": {
+      "verify": "Vérifier l'utilisateur",
+      "reject": "Rejeter la vérification",
+      "viewDocuments": "Voir les documents",
+      "sendMessage": "Envoyer un message"
+    }
+  },
+  "properties": {
+    "title": "Gestion des propriétés",
+    "approval": {
+      "title": "Approbation de propriété",
+      "pending": "En attente d'approbation",
+      "approved": "Approuvées",
+      "rejected": "Rejetées",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "reason": "Raison du rejet",
+      "viewBoundary": "Voir les limites",
+      "viewDocuments": "Voir les documents"
+    },
+    "duplicates": {
+      "title": "Gestion des doublons",
+      "pending": "Doublons signalés",
+      "resolve": "Résoudre",
+      "confirmDuplicate": "Confirmer comme doublon",
+      "notDuplicate": "Pas un doublon",
+      "merge": "Fusionner les propriétés"
+    },
+    "disputes": {
+      "title": "Litiges de limites",
+      "pending": "En attente",
+      "resolved": "Résolus",
+      "viewEvidence": "Voir les preuves",
+      "resolve": "Résoudre le litige",
+      "ruling": "Décision"
+    }
+  },
+  "verification": {
+    "title": "Vérification des documents",
+    "queue": "File d'attente de vérification",
+    "documents": {
+      "identity": "Documents d'identité",
+      "ownership": "Preuve de propriété",
+      "consent": "Documents de consentement",
+      "undertaking": "Engagements"
+    },
+    "actions": {
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "requestMore": "Demander plus de documents",
+      "flagFraud": "Signaler une fraude"
+    },
+    "status": {
+      "pending": "En attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "flagged": "Signalé"
+    }
+  },
+  "payments": {
+    "title": "Surveillance des paiements",
+    "transactions": "Transactions",
+    "refunds": "Remboursements",
+    "disputes": "Litiges",
+    "virtualAccounts": "Comptes virtuels",
+    "commission": "Distribution de commission",
+    "actions": {
+      "viewDetails": "Voir les détails",
+      "processRefund": "Traiter le remboursement",
+      "investigate": "Enquêter",
+      "release": "Libérer les fonds"
+    }
+  },
+  "marking": {
+    "title": "Surveillance du marquage",
+    "oversight": {
+      "title": "Surveillance des travaux de marquage",
+      "active": "Travaux actifs",
+      "completed": "Terminés",
+      "disputed": "Contestés",
+      "viewJob": "Voir le travail",
+      "reassign": "Réassigner",
+      "cancel": "Annuler"
+    },
+    "agents": {
+      "title": "Performance des agents",
+      "reliability": "Fiabilité",
+      "completed": "Travaux terminés",
+      "rating": "Note",
+      "suspend": "Suspendre",
+      "viewHistory": "Voir l'historique"
+    }
+  },
+  "analytics": {
+    "title": "Analyses",
+    "overview": {
+      "title": "Aperçu de la plateforme",
+      "totalUsers": "Total des utilisateurs",
+      "activeListings": "Annonces actives",
+      "totalRevenue": "Revenu total",
+      "growthRate": "Taux de croissance"
+    },
+    "users": {
+      "title": "Analyses des utilisateurs",
+      "signups": "Inscriptions",
+      "retention": "Taux de rétention",
+      "engagement": "Engagement",
+      "demographics": "Démographie"
+    },
+    "properties": {
+      "title": "Analyses des propriétés",
+      "listings": "Annonces",
+      "occupancyRate": "Taux d'occupation",
+      "averagePrice": "Prix moyen",
+      "popularAreas": "Zones populaires"
+    },
+    "revenue": {
+      "title": "Analyses de revenus",
+      "totalRevenue": "Revenu total",
+      "commission": "Commission",
+      "markingFees": "Frais de marquage",
+      "premiumSubs": "Abonnements premium"
+    },
+    "reports": {
+      "title": "Rapports",
+      "generate": "Générer un rapport",
+      "download": "Télécharger",
+      "schedule": "Planifier un rapport",
+      "types": {
+        "daily": "Quotidien",
+        "weekly": "Hebdomadaire",
+        "monthly": "Mensuel",
+        "custom": "Personnalisé"
+      }
+    }
+  },
+  "support": {
+    "title": "Tickets de support",
+    "open": "Ouverts",
+    "inProgress": "En cours",
+    "resolved": "Résolus",
+    "priority": {
+      "low": "Faible",
+      "medium": "Moyen",
+      "high": "Élevé",
+      "urgent": "Urgent"
+    },
+    "category": {
+      "technical": "Technique",
+      "billing": "Facturation",
+      "property": "Propriété",
+      "verification": "Vérification",
+      "general": "Général"
+    },
+    "actions": {
+      "view": "Voir",
+      "respond": "Répondre",
+      "resolve": "Résoudre",
+      "escalate": "Escalader",
+      "close": "Fermer"
+    }
+  },
+  "settings": {
+    "title": "Paramètres système",
+    "general": "Général",
+    "fees": "Frais et commissions",
+    "notifications": "Notifications",
+    "security": "Sécurité",
+    "integrations": "Intégrations",
+    "platformFee": "Frais de plateforme",
+    "markingFee": "Frais de marquage",
+    "agentCommission": "Commission d'agent"
+  },
+  "actions": {
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "suspend": "Suspendre",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "export": "Exporter",
+    "import": "Importer"
+  },
+  "notifications": {
+    "title": "Notifications administrateur",
+    "newUser": "Nouvel utilisateur inscrit",
+    "newProperty": "Nouvelle propriété soumise",
+    "paymentIssue": "Problème de paiement",
+    "disputeRaised": "Litige soulevé",
+    "markingJobIssue": "Problème de travail de marquage",
+    "fraudAlert": "Alerte de fraude"
+  }
+}
