@@ -1,0 +1,234 @@
+{
+  "auth": {
+    "email": {
+      "required": "Email na must",
+      "invalid": "Enter valid email address",
+      "exists": "Dis email don dey use already"
+    },
+    "phone": {
+      "required": "Phone number na must",
+      "invalid": "Enter valid 11-digit phone number",
+      "exists": "Dis phone number don dey use already",
+      "format": "Phone must start with 0 and get 11 digits"
+    },
+    "password": {
+      "required": "Password na must",
+      "minLength": "Password must be at least {{min}} characters",
+      "weak": "Password too weak. Add uppercase, number, and special character",
+      "mismatch": "Passwords no match",
+      "current": "Current password no correct"
+    },
+    "name": {
+      "required": "Full name na must",
+      "minLength": "Name must be at least {{min}} characters",
+      "maxLength": "Name too long (maximum {{max}} characters)",
+      "invalid": "Name fit only contain letters and spaces"
+    },
+    "otp": {
+      "required": "Enter verification code",
+      "invalid": "Code must be {{length}} digits",
+      "expired": "Code don expire",
+      "incorrect": "Code no correct"
+    },
+    "userType": {
+      "required": "Select who you be"
+    },
+    "dateOfBirth": {
+      "required": "Date of birth na must",
+      "invalid": "Date no valid",
+      "underage": "You must be at least 18 years old",
+      "future": "Date no fit dey for future"
+    }
+  },
+  "property": {
+    "title": {
+      "required": "Property title na must",
+      "minLength": "Title must be at least {{min}} characters",
+      "maxLength": "Title too long (maximum {{max}} characters)"
+    },
+    "description": {
+      "required": "Property description na must",
+      "minLength": "Description must be at least {{min}} characters",
+      "maxLength": "Description too long (maximum {{max}} characters)"
+    },
+    "price": {
+      "required": "Price na must",
+      "invalid": "Enter valid price amount",
+      "min": "Price must be at least ₦{{min}}",
+      "max": "Price must no pass ₦{{max}}"
+    },
+    "propertyType": {
+      "required": "Select property type"
+    },
+    "address": {
+      "required": "Address na must",
+      "minLength": "Address too short"
+    },
+    "city": {
+      "required": "Select city"
+    },
+    "state": {
+      "required": "Select state"
+    },
+    "lga": {
+      "required": "Select LGA"
+    },
+    "bedrooms": {
+      "required": "Enter number of bedrooms",
+      "min": "Minimum na {{min}} bedroom",
+      "max": "Maximum na {{max}} bedrooms"
+    },
+    "bathrooms": {
+      "required": "Enter number of bathrooms",
+      "min": "Minimum na {{min}} bathroom",
+      "max": "Maximum na {{max}} bathrooms"
+    },
+    "area": {
+      "invalid": "Area size no valid (e.g., 120 sqm)"
+    },
+    "images": {
+      "required": "Upload at least {{min}} images",
+      "max": "Maximum na {{max}} images",
+      "size": "Image size must no pass {{max}}MB",
+      "type": "Only JPG, PNG, and WebP images dey allowed"
+    },
+    "structure": {
+      "required": "Select property structure"
+    },
+    "totalUnits": {
+      "required": "Enter total number of units",
+      "min": "Minimum na {{min}} units",
+      "max": "Maximum na {{max}} units"
+    },
+    "unitNumber": {
+      "required": "Unit number na must",
+      "duplicate": "Dis unit number don exist already"
+    },
+    "boundary": {
+      "required": "Mark property boundary",
+      "invalid": "Boundary no valid",
+      "tooSmall": "Boundary too small (minimum {{min}} sqm)",
+      "tooLarge": "Boundary too big (maximum {{max}} sqm)",
+      "overlap": "Boundary dey overlap with another property"
+    },
+    "documents": {
+      "ownership": "Upload ownership document",
+      "consent": "Upload consent document (for agents)",
+      "size": "Document size must no pass {{max}}MB",
+      "type": "Only PDF, JPG, and PNG dey allowed"
+    },
+    "terms": {
+      "required": "Accept terms and conditions"
+    }
+  },
+  "payment": {
+    "amount": {
+      "required": "Enter payment amount",
+      "invalid": "Amount no valid",
+      "min": "Minimum payment na ₦{{min}}",
+      "max": "Maximum payment na ₦{{max}}"
+    },
+    "bankAccount": {
+      "required": "Select bank account"
+    },
+    "accountNumber": {
+      "required": "Enter account number",
+      "invalid": "Account number must be 10 digits",
+      "verification": "Account number no verify"
+    },
+    "bankName": {
+      "required": "Select bank"
+    },
+    "confirmation": {
+      "required": "Confirm say you don check the property"
+    },
+    "terms": {
+      "required": "Accept payment terms"
+    }
+  },
+  "marking": {
+    "contactName": {
+      "required": "Contact person name na must",
+      "minLength": "Name too short"
+    },
+    "contactPhone": {
+      "required": "Contact phone number na must",
+      "invalid": "Enter valid 11-digit phone number"
+    },
+    "accessInstructions": {
+      "maxLength": "Instructions too long (maximum {{max}} characters)"
+    },
+    "preferredTime": {
+      "invalid": "Select valid date and time",
+      "past": "Time no fit dey for past"
+    },
+    "urgency": {
+      "required": "Select urgency level"
+    },
+    "photos": {
+      "required": "Upload at least {{min}} photos",
+      "max": "Maximum na {{max}} photos",
+      "size": "Photo size must no pass {{max}}MB"
+    },
+    "boundary": {
+      "required": "Draw property boundary",
+      "invalid": "Boundary no valid"
+    },
+    "notes": {
+      "maxLength": "Notes too long (maximum {{max}} characters)"
+    }
+  },
+  "referral": {
+    "code": {
+      "required": "Enter referral code",
+      "invalid": "Referral code no valid",
+      "notFound": "Referral code no exist"
+    }
+  },
+  "profile": {
+    "address": {
+      "minLength": "Address too short"
+    },
+    "city": {
+      "required": "Select city"
+    },
+    "state": {
+      "required": "Select state"
+    },
+    "companyName": {
+      "required": "Company name na must (for property managers)"
+    },
+    "businessRegNumber": {
+      "required": "Business registration number na must",
+      "invalid": "Registration number no valid"
+    }
+  },
+  "support": {
+    "title": {
+      "required": "Ticket title na must",
+      "minLength": "Title too short",
+      "maxLength": "Title too long"
+    },
+    "description": {
+      "required": "Description na must",
+      "minLength": "Description too short (minimum {{min}} characters)",
+      "maxLength": "Description too long (maximum {{max}} characters)"
+    },
+    "category": {
+      "required": "Select category"
+    }
+  },
+  "admin": {
+    "rejectionReason": {
+      "required": "Rejection reason na must",
+      "minLength": "Reason too short"
+    },
+    "resolutionNotes": {
+      "required": "Resolution notes na must"
+    },
+    "response": {
+      "required": "Response na must",
+      "minLength": "Response too short"
+    }
+  }
+}

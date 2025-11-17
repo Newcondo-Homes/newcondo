@@ -126,4 +126,62 @@
     "tooLarge": "File too big. Maximum size na {{max}}MB.",
     "invalidType": "File type no dey supported. Use {{types}}.",
     "tooMany": "Too many files. Maximum na {{max}} files.",
-    "networkError": "Network
+    "networkError": "Network error during upload. Try again.",
+    "serverError": "Server error. Try upload again later.",
+    "corruptFile": "File don corrupt. Use another file.",
+    "virusDetected": "File contain malicious content. Upload rejected."
+  },
+  "validation": {
+    "required": "Dis field na must.",
+    "invalidEmail": "Enter valid email address.",
+    "invalidPhone": "Enter valid phone number (11 digits).",
+    "invalidUrl": "Enter valid URL.",
+    "minLength": "Minimum length na {{min}} characters.",
+    "maxLength": "Maximum length na {{max}} characters.",
+    "minValue": "Minimum value na {{min}}.",
+    "maxValue": "Maximum value na {{max}}.",
+    "invalidFormat": "Format no correct.",
+    "invalidDate": "Date no valid.",
+    "futureDate": "Date must be for future.",
+    "pastDate": "Date must be for past.",
+    "invalidNumber": "Enter valid number.",
+    "invalidPrice": "Enter valid price amount.",
+    "invalidCoordinates": "GPS coordinates no valid.",
+    "passwordTooShort": "Password must be at least {{min}} characters.",
+    "passwordTooWeak": "Password too weak. Add uppercase, lowercase, number, and special character.",
+    "termsNotAccepted": "You must accept terms and conditions.",
+    "invalidSelection": "Selection no valid."
+  },
+  "admin": {
+    "accessDenied": "Admin access denied.",
+    "invalidAction": "Invalid admin action.",
+    "userNotFound": "User no dey found.",
+    "propertyNotFound": "Property no dey found.",
+    "approvalFailed": "Approval action fail.",
+    "rejectionFailed": "Rejection action fail.",
+    "disputeNotFound": "Dispute no dey found.",
+    "ticketNotFound": "Support ticket no dey found.",
+    "settingsUpdateFailed": "Settings update fail.",
+    "reportGenerationFailed": "Report generation fail.",
+    "invalidDateRange": "Date range no valid."
+  },
+  "notifications": {
+    "sendFailed": "Notification sending fail.",
+    "invalidRecipient": "Recipient no valid.",
+    "templateNotFound": "Notification template no dey found.",
+    "deliveryFailed": "Notification delivery fail.",
+    "smsFailed": "SMS sending fail. Check phone number.",
+    "emailFailed": "Email sending fail. Check email address.",
+    "pushFailed": "Push notification fail."
+  },
+  "virtualAccount": {
+    "creationFailed": "Virtual account creation fail.",
+    "notFound": "Virtual account no dey found.",
+    "insufficientBalance": "Account balance no reach.",
+    "withdrawalFailed": "Withdrawal no successful.",
+    "transferFailed": "Transfer no successful.",
+    "accountLocked": "Account don lock temporarily.",
+    "invalidTransaction": "Transaction no valid.",
+    "duplicateAccount": "Virtual account don exist already."
+  }
+}
