@@ -1,0 +1,72 @@
+{
+  "name": "@newcondo/i18n",
+  "version": "0.1.0",
+  "description": "Shared internationalization package for Newcondo monorepo",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./config": {
+      "require": "./dist/config/index.js",
+      "import": "./dist/config/index.mjs",
+      "types": "./dist/config/index.d.ts"
+    },
+    "./hooks": {
+      "require": "./dist/hooks/index.js",
+      "import": "./dist/hooks/index.mjs",
+      "types": "./dist/hooks/index.d.ts"
+    },
+    "./middleware": {
+      "require": "./dist/middleware/index.js",
+      "import": "./dist/middleware/index.mjs",
+      "types": "./dist/middleware/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src/",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "i18next": "^23.7.11",
+    "react-i18next": "^14.0.0",
+    "i18next-http-backend": "^2.4.2",
+    "i18next-browser-languagedetector": "^7.2.0",
+    "accept-language-parser": "^1.5.0",
+    "date-fns": "^3.0.6",
+    "date-fns-tz": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/accept-language-parser": "^1.5.6",
+    "@types/node": "^20.10.6",
+    "@types/react": "^18.2.46",
+    "typescript": "^5.3.3",
+    "tsup": "^8.0.1",
+    "eslint": "^8.56.0"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "next": "^15.0.0"
+  },
+  "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    }
+  },
+  "keywords": [
+    "i18n",
+    "internationalization",
+    "localization",
+    "translation",
+    "newcondo"
+  ],
+  "author": "Newcondo Team",
+  "license": "MIT"
+}

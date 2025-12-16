@@ -59,12 +59,21 @@ model User {
   completedMarkingJobs  Int      @default(0)
 
   // Relations
-  accounts             Account[]
-  sessions             Session[]
-  properties           Property[]           @relation("PropertyOwner")
-  agentListings        Property[]           @relation("PropertyAgent")
-  referrals            Referral[]           @relation("Referrer")
-  referredBy           Referral?            @relation("Referred")
+  accounts      Account[]
+  sessions      Session[]
+  properties    Property[] @relation("PropertyOwner")
+  agentListings Property[] @relation("PropertyAgent")
+
+  // User Referral System
+  referrals  Referral[]       @relation("Referrer")
+  referredBy Referral?        @relation("Referred")
+  rewards    ReferralReward[] @relation("UserRewards")
+
+  // Agent Referral System
+  agentReferrals     AgentReferral[]    @relation("AgentReferrals")
+  promotionRequests  PromotionRequest[] @relation("PromotionRequester")
+  ownedPromotionReqs PromotionRequest[] @relation("PromotionOwner")
+
   authenticator        Authenticator[]
   featureFlags         FeatureFlag[]
   events               EventLog[]           @relation("UserEvents")
@@ -87,6 +96,7 @@ model User {
   @@index([role])
   @@index([userType])
   @@index([isAvailableForMarking])
+  @@index([referralCode])
 }
 
 enum Role {
@@ -94,12 +104,6 @@ enum Role {
   AGENT
   RENTER
   ADMIN
-}
-
-enum VerificationStatus {
-  PENDING
-  VERIFIED
-  REJECTED
 }
 
 enum IdDocumentType {
@@ -302,6 +306,11 @@ model Property {
   virtualAccount   VirtualAccount?
   documents        Document[] // Property-specific documents
 
+  // Agent Referral System
+  agentReferrals    AgentReferral[]            @relation("PropertyReferrals")
+  promotionRequests PromotionRequest[]         @relation("PromotionRequests")
+  promotionSettings PropertyPromotionSettings?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -367,21 +376,20 @@ model PropertyUnit {
   @@index([floor])
 }
 
-
 model PaymentAttemptLog {
-  id         String   @id @default(cuid())
-  userId     String
-  propertyId String
-  unitId     String?
-  amount     Decimal  @db.Decimal(10, 2)
-  status     String   // "LOCKED", "SUCCESS", "FAILED", "TIMEOUT"
+  id            String   @id @default(cuid())
+  userId        String
+  propertyId    String
+  unitId        String?
+  amount        Decimal  @db.Decimal(10, 2)
+  status        String // "LOCKED", "SUCCESS", "FAILED", "TIMEOUT"
   failureReason String?
-  lockAcquired Boolean @default(false)
-  lockDuration Int?    // milliseconds
-  ipAddress  String?
-  userAgent  String?
-  createdAt  DateTime @default(now())
-  
+  lockAcquired  Boolean  @default(false)
+  lockDuration  Int? // milliseconds
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
   @@index([userId])
   @@index([propertyId])
   @@index([status])
@@ -616,13 +624,6 @@ model Rental {
   @@index([confirmationDeadline])
 }
 
-enum RentalStatus {
-  ACTIVE
-  EXPIRED
-  TERMINATED
-  PENDING_CONFIRMATION
-}
-
 model Payment {
   id           String  @id @default(cuid())
   userId       String
@@ -659,8 +660,12 @@ model Payment {
   user   User    @relation(fields: [userId], references: [id])
   rental Rental? @relation(fields: [rentalId], references: [id])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // Agent Referral System
+  agentReferralConversion AgentReferralConversion?
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  referralConversion ReferralConversion?
 
   @@index([userId])
   @@index([rentalId])
@@ -723,17 +728,40 @@ model Referral {
 
   // Referral tracking
   referralCode String
-  isActive     Boolean  @default(true)
-  reward       Decimal? @db.Decimal(10, 2)
-  rewardPaid   Boolean  @default(false)
+  referralType ReferralType?
+  isActive     Boolean       @default(true)
 
-  referrer User @relation("Referrer", fields: [referrerId], references: [id])
-  referred User @relation("Referred", fields: [referredId], references: [id])
+  status           ReferralStatus @default(PENDING)
+  qualificationMet Boolean        @default(false)
+  qualifiedAt      DateTime?
+
+  // Rewards (backward compatible + enhanced)
+  reward         Decimal?    @db.Decimal(10, 2)
+  referrerReward Decimal?    @db.Decimal(10, 2)
+  referredReward Decimal?    @db.Decimal(10, 2)
+  rewardType     RewardType? @default(SERVICE_CREDIT)
+
+  rewardPaid           Boolean   @default(false)
+  referrerRewardPaid   Boolean   @default(false)
+  referredRewardPaid   Boolean   @default(false)
+  referrerRewardPaidAt DateTime?
+  referredRewardPaidAt DateTime?
+
+  clickCount   Int     @default(0)
+  shareChannel String?
+
+  referrer User             @relation("Referrer", fields: [referrerId], references: [id])
+  referred User             @relation("Referred", fields: [referredId], references: [id])
+  rewards  ReferralReward[]
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([referrerId])
   @@index([referralCode])
+  @@index([status])
+  @@index([qualificationMet])
+  @@index([referralType])
 }
 
 model EventLog {
@@ -869,6 +897,240 @@ model AdminAction {
   @@index([targetType, targetId])
 }
 
+// Add these models to your Prisma schema (packages/db/prisma/schema.prisma)
+
+// Agent Referral Tracking
+model AgentReferral {
+  id         String @id @default(cuid())
+  agentId    String // Sub-agent or listing agent
+  propertyId String
+
+  // Referral link
+  referralCode String @unique
+  referralLink String
+
+  // Tracking metrics
+  // clicks        Int     @default(0)
+  uniqueClicks  Int     @default(0)
+  // conversions   Int     @default(0) // Successful payments
+  totalEarnings Decimal @default(0) @db.Decimal(15, 2)
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Relations
+  agent       User                      @relation("AgentReferrals", fields: [agentId], references: [id])
+  property    Property                  @relation("PropertyReferrals", fields: [propertyId], references: [id])
+  // referralClicks      ReferralClick[]
+  // referralConversions ReferralConversion[]
+  clicks      AgentReferralClick[]
+  conversions AgentReferralConversion[]
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  referralClicks      ReferralClick[]
+  referralConversions ReferralConversion[]
+
+  @@unique([agentId, propertyId])
+  @@index([agentId])
+  @@index([propertyId])
+  @@index([referralCode])
+  @@index([isActive])
+}
+
+model AgentReferralClick {
+  id         String @id @default(cuid())
+  referralId String
+
+  ipAddress   String?
+  userAgent   String?
+  referrerUrl String?
+
+  country String?
+  city    String?
+
+  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([referralId])
+  @@index([createdAt])
+  @@index([ipAddress])
+}
+
+model AgentReferralConversion {
+  id         String @id @default(cuid())
+  referralId String
+  paymentId  String @unique
+
+  amount     Decimal @db.Decimal(10, 2)
+  commission Decimal @db.Decimal(10, 2)
+
+  isPaid Boolean   @default(false)
+  paidAt DateTime?
+
+  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  payment  Payment       @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([referralId])
+  @@index([paymentId])
+  @@index([createdAt])
+  @@index([isPaid])
+}
+
+// Referral Click Tracking
+model ReferralClick {
+  id String @id @default(cuid())
+
+  referralCode String
+  referrerId   String?
+  // referralId   String
+
+  // Click details
+  ipAddress   String?
+  userAgent   String?
+  referrerUrl String?
+  landingPage String?
+
+  // Geolocation (optional)
+  country String?
+  city    String?
+
+  convertedToSignup Boolean   @default(false)
+  convertedUserId   String?
+  convertedAt       DateTime?
+
+  sessionId String?
+  // Relations
+  referral  AgentReferral @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([referralCode])
+  @@index([referrerId])
+  @@index([convertedUserId])
+  @@index([createdAt])
+  @@index([sessionId])
+  @@index([ipAddress])
+}
+
+model ReferralReward {
+  id String @id @default(cuid())
+
+  userId     String
+  referralId String?
+
+  rewardType  RewardType
+  amount      Decimal    @db.Decimal(10, 2)
+  description String
+
+  status     RewardStatus @default(PENDING)
+  isRedeemed Boolean      @default(false)
+  redeemedAt DateTime?
+  expiresAt  DateTime?
+
+  isPaidOut       Boolean   @default(false)
+  paidOutAt       DateTime?
+  payoutReference String?
+
+  metadata Json?
+
+  user     User      @relation("UserRewards", fields: [userId], references: [id])
+  referral Referral? @relation(fields: [referralId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([referralId])
+  @@index([status])
+  @@index([isRedeemed])
+  @@index([isPaidOut])
+  @@index([expiresAt])
+}
+
+// Referral Conversion Tracking
+model ReferralConversion {
+  id         String @id @default(cuid())
+  referralId String
+  paymentId  String @unique
+
+  // Conversion details
+  amount     Decimal @db.Decimal(10, 2)
+  commission Decimal @db.Decimal(10, 2) // Agent's commission from this conversion
+
+  // Status
+  isPaid Boolean   @default(false)
+  paidAt DateTime?
+
+  // Relations
+  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
+  payment  Payment       @relation(fields: [paymentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([referralId])
+  @@index([paymentId])
+  @@index([createdAt])
+}
+
+// Sub-Agent Promotion Requests
+model PromotionRequest {
+  id         String @id @default(cuid())
+  agentId    String // Agent requesting to promote
+  propertyId String
+  ownerId    String // Property owner or listing agent
+
+  // Request details
+  message String?
+  status  PromotionRequestStatus @default(PENDING)
+
+  // Response
+  rejectionReason String?
+  respondedAt     DateTime?
+  respondedBy     String? // User ID who responded
+
+  // Relations
+  agent    User     @relation("PromotionRequester", fields: [agentId], references: [id])
+  property Property @relation("PromotionRequests", fields: [propertyId], references: [id])
+  owner    User     @relation("PromotionOwner", fields: [ownerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([agentId, propertyId])
+  @@index([agentId])
+  @@index([propertyId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+// Property Promotion Settings
+model PropertyPromotionSettings {
+  id         String @id @default(cuid())
+  propertyId String @unique
+
+  // Promotion type
+  promotionType PropertyPromotionType @default(RESTRICTED)
+
+  // Settings
+  allowPublicSharing Boolean @default(false)
+  requireApproval    Boolean @default(true)
+  autoApproveAgents  Boolean @default(false)
+  maxSubAgents       Int? // Optional limit on number of sub-agents
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([promotionType])
+}
+
 enum AdminActionType {
   USER_VERIFIED
   USER_REJECTED
@@ -881,122 +1143,11 @@ enum AdminActionType {
   AGENT_SUSPENDED
 }
 
-
-
-// Add these models to your Prisma schema (packages/db/prisma/schema.prisma)
-
-// Agent Referral Tracking
-model AgentReferral {
-  id         String   @id @default(cuid())
-  agentId    String   // Sub-agent or listing agent
-  propertyId String
-  
-  // Referral link
-  referralCode String   @unique
-  referralLink String
-  
-  // Tracking metrics
-  clicks       Int      @default(0)
-  uniqueClicks Int      @default(0)
-  conversions  Int      @default(0) // Successful payments
-  totalEarnings Decimal @default(0) @db.Decimal(15, 2)
-  
-  // Status
-  isActive     Boolean  @default(true)
-  
-  // Relations
-  agent    User     @relation("AgentReferrals", fields: [agentId], references: [id])
-  property Property @relation("PropertyReferrals", fields: [propertyId], references: [id])
-  referralClicks   ReferralClick[]
-  referralConversions ReferralConversion[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([agentId, propertyId])
-  @@index([agentId])
-  @@index([propertyId])
-  @@index([referralCode])
-}
-
-// Referral Click Tracking
-model ReferralClick {
-  id            String   @id @default(cuid())
-  referralId    String
-  
-  // Click details
-  ipAddress     String?
-  userAgent     String?
-  referrerUrl   String?
-  
-  // Geolocation (optional)
-  country       String?
-  city          String?
-  
-  // Relations
-  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  
-  @@index([referralId])
-  @@index([createdAt])
-  @@index([ipAddress])
-}
-
-// Referral Conversion Tracking
-model ReferralConversion {
-  id            String   @id @default(cuid())
-  referralId    String
-  paymentId     String   @unique
-  
-  // Conversion details
-  amount        Decimal  @db.Decimal(10, 2)
-  commission    Decimal  @db.Decimal(10, 2) // Agent's commission from this conversion
-  
-  // Status
-  isPaid        Boolean  @default(false)
-  paidAt        DateTime?
-  
-  // Relations
-  referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  payment  Payment       @relation(fields: [paymentId], references: [id])
-  
-  createdAt DateTime @default(now())
-  
-  @@index([referralId])
-  @@index([paymentId])
-  @@index([createdAt])
-}
-
-// Sub-Agent Promotion Requests
-model PromotionRequest {
-  id         String   @id @default(cuid())
-  agentId    String   // Agent requesting to promote
-  propertyId String
-  ownerId    String   // Property owner or listing agent
-  
-  // Request details
-  message    String?
-  status     PromotionRequestStatus @default(PENDING)
-  
-  // Response
-  rejectionReason String?
-  respondedAt     DateTime?
-  respondedBy     String? // User ID who responded
-  
-  // Relations
-  agent    User     @relation("PromotionRequester", fields: [agentId], references: [id])
-  property Property @relation("PromotionRequests", fields: [propertyId], references: [id])
-  owner    User     @relation("PromotionOwner", fields: [ownerId], references: [id])
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@unique([agentId, propertyId])
-  @@index([agentId])
-  @@index([propertyId])
-  @@index([ownerId])
-  @@index([status])
+enum PropertyPromotionType {
+  PUBLIC // Anyone can share with 'share' button
+  PERMISSION_BASED // Agents must request and get approved
+  RESTRICTED // No external promotion allowed
+  REQUEST_BASED // Only specific requested agents
 }
 
 enum PromotionRequestStatus {
@@ -1005,47 +1156,59 @@ enum PromotionRequestStatus {
   REJECTED
 }
 
-// Property Promotion Settings
-model PropertyPromotionSettings {
-  id         String   @id @default(cuid())
-  propertyId String   @unique
-  
-  // Promotion type
-  promotionType PropertyPromotionType @default(RESTRICTED)
-  
-  // Settings
-  allowPublicSharing      Boolean @default(false)
-  requireApproval         Boolean @default(true)
-  autoApproveAgents       Boolean @default(false)
-  maxSubAgents            Int?    // Optional limit on number of sub-agents
-  
-  // Relations
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  @@index([propertyId])
+enum ReferralType {
+  OWNER_TO_OWNER
+  OWNER_TO_AGENT
+  OWNER_TO_RENTER
+  AGENT_TO_OWNER
+  AGENT_TO_AGENT
+  AGENT_TO_RENTER
+  RENTER_TO_RENTER
 }
 
-enum PropertyPromotionType {
-  PUBLIC              // Anyone can share with 'share' button
-  PERMISSION_BASED    // Agents must request and get approved
-  RESTRICTED          // No external promotion allowed
-  REQUEST_BASED       // Only specific requested agents
+enum ReferralStatus {
+  PENDING
+  QUALIFIED
+  REWARDED
+  EXPIRED
+  CANCELLED
 }
 
-// Update User model to add these relations
-// Add these to the User model relations:
-// agentReferrals       AgentReferral[]      @relation("AgentReferrals")
-// promotionRequests    PromotionRequest[]   @relation("PromotionRequester")
-// ownedPromotionReqs   PromotionRequest[]   @relation("PromotionOwner")
+enum RewardType {
+  SERVICE_CREDIT
+  SUBSCRIPTION_DISCOUNT
+  RENT_CREDIT
+  COMMISSION_CREDIT
+  MAINTENANCE_VOUCHER
+  CASH_REWARD
+}
 
-// Update Property model to add these relations
-// Add these to the Property model relations:
-// referrals            AgentReferral[]      @relation("PropertyReferrals")
-// promotionRequests    PromotionRequest[]   @relation("PromotionRequests")
-// promotionSettings    PropertyPromotionSettings?
+enum RewardStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum RentalStatus {
+  ACTIVE
+  EXPIRED
+  TERMINATED
+  PENDING_CONFIRMATION
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+// ============================================================================
+// EXISTING MODELS (keeping all other models as they were)
+// ============================================================================
+
+// ... [Keep all other existing models like Account, Document, Session, etc.]
+// ... [I'm omitting them here for brevity, but they remain unchanged]
 
 // Update Payment model to add this relation
 // Add this to the Payment model relations:
