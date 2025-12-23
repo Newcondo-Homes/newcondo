@@ -1,0 +1,330 @@
+<!-- backend/notification-service/src/templates/reward-redeemed.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reward Redeemed Successfully</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .success-icon {
+            font-size: 72px;
+            margin: 20px 0;
+        }
+        .title {
+            font-size: 26px;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .success-card {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+        }
+        .redemption-amount {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+        .redemption-method {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .details-section {
+            background-color: #f9fafb;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            color: #6b7280;
+        }
+        .detail-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .timeline {
+            margin: 30px 0;
+        }
+        .timeline-item {
+            display: flex;
+            align-items: start;
+            margin: 20px 0;
+            position: relative;
+            padding-left: 40px;
+        }
+        .timeline-icon {
+            position: absolute;
+            left: 0;
+            width: 30px;
+            height: 30px;
+            background-color: #10b981;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .timeline-description {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏠 NewCondo</div>
+            <div class="success-icon">✅</div>
+            <h1 class="title">Redemption Successful!</h1>
+            <p style="color: #6b7280; font-size: 16px;">Your reward has been redeemed</p>
+        </div>
+
+        <div class="content">
+            <p>Hi {{userName}},</p>
+            
+            <div class="status-badge">
+                ✓ Successfully Redeemed
+            </div>
+
+            <p>
+                Your reward redemption has been processed successfully.
+            </p>
+
+            <div class="success-card">
+                <div style="font-size: 16px; opacity: 0.9;">Amount Redeemed</div>
+                <div class="redemption-amount">₦{{redemptionAmount}}</div>
+                <div class="redemption-method">via {{redemptionMethod}}</div>
+            </div>
+
+            <div class="details-section">
+                <h3 style="margin-top: 0;">Redemption Details</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Transaction ID</span>
+                    <span class="detail-value">{{transactionId}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Redemption Date</span>
+                    <span class="detail-value">{{redemptionDate}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Processing Time</span>
+                    <span class="detail-value">{{processingTime}}</span>
+                </div>
+                
+                {{#if bankDetails}}
+                <div class="detail-row">
+                    <span class="detail-label">Bank Account</span>
+                    <span class="detail-value">{{bankDetails}}</span>
+                </div>
+                {{/if}}
+                
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value" style="color: #10b981;">{{status}}</span>
+                </div>
+            </div>
+
+            {{#if isBankTransfer}}
+            <div class="info-box">
+                <strong>💳 Bank Transfer</strong><br>
+                {{bankTransferMessage}}
+            </div>
+
+            <div class="timeline">
+                <h3>What happens next?</h3>
+                
+                <div class="timeline-item">
+                    <div class="timeline-icon">✓</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Redemption Initiated</div>
+                        <div class="timeline-description">
+                            Your redemption request has been received and verified
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-icon">2</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Processing Payment</div>
+                        <div class="timeline-description">
+                            Your payout is being processed by our payment provider
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-icon">3</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">Funds Transferred</div>
+                        <div class="timeline-description">
+                            You'll receive the funds in your bank account within {{expectedArrival}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{/if}}
+
+            {{#if isCredit}}
+            <div class="info-box">
+                <strong>💰 Account Credit</strong><br>
+                ₦{{redemptionAmount}} has been added to your NewCondo account balance and is available for immediate use.
+            </div>
+            {{/if}}
+
+            <div class="details-section">
+                <h3 style="margin-top: 0;">Your Updated Balance</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Previous Balance</span>
+                    <span class="detail-value">₦{{previousBalance}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Amount Redeemed</span>
+                    <span class="detail-value" style="color: #ef4444;">-₦{{redemptionAmount}}</span>
+                </div>
+                
+                <div class="detail-row" style="padding-top: 15px; margin-top: 15px; border-top: 2px solid #e5e7eb;">
+                    <span class="detail-label" style="font-weight: 600; color: #1f2937;">
+                        Remaining Balance
+                    </span>
+                    <span class="detail-value" style="font-size: 24px; color: #10b981;">
+                        ₦{{remainingBalance}}
+                    </span>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{transactionHistoryLink}}" class="cta-button">
+                    View Transaction History
+                </a>
+            </div>
+
+            <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #10b981;">
+                <h4 style="margin-top: 0; color: #047857;">💡 Keep Earning!</h4>
+                <p style="margin-bottom: 0;">
+                    Continue referring friends to earn more rewards. 
+                    <a href="{{shareLink}}" style="color: #2563eb; text-decoration: none; font-weight: 600;">
+                        Share your referral link →
+                    </a>
+                </p>
+            </div>
+
+            <div class="info-box">
+                <strong>📧 Need Help?</strong><br>
+                If you have any questions about your redemption, please contact our support team at 
+                <a href="mailto:{{supportEmail}}" style="color: #2563eb; text-decoration: none;">
+                    {{supportEmail}}
+                </a> or reference your Transaction ID: <strong>{{transactionId}}</strong>
+            </div>
+
+            <p style="margin-top: 30px;">
+                Thank you for being a valued member of NewCondo!
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>Transaction ID:</strong> {{transactionId}}<br>
+                <strong>Processed On:</strong> {{processedDate}}
+            </p>
+            <p>
+                NewCondo - Making Property Management Simple<br>
+                © {{currentYear}} NewCondo. All rights reserved.
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="{{unsubscribeLink}}" style="color: #6b7280; text-decoration: none;">
+                    Unsubscribe from emails
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

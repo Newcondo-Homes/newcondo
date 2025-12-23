@@ -897,8 +897,6 @@ model AdminAction {
   @@index([targetType, targetId])
 }
 
-// Add these models to your Prisma schema (packages/db/prisma/schema.prisma)
-
 // Agent Referral Tracking
 model AgentReferral {
   id         String @id @default(cuid())
@@ -1210,6 +1208,3 @@ enum VerificationStatus {
 // ... [Keep all other existing models like Account, Document, Session, etc.]
 // ... [I'm omitting them here for brevity, but they remain unchanged]
 
-// Update Payment model to add this relation
-// Add this to the Payment model relations:
-// referralConversion   ReferralConversion?

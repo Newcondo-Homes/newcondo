@@ -1,0 +1,316 @@
+<!-- backend/notification-service/src/templates/referral-qualified.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Referral Qualified!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .celebration {
+            font-size: 80px;
+            margin: 20px 0;
+            animation: bounce 1s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .title {
+            font-size: 28px;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #6b7280;
+        }
+        .reward-card {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        .reward-label {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        .reward-amount {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 15px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .reward-type {
+            font-size: 18px;
+            opacity: 0.95;
+            margin-top: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .details-section {
+            background-color: #f9fafb;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            color: #6b7280;
+        }
+        .detail-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .secondary-button {
+            display: inline-block;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            padding: 16px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .success-box {
+            background-color: #f0fdf4;
+            border-left: 4px solid #10b981;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .tier-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .tier-badge {
+            font-size: 32px;
+            margin: 10px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏠 NewCondo</div>
+            <div class="celebration">🎊</div>
+            <h1 class="title">Congratulations!</h1>
+            <p class="subtitle">Your referral has qualified</p>
+        </div>
+
+        <div class="content">
+            <p>Hi {{referrerName}},</p>
+            
+            <div class="status-badge">
+                ✓ Referral Qualified
+            </div>
+
+            <p>
+                <strong>{{referredName}}</strong> has completed all the required steps, 
+                and your referral is now qualified for rewards!
+            </p>
+
+            <div class="reward-card">
+                <div class="reward-label">Your Reward</div>
+                <div class="reward-amount">₦{{rewardAmount}}</div>
+                <div class="reward-type">{{rewardType}}</div>
+            </div>
+
+            <div class="success-box">
+                <strong>✅ Reward Status: {{rewardStatus}}</strong><br>
+                {{#if isPending}}
+                Your reward will be processed within 24-48 hours and added to your account balance.
+                {{else}}
+                Your reward has been added to your account and is ready to use!
+                {{/if}}
+            </div>
+
+            <div class="details-section">
+                <h3 style="margin-top: 0;">Referral Details</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Referred User</span>
+                    <span class="detail-value">{{referredName}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">User Type</span>
+                    <span class="detail-value">{{referredRole}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Qualified On</span>
+                    <span class="detail-value">{{qualifiedDate}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Referral Type</span>
+                    <span class="detail-value">{{referralType}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Your Total Earnings</span>
+                    <span class="detail-value">₦{{totalEarnings}}</span>
+                </div>
+            </div>
+
+            {{#if tierUpgrade}}
+            <div class="tier-info">
+                <div style="font-size: 18px; opacity: 0.9;">🎉 Tier Upgraded!</div>
+                <div class="tier-badge">{{newTierBadge}}</div>
+                <div style="font-size: 24px; font-weight: bold; margin: 10px 0;">
+                    {{newTierName}}
+                </div>
+                <div style="font-size: 14px; opacity: 0.9;">
+                    You now earn {{bonusMultiplier}}x rewards on all referrals!
+                </div>
+            </div>
+            {{/if}}
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{dashboardLink}}" class="cta-button">
+                    View Your Dashboard
+                </a>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{redeemLink}}" class="secondary-button">
+                    Redeem Rewards
+                </a>
+                <a href="{{shareLink}}" class="secondary-button">
+                    Refer More Friends
+                </a>
+            </div>
+
+            {{#if nextMilestone}}
+            <div class="info-box">
+                <strong>🎯 Next Milestone</strong><br>
+                Refer {{nextMilestoneCount}} more people to unlock the 
+                <strong>{{nextMilestoneName}}</strong> milestone and earn an extra 
+                <strong>₦{{nextMilestoneReward}}</strong>!
+            </div>
+            {{/if}}
+
+            <div class="details-section">
+                <h3 style="margin-top: 0;">Your Referral Stats</h3>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Total Referrals</span>
+                    <span class="detail-value">{{totalReferrals}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Qualified Referrals</span>
+                    <span class="detail-value">{{qualifiedReferrals}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Pending Referrals</span>
+                    <span class="detail-value">{{pendingReferrals}}</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Conversion Rate</span>
+                    <span class="detail-value">{{conversionRate}}%</span>
+                </div>
+            </div>
+
+            <p style="margin-top: 30px;">
+                Keep up the great work! Every successful referral brings you closer to 
+                exclusive rewards and higher tier benefits.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>Your Referral Code:</strong> {{referralCode}}<br>
+                <strong>Current Tier:</strong> {{currentTier}}
+            </p>
+            <p>
+                NewCondo - Making Property Management Simple<br>
+                © {{currentYear}} NewCondo. All rights reserved.
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="{{unsubscribeLink}}" style="color: #6b7280; text-decoration: none;">
+                    Unsubscribe from emails
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

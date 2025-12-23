@@ -1,0 +1,265 @@
+<!-- backend/notification-service/src/templates/referral-signup.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Great News! Someone Joined Using Your Referral</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .celebration-icon {
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        .title {
+            font-size: 24px;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 25px 0;
+        }
+        .user-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .progress-section {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+        }
+        .progress-label {
+            font-weight: 500;
+        }
+        .progress-value {
+            font-weight: bold;
+            color: #2563eb;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 15px 40px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .next-steps {
+            margin: 30px 0;
+        }
+        .step {
+            display: flex;
+            align-items: start;
+            margin: 20px 0;
+        }
+        .step-number {
+            background-color: #2563eb;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏠 NewCondo</div>
+            <div class="celebration-icon">🎉</div>
+            <h1 class="title">Someone Joined Using Your Link!</h1>
+        </div>
+
+        <div class="content">
+            <p>Hi {{referrerName}},</p>
+            
+            <p>
+                Great news! Someone has signed up to NewCondo using your referral link.
+            </p>
+
+            <div class="highlight-box">
+                <div style="font-size: 16px; opacity: 0.9;">New Referral</div>
+                <div class="user-name">{{referredName}}</div>
+                <div style="font-size: 14px; opacity: 0.9; margin: 5px 0;">
+                    {{referredRole}} • Joined {{joinedDate}}
+                </div>
+                <div class="status-badge">
+                    ⏳ Pending Qualification
+                </div>
+            </div>
+
+            <div class="info-box">
+                <strong>💡 What happens next?</strong><br>
+                Your referral needs to complete their qualification steps to unlock rewards for both of you.
+            </div>
+
+            <div class="next-steps">
+                <h3>Qualification Steps for {{referredName}}:</h3>
+                
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <strong>{{qualificationStep1Title}}</strong><br>
+                        <span style="color: #6b7280;">{{qualificationStep1Description}}</span>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <strong>{{qualificationStep2Title}}</strong><br>
+                        <span style="color: #6b7280;">{{qualificationStep2Description}}</span>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <strong>You Both Get Rewarded! 🎁</strong><br>
+                        <span style="color: #6b7280;">
+                            Once qualified, you'll receive {{referrerReward}} and {{referredName}} gets {{referredReward}}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <h3 style="margin-top: 0;">Your Referral Progress</h3>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Total Referrals</span>
+                    <span class="progress-value">{{totalReferrals}}</span>
+                </div>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Qualified Referrals</span>
+                    <span class="progress-value">{{qualifiedReferrals}}</span>
+                </div>
+                
+                <div class="progress-item">
+                    <span class="progress-label">Total Earnings</span>
+                    <span class="progress-value">₦{{totalEarnings}}</span>
+                </div>
+
+                {{#if nextMilestone}}
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 5px;">
+                        Next Milestone
+                    </div>
+                    <div style="font-weight: bold; color: #2563eb;">
+                        {{nextMilestoneReferrals}} referrals - {{nextMilestoneBadge}} {{nextMilestoneName}}
+                    </div>
+                    <div style="font-size: 14px; color: #6b7280; margin-top: 5px;">
+                        Bonus: ₦{{nextMilestoneReward}}
+                    </div>
+                </div>
+                {{/if}}
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{dashboardLink}}" class="cta-button">
+                    View Referral Dashboard
+                </a>
+            </div>
+
+            <div class="info-box">
+                <strong>💰 Keep Sharing, Keep Earning!</strong><br>
+                Share your referral link with more friends and family to earn unlimited rewards. 
+                The more people you refer, the higher your tier and bonus multiplier!
+            </div>
+
+            <p style="margin-top: 30px;">
+                Want to invite more people? 
+                <a href="{{shareLink}}" style="color: #2563eb; text-decoration: none;">
+                    Share your referral link →
+                </a>
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>
+                <strong>Your Referral Code:</strong> {{referralCode}}
+            </p>
+            <p>
+                NewCondo - Making Property Management Simple<br>
+                © {{currentYear}} NewCondo. All rights reserved.
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="{{unsubscribeLink}}" style="color: #6b7280; text-decoration: none;">
+                    Unsubscribe from emails
+                </a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
