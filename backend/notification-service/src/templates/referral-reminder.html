@@ -1,0 +1,193 @@
+<!-- backend/notification-service/src/templates/referral-reminder.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your NewCondo Signup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .reward-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .reward-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        .benefits {
+            margin: 30px 0;
+        }
+        .benefit-item {
+            display: flex;
+            align-items: start;
+            margin: 15px 0;
+        }
+        .benefit-icon {
+            color: #667eea;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        .social-links {
+            margin: 15px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .urgency {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎁 Don't Miss Out on Your Reward!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{referredName}},</p>
+            
+            <p><strong>{{referrerName}}</strong> invited you to join NewCondo, and there's a special reward waiting for you!</p>
+            
+            <div class="reward-box">
+                <div style="font-size: 14px; color: #666;">Your Welcome Reward</div>
+                <div class="reward-amount">₦{{referredReward}}</div>
+                <div style="font-size: 14px; color: #666;">in service credits</div>
+            </div>
+            
+            <div class="urgency">
+                <strong>⏰ Limited Time:</strong> This offer expires in {{daysRemaining}} days. Complete your signup now to claim your reward!
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{{signupLink}}" class="cta-button">Complete My Signup →</a>
+            </div>
+            
+            <div class="benefits">
+                <h3 style="color: #333; margin-bottom: 20px;">Why Join NewCondo?</h3>
+                
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <div>
+                        <strong>Find Your Perfect Home</strong><br>
+                        <span style="color: #666;">Browse verified properties across Nigeria</span>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <div>
+                        <strong>Secure Payments</strong><br>
+                        <span style="color: #666;">24-hour confirmation period for peace of mind</span>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <div>
+                        <strong>No Hidden Fees</strong><br>
+                        <span style="color: #666;">Transparent pricing and service charges</span>
+                    </div>
+                </div>
+                
+                <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <div>
+                        <strong>Earn More Rewards</strong><br>
+                        <span style="color: #666;">Refer friends and earn ₦{{referralBonus}} per referral</span>
+                    </div>
+                </div>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                <strong>{{referrerName}}</strong> also gets a reward when you complete your first transaction. Help them out by joining today!
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Making Property Rentals Simple & Secure</p>
+            
+            <div class="social-links">
+                <a href="{{facebookUrl}}">Facebook</a> |
+                <a href="{{twitterUrl}}">Twitter</a> |
+                <a href="{{instagramUrl}}">Instagram</a>
+            </div>
+            
+            <p style="margin-top: 15px;">
+                Questions? Contact us at <a href="mailto:support@newcondo.ng" style="color: #667eea;">support@newcondo.ng</a>
+            </p>
+            
+            <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                This is an automated reminder from NewCondo. You received this because {{referrerName}} referred you using code {{referralCode}}.
+                <br><br>
+                NewCondo Ltd. | Lagos, Nigeria<br>
+                <a href="{{unsubscribeUrl}}" style="color: #999;">Unsubscribe from referral reminders</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

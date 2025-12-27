@@ -1,0 +1,250 @@
+<!-- backend/notification-service/src/templates/referral-milestone.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Congratulations on Your Milestone!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #ffffff;
+            padding: 50px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .celebration-icon {
+            font-size: 80px;
+            margin-bottom: 10px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .milestone-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 30px 0;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .milestone-number {
+            font-size: 72px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .bonus-amount {
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .stat-box {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 5px 0;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        .next-milestone {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 4px;
+        }
+        .progress-bar {
+            background-color: #e9ecef;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .social-share {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .share-button {
+            display: inline-block;
+            margin: 10px 5px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .share-twitter {
+            background-color: #1da1f2;
+            color: white;
+        }
+        .share-facebook {
+            background-color: #4267B2;
+            color: white;
+        }
+        .share-whatsapp {
+            background-color: #25D366;
+            color: white;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="celebration-icon">🎉</div>
+            <h1>Incredible Achievement!</h1>
+            <p style="font-size: 18px; margin: 10px 0;">You've reached a major milestone!</p>
+        </div>
+        
+        <div class="content">
+            <p style="font-size: 18px;">Hi {{userName}},</p>
+            
+            <p style="font-size: 16px;">Congratulations! You've just achieved something amazing on NewCondo!</p>
+            
+            <div class="milestone-card">
+                <div style="font-size: 18px; opacity: 0.9;">You've Successfully Referred</div>
+                <div class="milestone-number">{{milestoneCount}}</div>
+                <div style="font-size: 18px; opacity: 0.9;">Qualified Users!</div>
+                
+                <div style="margin: 30px 0; padding: 20px 0; border-top: 1px solid rgba(255,255,255,0.3); border-bottom: 1px solid rgba(255,255,255,0.3);">
+                    <div style="font-size: 16px; opacity: 0.9;">🎁 Bonus Reward Unlocked</div>
+                    <div class="bonus-amount">₦{{bonusAmount}}</div>
+                    <div style="font-size: 14px; opacity: 0.9;">Added to your account!</div>
+                </div>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-number">{{totalReferrals}}</div>
+                    <div class="stat-label">Total Referrals</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">₦{{totalEarnings}}</div>
+                    <div class="stat-label">Total Earnings</div>
+                </div>
+            </div>
+            
+            <div class="next-milestone">
+                <h3 style="margin: 0 0 10px 0; color: #333;">🎯 Next Milestone: {{nextMilestone}} Referrals</h3>
+                <p style="margin: 5px 0; color: #666;">{{referralsNeeded}} more to go!</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{progressPercentage}}%"></div>
+                </div>
+                <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
+                    Reward: <strong>₦{{nextMilestoneReward}}</strong>
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin: 40px 0;">
+                <h3 style="color: #333;">Keep the momentum going!</h3>
+                <a href="{{dashboardUrl}}" class="cta-button">View My Dashboard →</a>
+            </div>
+            
+            <div class="social-share">
+                <h3 style="margin: 0 0 15px 0; color: #333;">📢 Share Your Success!</h3>
+                <p style="margin: 0 0 15px 0; color: #666; font-size: 14px;">
+                    Celebrate with your network and inspire others to join NewCondo
+                </p>
+                <a href="{{twitterShareUrl}}" class="share-button share-twitter">Share on Twitter</a>
+                <a href="{{facebookShareUrl}}" class="share-button share-facebook">Share on Facebook</a>
+                <a href="{{whatsappShareUrl}}" class="share-button share-whatsapp">Share on WhatsApp</a>
+            </div>
+            
+            <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin: 30px 0;">
+                <h3 style="margin: 0 0 15px 0; color: #333;">💡 Pro Tips to Reach Your Next Milestone</h3>
+                <ul style="margin: 0; padding-left: 20px; color: #666;">
+                    <li style="margin: 10px 0;">Share your referral link on social media</li>
+                    <li style="margin: 10px 0;">Tell friends and family about NewCondo</li>
+                    <li style="margin: 10px 0;">Explain the benefits: secure rentals, 24-hour protection</li>
+                    <li style="margin: 10px 0;">Mention the welcome reward they'll receive</li>
+                </ul>
+            </div>
+            
+            <p style="text-align: center; margin: 30px 0; font-size: 16px; color: #666;">
+                Your referral link:<br>
+                <a href="{{referralLink}}" style="color: #667eea; word-break: break-all;">{{referralLink}}</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p><strong>NewCondo</strong> - Thank you for being an amazing community member!</p>
+            
+            <p style="margin-top: 15px;">
+                Questions? Contact us at <a href="mailto:support@newcondo.ng" style="color: #667eea;">support@newcondo.ng</a>
+            </p>
+            
+            <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                This milestone notification was sent because you reached {{milestoneCount}} qualified referrals.
+                <br><br>
+                NewCondo Ltd. | Lagos, Nigeria<br>
+                <a href="{{unsubscribeUrl}}" style="color: #999;">Manage email preferences</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
