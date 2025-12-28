@@ -303,3 +303,267 @@ export const useReferralStore = create<ReferralState>()(
     { name: 'ReferralStore' }
   )
 );
+
+
+
+
+
+
+
+
+//////////////////////////////////////////
+
+
+// apps/platform/store/referralStore.ts
+
+// import { create } from 'zustand';
+// import { devtools, persist } from 'zustand/middleware';
+// import {
+//   Referral,
+//   ReferralStats,
+//   ReferralLink,
+//   ReferralLeaderboardEntry,
+// } from '@/types/referral';
+// import { Reward, RewardSummary } from '@/types/reward';
+
+// interface ReferralState {
+//   // Referral data
+//   referralLink: ReferralLink | null;
+//   referrals: Referral[];
+//   stats: ReferralStats | null;
+//   leaderboard: ReferralLeaderboardEntry[];
+//   userRank: number | null;
+  
+//   // Rewards data
+//   rewards: Reward[];
+//   rewardsSummary: RewardSummary | null;
+  
+//   // Pagination
+//   currentPage: number;
+//   pageSize: number;
+//   totalPages: number;
+//   totalItems: number;
+  
+//   // Loading states
+//   isLoadingReferrals: boolean;
+//   isLoadingStats: boolean;
+//   isLoadingRewards: boolean;
+//   isLoadingLeaderboard: boolean;
+  
+//   // Error states
+//   error: string | null;
+  
+//   // UI states
+//   selectedReferral: Referral | null;
+//   selectedReward: Reward | null;
+//   isShareModalOpen: boolean;
+//   isInviteModalOpen: boolean;
+//   isRedemptionModalOpen: boolean;
+  
+//   // Actions - Referral Link
+//   setReferralLink: (link: ReferralLink) => void;
+  
+//   // Actions - Referrals
+//   setReferrals: (referrals: Referral[]) => void;
+//   addReferral: (referral: Referral) => void;
+//   updateReferral: (id: string, updates: Partial<Referral>) => void;
+//   removeReferral: (id: string) => void;
+  
+//   // Actions - Stats
+//   setStats: (stats: ReferralStats) => void;
+//   incrementClickCount: () => void;
+  
+//   // Actions - Rewards
+//   setRewards: (rewards: Reward[]) => void;
+//   setRewardsSummary: (summary: RewardSummary) => void;
+//   addReward: (reward: Reward) => void;
+//   updateReward: (id: string, updates: Partial<Reward>) => void;
+//   markRewardAsRedeemed: (id: string) => void;
+  
+//   // Actions - Leaderboard
+//   setLeaderboard: (leaderboard: ReferralLeaderboardEntry[], userRank: number | null) => void;
+  
+//   // Actions - Pagination
+//   setPage: (page: number) => void;
+//   setPageSize: (size: number) => void;
+//   setPaginationData: (data: { page: number; pageSize: number; totalPages: number; totalItems: number }) => void;
+  
+//   // Actions - Loading
+//   setLoadingReferrals: (loading: boolean) => void;
+//   setLoadingStats: (loading: boolean) => void;
+//   setLoadingRewards: (loading: boolean) => void;
+//   setLoadingLeaderboard: (loading: boolean) => void;
+  
+//   // Actions - Error
+//   setError: (error: string | null) => void;
+  
+//   // Actions - UI
+//   selectReferral: (referral: Referral | null) => void;
+//   selectReward: (reward: Reward | null) => void;
+//   toggleShareModal: () => void;
+//   toggleInviteModal: () => void;
+//   toggleRedemptionModal: () => void;
+  
+//   // Actions - Reset
+//   reset: () => void;
+// }
+
+// const initialState = {
+//   referralLink: null,
+//   referrals: [],
+//   stats: null,
+//   leaderboard: [],
+//   userRank: null,
+//   rewards: [],
+//   rewardsSummary: null,
+//   currentPage: 1,
+//   pageSize: 20,
+//   totalPages: 0,
+//   totalItems: 0,
+//   isLoadingReferrals: false,
+//   isLoadingStats: false,
+//   isLoadingRewards: false,
+//   isLoadingLeaderboard: false,
+//   error: null,
+//   selectedReferral: null,
+//   selectedReward: null,
+//   isShareModalOpen: false,
+//   isInviteModalOpen: false,
+//   isRedemptionModalOpen: false,
+// };
+
+// export const useReferralStore = create<ReferralState>()(
+//   devtools(
+//     persist(
+//       (set) => ({
+//         ...initialState,
+        
+//         // Referral Link
+//         setReferralLink: (link) => set({ referralLink: link }),
+        
+//         // Referrals
+//         setReferrals: (referrals) => set({ referrals }),
+        
+//         addReferral: (referral) =>
+//           set((state) => ({ referrals: [referral, ...state.referrals] })),
+        
+//         updateReferral: (id, updates) =>
+//           set((state) => ({
+//             referrals: state.referrals.map((ref) =>
+//               ref.id === id ? { ...ref, ...updates } : ref
+//             ),
+//           })),
+        
+//         removeReferral: (id) =>
+//           set((state) => ({
+//             referrals: state.referrals.filter((ref) => ref.id !== id),
+//           })),
+        
+//         // Stats
+//         setStats: (stats) => set({ stats }),
+        
+//         incrementClickCount: () =>
+//           set((state) => ({
+//             stats: state.stats
+//               ? { ...state.stats, clickCount: state.stats.clickCount + 1 }
+//               : null,
+//           })),
+        
+//         // Rewards
+//         setRewards: (rewards) => set({ rewards }),
+        
+//         setRewardsSummary: (summary) => set({ rewardsSummary: summary }),
+        
+//         addReward: (reward) =>
+//           set((state) => ({ rewards: [reward, ...state.rewards] })),
+        
+//         updateReward: (id, updates) =>
+//           set((state) => ({
+//             rewards: state.rewards.map((reward) =>
+//               reward.id === id ? { ...reward, ...updates } : reward
+//             ),
+//           })),
+        
+//         markRewardAsRedeemed: (id) =>
+//           set((state) => ({
+//             rewards: state.rewards.map((reward) =>
+//               reward.id === id
+//                 ? { ...reward, isRedeemed: true, redeemedAt: new Date().toISOString() }
+//                 : reward
+//             ),
+//           })),
+        
+//         // Leaderboard
+//         setLeaderboard: (leaderboard, userRank) => set({ leaderboard, userRank }),
+        
+//         // Pagination
+//         setPage: (page) => set({ currentPage: page }),
+        
+//         setPageSize: (size) => set({ pageSize: size, currentPage: 1 }),
+        
+//         setPaginationData: (data) =>
+//           set({
+//             currentPage: data.page,
+//             pageSize: data.pageSize,
+//             totalPages: data.totalPages,
+//             totalItems: data.totalItems,
+//           }),
+        
+//         // Loading
+//         setLoadingReferrals: (loading) => set({ isLoadingReferrals: loading }),
+        
+//         setLoadingStats: (loading) => set({ isLoadingStats: loading }),
+        
+//         setLoadingRewards: (loading) => set({ isLoadingRewards: loading }),
+        
+//         setLoadingLeaderboard: (loading) => set({ isLoadingLeaderboard: loading }),
+        
+//         // Error
+//         setError: (error) => set({ error }),
+        
+//         // UI
+//         selectReferral: (referral) => set({ selectedReferral: referral }),
+        
+//         selectReward: (reward) => set({ selectedReward: reward }),
+        
+//         toggleShareModal: () =>
+//           set((state) => ({ isShareModalOpen: !state.isShareModalOpen })),
+        
+//         toggleInviteModal: () =>
+//           set((state) => ({ isInviteModalOpen: !state.isInviteModalOpen })),
+        
+//         toggleRedemptionModal: () =>
+//           set((state) => ({ isRedemptionModalOpen: !state.isRedemptionModalOpen })),
+        
+//         // Reset
+//         reset: () => set(initialState),
+//       }),
+//       {
+//         name: 'referral-storage',
+//         partialize: (state) => ({
+//           referralLink: state.referralLink,
+//           stats: state.stats,
+//         }),
+//       }
+//     ),
+//     { name: 'ReferralStore' }
+//   )
+// );
+
+// // Selectors for computed values
+// export const selectAvailableRewards = (state: ReferralState) =>
+//   state.rewards.filter((r) => r.status === 'APPROVED' && !r.isRedeemed);
+
+// export const selectPendingRewards = (state: ReferralState) =>
+//   state.rewards.filter((r) => r.status === 'PENDING');
+
+// export const selectTotalAvailableBalance = (state: ReferralState) =>
+//   state.rewards
+//     .filter((r) => r.status === 'APPROVED' && !r.isRedeemed)
+//     .reduce((sum, r) => sum + r.amount, 0);
+
+// export const selectQualifiedReferrals = (state: ReferralState) =>
+//   state.referrals.filter((r) => r.qualificationMet);
+
+// export const selectPendingReferrals = (state: ReferralState) =>
+//   state.referrals.filter((r) => r.status === 'PENDING');

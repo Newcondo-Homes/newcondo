@@ -223,3 +223,229 @@ export function generateShareLinkWithUTM(
   
   return url.toString();
 }
+
+
+
+
+
+
+// apps/platform/lib/utils/shareHelpers.ts
+
+import { SHARE_MESSAGES, SHARE_CHANNEL_CONFIG, formatShareMessage } from '../constants/shareMessages';
+import { REFERRAL_CONFIG } from '../constants/referralConfig';
+
+export interface ShareData {
+  code: string;
+  link: string;
+  referrerName: string;
+  referrerRole: string;
+  referredAmount: number;
+  referrerAmount: number;
+  rewardType: string;
+}
+
+/**
+ * Get appropriate share message based on channel and user role
+ */
+export function getShareMessage(
+  channel: keyof typeof SHARE_MESSAGES,
+  data: ShareData,
+  customMessage?: string
+): string | { subject: string; template: string } {
+  if (customMessage && channel !== 'email') {
+    return formatShareMessage(customMessage, data);
+  }
+
+  const channelMessages = SHARE_MESSAGES[channel];
+  
+  if (channel === 'email') {
+    const roleKey = data.referrerRole.toLowerCase() as 'owner' | 'agent' | 'renter';
+    const emailConfig = channelMessages[roleKey] || channelMessages.default;
+    
+    return {
+      subject: emailConfig.subject,
+      template: formatShareMessage(emailConfig.template, data)
+    };
+  }
+
+  // For other channels, pick role-specific message if available
+  const roleKey = data.referrerRole.toLowerCase();
+  const message = (channelMessages as any)[roleKey] || (channelMessages as any).default;
+  
+  return formatShareMessage(message, data);
+}
+
+/**
+ * Build share URL for specific channel
+ */
+export function buildShareUrl(
+  channel: string,
+  referralLink: string,
+  message?: string,
+  subject?: string
+): string {
+  const channelConfig = SHARE_CHANNEL_CONFIG.find(c => c.id === channel);
+  
+  if (!channelConfig) {
+    return referralLink;
+  }
+
+  return channelConfig.shareUrl(referralLink, message || '', subject);
+}
+
+/**
+ * Copy text to clipboard
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const success = document.execCommand('copy');
+      textArea.remove();
+      return success;
+    }
+  } catch (err) {
+    console.error('Failed to copy:', err);
+    return false;
+  }
+}
+
+/**
+ * Share via Web Share API (mobile)
+ */
+export async function shareViaNative(data: {
+  title: string;
+  text: string;
+  url: string;
+}): Promise<boolean> {
+  if (!navigator.share) {
+    return false;
+  }
+
+  try {
+    await navigator.share(data);
+    return true;
+  } catch (err) {
+    if ((err as Error).name !== 'AbortError') {
+      console.error('Share failed:', err);
+    }
+    return false;
+  }
+}
+
+/**
+ * Open share dialog for specific channel
+ */
+export function openShareDialog(
+  channel: string,
+  url: string,
+  message?: string,
+  subject?: string
+): void {
+  const shareUrl = buildShareUrl(channel, url, message, subject);
+  
+  // For copy, just return the URL
+  if (channel === 'copy') {
+    copyToClipboard(url);
+    return;
+  }
+
+  // For email and SMS, use location.href
+  if (channel === 'email' || channel === 'sms') {
+    window.location.href = shareUrl;
+    return;
+  }
+
+  // For social media, open in new window
+  const width = 600;
+  const height = 400;
+  const left = (window.screen.width - width) / 2;
+  const top = (window.screen.height - height) / 2;
+  
+  window.open(
+    shareUrl,
+    '_blank',
+    `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes`
+  );
+}
+
+/**
+ * Get available share channels
+ */
+export function getAvailableChannels(): typeof SHARE_CHANNEL_CONFIG {
+  return SHARE_CHANNEL_CONFIG.filter(channel => channel.isAvailable);
+}
+
+/**
+ * Format phone number for WhatsApp
+ */
+export function formatPhoneForWhatsApp(phone: string): string {
+  // Remove all non-digit characters
+  let cleaned = phone.replace(/\D/g, '');
+  
+  // If starts with 0, replace with 234
+  if (cleaned.startsWith('0')) {
+    cleaned = '234' + cleaned.substring(1);
+  }
+  
+  // If doesn't start with 234, add it
+  if (!cleaned.startsWith('234')) {
+    cleaned = '234' + cleaned;
+  }
+  
+  return cleaned;
+}
+
+/**
+ * Generate QR code data URL for referral link
+ */
+export async function generateQRCode(text: string): Promise<string> {
+  // In production, use a QR code library like 'qrcode'
+  // For now, return a placeholder
+  // import QRCode from 'qrcode';
+  // return await QRCode.toDataURL(text);
+  return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+}
+
+/**
+ * Track share event (for analytics)
+ */
+export function trackShare(channel: string, referralCode: string): void {
+  // Implement analytics tracking here
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('event', 'share', {
+      method: channel,
+      content_type: 'referral',
+      item_id: referralCode,
+    });
+  }
+}
+
+/**
+ * Validate share message length for channel
+ */
+export function validateMessageLength(channel: string, message: string): {
+  isValid: boolean;
+  maxLength: number;
+  currentLength: number;
+} {
+  const channelConfig = SHARE_MESSAGES[channel as keyof typeof SHARE_MESSAGES];
+  const maxLength = (channelConfig as any)?.maxLength || 1000;
+  
+  return {
+    isValid: message.length <= maxLength,
+    maxLength,
+    currentLength: message.length,
+  };
+}

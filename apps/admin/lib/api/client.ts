@@ -414,3 +414,166 @@ export default apiClient;
 
 // // Export default instance
 // export default apiClient;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////
+
+// apps/admin/src/lib/api/client.ts
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+
+const BASE_URL = process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost:4000/api/v1";
+
+// Create axios instance with default config
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: BASE_URL,
+  timeout: 30000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Request interceptor - Add auth token to requests
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Get token from localStorage or session
+    const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - Handle errors globally
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Handle 401 Unauthorized - token expired
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      // Try to refresh token
+      try {
+        const refreshToken = typeof window !== "undefined" 
+          ? localStorage.getItem("admin_refresh_token") 
+          : null;
+
+        if (refreshToken) {
+          const response = await axios.post(`${BASE_URL}/auth/refresh`, {
+            refreshToken,
+          });
+
+          const { token } = response.data;
+          localStorage.setItem("admin_token", token);
+
+          // Retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return axiosInstance(originalRequest);
+        }
+      } catch (refreshError) {
+        // Refresh failed - redirect to login
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("admin_token");
+          localStorage.removeItem("admin_refresh_token");
+          window.location.href = "/login";
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Handle other errors
+    const errorMessage = error.response?.data?.message || error.message || "An error occurred";
+
+    return Promise.reject({
+      status: error.response?.status,
+      message: errorMessage,
+      data: error.response?.data,
+    });
+  }
+);
+
+// API Client wrapper
+export const apiClient = {
+  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return axiosInstance.get<T>(url, config);
+  },
+
+  async post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
+    return axiosInstance.post<T>(url, data, config);
+  },
+
+  async put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
+    return axiosInstance.put<T>(url, data, config);
+  },
+
+  async patch<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig
+  ): Promise<AxiosResponse<T>> {
+    return axiosInstance.patch<T>(url, data, config);
+  },
+
+  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return axiosInstance.delete<T>(url, config);
+  },
+};
+
+// Auth helpers
+export const authHelpers = {
+  setTokens(token: string, refreshToken: string) {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("admin_token", token);
+      localStorage.setItem("admin_refresh_token", refreshToken);
+    }
+  },
+
+  clearTokens() {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("admin_refresh_token");
+    }
+  },
+
+  getToken() {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("admin_token");
+    }
+    return null;
+  },
+
+  isAuthenticated() {
+    return !!this.getToken();
+  },
+};
+
+export default apiClient;

@@ -388,3 +388,166 @@ export interface ReferralInsights {
 export type {
   AnalyticsTimePeriod,
 };
+
+
+// apps/platform/types/referral.ts
+
+export type ReferralType = 
+  | 'OWNER_TO_OWNER'
+  | 'OWNER_TO_AGENT'
+  | 'OWNER_TO_RENTER'
+  | 'AGENT_TO_OWNER'
+  | 'AGENT_TO_AGENT'
+  | 'AGENT_TO_RENTER'
+  | 'RENTER_TO_RENTER';
+
+export type ReferralStatus = 
+  | 'PENDING'
+  | 'QUALIFIED'
+  | 'REWARDED'
+  | 'EXPIRED'
+  | 'CANCELLED';
+
+export type RewardType = 
+  | 'SERVICE_CREDIT'
+  | 'SUBSCRIPTION_DISCOUNT'
+  | 'RENT_CREDIT'
+  | 'COMMISSION_CREDIT'
+  | 'MAINTENANCE_VOUCHER'
+  | 'CASH_REWARD';
+
+export type RewardStatus = 
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'EXPIRED';
+
+export interface Referral {
+  id: string;
+  referrerId: string;
+  referredId: string;
+  referralCode: string;
+  referralType: ReferralType | null;
+  isActive: boolean;
+  status: ReferralStatus;
+  qualificationMet: boolean;
+  qualifiedAt: string | null;
+  
+  // Rewards
+  reward: number | null;
+  referrerReward: number | null;
+  referredReward: number | null;
+  rewardType: RewardType | null;
+  
+  rewardPaid: boolean;
+  referrerRewardPaid: boolean;
+  referredRewardPaid: boolean;
+  referrerRewardPaidAt: string | null;
+  referredRewardPaidAt: string | null;
+  
+  clickCount: number;
+  shareChannel: string | null;
+  
+  createdAt: string;
+  updatedAt: string;
+  
+  // Relations
+  referrer?: {
+    id: string;
+    name: string | null;
+    email: string;
+    role: string;
+  };
+  referred?: {
+    id: string;
+    name: string | null;
+    email: string;
+    role: string;
+  };
+  rewards?: ReferralReward[];
+}
+
+export interface ReferralReward {
+  id: string;
+  userId: string;
+  referralId: string | null;
+  rewardType: RewardType;
+  amount: number;
+  description: string;
+  status: RewardStatus;
+  isRedeemed: boolean;
+  redeemedAt: string | null;
+  expiresAt: string | null;
+  isPaidOut: boolean;
+  paidOutAt: string | null;
+  payoutReference: string | null;
+  metadata: Record<string, any> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReferralStats {
+  totalReferrals: number;
+  qualifiedReferrals: number;
+  pendingReferrals: number;
+  totalRewards: number;
+  totalEarnings: number;
+  pendingRewards: number;
+  redeemedRewards: number;
+  clickCount: number;
+  conversionRate: number;
+  referralsByType: Record<ReferralType, number>;
+}
+
+export interface ReferralLink {
+  code: string;
+  url: string;
+  shortUrl?: string;
+}
+
+export interface ShareChannel {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  shareUrl: (url: string, message?: string) => string;
+}
+
+export interface ReferralLeaderboardEntry {
+  userId: string;
+  userName: string;
+  userRole: string;
+  totalReferrals: number;
+  qualifiedReferrals: number;
+  totalEarnings: number;
+  rank: number;
+}
+
+export interface ReferralAnalytics {
+  period: 'day' | 'week' | 'month' | 'year';
+  startDate: string;
+  endDate: string;
+  data: {
+    date: string;
+    referrals: number;
+    conversions: number;
+    earnings: number;
+  }[];
+}
+
+export interface InviteRequest {
+  email?: string;
+  phone?: string;
+  message?: string;
+  channel: 'email' | 'sms' | 'whatsapp';
+}
+
+export interface RewardRedemptionRequest {
+  rewardId: string;
+  method: 'bank_transfer' | 'wallet_credit' | 'service_credit';
+  bankDetails?: {
+    accountNumber: string;
+    accountName: string;
+    bankCode: string;
+  };
+}
