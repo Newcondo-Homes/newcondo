@@ -4,9 +4,9 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Textarea } from '@newcondo/ui/components/textarea';
 import { useInviteViaEmail } from '@/hooks/useReferrals';
 import { inviteViaEmailSchema, type InviteViaEmailInput } from '@/lib/validations/referral';
 import { Loader2, Mail } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@newcondo/ui/components/form';
 
 export function InviteViaEmail() {
   const inviteMutation = useInviteViaEmail();

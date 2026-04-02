@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
-import { AgentAvailabilityToggle } from '@/components/marking/AgentAvailabilityToggle';
-import { MarkingServiceTerms } from '@/components/marking/MarkingServiceTerms';
+import  AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
+import MarkingServiceTerms  from '@/components/marking/MarkingServiceTerms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
 import { Skeleton } from '@newcondo/ui';
 import { Separator } from '@newcondo/ui';

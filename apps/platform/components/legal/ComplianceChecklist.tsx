@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Circle, AlertTriangle, FileText, Users, Shield, ScrollText } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Progress } from '@newcondo/ui/components/progress';
+import { Separator } from '@newcondo/ui/components/separator';
 import { useRouter } from 'next/navigation';
 import { DocumentType, UserType } from '@newcondo/db';
 
@@ -203,7 +202,7 @@ export default function ComplianceChecklist({
 
   const getStatusBadge = (status: string, completed: boolean) => {
     if (completed) {
-      return <Badge variant="success" className="ml-auto">Completed</Badge>;
+      return <Badge variant="default" className="ml-auto">Completed</Badge>;
     }
     
     switch (status) {
@@ -314,7 +313,7 @@ export default function ComplianceChecklist({
               {completedRequired.length} of {requiredItems.length} required items completed
             </span>
             {progress === 100 && (
-              <Badge variant="success">
+              <Badge variant="default">
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 All Complete
               </Badge>

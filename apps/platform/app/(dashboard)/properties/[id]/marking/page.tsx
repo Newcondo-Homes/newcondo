@@ -3,15 +3,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { AlertCircle, Clock, CheckCircle, XCircle, MapPin, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProperties } from '@/hooks/useProperties';
-import LoadingSpinner from '@/components/shared/feedback/LoadingSpinner';
+import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner';
 
 interface MarkingJob {
   id: string;

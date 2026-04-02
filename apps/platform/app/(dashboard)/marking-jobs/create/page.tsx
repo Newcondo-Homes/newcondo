@@ -8,14 +8,14 @@ import * as z from "zod";
 import { markingJobsApi } from "@/lib/api/markingJobs";
 import { propertiesApi } from "@/lib/api/properties";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Input } from "@newcondo/ui/components/input";
+import { Label } from "@newcondo/ui/components/label";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { RadioGroup, RadioGroupItem } from "@newcondo/ui/components/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Separator } from "@newcondo/ui/components/separator";
 import {
   ArrowLeft,
   AlertCircle,
@@ -28,9 +28,9 @@ import {
   Building,
   Share2,
 } from "lucide-react";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { Calendar } from "@newcondo/ui/components/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@newcondo/ui/components/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 

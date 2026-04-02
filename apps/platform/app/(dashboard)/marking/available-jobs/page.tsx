@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkingJobs } from '@/hooks/useMarkingJobs';
-import { toast } from '@/components/ui/toast';
+import { toast } from '@newcondo/ui/';
 import { MapPin, Clock, DollarSign, AlertCircle, Filter } from 'lucide-react';
 import { 
   Select, 
@@ -16,7 +16,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 import { formatCurrency, formatDate, formatTimeRemaining } from '@/lib/utils/format';
 
 interface MarkingJob {
@@ -57,10 +57,8 @@ export default function AvailableMarkingJobsPage() {
 
     // Check if user is eligible for marking jobs
     if (user.role !== 'AGENT' && !user.isPremium) {
-      toast({
-        title: 'Access Denied',
+      toast.error('Access Denied',{
         description: 'Only agents and premium users can access marking jobs.',
-        variant: 'destructive'
       });
       router.push('/dashboard');
     }
@@ -87,17 +85,13 @@ export default function AvailableMarkingJobsPage() {
   const handleAcceptJob = async (jobId: string) => {
     try {
       await acceptJob(jobId);
-      toast({
-        title: 'Job Accepted',
+      toast.success('Job Accepted',{
         description: 'You have been added to the queue. Complete the job within your time slot.',
-        variant: 'success'
       });
       router.push(`/marking/my-jobs/${jobId}`);
     } catch (error) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: error instanceof Error ? error.message : 'Failed to accept job',
-        variant: 'destructive'
       });
     }
   };

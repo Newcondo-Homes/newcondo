@@ -2,7 +2,7 @@
 'use client';
 
 import { GoogleMap, Polygon, Marker, useJsApiLoader } from '@react-google-maps/api';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { AlertCircle } from 'lucide-react';
 
 interface PropertyBoundary {

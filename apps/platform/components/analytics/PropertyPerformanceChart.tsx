@@ -1,7 +1,7 @@
 // apps/platform/components/analytics/PropertyPerformanceChart.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import {
   LineChart,
   Line,

@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Progress } from '@newcondo/ui/components/progress';
 import {
   AlertCircle,
   Clock,
@@ -21,7 +21,7 @@ import {
   Share2,
   FileText,
 } from 'lucide-react';
-import LoadingSpinner from '@/components/shared/feedback/LoadingSpinner';
+import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
 
 interface QueueAgent {

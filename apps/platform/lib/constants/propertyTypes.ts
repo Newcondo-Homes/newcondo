@@ -1,6 +1,6 @@
 // apps/platform/lib/constants/propertyTypes.ts
 
-import { PropertyType, PropertyStructure } from '@prisma/client'
+import { PropertyType, PropertyStructure } from '@newcondo/db'
 
 /**
  * Property type configurations with display information

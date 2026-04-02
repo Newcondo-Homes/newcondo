@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CompensationBreakdown } from '@/components/marking/CompensationBreakdown';
-import { MarkingHistoryList } from '@/components/marking/MarkingHistoryList';
+import MarkingHistoryList  from '@/components/marking/MarkingHistoryList';
 import { Button } from '@newcondo/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui';
 import {

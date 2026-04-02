@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newc
 import { Skeleton } from '@newcondo/ui';
 import { Alert, AlertDescription } from '@newcondo/ui';
 import { MapPin, AlertCircle } from 'lucide-react';
-import { MarkingInstructions } from '@/components/marking/MarkingInstructions';
+import MarkingInstructions  from '@/components/marking/MarkingInstructions';
 import { MarkPropertySelf } from '@/components/marking/MarkPropertySelf';
 
 interface PageProps {

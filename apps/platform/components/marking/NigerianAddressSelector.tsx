@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import StateSelector from './StateSelector';
 import LGASelector from './LGASelector';
 import LocationSelector from './LocationSelector';
 import AddressDisplay from './AddressDisplay';
-import { Label } from '@/components/ui/label';
+import { Label } from '@newcondo/ui/components/label';
 
 export interface NigerianAddress {
   state: string;

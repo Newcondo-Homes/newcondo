@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { Resolver } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@newcondo/ui/components/button";
 import { Textarea } from "@newcondo/ui/components/textarea";
@@ -53,8 +54,8 @@ export function ConfirmationForm({
     watch,
     setValue,
     formState: { errors },
-  } = useForm<ConfirmationFormData>({
-    resolver: zodResolver(confirmationSchema),
+  } = useForm<ConfirmationFormData, any, ConfirmationFormData>({
+    resolver: zodResolver(confirmationSchema) as Resolver<ConfirmationFormData>,
     defaultValues: {
       confirmationType: "confirm",
       refundRequested: false,

@@ -142,8 +142,10 @@ export const usePayments = () => {
     confirmPayment: confirmPaymentMutation.mutate,
     cancelPayment: cancelPaymentMutation.mutate,
     refundPayment: refundPaymentMutation.mutate,
-    retryPayment: retryPaymentMutation.mutate,
+    // retryPayment: retryPaymentMutation.mutate,
+    retryPayment: retryPaymentMutation.mutateAsync, 
     releasePayment: releasePaymentMutation.mutate,
+    initiatePayment: createPaymentMutation.mutateAsync, // use mutateAsync so it returns a promise
 
     // Loading states
     isCreatingPayment: createPaymentMutation.isPending,
@@ -152,10 +154,14 @@ export const usePayments = () => {
     isRefundingPayment: refundPaymentMutation.isPending,
     isRetryingPayment: retryPaymentMutation.isPending,
     isReleasingPayment: releasePaymentMutation.isPending,
-
-    // Data
-    createdPayment: createPaymentMutation.data?.data,
+    isLoading: createPaymentMutation.isPending,
     
+    
+    // Data
+    downloadReceipt: (paymentId: string) => usePaymentReceipt().downloadReceipt(paymentId), // ← or just use the hook separately
+    fetchPaymentHistory: (params?: PaymentHistoryParams) => paymentsApi.getPaymentHistory(params).then(r => r.data),
+    createdPayment: createPaymentMutation.data?.data,
+
     // Errors
     createPaymentError: createPaymentMutation.error,
     confirmPaymentError: confirmPaymentMutation.error,
@@ -173,7 +179,7 @@ export const usePaymentHistory = (params?: PaymentHistoryParams) => {
     queryFn: () => paymentsApi.getPaymentHistory(params),
     select: (response) => response.data,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!params // Only fetch if params are provided
+    enabled: true // !!params // Only fetch if params are provided
   });
 };
 
@@ -204,21 +210,21 @@ export const usePaymentReceipt = () => {
   const downloadReceipt = async (paymentId: string, fileName?: string) => {
     try {
       const blob = await paymentsApi.getPaymentReceipt(paymentId);
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName || `payment-receipt-${paymentId}.pdf`;
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       window.URL.revokeObjectURL(url);
-      
+
       toast({
         title: 'Receipt downloaded',
         description: 'Payment receipt has been downloaded successfully.'
@@ -285,12 +291,12 @@ export const usePaymentVerification = () => {
     setIsVerifying(true);
     try {
       const response = await paymentsApi.verifyPaymentStatus(transactionId);
-      
+
       toast({
         title: 'Payment verified',
         description: 'Payment status has been verified successfully.'
       });
-      
+
       return response.data;
     } catch (error: any) {
       toast({

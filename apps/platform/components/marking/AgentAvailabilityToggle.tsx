@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@newcondo/ui/components/switch";
+import { Label } from "@newcondo/ui/components/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { toast } from '@newcondo/ui'
 import { CheckCircle, XCircle, MapPin, AlertCircle } from "lucide-react";
 
 interface AgentAvailabilityToggleProps {
@@ -21,7 +21,6 @@ export default function AgentAvailabilityToggle({
   serviceAreas = [],
 }: AgentAvailabilityToggleProps) {
   const [isAvailable, setIsAvailable] = useState(initialAvailability);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const updateAvailabilityMutation = useMutation({
@@ -45,29 +44,23 @@ export default function AgentAvailabilityToggle({
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["agent-profile", userId] });
-      toast({
-        title: "Availability Updated",
+      toast.success('Availability Updated', {
         description: `You are now ${data.isAvailableForMarking ? "available" : "unavailable"} for marking jobs.`,
-        variant: "default",
       });
     },
     onError: (error: Error, previousValue) => {
       // Revert optimistic update
       setIsAvailable(!previousValue);
-      toast({
-        title: "Update Failed",
+      toast.error('Update Failed', {
         description: error.message,
-        variant: "destructive",
       });
     },
   });
 
   const handleToggle = (checked: boolean) => {
     if (serviceAreas.length === 0 && checked) {
-      toast({
-        title: "Service Areas Required",
+      toast("Service Areas Required", {
         description: "Please set up your service areas before becoming available for marking jobs.",
-        variant: "destructive",
       });
       return;
     }

@@ -4,20 +4,20 @@
 
 import { useState } from 'react';
 import { Metadata } from 'next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 import { useReferrals } from '@/hooks/useReferrals';
 import { useReferralTimeline } from '@/hooks/useReferrals';
 import { ReferralCard } from '@/components/referrals/ReferralCard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { Search, Filter, Download, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatRewardDate, formatRewardDateTime } from '@/lib/utils/rewardFormatters';
 

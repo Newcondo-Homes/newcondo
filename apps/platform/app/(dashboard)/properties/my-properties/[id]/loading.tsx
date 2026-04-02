@@ -1,6 +1,6 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
+import { Card, CardContent, CardHeader } from "@newcondo/ui/components/card";
+import { Separator } from "@newcondo/ui/components/separator";
 
 export default function PropertyDetailsLoading() {
   return (

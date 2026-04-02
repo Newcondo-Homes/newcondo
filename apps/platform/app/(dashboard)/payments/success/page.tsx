@@ -6,7 +6,7 @@ import { CheckCircle, Download, Home, Receipt, Clock } from 'lucide-react'
 import { Button } from '@newcondo/ui'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
 import { Badge } from '@newcondo/ui'
-import PaymentReceipt from '@/components/payments/PaymentReceipt'
+import {PaymentReceipt} from '@/components/payments/PaymentReceipt'
 
 export const metadata: Metadata = {
   title: 'Payment Successful | NewCondo',

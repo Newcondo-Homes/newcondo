@@ -2,15 +2,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { GoogleMap, StreetViewPanorama, useJsApiLoader } from '@react-google-maps/api';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GoogleMap, StreetViewPanorama, useJsApiLoader, Marker } from '@react-google-maps/api';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { AlertCircle, MapPin, AlertTriangle, CheckCircle2, Copy } from 'lucide-react';
 import { useUpload } from '@/hooks/useUpload';
-import { useProperties } from '@/hooks/useProperties';
-import toast from 'react-hot-toast';
+import { useMarkProperty } from '@/hooks/useProperties';
+import { toast } from '@newcondo/ui';
 
 interface MarkPropertySelfProps {
   propertyId: string;
@@ -73,7 +73,7 @@ export function MarkPropertySelf({
   const [boundaryArea, setBoundaryArea] = useState(0);
 
   const { uploadFile } = useUpload();
-  const { markProperty } = useProperties();
+  const { mutateAsync: markProperty } = useMarkProperty();
 
   // Get user's current location
   useEffect(() => {
@@ -130,7 +130,7 @@ export function MarkPropertySelf({
     drawingManagerRef.current = drawingManager;
 
     // Listen for polygon complete
-    google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon) => {
+    google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon: google.maps.Polygon) => {
       const path = polygon.getPath();
       const coords = path.getArray();
       const area = google.maps.geometry.spherical.computeArea(path);
@@ -148,7 +148,7 @@ export function MarkPropertySelf({
     });
 
     // Listen for rectangle complete
-    google.maps.event.addListener(drawingManager, 'rectanglecomplete', (rectangle) => {
+    google.maps.event.addListener(drawingManager, 'rectanglecomplete', (rectangle: google.maps.Rectangle) => {
       rectangle.setEditable(true);
 
       const bounds = rectangle.getBounds();
@@ -178,8 +178,8 @@ export function MarkPropertySelf({
     });
 
     return () => {
-      google.maps.event.clearListenersByType('polygoncomplete');
-      google.maps.event.clearListenersByType('rectanglecomplete');
+      google.maps.event.clearListeners(drawingManager, 'polygoncomplete');
+      google.maps.event.clearListeners(drawingManager, 'rectanglecomplete');
     };
   }, [isLoaded]);
 
@@ -248,9 +248,9 @@ export function MarkPropertySelf({
 
       const center = drawing.coordinates.length > 0
         ? {
-            lat: drawing.coordinates.reduce((sum, c) => sum + c.lat(), 0) / drawing.coordinates.length,
-            lng: drawing.coordinates.reduce((sum, c) => sum + c.lng(), 0) / drawing.coordinates.length,
-          }
+          lat: drawing.coordinates.reduce((sum, c) => sum + c.lat(), 0) / drawing.coordinates.length,
+          lng: drawing.coordinates.reduce((sum, c) => sum + c.lng(), 0) / drawing.coordinates.length,
+        }
         : mapCenter;
 
       const boundaryData: BoundaryData = {
@@ -261,12 +261,19 @@ export function MarkPropertySelf({
         images: markingImages,
       };
 
-      await markProperty(propertyId, {
-        boundaryCoordinates: coordinates,
-        boundaryImages: markingImages,
-        boundaryVerified: true,
-        boundaryMarkedAt: new Date(),
+
+      await markProperty({
+        propertyId,
+        data: {
+          boundaryCoordinates: coordinates,
+          boundaryImages: markingImages,
+          boundaryVerified: true,
+          boundaryMarkedAt: new Date(),
+        },
       });
+
+
+
 
       toast.success('Property marked successfully!');
       onMarked?.(boundaryData);
@@ -341,7 +348,8 @@ export function MarkPropertySelf({
           <TabsContent value="satellite" className="space-y-4">
             <div className="border rounded-lg overflow-hidden h-96">
               <GoogleMap
-                ref={mapRef}
+                // ref={mapRef}
+                onLoad={(map) => { mapRef.current = map; }}
                 zoom={18}
                 center={mapCenter}
                 mapTypeId={google.maps.MapTypeId.SATELLITE}
@@ -352,7 +360,7 @@ export function MarkPropertySelf({
                 }}
               >
                 {userLocation && (
-                  <google.maps.marker.AdvancedMarkerElement
+                  <Marker
                     position={userLocation}
                     title="Your Location"
                   />
@@ -364,9 +372,10 @@ export function MarkPropertySelf({
           <TabsContent value="street" className="space-y-4">
             <div className="border rounded-lg overflow-hidden h-96">
               <StreetViewPanorama
-                ref={streetViewRef}
-                position={mapCenter}
+                // ref={streetViewRef}
+                onLoad={(sv) => { streetViewRef.current = sv; }}
                 options={{
+                  position: mapCenter,
                   fullscreenControl: true,
                   zoomControl: true,
                 }}

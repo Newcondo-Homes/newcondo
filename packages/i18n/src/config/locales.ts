@@ -102,6 +102,12 @@ export const LOCALE_CONFIG: Record<LocaleCode, LocaleConfig> = {
   },
 };
 
+export const LOCALE_NAMES: Record<LocaleCode, string> = {
+  en: 'English',
+  fr: 'Français',
+  pcm: 'Naija Pidgin',
+};
+
 /**
  * Currency configurations
  */

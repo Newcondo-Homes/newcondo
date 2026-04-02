@@ -4,11 +4,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Textarea } from "@newcondo/ui/textarea";
-import { Label } from "@newcondo/ui/label";
-import { RadioGroup, RadioGroupItem } from "@newcondo/ui/radio-group";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { Label } from "@newcondo/ui/components/label";
+import { RadioGroup, RadioGroupItem } from "@newcondo/ui/components/radio-group";
 import { AlertTriangle, X } from "lucide-react";
 
 const rejectionSchema = z.object({

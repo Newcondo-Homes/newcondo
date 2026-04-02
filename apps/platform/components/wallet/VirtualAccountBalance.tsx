@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Eye, EyeOff, RefreshCw, Wallet } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { formatCurrency } from '@/lib/utils/format';
 import { walletApi } from '@/lib/api/wallet';
 

@@ -1,58 +1,41 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@newcondo/ui/components/ui/table';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/ui/select';
-import { Skeleton } from '@newcondo/ui/components/ui/skeleton';
-import { Calendar } from '@newcondo/ui/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@newcondo/ui/components/ui/popover';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@newcondo/ui/components/ui/dropdown-menu';
-import { 
-  CalendarIcon, 
-  Download, 
-  Eye, 
-  Filter, 
-  MoreHorizontal, 
-  Receipt, 
-  RefreshCw, 
-  Search, 
-  X 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@newcondo/ui/components/table';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
+import { Calendar } from '@newcondo/ui/components/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@newcondo/ui/components/popover';
+import type { DateRange } from 'react-day-picker';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@newcondo/ui/components/dropdown-menu';
+import {
+  CalendarIcon,
+  Download,
+  Eye,
+  Filter,
+  MoreHorizontal,
+  Receipt,
+  RefreshCw,
+  Search,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { usePayments } from '@/hooks/usePayments';
+import { usePayments, usePaymentReceipt, usePaymentHistory } from '@/hooks/usePayments';
 import { PaymentStatus } from './PaymentStatus';
 import { PaymentReceipt } from './PaymentReceipt';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { cn } from '@/lib/utils';
-
-interface Payment {
-  id: string;
-  amount: number;
-  currency: string;
-  paymentType: 'RENT' | 'DEPOSIT' | 'PROPERTY_MARKING' | 'AGENT_COMMISSION' | 'PREMIUM_UPGRADE';
-  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'REFUNDED' | 'HELD' | 'RELEASED';
-  paymentMethod?: string;
-  transactionId?: string;
-  description?: string;
-  paidAt?: string;
-  createdAt: string;
-  rental?: {
-    id: string;
-    property: {
-      title: string;
-      address: string;
-    };
-  };
-}
+import type { Payment } from '@/types/payment';
+import type { PaymentWithRental, PaymentRetryRequest } from '@/types/payment';
 
 interface PaymentHistoryProps {
   userId?: string;
@@ -61,29 +44,34 @@ interface PaymentHistoryProps {
   showExport?: boolean;
 }
 
-export function PaymentHistory({ 
-  userId, 
-  limit, 
-  showFilters = true, 
-  showExport = true 
+export function PaymentHistory({
+  userId,
+  limit,
+  showFilters = true,
+  showExport = true
 }: PaymentHistoryProps) {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [payments, setPayments] = useState<PaymentWithRental[]>([]);
+  const { downloadReceipt } = usePaymentReceipt();
+  const [filteredPayments, setFilteredPayments] = useState<PaymentWithRental[]>([]);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentWithRental | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(true);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [dateRange, setDateRange] = useState<{
-    from?: Date;
-    to?: Date;
-  }>({});
+  // const [dateRange, setDateRange] = useState<{
+  //   from?: Date;
+  //   to?: Date;
+  // }>({});
+  const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
+  // const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
-  const { fetchPaymentHistory, downloadReceipt, retryPayment } = usePayments();
+  const {  retryPayment } = usePayments();
+
+  const { data: historyData, isLoading, refetch: loadPaymentHistory } = usePaymentHistory({ userId, limit });
 
   useEffect(() => {
     loadPaymentHistory();
@@ -93,24 +81,17 @@ export function PaymentHistory({
     applyFilters();
   }, [payments, searchQuery, statusFilter, typeFilter, dateRange]);
 
-  const loadPaymentHistory = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchPaymentHistory({ userId, limit });
-      setPayments(data);
-    } catch (error) {
-      console.error('Failed to load payment history:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    if (historyData) setPayments(historyData.data ?? []);
+  }, [historyData]);
+
 
   const applyFilters = () => {
     let filtered = [...payments];
 
     // Search filter
     if (searchQuery) {
-      filtered = filtered.filter(payment => 
+      filtered = filtered.filter(payment =>
         payment.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         payment.transactionId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         payment.rental?.property.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -144,7 +125,7 @@ export function PaymentHistory({
     setSearchQuery('');
     setStatusFilter('all');
     setTypeFilter('all');
-    setDateRange({});
+    setDateRange({ from: undefined, to: undefined });
   };
 
   const getPaymentTypeLabel = (type: string) => {
@@ -173,7 +154,7 @@ export function PaymentHistory({
 
   const handleRetryPayment = async (paymentId: string) => {
     try {
-      await retryPayment(paymentId);
+      await retryPayment({ paymentId, data: {} as PaymentRetryRequest });
       await loadPaymentHistory(); // Refresh the list
     } catch (error) {
       console.error('Failed to retry payment:', error);
@@ -238,7 +219,7 @@ export function PaymentHistory({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={loadPaymentHistory}
+                onClick={() => loadPaymentHistory()}
               >
                 <RefreshCw className="h-4 w-4 mr-1" />
                 Refresh
@@ -333,7 +314,7 @@ export function PaymentHistory({
                         mode="range"
                         defaultMonth={dateRange.from}
                         selected={dateRange}
-                        onSelect={setDateRange}
+                        onSelect={(range) => setDateRange(range ?? { from: undefined, to: undefined })}
                         numberOfMonths={2}
                       />
                     </PopoverContent>
@@ -360,7 +341,7 @@ export function PaymentHistory({
               <Receipt className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-medium">No payments found</h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                {payments.length === 0 
+                {payments.length === 0
                   ? "You haven't made any payments yet."
                   : "No payments match your current filters."
                 }

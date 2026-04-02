@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Badge } from '@newcondo/ui/badge';
-import { Progress } from '@newcondo/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Progress } from '@newcondo/ui/components/progress';
 import { Clock, Users, TrendingUp, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { formatDistanceToNow } from 'date-fns';
 
 interface QueueAgent {

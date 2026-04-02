@@ -4,14 +4,14 @@ import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Checkbox } from '@newcondo/ui/components/ui/checkbox';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@newcondo/ui/components/ui/form';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Textarea } from '@newcondo/ui/components/ui/textarea';
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
-import { Badge } from '@newcondo/ui/components/ui/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@newcondo/ui/components/form';
+import { Input } from '@newcondo/ui/components/input';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Badge } from '@newcondo/ui/components/badge';
 import { FileText, Download, Upload, CheckCircle, AlertTriangle, Clock } from 'lucide-react';
 import { DocumentTemplateViewer } from './DocumentTemplateViewer';
 
@@ -157,17 +157,29 @@ export function UndertakingForm({
   const getStatusBadge = () => {
     if (!existingDocument) return null;
 
-    const statusConfig = {
-      PENDING: { variant: 'secondary' as const, icon: Clock, text: 'Under Review' },
-      APPROVED: { variant: 'success' as const, icon: CheckCircle, text: 'Approved' },
-      REJECTED: { variant: 'destructive' as const, icon: AlertTriangle, text: 'Rejected' }
-    };
+   const statusConfig = {
+    PENDING: { 
+      className: 'bg-yellow-100 text-yellow-800 border-yellow-200', 
+      icon: Clock, 
+      text: 'Under Review' 
+    },
+    APPROVED: { 
+      className: 'bg-green-100 text-green-800 border-green-200', 
+      icon: CheckCircle, 
+      text: 'Approved' 
+    },
+    REJECTED: { 
+      className: 'bg-red-100 text-red-800 border-red-200', 
+      icon: AlertTriangle, 
+      text: 'Rejected' 
+    },
+  };
 
     const config = statusConfig[existingDocument.status];
     const IconComponent = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1">
+      <Badge variant="outline" className={`flex items-center gap-1 ${config.className}`}>
         <IconComponent className="h-3 w-3" />
         {config.text}
       </Badge>

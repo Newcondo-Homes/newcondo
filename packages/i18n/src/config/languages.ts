@@ -16,30 +16,33 @@ export const LOCALE_METADATA: Record<Locale, LocaleMetadata> = {
     name: 'English',
     nativeName: 'English',
     direction: 'ltr',
+    region: 'Africa',
     currency: 'NGN',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: 'HH:mm',
-    weekStart: 1, // Monday
+    firstDayOfWeek: 1, // Monday
   },
   fr: {
     code: 'fr',
     name: 'French',
     nativeName: 'Français',
     direction: 'ltr',
+    region: 'Africa',
     currency: 'XOF',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: 'HH:mm',
-    weekStart: 1, // Monday
+    firstDayOfWeek: 1, // Monday
   },
   pcm: {
     code: 'pcm',
     name: 'Nigerian Pidgin',
     nativeName: 'Naija Pidgin',
     direction: 'ltr',
+    region: 'Africa',
     currency: 'NGN',
     dateFormat: 'DD/MM/YYYY',
     timeFormat: 'HH:mm',
-    weekStart: 1, // Monday
+    firstDayOfWeek: 1, // Monday
   },
 };
 

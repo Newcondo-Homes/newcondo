@@ -2,19 +2,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+} from '@newcondo/ui/components/select';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { toast } from '@newcondo/ui'
 import {
   Wallet,
   AlertCircle,
@@ -57,7 +57,6 @@ export function WithdrawalForm({
   const [selectedBankId, setSelectedBankId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { toast } = useToast();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -101,8 +100,7 @@ export function WithdrawalForm({
         bankAccountId: selectedBankId,
       });
 
-      toast({
-        title: 'Withdrawal initiated',
+      toast.success('Withdrawal initiated', {
         description: 'Your withdrawal request has been submitted successfully',
       });
 
@@ -111,11 +109,11 @@ export function WithdrawalForm({
       setSelectedBankId('');
     } catch (error) {
       console.error('Withdrawal error:', error);
-      toast({
-        title: 'Withdrawal failed',
+
+      toast.error('Withdrawal failed', {
         description: 'Failed to process withdrawal request',
-        variant: 'destructive',
       });
+
     } finally {
       setIsSubmitting(false);
     }

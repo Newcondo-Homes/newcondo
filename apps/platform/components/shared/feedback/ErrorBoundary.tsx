@@ -2,8 +2,8 @@
 'use client'
 
 import React from 'react'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@newcondo/ui/components/button"
+import { Card, CardContent } from "@newcondo/ui/components/card"
 import { AlertTriangle, RefreshCw, Home } from "lucide-react"
 import { useRouter } from 'next/navigation'
 

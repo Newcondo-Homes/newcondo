@@ -4,11 +4,11 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Input } from "@newcondo/ui/input";
-import { Label } from "@newcondo/ui/label";
-import { Textarea } from "@newcondo/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Input } from "@newcondo/ui/components/input";
+import { Label } from "@newcondo/ui/components/label";
+import { Textarea } from "@newcondo/ui/components/textarea";
 import { User, Phone, Info } from "lucide-react";
 
 const contactPersonSchema = z.object({

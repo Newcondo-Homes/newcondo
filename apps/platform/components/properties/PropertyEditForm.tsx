@@ -2,20 +2,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Textarea } from '@newcondo/ui/components/textarea';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
+} from '@newcondo/ui/components/select';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { toast } from '@newcondo/ui';
 import { Save, X } from 'lucide-react';
 
 interface PropertyEditFormProps {
@@ -82,7 +82,6 @@ export function PropertyEditForm({
 }: PropertyEditFormProps) {
   const [formData, setFormData] = useState(property);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -103,16 +102,13 @@ export function PropertyEditForm({
     try {
       setIsSaving(true);
       await onSave(formData);
-      toast({
-        title: 'Property updated',
+      toast.success("Property updated", {
         description: 'Your property has been updated successfully',
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast({
-        title: 'Save failed',
+      toast.error("Save failed",{
         description: 'Failed to update property',
-        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);

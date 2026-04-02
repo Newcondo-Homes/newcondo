@@ -14,4 +14,5 @@ const prisma =
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export { prisma };
+export type { Role, User, Property, Prisma } from '@prisma/client'
 // export default prisma;

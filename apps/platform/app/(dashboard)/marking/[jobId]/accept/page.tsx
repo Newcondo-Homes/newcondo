@@ -3,12 +3,12 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/components/ui/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
+import { toast } from '@newcondo/ui/';
 import { 
   AlertCircle, 
   CheckCircle, 
@@ -61,10 +61,8 @@ export default function AcceptJobPage() {
       const data = await response.json();
       setJob(data.job);
     } catch (err) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: 'Failed to load job information',
-        variant: 'destructive',
       });
       router.push('/marking/available-jobs');
     } finally {
@@ -74,10 +72,8 @@ export default function AcceptJobPage() {
 
   const handleAcceptJob = async () => {
     if (!termsAccepted || !understandingAccepted || !availabilityConfirmed) {
-      toast({
-        title: 'Incomplete',
+      toast.error('Incomplete',{
         description: 'Please accept all terms and confirmations',
-        variant: 'destructive',
       });
       return;
     }
@@ -97,17 +93,14 @@ export default function AcceptJobPage() {
 
       const data = await response.json();
 
-      toast({
-        title: 'Success!',
+      toast.success('Success!',{
         description: 'Job accepted successfully. You have 3 hours to complete it.',
       });
 
       router.push(`/marking/${jobId}/details`);
     } catch (err) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: err instanceof Error ? err.message : 'Failed to accept job',
-        variant: 'destructive',
       });
     } finally {
       setAccepting(false);

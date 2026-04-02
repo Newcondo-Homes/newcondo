@@ -2,9 +2,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Badge } from "@newcondo/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Badge } from "@newcondo/ui/components/badge";
 import { 
   Bell, 
   MapPin, 

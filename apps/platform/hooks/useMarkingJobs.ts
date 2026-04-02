@@ -21,8 +21,10 @@ interface MarkingJob {
   contactPersonName: string;
   contactPersonPhone: string;
   accessInstructions?: string;
-  preferredTime?: Date;
-  urgencyLevel: string;
+  // preferredTime?: Date;
+  preferredTime?: string;      // ✅ instead of Date
+  // urgencyLevel: string;
+  urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
   markingFee: number;
   paymentStatus: string;
   status: string;
@@ -33,7 +35,12 @@ interface MarkingJob {
   completionImages: string[];
   boundaryData?: any;
   queuePosition?: number;
-  maxCompletionTime?: Date;
+  // maxCompletionTime?: Date;
+  maxCompletionTime?: string;
+  distanceFromAgent?: number;
+  address: string;
+  city: string;
+  state: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,6 +67,37 @@ export function useMarkingJobs() {
     staleTime: 30000, // 30 seconds
   });
 
+  // Fetch available jobs (for agents)
+  const fetchAvailableJobs = useCallback(
+    async (
+      userLocation?: { lat: number; lng: number },
+      maxDistance?: number
+    ) => {
+      const params = new URLSearchParams();
+      if (userLocation) {
+        params.set('lat', String(userLocation.lat));
+        params.set('lng', String(userLocation.lng));
+      }
+      if (maxDistance) params.set('radius', String(maxDistance));
+ 
+      const res = await fetch(`/api/marking-jobs/available?${params}`, {
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch available jobs');
+      return res.json();
+    },
+    []
+  );
+
+
+  const { data: availableJobs = [] } = useQuery<MarkingJob[]>({
+    queryKey: ['availableMarkingJobs'],
+    queryFn: () => fetchAvailableJobs(),
+    staleTime: 30000,
+    refetchInterval: 60000, // Refetch every minute for new jobs
+  });
+
+  
   // Fetch single marking job
   const fetchMarkingJob = useCallback(async (jobId: string) => {
     const res = await fetch(`/api/marking-jobs/${jobId}`, {
@@ -96,6 +134,27 @@ export function useMarkingJobs() {
       setIsSubmitting(false);
     },
   });
+
+  // Accept job (for agents)
+  const acceptJobMutation = useMutation({
+    mutationFn: async (jobId: string) => {
+      const res = await fetch(`/api/marking-jobs/${jobId}/accept`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to accept job');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['availableMarkingJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['markingJobs'] });
+      toast.success('Job accepted! You have 3 hours to complete it.');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
 
   // Cancel marking job
   const cancelMarkingJob = useMutation({
@@ -197,13 +256,17 @@ export function useMarkingJobs() {
 
   return {
     markingJobs,
+    availableJobs,
     pendingJobs,
     completedJobs,
     isLoading,
+    loading: isLoading, 
     error,
     isSubmitting,
     refetch,
     fetchMarkingJob,
+    fetchAvailableJobs,
+    acceptJob: acceptJobMutation.mutateAsync,
     createMarkingJob: createMarkingJob.mutateAsync,
     cancelMarkingJob: cancelMarkingJob.mutateAsync,
     confirmMarking: confirmMarking.mutateAsync,

@@ -2,13 +2,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import { Download, FileText, Sheet } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 

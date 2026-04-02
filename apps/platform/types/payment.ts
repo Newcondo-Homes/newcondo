@@ -50,6 +50,22 @@ export interface Payment {
   updatedAt: Date;
 }
 
+export interface PaymentRetryRequest {
+  paymentMethod?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentWithRental extends Payment {
+  rental?: {
+    id: string;
+    property: {
+      id: string;
+      title: string;
+      address: string;
+    };
+  } | null;
+}
+
 // Form data for creating payments
 export interface PaymentForm {
   amount: number;

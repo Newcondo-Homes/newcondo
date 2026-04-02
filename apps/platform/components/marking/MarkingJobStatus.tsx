@@ -1,8 +1,8 @@
 // apps/platform/components/marking/MarkingJobStatus.tsx
 "use client";
 
-import { Badge } from "@newcondo/ui/badge";
-import { Progress } from "@newcondo/ui/progress";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Progress } from "@newcondo/ui/components/progress";
 import { 
   Clock, 
   User, 

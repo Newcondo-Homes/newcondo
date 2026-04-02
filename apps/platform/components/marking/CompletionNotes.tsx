@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Textarea } from "@newcondo/ui/textarea";
-import { Label } from "@newcondo/ui/label";
-import { Badge } from "@newcondo/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { Label } from "@newcondo/ui/components/label";
+import { Badge } from "@newcondo/ui/components/badge";
 import { FileText, CheckCircle, AlertCircle } from "lucide-react";
 
 interface CompletionNotesProps {

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { MarkingQueueStatus } from '@/components/marking/MarkingQueueStatus';
+import  MarkingQueueStatus from '@/components/marking/MarkingQueueStatus';
 import { MarkingJobCard } from '@/components/marking/MarkingJobCard';
-import { AgentAvailabilityToggle } from '@/components/marking/AgentAvailabilityToggle';
+import AgentAvailabilityToggle  from '@/components/marking/AgentAvailabilityToggle';
 import { MarkingTimerCountdown } from '@/components/marking/MarkingTimerCountdown';
 import { Button } from '@newcondo/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';

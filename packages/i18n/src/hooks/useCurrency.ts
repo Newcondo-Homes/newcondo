@@ -5,7 +5,7 @@ import {
   CurrencyConfig,
   getCurrencyConfig,
   getCurrencyForLocale,
-  DEFAULT_CURRENCY,
+  // DEFAULT_CURRENCY,
 } from '../config/locales';
 
 /**
@@ -224,7 +224,7 @@ function formatNumberWithSeparators(
  */
 function formatCompactCurrency(
   amount: number,
-  currency: CurrencyCode,
+  _currency: CurrencyCode,
   config: CurrencyConfig,
   showSymbol: boolean,
   showCode: boolean

@@ -2,15 +2,16 @@
 
 import { useState } from 'react';
 import { UploadDropzone } from '@uploadthing/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Button } from '@newcondo/ui/button';
-import { Badge } from '@newcondo/ui/badge';
+import type { OurFileRouter } from '@/lib/uploadthing';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
 import { AlertCircle, CheckCircle2, Upload, X, FileText, Eye } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/dialog';
-import { Progress } from '@newcondo/ui/progress';
-import { useToast } from '@newcondo/ui/use-toast';
-import { cn } from '@newcondo/ui/utils';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
+import { Progress } from '@newcondo/ui/components/progress';
+import { toast } from '@newcondo/ui/';
+import { cn } from '@newcondo/ui/lib/utils';
 
 type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
 
@@ -45,7 +46,6 @@ export function OwnershipProofUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewDocument, setPreviewDocument] = useState<OwnershipDocument | null>(null);
-  const { toast } = useToast();
 
   const getStatusColor = (status: DocumentStatus) => {
     switch (status) {
@@ -80,7 +80,7 @@ export function OwnershipProofUpload({
   const handleUploadComplete = async (res: any) => {
     try {
       setIsUploading(true);
-      
+
       // Create document record via API
       const response = await fetch('/api/documents/ownership', {
         method: 'POST',
@@ -98,16 +98,13 @@ export function OwnershipProofUpload({
 
       const document = await response.json();
       onUploadComplete?.(document);
-      
-      toast({
-        title: 'Document uploaded successfully',
+
+      toast.success('Document uploaded successfully', {
         description: 'Your ownership proof has been submitted for verification.'
       });
     } catch (error) {
-      toast({
-        title: 'Upload failed',
+      toast.error('Upload failed', {
         description: 'There was an error uploading your document. Please try again.',
-        variant: 'destructive'
       });
     } finally {
       setIsUploading(false);
@@ -124,16 +121,13 @@ export function OwnershipProofUpload({
       if (!response.ok) throw new Error('Failed to remove document');
 
       onRemoveDocument?.(documentId);
-      
-      toast({
-        title: 'Document removed',
+
+      toast.success('Document removed', {
         description: 'The document has been successfully removed.'
       });
     } catch (error) {
-      toast({
-        title: 'Removal failed',
+      toast.error('Removal failde', {
         description: 'There was an error removing the document. Please try again.',
-        variant: 'destructive'
       });
     }
   };
@@ -152,13 +146,13 @@ export function OwnershipProofUpload({
           Upload documents that prove your ownership of the property. Accepted formats: PDF, JPG, PNG (Max 5MB)
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Alert for requirements */}
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Required Documents:</strong> Certificate of Occupancy (C of O), 
+            <strong>Required Documents:</strong> Certificate of Occupancy (C of O),
             Deed of Assignment, or any legal document proving ownership.
           </AlertDescription>
         </Alert>
@@ -174,7 +168,7 @@ export function OwnershipProofUpload({
                   <div>
                     <p className="font-medium text-sm">{document.fileName}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatFileSize(document.fileSizeBytes)} • 
+                      {formatFileSize(document.fileSizeBytes)} •
                       Uploaded {new Date(document.createdAt).toLocaleDateString()}
                     </p>
                     {document.verificationNotes && (
@@ -182,17 +176,17 @@ export function OwnershipProofUpload({
                     )}
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className={getStatusColor(document.status)}>
                     {getStatusIcon(document.status)}
                     {document.status.toLowerCase().replace('_', ' ')}
                   </Badge>
-                  
+
                   <Dialog>
                     <DialogTrigger asChild>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         onClick={() => setPreviewDocument(document)}
                       >
@@ -205,25 +199,25 @@ export function OwnershipProofUpload({
                       </DialogHeader>
                       <div className="flex justify-center">
                         {document.fileUrl.toLowerCase().includes('.pdf') ? (
-                          <iframe 
-                            src={document.fileUrl} 
+                          <iframe
+                            src={document.fileUrl}
                             className="w-full h-[60vh]"
                             title="Document Preview"
                           />
                         ) : (
-                          <img 
-                            src={document.fileUrl} 
-                            alt="Document" 
+                          <img
+                            src={document.fileUrl}
+                            alt="Document"
                             className="max-w-full h-auto max-h-[60vh] object-contain"
                           />
                         )}
                       </div>
                     </DialogContent>
                   </Dialog>
-                  
+
                   {document.status !== 'APPROVED' && !disabled && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => handleRemoveDocument(document.id)}
                     >
@@ -249,14 +243,12 @@ export function OwnershipProofUpload({
 
         {/* Upload Area */}
         {!hasApprovedDocument && !hasPendingDocument && !disabled && (
-          <UploadDropzone
-            endpoint="documentUploader"
+          <UploadDropzone<OurFileRouter, 'propertyDocuments'>
+            endpoint='propertyDocuments'
             onClientUploadComplete={handleUploadComplete}
             onUploadError={(error: Error) => {
-              toast({
-                title: 'Upload failed',
+              toast.error('Upload failed', {
                 description: error.message,
-                variant: 'destructive'
               });
             }}
             onUploadProgress={(progress) => {

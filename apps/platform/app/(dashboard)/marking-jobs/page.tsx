@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import { useMarkingStore } from "@/store/markingStore";
 import { useAuth } from "@/hooks/useAuth";
 import { markingJobsApi } from "@/lib/api/markingJobs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
 import { Clock, MapPin, Plus, Filter, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 
 const statusConfig = {
   QUEUED: { label: "Queued", color: "bg-blue-500" },

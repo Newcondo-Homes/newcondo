@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Clock, MapPin, User, Phone, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow, format } from "date-fns";

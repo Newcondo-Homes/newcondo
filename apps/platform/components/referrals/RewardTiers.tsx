@@ -2,14 +2,14 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useRewardTiers } from '@/hooks/useRewards';
 import { REWARD_TIERS } from '@/lib/constants/rewardTypes';
 import { formatCurrency } from '@/lib/utils/referralHelpers';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Progress } from '@newcondo/ui/components/progress';
 import { Check } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { cn } from '@/lib/utils';
 
 export function RewardTiers() {

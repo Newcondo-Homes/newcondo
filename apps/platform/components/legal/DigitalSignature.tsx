@@ -2,15 +2,15 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+// import { Separator } from '@newcondo/ui/components/separator';
+// import { Badge } from '@newcondo/ui/components/badge';
+// import { Textarea } from '@newcondo/ui/components/textarea';
 import { PenTool, RotateCcw, Check, X, Download, Upload, Smartphone } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@newcondo/ui/';
 
 interface DigitalSignatureProps {
   documentTitle: string;
@@ -52,7 +52,6 @@ export default function DigitalSignature({
   const [currentSignatureType, setCurrentSignatureType] = useState<'canvas' | 'text' | 'upload'>(signatureType);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   // Initialize canvas
   useEffect(() => {
@@ -162,19 +161,15 @@ export default function DigitalSignature({
     if (!file) return;
     
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Invalid file type',
+      toast.error('Invalid file type', {
         description: 'Please upload an image file.',
-        variant: 'destructive'
       });
       return;
     }
     
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      toast({
-        title: 'File too large',
+      toast.error( 'File too large',{
         description: 'Please upload an image smaller than 5MB.',
-        variant: 'destructive'
       });
       return;
     }
@@ -214,10 +209,8 @@ export default function DigitalSignature({
 
   const handleSign = () => {
     if (!validateSignature()) {
-      toast({
-        title: 'Signature Required',
+      toast.error('Signature Required', {
         description: 'Please provide your signature before continuing.',
-        variant: 'destructive'
       });
       return;
     }
@@ -246,17 +239,13 @@ export default function DigitalSignature({
       
       onSignatureComplete(signatureData);
       
-      toast({
-        title: 'Document Signed',
+      toast.success('Document Signed',{
         description: 'Your digital signature has been successfully recorded.',
-        variant: 'default'
       });
       
     } catch (error) {
-      toast({
-        title: 'Signature Failed',
+      toast.error('Signature Failed', {
         description: 'There was an error processing your signature. Please try again.',
-        variant: 'destructive'
       });
     } finally {
       setLoading(false);

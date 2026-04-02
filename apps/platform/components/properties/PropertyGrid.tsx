@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useInView } from 'react-intersection-observer';
 import PropertyCard from './PropertyCard';
 import PropertyCardSkeleton from './PropertyCardSkeleton';
-import { Button } from '@newcondo/ui/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { usePropertyStore } from '@/store/propertyStore';
 import { Property } from '@/types/api';
@@ -75,7 +75,7 @@ export default function PropertyGrid({
   });
 
   // Auto-fetch next page when in view
-  React.useEffect(() => {
+  useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage && status === 'success') {
       fetchNextPage();
     }

@@ -3,10 +3,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useRewards } from '@/hooks/useRewards';
 import { RewardCard } from './RewardCard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import {
@@ -15,7 +15,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 import { useReferralStore } from '@/store/referralStore';
 
 export function RewardsList() {

@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Polygon, Marker, InfoWindow } from '@react-google-maps/api';
 import { MapPin, Verified, AlertTriangle, Info, Maximize2 } from 'lucide-react';
-import { Button } from '@newcondo/ui/button';
-import { Badge } from '@newcondo/ui/badge';
-import { Card, CardContent } from '@newcondo/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/dialog';
-import { cn } from '@newcondo/ui/utils';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
+import { cn } from '@newcondo/ui/';
 
 interface PropertyBoundaryMapProps {
   propertyId: string;

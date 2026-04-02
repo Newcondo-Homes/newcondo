@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@newcondo/ui/components/ui/card";
-import { Skeleton } from "@newcondo/ui/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@newcondo/ui/components/card";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
 
 export default function PaymentsLoading() {
   return (

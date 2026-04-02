@@ -18,12 +18,12 @@ import {
   Zap,
   LayoutGrid
 } from 'lucide-react';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Separator } from '@newcondo/ui/components/ui/separator';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Separator } from '@newcondo/ui/components/separator';
 import { cn } from '@newcondo/ui/lib/utils';
-import PropertyGallery from './PropertyGallery';
+import {PropertyGallery} from './PropertyGallery';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyBoundaryMap from './PropertyBoundaryMap';
 import PropertyShare from './PropertyShare';

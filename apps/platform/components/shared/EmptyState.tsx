@@ -1,7 +1,7 @@
 // apps/platform/components/shared/EmptyState.tsx
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {

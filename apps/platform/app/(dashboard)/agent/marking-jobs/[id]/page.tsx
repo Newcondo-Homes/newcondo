@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { queueApi } from "@/lib/api/queue";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Separator } from "@newcondo/ui/components/separator";
 import {
   MapPin,
   Phone,
@@ -20,8 +20,8 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { Progress } from "@/components/ui/progress";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { Progress } from "@newcondo/ui/components/progress";
 
 export default function AgentJobDetailPage() {
   const params = useParams();

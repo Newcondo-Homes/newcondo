@@ -2,10 +2,10 @@
   "name": "@newcondo/db",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
-  "main": "./dist/index.js",
+  "main": "./index.ts",
+  "types": "./index.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./index.ts"
   },
   "scripts": {
     "db:migrate": "prisma migrate dev --name init --skip-generate",

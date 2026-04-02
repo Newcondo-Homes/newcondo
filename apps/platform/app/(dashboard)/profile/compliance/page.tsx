@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Progress } from '@newcondo/ui/components/ui/progress';
-import { Separator } from '@newcondo/ui/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Progress } from '@newcondo/ui/components/progress';
+import { Separator } from '@newcondo/ui/components/separator';
 import { 
   Shield, 
   FileCheck, 
@@ -23,8 +23,8 @@ import {
   Calendar,
   ExternalLink
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/ui/tabs';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { DocumentStatus, DocumentType, VerificationStatus, UserType } from '@newcondo/db';
 
 interface ComplianceData {

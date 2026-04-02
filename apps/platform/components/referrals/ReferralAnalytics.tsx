@@ -3,16 +3,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 import { useAnalyticsOverview, usePerformanceMetrics, useTimeSeriesData } from '@/hooks/useReferralAnalytics';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { TrendingUp, TrendingDown, Users, DollarSign, Target } from 'lucide-react';
 import {
   LineChart,

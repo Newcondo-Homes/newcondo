@@ -2,10 +2,10 @@
 
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Avatar, AvatarFallback } from '@newcondo/ui/components/avatar';
 import { CheckCircle, Gift, TrendingUp, Users, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 

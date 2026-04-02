@@ -18,6 +18,27 @@ export const propertyKeys = {
   recent: () => [...propertyKeys.all, 'recent'] as const,
 };
 
+
+export function useMarkProperty() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ propertyId, data }: {
+      propertyId: string;
+      data: {
+        boundaryCoordinates: { lat: number; lng: number }[];
+        boundaryImages: string[];
+        boundaryVerified: boolean;
+        boundaryMarkedAt: Date;
+      };
+    }) => propertyApi.markProperty(propertyId, data),
+    onSuccess: (_, { propertyId }) => {
+      queryClient.invalidateQueries({ queryKey: propertyKeys.detail(propertyId) });
+    },
+  });
+}
+
+
 // Hook for fetching properties with filters and pagination
 export function useProperties(filters?: PropertyFilters) {
   return useQuery({

@@ -5,9 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, AlertCircle, Home, MapPin, FileText, Users } from "lucide-react";
-import { Button } from "@newcondo/ui/button";
-import { Input } from "@newcondo/ui/input";
-import { Textarea } from "@newcondo/ui/textarea";
+import { Button } from "@newcondo/ui/components/button";
+import { Input } from "@newcondo/ui/components/input";
+import { Textarea } from "@newcondo/ui/components/textarea";
 import {
   Form,
   FormControl,
@@ -16,24 +16,24 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@newcondo/ui/form";
+} from "@newcondo/ui/components/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@newcondo/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Alert, AlertDescription } from "@newcondo/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/tabs";
-import { Checkbox } from "@newcondo/ui/checkbox";
+} from "@newcondo/ui/components/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
+import { Checkbox } from "@newcondo/ui/components/checkbox";
 import { NigerianAddressSelector } from "@/components/address/NigerianAddressSelector";
 import { ContactPersonForm } from "@/components/properties/ContactPersonForm";
 import { PropertyMarkingStatus } from "@/components/properties/PropertyMarkingStatus";
 import { ImageUploader } from "@/components/properties/ImageUploader";
 import { useRouter } from "next/navigation";
-import { useToast } from "@newcondo/ui/use-toast";
+import { toast } from "@newcondo/ui/";
 
 const propertyFormSchema = z.object({
   // Basic Information
@@ -111,7 +111,6 @@ interface PropertyFormProps {
 
 export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFormProps) {
   const router = useRouter();
-  const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState("basic");
   const [markingJobId, setMarkingJobId] = useState<string | null>(null);
@@ -158,8 +157,7 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
 
       const result = await response.json();
 
-      toast({
-        title: "Success",
+      toast.success("Sucess", {
         description: propertyId
           ? "Property updated successfully"
           : "Property created successfully",
@@ -171,10 +169,8 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
         router.push(`/dashboard/properties/${result.data.id}`);
       }
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error",{
         description: error instanceof Error ? error.message : "An error occurred",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

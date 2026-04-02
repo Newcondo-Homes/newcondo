@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui";
 import { DocumentTemplateViewer } from "@/components/legal/DocumentTemplateViewer";
-import { LegalAgreementModal } from "@/components/legal/LegalAgreementModal";
+import LegalAgreementModal  from "@/components/legal/LegalAgreementModal";
 import { ComplianceStatus } from "@/components/legal/ComplianceStatus";
 import { Shield, Lock, Eye, UserCheck } from "lucide-react";
 

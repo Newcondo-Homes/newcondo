@@ -4,9 +4,9 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Textarea } from '@newcondo/ui/components/textarea';
 import { useInviteViaWhatsApp } from '@/hooks/useReferrals';
 import { inviteViaWhatsAppSchema, type InviteViaWhatsAppInput } from '@/lib/validations/referral';
 import { Loader2, Phone } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@newcondo/ui/components/form';
 
 export function InviteViaWhatsApp() {
   const inviteMutation = useInviteViaWhatsApp();

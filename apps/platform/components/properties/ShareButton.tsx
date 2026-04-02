@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { Share2, Copy, Check } from "lucide-react";
-import { Button } from "@newcondo/ui/components/ui/button";
+import { Button } from "@newcondo/ui/components/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@newcondo/ui/components/ui/tooltip";
-import { cn } from "@/lib/utils/helpers";
+} from "@newcondo/ui/components/tooltip";
+import { cn } from "@newcondo/ui";
 import { ShareModal } from "./ShareModal";
-import { toast } from "@newcondo/ui/hooks/use-toast";
+import { toast } from "@newcondo/ui/";
 
 interface ShareButtonProps {
   propertyId: string;
@@ -71,10 +71,8 @@ export function ShareButton({
         const link = await onGenerateLink();
         return link;
       } catch (error) {
-        toast({
-          title: "Failed to generate link",
+        toast.error("Failed to generate link",{
           description: "Please try again later.",
-          variant: "destructive",
         });
         throw error;
       } finally {
@@ -94,16 +92,13 @@ export function ShareButton({
       const link = await generateShareLink();
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast({
-        title: "Link copied!",
+      toast.success("Link copied!", {
         description: "Share this link with anyone.",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast({
-        title: "Failed to copy link",
+      toast.error("Failed to copy link",{
         description: "Please try again.",
-        variant: "destructive",
       });
     }
   };

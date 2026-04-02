@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { toast } from '@newcondo/ui';
 import { AlertCircle, CreditCard, Calendar, User, FileText } from 'lucide-react';
 import { Payment } from '@/types/api';
 
@@ -48,7 +48,6 @@ export default function RefundRequest({ payment, onRefundRequested, onClose }: R
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { toast } = useToast();
 
   const handleInputChange = (field: keyof RefundFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -122,18 +121,15 @@ export default function RefundRequest({ payment, onRefundRequested, onClose }: R
 
       const result = await response.json();
       
-      toast({
-        title: "Refund Request Submitted",
+      toast.success("Refund Request Submitted", {
         description: "Your refund request has been submitted successfully. We'll review it within 24-48 hours.",
       });
 
       onRefundRequested?.(result.refundId);
       onClose?.();
     } catch (error) {
-      toast({
-        title: "Submission Failed",
+      toast.success("Submission Failed", {
         description: error instanceof Error ? error.message : "Failed to submit refund request",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

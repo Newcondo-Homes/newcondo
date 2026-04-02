@@ -5,18 +5,19 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { UploadDropzone } from '@uploadthing/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Button } from '@newcondo/ui/button';
-import { Badge } from '@newcondo/ui/badge';
-import { Textarea } from '@newcondo/ui/textarea';
-import { Input } from '@newcondo/ui/input';
-import { Label } from '@newcondo/ui/label';
-import { Checkbox } from '@newcondo/ui/checkbox';
+import type { OurFileRouter } from '@/lib/uploadthing';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { AlertCircle, CheckCircle2, Upload, X, FileText, User, Phone, Mail } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@newcondo/ui/form';
-import { useToast } from '@newcondo/ui/use-toast';
-import { cn } from '@newcondo/ui/utils';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@newcondo/ui/components/form';
+import { toast } from '@newcondo/ui/';
+import { cn } from '@newcondo/ui/lib/utils';
 
 const agentPermissionSchema = z.object({
   ownerName: z.string().min(2, 'Owner name must be at least 2 characters'),
@@ -77,7 +78,6 @@ export function AgentPermissionForm({
   const [uploadedDocument, setUploadedDocument] = useState<AgentPermissionDocument | null>(existingDocument || null);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm<AgentPermissionFormData>({
     resolver: zodResolver(agentPermissionSchema),
@@ -97,7 +97,7 @@ export function AgentPermissionForm({
   const handleUploadComplete = async (res: any) => {
     try {
       setIsUploading(true);
-      
+
       // Create document record via API
       const response = await fetch('/api/documents/consent', {
         method: 'POST',
@@ -116,16 +116,14 @@ export function AgentPermissionForm({
       const document = await response.json();
       setUploadedDocument(document);
       form.setValue('consentDocument', document.fileUrl);
-      
-      toast({
-        title: 'Document uploaded successfully',
-        description: 'Your consent document has been uploaded and is ready for submission.'
+
+      toast.success('Document uploaded successfully', {
+        description: 'Your consent document has been uploaded and is ready for submission.',
       });
     } catch (error) {
-      toast({
-        title: 'Upload failed',
+
+      toast.error('Upload failed', {
         description: 'There was an error uploading your document. Please try again.',
-        variant: 'destructive'
       });
     } finally {
       setIsUploading(false);
@@ -144,33 +142,29 @@ export function AgentPermissionForm({
 
       setUploadedDocument(null);
       form.setValue('consentDocument', '');
-      
-      toast({
-        title: 'Document removed',
-        description: 'The consent document has been removed.'
+
+      toast.success('Document removed', {
+        description: 'The consent document has been removed.',
       });
     } catch (error) {
-      toast({
-        title: 'Removal failed',
+      toast.error('Removal failed', {
         description: 'There was an error removing the document. Please try again.',
-        variant: 'destructive'
       });
+
     }
   };
 
   const handleSubmit = async (data: AgentPermissionFormData) => {
     if (!uploadedDocument) {
-      toast({
-        title: 'Document required',
+      toast('Document required', {
         description: 'Please upload a signed consent document from the property owner.',
-        variant: 'destructive'
       });
       return;
     }
 
     try {
       setIsSubmitting(true);
-      
+
       const response = await fetch('/api/properties/agent-permission', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -184,16 +178,13 @@ export function AgentPermissionForm({
       if (!response.ok) throw new Error('Failed to submit permission form');
 
       onSubmit?.(data);
-      
-      toast({
-        title: 'Permission form submitted',
+
+      toast.success('Permission form submitted', {
         description: 'Your agent permission form has been submitted for verification.'
       });
     } catch (error) {
-      toast({
-        title: 'Submission failed',
+      toast.error('Submission failed', {
         description: 'There was an error submitting your form. Please try again.',
-        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
@@ -230,18 +221,18 @@ export function AgentPermissionForm({
           Agent Permission Form
         </CardTitle>
         <CardDescription>
-          This form grants permission to act as an agent for this property. 
+          This form grants permission to act as an agent for this property.
           Both the form and a signed consent document from the property owner are required.
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Property Owner Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Property Owner Information</h3>
-              
+
               <FormField
                 control={form.control}
                 name="ownerName"
@@ -251,9 +242,9 @@ export function AgentPermissionForm({
                     <FormControl>
                       <div className="relative">
                         <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                          {...field} 
-                          className="pl-10" 
+                        <Input
+                          {...field}
+                          className="pl-10"
                           placeholder="Enter property owner's full name"
                           disabled={disabled}
                         />
@@ -274,9 +265,9 @@ export function AgentPermissionForm({
                       <FormControl>
                         <div className="relative">
                           <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input 
-                            {...field} 
-                            className="pl-10" 
+                          <Input
+                            {...field}
+                            className="pl-10"
                             placeholder="+234 xxx xxx xxxx"
                             disabled={disabled}
                           />
@@ -296,9 +287,9 @@ export function AgentPermissionForm({
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input 
-                            {...field} 
-                            className="pl-10" 
+                          <Input
+                            {...field}
+                            className="pl-10"
                             placeholder="owner@example.com"
                             disabled={disabled}
                           />
@@ -317,8 +308,8 @@ export function AgentPermissionForm({
                   <FormItem>
                     <FormLabel>Your Relationship to Property *</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        {...field} 
+                      <Textarea
+                        {...field}
                         placeholder="e.g., Licensed real estate agent representing the owner, Property management company, Family member managing on behalf of owner"
                         disabled={disabled}
                       />
@@ -332,7 +323,7 @@ export function AgentPermissionForm({
             {/* Permission Scope */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Permission Scope</h3>
-              
+
               <FormField
                 control={form.control}
                 name="permissionScope"
@@ -379,8 +370,8 @@ export function AgentPermissionForm({
                   <FormItem>
                     <FormLabel>Permission Duration *</FormLabel>
                     <FormControl>
-                      <select 
-                        {...field} 
+                      <select
+                        {...field}
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         disabled={disabled}
                       >
@@ -407,8 +398,8 @@ export function AgentPermissionForm({
                   <FormItem>
                     <FormLabel>Additional Notes (Optional)</FormLabel>
                     <FormControl>
-                      <Textarea 
-                        {...field} 
+                      <Textarea
+                        {...field}
                         placeholder="Any additional information about the permission arrangement"
                         disabled={disabled}
                       />
@@ -422,12 +413,12 @@ export function AgentPermissionForm({
             {/* Document Upload */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Consent Document</h3>
-              
+
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  You must upload a signed consent document from the property owner 
-                  authorizing you to act as their agent. This document should include 
+                  You must upload a signed consent document from the property owner
+                  authorizing you to act as their agent. This document should include
                   the owner's signature and contact information.
                 </AlertDescription>
               </Alert>
@@ -448,16 +439,16 @@ export function AgentPermissionForm({
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <Badge variant="outline" className={getStatusColor(uploadedDocument.status)}>
                       {getStatusIcon(uploadedDocument.status)}
                       {uploadedDocument.status.toLowerCase()}
                     </Badge>
-                    
+
                     {uploadedDocument.status !== 'APPROVED' && !disabled && (
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="sm"
                         type="button"
                         onClick={handleRemoveDocument}
@@ -469,14 +460,12 @@ export function AgentPermissionForm({
                 </div>
               ) : (
                 !disabled && (
-                  <UploadDropzone
-                    endpoint="documentUploader"
+                  <UploadDropzone<OurFileRouter, 'propertyDocuments'>
+                    endpoint='propertyDocuments'
                     onClientUploadComplete={handleUploadComplete}
                     onUploadError={(error: Error) => {
-                      toast({
-                        title: 'Upload failed',
+                      toast.error('Upload failed', {
                         description: error.message,
-                        variant: 'destructive'
                       });
                     }}
                     appearance={{
@@ -520,7 +509,7 @@ export function AgentPermissionForm({
               )}
             />
 
-            <Button 
+            <Button
               type="submit"
               className="w-full"
               disabled={isSubmitting || isUploading || disabled || !form.formState.isValid}

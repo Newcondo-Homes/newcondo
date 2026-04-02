@@ -2,12 +2,13 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { GoogleMap, Polygon, useJsApiLoader } from '@react-google-maps/api';
 import { Save, Trash2, AlertCircle, MapPin } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui/';
+
 
 interface BoundaryEditorProps {
   propertyId: string;
@@ -32,7 +33,6 @@ export function BoundaryEditor({
   const [coordinates, setCoordinates] = useState(initialCoordinates);
   const [isDrawing, setIsDrawing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -57,25 +57,21 @@ export function BoundaryEditor({
   const handleStartDrawing = () => {
     setCoordinates([]);
     setIsDrawing(true);
-    toast({
-      title: 'Drawing mode activated',
+    toast.info('Drawing mode activated', {
       description: 'Click on the map to draw the property boundary',
     });
   };
 
   const handleCompleteDrawing = () => {
     if (coordinates.length < 3) {
-      toast({
-        title: 'Invalid boundary',
+      toast.error('Invalid boundary', {
         description: 'Please draw at least 3 points to create a boundary',
-        variant: 'destructive',
       });
       return;
     }
 
     setIsDrawing(false);
-    toast({
-      title: 'Boundary drawn',
+    toast.success('Boundary drawn', {
       description: 'Review your boundary and save when ready',
     });
   };
@@ -87,10 +83,8 @@ export function BoundaryEditor({
 
   const handleSave = async () => {
     if (coordinates.length < 3) {
-      toast({
-        title: 'Invalid boundary',
+      toast.error('Invalid boundary', {
         description: 'Please draw at least 3 points to create a boundary',
-        variant: 'destructive',
       });
       return;
     }
@@ -98,16 +92,13 @@ export function BoundaryEditor({
     try {
       setIsSaving(true);
       await onSave(coordinates);
-      toast({
-        title: 'Boundary saved',
+      toast.success('Boundary saved', {
         description: 'Property boundary has been updated successfully',
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast({
-        title: 'Save failed',
+      toast.error('Save failed', {
         description: 'Failed to save property boundary',
-        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -158,9 +149,10 @@ export function BoundaryEditor({
           </Button>
         </div>
 
-        <div className="rounded-lg overflow-hidden border">
+        <div className={`rounded-lg overflow-hidden border ${isDrawing ? '[&_.gm-style]:cursor-crosshair' : ''}`}>
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
+            mapContainerClassName={isDrawing ? 'cursor-crosshair' : 'cursor-default'}
             center={gpsCoordinates}
             zoom={20}
             mapTypeId="satellite"
@@ -170,7 +162,6 @@ export function BoundaryEditor({
               zoomControl: true,
               streetViewControl: true,
               fullscreenControl: true,
-              cursor: isDrawing ? 'crosshair' : 'default',
             }}
           >
             {coordinates.length > 0 && (

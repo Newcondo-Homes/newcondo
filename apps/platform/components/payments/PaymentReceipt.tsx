@@ -1,13 +1,14 @@
 'use client'
 
 import { forwardRef, useState } from 'react'
-import { Card, CardContent, CardHeader } from '@newcondo/ui/components/ui/card'
-import { Button } from '@newcondo/ui/components/ui/button'
-import { Badge } from '@newcondo/ui/components/ui/badge'
-import { Separator } from '@newcondo/ui/components/ui/separator'
+import { Card, CardContent, CardHeader } from '@newcondo/ui/components/card'
+import { Button } from '@newcondo/ui/components/button'
+import { Badge } from '@newcondo/ui/components/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog'
+import { Separator } from '@newcondo/ui/components/separator'
 import {
   Download,
-  Print,
+  Printer,
   Check,
   Building,
   MapPin,
@@ -59,41 +60,66 @@ interface PaymentReceiptProps {
   onDownload?: () => void
   onPrint?: () => void
   onShare?: () => void
+  onClose?: () => void
+  isOpen?: boolean
   className?: string
 }
 
 const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
-  ({ paymentData, onDownload, onPrint, onShare, className }, ref) => {
+  ({ payment, isOpen, onClose, paymentData: paymentDataProp, onDownload, onPrint, onShare, className }, ref) => {
     const [copied, setCopied] = useState(false)
 
-    const formatCurrency = (amount: number) => {
-      return new Intl.NumberFormat('en-NG', {
+    // Normalize data — support both usage modes
+    const data = paymentDataProp ?? (payment ? {
+      id: payment.id,
+      transactionId: payment.transactionId ?? payment.id,
+      flutterwaveRef: (payment as any).flutterwaveRef ?? '',
+      amount: payment.amount,
+      processingFee: undefined,
+      total: payment.amount,
+      currency: payment.currency,
+      paymentMethod: payment.paymentMethod ?? 'N/A',
+      paymentType: payment.paymentType as 'RENT' | 'DEPOSIT' | 'PROPERTY_MARKING',
+      status: payment.status as 'SUCCESS' | 'PENDING' | 'FAILED',
+      paidAt: payment.paidAt ? String(payment.paidAt) : payment.createdAt ? String(payment.createdAt) : new Date().toISOString(),
+      description: payment.description ?? undefined,
+      property: {
+        title: payment.rental?.property.title ?? 'N/A',
+        address: payment.rental?.property.address ?? 'N/A',
+        unitNumber: undefined,
+      },
+      landlord: undefined,
+      tenant: {
+        name: 'N/A',
+        email: 'N/A',
+      },
+      rental: undefined,
+    } : null)
+
+    if (!data) return null
+
+    const formatAmount = (amount: number) =>
+      new Intl.NumberFormat('en-NG', {
         style: 'currency',
-        currency: paymentData.currency,
+        currency: data.currency,
         minimumFractionDigits: 2,
       }).format(amount)
-    }
 
-    const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString('en-NG', {
+    const formatReceiptDate = (dateString: string) =>
+      new Date(dateString).toLocaleDateString('en-NG', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
       })
-    }
 
     const getPaymentTypeLabel = (type: string) => {
       switch (type) {
-        case 'RENT':
-          return 'Monthly Rent Payment'
-        case 'DEPOSIT':
-          return 'Security Deposit'
-        case 'PROPERTY_MARKING':
-          return 'Property Marking Service'
-        default:
-          return 'Payment'
+        case 'RENT': return 'Monthly Rent Payment'
+        case 'DEPOSIT': return 'Security Deposit'
+        case 'PROPERTY_MARKING': return 'Property Marking Service'
+        default: return 'Payment'
       }
     }
 
@@ -107,53 +133,47 @@ const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
             </Badge>
           )
         case 'PENDING':
-          return (
-            <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-              Pending
-            </Badge>
-          )
+          return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Pending</Badge>
         case 'FAILED':
-          return (
-            <Badge className="bg-red-100 text-red-800 border-red-200">
-              Failed
-            </Badge>
-          )
+          return <Badge className="bg-red-100 text-red-800 border-red-200">Failed</Badge>
         default:
           return <Badge variant="outline">{status}</Badge>
       }
     }
 
     const copyTransactionId = () => {
-      navigator.clipboard.writeText(paymentData.transactionId)
+      navigator.clipboard.writeText(data.transactionId)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }
 
-    return (
-      <div className={cn('max-w-2xl mx-auto', className)}>
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-2 mb-4 print:hidden">
-          {onDownload && (
-            <Button variant="outline" size="sm" onClick={onDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Download PDF
-            </Button>
-          )}
-          {onPrint && (
-            <Button variant="outline" size="sm" onClick={onPrint}>
-              <Print className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-          )}
-          {onShare && (
-            <Button variant="outline" size="sm" onClick={onShare}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-          )}
-        </div>
+    const receiptContent = (
+      <div className={cn('max-w-2xl mx-auto', className)} ref={ref}>
+        {/* Action Buttons — only show in standalone mode */}
+        {!isOpen && (
+          <div className="flex justify-end gap-2 mb-4 print:hidden">
+            {onDownload && (
+              <Button variant="outline" size="sm" onClick={onDownload}>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+            )}
+            {onPrint && (
+              <Button variant="outline" size="sm" onClick={onPrint}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+            )}
+            {onShare && (
+              <Button variant="outline" size="sm" onClick={onShare}>
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            )}
+          </div>
+        )}
 
-        <Card ref={ref} className="receipt-card">
+        <Card className="receipt-card">
           <CardHeader className="text-center pb-6">
             {/* Company Header */}
             <div className="mb-4">
@@ -166,35 +186,32 @@ const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
               </p>
             </div>
 
-            {/* Receipt Header */}
             <div className="flex items-center justify-center gap-2 mb-4">
               <FileText className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold">Payment Receipt</h2>
             </div>
 
-            {/* Status and Date */}
             <div className="flex items-center justify-between">
-              {getStatusBadge(paymentData.status)}
+              {getStatusBadge(data.status)}
               <p className="text-sm text-muted-foreground">
-                {formatDate(paymentData.paidAt)}
+                {formatReceiptDate(data.paidAt)}
               </p>
             </div>
           </CardHeader>
 
           <CardContent className="space-y-6">
             {/* Transaction Details */}
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-muted/50 rounded-lg p-4">
               <h3 className="font-medium mb-3 flex items-center gap-2">
                 <CreditCard className="h-4 w-4" />
                 Transaction Details
               </h3>
-              
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Transaction ID:</span>
                   <div className="flex items-center gap-2">
-                    <code className="bg-white px-2 py-1 rounded text-xs">
-                      {paymentData.transactionId}
+                    <code className="bg-background px-2 py-1 rounded text-xs">
+                      {data.transactionId}
                     </code>
                     <Button
                       variant="ghost"
@@ -202,26 +219,28 @@ const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
                       onClick={copyTransactionId}
                       className="h-6 w-6 p-0"
                     >
-                      <Copy className="h-3 w-3" />
+                      {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                     </Button>
                   </div>
                 </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Flutterwave Ref:</span>
-                  <code className="bg-white px-2 py-1 rounded text-xs">
-                    {paymentData.flutterwaveRef}
-                  </code>
-                </div>
-                
+
+                {data.flutterwaveRef && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Flutterwave Ref:</span>
+                    <code className="bg-background px-2 py-1 rounded text-xs">
+                      {data.flutterwaveRef}
+                    </code>
+                  </div>
+                )}
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment Method:</span>
-                  <span className="capitalize">{paymentData.paymentMethod.replace('_', ' ')}</span>
+                  <span className="capitalize">{data.paymentMethod.replace('_', ' ')}</span>
                 </div>
-                
+
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment Type:</span>
-                  <span>{getPaymentTypeLabel(paymentData.paymentType)}</span>
+                  <span>{getPaymentTypeLabel(data.paymentType)}</span>
                 </div>
               </div>
             </div>
@@ -232,117 +251,146 @@ const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
                 <Building className="h-4 w-4" />
                 Property Information
               </h3>
-              
               <div className="space-y-2 text-sm">
                 <div>
-                  <p className="font-medium">{paymentData.property.title}</p>
-                  {paymentData.property.unitNumber && (
+                  <p className="font-medium">{data.property.title}</p>
+                  {data.property.unitNumber && (
                     <p className="text-muted-foreground text-xs">
-                      Unit: {paymentData.property.unitNumber}
+                      Unit: {data.property.unitNumber}
                     </p>
                   )}
                 </div>
-                
                 <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <p className="text-muted-foreground">{paymentData.property.address}</p>
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-muted-foreground">{data.property.address}</p>
                 </div>
               </div>
             </div>
 
-            {/* Parties Information */}
+            {/* Parties */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Tenant */}
               <div>
                 <h4 className="font-medium mb-2 flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Tenant
                 </h4>
                 <div className="text-sm space-y-1">
-                  <p>{paymentData.tenant.name}</p>
-                  <p className="text-muted-foreground">{paymentData.tenant.email}</p>
+                  <p>{data.tenant.name}</p>
+                  <p className="text-muted-foreground">{data.tenant.email}</p>
                 </div>
               </div>
 
-              {/* Landlord */}
-              {paymentData.landlord && (
+              {data.landlord && (
                 <div>
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Landlord
                   </h4>
                   <div className="text-sm space-y-1">
-                    <p>{paymentData.landlord.name}</p>
-                    {paymentData.landlord.email && (
-                      <p className="text-muted-foreground">{paymentData.landlord.email}</p>
+                    <p>{data.landlord.name}</p>
+                    {data.landlord.email && (
+                      <p className="text-muted-foreground">{data.landlord.email}</p>
                     )}
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Rental Period (if applicable) */}
-            {paymentData.rental && (
+            {/* Rental Period */}
+            {data.rental && (
               <div>
                 <h3 className="font-medium mb-3 flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   Rental Period
                 </h3>
-                
                 <div className="text-sm space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Start Date:</span>
-                    <span>{new Date(paymentData.rental.startDate).toLocaleDateString('en-NG')}</span>
+                    <span>{new Date(data.rental.startDate).toLocaleDateString('en-NG')}</span>
                   </div>
-                  
-                  {paymentData.rental.endDate && (
+                  {data.rental.endDate && (
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">End Date:</span>
-                      <span>{new Date(paymentData.rental.endDate).toLocaleDateString('en-NG')}</span>
+                      <span>{new Date(data.rental.endDate).toLocaleDateString('en-NG')}</span>
                     </div>
                   )}
-                  
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Monthly Rent:</span>
-                    <span>{formatCurrency(paymentData.rental.monthlyRent)}</span>
+                    <span>{formatAmount(data.rental.monthlyRent)}</span>
                   </div>
                 </div>
               </div>
             )}
-            
+
             <Separator />
-            
+
             {/* Amount Breakdown */}
             <div className="space-y-2">
               <div className="flex justify-between font-medium">
                 <span>Payment Amount:</span>
-                <span>{formatCurrency(paymentData.amount)}</span>
+                <span>{formatAmount(data.amount)}</span>
               </div>
-              
-              {paymentData.processingFee !== undefined && (
+              {data.processingFee !== undefined && (
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Processing Fee:</span>
-                  <span>{formatCurrency(paymentData.processingFee)}</span>
+                  <span>{formatAmount(data.processingFee)}</span>
                 </div>
               )}
-              
               <Separator className="my-2" />
-              
               <div className="flex justify-between text-lg font-bold">
                 <span>Total Paid:</span>
-                <span>{formatCurrency(paymentData.total)}</span>
+                <span>{formatAmount(data.total)}</span>
               </div>
             </div>
-            
-            {paymentData.description && (
-              <div className="text-sm text-center italic text-muted-foreground pt-4">
-                <p>"{paymentData.description}"</p>
-              </div>
+
+            {data.description && (
+              <p className="text-sm text-center italic text-muted-foreground pt-4">
+                "{data.description}"
+              </p>
             )}
           </CardContent>
         </Card>
       </div>
     )
+
+    // Modal mode
+    if (isOpen !== undefined) {
+      return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="sr-only">Payment Receipt</DialogTitle>
+                <div className="flex items-center gap-2 ml-auto print:hidden">
+                  {onDownload && (
+                    <Button variant="outline" size="sm" onClick={onDownload}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download PDF
+                    </Button>
+                  )}
+                  {onPrint && (
+                    <Button variant="outline" size="sm" onClick={onPrint}>
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print
+                    </Button>
+                  )}
+                  {onShare && (
+                    <Button variant="outline" size="sm" onClick={onShare}>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </DialogHeader>
+            {receiptContent}
+          </DialogContent>
+        </Dialog>
+      )
+    }
+
+    // Standalone mode
+    return receiptContent
   }
 )
 

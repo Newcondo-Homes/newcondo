@@ -28,7 +28,7 @@ export const i18nConfig: InitOptions = {
   interpolation: {
     escapeValue: false, // React already escapes values
     formatSeparator: ',',
-    format: (value, format, lng) => {
+    format: (value, format, _lng) => {
       // Custom formatters can be added here
       if (format === 'uppercase') return value.toUpperCase();
       if (format === 'lowercase') return value.toLowerCase();
@@ -120,11 +120,15 @@ export const initI18n = async (serverLocale?: string) => {
   
   if (isBrowser) {
     // Browser-only plugins
-    plugins.push(Backend, LanguageDetector);
+    plugins.push(Backend as any, LanguageDetector as any);
   }
 
-  // Initialize with plugins
-  await i18n.use(...plugins).init({
+  let i18nInstance = i18n;
+  for (const plugin of plugins) {
+    i18nInstance = i18nInstance.use(plugin as any);
+  }
+
+  await i18nInstance.init({
     ...i18nConfig,
     lng: serverLocale || DEFAULT_LOCALE,
   });

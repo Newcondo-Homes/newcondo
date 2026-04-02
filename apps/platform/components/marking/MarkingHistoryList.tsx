@@ -11,9 +11,9 @@ import {
   Eye,
   MapPin,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
 import {
   Table,
   TableBody,
@@ -21,9 +21,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+} from "@newcondo/ui/components/table";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
+// import { toast } from '@newcondo/ui'
 
 interface MarkingJob {
   id: string;
@@ -59,7 +59,6 @@ export default function MarkingHistoryList({
   userId,
   role,
 }: MarkingHistoryListProps) {
-  const { toast } = useToast();
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
 
   const { data: jobs, isLoading } = useQuery<MarkingJob[]>({

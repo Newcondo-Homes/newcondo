@@ -73,14 +73,14 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
   const handleRetry = async () => {
     setIsRetrying(true);
     setAutoRetryCountdown(0);
-    
+
     try {
       // Test network connectivity
-      await fetch('/api/health', { 
+      await fetch('/api/health', {
         method: 'HEAD',
         cache: 'no-cache'
       });
-      
+
       if (onRetry) {
         onRetry();
       }
@@ -95,15 +95,36 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
     }
   };
 
+  // const getConnectionQuality = () => {
+  //   // @ts-ignore - experimental API
+  //   if ('connection' in navigator && navigator.connection) {
+  //     // @ts-ignore
+  //     const connection = navigator.connection;
+  //     return {
+  //       effectiveType: connection.effectiveType,
+  //       downlink: connection.downlink,
+  //       rtt: connection.rtt
+  //     };
+  //   }
+  //   return null;
+  // };
+
   const getConnectionQuality = () => {
-    // @ts-ignore - experimental API
-    if ('connection' in navigator && navigator.connection) {
-      // @ts-ignore
-      const connection = navigator.connection;
+    if ('connection' in navigator) {
+      const connection = (navigator as Navigator & {
+        connection?: {
+          effectiveType?: string;
+          downlink?: number;
+          rtt?: number;
+        };
+      }).connection;
+
+      if (!connection) return null;
+
       return {
         effectiveType: connection.effectiveType,
         downlink: connection.downlink,
-        rtt: connection.rtt
+        rtt: connection.rtt,
       };
     }
     return null;
@@ -128,7 +149,7 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
         <p className="text-sm text-red-600">
           It looks like you are offline. Please check your internet connection.
         </p>
-        
+
         {autoRetry && (
           <p className="text-xs text-red-500 mt-2">
             Auto-retrying in {autoRetryCountdown} seconds...
@@ -145,9 +166,9 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
       </div>
 
       {showRetry && (
-        <Button 
-          onClick={handleRetry} 
-          disabled={isRetrying || autoRetryCountdown > 0} 
+        <Button
+          onClick={handleRetry}
+          disabled={isRetrying || autoRetryCountdown > 0}
           variant="outline"
           className="flex-shrink-0"
         >

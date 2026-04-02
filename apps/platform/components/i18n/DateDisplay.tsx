@@ -1,7 +1,7 @@
 'use client';
 
-import { formatDate, formatRelativeTime } from '@/lib/utils/locale';
-import { type Locale } from '@/i18n';
+import { formatLocaleDate, formatRelativeLocaleTime} from '@/lib/utils/locale';
+import { type Locale,  } from '@newcondo/i18n'
 
 interface DateDisplayProps {
   date: Date | string;
@@ -18,10 +18,17 @@ export function DateDisplay({
 }: DateDisplayProps) {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
 
+  const formatOptions: Intl.DateTimeFormatOptions =
+    format === 'short' ? { year: 'numeric', month: 'short', day: 'numeric' } :
+    format === 'long'  ? { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' } :
+    format === 'full'  ? { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: 'numeric', minute: 'numeric' } :
+                         { year: 'numeric', month: 'long', day: 'numeric' };
+
   const formatted =
     format === 'relative'
-      ? formatRelativeTime(dateObj, locale as Locale)
-      : formatDate(dateObj, locale as Locale, format);
+      ? formatRelativeLocaleTime(dateObj, locale as Locale)
+      : formatLocaleDate(dateObj, locale as Locale, formatOptions);
+
 
   return <time dateTime={dateObj.toISOString()} className={className}>{formatted}</time>;
 }

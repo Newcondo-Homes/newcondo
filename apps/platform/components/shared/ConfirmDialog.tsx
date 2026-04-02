@@ -10,7 +10,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@newcondo/ui/components/alert-dialog';
 
 interface ConfirmDialogProps {
   open: boolean;

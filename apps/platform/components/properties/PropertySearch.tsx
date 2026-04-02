@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Search, MapPin, Filter, X, Loader2, Bed, Bath, DollarSign, Home, Maximize, CheckSquare } from 'lucide-react';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Card, CardContent } from '@newcondo/ui/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@newcondo/ui/components/ui/popover';
-import { Label } from '@newcondo/ui/components/ui/label';
-import { Slider } from '@newcondo/ui/components/ui/slider';
-import { Checkbox } from '@newcondo/ui/components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/ui/radio-group';
-import { Separator } from '@newcondo/ui/components/ui/separator';
+import { Search, MapPin, Filter, X, Loader2, Bed, Bath, DollarSign, Home, Maximize, CheckSquare, Building2, Zap } from 'lucide-react';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@newcondo/ui/components/popover';
+import { Label } from '@newcondo/ui/components/label';
+import { Slider } from '@newcondo/ui/components/slider';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
+import { Separator } from '@newcondo/ui/components/separator';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@newcondo/ui/lib/utils';
 import { formatNumber } from '@/lib/utils';
@@ -350,7 +350,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
                   </Button>
                 </Badge>
               )}
-              
+
               {(filters.priceRange?.min || filters.priceRange?.max) && (
                 <Badge variant="secondary" className="gap-1">
                   Price: {filters.priceRange.min ? `₦${formatNumber(filters.priceRange.min)}` : '0'} - {filters.priceRange.max ? `₦${formatNumber(filters.priceRange.max)}` : 'Max'}
@@ -477,7 +477,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
           </div>
         </div>
       )}
-      
+
       {resultCount !== undefined && (
         <div className="flex justify-between items-center text-gray-600">
           <p className="text-sm">
@@ -580,19 +580,19 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
           Price Range (₦)
         </Label>
         <div className="flex items-center gap-2">
-          <Input 
-            type="number" 
-            placeholder="Min" 
-            value={localFilters.priceRange?.min || ''} 
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, priceRange: { ...prev.priceRange, min: Number(e.target.value) || undefined }}))}
+          <Input
+            type="number"
+            placeholder="Min"
+            value={localFilters.priceRange?.min || ''}
+            onChange={(e) => setLocalFilters(prev => ({ ...prev, priceRange: { ...prev.priceRange, min: Number(e.target.value) || undefined } }))}
             className="w-1/2"
           />
           <span className="text-gray-500">-</span>
-          <Input 
-            type="number" 
-            placeholder="Max" 
-            value={localFilters.priceRange?.max || ''} 
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, priceRange: { ...prev.priceRange, max: Number(e.target.value) || undefined }}))}
+          <Input
+            type="number"
+            placeholder="Max"
+            value={localFilters.priceRange?.max || ''}
+            onChange={(e) => setLocalFilters(prev => ({ ...prev, priceRange: { ...prev.priceRange, max: Number(e.target.value) || undefined } }))}
             className="w-1/2"
           />
         </div>
@@ -629,11 +629,11 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
             <Bed className="h-4 w-4 text-gray-500" />
             Bedrooms
           </Label>
-          <Input 
-            type="number" 
-            placeholder="Min" 
-            value={localFilters.bedrooms?.min || ''} 
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, bedrooms: { ...prev.bedrooms, min: Number(e.target.value) || undefined }}))}
+          <Input
+            type="number"
+            placeholder="Min"
+            value={localFilters.bedrooms?.min || ''}
+            onChange={(e) => setLocalFilters(prev => ({ ...prev, bedrooms: { ...prev.bedrooms, min: Number(e.target.value) || undefined } }))}
           />
         </div>
         <div>
@@ -641,11 +641,11 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
             <Bath className="h-4 w-4 text-gray-500" />
             Bathrooms
           </Label>
-          <Input 
-            type="number" 
-            placeholder="Min" 
-            value={localFilters.bathrooms?.min || ''} 
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, bathrooms: { ...prev.bathrooms, min: Number(e.target.value) || undefined }}))}
+          <Input
+            type="number"
+            placeholder="Min"
+            value={localFilters.bathrooms?.min || ''}
+            onChange={(e) => setLocalFilters(prev => ({ ...prev, bathrooms: { ...prev.bathrooms, min: Number(e.target.value) || undefined } }))}
           />
         </div>
       </div>
@@ -732,3 +732,6 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
     </div>
   );
 };
+
+// Add this line at the very bottom of PropertySearch.tsx:
+export { PropertySearch as SearchBox }

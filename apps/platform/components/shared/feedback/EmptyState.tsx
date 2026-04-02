@@ -1,6 +1,6 @@
 // apps/platform/components/shared/feedback/EmptyState.tsx
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { Button } from "@newcondo/ui/components/button"
 import { 
   Search, 
   Home, 

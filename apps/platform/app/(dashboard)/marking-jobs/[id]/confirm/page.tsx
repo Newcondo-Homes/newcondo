@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMarkingStore } from "@/store/markingStore";
 import { markingJobsApi } from "@/lib/api/markingJobs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { RadioGroup, RadioGroupItem } from "@newcondo/ui/components/radio-group";
+import { Label } from "@newcondo/ui/components/label";
 import {
   CheckCircle,
   XCircle,
@@ -20,7 +20,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { format } from "date-fns";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@newcondo/ui/components/dialog";
 
 type ConfirmationDecision = "accept" | "reject" | "";
 

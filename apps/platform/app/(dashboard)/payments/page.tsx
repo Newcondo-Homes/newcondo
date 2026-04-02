@@ -1,8 +1,8 @@
 // apps/platform/app/(dashboard)/payments/page.tsx
 import { Suspense } from 'react'
 import { Metadata } from 'next'
-import PaymentHistory from '@/components/payments/PaymentHistory'
-import LoadingSpinner from '@/components/shared/feedback/LoadingSpinner'
+import {PaymentHistory} from '@/components/payments/PaymentHistory'
+import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner'
 
 export const metadata: Metadata = {
   title: 'Payment History | NewCondo',

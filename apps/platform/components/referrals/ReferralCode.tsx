@@ -4,11 +4,11 @@
 
 import { useState } from 'react';
 import { Copy, Check, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useReferralLink } from '@/hooks/useReferralLink';
 import { useRegenerateReferralCode } from '@/hooks/useReferrals';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+} from '@newcondo/ui/components/alert-dialog';
 
 export function ReferralCode() {
   const { code, isLoading, copyCode } = useReferralLink();

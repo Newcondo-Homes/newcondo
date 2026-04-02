@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Separator } from '@newcondo/ui/components/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { 

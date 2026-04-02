@@ -3,10 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { GoogleMap, Polygon, Marker } from '@react-google-maps/api';
-import { Button } from '@newcondo/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
-import { Badge } from '@newcondo/ui/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Badge } from '@newcondo/ui/components/badge';
 import { MapPin, AlertTriangle, Check, X } from 'lucide-react';
 import { useBoundaryMarking } from '@/hooks/useBoundaryMarking';
 

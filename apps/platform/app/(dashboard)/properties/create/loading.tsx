@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader } from "@newcondo/ui/card";
-import { Skeleton } from "@newcondo/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@newcondo/ui/";
+import { Skeleton } from "@newcondo/ui/";
 
 export default function CreatePropertyLoading() {
   return (

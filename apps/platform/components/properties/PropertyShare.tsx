@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { Share2, Copy, MessageCircle, Mail, Facebook, Twitter, Link2 } from 'lucide-react';
-import { Button } from '@newcondo/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/dialog';
-import { Input } from '@newcondo/ui/input';
-import { toast } from '@newcondo/ui/use-toast';
+import { Button } from '@newcondo/ui/components/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
+import { Input } from '@newcondo/ui/components/input';
+import { toast } from '@newcondo/ui/';
 
 interface PropertyShareProps {
   propertyId: string;
@@ -43,16 +43,13 @@ const PropertyShare: React.FC<PropertyShareProps> = ({
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast({
-        title: "Link copied!",
+      toast.success("Link copied!",{
         description: "Property link has been copied to clipboard",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast({
-        title: "Failed to copy",
+      toast.error("Failed to copy", {
         description: "Please copy the link manually",
-        variant: "destructive",
       });
     }
   };

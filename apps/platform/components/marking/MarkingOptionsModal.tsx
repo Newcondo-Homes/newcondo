@@ -12,10 +12,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, MapPin, Users, Share2, Zap } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 
 interface MarkingOption {
   id: string;

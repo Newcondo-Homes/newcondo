@@ -3,15 +3,15 @@
 import { useEffect, useState } from 'react';
 import { Users, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+} from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
 
 export type QueueStatus = 
   | 'waiting' 

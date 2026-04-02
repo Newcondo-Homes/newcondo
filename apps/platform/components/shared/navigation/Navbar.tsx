@@ -5,8 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Menu, X, User, Heart, Bell, Settings, LogOut } from 'lucide-react';
-import { Button } from '@newcondo/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/avatar';
+import { Button } from '@newcondo/ui/components/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +14,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@newcondo/ui/dropdown-menu';
-import { useSession, signOut } from 'next-auth/react';
-import { cn } from '@newcondo/ui/utils';
+} from '@newcondo/ui/components/dropdown-menu';
+// import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut } from '@newcondo/auth/client';
+import { cn } from '@newcondo/ui/lib/utils';
 
 interface NavbarProps {
   className?: string;

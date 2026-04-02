@@ -3,17 +3,17 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/components/shared/DataTable';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { DataTable } from '@newcondo/ui/components/shared/DataTable';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import { Eye, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { RentalStatus } from '@prisma/client';
+} from '@newcondo/ui/components/dropdown-menu';
+import { RentalStatus } from '@newcondo/db';
 
 interface Rental {
   id: string;

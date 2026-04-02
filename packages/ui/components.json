@@ -15,6 +15,6 @@
     "utils": "@newcondo/ui/lib/utils",
     "hooks": "@newcondo/ui/hooks",
     "lib": "@newcondo/ui/lib",
-    "ui": "@newcondo/ui/components"
+    "ui": "@newcondo/ui/"
   }
 }

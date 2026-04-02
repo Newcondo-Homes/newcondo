@@ -1,8 +1,8 @@
 'use client';
 
 import { CheckCircle2, MapPin, Camera, Clock, AlertCircle } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 
 interface MarkingInstructionsProps {
   markingType: 'self' | 'assigned' | 'known_person';

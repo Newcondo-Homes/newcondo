@@ -1,15 +1,16 @@
 'use client';
 
 import { useTransition } from 'react';
-import { useLocale } from 'next-intl';
+// import { useLocale } from 'next-intl';
+import { useLocale } from '@newcondo/i18n';
 import { useRouter, usePathname } from 'next/navigation';
-import { locales, localeNames, type Locale } from '@/i18n';
+import { locales, localeNames, type Locale } from '@newcondo/i18n';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Globe, Check } from 'lucide-react';
 
@@ -17,13 +18,15 @@ export function LanguageSwitcher() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
-  const currentLocale = useLocale();
+  const {locale: currentLocale, changeLocale} = useLocale();
 
   const handleLocaleChange = (newLocale: Locale) => {
     if (newLocale === currentLocale) return;
 
     startTransition(() => {
       // Replace the locale in the pathname
+      changeLocale(newLocale);
+      
       const segments = pathname.split('/');
       segments[1] = newLocale;
       const newPathname = segments.join('/');

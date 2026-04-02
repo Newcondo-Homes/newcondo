@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import JobCard from './JobCard';
 import { useMarkingJobs } from '@/hooks/useMarkingJobs';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import { AlertCircle, Loader2, MapPin } from 'lucide-react';
 
 interface AvailableJobsListProps {
@@ -104,7 +104,7 @@ export default function AvailableJobsList({
           <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
           <div>
             <p className="font-medium text-red-900">Error Loading Jobs</p>
-            <p className="text-sm text-red-800">{error}</p>
+            <p className="text-sm text-red-800">{error.message}</p>
             <Button
               variant="outline"
               size="sm"

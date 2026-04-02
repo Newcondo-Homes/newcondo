@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { Property, PropertyStatus, PropertyType } from '@/types/property';
 import { formatCurrency } from '@/lib/utils/format';
-import { cn } from '@/lib/utils/helpers';
+import { cn } from '@newcondo/ui';
 
 interface PropertyCardProps {
   property: Property;

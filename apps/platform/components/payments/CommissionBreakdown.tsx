@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Separator } from "@newcondo/ui/components/separator";
 import {
   TrendingUp,
   Building2,
@@ -15,7 +15,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@newcondo/ui/components/tooltip";
 
 interface CommissionBreakdownProps {
   totalAmount: number;

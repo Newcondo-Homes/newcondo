@@ -13,8 +13,8 @@ import { cn } from '@/lib/utils'
 import Navbar from '../navigation/Navbar'
 import SearchBox from '../navigation/SearchBox'
 import Footer from '../navigation/Footer'
-import LoadingSpinner from '../feedback/LoadingSpinner'
-import EmptyState from '../feedback/EmptyState'
+import {LoadingSpinner} from '../feedback/LoadingSpinner'
+import {EmptyState} from '../feedback/EmptyState'
 
 // Types
 interface PropertyImage {

@@ -3,7 +3,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useShareReferral } from '@/hooks/useShareReferral';
 import { useReferralLink } from '@/hooks/useReferralLink';
 import { SHARE_CHANNEL_CONFIG } from '@/lib/constants/shareMessages';

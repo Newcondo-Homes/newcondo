@@ -7,11 +7,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@newcondo/ui/components/ui/dialog";
-import { Button } from "@newcondo/ui/components/ui/button";
-import { Input } from "@newcondo/ui/components/ui/input";
-import { Label } from "@newcondo/ui/components/ui/label";
-import { Separator } from "@newcondo/ui/components/ui/separator";
+} from "@newcondo/ui/components/dialog";
+import { Button } from "@newcondo/ui/components/button";
+import { Input } from "@newcondo/ui/components/input";
+import { Label } from "@newcondo/ui/components/label";
+import { Separator } from "@newcondo/ui/components/separator";
 import {
   Copy,
   Check,
@@ -23,8 +23,8 @@ import {
   Linkedin,
   ExternalLink,
 } from "lucide-react";
-import { toast } from "@newcondo/ui/hooks/use-toast";
-import { cn } from "@/lib/utils/helpers";
+import { toast } from "@newcondo/ui/";
+import { cn } from "@newcondo/ui";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -66,10 +66,8 @@ export function ShareModal({
         setLink(generatedLink);
       } catch (error) {
         setLink(`${window.location.origin}/properties/${propertyId}`);
-        toast({
-          title: "Using default link",
+        toast.success("Using default link", {
           description: "Could not generate custom share link.",
-          variant: "default",
         });
       } finally {
         setIsGenerating(false);
@@ -83,16 +81,13 @@ export function ShareModal({
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast({
-        title: "Link copied!",
+      toast.success("Link copied!",{
         description: "You can now share this link anywhere.",
       });
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast({
-        title: "Failed to copy",
+      toast.error("Failed to copy",{
         description: "Please copy the link manually.",
-        variant: "destructive",
       });
     }
   };

@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Progress } from '@newcondo/ui/components/progress';
+import { toast } from '@newcondo/ui';
 import { 
   RefreshCw, 
   AlertTriangle, 
@@ -50,7 +50,6 @@ export default function PaymentRetry({
   const [countdown, setCountdown] = useState(0);
   const [canRetry, setCanRetry] = useState(true);
   const [lastRetryTime, setLastRetryTime] = useState<Date | null>(null);
-  const { toast } = useToast();
 
   // Countdown timer for retry delay
   useEffect(() => {
@@ -143,8 +142,7 @@ export default function PaymentRetry({
         )
       );
 
-      toast({
-        title: "Payment Successful!",
+      toast.success("Payment Successful!",{
         description: "Your payment has been processed successfully.",
       });
 
@@ -162,17 +160,13 @@ export default function PaymentRetry({
       );
 
       if (attemptNumber >= maxRetries) {
-        toast({
-          title: "Maximum Retries Reached",
+        toast.error("Maximum Retries Reached",{
           description: "Unable to process payment after multiple attempts. Please try a different payment method.",
-          variant: "destructive",
         });
         onMaxRetriesReached?.();
       } else {
-        toast({
-          title: "Payment Failed",
+        toast.error("Payment Failed", {
           description: `Attempt ${attemptNumber} failed. You can retry in ${retryDelay} seconds.`,
-          variant: "destructive",
         });
         setCountdown(retryDelay);
       }

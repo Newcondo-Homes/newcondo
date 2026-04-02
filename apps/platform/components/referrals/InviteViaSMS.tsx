@@ -1,12 +1,12 @@
-/ apps/platform/components/referrals/InviteViaSMS.tsx
+// apps/platform/components/referrals/InviteViaSMS.tsx
 
 'use client';
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@newcondo/ui/components/input';
+import { Textarea } from '@newcondo/ui/components/textarea';
 import { useInviteViaSMS } from '@/hooks/useReferrals';
 import { inviteViaSMSSchema, type InviteViaSMSInput } from '@/lib/validations/referral';
 import { Loader2, MessageSquare } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@newcondo/ui/components/form';
 
 export function InviteViaSMS() {
   const inviteMutation = useInviteViaSMS();

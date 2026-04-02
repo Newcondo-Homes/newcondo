@@ -1,5 +1,5 @@
 // apps/platform/lib/api/geolocation.ts
-import { client } from './client';
+import client  from './client';
 
 // Types for geolocation API
 export interface GeolocationCoordinates {

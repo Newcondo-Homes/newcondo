@@ -1,15 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Button } from '@newcondo/ui/button';
-import { Label } from '@newcondo/ui/label';
-import { RadioGroup, RadioGroupItem } from '@newcondo/ui/radio-group';
-import { Checkbox } from '@newcondo/ui/checkbox';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Label } from '@newcondo/ui/components/label';
+import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { CreditCard, Wallet, AlertCircle, Shield, Info } from 'lucide-react';
-import { Separator } from '@newcondo/ui/separator';
-import CompensationBreakdown from './CompensationBreakdown';
+import { Separator } from '@newcondo/ui/components/separator';
+import { CompensationBreakdown } from './CompensationBreakdown';
 
 interface MarkingPaymentFormProps {
   jobId: string;
@@ -77,13 +77,18 @@ export default function MarkingPaymentForm({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Fee Breakdown */}
-          <CompensationBreakdown
+          {/* <CompensationBreakdown
             totalFee={markingFee}
             agentCompensation={markingFee * 0.25}
             platformFee={markingFee * 0.75}
             currency={currency}
-          />
+          /> */}
 
+          <CompensationBreakdown
+            markingType="agent_network"
+            isPropertyOwner={true}
+            userRole="OWNER"
+          />
           <Separator />
 
           {/* Payment Method Selection */}

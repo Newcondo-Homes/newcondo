@@ -2,27 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Separator } from '@newcondo/ui/components/ui/separator';
-import { 
-  FileText, 
-  Download, 
-  Edit, 
-  Trash2, 
-  AlertCircle, 
-  CheckCircle, 
-  Clock, 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Separator } from '@newcondo/ui/components/separator';
+import {
+  FileText,
+  Download,
+  Edit,
+  Trash2,
+  AlertCircle,
+  CheckCircle,
+  Clock,
   X,
   Eye,
   Upload
 } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/ui/dialog';
-import { Textarea } from '@newcondo/ui/components/ui/textarea';
-import { Label } from '@newcondo/ui/components/ui/label';
-import { toast } from '@newcondo/ui/components/ui/use-toast';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Label } from '@newcondo/ui/components/label';
+import { toast } from '@newcondo/ui/';
 import { DocumentStatus, DocumentType, DocumentSide } from '@newcondo/db';
 
 interface DocumentData {
@@ -51,7 +51,7 @@ export default function LegalDocumentDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const documentId = params.documentId as string;
-  
+
   const [document, setDocument] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,18 +99,15 @@ export default function LegalDocumentDetailsPage() {
         throw new Error('Failed to delete document');
       }
 
-      toast({
-        title: "Document Deleted",
+      toast.success("Document Deleted", {
         description: "The document has been successfully deleted.",
       });
 
       router.push('/dashboard/properties/legal-documents');
     } catch (error) {
       console.error('Error deleting document:', error);
-      toast({
-        title: "Error",
+      toast.error("Error"{
         description: "Failed to delete document. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setDeleteLoading(false);
@@ -352,16 +349,16 @@ export default function LegalDocumentDetailsPage() {
             <CardContent className="space-y-3">
               {document.fileUrl && (
                 <>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start"
                     onClick={handleDownload}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-start"
                     onClick={() => window.open(document.fileUrl, '_blank')}
                   >
@@ -370,10 +367,10 @@ export default function LegalDocumentDetailsPage() {
                   </Button>
                 </>
               )}
-              
+
               {document.status !== DocumentStatus.APPROVED && (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-start"
                   onClick={() => setReuploadDialogOpen(true)}
                 >
@@ -384,8 +381,8 @@ export default function LegalDocumentDetailsPage() {
 
               <Separator />
 
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 className="w-full justify-start"
                 onClick={() => setShowDeleteDialog(true)}
               >
@@ -407,7 +404,7 @@ export default function LegalDocumentDetailsPage() {
                   {document.isRequired ? "Yes" : "No"}
                 </Badge>
               </div>
-              
+
               {document.status === DocumentStatus.PENDING && (
                 <Alert>
                   <Clock className="h-4 w-4" />
@@ -452,8 +449,8 @@ export default function LegalDocumentDetailsPage() {
             <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               onClick={handleDelete}
               disabled={deleteLoading}
             >

@@ -2,7 +2,7 @@
 
 import { Metadata } from 'next';
 import { ReferralAnalytics } from '@/components/referrals/ReferralAnalytics';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@/components/ui/button';
 import { Download, TrendingUp } from 'lucide-react';
 

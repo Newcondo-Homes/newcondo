@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Badge } from '@newcondo/ui/components/badge';
 import { MapPin, Loader2, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface GeolocationData {

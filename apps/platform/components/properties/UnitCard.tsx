@@ -1,16 +1,16 @@
 // apps/platform/components/properties/UnitCard.tsx
 'use client';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import {
   DollarSign,
   Bed,

@@ -1,10 +1,10 @@
 // apps/platform/components/marketing/QRCodeGenerator.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { toast } from '@newcondo/ui';
 import { QrCode, Download, ExternalLink, Info } from 'lucide-react';
 
 interface QRCodeGeneratorProps {
@@ -18,7 +18,6 @@ export function QRCodeGenerator({
   shareableLink,
   propertyTitle,
 }: QRCodeGeneratorProps) {
-  const { toast } = useToast();
 
   // Generate QR code URL using Google Charts API (free service)
   const getQRCodeUrl = (size: number = 300) => {
@@ -41,16 +40,13 @@ export function QRCodeGenerator({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({
-        title: 'QR Code downloaded',
+      toast.success('QR Code downloaded',{
         description: 'QR code saved successfully',
       });
     } catch (error) {
       console.error('Download error:', error);
-      toast({
-        title: 'Download failed',
+      toast.error('Download failded',{
         description: 'Failed to download QR code',
-        variant: 'destructive',
       });
     }
   };

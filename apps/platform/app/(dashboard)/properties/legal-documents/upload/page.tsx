@@ -4,15 +4,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { Progress } from '@newcondo/ui/components/progress';
+import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
 import { 
   Upload, 
   FileText, 
@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import { UploadButton } from '@uploadthing/react';
 import { useAuthStore } from '@/store/authStore';
 import { usePropertyStore } from '@/store/propertyStore';
-import { api } from '@/lib/api/client';
+import api  from '@/lib/api/client';
 import { getFileIcon } from '@/lib/utils/helpers';
 import { DocumentType as PrismaDocumentType } from '@newcondo/db';
 

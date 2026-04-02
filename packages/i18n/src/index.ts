@@ -9,10 +9,13 @@
 export { i18nConfig, initI18n } from './config/i18n.config';
 export { NAMESPACES, type Namespace } from './config/namespaces';
 export { 
-  SUPPORTED_LOCALES, 
+  SUPPORTED_LOCALES,
+  SUPPORTED_LOCALES as locales,
+  LOCALE_NAMES as localeNames, 
   DEFAULT_LOCALE, 
   LOCALE_CONFIG,
   type LocaleCode,
+  type LocaleCode as Locale,
   type LocaleConfig,
   type CurrencyCode
 } from './config/locales';

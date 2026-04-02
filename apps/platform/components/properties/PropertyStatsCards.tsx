@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Building2, Eye, TrendingUp, CheckCircle } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
 
 interface PropertyStats {
   total: number;

@@ -1,10 +1,10 @@
-// apps/platform/components/marking/MarkingPaymentSummary.tsx
+/// apps/platform/components/marking/MarkingPaymentSummary.tsx
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Separator } from "@newcondo/ui/separator";
-import { Badge } from "@newcondo/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Separator } from "@newcondo/ui/components/separator";
+import { Badge } from "@newcondo/ui/components/badge";
 import { DollarSign, CheckCircle, AlertCircle, Info } from "lucide-react";
 
 interface MarkingPaymentSummaryProps {

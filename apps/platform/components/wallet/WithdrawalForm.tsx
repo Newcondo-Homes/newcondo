@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   Form,
   FormControl,
@@ -15,16 +15,16 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+} from '@newcondo/ui/components/form';
+import { Input } from '@newcondo/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from '@newcondo/ui/components/select';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { formatCurrency } from '@/lib/utils/format';
 import { walletApi } from '@/lib/api/wallet';
 import { toast } from 'sonner';

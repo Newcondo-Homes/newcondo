@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/ui/dialog';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/ui/tabs';
-import { ScrollArea } from '@newcondo/ui/components/ui/scroll-area';
+import { Button } from '@newcondo/ui/components/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+import { ScrollArea } from '@newcondo/ui/components/scroll-area';
 import { 
   FileText, 
   Download, 

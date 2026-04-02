@@ -2,9 +2,9 @@
 
 "use client";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@newcondo/ui/components/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { AlertCircle } from "lucide-react";
 
 interface MarkingServiceTermsProps {

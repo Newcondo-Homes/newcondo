@@ -2,13 +2,13 @@
 
 import { useState } from 'react'
 import { X, FileText, AlertTriangle, Check } from 'lucide-react'
-import { Button } from '@newcondo/ui/components/ui/button'
-import { Checkbox } from '@newcondo/ui/components/ui/checkbox'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@newcondo/ui/components/ui/dialog'
-import { ScrollArea } from '@newcondo/ui/components/ui/scroll-area'
-import { Badge } from '@newcondo/ui/components/ui/badge'
-import { Separator } from '@newcondo/ui/components/ui/separator'
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert'
+import { Button } from '@newcondo/ui/components/button'
+import { Checkbox } from '@newcondo/ui/components/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog'
+import { ScrollArea } from '@newcondo/ui/components/scroll-area'
+import { Badge } from '@newcondo/ui/components/badge'
+import { Separator } from '@newcondo/ui/components/separator'
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 
 interface LegalDocument {
   id: string

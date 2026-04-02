@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Button } from "@/components/ui/button";
+import { Button } from "@newcondo/ui/components/button";
 import {
   Form,
   FormControl,
@@ -13,13 +13,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+} from "@newcondo/ui/components/form";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { RadioGroup, RadioGroupItem } from "@newcondo/ui/components/radio-group";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Separator } from "@newcondo/ui/components/separator";
 import { CheckCircle2, XCircle, AlertTriangle, Loader2, MapPin, Clock, User } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";

@@ -2,8 +2,8 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent } from "@newcondo/ui/dialog";
-import { Button } from "@newcondo/ui/button";
+import { Dialog, DialogContent } from "@newcondo/ui/components/dialog";
+import { Button } from "@newcondo/ui/components/button";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Download } from "lucide-react";
 
 interface ConfirmationPhotosProps {

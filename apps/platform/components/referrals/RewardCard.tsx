@@ -2,9 +2,9 @@
 
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import { Reward } from '@/types/reward';
 import {
   formatRewardAmount,

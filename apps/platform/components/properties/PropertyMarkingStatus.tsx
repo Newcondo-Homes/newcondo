@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Badge } from "@newcondo/ui/badge";
-import { Button } from "@newcondo/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@newcondo/ui/dialog";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@newcondo/ui/components/dialog";
 import { CheckCircle2, Clock, XCircle, AlertCircle, MapPin, User, Phone, Calendar, ImageIcon } from "lucide-react";
 import { format } from "date-fns";
 

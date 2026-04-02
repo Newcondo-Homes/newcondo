@@ -1,14 +1,14 @@
 // apps/platform/components/shared/FilterBar.tsx
 'use client';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 import { X } from 'lucide-react';
 
 export interface FilterOption {

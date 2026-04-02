@@ -3,15 +3,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, MapPin, Calendar, Users, SlidersHorizontal, X } from 'lucide-react';
-import { Button } from '@newcondo/ui/button';
-import { Input } from '@newcondo/ui/input';
+import { Button } from '@newcondo/ui/';
+import { Input } from '@newcondo/ui/';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@newcondo/ui/popover';
-import { Calendar as CalendarComponent } from '@newcondo/ui/calendar';
-import { cn } from '@newcondo/ui/utils';
+} from '@newcondo/ui/';
+import { Calendar as CalendarComponent } from '@newcondo/ui/';
+import { cn } from '@newcondo/ui/';
 import { format } from 'date-fns';
 
 interface SearchBoxProps {

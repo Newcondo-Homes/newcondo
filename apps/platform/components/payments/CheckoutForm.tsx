@@ -4,8 +4,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CreditCard, Lock, AlertCircle } from 'lucide-react';
-import PaymentLockStatus from './PaymentLockStatus';
-import ConflictWarning from './ConflictWarning';
+import { PaymentLockStatus } from './PaymentLockStatus';
+import { ConflictWarning } from './ConflictWarning';
 
 interface CheckoutFormProps {
   propertyId: string;
@@ -157,10 +157,17 @@ export default function CheckoutForm({
 
       {/* Conflict Warning */}
       {conflict?.hasConflict && (
+        // <ConflictWarning
+        //   message={conflict.message}
+        //   onRetry={acquireLock}
+        //   onCancel={() => router.back()}
+        // />
         <ConflictWarning
-          message={conflict.message}
-          onRetry={acquireLock}
-          onCancel={() => router.back()}
+          type="PAYMENT_IN_PROGRESS"
+          severity="warning"
+          details={{ lockedUntil: undefined }}
+          onAction={acquireLock}
+          onDismiss={() => router.back()}
         />
       )}
 
@@ -193,7 +200,12 @@ export default function CheckoutForm({
 
       {/* Lock Status */}
       {lockAcquired && lockExpiresAt && (
-        <PaymentLockStatus lockId={lockId!} expiresAt={lockExpiresAt} />
+        // <PaymentLockStatus lockId={lockId!} expiresAt={lockExpiresAt} />
+        <PaymentLockStatus
+          isLocked={true}
+          isCurrentUser={true}
+          lockExpiry={new Date(lockExpiresAt)}
+        />
       )}
 
       {/* Security Notice */}

@@ -55,7 +55,7 @@ export interface UseTranslationResult {
  */
 export const useTranslation = (
   namespace: Namespace = 'common',
-  options?: UseTranslationOptions
+  options?: UseTranslationOptions<string>
 ): UseTranslationResult => {
   // Load namespace with its dependencies
   const namespacesWithDeps = getNamespaceWithDependencies(namespace);
@@ -102,7 +102,7 @@ export const useTranslation = (
    * Check if a translation key exists
    */
   const exists = (key: TranslationKey): boolean => {
-    return i18n.exists(key, options);
+    return i18n.exists(key, options as Record<string, unknown>);
   };
 
   return {
@@ -132,7 +132,7 @@ export const useTranslation = (
  */
 export const useTranslationMultiple = (
   namespaces: Namespace[],
-  options?: UseTranslationOptions
+  options?: UseTranslationOptions<string>
 ) => {
   return useI18NextTranslation(namespaces, options);
 };

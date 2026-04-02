@@ -3,9 +3,9 @@
 
 import { useState, useCallback } from "react";
 import { GoogleMap, Polygon, Marker } from "@react-google-maps/api";
-import { Button } from "@newcondo/ui/button";
-import { Card } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
 import { MapPin, Trash2, Undo, Save, AlertCircle } from "lucide-react";
 
 interface BoundaryUploadProps {

@@ -2,11 +2,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Input } from "@newcondo/ui/input";
-import { Badge } from "@newcondo/ui/badge";
-import { Checkbox } from "@newcondo/ui/checkbox";
+import { Card } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Input } from "@newcondo/ui/components/input";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Checkbox } from "@newcondo/ui/components/checkbox";
 import { Search, X, MapPin } from "lucide-react";
 
 interface ServiceAreaSelectorProps {

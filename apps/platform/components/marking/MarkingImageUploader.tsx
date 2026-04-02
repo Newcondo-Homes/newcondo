@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Button } from '@newcondo/ui/button';
-import { Label } from '@newcondo/ui/label';
-import { Progress } from '@newcondo/ui/progress';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Label } from '@newcondo/ui/components/label';
+import { Progress } from '@newcondo/ui/components/progress';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Camera, Upload, X, CheckCircle2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
 
@@ -54,7 +54,7 @@ export default function MarkingImageUploader({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const { startUpload, isUploading } = useUploadThing('markingImages', {
+  const { startUpload, isUploading } = useUploadThing('propertyImages', {
     onClientUploadComplete: (res) => {
       const newImages: UploadedImage[] = res.map((file) => ({
         id: file.key,

@@ -8,13 +8,13 @@ import * as z from "zod";
 import { useQueueStore } from "@/store/queueStore";
 import { queueApi } from "@/lib/api/queue";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Label } from "@newcondo/ui/components/label";
+import { Input } from "@newcondo/ui/components/input";
+import { Switch } from "@newcondo/ui/components/switch";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Checkbox } from "@newcondo/ui/components/checkbox";
 import {
   ArrowLeft,
   MapPin,
@@ -23,8 +23,8 @@ import {
   Navigation,
   Radius,
 } from "lucide-react";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { Slider } from "@/components/ui/slider";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { Slider } from "@newcondo/ui/components/slider";
 
 // Nigerian States and Cities
 const NIGERIAN_LOCATIONS = {

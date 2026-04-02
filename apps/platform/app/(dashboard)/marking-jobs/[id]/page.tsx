@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMarkingStore } from "@/store/markingStore";
 import { markingJobsApi } from "@/lib/api/markingJobs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Separator } from "@newcondo/ui/components/separator";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import {
   Clock,
   MapPin,
@@ -23,7 +23,7 @@ import {
   Download,
 } from "lucide-react";
 import { format, formatDistanceToNow, differenceInHours } from "date-fns";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -31,7 +31,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@newcondo/ui/components/dialog";
 
 const statusConfig = {
   QUEUED: { label: "Queued", color: "bg-blue-500", icon: Clock },

@@ -1,7 +1,7 @@
 // apps/platform/hooks/usePropertyList.ts
 import { useQuery } from '@tanstack/react-query';
 import { getMyProperties } from '@/lib/api/propertyManagement';
-import { PropertyStatus } from '@prisma/client';
+import { PropertyStatus } from '@newcondo/db';
 
 export interface PropertyListFilters {
   status?: PropertyStatus[];

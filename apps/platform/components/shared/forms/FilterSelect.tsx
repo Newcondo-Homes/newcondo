@@ -3,20 +3,20 @@
 
 import React from 'react'
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Badge } from "@newcondo/ui/components/badge"
+import { Checkbox } from "@newcondo/ui/components/checkbox"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@newcondo/ui/components/select"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@newcondo/ui/components/popover"
 import {
   Command,
   CommandEmpty,
@@ -24,7 +24,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@newcondo/ui/components/command"
 import { cn } from "@/lib/utils"
 import { 
   ChevronDown, 

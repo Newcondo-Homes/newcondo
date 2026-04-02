@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 
 // Nigerian LGAs by State - Sample comprehensive data
 const NIGERIAN_LGAS: Record<string, string[]> = {

@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Label } from '@newcondo/ui/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/ui/select';
-import { Checkbox } from '@newcondo/ui/components/ui/checkbox';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Slider } from '@newcondo/ui/components/ui/slider';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@newcondo/ui/components/ui/collapsible';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Checkbox } from '@newcondo/ui/components/checkbox';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Slider } from '@newcondo/ui/components/slider';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@newcondo/ui/components/collapsible';
 import { ChevronDown, ChevronUp, Filter, X, MapPin } from 'lucide-react';
 
 export interface PropertyFiltersState {

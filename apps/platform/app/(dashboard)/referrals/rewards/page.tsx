@@ -3,7 +3,7 @@
 import { Metadata } from 'next';
 import { RewardsList } from '@/components/referrals/RewardsList';
 import { RewardTiers } from '@/components/referrals/RewardTiers';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useRewardsSummary } from '@/hooks/useRewards';
 import { formatCurrency } from '@/lib/utils/referralHelpers';
 import { Wallet, Clock, CheckCircle, XCircle } from 'lucide-react';

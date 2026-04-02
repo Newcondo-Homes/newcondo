@@ -3,17 +3,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Filter, Grid, List } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Input } from "@newcondo/ui/components/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@newcondo/ui/components/select";
+import { Tabs, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import PropertyCard from "./PropertyCard";
 import PropertyStatsCards from "./PropertyStatsCards";
 import { useProperties } from "@/hooks/useProperties";

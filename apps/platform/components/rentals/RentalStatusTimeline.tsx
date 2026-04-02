@@ -1,7 +1,7 @@
 // apps/platform/components/rentals/RentalStatusTimeline.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { CheckCircle, Circle, Clock, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 

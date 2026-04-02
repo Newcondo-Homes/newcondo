@@ -1,9 +1,9 @@
 // apps/platform/components/marking/QueuePosition.tsx
 "use client";
 
-import { Card } from "@newcondo/ui/card";
-import { Progress } from "@newcondo/ui/progress";
-import { Badge } from "@newcondo/ui/badge";
+import { Card } from "@newcondo/ui/components/card";
+import { Progress } from "@newcondo/ui/components/progress";
+import { Badge } from "@newcondo/ui/components/badge";
 import { Users, Clock, AlertCircle } from "lucide-react";
 import { QueueTimer } from "./QueueTimer";
 

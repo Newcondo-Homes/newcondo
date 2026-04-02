@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/tabs";
-import { Progress } from "@newcondo/ui/progress";
-import { Badge } from "@newcondo/ui/badge";
-import { Skeleton } from "@newcondo/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
+import { Progress } from "@newcondo/ui/components/progress";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
 import {
   CheckCircle2,
   Clock,
@@ -15,7 +15,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api/client";
+import  api  from "@/lib/api/client";
 
 interface PerformanceMetrics {
   // Time-based metrics
@@ -110,7 +110,7 @@ export default function PerformanceMetrics() {
       try {
         setLoading(true);
         const response = await api.get(`/marking/agents/${user.id}/performance`);
-        setMetrics(response.data);
+        setMetrics(response.data as PerformanceMetrics);
         setError(null);
       } catch (err: any) {
         console.error("Error fetching performance metrics:", err);

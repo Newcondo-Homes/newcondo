@@ -4,7 +4,7 @@ import { Metadata } from 'next';
 import { ReferralInviteForm } from '@/components/referrals/ReferralInviteForm';
 import { ReferralLink } from '@/components/referrals/ReferralLink';
 import { SocialShareButtons } from '@/components/referrals/SocialShareButtons';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Gift, Users, TrendingUp } from 'lucide-react';
 
 export const metadata: Metadata = {

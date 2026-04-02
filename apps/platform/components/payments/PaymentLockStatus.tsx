@@ -1,8 +1,8 @@
 import React from 'react';
 import { Clock, Lock, LockOpen, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Progress } from '@newcondo/ui/components/progress';
 
 interface PaymentLockStatusProps {
   isLocked: boolean;

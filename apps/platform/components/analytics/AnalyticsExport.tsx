@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +10,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import { Download, FileText, Sheet, Image } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui/';
+
 
 interface AnalyticsExportProps {
   propertyId?: string;
@@ -29,7 +30,6 @@ export function AnalyticsExport({
   disabled,
 }: AnalyticsExportProps) {
   const [isExporting, setIsExporting] = useState(false);
-  const { toast } = useToast();
 
   const handleExport = async (format: 'csv' | 'pdf' | 'png') => {
     setIsExporting(true);
@@ -61,16 +61,13 @@ export function AnalyticsExport({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({
-        title: 'Export successful',
+      toast.success('Export successful', {
         description: `Analytics exported as ${format.toUpperCase()}.`,
       });
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: 'Export failed',
+      toast.error('Export failed', {
         description: 'An error occurred while exporting analytics.',
-        variant: 'destructive',
       });
     } finally {
       setIsExporting(false);

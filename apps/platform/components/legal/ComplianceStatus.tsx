@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
+import { Badge } from '@newcondo/ui/components/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card'
+import { Progress } from '@newcondo/ui/components/progress'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, CheckCircle2, Clock, FileText, Shield, Upload, User, Building } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 
 interface DocumentRequirement {
   type: string

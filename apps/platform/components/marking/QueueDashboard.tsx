@@ -1,10 +1,10 @@
 // apps/platform/components/marking/QueueDashboard.tsx
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
-import { Button } from "@newcondo/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import { 
   Clock, 
   CheckCircle, 
@@ -14,7 +14,7 @@ import {
   DollarSign
 } from "lucide-react";
 import { QueuePosition } from "./QueuePosition";
-import { AvailableJobsList } from "./AvailableJobsList";
+import AvailableJobsList  from "./AvailableJobsList";
 
 interface QueueDashboardProps {
   agentStats: {

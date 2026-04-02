@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { OTPVerification } from '@/components/auth/OTPVerification'
-import LoadingSpinner from '@/components/shared/feedback/LoadingSpinner'
+import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner'
 import type { OTPType } from '@/types/api'
 
 export const metadata: Metadata = {

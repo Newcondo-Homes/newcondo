@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Separator } from '@newcondo/ui/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Separator } from '@newcondo/ui/components/separator';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { ErrorBoundary } from '@/components/shared/feedback/ErrorBoundary';
 import { 
@@ -22,7 +22,7 @@ import {
   Check
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { api } from '@/lib/api/client';
+import api  from '@/lib/api/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 

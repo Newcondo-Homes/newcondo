@@ -34,16 +34,13 @@ export const ShareableLinkCopy: React.FC<ShareableLinkCopyProps> = ({
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast({
-        title: 'Link Copied!',
+      toast.success('Link Copied!',{
         description: 'The shareable link has been copied to your clipboard.',
       });
       setTimeout(() => setCopied(false), 3000);
     } catch (error) {
-      toast({
-        title: 'Copy Failed',
+      toast.error('Copy Failed',{
         description: 'Unable to copy link. Please try again.',
-        variant: 'destructive',
       });
     }
   };

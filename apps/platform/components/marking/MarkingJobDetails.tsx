@@ -1,9 +1,9 @@
-// apps/platform/components/marking/MarkingJobDetails.tsx
+/// apps/platform/components/marking/MarkingJobDetails.tsx
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
-import { Separator } from "@newcondo/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Separator } from "@newcondo/ui/components/separator";
 import { 
   MapPin, 
   Clock, 

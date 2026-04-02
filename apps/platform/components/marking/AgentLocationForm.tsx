@@ -5,10 +5,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Label } from "@newcondo/ui/label";
-import { Switch } from "@newcondo/ui/switch";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Label } from "@newcondo/ui/components/label";
+import { Switch } from "@newcondo/ui/components/switch";
 import { MapPin, AlertCircle, CheckCircle } from "lucide-react";
 import { ServiceAreaSelector } from "./ServiceAreaSelector";
 

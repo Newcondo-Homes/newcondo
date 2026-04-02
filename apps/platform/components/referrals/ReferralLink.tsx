@@ -4,12 +4,12 @@
 
 import { useState } from 'react';
 import { Copy, Check, Share2, QrCode } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Input } from '@newcondo/ui/components/input';
 import { useReferralLink } from '@/hooks/useReferralLink';
 import { useShareReferral } from '@/hooks/useShareReferral';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 
 export function ReferralLink() {
   const { link, url, isLoading, copyLink } = useReferralLink();

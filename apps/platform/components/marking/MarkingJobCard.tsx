@@ -1,8 +1,8 @@
 // apps/platform/components/marking/MarkingJobCard.tsx
 
-import { Card, CardContent, CardFooter, CardHeader } from '@newcondo/ui/card';
-import { Badge } from '@newcondo/ui/badge';
-import { Button } from '@newcondo/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import { 
   MapPin, 
   Clock, 
@@ -20,7 +20,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@newcondo/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import { formatDate, formatTimeRemaining } from '@/lib/utils/format';
 import { MarkingStatusBadge } from './MarkingStatusBadge';
 
@@ -175,12 +175,13 @@ export function MarkingJobCard({
           <div className="space-y-1">
             <p className="text-muted-foreground">Payment Status</p>
             <Badge
-              variant={
+              variant="outline"
+              className={
                 job.paymentStatus === 'SUCCESS' || job.paymentStatus === 'RELEASED'
-                  ? 'success'
+                  ? 'bg-green-100 text-green-800 border-green-200'
                   : job.paymentStatus === 'HELD'
-                  ? 'warning'
-                  : 'secondary'
+                  ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                  : 'bg-gray-100 text-gray-800 border-gray-200'
               }
             >
               {job.paymentStatus}

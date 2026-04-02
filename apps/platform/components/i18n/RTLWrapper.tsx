@@ -1,7 +1,9 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { useLocale } from 'next-intl';
+// import { useLocale } from 'next-intl';
+import { useLocale } from '@newcondo/i18n';
+
 import { rtlLocales } from '@/i18n';
 import { cn } from '@/lib/utils';
 

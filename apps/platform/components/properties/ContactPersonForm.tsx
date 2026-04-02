@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button } from "@newcondo/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import {
   Form,
   FormControl,
@@ -14,18 +14,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@newcondo/ui/form";
-import { Input } from "@newcondo/ui/input";
-import { Textarea } from "@newcondo/ui/textarea";
+} from "@newcondo/ui/components/form";
+import { Input } from "@newcondo/ui/components/input";
+import { Textarea } from "@newcondo/ui/components/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@newcondo/ui/select";
-import { Calendar } from "@newcondo/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@newcondo/ui/popover";
+} from "@newcondo/ui/components/select";
+import { Calendar } from "@newcondo/ui/components/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@newcondo/ui/components/popover";
 import { User, Phone, Calendar as CalendarIcon, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@newcondo/ui/lib/utils";

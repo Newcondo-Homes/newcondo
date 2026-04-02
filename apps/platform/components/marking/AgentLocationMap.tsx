@@ -3,9 +3,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow } from '@react-google-maps/api'
-import { Card } from '@/components/ui/card'
+import { Card } from '@newcondo/ui/components/card'
 import { AlertCircle, MapPin, Navigation } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 
 interface JobLocation {
   id: string

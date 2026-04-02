@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Label } from '@newcondo/ui/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/ui/select';
-import { Textarea } from '@newcondo/ui/components/ui/textarea';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
-import { Separator } from '@newcondo/ui/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/ui/radio-group';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Separator } from '@newcondo/ui/components/separator';
+import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
 import { 
   CreditCard, 
   DollarSign, 
@@ -24,7 +24,7 @@ import {
   Phone,
   AlertTriangle
 } from 'lucide-react';
-import { useToast } from '@newcondo/ui/components/ui/use-toast';
+import { toast } from '@newcondo/ui/';
 import { UrgencyLevel, PaymentStatus } from '@newcondo/db';
 
 interface ContactPerson {
@@ -120,7 +120,6 @@ export default function MarkingPaymentForm({
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [calculatedFee, setCalculatedFee] = useState(paymentDetails.totalFee);
   const [paymentStep, setPaymentStep] = useState(1);
-  const { toast } = useToast();
 
   const calculateFee = (urgency: UrgencyLevel) => {
     const urgencyConfig = URGENCY_LEVELS.find(level => level.value === urgency);
@@ -137,10 +136,8 @@ export default function MarkingPaymentForm({
 
   const handlePaymentSubmit = async () => {
     if (!agreeToTerms) {
-      toast({
-        title: 'Terms and Conditions',
+      toast('Terms and Conditions',{
         description: 'Please agree to the terms and conditions to proceed',
-        variant: 'destructive'
       });
       return;
     }
@@ -161,10 +158,8 @@ export default function MarkingPaymentForm({
       await onPaymentSubmit(paymentData);
       setPaymentStep(2);
     } catch (error) {
-      toast({
-        title: 'Payment Failed',
+      toast.error('Payment Failed',{
         description: 'Failed to process payment. Please try again.',
-        variant: 'destructive'
       });
     }
   };

@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { VirtualAccountTransactions } from '@/components/virtual-accounts/VirtualAccountTransactions';
+import VirtualAccountTransactions from '@/components/virtual-accounts/VirtualAccountTransactions';
 import { VirtualAccountDetails } from '@/components/virtual-accounts/VirtualAccountDetails';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
@@ -73,12 +73,12 @@ export default async function VirtualAccountTransactionsPage({
   return (
     <div className="space-y-6">
       <Breadcrumbs items={breadcrumbItems} />
-      
+
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Virtual Account Details Sidebar */}
         <div className="lg:w-1/3">
           <Suspense fallback={<LoadingSpinner />}>
-            <VirtualAccountDetails 
+            <VirtualAccountDetails
               virtualAccount={virtualAccount}
               showTransactionButton={false}
             />
@@ -96,9 +96,9 @@ export default async function VirtualAccountTransactionsPage({
                 View all transactions for {virtualAccount.accountName}
               </p>
             </div>
-            
+
             <Suspense fallback={<LoadingSpinner />}>
-              <VirtualAccountTransactions 
+              <VirtualAccountTransactions
                 virtualAccountId={params.id}
                 filters={transactionFilters}
                 showHeader={false}
@@ -115,7 +115,7 @@ export default async function VirtualAccountTransactionsPage({
 export async function generateMetadata({ params }: { params: { id: string } }) {
   try {
     const virtualAccount = await getVirtualAccount(params.id);
-    
+
     if (!virtualAccount) {
       return {
         title: 'Virtual Account Not Found',

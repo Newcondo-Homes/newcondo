@@ -2,9 +2,9 @@
 'use client'
 
 import React from 'react'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Input } from "@newcondo/ui/components/input"
+import { Button } from "@newcondo/ui/components/button"
+import { Badge } from "@newcondo/ui/components/badge"
 import { 
   Command,
   CommandEmpty,
@@ -12,12 +12,12 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command"
+} from "@newcondo/ui/components/command"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
+} from "@newcondo/ui/components/popover"
 import { cn } from "@/lib/utils"
 import { 
   Search, 

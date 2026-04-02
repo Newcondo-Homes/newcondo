@@ -2,8 +2,8 @@
 
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import PropertyComparison from '@/components/properties/PropertyComparison';
-import { Button } from '@newcondo/ui/components/ui/button';
+import {PropertyComparison} from '@/components/properties/PropertyComparison';
+import { Button } from '@newcondo/ui/components/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 

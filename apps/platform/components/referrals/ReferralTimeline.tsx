@@ -2,12 +2,12 @@
 
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useReferralTimeline } from '@/hooks/useReferrals';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { formatRewardDateTime } from '@/lib/utils/rewardFormatters';
 import { UserPlus, CheckCircle, Gift, Send } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ScrollArea } from '@newcondo/ui/components/scroll-area';
 
 export function ReferralTimeline() {
   const { timeline, isLoading } = useReferralTimeline();

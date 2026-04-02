@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { MarkingJobCard } from './MarkingJobCard';
-import { Button } from '@newcondo/ui/button';
-import { Input } from '@newcondo/ui/input';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@newcondo/ui/select';
+} from '@newcondo/ui/components/select';
 import { Search, Filter, RefreshCw } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 
 interface MarkingJob {
   id: string;

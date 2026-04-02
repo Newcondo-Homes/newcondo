@@ -6,7 +6,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 
 // Nigerian Locations by State and LGA - Sample data
 const NIGERIAN_LOCATIONS: Record<string, Record<string, string[]>> = {

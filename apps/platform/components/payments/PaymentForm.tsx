@@ -4,18 +4,18 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@newcondo/ui/components/ui/form';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/ui/select';
-import { Separator } from '@newcondo/ui/components/ui/separator';
-import { Badge } from '@newcondo/ui/components/ui/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@newcondo/ui/components/form';
+import { Input } from '@newcondo/ui/components/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Separator } from '@newcondo/ui/components/separator';
+import { Badge } from '@newcondo/ui/components/badge';
 import { AlertCircle, CreditCard, Loader2, Shield } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { usePayments } from '@/hooks/usePayments';
-import { PaymentMethods } from './PaymentMethods';
-import { formatCurrency } from '@/lib/utils/format';
+import PaymentMethods  from './PaymentMethods';
+import {formatCurrency}  from '@/lib/utils/format';
 
 const paymentSchema = z.object({
   amount: z.number().min(1, 'Amount must be greater than 0'),

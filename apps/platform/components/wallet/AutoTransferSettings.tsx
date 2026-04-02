@@ -10,9 +10,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@newcondo/ui/card';
-import { Button } from '@newcondo/ui/button';
-import { Switch } from '@newcondo/ui/switch';
+} from '@newcondo/ui/';
+import { Button } from '@newcondo/ui/';
+import { Switch } from '@newcondo/ui/';
 import {
   Form,
   FormControl,
@@ -21,18 +21,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@newcondo/ui/form';
+} from '@newcondo/ui/';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@newcondo/ui/select';
-import { Input } from '@newcondo/ui/input';
-import { useToast } from '@newcondo/ui/use-toast';
+} from '@newcondo/ui/';
+import { Input } from '@newcondo/ui/';
+import { toast } from '@newcondo/ui/';
 import { Loader2, Save, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/';
 
 const autoTransferSchema = z.object({
   enabled: z.boolean(),
@@ -80,7 +80,6 @@ export function AutoTransferSettings({
   onSave,
 }: AutoTransferSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm<AutoTransferFormData>({
     resolver: zodResolver(autoTransferSchema),
@@ -100,8 +99,7 @@ export function AutoTransferSettings({
     setIsLoading(true);
     try {
       await onSave(data);
-      toast({
-        title: 'Settings saved',
+      toast.success('Settings saved',{
         description: 'Your auto-transfer settings have been updated successfully.',
       });
     } catch (error) {

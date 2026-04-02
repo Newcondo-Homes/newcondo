@@ -1,12 +1,12 @@
 // apps/platform/components/rentals/TenantInfoCard.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/avatar';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import { Mail, Phone, MapPin, User, Shield } from 'lucide-react';
-import { VerificationStatus } from '@prisma/client';
+import { VerificationStatus } from '@newcondo/db';
 
 interface TenantInfoCardProps {
   tenant: {

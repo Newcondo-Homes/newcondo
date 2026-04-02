@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, Shield } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Badge } from '@newcondo/ui/badge';
-import { Progress } from '@newcondo/ui/progress';
-import { Button } from '@newcondo/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Progress } from '@newcondo/ui/components/progress';
+import { Button } from '@newcondo/ui/components/button';
 import { DocumentType, DocumentStatus, VerificationStatus } from '@newcondo/db';
 
 interface DocumentVerificationStatusProps {

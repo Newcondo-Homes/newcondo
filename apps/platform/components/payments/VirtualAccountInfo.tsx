@@ -6,7 +6,7 @@ import { Button } from '@newcondo/ui/components/button'
 import { Badge } from '@newcondo/ui/components/badge'
 import { Separator } from '@newcondo/ui/components/separator'
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert'
-import { toast } from '@newcondo/ui/components/toast'
+import { toast } from '@newcondo/ui/'
 import { 
   Copy, 
   Eye, 
@@ -60,18 +60,15 @@ export default function VirtualAccountInfo({
     try {
       await navigator.clipboard.writeText(text)
       setCopiedField(fieldName)
-      toast({
-        title: "Copied!",
+      toast.success("Copied", {
         description: `${fieldName} copied to clipboard`,
       })
       
       // Clear the copied state after 2 seconds
       setTimeout(() => setCopiedField(null), 2000)
     } catch (error) {
-      toast({
-        title: "Copy failed",
+      toast.error("Copy Failed",{
         description: "Unable to copy to clipboard",
-        variant: "destructive"
       })
     }
   }
@@ -87,7 +84,6 @@ export default function VirtualAccountInfo({
       '011': 'First Bank',
       '214': 'First City Monument Bank',
       '058': 'GTBank',
-      '030': 'Heritage Bank',
       '082': 'Keystone Bank',
       '526': 'Parallex Bank',
       '076': 'Polaris Bank',

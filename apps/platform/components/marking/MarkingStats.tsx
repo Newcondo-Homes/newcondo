@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Skeleton } from "@newcondo/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api/client";
+import api  from "@/lib/api/client";
 
 interface MarkingStatsData {
   totalJobs: number;
@@ -80,7 +80,7 @@ export default function MarkingStats() {
       try {
         setLoading(true);
         const response = await api.get(`/marking/agents/${user.id}/statistics`);
-        setStats(response.data);
+        setStats(response.data as MarkingStatsData );
         setError(null);
       } catch (err: any) {
         console.error("Error fetching marking stats:", err);

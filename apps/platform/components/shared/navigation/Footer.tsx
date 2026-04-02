@@ -4,9 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Facebook, Twitter, Instagram, LinkedIn, Mail, Phone, MapPin } from 'lucide-react';
-import { Button } from '@newcondo/ui/button';
-import { Input } from '@newcondo/ui/input';
-import { Separator } from '@newcondo/ui/separator';
+import { Button } from '@newcondo/ui/';
+import { Input } from '@newcondo/ui/';
+import { Separator } from '@newcondo/ui/';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();

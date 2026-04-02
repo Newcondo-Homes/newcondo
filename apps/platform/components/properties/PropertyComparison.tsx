@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Separator } from '@newcondo/ui/components/ui/separator';
-import { ScrollArea, ScrollBar } from '@newcondo/ui/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/ui/dialog';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@newcondo/ui/components/ui/sheet';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Separator } from '@newcondo/ui/components/separator';
+import { ScrollArea, ScrollBar } from '@newcondo/ui/components/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@newcondo/ui/components/sheet';
 import { 
   Compare, 
   X, 

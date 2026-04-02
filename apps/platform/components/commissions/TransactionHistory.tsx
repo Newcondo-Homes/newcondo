@@ -4,14 +4,14 @@
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import {
   ArrowUpRight,
   ArrowDownLeft,

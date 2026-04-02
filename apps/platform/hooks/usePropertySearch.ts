@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchStore } from '@/store/searchStore';
 import { useDebounce } from '@/hooks/useDebounce';
-import { PropertyType, PropertyStatus } from '@prisma/client';
+import { PropertyType, PropertyStatus } from '@newcondo/db';
 
 // Search filters interface
 export interface PropertySearchFilters {

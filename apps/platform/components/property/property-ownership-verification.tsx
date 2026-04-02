@@ -1,16 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Input } from '@newcondo/ui/components/ui/input';
-import { Label } from '@newcondo/ui/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/ui/select';
-import { Textarea } from '@newcondo/ui/components/ui/textarea';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
-import { Separator } from '@newcondo/ui/components/ui/separator';
-import { Progress } from '@newcondo/ui/components/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Separator } from '@newcondo/ui/components/separator';
+import { Progress } from '@newcondo/ui/components/progress';
 import { 
   FileText, 
   Upload, 
@@ -23,7 +23,7 @@ import {
   Info
 } from 'lucide-react';
 import { UploadButton } from '@/lib/uploadthing';
-import { useToast } from '@newcondo/ui/components/ui/use-toast';
+import { toast } from '@newcondo/ui/';
 import { DocumentType, DocumentStatus } from '@newcondo/db';
 
 interface Document {
@@ -93,7 +93,6 @@ export default function PropertyOwnershipVerification({
   const [ninNumber, setNinNumber] = useState('');
   const [uploadingDocument, setUploadingDocument] = useState<DocumentType | null>(null);
   const [verificationStep, setVerificationStep] = useState(1);
-  const { toast } = useToast();
 
   const getDocumentStatus = (docType: DocumentType) => {
     return userDocuments.find(doc => doc.documentType === docType);
@@ -116,10 +115,8 @@ export default function PropertyOwnershipVerification({
 
   const handleNinSubmit = async () => {
     if (!ninNumber || ninNumber.length !== 11) {
-      toast({
-        title: 'Invalid NIN',
+      toast.error('Invalid NIN',{
         description: 'Please enter a valid 11-digit NIN',
-        variant: 'destructive'
       });
       return;
     }
@@ -132,17 +129,14 @@ export default function PropertyOwnershipVerification({
         isRequired: true
       });
 
-      toast({
-        title: 'NIN Submitted',
+      toast('NIN Submitted',{
         description: 'Your NIN has been submitted for verification'
       });
 
       setVerificationStep(2);
     } catch (error) {
-      toast({
-        title: 'Submission Failed',
+      toast.error('Submission Failed',{
         description: 'Failed to submit NIN. Please try again.',
-        variant: 'destructive'
       });
     }
   };
@@ -159,17 +153,14 @@ export default function PropertyOwnershipVerification({
         isRequired: true
       });
 
-      toast({
-        title: 'Document Uploaded',
+      toast.success('Document Uploaded',{
         description: `${REQUIRED_DOCUMENTS.find(d => d.type === docType)?.name} uploaded successfully`
       });
 
       setUploadingDocument(null);
     } catch (error) {
-      toast({
-        title: 'Upload Failed',
+      toast.error('Upload Failed',{
         description: 'Failed to upload document. Please try again.',
-        variant: 'destructive'
       });
       setUploadingDocument(null);
     }
@@ -254,10 +245,8 @@ export default function PropertyOwnershipVerification({
                   }
                 }}
                 onUploadError={(error) => {
-                  toast({
-                    title: 'Upload Error',
+                  toast.error('Upload Error',{
                     description: error.message,
-                    variant: 'destructive'
                   });
                 }}
                 appearance={{

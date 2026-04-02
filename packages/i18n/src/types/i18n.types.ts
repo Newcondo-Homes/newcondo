@@ -2,6 +2,7 @@
  * i18n Type Definitions
  * Location: packages/i18n/src/types/i18n.types.ts
  */
+// Add this to packages/i18n/src/types/i18n.types.ts
 
 export interface I18nConfig {
   supportedLocales: string[];

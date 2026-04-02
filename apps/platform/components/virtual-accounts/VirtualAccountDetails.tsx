@@ -4,10 +4,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
-import { cn } from '@/lib/utils/helpers';
+import { cn } from '@newcondo/ui';
 import { Copy, Check, Eye, FileText, Home, AlertCircle } from 'lucide-react';
 
 interface VirtualAccount {

@@ -2,14 +2,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import {
   MoreHorizontal,
@@ -23,7 +23,7 @@ import {
   CheckCircle,
   MapPin,
 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 interface Property {
   id: string;
@@ -57,30 +57,24 @@ export function PropertyActionMenu({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDelistDialog, setShowDelistDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
 
   const handleCopyLink = async () => {
     if (!property.shareableLink) {
-      toast({
-        title: 'No shareable link',
+      toast.error("No shareable link",{
         description: 'This property does not have a shareable link yet',
-        variant: 'destructive',
       });
       return;
     }
 
     try {
       await navigator.clipboard.writeText(property.shareableLink);
-      toast({
-        title: 'Link copied',
+      toast.success("Link copied",{
         description: 'Property link copied to clipboard',
       });
     } catch (error) {
       console.error('Copy error:', error);
-      toast({
-        title: 'Copy failed',
+      toast.error("Copy failed",{
         description: 'Failed to copy link to clipboard',
-        variant: 'destructive',
       });
     }
   };
@@ -90,16 +84,13 @@ export function PropertyActionMenu({
       setIsDeleting(true);
       await onDelete();
       setShowDeleteDialog(false);
-      toast({
-        title: 'Property deleted',
+      toast.success("Property deleted",{
         description: 'The property has been deleted successfully',
       });
     } catch (error) {
       console.error('Delete error:', error);
-      toast({
-        title: 'Delete failed',
+      toast.error("Delete failed",{
         description: 'Failed to delete the property',
-        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -112,16 +103,13 @@ export function PropertyActionMenu({
     try {
       await onDelist();
       setShowDelistDialog(false);
-      toast({
-        title: 'Property delisted',
+      toast.success("Property delisted",{
         description: 'The property has been removed from public listings',
       });
     } catch (error) {
       console.error('Delist error:', error);
-      toast({
-        title: 'Delist failed',
+      toast.error("Delist failed",{
         description: 'Failed to delist the property',
-        variant: 'destructive',
       });
     }
   };

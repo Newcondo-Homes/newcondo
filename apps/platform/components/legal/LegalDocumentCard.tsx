@@ -14,10 +14,10 @@ import {
   User,
   Building
 } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@newcondo/ui/card';
-import { Badge } from '@newcondo/ui/badge';
-import { Button } from '@newcondo/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@newcondo/ui/tooltip';
+import { Card, CardContent, CardHeader } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@newcondo/ui/components/tooltip';
 import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
 
 interface LegalDocumentCardProps {
@@ -119,12 +119,12 @@ export function LegalDocumentCard({
     if (onDownload && document.fileUrl) {
       onDownload(document.id, document.fileUrl);
     } else if (document.fileUrl) {
-      const link = document.createElement('a');
+      const link = window.document.createElement('a');
       link.href = document.fileUrl;
       link.download = document.fileName || 'document';
-      document.body.appendChild(link);
+      window.document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
+      window.document.body.removeChild(link);
     }
   };
 

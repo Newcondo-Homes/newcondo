@@ -1,9 +1,9 @@
 'use client';
 
 import { AlertCircle, XCircle, Clock } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
+import { Button } from '@newcondo/ui/components/button';
+import { cn } from '@newcondo/ui';
 
 export type ConflictType = 
   | 'payment_in_progress' 

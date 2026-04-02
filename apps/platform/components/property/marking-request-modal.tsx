@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog'
+import { Button } from '@newcondo/ui/components/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card'
+import { Badge } from '@newcondo/ui/components/badge'
 import { MapPin, Users, Clock, DollarSign, Shield, AlertCircle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 
 interface MarkingRequestModalProps {
   isOpen: boolean

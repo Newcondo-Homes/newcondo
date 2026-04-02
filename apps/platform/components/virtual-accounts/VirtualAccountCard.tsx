@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils/format';
-import { cn } from '@/lib/utils/helpers';
+import { cn } from '@newcondo/ui';
 
 interface VirtualAccount {
   id: string;

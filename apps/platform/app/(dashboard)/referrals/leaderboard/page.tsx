@@ -4,20 +4,20 @@
 
 import { useState } from 'react';
 import { Metadata } from 'next';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/avatar';
+import { Badge } from '@newcondo/ui/components/badge';
 import { useReferralLeaderboard } from '@/hooks/useReferrals';
 import { formatCurrency } from '@/lib/utils/referralHelpers';
 import { Trophy, Medal, Award, Crown, User } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from '@newcondo/ui/components/select';
 
 export default function LeaderboardPage() {
   const [period, setPeriod] = useState<'week' | 'month' | 'year' | 'all'>('month');

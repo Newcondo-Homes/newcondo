@@ -3,13 +3,13 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/components/ui/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Separator } from '@newcondo/ui/components/separator';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
+import { toast } from '@newcondo/ui/';
 import { 
   Clock, 
   MapPin, 
@@ -89,10 +89,8 @@ export default function JobDetailsPage() {
       setJob(data.job);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: 'Failed to load job details',
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -142,10 +140,8 @@ export default function JobDetailsPage() {
 
   const openInMaps = () => {
     if (!job?.property.gpsCoordinates) {
-      toast({
-        title: 'Location unavailable',
+      toast.error('Location unavailable',{
         description: 'GPS coordinates not available for this property',
-        variant: 'destructive',
       });
       return;
     }
@@ -155,10 +151,8 @@ export default function JobDetailsPage() {
       const url = `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
       window.open(url, '_blank');
     } catch (err) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: 'Failed to open maps',
-        variant: 'destructive',
       });
     }
   };

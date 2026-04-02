@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { Calendar, Clock, Lock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
-import { Badge } from '@newcondo/ui/badge';
-import { cn } from '@newcondo/ui/utils';
+import { Badge } from '@newcondo/ui/components/badge';
+import { cn } from '@newcondo/ui/';
 
 interface PropertyAvailabilityBadgeProps {
   status: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' | 'RENTED' | 'UNAVAILABLE' | 'PAYMENT_LOCKED';

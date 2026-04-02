@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent } from "@newcondo/ui/components/ui/card";
+import { Card, CardContent } from "@newcondo/ui/components/card";
 import { LoadingSpinner } from "../shared/feedback/LoadingSpinner";
 import { CreditCard, Clock, Shield } from "lucide-react";
 

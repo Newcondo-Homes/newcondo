@@ -8,10 +8,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
+} from '@newcondo/ui/components/dialog';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Progress } from '@newcondo/ui/components/progress';
 import { Share2, Users, Gift, Trophy, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/referralHelpers';
 

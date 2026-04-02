@@ -1,9 +1,9 @@
 // apps/platform/components/referrals/AgentReferralDashboard.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { StatCard } from '@/components/shared/StatCard';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import {
   Users,
   Eye,

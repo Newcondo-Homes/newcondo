@@ -1,10 +1,10 @@
 // apps/platform/components/marketing/PropertyPromotionCard.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
+import { Progress } from '@newcondo/ui/components/progress';
 import {
   TrendingUp,
   Eye,

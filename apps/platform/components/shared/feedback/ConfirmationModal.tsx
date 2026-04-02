@@ -9,8 +9,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@newcondo/ui/alert-dialog';
-import { Button } from '@newcondo/ui/button';
+} from '@newcondo/ui/';
+import { Button } from '@newcondo/ui/';
 import { Loader2 } from 'lucide-react';
 
 interface ConfirmationModalProps {

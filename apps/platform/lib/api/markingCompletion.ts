@@ -1,5 +1,5 @@
 // apps/platform/lib/api/markingCompletion.ts
-import { client } from './client';
+import client  from './client';
 import type {
   CompleteMarkingJobRequest,
   MarkingCompletionResponse,

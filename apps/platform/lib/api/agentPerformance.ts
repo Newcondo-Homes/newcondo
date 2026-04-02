@@ -4,7 +4,7 @@
  * Location: apps/platform/lib/api/agentPerformance.ts
  */
 
-import { client } from './client';
+import client  from './client';
 
 // Types for performance tracking
 export interface AgentPerformanceMetrics {

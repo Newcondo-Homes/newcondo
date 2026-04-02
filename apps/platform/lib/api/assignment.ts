@@ -4,7 +4,7 @@
  * Location: apps/platform/lib/api/assignment.ts
  */
 
-import { client } from './client';
+import client  from './client';
 
 // Types for assignment operations
 export interface AssignmentResponse {

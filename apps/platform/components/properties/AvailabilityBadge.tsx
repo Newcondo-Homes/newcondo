@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@newcondo/ui/components/ui/badge";
+import { Badge } from "@newcondo/ui/components/badge";
 import { Clock, Lock, CheckCircle2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils/helpers";
+import { cn } from "@newcondo/ui/";
 
 interface AvailabilityBadgeProps {
   isAvailable: boolean;

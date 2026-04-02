@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Lock, AlertTriangle, Clock } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@newcondo/ui/components/ui/alert";
-import { Progress } from "@newcondo/ui/components/ui/progress";
-import { cn } from "@/lib/utils/helpers";
+import { Alert, AlertDescription, AlertTitle } from "@newcondo/ui/components/alert";
+import { Progress } from "@newcondo/ui/components/progress";
+import { cn } from "@newcondo/ui";
 
 interface PropertyLockIndicatorProps {
   isLocked: boolean;

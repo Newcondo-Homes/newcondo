@@ -3,8 +3,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { InviteViaEmail } from './InviteViaEmail';
 import { InviteViaSMS } from './InviteViaSMS';
 import { InviteViaWhatsApp } from './InviteViaWhatsApp';

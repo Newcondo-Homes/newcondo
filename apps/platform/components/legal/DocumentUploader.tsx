@@ -3,11 +3,11 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, File, X, CheckCircle, AlertCircle } from 'lucide-react';
-import { Button } from '@newcondo/ui/button';
-import { Card, CardContent } from '@newcondo/ui/card';
-import { Progress } from '@newcondo/ui/progress';
-import { Badge } from '@newcondo/ui/badge';
-import { cn } from '@newcondo/ui/utils';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Progress } from '@newcondo/ui/components/progress';
+import { Badge } from '@newcondo/ui/components/badge';
+import { cn } from '@newcondo/ui/lib/utils';
 import { DocumentType, DocumentStatus } from '@newcondo/db';
 
 interface DocumentFile extends File {
@@ -94,7 +94,7 @@ export function DocumentUploader({
   };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newFiles = acceptedFiles.map(file => 
+    const newFiles = acceptedFiles.map(file =>
       Object.assign(file, {
         preview: URL.createObjectURL(file),
         uploadProgress: 0,
@@ -103,15 +103,15 @@ export function DocumentUploader({
     );
 
     setFiles(prev => [...prev, ...newFiles].slice(0, maxFiles));
-    
+
     // Start upload for each file
     newFiles.forEach(async (file, index) => {
       try {
         setIsUploading(true);
-        
+
         // Simulate progress
         const progressInterval = setInterval(() => {
-          setFiles(prev => prev.map(f => 
+          setFiles(prev => prev.map(f =>
             f === file && f.uploadProgress !== undefined && f.uploadProgress < 90
               ? { ...f, uploadProgress: f.uploadProgress + 10 }
               : f
@@ -119,23 +119,23 @@ export function DocumentUploader({
         }, 200);
 
         const result = await uploadFile(file);
-        
+
         clearInterval(progressInterval);
-        
-        setFiles(prev => prev.map(f => 
-          f === file 
+
+        setFiles(prev => prev.map(f =>
+          f === file
             ? { ...f, uploadProgress: 100, status: 'success', documentId: result.documentId }
             : f
         ));
-        
+
         onUploadComplete(result.documentId, result.fileUrl);
       } catch (error) {
-        setFiles(prev => prev.map(f => 
-          f === file 
+        setFiles(prev => prev.map(f =>
+          f === file
             ? { ...f, status: 'error', uploadProgress: 0 }
             : f
         ));
-        
+
         onUploadError(error instanceof Error ? error.message : 'Upload failed');
       } finally {
         setIsUploading(false);
@@ -173,15 +173,16 @@ export function DocumentUploader({
   };
 
   const getStatusBadge = (status: DocumentStatus) => {
-    const variants = {
-      PENDING: 'secondary',
-      APPROVED: 'success',
-      REJECTED: 'destructive',
-      EXPIRED: 'warning'
-    } as const;
+
+    const styles = {
+      PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      APPROVED: 'bg-green-100 text-green-800 border-green-200',
+      REJECTED: 'bg-red-100 text-red-800 border-red-200',
+      EXPIRED: 'bg-gray-100 text-gray-800 border-gray-200',
+    };
 
     return (
-      <Badge variant={variants[status] || 'secondary'}>
+      <Badge variant="outline" className={styles[status]}>
         {status.toLowerCase()}
       </Badge>
     );

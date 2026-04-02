@@ -2,11 +2,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { toast } from "@newcondo/ui"
 import { Copy, Link as LinkIcon, Check, RefreshCw } from 'lucide-react';
 
 interface ShareableLinkGeneratorProps {
@@ -25,23 +25,19 @@ export function ShareableLinkGenerator({
   const [link, setLink] = useState(currentLink || '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const { toast } = useToast();
 
   const handleGenerate = async () => {
     try {
       setIsGenerating(true);
       const newLink = await onGenerate();
       setLink(newLink);
-      toast({
-        title: 'Link generated',
+      toast.success('Link generated',{
         description: 'Shareable link has been created successfully',
       });
     } catch (error) {
       console.error('Generate error:', error);
-      toast({
-        title: 'Generation failed',
+      toast.error('Generation failed', {
         description: 'Failed to generate shareable link',
-        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
@@ -53,16 +49,13 @@ export function ShareableLinkGenerator({
       setIsGenerating(true);
       const newLink = await onRegenerate();
       setLink(newLink);
-      toast({
-        title: 'Link regenerated',
+      toast.success('Link regenerated',{
         description: 'A new shareable link has been created',
       });
     } catch (error) {
       console.error('Regenerate error:', error);
-      toast({
-        title: 'Regeneration failed',
+      toast.error('Regeneration failed',{
         description: 'Failed to regenerate shareable link',
-        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
@@ -75,8 +68,7 @@ export function ShareableLinkGenerator({
     try {
       await navigator.clipboard.writeText(link);
       setIsCopied(true);
-      toast({
-        title: 'Link copied',
+      toast.success('Link copied', {
         description: 'Shareable link copied to clipboard',
       });
 
@@ -85,10 +77,8 @@ export function ShareableLinkGenerator({
       }, 2000);
     } catch (error) {
       console.error('Copy error:', error);
-      toast({
-        title: 'Copy failed',
+      toast.error('Copy failed',{
         description: 'Failed to copy link to clipboard',
-        variant: 'destructive',
       });
     }
   };

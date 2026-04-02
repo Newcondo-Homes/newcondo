@@ -1,7 +1,8 @@
 import { Suspense } from 'react'
-import { Navbar } from '@/components/shared/navigation/Navbar'
-import { SearchBox } from '@/components/properties/PropertySearch'
-import { PropertyGrid } from '@/components/properties/PropertyGrid'
+import Navbar from '@/components/shared/navigation/Navbar'
+// import { SearchBox } from '@/components/properties/PropertySearch'
+import { SearchBox } from '@/components/properties/PropertySearchWrapper'
+import PropertyGrid from '@/components/properties/PropertyGrid'
 import { Footer } from '@/components/shared/layouts/Footer'
 import { HeroSection } from '@/components/shared/layouts/HeroSection'
 
@@ -10,10 +11,10 @@ export default async function HomePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <Navbar />
-      
+
       {/* Hero Section with Search */}
       <HeroSection />
-      
+
       {/* Search Box */}
       <section className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-6">

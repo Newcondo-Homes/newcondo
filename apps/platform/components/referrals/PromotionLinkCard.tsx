@@ -2,11 +2,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Badge } from '@newcondo/ui/components/badge';
+import { toast } from '@newcondo/ui';
 import {
   Link as LinkIcon,
   Copy,
@@ -39,7 +39,6 @@ export function PromotionLinkCard({
   currency = 'NGN',
 }: PromotionLinkCardProps) {
   const [isCopied, setIsCopied] = useState(false);
-  const { toast } = useToast();
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -53,8 +52,7 @@ export function PromotionLinkCard({
     try {
       await navigator.clipboard.writeText(promotionLink);
       setIsCopied(true);
-      toast({
-        title: 'Link copied',
+      toast.success('Link copied', {
         description: 'Promotion link copied to clipboard',
       });
 
@@ -63,10 +61,8 @@ export function PromotionLinkCard({
       }, 2000);
     } catch (error) {
       console.error('Copy error:', error);
-      toast({
-        title: 'Copy failed',
+      toast.error('Copy failed', {
         description: 'Failed to copy link to clipboard',
-        variant: 'destructive',
       });
     }
   };
@@ -177,21 +173,20 @@ export function PromotionLinkCard({
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className={`h-2 rounded-full transition-all ${
-                stats.conversions > 0
+              className={`h-2 rounded-full transition-all ${stats.conversions > 0
                   ? 'bg-green-500'
                   : stats.clicks > 0
-                  ? 'bg-yellow-500'
-                  : 'bg-red-500'
-              }`}
+                    ? 'bg-yellow-500'
+                    : 'bg-red-500'
+                }`}
               style={{
                 width: `${Math.min(
                   100,
                   stats.conversions > 0
                     ? 100
                     : stats.clicks > 0
-                    ? 50
-                    : 10
+                      ? 50
+                      : 10
                 )}%`,
               }}
             ></div>

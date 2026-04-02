@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { queueApi } from "@/lib/api/queue";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Input } from "@newcondo/ui/components/input";
 import {
   MapPin,
   Clock,
@@ -19,8 +19,8 @@ import {
   DollarSign,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
 
 interface AvailableJob {
   id: string;

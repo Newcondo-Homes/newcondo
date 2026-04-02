@@ -1,9 +1,9 @@
 // apps/platform/components/referrals/ReferralActivityLog.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { ScrollArea } from '@newcondo/ui/components/scroll-area';
 import {
   Eye,
   MousePointerClick,

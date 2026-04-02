@@ -1,5 +1,5 @@
 // apps/platform/hooks/usePromotionLink.ts
-import { useMutation, useQuery, useQueryClient } from '@tantml:query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   generatePromotionLink,
   requestPromotionAccess,

@@ -1,18 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
-import { Button } from "@newcondo/ui/button";
-import { Skeleton } from "@newcondo/ui/skeleton";
-import { Input } from "@newcondo/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Skeleton } from "@newcondo/ui/components/skeleton";
+import { Input } from "@newcondo/ui/components/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@newcondo/ui/select";
+} from "@newcondo/ui/components/select";
 import {
   MapPin,
   Clock,
@@ -23,7 +23,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { api } from "@/lib/api/client";
+import api  from "@/lib/api/client";
 import { format } from "date-fns";
 
 interface JobHistoryItem {
@@ -79,8 +79,9 @@ export default function JobHistory() {
       try {
         setLoading(true);
         const response = await api.get(`/marking/agents/${user.id}/history`);
-        setJobs(response.data);
-        setFilteredJobs(response.data);
+        const data = response.data as JobHistoryItem[]
+        setJobs(data);
+        setFilteredJobs(data);
         setError(null);
       } catch (err: any) {
         console.error("Error fetching job history:", err);

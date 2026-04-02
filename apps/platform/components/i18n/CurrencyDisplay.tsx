@@ -1,7 +1,7 @@
 'use client';
 
 import { formatCurrency } from '@/lib/utils/currency';
-import { type Locale } from '@/i18n';
+// import { type Locale } from '@/i18n';
 
 interface CurrencyDisplayProps {
   amount: number;
@@ -18,7 +18,7 @@ export function CurrencyDisplay({
   className,
   showSymbol = true,
 }: CurrencyDisplayProps) {
-  const formatted = formatCurrency(amount, locale as Locale, currency, showSymbol);
+  const formatted = formatCurrency(amount, currency, { showSymbol, locale });
 
   return <span className={className}>{formatted}</span>;
 }

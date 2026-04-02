@@ -3,9 +3,9 @@
 
 import React, { useState } from 'react';
 import { AlertCircle, CheckCircle, XCircle, Image as ImageIcon, ChevronDown } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Textarea } from '@newcondo/ui/components/textarea';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from '@newcondo/ui/components/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,7 +22,8 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  AlertDialogTrigger
+} from '@newcondo/ui/components/alert-dialog';
 
 interface OwnerConfirmationPromptProps {
   jobId: string;

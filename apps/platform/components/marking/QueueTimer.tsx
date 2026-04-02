@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { Clock, AlertTriangle } from "lucide-react";
-import { Progress } from "@newcondo/ui/progress";
+import { Progress } from "@newcondo/ui/components/progress";
 
 interface QueueTimerProps {
   expiryTime: string;

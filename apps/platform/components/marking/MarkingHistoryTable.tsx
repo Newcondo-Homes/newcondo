@@ -1,16 +1,16 @@
 // apps/platform/components/marking/MarkingHistoryTable.tsx
 'use client';
 
-import { ColumnDef } from '@tantml:react-table';
+import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@newcondo/ui/components/dropdown-menu';
 import { MoreHorizontal, Eye, CheckCircle, XCircle } from 'lucide-react';
 
 type MarkingJobStatus =

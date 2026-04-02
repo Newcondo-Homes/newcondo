@@ -9,13 +9,13 @@ const f = createUploadthing();
 export const ourFileRouter = {
   // Verification Documents Upload
   verificationDocuments: f({
-    image: { 
-      maxFileSize: "4MB", 
+    image: {
+      maxFileSize: "4MB",
       maxFileCount: 1,
       acl: "private" // Keep verification documents private
     },
-    pdf: { 
-      maxFileSize: "8MB", 
+    pdf: {
+      maxFileSize: "8MB",
       maxFileCount: 1,
       acl: "private"
     }
@@ -23,15 +23,15 @@ export const ourFileRouter = {
     .middleware(async ({ req }) => {
       // This code runs on your server before upload
       const session = await auth();
-      
+
       if (!session?.user?.id) {
         throw new UploadThingError("Unauthorized - Please login to upload verification documents");
       }
 
       // Return user data to be available in onUploadComplete
-      return { 
+      return {
         userId: session.user.id,
-        userEmail: session.user.email 
+        userEmail: session.user.email
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
@@ -44,8 +44,8 @@ export const ourFileRouter = {
 
       // Save file info to your database here if needed
       // You can also send notifications, update user verification status, etc.
-      
-      return { 
+
+      return {
         uploadedBy: metadata.userId,
         fileUrl: file.url,
         fileKey: file.key,
@@ -56,29 +56,29 @@ export const ourFileRouter = {
 
   // Selfie Upload (separate endpoint for selfies)
   selfieUpload: f({
-    image: { 
-      maxFileSize: "4MB", 
+    image: {
+      maxFileSize: "4MB",
       maxFileCount: 1,
       acl: "private"
     }
   })
     .middleware(async ({ req }) => {
       const session = await auth();
-      
+
       if (!session?.user?.id) {
         throw new UploadThingError("Unauthorized - Please login to upload selfie");
       }
 
-      return { 
+      return {
         userId: session.user.id,
-        userEmail: session.user.email 
+        userEmail: session.user.email
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Selfie uploaded by user:", metadata.userId);
       console.log("File URL:", file.url);
-      
-      return { 
+
+      return {
         uploadedBy: metadata.userId,
         fileUrl: file.url,
         fileKey: file.key,
@@ -89,34 +89,34 @@ export const ourFileRouter = {
 
   // Property Documents Upload (for future use)
   propertyDocuments: f({
-    image: { 
-      maxFileSize: "8MB", 
+    image: {
+      maxFileSize: "8MB",
       maxFileCount: 5,
       acl: "private"
     },
-    pdf: { 
-      maxFileSize: "16MB", 
+    pdf: {
+      maxFileSize: "16MB",
       maxFileCount: 3,
       acl: "private"
     }
   })
     .middleware(async ({ req }) => {
       const session = await auth();
-      
+
       if (!session?.user?.id) {
         throw new UploadThingError("Unauthorized");
       }
 
-      return { 
+      return {
         userId: session.user.id,
-        userEmail: session.user.email 
+        userEmail: session.user.email
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Property document uploaded by user:", metadata.userId);
       console.log("File URL:", file.url);
-      
-      return { 
+
+      return {
         uploadedBy: metadata.userId,
         fileUrl: file.url,
         fileKey: file.key,
@@ -127,29 +127,66 @@ export const ourFileRouter = {
 
   // Property Images Upload
   propertyImages: f({
-    image: { 
-      maxFileSize: "8MB", 
+    image: {
+      maxFileSize: "8MB",
       maxFileCount: 10,
       acl: "public-read" // Property images can be public
     }
   })
     .middleware(async ({ req }) => {
       const session = await auth();
-      
+
       if (!session?.user?.id) {
         throw new UploadThingError("Unauthorized");
       }
 
-      return { 
+      return {
         userId: session.user.id,
-        userEmail: session.user.email 
+        userEmail: session.user.email
       };
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Property image uploaded by user:", metadata.userId);
       console.log("File URL:", file.url);
-      
-      return { 
+
+      return {
+        uploadedBy: metadata.userId,
+        fileUrl: file.url,
+        fileKey: file.key,
+        fileName: file.name,
+        fileSize: file.size
+      };
+    }),
+
+
+  // dispute Evidence:
+  disputeEvidence: f({
+    image: {
+      maxFileSize: "8MB",
+      maxFileCount: 5,
+      acl: "private"
+    },
+    pdf: {
+      maxFileSize: "8MB",
+      maxFileCount: 3,
+      acl: "private"
+    }
+  })
+    .middleware(async ({ req }) => {
+      const session = await auth();
+
+      if (!session?.user?.id) {
+        throw new UploadThingError("Unauthorized");
+      }
+
+      return {
+        userId: session.user.id,
+        userEmail: session.user.email
+      };
+    })
+    .onUploadComplete(async ({ metadata, file }) => {
+      console.log("Dispute evidence uploaded by user:", metadata.userId);
+      return {
         uploadedBy: metadata.userId,
         fileUrl: file.url,
         fileKey: file.key,

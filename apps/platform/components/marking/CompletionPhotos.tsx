@@ -2,14 +2,15 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Input } from "@newcondo/ui/input";
-import { Label } from "@newcondo/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/select";
-import { Badge } from "@newcondo/ui/badge";
+import { Card, CardContent } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Input } from "@newcondo/ui/components/input";
+import { Label } from "@newcondo/ui/components/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
+import { Badge } from "@newcondo/ui/components/badge";
 import { Upload, X, Image as ImageIcon, AlertCircle, CheckCircle } from "lucide-react";
 import { UploadButton } from "@uploadthing/react";
+import type { OurFileRouter } from '@/lib/uploadthing';
 
 interface Photo {
   url: string;
@@ -132,8 +133,8 @@ export function CompletionPhotos({
                   JPG, PNG or WebP (Max 10MB per file)
                 </p>
               </div>
-              <UploadButton
-                endpoint="propertyImage"
+              <UploadButton<OurFileRouter, 'propertyImages'>
+                endpoint="propertyImages"
                 onClientUploadComplete={(res) => {
                   if (res && res[0]) {
                     handlePhotoUpload(res[0].url);

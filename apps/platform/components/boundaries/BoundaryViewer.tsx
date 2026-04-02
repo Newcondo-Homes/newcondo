@@ -1,9 +1,9 @@
 // apps/platform/components/boundaries/BoundaryViewer.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import { GoogleMap, Polygon, useJsApiLoader } from '@react-google-maps/api';
 import { useState } from 'react';
 import { MapPin, CheckCircle, Edit } from 'lucide-react';

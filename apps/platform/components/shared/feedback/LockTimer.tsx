@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Clock, Lock, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
+import { Progress } from '@newcondo/ui/components/progress';
 
 interface LockTimerProps {
   expiresAt: Date;

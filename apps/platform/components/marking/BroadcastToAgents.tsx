@@ -1,10 +1,11 @@
 // apps/platform/components/marking/BroadcastToAgents.tsx
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@newcondo/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/card';
-import { Alert, AlertDescription } from '@newcondo/ui/alert';
-import { Badge } from '@newcondo/ui/badge';
+import { useState, useEffect } from 'react';
+import { Button } from '@newcondo/ui/components/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
+import { Badge } from '@newcondo/ui/components/badge';
 import { Users, MapPin, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { formatDistance } from '@/lib/utils/format';
 
@@ -43,9 +44,13 @@ export function BroadcastToAgents({
   const [error, setError] = useState<string | null>(null);
 
   // Fetch nearby agents on component mount
-  useState(() => {
+  // useState(() => {
+  //   fetchNearbyAgents();
+  // });
+
+  useEffect(() => {
     fetchNearbyAgents();
-  });
+  }, []);
 
   const fetchNearbyAgents = async () => {
     try {
@@ -128,7 +133,7 @@ export function BroadcastToAgents({
         <Alert>
           <Clock className="h-4 w-4" />
           <AlertDescription>
-            Each agent will have a 3-hour time window to complete the marking. The first agent to 
+            Each agent will have a 3-hour time window to complete the marking. The first agent to
             successfully mark the property wins the job.
           </AlertDescription>
         </Alert>
@@ -167,7 +172,7 @@ export function BroadcastToAgents({
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-sm truncate">{agent.name}</p>
                       {agent.isAvailable && (
-                        <Badge variant="success" className="text-xs">
+                        <Badge variant="default" className="text-xs">
                           Available
                         </Badge>
                       )}
@@ -190,10 +195,10 @@ export function BroadcastToAgents({
             </div>
           </div>
         ) : (
-          <Alert variant="warning">
+          <Alert variant="default">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              No agents are currently available in your area. You may need to try other marking options 
+              No agents are currently available in your area. You may need to try other marking options
               or wait for agents to become available.
             </AlertDescription>
           </Alert>

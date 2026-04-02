@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/";
 import { Button } from "@newcondo/ui/";
 import { Stepper } from "@/components/shared/stepper";
 import { ArrowLeft, MapPin, FileText, Image, CheckCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@newcondo/ui";
 
 const steps = [
   {
@@ -41,7 +41,6 @@ const steps = [
 
 export default function CreatePropertyPage() {
   const router = useRouter();
-  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,19 +71,16 @@ export default function CreatePropertyPage() {
     try {
       setIsSubmitting(true);
       await submitProperty();
-      
-      toast({
-        title: "Property Listed Successfully!",
+
+      toast.success("Property Listed Successfully!", {
         description: "Your property has been submitted for review.",
       });
-      
+
       resetForm();
       router.push("/dashboard/properties/my-listings");
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to submit property. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -183,7 +179,7 @@ export default function CreatePropertyPage() {
         >
           Previous
         </Button>
-        
+
         <Button
           onClick={handleNext}
           disabled={!canProceed || isSubmitting}
@@ -199,7 +195,7 @@ export default function CreatePropertyPage() {
 // Additional components for image upload and review
 function PropertyImageUpload() {
   const { images, addImage, removeImage, setImageAsPrimary } = usePropertyListingStore();
-  
+
   // Implementation for image upload component
   return (
     <div className="space-y-4">
@@ -213,7 +209,7 @@ function PropertyImageUpload() {
 
 function PropertyReview() {
   const { propertyData, boundaryData, images } = usePropertyListingStore();
-  
+
   return (
     <div className="space-y-6">
       <div>

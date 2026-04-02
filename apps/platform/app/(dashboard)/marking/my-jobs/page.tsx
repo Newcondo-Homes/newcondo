@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
+import { Progress } from '@newcondo/ui/components/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkingJobs } from '@/hooks/useMarkingJobs';
 import { 
@@ -22,7 +22,7 @@ import {
   Info
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRemaining } from '@/lib/utils/format';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
 
 interface MyMarkingJob {
   id: string;

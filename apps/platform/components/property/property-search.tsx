@@ -4,11 +4,11 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, MapPin, Filter, SortAsc } from "lucide-react";
-import { Input } from "@newcondo/ui/input";
-import { Button } from "@newcondo/ui/button";
-import { Card, CardContent } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
-import { Separator } from "@newcondo/ui/separator";
+import { Input } from "@newcondo/ui/components/input";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Separator } from "@newcondo/ui/components/separator";
 import { PropertyFilters } from "./property-filters";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useProperties } from "@/hooks/use-properties";

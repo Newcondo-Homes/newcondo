@@ -2,13 +2,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Label } from '@newcondo/ui/components/label';
+import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Info, Save } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui/'
 
 type PromotionType = 'PUBLIC' | 'PERMISSION_BASED' | 'RESTRICTED' | 'REQUEST_BASED';
 
@@ -25,7 +25,6 @@ export function PromotionSettings({
 }: PromotionSettingsProps) {
   const [selectedSetting, setSelectedSetting] = useState<PromotionType>(currentSetting);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
 
   const promotionOptions = [
     {
@@ -58,16 +57,13 @@ export function PromotionSettings({
     try {
       setIsSaving(true);
       await onSave(selectedSetting);
-      toast({
-        title: 'Settings saved',
+      toast.success('Settings saved', {
         description: 'Promotion settings have been updated successfully',
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast({
-        title: 'Save failed',
+      toast.error('Save failed', {
         description: 'Failed to update promotion settings',
-        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);

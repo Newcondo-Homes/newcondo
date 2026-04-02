@@ -3,7 +3,7 @@
 
 import React from 'react'
 import { Star, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@newcondo/ui/components/tooltip'
 
 interface ReliabilityScoreBadgeProps {
   score: number // 0 to 5
@@ -77,7 +77,7 @@ export default function ReliabilityScoreBadge({
 
   const mainContent = (
     <div
-      className={`${sizeClasses[size]} ${getScoreBgClass(score)} border rounded-full px-3 flex items-center gap-2 inline-flex ${className}`}
+      className={`${sizeClasses[size]} ${getScoreBgClass(score)} border rounded-full px-3 items-center gap-2 inline-flex ${className}`}
     >
       <Star
         className={`${iconSizes[size]} fill-current`}

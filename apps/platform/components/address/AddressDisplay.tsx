@@ -1,8 +1,8 @@
 "use client";
 
 import { MapPin } from "lucide-react";
-import { Card, CardContent } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
+import { Card, CardContent } from "@newcondo/ui";
+import { Badge } from "@newcondo/ui";
 
 interface HierarchicalAddress {
   state: string;

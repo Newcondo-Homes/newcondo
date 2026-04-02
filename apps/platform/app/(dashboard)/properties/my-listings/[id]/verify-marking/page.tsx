@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Separator } from "@newcondo/ui/components/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
+import { toast } from "@newcondo/ui";
 import {
   CheckCircle,
   XCircle,
@@ -58,7 +58,6 @@ interface MarkingJobDetails {
 export default function VerifyMarkingPage() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
   const propertyId = params.id as string;
 
   const [job, setJob] = useState<MarkingJobDetails | null>(null);
@@ -85,10 +84,8 @@ export default function VerifyMarkingPage() {
       const data = await response.json();
       setJob(data.job);
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error",{
         description: "Failed to load marking job details",
-        variant: "destructive",
       });
       router.push(`/properties/my-listings`);
     } finally {
@@ -110,17 +107,14 @@ export default function VerifyMarkingPage() {
         throw new Error("Failed to confirm marking");
       }
 
-      toast({
-        title: "Success",
+      toast.success("Success",{
         description: "Property marking confirmed successfully",
       });
 
       router.push(`/properties/my-listings/${propertyId}`);
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error",{
         description: "Failed to confirm marking",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
@@ -129,10 +123,8 @@ export default function VerifyMarkingPage() {
 
   const handleRejectMarking = async () => {
     if (!job || !rejectionReason.trim()) {
-      toast({
-        title: "Error",
+      toast.error("Error",{
         description: "Please provide a reason for rejection",
-        variant: "destructive",
       });
       return;
     }
@@ -149,17 +141,14 @@ export default function VerifyMarkingPage() {
         throw new Error("Failed to reject marking");
       }
 
-      toast({
-        title: "Marking Rejected",
+      toast.error("Marking Rejected",{
         description: "The agent has been notified. A new marking job will be created.",
       });
 
       router.push(`/properties/my-listings/${propertyId}`);
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error",{
         description: "Failed to reject marking",
-        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);

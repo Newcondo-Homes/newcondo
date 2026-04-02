@@ -9,12 +9,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from '@newcondo/ui/components/dialog';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Textarea } from '@newcondo/ui/components/textarea';
+import { Label } from '@newcondo/ui/components/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { useReferralLink } from '@/hooks/useReferralLink';
 import { useShareReferral } from '@/hooks/useShareReferral';
 import { useReferralStore } from '@/store/referralStore';

@@ -2,7 +2,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui'
 import { Facebook, Twitter, Linkedin, Mail, MessageCircle, Copy } from 'lucide-react';
 
 interface SocialShareButtonsProps {
@@ -20,7 +20,6 @@ export function SocialShareButtons({
   variant = 'outline',
   size = 'sm',
 }: SocialShareButtonsProps) {
-  const { toast } = useToast();
 
   const shareText = `Check out this property: ${propertyTitle}`;
   const encodedUrl = encodeURIComponent(shareableLink);
@@ -37,15 +36,14 @@ export function SocialShareButtons({
 
   const handleShare = (platform: keyof typeof shareLinks) => {
     const url = shareLinks[platform];
-    
+
     if (platform === 'email') {
       window.location.href = url;
     } else {
       window.open(url, '_blank', 'width=600,height=400');
     }
 
-    toast({
-      title: 'Opening share dialog',
+    toast('Opening share dialog', {
       description: `Sharing on ${platform}`,
     });
   };
@@ -53,16 +51,13 @@ export function SocialShareButtons({
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareableLink);
-      toast({
-        title: 'Link copied',
+      toast.success('Link copied', {
         description: 'Property link copied to clipboard',
       });
     } catch (error) {
       console.error('Copy error:', error);
-      toast({
-        title: 'Copy failed',
+      toast.error('Copy failed', {
         description: 'Failed to copy link to clipboard',
-        variant: 'destructive',
       });
     }
   };

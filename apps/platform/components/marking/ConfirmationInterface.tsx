@@ -2,10 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/card";
-import { Button } from "@newcondo/ui/button";
-import { Badge } from "@newcondo/ui/badge";
-import { Separator } from "@newcondo/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Separator } from "@newcondo/ui/components/separator";
 import { 
   CheckCircle, 
   XCircle, 

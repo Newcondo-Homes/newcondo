@@ -209,7 +209,7 @@ export const detectServerLocale = (request: any): LocaleCode => {
  * @param options - Detection options
  * @returns Middleware function
  */
-export const createLocaleMiddleware = (options: LanguageDetectionOptions = {}) => {
+export const createLocaleMiddleware = (_options: LanguageDetectionOptions = {}) => {
   return (request: any) => {
     const locale = detectServerLocale(request);
     

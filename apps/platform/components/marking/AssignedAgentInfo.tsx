@@ -3,9 +3,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Button } from '@newcondo/ui/components/button';
 import { Star, Phone, MapPin, Clock, AlertCircle } from 'lucide-react';
 
 interface AssignedAgent {
@@ -59,6 +59,8 @@ export function AssignedAgentInfo({
     if (!markingJob.timeSlotExpiry) return;
 
     const updateTimer = () => {
+      if (!markingJob.timeSlotExpiry) return;
+      
       const expiry = new Date(markingJob.timeSlotExpiry).getTime();
       const now = new Date().getTime();
       const diff = expiry - now;

@@ -1002,7 +1002,7 @@ model ReferralClick {
 
   sessionId String?
   // Relations
-  referral  AgentReferral @relation(fields: [referrerId], references: [id], onDelete: Cascade)
+  referral  AgentReferral? @relation(fields: [referrerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 

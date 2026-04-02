@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@newcondo/ui/components/checkbox";
+import { Label } from "@newcondo/ui/components/label";
+import { ScrollArea } from "@newcondo/ui/components/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@newcondo/ui/components/dialog";
 import { Button } from "@/components/ui/button";
 import { FileText, AlertTriangle } from "lucide-react";
 

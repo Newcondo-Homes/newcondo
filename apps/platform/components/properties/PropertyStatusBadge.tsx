@@ -1,7 +1,7 @@
 // apps/platform/components/properties/PropertyStatusBadge.tsx
 'use client';
 
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@/lib/utils';
 import {
   CheckCircle,

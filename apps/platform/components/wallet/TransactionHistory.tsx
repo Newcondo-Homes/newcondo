@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@newcondo/ui/card';
+} from '@newcondo/ui/';
 import {
   Table,
   TableBody,
@@ -15,17 +15,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@newcondo/ui/table';
-import { Badge } from '@newcondo/ui/badge';
-import { Button } from '@newcondo/ui/button';
+} from '@newcondo/ui/';
+import { Badge } from '@newcondo/ui/';
+import { Button } from '@newcondo/ui/';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@newcondo/ui/select';
-import { Input } from '@newcondo/ui/input';
+} from '@newcondo/ui/';
+import { Input } from '@newcondo/ui/';
 import {
   ArrowDownCircle,
   ArrowUpCircle,

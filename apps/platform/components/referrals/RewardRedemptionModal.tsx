@@ -11,18 +11,18 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+} from '@newcondo/ui/components/dialog';
+import { Button } from '@newcondo/ui/components/button';
+import { Input } from '@newcondo/ui/components/input';
+import { Label } from '@newcondo/ui/components/label';
+import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
 import { useReferralStore } from '@/store/referralStore';
 import { useRedeemReward, useCheckRedemptionEligibility } from '@/hooks/useRewards';
 import { rewardRedemptionSchema, type RewardRedemptionInput } from '@/lib/validations/reward';
 import { formatRewardAmount, getRewardTypeDisplay } from '@/lib/utils/rewardFormatters';
 import { REWARD_REDEMPTION_OPTIONS } from '@/lib/constants/rewardTypes';
 import { Loader2, AlertCircle, CheckCircle, Wallet, CreditCard, Gift } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import {
   Form,
   FormControl,
@@ -31,7 +31,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from '@newcondo/ui/components/form';
 
 export function RewardRedemptionModal() {
   const { isRedemptionModalOpen, toggleRedemptionModal, selectedReward } = useReferralStore();

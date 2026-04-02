@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { useQueueStore } from "@/store/queueStore";
 import { useAuth } from "@/hooks/useAuth";
 import { queueApi } from "@/lib/api/queue";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@newcondo/ui/components/badge";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Switch } from "@newcondo/ui/components/switch";
+import { Label } from "@newcondo/ui/components/label";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import {
   Clock,
   MapPin,
@@ -25,8 +25,8 @@ import {
   Pause,
 } from "lucide-react";
 import { formatDistanceToNow, differenceInMinutes, format } from "date-fns";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { Progress } from "@/components/ui/progress";
+import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { Progress } from "@newcondo/ui/components/progress";
 
 export default function AgentQueueDashboardPage() {
   const router = useRouter();

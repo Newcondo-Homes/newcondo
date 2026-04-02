@@ -3,12 +3,12 @@
 
 import { useState } from "react";
 import { Property, PropertyImage, PropertyUnit, User } from "@newcondo/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/card";
-import { Badge } from "@newcondo/ui/badge";
-import { Button } from "@newcondo/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@newcondo/ui/avatar";
-import { Separator } from "@newcondo/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/";
+import { Badge } from "@newcondo/ui/";
+import { Button } from "@newcondo/ui/";
+import { Avatar, AvatarFallback, AvatarImage } from "@newcondo/ui/";
+import { Separator } from "@newcondo/ui/";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/";
 import { 
   MapPin, 
   Bed, 

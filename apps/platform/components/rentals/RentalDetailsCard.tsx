@@ -1,9 +1,9 @@
 // apps/platform/components/rentals/RentalDetailsCard.tsx
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Separator } from '@newcondo/ui/components/separator';
 import {
   Calendar,
   DollarSign,
@@ -12,7 +12,7 @@ import {
   XCircle,
   Clock,
 } from 'lucide-react';
-import { RentalStatus } from '@prisma/client';
+import { RentalStatus } from '@newcondo/db';
 
 interface RentalDetailsCardProps {
   rental: {

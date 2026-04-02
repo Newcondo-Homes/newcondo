@@ -4,12 +4,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Image from 'next/image';
 import Link from 'next/link';
 import { Heart, MapPin, Bed, Bath, Square, Share2, Eye } from 'lucide-react';
-import { Button } from '@newcondo/ui/components/ui/button';
-import { Badge } from '@newcondo/ui/components/ui/badge';
-import { Card, CardContent } from '@newcondo/ui/components/ui/card';
-import { Skeleton } from '@newcondo/ui/components/ui/skeleton';
+import { Button } from '@newcondo/ui/components/button';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { useInView } from 'react-intersection-observer';
-import { PropertyAvailabilityBadge } from './PropertyAvailabilityBadge';
+import PropertyAvailabilityBadge  from './PropertyAvailabilityBadge';
 
 export interface PropertyCardData {
   id: string;

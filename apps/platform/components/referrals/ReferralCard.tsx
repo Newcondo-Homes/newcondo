@@ -2,9 +2,9 @@
 
 'use client';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Badge } from '@newcondo/ui/components/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/avatar';
 import { Referral } from '@/types/referral';
 import { formatReferralStatus, formatCurrency, getReferralTypeInfo } from '@/lib/utils/referralHelpers';
 import { formatRewardDate } from '@/lib/utils/rewardFormatters';

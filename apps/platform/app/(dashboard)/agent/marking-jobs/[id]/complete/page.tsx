@@ -6,12 +6,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { queueApi } from "@/lib/api/queue";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@newcondo/ui/components/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Label } from "@newcondo/ui/components/label";
+import { Textarea } from "@newcondo/ui/components/textarea";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Progress } from "@newcondo/ui/components/progress";
 import {
   AlertCircle,
   ArrowLeft,

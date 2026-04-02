@@ -2,7 +2,7 @@
 
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from '@newcondo/auth';
 import { authOptions } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import { CompleteMarkingJobClient } from '@/components/marking/CompleteMarkingJobClient';
