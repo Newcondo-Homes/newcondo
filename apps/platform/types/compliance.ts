@@ -1,5 +1,8 @@
-import { DocumentType, DocumentStatus, Role } from '@newcondo/db'
+import { DocumentType, DocumentStatus, Role, PropertyType } from '@newcondo/db'
 import { LegalDocument, UndertakingType } from './legal'
+
+export type { Role, PropertyType }
+
 
 // Compliance status and scoring
 export interface ComplianceStatus {
@@ -15,7 +18,50 @@ export interface ComplianceStatus {
   requiredActions: ComplianceAction[]
   completedRequirements: ComplianceRequirement[]
   pendingRequirements: ComplianceRequirement[]
+  /** Mirrors the store's OverallStatus union for convenience */
+  status: ComplianceStatusValue
+
 }
+
+export type ComplianceStatusValue =
+  (typeof ComplianceStatusEnum)[keyof typeof ComplianceStatusEnum];
+
+export const ComplianceStatusEnum = {
+  COMPLIANT: 'COMPLIANT',
+  PARTIAL: 'PARTIAL',
+  NON_COMPLIANT: 'NON_COMPLIANT',
+  PENDING_REVIEW: 'PENDING_REVIEW',
+} as const;
+
+
+export interface ComplianceReport {
+  id: string
+  reportType: ComplianceReportType
+  generatedBy: string
+  generatedAt: Date
+  period: ComplianceReportPeriod
+  scope: ComplianceReportScope
+  data: ComplianceReportData
+  summary: ComplianceReportSummary
+ 
+  // Fields also used by the hook directly (from ComplianceStatus)
+  status: ComplianceStatusValue
+  isCompliant: boolean
+  level: ComplianceLevel
+  completedRequirements: ComplianceRequirement[]
+  missingRequirements?: ComplianceRequirement[]
+}
+
+
+export interface ComplianceCheckResult {
+  id: string
+  status: ComplianceStatusValue
+  isCompliant: boolean
+  checkedAt: Date
+  missingRequirements?: ComplianceRequirement[]
+  completedRequirements: ComplianceRequirement[]
+}
+ 
 
 export interface ComplianceScore {
   overall: number

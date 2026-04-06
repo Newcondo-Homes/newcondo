@@ -80,9 +80,9 @@ export function ReferralCode() {
                 <Button
                   variant="outline"
                   size="icon"
-                  disabled={regenerate.isLoading}
+                  disabled={regenerate.isPending}
                 >
-                  <RefreshCw className={`h-4 w-4 ${regenerate.isLoading ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 ${regenerate.isPending ? 'animate-spin' : ''}`} />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>

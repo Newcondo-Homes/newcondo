@@ -103,9 +103,7 @@ export function AutoTransferSettings({
         description: 'Your auto-transfer settings have been updated successfully.',
       });
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
+      toast.error('Error',{
         description:
           error instanceof Error
             ? error.message

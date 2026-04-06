@@ -291,3 +291,18 @@ export const propertyApi = {
     return response.data
   }
 }
+
+
+export async function searchProperties(
+  params: PropertyFilters & { q?: string; retryAttempt?: number; page?: number }
+) {
+  const { q, retryAttempt, ...filters } = params;
+  const result = await propertyApi.getAll(filters);
+  return {
+    data: result.properties,
+    pagination: {
+      currentPage: result.pagination.page,
+      totalPages: result.pagination.totalPages,
+    },
+  };
+}

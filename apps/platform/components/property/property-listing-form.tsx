@@ -18,13 +18,13 @@ import { Badge } from "@newcondo/ui/";
 import { Alert, AlertDescription } from "@newcondo/ui/";
 import { Separator } from "@newcondo/ui/";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/";
-import { 
-  MapPin, 
-  Home, 
-  DollarSign, 
-  Camera, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  MapPin,
+  Home,
+  DollarSign,
+  Camera,
+  AlertCircle,
+  CheckCircle,
   Building2,
   Users,
   Car,
@@ -45,50 +45,51 @@ import {
   X
 } from "lucide-react";
 import { usePropertyListingStore } from "@/store/propertyListingStore";
-import { useAuthStore } from "@/store/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { BoundaryMarkingMap } from "./boundary-marking-map";
 import { ImageUploader } from "./image-uploader";
-import { PropertyMarkingService } from "./property-marking-service";
 import { toast } from "sonner";
 
+// for property marking
+// import { PropertyMarkingService } from "./property-marking-service";
 // Property listing form schema
 const propertyListingSchema = z.object({
   // Basic Information
   title: z.string().min(10, "Title must be at least 10 characters").max(100, "Title too long"),
   description: z.string().min(50, "Description must be at least 50 characters").max(1000, "Description too long"),
-  
+
   // Property Type & Structure
   propertyType: z.enum(["APARTMENT", "HOUSE", "DUPLEX", "ROOM", "SHARED_APARTMENT", "OFFICE", "SHOP", "WAREHOUSE"]),
   structure: z.enum(["SINGLE_UNIT", "MULTI_FAMILY"]),
-  
+
   // Location
   address: z.string().min(10, "Address must be at least 10 characters"),
   city: z.string().min(2, "City is required"),
   state: z.string().min(2, "State is required"),
   country: z.string().default("Nigeria"),
-  
+
   // Property Details (for single units)
   bedrooms: z.number().min(0).max(20).optional(),
   bathrooms: z.number().min(0).max(20).optional(),
   area: z.string().optional(),
-  
+
   // Pricing (for single units)
   price: z.number().min(1000, "Price must be at least ₦1,000").optional(),
   currency: z.string().default("NGN"),
-  
+
   // Multi-family building details
   totalUnits: z.number().min(1).max(1000).optional(),
-  
+
   // Ownership & Agency
   isOwnerListing: z.boolean().default(true),
-  
+
   // Features & Amenities
   features: z.array(z.string()).default([]),
   buildingFeatures: z.array(z.string()).default([]),
-  
+
   // Availability
   availableFrom: z.string().optional(),
-  
+
   // Boundary & Location Data
   gpsCoordinates: z.string().optional(),
   boundaryCoordinates: z.any().optional(),
@@ -135,9 +136,9 @@ const PROPERTY_TYPES = [
 ];
 
 const NIGERIAN_STATES = [
-  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno", 
-  "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa", 
-  "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger", 
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
+  "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Gombe", "Imo", "Jigawa",
+  "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara", "Lagos", "Nasarawa", "Niger",
   "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara"
 ];
 
@@ -147,20 +148,17 @@ interface PropertyListingFormProps {
   propertyId?: string;
 }
 
-export function PropertyListingForm({ 
-  initialData, 
-  isEditing = false, 
-  propertyId 
+export function PropertyListingForm({
+  initialData,
+  isEditing = false,
+  propertyId
 }: PropertyListingFormProps) {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const { 
-    createProperty, 
-    updateProperty, 
-    uploadImages, 
-    isLoading, 
-    currentProperty,
-    setCurrentProperty 
+  const { user } = useAuth();
+  const {
+    isSubmitting: isLoading,
+    submitListing,
+    updateFormData,
   } = usePropertyListingStore();
 
   const [currentStep, setCurrentStep] = useState<"basic" | "location" | "features" | "images" | "preview">("basic");
@@ -201,7 +199,7 @@ export function PropertyListingForm({
   useEffect(() => {
     if (isEditing && initialData) {
       reset(initialData);
-      setUploadedImages(initialData.images || []);
+      setUploadedImages([]);
       setBoundaryData(initialData.boundaryCoordinates);
     }
   }, [isEditing, initialData, reset]);
@@ -212,12 +210,15 @@ export function PropertyListingForm({
     const newFeatures = currentFeatures.includes(featureId)
       ? currentFeatures.filter(f => f !== featureId)
       : [...currentFeatures, featureId];
-    
+
     setValue(type, newFeatures);
   };
 
   // Handle boundary data from map
-  const handleBoundaryComplete = (data: any) => {
+  const handleBoundaryComplete = (data: {
+    coordinates: google.maps.LatLngLiteral[];
+    center: google.maps.LatLngLiteral
+  }) => {
     setBoundaryData(data);
     setValue("boundaryCoordinates", data.coordinates);
     setValue("gpsCoordinates", JSON.stringify(data.center));
@@ -263,26 +264,37 @@ export function PropertyListingForm({
         isAvailable: true,
       };
 
-      let result;
-      if (isEditing && propertyId) {
-        result = await updateProperty(propertyId, formData);
-      } else {
-        result = await createProperty(formData);
-      }
+      // let result;
+      updateFormData({
+        ...data,
+        availableFrom: data.availableFrom ? new Date(data.availableFrom) : undefined,
+        images: uploadedImages as any,
+        boundaryCoordinates: boundaryData,
+      });
+      await submitListing();
+      // const result = { success: true };
 
-      if (result.success) {
-        toast.success(
-          isDraft 
-            ? "Property saved as draft" 
-            : isEditing 
-              ? "Property updated successfully" 
-              : "Property listing created successfully"
-        );
-        
-        router.push(`/dashboard/properties/my-listings`);
-      } else {
-        toast.error(result.error || "Failed to save property");
-      }
+      // if (result.success) {
+      //   toast.success(
+      //     isDraft
+      //       ? "Property saved as draft"
+      //       : isEditing
+      //         ? "Property updated successfully"
+      //         : "Property listing created successfully"
+      //   );
+
+      //   router.push(`/dashboard/properties/my-listings`);
+      // } else {
+      //   toast.error(result.error || "Failed to save property");
+      // }
+
+      toast.success(
+        isDraft
+          ? "Property saved as draft"
+          : isEditing
+            ? "Property updated successfully"
+            : "Property listing created successfully"
+      );
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error("An error occurred while saving the property");
@@ -352,13 +364,12 @@ export function PropertyListingForm({
           { key: "images", label: "Images", icon: Camera },
           { key: "preview", label: "Preview", icon: Eye }
         ].map((step, index) => (
-          <div 
+          <div
             key={step.key}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors ${
-              currentStep === step.key 
-                ? "bg-primary text-primary-foreground" 
-                : "text-muted-foreground hover:text-foreground"
-            }`}
+            className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors ${currentStep === step.key
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
+              }`}
             onClick={() => setCurrentStep(step.key as any)}
           >
             <step.icon className="w-4 h-4" />
@@ -834,11 +845,10 @@ export function PropertyListingForm({
                     return (
                       <div
                         key={feature.id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                          isSelected 
-                            ? "border-primary bg-primary/10 text-primary" 
-                            : "border-border hover:border-primary/50"
-                        }`}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${isSelected
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-primary/50"
+                          }`}
                         onClick={() => handleFeatureToggle(feature.id, "features")}
                       >
                         <div className="flex flex-col items-center gap-2 text-center">
@@ -863,11 +873,10 @@ export function PropertyListingForm({
                       return (
                         <div
                           key={feature.id}
-                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                            isSelected 
-                              ? "border-primary bg-primary/10 text-primary" 
-                              : "border-border hover:border-primary/50"
-                          }`}
+                          className={`p-4 border rounded-lg cursor-pointer transition-colors ${isSelected
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/50"
+                            }`}
                           onClick={() => handleFeatureToggle(feature.id, "buildingFeatures")}
                         >
                           <div className="flex flex-col items-center gap-2 text-center">
@@ -941,10 +950,14 @@ export function PropertyListingForm({
               <div className="space-y-4">
                 <Label className="text-lg font-semibold">Upload Images</Label>
                 <ImageUploader
-                  onUpload={handleImageUpload}
-                  maxFiles={20}
-                  acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
-                  maxSize={5 * 1024 * 1024} // 5MB
+                  images={uploadedImages.map((url, index) => ({
+                    id: `img-${index}`,
+                    url,
+                    isPrimary: index === 0,
+                    order: index,
+                  }))}
+                  onImagesChange={(newImages) => setUploadedImages(newImages.map(img => img.url))}
+                  maxImages={20}
                 />
               </div>
 
@@ -1198,18 +1211,34 @@ export function PropertyListingForm({
       {showBoundaryMap && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="p-4 border-b">
-              <h3 className="text-lg font-semibold">Mark Property Boundary</h3>
-              <p className="text-sm text-muted-foreground">
-                Draw the boundary of your property on the map
-              </p>
+            <div className="p-4 border-b flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">Mark Property Boundary</h3>
+                <p className="text-sm text-muted-foreground">
+                  Draw the boundary of your property on the map
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowBoundaryMap(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
             <div className="h-96">
               <BoundaryMarkingMap
-                address={`${watch("address")}, ${watch("city")}, ${watch("state")}`}
-                onComplete={handleBoundaryComplete}
-                onCancel={() => setShowBoundaryMap(false)}
-                initialBoundary={boundaryData}
+                onBoundarySelected={(coordinates) => {
+                  handleBoundaryComplete({
+                    coordinates,
+                    center: coordinates[0]
+                  });
+                }}
+                onLocationConfirmed={(location) => {
+                  // handle confirmed location if needed
+                }}
+                initialLocation={undefined}
+                existingBoundaries={[]}
               />
             </div>
           </div>
@@ -1219,7 +1248,7 @@ export function PropertyListingForm({
       {/* Property Marking Service Modal */}
       {showMarkingService && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
+          {/* <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
             <PropertyMarkingService
               propertyAddress={`${watch("address")}, ${watch("city")}, ${watch("state")}`}
               onClose={() => setShowMarkingService(false)}
@@ -1228,6 +1257,10 @@ export function PropertyListingForm({
                 toast.success("Property marking service booked successfully!");
               }}
             />
+          </div> */}
+          <div className="bg-white rounded-lg p-6">
+            <p>Property marking service coming soon.</p>
+            <Button onClick={() => setShowMarkingService(false)}>Close</Button>
           </div>
         </div>
       )}

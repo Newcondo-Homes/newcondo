@@ -21,7 +21,7 @@ import { useReferralStore } from '@/store/referralStore';
 import { SHARE_CHANNEL_CONFIG } from '@/lib/constants/shareMessages';
 import { CopyLinkButton } from './CopyLinkButton';
 import { Loader2, Mail, MessageSquare, Phone, Share2 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@newcondo/auth/client';
 
 export function ShareModal() {
   const { data: session } = useSession();

@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@newcondo/ui/components/dropdown-menu';
 import { Download, FileText, Sheet } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 interface ExportButtonProps {
   data: any[];
@@ -20,14 +20,11 @@ interface ExportButtonProps {
 
 export function ExportButton({ data, filename, disabled }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
-  const { toast } = useToast();
 
   const exportToCSV = () => {
     if (!data || data.length === 0) {
-      toast({
-        title: 'No data to export',
+      toast.error('No data to export',{
         description: 'There is no data available to export.',
-        variant: 'destructive',
       });
       return;
     }
@@ -70,16 +67,13 @@ export function ExportButton({ data, filename, disabled }: ExportButtonProps) {
       link.click();
       document.body.removeChild(link);
 
-      toast({
-        title: 'Export successful',
+      toast.success('Export successful',{
         description: `${data.length} records exported to CSV.`,
       });
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: 'Export failed',
+      toast.error('Export failed',{
         description: 'An error occurred while exporting data.',
-        variant: 'destructive',
       });
     } finally {
       setIsExporting(false);
@@ -88,10 +82,8 @@ export function ExportButton({ data, filename, disabled }: ExportButtonProps) {
 
   const exportToJSON = () => {
     if (!data || data.length === 0) {
-      toast({
-        title: 'No data to export',
+      toast.error('No data to export',{
         description: 'There is no data available to export.',
-        variant: 'destructive',
       });
       return;
     }
@@ -111,16 +103,13 @@ export function ExportButton({ data, filename, disabled }: ExportButtonProps) {
       link.click();
       document.body.removeChild(link);
 
-      toast({
-        title: 'Export successful',
+      toast.success('Export successful',{
         description: `${data.length} records exported to JSON.`,
       });
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: 'Export failed',
+      toast.error('Export failed',{
         description: 'An error occurred while exporting data.',
-        variant: 'destructive',
       });
     } finally {
       setIsExporting(false);

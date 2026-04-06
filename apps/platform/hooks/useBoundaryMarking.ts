@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
-import { boundaryApi } from '@/lib/api/boundary';
-import { BoundaryCoordinates, PropertyBoundaryData } from '@/types/boundary';
+import { boundaryService, BoundaryCoordinates } from '@/lib/api/boundary';
+import { PropertyBoundaryData } from '@/types/boundary';
 import { toast } from 'sonner';
 
 interface UseBoundaryMarkingProps {
@@ -22,7 +22,7 @@ export const useBoundaryMarking = ({
   const [isMarking, setIsMarking] = useState(false);
   const [boundaryData, setBoundaryData] = useState<PropertyBoundaryData | null>(null);
   const [conflicts, setConflicts] = useState<any[]>([]);
-  const [currentBoundary, setCurrentBoundary] = useState<BoundaryCoordinates | null>(null);
+  const [currentBoundary, setCurrentBoundary] = useState<BoundaryCoordinates[] | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const polygonRef = useRef<google.maps.Polygon | null>(null);
 
@@ -98,15 +98,11 @@ export const useBoundaryMarking = ({
       const bounds = map.getBounds();
       if (!bounds) return;
 
-      const existingBoundaries = await boundaryApi.getBoundariesInArea({
-        northEast: {
-          lat: bounds.getNorthEast().lat(),
-          lng: bounds.getNorthEast().lng(),
-        },
-        southWest: {
-          lat: bounds.getSouthWest().lat(),
-          lng: bounds.getSouthWest().lng(),
-        },
+      const center = map.getCenter();
+      const existingBoundaries = await boundaryService.getNearbyBoundaries({
+        latitude: center?.lat() ?? 0,
+        longitude: center?.lng() ?? 0,
+        radius: 500,
       });
 
       // Display existing boundaries as red overlays
@@ -158,7 +154,7 @@ export const useBoundaryMarking = ({
     // Handle polygon completion
     google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon: google.maps.Polygon) => {
       const path = polygon.getPath();
-      const coordinates: BoundaryCoordinates = [];
+      const coordinates: BoundaryCoordinates[] = [];
 
       for (let i = 0; i < path.getLength(); i++) {
         const point = path.getAt(i);
@@ -179,7 +175,7 @@ export const useBoundaryMarking = ({
   }, []);
 
   // Validate boundary for conflicts and size
-  const validateBoundary = useCallback(async (coordinates: BoundaryCoordinates) => {
+  const validateBoundary = useCallback(async (coordinates: BoundaryCoordinates[]) => {
     if (!coordinates || coordinates.length < 3) {
       toast.error('Please draw a valid boundary with at least 3 points');
       return;
@@ -187,21 +183,21 @@ export const useBoundaryMarking = ({
 
     setIsLoading(true);
     try {
-      const validation = await boundaryApi.validateBoundary({
-        coordinates,
-        propertyId,
+
+      const validation = await boundaryService.validateBoundary({
+        coordinates, // now correctly BoundaryCoordinates[]
       });
 
-      if (validation.hasConflicts) {
-        setConflicts(validation.conflicts || []);
-        onConflictDetected?.(validation.conflicts || []);
+      if (!validation.isValid) {
+        setConflicts(validation.errors ?? []);
+        onConflictDetected?.(validation.errors ?? []);
         toast.error('Boundary conflicts detected. Please resolve before proceeding.');
       } else {
         toast.success('Boundary validated successfully');
       }
 
-      if (validation.isOversized) {
-        toast.warning('Boundary appears to be oversized. Please adjust.');
+      if (validation.warnings.length > 0) {
+        toast.warning(validation.warnings[0]);
       }
     } catch (error) {
       console.error('Error validating boundary:', error);
@@ -220,16 +216,48 @@ export const useBoundaryMarking = ({
 
     setIsLoading(true);
     try {
-      const boundaryData = await boundaryApi.createBoundary({
+      const center = currentBoundary.reduce(
+        (acc, coord) => ({ lat: acc.lat + coord.lat / currentBoundary.length, lng: acc.lng + coord.lng / currentBoundary.length }),
+        { lat: 0, lng: 0 }
+      );
+      const response = await boundaryService.createBoundary({
         coordinates: currentBoundary,
-        propertyId,
-        userId: user.id,
-        markedBy: user.id,
+        propertyId: propertyId ?? '',
+        center,
+        area: 0, // calculate if needed
+        gpsCoordinates: center,
+        address: '',
+        city: '',
+        state: '',
       });
 
-      setBoundaryData(boundaryData);
+      const mappedBoundaryData: PropertyBoundaryData = {
+        id: response.id,
+        propertyId: response.propertyId,
+        coordinates: response.coordinates,
+        center: response.center,
+        area: response.area,
+        perimeter: 0, // not returned by API, default to 0
+        boundingBox: {
+          north: Math.max(...response.coordinates.map(c => c.lat)),
+          south: Math.min(...response.coordinates.map(c => c.lat)),
+          east: Math.max(...response.coordinates.map(c => c.lng)),
+          west: Math.min(...response.coordinates.map(c => c.lng)),
+        },
+        verified: response.verificationStatus === 'verified',
+        verifiedBy: response.markedBy,
+        confidence: 100,
+        source: 'user_drawn',
+        metadata: {
+          zoomLevel: 20,
+          mapType: 'satellite',
+          timestamp: new Date(response.markedAt),
+        },
+      };
+
+      setBoundaryData(mappedBoundaryData);
       setIsMarking(false);
-      onBoundaryMarked?.(boundaryData);
+      onBoundaryMarked?.(mappedBoundaryData);
       toast.success('Property boundary saved successfully');
     } catch (error) {
       console.error('Error saving boundary:', error);
@@ -256,6 +284,27 @@ export const useBoundaryMarking = ({
     setIsMarking(false);
   }, [clearBoundary]);
 
+  const checkOverlaps = useCallback(async (
+    coordinates: google.maps.LatLngLiteral[],
+    propertyId?: string
+  ) => {
+    try {
+      const result = await boundaryService.checkForDuplicates({
+        coordinates: coordinates.map(c => ({ lat: c.lat, lng: c.lng })),
+        center: coordinates[0], // or calculate actual center
+        address: '',
+      });
+      return result.duplicateProperties.map(dup => ({
+        propertyId: dup.id,
+        overlapPercentage: dup.similarity * 100,
+        ownerName: dup.owner.name,
+        propertyTitle: dup.title,
+      }));
+    } catch (error) {
+      console.error('Error checking overlaps:', error);
+      return [];
+    }
+  }, []);
   return {
     isLoading,
     isMarking,
@@ -268,5 +317,6 @@ export const useBoundaryMarking = ({
     clearBoundary,
     resetMarking,
     validateBoundary,
+    checkOverlaps,
   };
 };

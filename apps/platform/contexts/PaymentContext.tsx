@@ -1,4 +1,5 @@
 // apps/platform/lib/constants/paymentErrors.ts
+// TODO: what is paymentcontext or context used for?
 
 export const PAYMENT_ERROR_CODES = {
   // Flutterwave specific errors
@@ -250,7 +251,7 @@ export const PAYMENT_METHOD_ERRORS = {
   ],
 } as const;
 
-export type PaymentErrorCode = keyof typeof PAYMENT_ERROR_CODES;
+export type PaymentErrorCode = typeof PAYMENT_ERROR_CODES[keyof typeof PAYMENT_ERROR_CODES];
 export type PaymentErrorMessage = typeof PAYMENT_ERROR_MESSAGES[PaymentErrorCode];
 export type PaymentStatusMessage = typeof PAYMENT_STATUS_MESSAGES[keyof typeof PAYMENT_STATUS_MESSAGES];
 
@@ -275,7 +276,7 @@ export const isRetryableError = (errorCode: string): boolean => {
     PAYMENT_ERROR_CODES.INCORRECT_PIN,
   ];
   
-  return retryableErrors.includes(errorCode as PaymentErrorCode);
+  return retryableErrors.includes(errorCode as typeof retryableErrors[number]);
 };
 
 // Helper function to get retry delay

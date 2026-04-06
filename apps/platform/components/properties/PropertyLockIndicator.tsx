@@ -43,7 +43,7 @@ export function PropertyLockIndicator({
       const remaining = Math.max(0, expiry - now);
 
       setTimeRemaining(remaining);
-      
+
       // Calculate progress (percentage of time remaining)
       const elapsed = LOCK_DURATION - remaining;
       const progressPercent = Math.min(100, (elapsed / LOCK_DURATION) * 100);
@@ -92,7 +92,13 @@ export function PropertyLockIndicator({
   if (variant === "detailed") {
     return (
       <div className={cn("space-y-3", className)}>
-        <Alert variant={isOwnLock ? "default" : "warning"}>
+        <Alert variant="default"
+          className={cn(
+            !isOwnLock && "border-yellow-500 bg-yellow-50 text-yellow-800 [&>svg]:text-yellow-600",
+            "relative overflow-hidden",  // keep existing className for the default variant usage
+            className
+          )}
+        >
           <Lock className="h-4 w-4" />
           <AlertTitle>
             {isOwnLock
@@ -140,8 +146,12 @@ export function PropertyLockIndicator({
   // Default variant
   return (
     <Alert
-      variant={isOwnLock ? "default" : "warning"}
-      className={cn("relative overflow-hidden", className)}
+      variant="default"
+      className={cn(
+        !isOwnLock && "border-yellow-500 bg-yellow-50 text-yellow-800 [&>svg]:text-yellow-600",
+        "relative overflow-hidden",  // keep existing className for the default variant usage
+        className
+      )}
     >
       <div
         className="absolute inset-0 bg-yellow-100 opacity-20 transition-all duration-1000"

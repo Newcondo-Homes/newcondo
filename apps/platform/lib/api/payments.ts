@@ -7,7 +7,8 @@ import type {
   PaymentHistoryParams,
   PaymentRefundRequest,
   PaymentRetryRequest,
-  VirtualAccountRequest
+  VirtualAccountRequest,
+  RefundDetails
 } from '@/types/payment';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
 
@@ -30,10 +31,15 @@ export const paymentsApi = {
     return response.data;
   },
 
+  getRefundStatus: async (paymentId: string): Promise<RefundDetails> => {
+    const response = await apiClient.get(`/api/payments/${paymentId}/refund-status`);
+    return response.data;
+  },
+
   // Get payment history for user
   getPaymentHistory: async (params?: PaymentHistoryParams): Promise<ApiResponse<PaginatedResponse<Payment>>> => {
     const searchParams = new URLSearchParams();
-    
+
     if (params?.page) searchParams.append('page', params.page.toString());
     if (params?.limit) searchParams.append('limit', params.limit.toString());
     if (params?.status) searchParams.append('status', params.status);
@@ -78,11 +84,11 @@ export const paymentsApi = {
   },
 
   // Get user's virtual accounts
-  getVirtualAccounts: async (): Promise<ApiResponse<Array<{ 
-    id: string; 
-    accountNumber: string; 
-    accountName: string; 
-    bankCode: string; 
+  getVirtualAccounts: async (): Promise<ApiResponse<Array<{
+    id: string;
+    accountNumber: string;
+    accountName: string;
+    bankCode: string;
     balance: number;
     propertyId?: string;
   }>>> => {

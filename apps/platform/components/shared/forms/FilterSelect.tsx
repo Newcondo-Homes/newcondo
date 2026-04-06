@@ -78,6 +78,7 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
 }) => {
   const isMulti = 'multi' in props && props.multi;
   
+
   if (isMulti) {
     const { value, onChange } = props;
     const selectedOptions = value || [];
@@ -152,8 +153,8 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   }
   
   // Single select logic
-  const { value, onChange } = props;
-  const selectedLabel = value ? options.find(opt => opt.value === value)?.label : '';
+  const singleProps = props as SingleSelectProps;
+  const { value, onChange } = singleProps;
 
   return (
     <Select value={value} onValueChange={onChange}>

@@ -1,6 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { api } from '@/lib/api/client';
+
+import {
+  checkBookingConflicts,
+  bulkCheckConflicts,
+  type ConflictCheckRequest,
+  type ConflictCheckResponse,
+} from '@/lib/api/conflicts';
+
+interface UseConflictDetectionOptions {
+  enabled?: boolean;
+  refetchInterval?: number;
+  onConflictDetected?: (conflict: ConflictCheckResponse) => void;
+}
+
+interface ConflictDetectionReturn {
+  conflict: ConflictCheckResponse | null;
+  isChecking: boolean;
+  checkConflict: (params: ConflictCheckRequest) => Promise<ConflictCheckResponse>;
+  clearConflict: () => void;
+  hasActiveConflict: boolean;
+  error: Error | null;
+}
 
 interface ConflictInfo {
   hasConflict: boolean;
@@ -21,20 +42,7 @@ interface ConflictCheckParams {
   userId: string;
 }
 
-interface UseConflictDetectionOptions {
-  enabled?: boolean;
-  refetchInterval?: number; // Auto-check interval in ms
-  onConflictDetected?: (conflict: ConflictInfo) => void;
-}
 
-interface ConflictDetectionReturn {
-  conflict: ConflictInfo | null;
-  isChecking: boolean;
-  checkConflict: (params: ConflictCheckParams) => Promise<ConflictInfo>;
-  clearConflict: () => void;
-  hasActiveConflict: boolean;
-  error: Error | null;
-}
 
 /**
  * Hook for detecting booking conflicts before payment
@@ -53,29 +61,20 @@ export function useConflictDetection(
     onConflictDetected,
   } = options;
 
-  const [conflict, setConflict] = useState<ConflictInfo | null>(null);
-  const [checkParams, setCheckParams] = useState<ConflictCheckParams | null>(null);
+  const [conflict, setConflict] = useState<ConflictCheckResponse | null>(null);
+  const [checkParams, setCheckParams] = useState<ConflictCheckRequest | null>(null);
 
   // Query for real-time conflict checking
   const {
     data: conflictData,
     isLoading: isChecking,
     error,
-    refetch,
-  } = useQuery({
+  } = useQuery<ConflictCheckResponse | null>({
     queryKey: ['conflict-check', checkParams?.propertyId, checkParams?.unitId],
     queryFn: async () => {
       if (!checkParams) return null;
 
-      const endpoint = checkParams.unitId
-        ? `/api/properties/${checkParams.propertyId}/units/${checkParams.unitId}/check-conflict`
-        : `/api/properties/${checkParams.propertyId}/check-conflict`;
-
-      const response = await api.get<ConflictInfo>(endpoint, {
-        params: { userId: checkParams.userId },
-      });
-
-      return response.data;
+      return checkBookingConflicts(checkParams);
     },
     enabled: enabled && !!checkParams,
     refetchInterval: refetchInterval || 5000, // Default 5s polling
@@ -85,17 +84,7 @@ export function useConflictDetection(
 
   // Manual conflict check mutation
   const conflictCheckMutation = useMutation({
-    mutationFn: async (params: ConflictCheckParams) => {
-      const endpoint = params.unitId
-        ? `/api/properties/${params.propertyId}/units/${params.unitId}/check-conflict`
-        : `/api/properties/${params.propertyId}/check-conflict`;
-
-      const response = await api.get<ConflictInfo>(endpoint, {
-        params: { userId: params.userId },
-      });
-
-      return response.data;
-    },
+    mutationFn: async (params: ConflictCheckRequest) => checkBookingConflicts(params),
     onSuccess: (data) => {
       setConflict(data);
       if (data.hasConflict && onConflictDetected) {
@@ -116,7 +105,7 @@ export function useConflictDetection(
 
   // Manual conflict check function
   const checkConflict = useCallback(
-    async (params: ConflictCheckParams): Promise<ConflictInfo> => {
+    async (params: ConflictCheckRequest): Promise<ConflictCheckResponse> => {
       setCheckParams(params);
       const result = await conflictCheckMutation.mutateAsync(params);
       return result;
@@ -148,17 +137,11 @@ export function useConflictDetection(
  */
 export function useBatchConflictDetection() {
   const batchCheckMutation = useMutation({
-    mutationFn: async (items: ConflictCheckParams[]) => {
-      const response = await api.post<ConflictInfo[]>(
-        '/api/properties/batch-check-conflict',
-        { items }
-      );
-      return response.data;
-    },
+    mutationFn: async (items: ConflictCheckRequest[]) => bulkCheckConflicts(items),
   });
 
   const checkBatchConflicts = useCallback(
-    async (items: ConflictCheckParams[]) => {
+    async (items: ConflictCheckRequest[]) => {
       return await batchCheckMutation.mutateAsync(items);
     },
     [batchCheckMutation]
@@ -175,59 +158,56 @@ export function useBatchConflictDetection() {
 /**
  * Hook for conflict resolution suggestions
  */
-export function useConflictResolution(conflict: ConflictInfo | null) {
+export function useConflictResolution(conflict: ConflictCheckResponse | null) {
   const getResolutionSuggestions = useCallback(() => {
-    if (!conflict?.hasConflict) return [];
+    if (!conflict?.hasConflict || !conflict.conflicts.length) return [];
 
-    const suggestions: string[] = [];
+    const suggestions: string[] = [...(conflict.warnings ?? [])];
 
-    switch (conflict.conflictType) {
-      case 'PAYMENT_IN_PROGRESS':
-        suggestions.push(
-          'Another user is currently processing payment for this property.',
-          'Please wait for the lock to expire or try another property.',
-          `Lock expires at: ${conflict.conflictDetails?.lockExpiry || 'Unknown'}`
-        );
-        break;
+    conflict.conflicts.forEach((c) => {
+      switch (c.conflictType) {
+        case 'SIMULTANEOUS_PAYMENT':
+          suggestions.push(
+            'Another user is currently processing payment for this property.',
+            'Please wait a few minutes and try again.'
+          );
+          break;
+        case 'ALREADY_RENTED':
+          suggestions.push(
+            'This property has already been rented.',
+            'Please browse other available properties.'
+          );
+          break;
+        case 'OVERLAPPING_RENTAL':
+          suggestions.push(
+            'Your rental dates overlap with an existing booking.',
+            'Please choose different dates.'
+          );
+          break;
+        case 'PAYMENT_LOCKED':
+          suggestions.push(
+            'This property is temporarily locked for payment processing.',
+            'The lock will expire shortly — please try again.'
+          );
+          break;
+      }
+    });
 
-      case 'ALREADY_RENTED':
-        suggestions.push(
-          'This property has already been rented.',
-          'Please browse other available properties.',
-          'Consider setting up alerts for similar properties.'
-        );
-        break;
-
-      case 'UNIT_UNAVAILABLE':
-        suggestions.push(
-          'This unit is currently unavailable.',
-          'Check other units in the same building.',
-          'Contact the property manager for more information.'
-        );
-        break;
-
-      case 'PROPERTY_LOCKED':
-        suggestions.push(
-          'This property is temporarily locked for payment processing.',
-          `Lock will expire in a few minutes.`,
-          'You can add this property to your watchlist.'
-        );
-        break;
-
-      default:
-        suggestions.push(
-          'Unable to proceed with this property at the moment.',
-          'Please try again later or contact support.'
-        );
+    if (conflict.recommendations?.length) {
+      suggestions.push(...conflict.recommendations);
     }
 
-    return suggestions;
+    return [...new Set(suggestions)];
   }, [conflict]);
+
+  const conflictTypes = conflict?.conflicts.map((c) => c.conflictType) ?? [];
 
   return {
     suggestions: getResolutionSuggestions(),
-    canRetry: conflict?.conflictType === 'PAYMENT_IN_PROGRESS' || 
-              conflict?.conflictType === 'PROPERTY_LOCKED',
-    shouldWait: conflict?.conflictType === 'PAYMENT_IN_PROGRESS',
+    canRetry:
+      conflictTypes.includes('SIMULTANEOUS_PAYMENT') ||
+      conflictTypes.includes('PAYMENT_LOCKED'),
+    shouldWait: conflictTypes.includes('SIMULTANEOUS_PAYMENT'),
+    canProceed: conflict?.canProceed ?? false,
   };
 }

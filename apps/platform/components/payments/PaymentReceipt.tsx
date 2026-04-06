@@ -6,6 +6,7 @@ import { Button } from '@newcondo/ui/components/button'
 import { Badge } from '@newcondo/ui/components/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog'
 import { Separator } from '@newcondo/ui/components/separator'
+import type { PaymentWithRental } from '@/types/payment'
 import {
   Download,
   Printer,
@@ -25,7 +26,8 @@ import {
 import { cn } from '@/lib/utils'
 
 interface PaymentReceiptProps {
-  paymentData: {
+  payment?: PaymentWithRental
+  paymentData?: {
     id: string
     transactionId: string
     flutterwaveRef: string

@@ -7,7 +7,8 @@ import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { formatCurrency } from '@/lib/utils/format';
-import { walletApi } from '@/lib/api/wallet';
+import { virtualAccountsApi } from '@/lib/api/virtualAccounts';
+import type { VirtualAccount } from '@/types/api';
 
 interface VirtualAccountBalanceProps {
   showWithdrawButton?: boolean;
@@ -20,6 +21,8 @@ export function VirtualAccountBalance({
 }: VirtualAccountBalanceProps) {
   const [showBalance, setShowBalance] = useState(true);
 
+  //  If you need a specific account by ID, use virtualAccountsApi.getAccount(accountId)
+  //  instead and add accountId as a prop to VirtualAccountBalanceProps.
   const {
     data: account,
     isLoading,
@@ -27,7 +30,7 @@ export function VirtualAccountBalance({
     isRefetching,
   } = useQuery({
     queryKey: ['virtual-account-balance'],
-    queryFn: () => walletApi.getVirtualAccount(),
+    queryFn: (): Promise<VirtualAccount> => virtualAccountsApi.getUserAccounts().then(accounts => accounts[0]),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 

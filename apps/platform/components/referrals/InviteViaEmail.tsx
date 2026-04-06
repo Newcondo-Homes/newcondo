@@ -27,7 +27,7 @@ export function InviteViaEmail() {
     resolver: zodResolver(inviteViaEmailSchema),
     defaultValues: {
       email: '',
-      message: '',
+      message: '',  
     },
   });
 
@@ -84,9 +84,9 @@ export function InviteViaEmail() {
         <Button
           type="submit"
           className="w-full"
-          disabled={inviteMutation.isLoading}
+          disabled={inviteMutation.isPending}
         >
-          {inviteMutation.isLoading ? (
+          {inviteMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Sending...

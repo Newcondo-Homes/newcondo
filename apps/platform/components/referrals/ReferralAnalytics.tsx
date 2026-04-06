@@ -66,12 +66,12 @@ export function ReferralAnalytics() {
           <CardContent>
             <div className="text-2xl font-bold">{metrics?.totalReferrals || 0}</div>
             <div className="flex items-center text-xs mt-1">
-              {metrics?.trends.referrals && metrics.trends.referrals.change > 0 ? (
+              {(metrics?.trends?.referrals?.change ?? 0) > 0 ? (
                 <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
               ) : (
                 <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
               )}
-              <span className={metrics?.trends.referrals.change > 0 ? 'text-green-600' : 'text-red-600'}>
+              <span className={(metrics?.trends?.referrals?.change ?? 0) > 0 ? 'text-green-600' : 'text-red-600'}>
                 {Math.abs(metrics?.trends.referrals.change || 0)}%
               </span>
               <span className="text-muted-foreground ml-1">vs last period</span>
@@ -87,12 +87,12 @@ export function ReferralAnalytics() {
           <CardContent>
             <div className="text-2xl font-bold">{metrics?.conversionRate || 0}%</div>
             <div className="flex items-center text-xs mt-1">
-              {metrics?.trends.conversions && metrics.trends.conversions.change > 0 ? (
+              {(metrics?.trends?.conversions?.change ?? 0) > 0 ? (
                 <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
               ) : (
                 <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
               )}
-              <span className={metrics?.trends.conversions.change > 0 ? 'text-green-600' : 'text-red-600'}>
+              <span className={(metrics?.trends?.conversions?.change ?? 0) > 0 ? 'text-green-600' : 'text-red-600'}>
                 {Math.abs(metrics?.trends.conversions.change || 0)}%
               </span>
               <span className="text-muted-foreground ml-1">vs last period</span>
@@ -110,12 +110,12 @@ export function ReferralAnalytics() {
               {formatCurrency(metrics?.totalEarnings || 0)}
             </div>
             <div className="flex items-center text-xs mt-1">
-              {metrics?.trends.earnings && metrics.trends.earnings.change > 0 ? (
+              {(metrics?.trends?.earnings?.change ?? 0) > 0 ? (
                 <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
               ) : (
                 <TrendingDown className="h-3 w-3 text-red-600 mr-1" />
               )}
-              <span className={metrics?.trends.earnings.change > 0 ? 'text-green-600' : 'text-red-600'}>
+              <span className={(metrics?.trends?.earnings?.change ?? 0) > 0 ? 'text-green-600' : 'text-red-600'}>
                 {Math.abs(metrics?.trends.earnings.change || 0)}%
               </span>
               <span className="text-muted-foreground ml-1">vs last period</span>

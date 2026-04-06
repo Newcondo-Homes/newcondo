@@ -84,9 +84,9 @@ export function InviteViaWhatsApp() {
         <Button
           type="submit"
           className="w-full bg-green-600 hover:bg-green-700"
-          disabled={inviteMutation.isLoading}
+          disabled={inviteMutation.isPending}
         >
-          {inviteMutation.isLoading ? (
+          {inviteMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Opening...

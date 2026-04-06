@@ -11,7 +11,7 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { toast } from '@newcondo/ui';
 import { AlertCircle, CreditCard, Calendar, User, FileText } from 'lucide-react';
-import { Payment } from '@/types/api';
+import { Payment } from '@/types/payment';
 
 interface RefundRequestProps {
   payment: Payment;

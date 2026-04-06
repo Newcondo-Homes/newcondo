@@ -8,8 +8,9 @@ import PropertyCardSkeleton from './PropertyCardSkeleton';
 import { Button } from '@newcondo/ui/components/button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { usePropertyStore } from '@/store/propertyStore';
-import { Property } from '@/types/api';
+import { PropertyType } from '@/types/api';
 import { searchProperties } from '@/lib/api/properties';
+import type { PropertyResponse } from '@/lib/api/properties';
 
 interface PropertyGridProps {
   searchQuery?: string;
@@ -17,7 +18,7 @@ interface PropertyGridProps {
     priceRange?: [number, number];
     city?: string;
     state?: string;
-    propertyType?: string;
+    propertyType?: PropertyType;
     bedrooms?: number;
     bathrooms?: number;
     features?: string[];
@@ -25,6 +26,8 @@ interface PropertyGridProps {
   showComparison?: boolean;
   className?: string;
 }
+
+type SearchResult = Awaited<ReturnType<typeof searchProperties>>;
 
 export default function PropertyGrid({
   searchQuery = '',
@@ -34,7 +37,7 @@ export default function PropertyGrid({
 }: PropertyGridProps) {
   const { selectedForComparison, toggleComparison, clearComparison } = usePropertyStore();
   const [retryCount, setRetryCount] = useState(0);
-  
+
   const { ref: loadMoreRef, inView } = useInView({
     threshold: 0.1,
     rootMargin: '100px'
@@ -56,19 +59,20 @@ export default function PropertyGrid({
     isFetchingNextPage,
     status,
     refetch
-  } = useInfiniteQuery({
+  } = useInfiniteQuery<SearchResult, Error>({
     queryKey: ['properties', searchParams],
-    queryFn: ({ pageParam = 1 }) =>
+    queryFn: ({ pageParam }) =>
       searchProperties({
         ...searchParams,
-        page: pageParam
+        page: pageParam as number
       }),
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       const { currentPage, totalPages } = lastPage.pagination;
       return currentPage < totalPages ? currentPage + 1 : undefined;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes - prevent unnecessary refetches
-    cacheTime: 30 * 60 * 1000, // 30 minutes - keep data in cache
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep data in cache
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
@@ -94,7 +98,7 @@ export default function PropertyGrid({
     clearComparison();
   }, [clearComparison]);
 
-  if (status === 'loading') {
+  if (status === 'pending') {
     return (
       <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 ${className}`}>
         {Array.from({ length: 48 }).map((_, index) => (
@@ -110,8 +114,8 @@ export default function PropertyGrid({
         <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
         <h3 className="text-lg font-semibold mb-2">Unable to load properties</h3>
         <p className="text-gray-600 mb-4">
-          {error instanceof Error 
-            ? error.message 
+          {error instanceof Error
+            ? error.message
             : 'Something went wrong while fetching properties. Please try again.'}
         </p>
         <Button onClick={handleRetry} variant="outline">
@@ -151,9 +155,9 @@ export default function PropertyGrid({
                   </a>
                 </Button>
               )}
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={handleComparisonClear}
               >
                 Clear All
@@ -165,7 +169,7 @@ export default function PropertyGrid({
 
       {/* Properties Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {allProperties.map((property: Property) => (
+        {allProperties.map((property: PropertyResponse) => (
           <PropertyCard
             key={property.id}
             property={property}

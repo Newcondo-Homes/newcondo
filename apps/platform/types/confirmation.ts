@@ -48,6 +48,14 @@ export interface ConfirmationAction {
   verificationPhotos?: string[];
 }
 
+// @/types/confirmation.ts — add these aliases at the bottom
+
+export type ConfirmationStatusResponse = PaymentConfirmation;
+
+export type ConfirmationResponse = ConfirmPaymentResponse;
+
+export type DisputeInitiationResponse = DisputePaymentResponse;
+
 export interface ConfirmationTimer {
   paymentId: string;
   endTime: Date;

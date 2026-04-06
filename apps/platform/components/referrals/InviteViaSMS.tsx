@@ -85,9 +85,9 @@ export function InviteViaSMS() {
         <Button
           type="submit"
           className="w-full"
-          disabled={inviteMutation.isLoading}
+          disabled={inviteMutation.isPending}
         >
-          {inviteMutation.isLoading ? (
+          {inviteMutation.isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Sending...

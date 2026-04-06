@@ -10,7 +10,7 @@ import type {
   DocumentType,
   DocumentSide 
 } from '@/types/documents';
-import { toast } from 'sonner';
+import { toast } from '@newcondo/ui';
 
 interface UseDocumentUploadOptions {
   onSuccess?: (uploadedDocument: any) => void;

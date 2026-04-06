@@ -7,13 +7,13 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter } from '@newcondo/ui/';
 import { Badge } from '@newcondo/ui/';
 import { Button } from '@newcondo/ui/';
-import { 
-  MapPin, 
-  Eye, 
-  Heart, 
-  Share2, 
-  Bed, 
-  Bath, 
+import {
+  MapPin,
+  Eye,
+  Heart,
+  Share2,
+  Bed,
+  Bath,
   Square,
   AlertTriangle,
   CheckCircle,
@@ -22,7 +22,7 @@ import {
   Building2,
   Home
 } from 'lucide-react';
-import { Property, PropertyStatus, PropertyType } from '@/types/property';
+import { PropertyWithDetails as Property, PropertyStatus, PropertyType } from '@/types/property';
 import { formatCurrency } from '@/lib/utils/format';
 import { cn } from '@newcondo/ui';
 
@@ -51,10 +51,10 @@ export function PropertyCard({
 
   // Format property features
   const features = [
-    property.bedrooms && { icon: Bed, value: property.bedrooms, label: 'bed' },
-    property.bathrooms && { icon: Bath, value: property.bathrooms, label: 'bath' },
-    property.area && { icon: Square, value: property.area, label: 'area' }
-  ].filter(Boolean);
+    property.bedrooms ? { icon: Bed, value: property.bedrooms, label: 'bed' } : null,
+    property.bathrooms ? { icon: Bath, value: property.bathrooms, label: 'bath' } : null,
+    property.area ? { icon: Square, value: property.area, label: 'area' } : null,
+  ].filter((f): f is NonNullable<typeof f> => f !== null);
 
   // Get property type icon
   const getPropertyTypeIcon = (type: PropertyType) => {
@@ -91,7 +91,7 @@ export function PropertyCard({
   // Get boundary status
   const getBoundaryStatus = () => {
     if (!showBoundaryStatus) return null;
-    
+
     if (property.boundaryVerified) {
       return {
         icon: CheckCircle,
@@ -99,7 +99,7 @@ export function PropertyCard({
         color: 'text-green-600'
       };
     }
-    
+
     return {
       icon: Clock,
       label: 'Boundary Pending',
@@ -125,7 +125,7 @@ export function PropertyCard({
 
   if (viewMode === 'list') {
     return (
-      <Card 
+      <Card
         className={cn(
           'cursor-pointer transition-all hover:shadow-lg',
           isDuplicate && 'border-red-200 bg-red-50',
@@ -144,13 +144,13 @@ export function PropertyCard({
                 className="object-cover rounded-l-lg"
                 onLoad={() => setIsImageLoading(false)}
               />
-              
+
               {/* Overlay badges */}
               <div className="absolute top-3 left-3 flex flex-col gap-2">
                 <Badge className={getStatusColor(property.status)}>
                   {property.status.replace('_', ' ')}
                 </Badge>
-                
+
                 {isDuplicate && (
                   <Badge variant="destructive" className="text-xs">
                     <AlertTriangle className="h-3 w-3 mr-1" />
@@ -200,10 +200,13 @@ export function PropertyCard({
                     <span className="line-clamp-1">{property.address}, {property.city}</span>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
                   <div className="text-2xl font-bold text-primary">
-                    {formatCurrency(property.price, property.currency)}
+                    {property.price
+                      ? formatCurrency(Number(property.price), property.currency)
+                      : 'Contact for price'
+                    }
                   </div>
                   <div className="text-sm text-muted-foreground">per month</div>
                 </div>
@@ -221,7 +224,7 @@ export function PropertyCard({
                     {property.propertyType.toLowerCase().replace('_', ' ')}
                   </span>
                 </div>
-                
+
                 {features.map((feature, index) => {
                   const Icon = feature.icon;
                   return (
@@ -242,7 +245,7 @@ export function PropertyCard({
                     <Eye className="h-4 w-4" />
                     <span>{property.viewCount || 0}</span>
                   </div>
-                  
+
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <User className="h-4 w-4" />
                     <span>{property.isOwnerListing ? 'Owner' : 'Agent'}</span>
@@ -274,7 +277,7 @@ export function PropertyCard({
 
   // Grid view
   return (
-    <Card 
+    <Card
       className={cn(
         'cursor-pointer transition-all hover:shadow-lg overflow-hidden',
         isDuplicate && 'border-red-200 bg-red-50',
@@ -291,13 +294,13 @@ export function PropertyCard({
             className="object-cover transition-transform hover:scale-105"
             onLoad={() => setIsImageLoading(false)}
           />
-          
+
           {/* Overlay badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             <Badge className={getStatusColor(property.status)}>
               {property.status.replace('_', ' ')}
             </Badge>
-            
+
             {isDuplicate && (
               <Badge variant="destructive" className="text-xs">
                 <AlertTriangle className="h-3 w-3 mr-1" />
@@ -350,7 +353,10 @@ export function PropertyCard({
 
           <div className="text-right">
             <div className="text-xl font-bold text-primary">
-              {formatCurrency(property.price, property.currency)}
+              {property.price
+                ? formatCurrency(Number(property.price), property.currency)
+                : 'Contact for price'
+              }
             </div>
             <div className="text-sm text-muted-foreground">per month</div>
           </div>
@@ -367,7 +373,7 @@ export function PropertyCard({
                 {property.propertyType.toLowerCase().replace('_', ' ')}
               </span>
             </div>
-            
+
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
@@ -388,7 +394,7 @@ export function PropertyCard({
               <Eye className="h-4 w-4" />
               <span>{property.viewCount || 0}</span>
             </div>
-            
+
             <div className="flex items-center gap-1">
               <User className="h-4 w-4" />
               <span>{property.isOwnerListing ? 'Owner' : 'Agent'}</span>

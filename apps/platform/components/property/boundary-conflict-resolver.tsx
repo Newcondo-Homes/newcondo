@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@newcondo/ui/';
 import { Textarea } from '@newcondo/ui/';
 import { Separator } from '@newcondo/ui/';
 import { AlertTriangle, MapPin, User, Calendar } from 'lucide-react';
-import { boundaryApi } from '@/lib/api/boundary';
+import { boundaryService } from '@/lib/api/boundary';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -69,9 +69,10 @@ export const BoundaryConflictResolver = ({
   const handleReportDispute = async (conflictId: string) => {
     setIsResolving(true);
     try {
-      await boundaryApi.reportBoundaryDispute({
-        conflictId,
-        propertyId,
+      await boundaryService.reportBoundaryConflict({
+        originalBoundaryId: conflictId,
+        conflictingBoundaryId: propertyId ?? '',
+        reason: 'Boundary conflict reported by user',
         description: resolutionNote,
       });
 
@@ -114,7 +115,7 @@ export const BoundaryConflictResolver = ({
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          {conflicts.length} boundary conflict{conflicts.length > 1 ? 's' : ''} detected. 
+          {conflicts.length} boundary conflict{conflicts.length > 1 ? 's' : ''} detected.
           Please resolve before proceeding with your property listing.
         </AlertDescription>
       </Alert>
@@ -125,10 +126,9 @@ export const BoundaryConflictResolver = ({
           const isSelected = selectedConflict === conflict.id;
 
           return (
-            <Card key={conflict.id} className={`border-2 ${
-              severity === 'high' ? 'border-red-200' : 
-              severity === 'medium' ? 'border-yellow-200' : 'border-gray-200'
-            }`}>
+            <Card key={conflict.id} className={`border-2 ${severity === 'high' ? 'border-red-200' :
+                severity === 'medium' ? 'border-yellow-200' : 'border-gray-200'
+              }`}>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -177,7 +177,7 @@ export const BoundaryConflictResolver = ({
                   >
                     Contact Owner
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     size="sm"
@@ -186,7 +186,7 @@ export const BoundaryConflictResolver = ({
                   >
                     Report Dispute
                   </Button>
-                  
+
                   <Button
                     variant="secondary"
                     size="sm"
@@ -210,7 +210,7 @@ export const BoundaryConflictResolver = ({
                         className="min-h-[100px]"
                       />
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Button
                         onClick={() => handleReportDispute(conflict.id)}
@@ -219,7 +219,7 @@ export const BoundaryConflictResolver = ({
                       >
                         {isResolving ? 'Submitting...' : 'Submit Dispute'}
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"

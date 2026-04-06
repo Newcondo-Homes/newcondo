@@ -1,5 +1,7 @@
 // Core API Response Types
 import type { User} from '@newcondo/db'
+import { PropertyType } from '@newcondo/db';
+// types/api.ts
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -7,6 +9,38 @@ export interface ApiResponse<T = any> {
   message?: string;
   error?: string;
   errors?: Record<string, string[]>;
+}
+
+// Add to apps/platform/types/api.ts
+
+export interface WithdrawalRequest {
+  accountNumber: string;
+  bankCode: string;
+  amount: number;
+  narration?: string;
+}
+
+export interface WithdrawalResponse {
+  id: string;
+  status: string;
+  amount: number;
+  currency: string;
+  reference: string;
+  createdAt: string;
+}
+
+export interface WithdrawalStatusResponse extends WithdrawalResponse {
+  processedAt?: string;
+  failureReason?: string;
+}
+
+export interface BankAccountResponse {
+  id: string;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankCode: string;
+  isDefault?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -354,16 +388,20 @@ export enum VerificationStatus {
 
 export type OTPType = 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET'
 
-export enum PropertyType {
-  APARTMENT = 'APARTMENT',
-  HOUSE = 'HOUSE',
-  ROOM = 'ROOM',
-  STUDIO = 'STUDIO',
-  DUPLEX = 'DUPLEX',
-  BUNGALOW = 'BUNGALOW',
-  MANSION = 'MANSION',
-  PENTHOUSE = 'PENTHOUSE'
-}
+
+// types/api.ts
+// export enum PropertyType {
+//   APARTMENT = 'APARTMENT',
+//   HOUSE = 'HOUSE',
+//   DUPLEX = 'DUPLEX',
+//   ROOM = 'ROOM',
+//   SHARED_APARTMENT = 'SHARED_APARTMENT',
+//   OFFICE = 'OFFICE',
+//   SHOP = 'SHOP',
+//   WAREHOUSE = 'WAREHOUSE'
+// }
+
+export { PropertyType }
 
 export enum PropertyCategory {
   RENTAL = 'RENTAL',
@@ -525,6 +563,9 @@ export interface PropertySearchParams {
 }
 
 export interface PropertyFilters {
+  search?: string;
+  status?: string;
+  sortBy?: string;
   type?: PropertyType[];
   priceRange?: [number, number];
   bedrooms?: number[];

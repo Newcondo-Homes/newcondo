@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@newcondo/ui/components/shared/DataTable';
+import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { Eye, MoreHorizontal } from 'lucide-react';

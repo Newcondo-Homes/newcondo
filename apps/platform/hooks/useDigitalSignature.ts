@@ -1,6 +1,6 @@
 // apps/platform/hooks/useDigitalSignature.ts
 import { useState, useCallback, useRef } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@newcondo/ui';
 
 interface DigitalSignatureData {
   signature: string; // Base64 encoded signature

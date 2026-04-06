@@ -7,17 +7,17 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Progress } from '@newcondo/ui/components/progress';
 import { toast } from '@newcondo/ui';
-import { 
-  RefreshCw, 
-  AlertTriangle, 
-  Clock, 
-  CreditCard, 
+import {
+  RefreshCw,
+  AlertTriangle,
+  Clock,
+  CreditCard,
   CheckCircle,
   XCircle,
   Calendar,
   DollarSign
 } from 'lucide-react';
-import { Payment } from '@/types/api';
+import { Payment } from '@/types/payment';
 
 interface PaymentRetryProps {
   payment: Payment;
@@ -36,8 +36,8 @@ interface RetryAttempt {
   transactionId?: string;
 }
 
-export default function PaymentRetry({ 
-  payment, 
+export default function PaymentRetry({
+  payment,
   maxRetries = 3,
   retryDelay = 30,
   onSuccess,
@@ -61,9 +61,8 @@ export default function PaymentRetry({
 
   // Check if payment can be retried
   useEffect(() => {
-    const canRetryPayment = payment.status === 'FAILED' && 
-                           currentAttempt < maxRetries &&
-                           payment.paymentType !== 'REFUNDED';
+    const canRetryPayment = payment.status === 'FAILED' &&
+      currentAttempt < maxRetries
     setCanRetry(canRetryPayment);
   }, [payment.status, currentAttempt, maxRetries]);
 
@@ -130,29 +129,29 @@ export default function PaymentRetry({
       const result = await response.json();
 
       // Update attempt status
-      setRetryAttempts(prev => 
-        prev.map(attempt => 
+      setRetryAttempts(prev =>
+        prev.map(attempt =>
           attempt.attemptNumber === attemptNumber
-            ? { 
-                ...attempt, 
-                status: 'success', 
-                transactionId: result.transactionId 
-              }
+            ? {
+              ...attempt,
+              status: 'success',
+              transactionId: result.transactionId
+            }
             : attempt
         )
       );
 
-      toast.success("Payment Successful!",{
+      toast.success("Payment Successful!", {
         description: "Your payment has been processed successfully.",
       });
 
       onSuccess?.(result.payment);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Payment retry failed';
-      
+
       // Update attempt status
-      setRetryAttempts(prev => 
-        prev.map(attempt => 
+      setRetryAttempts(prev =>
+        prev.map(attempt =>
           attempt.attemptNumber === attemptNumber
             ? { ...attempt, status: 'failed', error: errorMessage }
             : attempt
@@ -160,7 +159,7 @@ export default function PaymentRetry({
       );
 
       if (attemptNumber >= maxRetries) {
-        toast.error("Maximum Retries Reached",{
+        toast.error("Maximum Retries Reached", {
           description: "Unable to process payment after multiple attempts. Please try a different payment method.",
         });
         onMaxRetriesReached?.();
@@ -225,7 +224,7 @@ export default function PaymentRetry({
               <span className="font-medium capitalize">{payment.paymentType.toLowerCase()}</span>
             </div>
           </div>
-          
+
           {payment.failureReason && (
             <div className="mt-3 p-3 bg-red-50 rounded border-l-4 border-red-200">
               <p className="text-sm text-red-700">
@@ -263,10 +262,10 @@ export default function PaymentRetry({
                     {attempt.status === 'pending' && <Clock className="w-4 h-4 text-yellow-500" />}
                     {attempt.status === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}
                     {attempt.status === 'failed' && <XCircle className="w-4 h-4 text-red-500" />}
-                    <Badge 
+                    <Badge
                       variant={
                         attempt.status === 'success' ? 'default' :
-                        attempt.status === 'failed' ? 'destructive' : 'secondary'
+                          attempt.status === 'failed' ? 'destructive' : 'secondary'
                       }
                     >
                       {attempt.status.toUpperCase()}
@@ -316,7 +315,7 @@ export default function PaymentRetry({
           {isRetrying && <RefreshCw className="w-4 h-4 mr-2 animate-spin" />}
           {getRetryButtonText()}
         </Button>
-        
+
         {currentAttempt >= maxRetries && (
           <Button variant="outline" asChild>
             <a href="/payments/methods">Try Different Method</a>

@@ -69,7 +69,7 @@ export function PaymentHistory({
   // const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
-  const {  retryPayment } = usePayments();
+  const { retryPayment } = usePayments();
 
   const { data: historyData, isLoading, refetch: loadPaymentHistory } = usePaymentHistory({ userId, limit });
 

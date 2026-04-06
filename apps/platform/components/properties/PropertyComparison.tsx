@@ -9,7 +9,7 @@ import { ScrollArea, ScrollBar } from '@newcondo/ui/components/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@newcondo/ui/components/sheet';
 import { 
-  Compare, 
+  GitCompare, 
   X, 
   MapPin, 
   Bed, 
@@ -315,7 +315,7 @@ export function PropertyComparison({
     return (
       <Card className="p-8">
         <div className="text-center space-y-4">
-          <Compare className="w-12 h-12 text-muted-foreground mx-auto" />
+          <GitCompare className="w-12 h-12 text-muted-foreground mx-auto" />
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">No Properties to Compare</h3>
             <p className="text-muted-foreground">
@@ -471,7 +471,7 @@ export function PropertyComparison({
     <Sheet>
       <SheetTrigger asChild>
         <Button size="sm" className="fixed bottom-4 right-4 z-50 rounded-full h-12 w-12 shadow-lg">
-          <Compare className="h-6 w-6" />
+          <GitCompare className="h-6 w-6" />
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-md p-6 overflow-y-auto">
@@ -488,7 +488,7 @@ export function PropertyComparison({
     <Dialog>
       <DialogTrigger asChild>
         <Button size="sm" className="fixed bottom-4 right-4 z-50 rounded-full h-12 w-12 shadow-lg">
-          <Compare className="h-6 w-6" />
+          <GitCompare className="h-6 w-6" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-6">

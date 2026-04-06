@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Facebook, Twitter, Instagram, LinkedIn, Mail, Phone, MapPin } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from '@newcondo/ui/';
 import { Input } from '@newcondo/ui/';
 import { Separator } from '@newcondo/ui/';
@@ -54,7 +54,7 @@ const Footer: React.FC = () => {
     { href: 'https://facebook.com/newcondo', icon: Facebook, label: 'Facebook' },
     { href: 'https://twitter.com/newcondo', icon: Twitter, label: 'Twitter' },
     { href: 'https://instagram.com/newcondo', icon: Instagram, label: 'Instagram' },
-    { href: 'https://linkedin.com/company/newcondo', icon: LinkedIn, label: 'LinkedIn' },
+    { href: 'https://linkedin.com/company/newcondo', icon: Linkedin, label: 'LinkedIn' },
   ];
 
   const handleNewsletterSubmit = (e: React.FormEvent<HTMLFormElement>) => {

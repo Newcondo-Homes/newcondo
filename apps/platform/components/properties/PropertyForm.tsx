@@ -31,9 +31,10 @@ import { Checkbox } from "@newcondo/ui/components/checkbox";
 import { NigerianAddressSelector } from "@/components/address/NigerianAddressSelector";
 import { ContactPersonForm } from "@/components/properties/ContactPersonForm";
 import { PropertyMarkingStatus } from "@/components/properties/PropertyMarkingStatus";
-import { ImageUploader } from "@/components/properties/ImageUploader";
+import { ImageUploader } from "@/components/property/image-uploader";
 import { useRouter } from "next/navigation";
 import { toast } from "@newcondo/ui/";
+// import type { PropertyImage } from '@/components/property/image-uploader';
 
 const propertyFormSchema = z.object({
   // Basic Information
@@ -77,16 +78,15 @@ const propertyFormSchema = z.object({
   // Ownership
   isOwnerListing: z.boolean().default(true),
 
-  // Images
-  images: z
-    .array(
-      z.object({
-        url: z.string(),
-        altText: z.string().optional(),
-        isPrimary: z.boolean().default(false),
-      })
-    )
-    .min(3, "At least 3 images are required"),
+  images: z.array(
+    z.object({
+      id: z.string(),
+      url: z.string(),
+      altText: z.string().optional(),
+      isPrimary: z.boolean().default(false),
+      order: z.number(),
+    })
+  ).min(3, 'At least 3 images are required'),
 
   // Property Marking
   requiresMarking: z.boolean().default(true),
@@ -114,6 +114,7 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentTab, setCurrentTab] = useState("basic");
   const [markingJobId, setMarkingJobId] = useState<string | null>(null);
+  const [markingJob, setMarkingJob] = useState<Parameters<typeof PropertyMarkingStatus>[0]['markingJob']>(undefined);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -132,6 +133,20 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
   const watchRequiresMarking = form.watch("requiresMarking");
   const watchMarkingOption = form.watch("markingOption");
 
+
+  const handleConfirm = () => {
+    // call your API to confirm marking
+  };
+
+  const handleReject = () => {
+    // call your API to reject and request remark
+  };
+
+  const handleCancel = () => {
+    // call your API to cancel the job
+    setMarkingJobId(null);
+    setMarkingJob(undefined);
+  };
   const onSubmit = async (data: PropertyFormValues) => {
     setIsSubmitting(true);
 
@@ -517,8 +532,8 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
                       <FormLabel>Property Images *</FormLabel>
                       <FormControl>
                         <ImageUploader
-                          value={field.value}
-                          onChange={field.onChange}
+                          images={field.value}
+                          onImagesChange={field.onChange}
                           maxImages={10}
                         />
                       </FormControl>
@@ -551,8 +566,14 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
                   </AlertDescription>
                 </Alert>
 
-                {markingJobId && (
-                  <PropertyMarkingStatus markingJobId={markingJobId} />
+                {markingJobId && markingJob && (
+                  <PropertyMarkingStatus
+                    markingJob={markingJob}        // the full object, not just the id
+                    propertyId={propertyId ?? ""}
+                    onConfirmMarking={handleConfirm}
+                    onRejectMarking={handleReject}
+                    onCancelJob={handleCancel}
+                  />
                 )}
 
                 <FormField
@@ -623,9 +644,26 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
                               <FormLabel>Contact Person Details *</FormLabel>
                               <FormControl>
                                 <ContactPersonForm
-                                  value={field.value}
-                                  onChange={field.onChange}
+                                  defaultValues={
+                                    field.value
+                                      ? {
+                                          contactPersonName: field.value.name,
+                                          contactPersonPhone: field.value.phone,
+                                          accessInstructions: field.value.accessInstructions,
+                                        }
+                                      : undefined
+                                  }
+                                  onSubmit={(data) =>
+                                    field.onChange({
+                                      name: data.contactPersonName,
+                                      phone: data.contactPersonPhone,
+                                      relationship: "contact",
+                                      accessInstructions: data.accessInstructions,
+                                    })
+                                  }
+                                  isLoading={isSubmitting}
                                 />
+
                               </FormControl>
                               <FormDescription>
                                 Provide contact details for property access

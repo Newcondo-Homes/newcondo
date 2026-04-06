@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable';
 import { PropertyStatusBadge } from './PropertyStatusBadge';
 import { PropertyActionMenu } from './PropertyActionMenu';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@newcondo/ui';
 import { Eye, Home } from 'lucide-react';
 
 interface Property {

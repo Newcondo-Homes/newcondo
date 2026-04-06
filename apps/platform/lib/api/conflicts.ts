@@ -1,70 +1,13 @@
 import { apiClient } from './client';
-
-// Types for conflict detection
-export interface BookingConflict {
-  id: string;
-  propertyId: string;
-  unitId?: string;
-  conflictType: 'SIMULTANEOUS_PAYMENT' | 'OVERLAPPING_RENTAL' | 'PAYMENT_LOCKED' | 'ALREADY_RENTED';
-  conflictingUserId?: string;
-  conflictingRentalId?: string;
-  detectedAt: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  message: string;
-  metadata?: Record<string, any>;
-}
-
-export interface ConflictCheckRequest {
-  propertyId: string;
-  unitId?: string;
-  userId: string;
-  startDate: string;
-  endDate?: string;
-}
-
-export interface ConflictCheckResponse {
-  hasConflict: boolean;
-  conflicts: BookingConflict[];
-  canProceed: boolean;
-  warnings: string[];
-  recommendations?: string[];
-}
-
-export interface ConflictResolutionRequest {
-  conflictId: string;
-  resolutionAction: 'CANCEL_FIRST' | 'CANCEL_SECOND' | 'MERGE' | 'IGNORE';
-  reason: string;
-}
-
-export interface ConflictHistoryParams {
-  propertyId?: string;
-  unitId?: string;
-  userId?: string;
-  startDate?: string;
-  endDate?: string;
-  conflictType?: BookingConflict['conflictType'];
-  page?: number;
-  limit?: number;
-}
-
-export interface ConflictHistoryResponse {
-  conflicts: BookingConflict[];
-  total: number;
-  page: number;
-  limit: number;
-  hasMore: boolean;
-}
-
-export interface PropertyConflictStats {
-  propertyId: string;
-  unitId?: string;
-  totalConflicts: number;
-  resolvedConflicts: number;
-  pendingConflicts: number;
-  conflictsByType: Record<string, number>;
-  lastConflictAt?: string;
-  averageResolutionTime?: number; // in minutes
-}
+import type {
+  BookingConflict,
+  ConflictCheckRequest,
+  ConflictCheckResponse,
+  ConflictResolutionRequest,
+  ConflictHistoryParams,
+  ConflictHistoryResponse,
+  PropertyConflictStats
+} from '@/types/conflicts'
 
 /**
  * Check for booking conflicts before payment
@@ -76,7 +19,7 @@ export const checkBookingConflicts = async (
     '/api/conflicts/check',
     request
   );
-  return response.data;
+  return response.data as ConflictCheckResponse;
 };
 
 /**
@@ -92,7 +35,7 @@ export const checkPropertyAvailability = async (
   const response = await apiClient.get<ConflictCheckResponse>(
     `/api/conflicts/availability?${params.toString()}`
   );
-  return response.data;
+  return response.data as ConflictCheckResponse
 };
 
 /**
@@ -116,7 +59,15 @@ export const detectSimultaneousPayments = async (
   const response = await apiClient.get(
     `/api/conflicts/simultaneous-payments?${params.toString()}`
   );
-  return response.data;
+  return response.data as {
+    hasSimultaneousAttempts: boolean;
+    activeAttempts: number;
+    attemptDetails: Array<{
+      userId: string;
+      attemptedAt: string;
+      lockStatus: 'ACQUIRED' | 'WAITING' | 'TIMEOUT';
+    }>;
+  };
 };
 
 /**
@@ -126,7 +77,7 @@ export const getConflictHistory = async (
   params: ConflictHistoryParams
 ): Promise<ConflictHistoryResponse> => {
   const searchParams = new URLSearchParams();
-  
+
   if (params.propertyId) searchParams.append('propertyId', params.propertyId);
   if (params.unitId) searchParams.append('unitId', params.unitId);
   if (params.userId) searchParams.append('userId', params.userId);
@@ -139,7 +90,7 @@ export const getConflictHistory = async (
   const response = await apiClient.get<ConflictHistoryResponse>(
     `/api/conflicts/history?${searchParams.toString()}`
   );
-  return response.data;
+  return response.data as ConflictHistoryResponse;
 };
 
 /**
@@ -155,7 +106,7 @@ export const getPropertyConflictStats = async (
   const response = await apiClient.get<PropertyConflictStats>(
     `/api/conflicts/stats?${params.toString()}`
   );
-  return response.data;
+  return response.data as PropertyConflictStats;
 };
 
 /**
@@ -168,7 +119,7 @@ export const reportConflict = async (
     '/api/conflicts/report',
     conflict
   );
-  return response.data;
+  return response.data as BookingConflict;
 };
 
 /**
@@ -181,7 +132,7 @@ export const resolveConflict = async (
     '/api/conflicts/resolve',
     request
   );
-  return response.data;
+  return response.data as { success: boolean; message: string };
 };
 
 /**
@@ -204,7 +155,16 @@ export const checkBoundaryConflicts = async (
     propertyId,
     boundaryCoordinates,
   });
-  return response.data;
+  return response.data as {
+    hasDuplicates: boolean;
+    potentialDuplicates: Array<{
+      propertyId: string;
+      similarity: number;
+      boundaryOverlap: number;
+      distanceMeters: number;
+    }>;
+    warnings: string[];
+  };
 };
 
 /**
@@ -229,7 +189,14 @@ export const validateRentalPeriod = async (
     startDate,
     endDate,
   });
-  return response.data;
+  return response.data as {
+    isValid: boolean;
+    conflicts: BookingConflict[];
+    suggestedDates?: {
+      earliestAvailable: string;
+      nextAvailable: string;
+    };
+  };
 };
 
 /**
@@ -254,7 +221,16 @@ export const getActivePaymentLocks = async (
   const response = await apiClient.get(
     `/api/conflicts/payment-locks?${params.toString()}`
   );
-  return response.data;
+  return response.data as {
+    isLocked: boolean;
+    lockDetails?: {
+      lockedBy: string;
+      lockedAt: string;
+      expiresAt: string;
+      remainingSeconds: number;
+    };
+    queuePosition?: number;
+  };
 };
 
 /**
@@ -298,8 +274,8 @@ export const bulkCheckConflicts = async (
     '/api/conflicts/bulk-check',
     { requests }
   );
-  
-  return new Map(Object.entries(response.data));
+
+  return new Map(Object.entries(response.data as Record<string, ConflictCheckResponse>));
 };
 
 /**
@@ -320,7 +296,16 @@ export const getConflictRecommendations = async (
   const response = await apiClient.get(
     `/api/conflicts/${conflictId}/recommendations`
   );
-  return response.data;
+  return response.data as {
+    recommendations: Array<{
+      action: ConflictResolutionRequest['resolutionAction'];
+      description: string;
+      priority: number;
+      pros: string[];
+      cons: string[];
+    }>;
+    autoResolvable: boolean;
+  }
 };
 
 export default {

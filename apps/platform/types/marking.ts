@@ -4,6 +4,8 @@
 
 import { Coordinates, BoundaryPolygon, PropertyBoundaryData } from './boundary';
 
+export type { Coordinates, BoundaryPolygon, PropertyBoundaryData };
+
 // Marking job statuses (matches Prisma enum)
 export type MarkingJobStatus = 
   | 'QUEUED'
@@ -15,6 +17,14 @@ export type MarkingJobStatus =
 
 // Urgency levels (matches Prisma enum)
 export type UrgencyLevel = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+
+export interface ServiceArea {
+  id: string;
+  name: string;       // e.g. "Port Harcourt", "Lagos Island"
+  state: string;      // e.g. "Rivers"
+  lga?: string;       // Local Government Area
+  radiusKm?: number;  // Optional radius override
+}
 
 // Payment statuses (matches Prisma enum)
 export type PaymentStatus = 

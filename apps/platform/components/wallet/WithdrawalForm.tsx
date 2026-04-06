@@ -26,7 +26,7 @@ import {
 } from '@newcondo/ui/components/select';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { formatCurrency } from '@/lib/utils/format';
-import { walletApi } from '@/lib/api/wallet';
+import { withdrawalsApi } from '@/lib/api/withdrawals';
 import { toast } from 'sonner';
 
 const withdrawalSchema = z.object({
@@ -65,11 +65,17 @@ export function WithdrawalForm({
   // Fetch user's saved bank accounts
   const { data: bankAccounts, isLoading: loadingAccounts } = useQuery({
     queryKey: ['bank-accounts'],
-    queryFn: () => walletApi.getBankAccounts(),
+    queryFn: () => withdrawalsApi.getBankAccounts(),
   });
 
   const withdrawalMutation = useMutation({
-    mutationFn: (data: WithdrawalFormData) => walletApi.initiateWithdrawal(data),
+    mutationFn: (data: WithdrawalFormData) => withdrawalsApi.createWithdrawal({
+      accountNumber: selectedAccount?.accountNumber,
+      bankCode: selectedAccount?.bankCode,
+      amount: parseFloat(data.amount),
+      narration: data.narration,
+    }),
+    
     onSuccess: () => {
       toast.success('Withdrawal initiated successfully');
       queryClient.invalidateQueries({ queryKey: ['virtual-account-balance'] });
@@ -84,7 +90,7 @@ export function WithdrawalForm({
 
   const handleSubmit = (data: WithdrawalFormData) => {
     const amount = parseFloat(data.amount);
-    
+
     if (amount <= 0) {
       form.setError('amount', { message: 'Amount must be greater than zero' });
       return;

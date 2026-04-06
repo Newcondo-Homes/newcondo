@@ -6,12 +6,13 @@ import { PropertyCard } from './property-card';
 import { PropertyFilters } from './property-filters';
 import { PropertySearch } from './property-search';
 import { useProperties } from '@/hooks/useProperties';
-import { usePropertyStore } from '@/store/propertyListingStore';
+import { usePropertyListingStore } from '@/store/propertyListingStore';
 import { Button } from '@newcondo/ui/';
 import { Skeleton } from '@newcondo/ui/';
 import { Alert, AlertDescription } from '@newcondo/ui/';
 import { AlertCircle, MapPin, Grid, List } from 'lucide-react';
-import { Property, PropertySearchFilters } from '@/types/property';
+import { PropertyWithDetails as Property } from '@/types/property';
+import { PropertyFilters as PropertySearchFilters } from '@/lib/api/properties';
 
 interface PropertyGridProps {
   searchQuery?: string;
@@ -32,28 +33,36 @@ export function PropertyGrid({
 }: PropertyGridProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(gridView ? 'grid' : 'list');
-  const [localFilters, setLocalFilters] = useState<PropertySearchFilters>(filters || {});
+  const [localFilters, setLocalFilters] = useState<{
+    priceRange: { min?: number; max?: number };
+    propertyType: string;
+    bedrooms: string;
+    bathrooms: string;
+    features: string[];
+    availableFrom: string;
+  }>({
+    priceRange: { min: undefined, max: undefined },
+    propertyType: '',
+    bedrooms: '',
+    bathrooms: '',
+    features: [],
+    availableFrom: '',
+  });
   const [searchTerm, setSearchTerm] = useState(searchQuery);
 
-  const { searchProperties, loading, error, hasMore } = useProperties();
-  const { properties, totalCount, duplicateProperties } = usePropertyStore();
+  const { data, isLoading: loading, error: queryError } = useProperties({
+    ...localFilters,
+    page: currentPage,
+    limit: 12,
+    query: searchTerm,
+  } as any);
 
-  // Search properties with filters
-  const handleSearch = useCallback(async (page: number = 1) => {
-    const searchParams = {
-      query: searchTerm,
-      page,
-      limit: 12,
-      ...localFilters
-    };
+  const properties = data?.properties ?? [];
+  const totalCount = data?.pagination?.total ?? 0;
+  const hasMore = data?.pagination?.hasNext ?? false;
+  const error = queryError ? (queryError as Error).message : null;
 
-    await searchProperties(searchParams);
-  }, [searchTerm, localFilters, searchProperties]);
-
-  // Initial load
-  useEffect(() => {
-    handleSearch(1);
-  }, []);
+  const { duplicateProperties } = usePropertyListingStore();
 
   // Handle search input change
   const handleSearchChange = (query: string) => {
@@ -62,21 +71,20 @@ export function PropertyGrid({
   };
 
   // Handle filter change
-  const handleFilterChange = (newFilters: PropertySearchFilters) => {
+  const handleFilterChange = (newFilters: typeof localFilters) => {
     setLocalFilters(newFilters);
     setCurrentPage(1);
   };
 
   // Handle search submit
   const handleSearchSubmit = () => {
-    handleSearch(1);
+    setCurrentPage(1);
   };
 
   // Load more properties
   const loadMoreProperties = () => {
     const nextPage = currentPage + 1;
     setCurrentPage(nextPage);
-    handleSearch(nextPage);
   };
 
   // Toggle view mode
@@ -86,19 +94,15 @@ export function PropertyGrid({
 
   // Check if property is a duplicate
   const isDuplicate = (propertyId: string) => {
-    return duplicateProperties.some(dup => 
-      dup.originalPropertyId === propertyId || 
-      dup.duplicatePropertyId === propertyId
-    );
+    return duplicateProperties.some(dup => dup.id === propertyId);
   };
 
   // Render loading skeleton
   const renderLoadingSkeleton = () => (
-    <div className={`grid gap-6 ${
-      viewMode === 'grid' 
-        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-        : 'grid-cols-1'
-    }`}>
+    <div className={`grid gap-6 ${viewMode === 'grid'
+      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+      : 'grid-cols-1'
+      }`}>
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="space-y-4">
           <Skeleton className="h-48 w-full rounded-lg" />
@@ -127,8 +131,15 @@ export function PropertyGrid({
           variant="outline"
           onClick={() => {
             setSearchTerm('');
-            setLocalFilters({});
-            handleSearch(1);
+            setLocalFilters({
+              priceRange: { min: undefined, max: undefined },
+              propertyType: '',
+              bedrooms: '',
+              bathrooms: '',
+              features: [],
+              availableFrom: '',
+            });
+            setCurrentPage(1);
           }}
           className="mt-4"
         >
@@ -145,13 +156,13 @@ export function PropertyGrid({
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <PropertySearch
-              onSearch={handleSearchChange}
-              onSubmit={handleSearchSubmit}
-              placeholder="Search properties by location, type, or features..."
-              initialValue={searchTerm}
+              onFiltersChange={(filters) => {
+                handleSearchChange(filters.query ?? '');
+                handleFilterChange(filters);
+              }}
             />
           </div>
-          
+
           {/* View Mode Toggle */}
           <div className="flex items-center border rounded-lg p-1">
             <Button
@@ -176,8 +187,7 @@ export function PropertyGrid({
         {showFilters && (
           <PropertyFilters
             filters={localFilters}
-            onFilterChange={handleFilterChange}
-            onApplyFilters={handleSearchSubmit}
+            onFiltersChange={handleFilterChange}
           />
         )}
       </div>
@@ -212,12 +222,11 @@ export function PropertyGrid({
       ) : properties.length === 0 ? (
         renderEmptyState()
       ) : (
-        <div className={`grid gap-6 ${
-          viewMode === 'grid' 
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-            : 'grid-cols-1'
-        }`}>
-          {properties.map((property) => (
+        <div className={`grid gap-6 ${viewMode === 'grid'
+          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+          : 'grid-cols-1'
+          }`}>
+          {(properties as Property[]).map((property: Property) => (
             <PropertyCard
               key={property.id}
               property={property}

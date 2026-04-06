@@ -39,7 +39,7 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string;
   onRowClick?: (row: TData) => void;
 }
-
+// TODO: there's another datatable in ui folder
 export function DataTable<TData, TValue>({
   columns,
   data,

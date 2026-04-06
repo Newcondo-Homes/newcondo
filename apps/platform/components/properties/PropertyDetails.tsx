@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  MapPin, 
-  Bed, 
-  Bath, 
-  Square, 
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Square,
   Calendar,
   User,
   Phone,
@@ -18,16 +18,18 @@ import {
   Zap,
   LayoutGrid
 } from 'lucide-react';
+import Image from 'next/image';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Separator } from '@newcondo/ui/components/separator';
 import { cn } from '@newcondo/ui/lib/utils';
-import {PropertyGallery} from './PropertyGallery';
+import { PropertyGallery } from './PropertyGallery';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyBoundaryMap from './PropertyBoundaryMap';
 import PropertyShare from './PropertyShare';
-import { Property } from '@/types/api';
+// import { Property } from '@/types/api';
+import type { PropertyWithDetails as Property } from '@/types/property';
 import { usePropertyStore } from '@/store/propertyStore';
 
 interface PropertyDetailsProps {
@@ -38,14 +40,14 @@ interface PropertyDetailsProps {
 export default function PropertyDetails({ property, className }: PropertyDetailsProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'amenities' | 'location'>('overview');
-  
-  const { 
-    toggleFavorite, 
-    favorites, 
-    selectedForComparison, 
-    toggleComparison 
+
+  const {
+    toggleFavorite,
+    favorites,
+    selectedForComparison,
+    toggleComparison
   } = usePropertyStore();
-  
+
   const isFavorited = favorites.includes(property.id);
   const isInComparison = selectedForComparison.includes(property.id);
 
@@ -81,8 +83,16 @@ export default function PropertyDetails({ property, className }: PropertyDetails
       'wifi': '📶',
       'laundry': '👕'
     };
-    
+
     return iconMap[feature.toLowerCase()] || '✨';
+  };
+
+  const getAvailabilityStatus = (): 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' | 'RENTED' | 'UNAVAILABLE' | 'PAYMENT_LOCKED' => {
+    if (property.isPaymentLocked) return 'PAYMENT_LOCKED';
+    if (property.status === 'RENTED') return 'RENTED';
+    if (property.status === 'UNAVAILABLE') return 'UNAVAILABLE';
+    if (!property.isAvailable) return 'UNAVAILABLE';
+    return 'AVAILABLE';
   };
 
   const tabs = [
@@ -94,7 +104,21 @@ export default function PropertyDetails({ property, className }: PropertyDetails
   return (
     <div className={cn("space-y-6", className)}>
       {/* Property Image Gallery */}
-      <PropertyGallery images={property.images} />
+      {/* <PropertyGallery images={property.images} /> */}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {property.images?.map((image, index) => (
+          <div key={image.id} className="relative aspect-video">
+            <Image
+              src={image.url}
+              alt={image.altText || property.title}
+              fill
+              className="object-cover rounded-lg"
+              priority={index === 0}
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
@@ -142,9 +166,8 @@ export default function PropertyDetails({ property, className }: PropertyDetails
           {/* Availability Status */}
           <div className="mb-4">
             <PropertyAvailabilityBadge
-              isAvailable={property.isAvailable}
-              status={property.status}
-              availableFrom={property.availableFrom}
+              status={getAvailabilityStatus()}
+              availableFrom={property.availableFrom?.toString()}
               size="lg"
             />
           </div>
@@ -196,7 +219,7 @@ export default function PropertyDetails({ property, className }: PropertyDetails
           </div>
         </div>
       </div>
-      
+
       <Separator />
 
       {/* Tabs for Property Information */}
@@ -223,12 +246,10 @@ export default function PropertyDetails({ property, className }: PropertyDetails
           {activeTab === 'overview' && (
             <div className="prose max-w-none text-gray-700">
               <p>{property.description}</p>
-              {property.dateListed && (
-                <div className="mt-4 flex items-center text-sm text-gray-500">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <span>Listed on {formatDate(property.dateListed)}</span>
-                </div>
-              )}
+              <div className="mt-4 flex items-center text-sm text-gray-500">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>Listed on {formatDate(property.createdAt)}</span>
+              </div>
             </div>
           )}
 
@@ -252,7 +273,13 @@ export default function PropertyDetails({ property, className }: PropertyDetails
               <div className="text-lg font-semibold text-gray-900">
                 Property Location & Boundary
               </div>
-              <PropertyBoundaryMap property={property} />
+              <PropertyBoundaryMap
+                propertyId={property.id}
+                gpsCoordinates={property.gpsCoordinates}
+                boundaryCoordinates={property.boundaryCoordinates}
+                boundaryVerified={property.boundaryVerified}
+                boundaryImages={property.boundaryImages}
+              />
               <div className="flex items-center text-gray-600">
                 <MapPin className="h-4 w-4 mr-2" />
                 <span>{property.address}, {property.city}, {property.state}</span>
@@ -303,14 +330,14 @@ export default function PropertyDetails({ property, className }: PropertyDetails
           </div>
         </CardContent>
       </Card>
-      
+
       {/* Share Modal */}
-      {showShareModal && (
-        <PropertyShare 
-          property={property} 
-          onClose={() => setShowShareModal(false)} 
-        />
-      )}
+      <PropertyShare
+        propertyId={property.id}
+        propertyTitle={property.title}
+        propertyPrice={property.price ? `₦${Number(property.price).toLocaleString()}/month` : 'Contact for price'}
+        propertyImage={property.images?.find(img => img.isPrimary)?.url ?? property.images?.[0]?.url}
+      />
     </div>
   )
 }

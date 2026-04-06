@@ -1,9 +1,11 @@
 import { apiClient } from './client';
-import type { 
-  ConfirmationResponse, 
+import type {
+  ConfirmationResponse,
   ConfirmationStatusResponse,
-  DisputeInitiationResponse 
-} from '@/types/api';
+  DisputeInitiationResponse,
+  DisputePaymentRequest,
+  ConfirmPaymentRequest
+} from '@/types/confirmation';
 
 export const confirmationsApi = {
   /**
@@ -11,22 +13,28 @@ export const confirmationsApi = {
    */
   getConfirmationStatus: async (rentalId: string): Promise<ConfirmationStatusResponse> => {
     const response = await apiClient.get(`/api/confirmations/${rentalId}/status`);
-    return response.data;
+    return response.data as ConfirmationStatusResponse;
   },
 
   /**
    * Confirm property and release payment
    */
-  confirmProperty: async (rentalId: string): Promise<ConfirmationResponse> => {
-    const response = await apiClient.post(`/api/confirmations/${rentalId}/confirm`);
-    return response.data;
+  confirmProperty: async (
+    rentalId: string,
+    data: ConfirmPaymentRequest        // ← add request body
+  ): Promise<ConfirmationResponse> => {
+    const response = await apiClient.post(
+      `/api/confirmations/${rentalId}/confirm`,
+      data                              // ← pass it along
+    );
+    return response.data as ConfirmationResponse;
   },
 
   /**
    * Get remaining time in confirmation period
    */
-  getConfirmationTimer: async (rentalId: string): Promise<{ 
-    remainingTime: number; 
+  getConfirmationTimer: async (rentalId: string): Promise<{
+    remainingTime: number;
     deadline: string;
     isExpired: boolean;
   }> => {
@@ -49,6 +57,17 @@ export const confirmationsApi = {
   }> => {
     const response = await apiClient.get('/api/confirmations/history', { params });
     return response.data;
+  },
+
+  disputeProperty: async (
+    rentalId: string,
+    data: DisputePaymentRequest
+  ): Promise<DisputeInitiationResponse> => {
+    const response = await apiClient.post(
+      `/api/confirmations/${rentalId}/dispute`,
+      data
+    );
+    return response.data as DisputeInitiationResponse;
   },
 
   /**

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, LayoutGrid, List } from 'lucide-react';
-import { PropertyStatsCards } from './PropertyStatsCards';
+import PropertyStatsCards  from './PropertyStatsCards';
 import { PropertyListTable } from './PropertyListTable';
 import { FilterBar, FilterConfig } from '@/components/shared/FilterBar';
 import { EmptyState } from '@/components/shared/EmptyState';

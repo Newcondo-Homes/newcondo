@@ -7,6 +7,99 @@ import type { AnalyticsTimePeriod } from '@/lib/constants/propertyManagement';
  * Type definitions for agent referral tracking and sub-agent management
  */
 
+
+// Add these to apps/platform/types/referral.ts
+
+export interface ReferralPerformanceItem {
+  referralId: string;
+  property: {
+    id: string;
+    title: string;
+    address: string;
+    price: string | null;
+    image: string | null;
+  };
+  metrics: {
+    clicks: number;
+    uniqueClicks: number;
+    conversions: number;
+    conversionRate: string;
+    totalEarnings: string;
+  };
+  referralCode: string;
+  referralLink: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface ReferralPerformanceResponse {
+  properties: ReferralPerformanceItem[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+  };
+}
+
+export interface ReferralDashboard {
+  summary: {
+    totalReferrals: number;
+    activeReferrals: number;
+    totalClicks: number;
+    uniqueClicks: number;
+    totalConversions: number;
+    totalEarnings: string;
+    conversionRate: string;
+  };
+  recentActivity: {
+    clicks: RecentClick[];
+    conversions: RecentConversion[];
+  };
+}
+
+export interface RecentClick {
+  id: string;
+  propertyId: string;
+  propertyTitle: string;
+  propertyImage: string | null;
+  ipAddress: string | null;
+  country: string | null;
+  city: string | null;
+  createdAt: string;
+}
+
+export interface RecentConversion {
+  id: string;
+  propertyId: string;
+  propertyTitle: string;
+  propertyImage: string | null;
+  amount: string;
+  commission: string;
+  isPaid: boolean;
+  createdAt: string;
+}
+
+export interface ReferralAnalytics {
+  summary: {
+    totalClicks: number;
+    uniqueClicks: number;
+    totalConversions: number;
+    totalEarnings: string;
+    conversionRate: string;
+  };
+  clicksOverTime: Array<{
+    date: string;
+    count: number;
+  }>;
+  conversionsOverTime: Array<{
+    date: string;
+    count: number;
+    amount: string;
+    commission: string;
+  }>;
+}
+
 // Agent referral tracking record
 export interface AgentReferral {
   id: string;
@@ -225,14 +318,14 @@ export interface SubAgentPerformance {
 }
 
 // Referral dashboard data
-export interface ReferralDashboard {
-  statistics: ReferralStatistics;
-  recentActivity: ReferralActivityLog[];
-  activeReferrals: AgentReferral[];
-  topPerformingLinks: ReferralLinkDetails[];
-  pendingRequests: PropertyPromotionRequest[];
-  subAgentPerformance: SubAgentPerformance[];
-}
+// export interface ReferralDashboard {
+//   statistics: ReferralStatistics;
+//   recentActivity: ReferralActivityLog[];
+//   activeReferrals: AgentReferral[];
+//   topPerformingLinks: ReferralLinkDetails[];
+//   pendingRequests: PropertyPromotionRequest[];
+//   subAgentPerformance: SubAgentPerformance[];
+// }
 
 // Referral filters
 export interface ReferralFilters {
@@ -457,12 +550,14 @@ export interface Referral {
     name: string | null;
     email: string;
     role: string;
+    image?: string | null;
   };
   referred?: {
     id: string;
     name: string | null;
     email: string;
     role: string;
+    image?: string | null;
   };
   rewards?: ReferralReward[];
 }

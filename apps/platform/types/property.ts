@@ -201,6 +201,17 @@ export interface PropertyShare {
   sharedAt: Date;
 }
 
+export interface SearchFilters {
+  query?: string;
+  city?: string;
+  state?: string;
+  propertyType?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+}
+
 // Property favorites interface
 export interface PropertyFavorite {
   id: string;

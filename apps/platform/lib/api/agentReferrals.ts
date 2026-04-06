@@ -1,6 +1,13 @@
 // apps/platform/lib/api/agentReferrals.ts
 import { apiClient } from './client';
 
+import type {
+  ReferralPerformanceResponse,
+  ReferralDashboard,
+  ReferralAnalytics,
+} from '@/types/referral';
+
+
 export interface ReferralFilters {
   propertyId?: string;
   status?: 'ACTIVE' | 'CONVERTED' | 'EXPIRED';
@@ -11,7 +18,7 @@ export interface ReferralFilters {
 }
 
 // Get agent referrals
-export const getAgentReferrals = async (filters?: ReferralFilters) => {
+export const getAgentReferrals = async (filters?: ReferralFilters): Promise<ReferralPerformanceResponse> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -27,20 +34,20 @@ export const getAgentReferrals = async (filters?: ReferralFilters) => {
   }
   
   const response = await apiClient.get(`/referrals/agent?${params.toString()}`);
-  return response.data;
+  return response.data as ReferralPerformanceResponse;
 };
 
 // Get agent referral stats
-export const getAgentReferralStats = async () => {
+export const getAgentReferralStats = async (): Promise<ReferralDashboard> => {
   const response = await apiClient.get('/referrals/agent/stats');
-  return response.data;
+  return response.data as ReferralDashboard;
 };
 
 // Get referral activity
 export const getReferralActivity = async (filters?: {
   limit?: number;
   type?: 'VIEW' | 'CLICK' | 'CONVERSION' | 'ALL';
-}) => {
+}): Promise<ReferralAnalytics> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -52,7 +59,7 @@ export const getReferralActivity = async (filters?: {
   }
   
   const response = await apiClient.get(`/referrals/activity?${params.toString()}`);
-  return response.data;
+  return response.data as ReferralAnalytics;
 };
 
 // Get referral by property

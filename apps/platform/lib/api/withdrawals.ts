@@ -1,9 +1,9 @@
 import { apiClient } from './client';
-import type { 
-  WithdrawalRequest, 
-  WithdrawalResponse, 
+import type {
+  WithdrawalRequest,
+  WithdrawalResponse,
   WithdrawalStatusResponse,
-  BankAccountResponse 
+  BankAccountResponse
 } from '@/types/api';
 
 export const withdrawalsApi = {
@@ -12,7 +12,7 @@ export const withdrawalsApi = {
    */
   createWithdrawal: async (data: WithdrawalRequest): Promise<WithdrawalResponse> => {
     const response = await apiClient.post('/api/withdrawals', data);
-    return response.data;
+    return response.data as WithdrawalResponse;
   },
 
   /**
@@ -20,7 +20,7 @@ export const withdrawalsApi = {
    */
   getWithdrawalStatus: async (withdrawalId: string): Promise<WithdrawalStatusResponse> => {
     const response = await apiClient.get(`/api/withdrawals/${withdrawalId}`);
-    return response.data;
+    return response.data as WithdrawalStatusResponse;
   },
 
   /**
@@ -37,7 +37,12 @@ export const withdrawalsApi = {
     limit: number;
   }> => {
     const response = await apiClient.get('/api/withdrawals/history', { params });
-    return response.data;
+    return response.data as {
+      withdrawals: WithdrawalStatusResponse[];
+      total: number;
+      page: number;
+      limit: number;
+    };
   },
 
   /**
@@ -45,7 +50,7 @@ export const withdrawalsApi = {
    */
   getBankAccounts: async (): Promise<BankAccountResponse[]> => {
     const response = await apiClient.get('/api/withdrawals/bank-accounts');
-    return response.data;
+    return response.data as BankAccountResponse[];
   },
 
   /**
@@ -57,7 +62,7 @@ export const withdrawalsApi = {
     accountName?: string;
   }): Promise<BankAccountResponse> => {
     const response = await apiClient.post('/api/withdrawals/bank-accounts', data);
-    return response.data;
+    return response.data as BankAccountResponse;
   },
 
   /**
@@ -72,7 +77,11 @@ export const withdrawalsApi = {
     bankName: string;
   }> => {
     const response = await apiClient.post('/api/withdrawals/verify-account', data);
-    return response.data;
+    return response.data as {
+      accountName: string;
+      accountNumber: string;
+      bankName: string;
+    };
   },
 
   /**
@@ -80,7 +89,7 @@ export const withdrawalsApi = {
    */
   deleteBankAccount: async (accountId: string): Promise<{ success: boolean }> => {
     const response = await apiClient.delete(`/api/withdrawals/bank-accounts/${accountId}`);
-    return response.data;
+    return response.data as { success: boolean };
   },
 
   /**
@@ -93,7 +102,7 @@ export const withdrawalsApi = {
     minimumAmount?: number;
   }): Promise<{ success: boolean }> => {
     const response = await apiClient.post('/api/withdrawals/automatic', data);
-    return response.data;
+    return response.data as { success: boolean };
   },
 
   /**
@@ -106,7 +115,12 @@ export const withdrawalsApi = {
     minimumAmount?: number;
   }> => {
     const response = await apiClient.get('/api/withdrawals/automatic');
-    return response.data;
+    return response.data as {
+      enabled: boolean;
+      bankAccountId?: string;
+      frequency?: string;
+      minimumAmount?: number;
+    };
   },
 
   /**
@@ -114,7 +128,7 @@ export const withdrawalsApi = {
    */
   cancelWithdrawal: async (withdrawalId: string): Promise<WithdrawalResponse> => {
     const response = await apiClient.post(`/api/withdrawals/${withdrawalId}/cancel`);
-    return response.data;
+    return response.data as WithdrawalResponse;
   },
 
   /**
@@ -126,6 +140,10 @@ export const withdrawalsApi = {
     totalBalance: number;
   }> => {
     const response = await apiClient.get('/api/withdrawals/available-amount');
-    return response.data;
+    return response.data as {
+      availableAmount: number;
+      lockedAmount: number;
+      totalBalance: number;
+    };
   }
 };

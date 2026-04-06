@@ -6,13 +6,17 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@newcondo/ui/';
 
 interface PropertyAvailabilityBadgeProps {
-  status: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' | 'RENTED' | 'UNAVAILABLE' | 'PAYMENT_LOCKED';
+  status: 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' | 'RENTED' | 'UNAVAILABLE' | 'PAYMENT_LOCKED' | 'PUBLISHED';
   availableFrom?: Date | string;
   paymentLockExpiry?: Date | string;
   className?: string;
   showIcon?: boolean;
   size?: 'sm' | 'md' | 'lg';
   variant?: 'default' | 'outline' | 'secondary';
+  isAvailable?: boolean;
+  structure?: 'SINGLE_UNIT' | 'MULTI_FAMILY';
+  availableUnits?: number;
+  totalUnits?: number;
 }
 
 interface AvailabilityConfig {
@@ -38,7 +42,7 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
     const now = new Date();
     const diffTime = dateObj.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays < 0) {
       return 'Available now';
     } else if (diffDays === 0) {
@@ -48,8 +52,8 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
     } else if (diffDays <= 7) {
       return `Available in ${diffDays} days`;
     } else {
-      return `Available ${dateObj.toLocaleDateString('en-US', { 
-        month: 'short', 
+      return `Available ${dateObj.toLocaleDateString('en-US', {
+        month: 'short',
         day: 'numeric',
         year: diffDays > 365 ? 'numeric' : undefined
       })}`;
@@ -76,19 +80,28 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
           bgColor: 'bg-green-500',
           textColor: 'text-green-700'
         };
-      
+
+      case 'PUBLISHED':
+        return {
+          label: 'Available',
+          icon: <CheckCircle className="w-3 h-3" />,
+          color: 'bg-green-100 text-green-800 border-green-200',
+          bgColor: 'bg-green-500',
+          textColor: 'text-green-700'
+        };
+
       case 'PAYMENT_LOCKED':
         const expiringSoon = isPaymentLockExpiringSoon();
         return {
           label: expiringSoon ? 'Payment pending (expires soon)' : 'Payment pending',
           icon: <Lock className="w-3 h-3" />,
-          color: expiringSoon 
+          color: expiringSoon
             ? 'bg-orange-100 text-orange-800 border-orange-200'
             : 'bg-yellow-100 text-yellow-800 border-yellow-200',
           bgColor: expiringSoon ? 'bg-orange-500' : 'bg-yellow-500',
           textColor: expiringSoon ? 'text-orange-700' : 'text-yellow-700'
         };
-      
+
       case 'RESERVED':
         return {
           label: 'Reserved',
@@ -97,7 +110,7 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
           bgColor: 'bg-blue-500',
           textColor: 'text-blue-700'
         };
-      
+
       case 'OCCUPIED':
       case 'RENTED':
         return {
@@ -107,7 +120,7 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
           bgColor: 'bg-red-500',
           textColor: 'text-red-700'
         };
-      
+
       case 'MAINTENANCE':
         return {
           label: 'Under maintenance',
@@ -116,7 +129,7 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
           bgColor: 'bg-orange-500',
           textColor: 'text-orange-700'
         };
-      
+
       case 'UNAVAILABLE':
       default:
         return {
@@ -161,7 +174,7 @@ const PropertyAvailabilityBadge: React.FC<PropertyAvailabilityBadgeProps> = ({
     >
       {showIcon && config.icon}
       <span className="whitespace-nowrap">{config.label}</span>
-      
+
       {/* Show countdown for payment lock expiry */}
       {status === 'PAYMENT_LOCKED' && paymentLockExpiry && (
         <PaymentLockCountdown expiryDate={paymentLockExpiry} />
@@ -183,7 +196,7 @@ const PaymentLockCountdown: React.FC<PaymentLockCountdownProps> = ({ expiryDate 
       const expiry = typeof expiryDate === 'string' ? new Date(expiryDate) : expiryDate;
       const now = new Date();
       const diffMs = expiry.getTime() - now.getTime();
-      
+
       if (diffMs <= 0) {
         setTimeLeft('Expired');
         return;
@@ -191,7 +204,7 @@ const PaymentLockCountdown: React.FC<PaymentLockCountdownProps> = ({ expiryDate 
 
       const minutes = Math.floor(diffMs / (1000 * 60));
       const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-      
+
       if (minutes > 0) {
         setTimeLeft(`${minutes}m ${seconds}s`);
       } else {
@@ -201,7 +214,7 @@ const PaymentLockCountdown: React.FC<PaymentLockCountdownProps> = ({ expiryDate 
 
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
-    
+
     return () => clearInterval(interval);
   }, [expiryDate]);
 

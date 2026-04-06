@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 interface AvailabilityStatus {
   propertyId: string;
@@ -30,7 +30,6 @@ export function useAvailability(
     onAvailabilityChange?: (event: AvailabilityChangeEvent) => void;
   }
 ) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const { enableRealtime = true, onAvailabilityChange } = options || {};
 
@@ -98,20 +97,15 @@ export function useAvailability(
 
     // Notify if property becomes unavailable
     if (availability.status === 'RENTED' || availability.status === 'UNAVAILABLE') {
-      toast({
-        title: 'Property No Longer Available',
+      toast.error('Property No Longer Available',{
         description: 'This property has been rented or marked unavailable.',
-        variant: 'destructive',
-        duration: 10000,
       });
     }
 
     // Notify if property is locked by someone else
     if (availability.isLocked && availability.status === 'LOCKED') {
-      toast({
-        title: 'Property Currently Locked',
+      toast.error('Property Currently Locked',{
         description: 'Someone else is processing payment for this property.',
-        variant: 'default',
       });
     }
   }, [availability?.status, availability?.isLocked, toast]);

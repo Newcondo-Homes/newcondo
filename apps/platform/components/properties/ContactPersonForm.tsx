@@ -48,7 +48,7 @@ const contactPersonSchema = z.object({
   preferredTimeSlot: z.enum(["MORNING", "AFTERNOON", "EVENING"], {
     required_error: "Please select a time slot",
   }),
-  urgencyLevel: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]).default("NORMAL"),
+  urgencyLevel: z.enum(["LOW", "NORMAL", "HIGH", "URGENT"]),
 });
 
 type ContactPersonFormData = z.infer<typeof contactPersonSchema>;

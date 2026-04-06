@@ -20,7 +20,7 @@ export function ReferralCard({ referral, onClick }: ReferralCardProps) {
   const typeInfo = referral.referralType ? getReferralTypeInfo(referral.referralType) : null;
 
   return (
-    <Card 
+    <Card
       className="hover:shadow-md transition-shadow cursor-pointer"
       onClick={onClick}
     >
@@ -28,7 +28,7 @@ export function ReferralCard({ referral, onClick }: ReferralCardProps) {
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={referral.referred?.image} />
+              <AvatarImage src={referral.referred?.image ?? undefined} />
               <AvatarFallback>
                 <User className="h-4 w-4" />
               </AvatarFallback>
@@ -48,8 +48,8 @@ export function ReferralCard({ referral, onClick }: ReferralCardProps) {
               </p>
             </div>
           </div>
-          
-          <Badge 
+
+          <Badge
             variant={statusInfo.color === 'green' ? 'default' : 'secondary'}
             className="gap-1"
           >
@@ -63,7 +63,7 @@ export function ReferralCard({ referral, onClick }: ReferralCardProps) {
             <Calendar className="h-4 w-4" />
             <span>{formatRewardDate(referral.createdAt)}</span>
           </div>
-          
+
           {referral.referrerReward && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Gift className="h-4 w-4" />

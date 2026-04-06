@@ -9,16 +9,28 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@newcondo/ui/lib/utils';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyShare from './PropertyShare';
-import { Property } from '@/types/api';
+import type { PropertyWithDetails as Property } from '@/types/property';
+import type { PropertyResponse } from '@/lib/api/properties';
 import { usePropertyStore } from '@/store/propertyStore';
 
+// interface PropertyCardProps {
+//   property: Property;
+//   showComparison?: boolean;
+//   isSelected?: boolean;
+//   onToggleComparison?: () => void;
+//   className?: string;
+//   priority?: boolean; // For above-the-fold images
+//   onClick?: () => void;
+// }
+
 interface PropertyCardProps {
-  property: Property;
+  property: PropertyResponse;
   showComparison?: boolean;
   isSelected?: boolean;
   onToggleComparison?: () => void;
   className?: string;
   priority?: boolean; // For above-the-fold images
+  onClick?: () => void;
 }
 
 const PropertyCard = memo(function PropertyCard({
@@ -27,12 +39,12 @@ const PropertyCard = memo(function PropertyCard({
   isSelected = false,
   onToggleComparison,
   className,
-  priority = false
+  priority = false,
+  onClick,
 }: PropertyCardProps) {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const { toggleFavorite, favorites } = usePropertyStore();
+  const { toggleFavorite, favorites = [] } = usePropertyStore();
   
   const isFavorited = favorites.includes(property.id);
   const primaryImage = property.images?.find(img => img.isPrimary) || property.images?.[0];
@@ -41,13 +53,7 @@ const PropertyCard = memo(function PropertyCard({
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleFavorite(property.id);
-  };
-
-  const handleShareClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setShowShareModal(true);
+    toggleFavorite?.(property.id);
   };
 
   const handleComparisonClick = (e: React.MouseEvent) => {
@@ -69,6 +75,14 @@ const PropertyCard = memo(function PropertyCard({
     return `${address}, ${city}, ${state}`;
   };
 
+  const getAvailabilityStatus = (): 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED' | 'RENTED' | 'UNAVAILABLE' | 'PAYMENT_LOCKED' => {
+  if (property.isPaymentLocked) return 'PAYMENT_LOCKED';
+  if (property.status === 'RENTED') return 'RENTED';
+  if (property.status === 'UNAVAILABLE') return 'UNAVAILABLE';
+  if (!property.isAvailable) return 'UNAVAILABLE';
+  return 'AVAILABLE';
+  };
+
   return (
     <>
       <div className={cn(
@@ -76,7 +90,7 @@ const PropertyCard = memo(function PropertyCard({
         isSelected && "ring-2 ring-primary ring-offset-2",
         className
       )}>
-        <Link href={`/properties/${property.id}`} className="block">
+        <Link href={`/properties/${property.id}`} className="block" onClick={onClick}>
           {/* Image Section */}
           <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
             {!isImageLoaded && !imageError && (
@@ -103,9 +117,9 @@ const PropertyCard = memo(function PropertyCard({
             {/* Availability Badge */}
             <div className="absolute top-2 left-2">
               <PropertyAvailabilityBadge
-                isAvailable={property.isAvailable}
-                status={property.status}
-                availableFrom={property.availableFrom}
+                // isAvailable={property.isAvailable}
+                status={getAvailabilityStatus()}
+                availableFrom={property.availableFrom ? new Date(property.availableFrom).toISOString() : undefined}
               />
             </div>
 
@@ -129,7 +143,7 @@ const PropertyCard = memo(function PropertyCard({
                 size="sm"
                 variant="secondary"
                 className="h-8 w-8 p-0 bg-white/90 hover:bg-white"
-                onClick={handleShareClick}
+                // onClick={handleShareClick}
               >
                 <Share2 className="h-4 w-4 text-gray-600" />
               </Button>
@@ -239,13 +253,14 @@ const PropertyCard = memo(function PropertyCard({
       </div>
 
       {/* Share Modal */}
-      {showShareModal && (
+      
         <PropertyShare
-          property={property}
-          isOpen={showShareModal}
-          onClose={() => setShowShareModal(false)}
+          propertyId={property.id}
+          propertyTitle={property.title}
+          propertyPrice={property.price ? `₦${Number(property.price).toLocaleString()}/month` : 'Contact for price'}
+          propertyImage={property.images?.find(img => img.isPrimary)?.url ?? property.images?.[0]?.url}
         />
-      )}
+    
     </>
   );
 });

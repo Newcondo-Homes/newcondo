@@ -5,6 +5,7 @@ import { useReferralStore } from '@/store/referralStore';
 import * as referralApi from '@/lib/api/referrals';
 import { ReferralListQuery } from '@/lib/validations/referral';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 export function useReferrals(query?: ReferralListQuery) {
   const queryClient = useQueryClient();
@@ -20,7 +21,11 @@ export function useReferrals(query?: ReferralListQuery) {
     queryKey: ['referrals', query],
     queryFn: () => referralApi.getReferrals(query),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    onSuccess: (data) => {
+  });
+
+
+  useEffect(() => {
+    if (data) {
       setReferrals(data.referrals);
       setPaginationData({
         page: data.page,
@@ -29,15 +34,18 @@ export function useReferrals(query?: ReferralListQuery) {
         totalItems: data.total,
       });
       setLoadingReferrals(false);
-    },
-    onError: (error: Error) => {
-      setError(error.message);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      setError((error as Error).message);
       setLoadingReferrals(false);
       toast.error('Failed to load referrals', {
-        description: error.message,
+        description: (error as Error).message,
       });
-    },
-  });
+    }
+  }, [error]);
 
   return {
     referrals: data?.referrals ?? [],
@@ -62,16 +70,23 @@ export function useReferralStats() {
   } = useQuery({
     queryKey: ['referral-stats'],
     queryFn: referralApi.getReferralStats,
-    staleTime: 5 * 60 * 1000,
-    onSuccess: (data) => {
-      setStats(data);
-      setLoadingStats(false);
-    },
-    onError: (error: Error) => {
-      setError(error.message);
-      setLoadingStats(false);
-    },
+    staleTime: 5 * 60 * 1000
   });
+
+  useEffect(() => {
+    if (stats) {
+      setStats(stats);
+      setLoadingStats(false);
+    }
+  }, [stats]);
+
+  useEffect(() => {
+    if (error) {
+      setError((error as Error).message);
+      setLoadingStats(false);
+    }
+  }, [error]);
+
 
   return {
     stats,
@@ -92,10 +107,13 @@ export function useReferralById(id: string) {
     queryKey: ['referral', id],
     queryFn: () => referralApi.getReferralById(id),
     enabled: !!id,
-    onSuccess: (data) => {
-      selectReferral(data);
-    },
   });
+
+  useEffect(() => {
+    if (referral) {
+      selectReferral(referral);
+    }
+  }, [referral]);
 
   return {
     referral,
@@ -113,8 +131,8 @@ export function useInviteViaEmail() {
       toast.success('Invitation sent!', {
         description: data.message,
       });
-      queryClient.invalidateQueries(['referrals']);
-      queryClient.invalidateQueries(['referral-stats']);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['referral-stats'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to send invitation', {
@@ -133,8 +151,8 @@ export function useInviteViaSMS() {
       toast.success('SMS invitation sent!', {
         description: data.message,
       });
-      queryClient.invalidateQueries(['referrals']);
-      queryClient.invalidateQueries(['referral-stats']);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['referral-stats'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to send SMS', {
@@ -153,8 +171,8 @@ export function useInviteViaWhatsApp() {
       // Open WhatsApp URL
       window.open(data.whatsappUrl, '_blank');
       toast.success('Opening WhatsApp...');
-      queryClient.invalidateQueries(['referrals']);
-      queryClient.invalidateQueries(['referral-stats']);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['referral-stats'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to prepare WhatsApp message', {
@@ -173,8 +191,8 @@ export function useBulkInvite() {
       toast.success('Invitations sent!', {
         description: `Successfully sent ${data.success} invitations. ${data.failed} failed.`,
       });
-      queryClient.invalidateQueries(['referrals']);
-      queryClient.invalidateQueries(['referral-stats']);
+      queryClient.invalidateQueries({ queryKey: ['referrals'] });
+      queryClient.invalidateQueries({ queryKey: ['referral-stats'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to send invitations', {
@@ -225,14 +243,20 @@ export function useReferralLeaderboard(params?: {
     queryKey: ['referral-leaderboard', params],
     queryFn: () => referralApi.getReferralLeaderboard(params),
     staleTime: 10 * 60 * 1000, // 10 minutes
-    onSuccess: (data) => {
+  });
+
+  useEffect(() => {
+    if (data) {
       setLeaderboard(data.leaderboard, data.userRank);
       setLoadingLeaderboard(false);
-    },
-    onError: () => {
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
       setLoadingLeaderboard(false);
-    },
-  });
+    }
+  }, [error]);
 
   return {
     leaderboard: data?.leaderboard ?? [],
@@ -269,7 +293,7 @@ export function useRegenerateReferralCode() {
     onSuccess: (data) => {
       setReferralLink(data);
       toast.success('Referral code regenerated!');
-      queryClient.invalidateQueries(['referral-link']);
+      queryClient.invalidateQueries({ queryKey: ['referral-link'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to regenerate code', {

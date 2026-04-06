@@ -11,18 +11,19 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Separator } from '@newcondo/ui/components/separator';
 import { Progress } from '@newcondo/ui/components/progress';
-import { 
-  FileText, 
-  Upload, 
-  Check, 
-  X, 
-  AlertTriangle, 
-  Camera, 
+import {
+  FileText,
+  Upload,
+  Check,
+  X,
+  AlertTriangle,
+  Camera,
   Shield,
   Clock,
   Info
 } from 'lucide-react';
-import { UploadButton } from '@/lib/uploadthing';
+import { UploadButton } from "@uploadthing/react";
+import type { OurFileRouter } from '@/lib/uploadthing';
 import { toast } from '@newcondo/ui/';
 import { DocumentType, DocumentStatus } from '@newcondo/db';
 
@@ -115,7 +116,7 @@ export default function PropertyOwnershipVerification({
 
   const handleNinSubmit = async () => {
     if (!ninNumber || ninNumber.length !== 11) {
-      toast.error('Invalid NIN',{
+      toast.error('Invalid NIN', {
         description: 'Please enter a valid 11-digit NIN',
       });
       return;
@@ -129,13 +130,13 @@ export default function PropertyOwnershipVerification({
         isRequired: true
       });
 
-      toast('NIN Submitted',{
+      toast('NIN Submitted', {
         description: 'Your NIN has been submitted for verification'
       });
 
       setVerificationStep(2);
     } catch (error) {
-      toast.error('Submission Failed',{
+      toast.error('Submission Failed', {
         description: 'Failed to submit NIN. Please try again.',
       });
     }
@@ -144,7 +145,7 @@ export default function PropertyOwnershipVerification({
   const handleFileUpload = async (docType: DocumentType, url: string, fileName: string) => {
     try {
       setUploadingDocument(docType);
-      
+
       await onDocumentUpload({
         documentType: docType,
         fileName,
@@ -153,13 +154,13 @@ export default function PropertyOwnershipVerification({
         isRequired: true
       });
 
-      toast.success('Document Uploaded',{
+      toast.success('Document Uploaded', {
         description: `${REQUIRED_DOCUMENTS.find(d => d.type === docType)?.name} uploaded successfully`
       });
 
       setUploadingDocument(null);
     } catch (error) {
-      toast.error('Upload Failed',{
+      toast.error('Upload Failed', {
         description: 'Failed to upload document. Please try again.',
       });
       setUploadingDocument(null);
@@ -168,7 +169,7 @@ export default function PropertyOwnershipVerification({
 
   const renderDocumentStatus = (docType: DocumentType) => {
     const userDoc = getDocumentStatus(docType);
-    
+
     if (!userDoc) {
       return <Badge variant="secondary">Not Submitted</Badge>;
     }
@@ -228,7 +229,7 @@ export default function PropertyOwnershipVerification({
                   maxLength={11}
                   className="flex-1"
                 />
-                <Button 
+                <Button
                   onClick={handleNinSubmit}
                   disabled={ninNumber.length !== 11 || isLoading}
                   size="sm"
@@ -237,15 +238,15 @@ export default function PropertyOwnershipVerification({
                 </Button>
               </div>
             ) : (
-              <UploadButton
-                endpoint="documentUpload"
+              <UploadButton<OurFileRouter, 'propertyDocuments'>
+                endpoint="propertyDocuments"
                 onClientUploadComplete={(res) => {
                   if (res?.[0]) {
                     handleFileUpload(doc.type, res[0].url, res[0].name);
                   }
                 }}
                 onUploadError={(error) => {
-                  toast.error('Upload Error',{
+                  toast.error('Upload Error', {
                     description: error.message,
                   });
                 }}
@@ -266,9 +267,9 @@ export default function PropertyOwnershipVerification({
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <FileText className="w-4 h-4" />
             <span>{userDoc.fileName}</span>
-            <a 
-              href={userDoc.fileUrl} 
-              target="_blank" 
+            <a
+              href={userDoc.fileUrl}
+              target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-800"
             >
@@ -326,7 +327,7 @@ export default function PropertyOwnershipVerification({
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Note:</strong> All documents will be reviewed by our verification team within 24-48 hours. 
+          <strong>Note:</strong> All documents will be reviewed by our verification team within 24-48 hours.
           You'll receive an email notification once the verification is complete.
         </AlertDescription>
       </Alert>

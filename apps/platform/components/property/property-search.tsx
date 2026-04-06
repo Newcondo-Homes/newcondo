@@ -11,7 +11,6 @@ import { Badge } from "@newcondo/ui/components/badge";
 import { Separator } from "@newcondo/ui/components/separator";
 import { PropertyFilters } from "./property-filters";
 import { useDebounce } from "@/hooks/use-debounce";
-import { useProperties } from "@/hooks/use-properties";
 
 interface PropertySearchProps {
   onFiltersChange?: (filters: any) => void;
@@ -25,11 +24,10 @@ export function PropertySearch({ onFiltersChange, showMapView = false }: Propert
   const [location, setLocation] = useState(searchParams.get("location") || "");
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "newest");
-  
+
   const debouncedSearch = useDebounce(searchQuery, 300);
   const debouncedLocation = useDebounce(location, 300);
-  
-  const { searchProperties, isLoading } = useProperties();
+
 
   const [filters, setFilters] = useState({
     priceRange: {
@@ -65,7 +63,7 @@ export function PropertySearch({ onFiltersChange, showMapView = false }: Propert
     if (filters.availableFrom) params.set("availableFrom", filters.availableFrom);
 
     router.push(`?${params.toString()}`, { scroll: false });
-    
+
     // Trigger search
     onFiltersChange?.(searchFilters);
   }, [debouncedSearch, debouncedLocation, sortBy, filters, onFiltersChange, router]);
@@ -180,37 +178,37 @@ export function PropertySearch({ onFiltersChange, showMapView = false }: Propert
       {activeFiltersCount > 0 && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-muted-foreground">Active filters:</span>
-          
+
           {filters.priceRange.min && (
             <Badge variant="secondary">
               Min: ₦{filters.priceRange.min.toLocaleString()}
             </Badge>
           )}
-          
+
           {filters.priceRange.max && (
             <Badge variant="secondary">
               Max: ₦{filters.priceRange.max.toLocaleString()}
             </Badge>
           )}
-          
+
           {filters.propertyType && (
             <Badge variant="secondary">
               Type: {filters.propertyType}
             </Badge>
           )}
-          
+
           {filters.bedrooms && (
             <Badge variant="secondary">
               {filters.bedrooms} Bedrooms
             </Badge>
           )}
-          
+
           {filters.bathrooms && (
             <Badge variant="secondary">
               {filters.bathrooms} Bathrooms
             </Badge>
           )}
-          
+
           {filters.features.map((feature) => (
             <Badge key={feature} variant="secondary">
               {feature}

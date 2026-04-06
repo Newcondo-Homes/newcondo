@@ -34,7 +34,7 @@ interface PropertyMarkingStatusProps {
     queuePosition?: number;
     markingFee: number;
   };
-  propertyId: string;
+  propertyId: string | undefined;
   onConfirmMarking?: () => void;
   onRejectMarking?: () => void;
   onCancelJob?: () => void;

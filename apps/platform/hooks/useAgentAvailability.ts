@@ -128,7 +128,7 @@ export const useAgentAvailability = (
   }, [isAtCapacity, availability?.isAvailable]);
 
   return {
-    availability,
+    availability: availability ?? null,
     isLoading,
     error: error as Error | null,
     

@@ -1,6 +1,6 @@
 // apps/platform/hooks/useDataExport.ts
 import { useState } from 'react';
-import { useToast } from '@/hooks/useToast';
+import { toast } from '@newcondo/ui';
 
 export type ExportFormat = 'csv' | 'pdf' | 'json' | 'xlsx';
 
@@ -14,7 +14,6 @@ export interface ExportOptions {
 
 export const useDataExport = () => {
   const [isExporting, setIsExporting] = useState(false);
-  const { toast } = useToast();
 
   const exportToCSV = (data: any[], filename: string, headers?: string[]) => {
     try {
@@ -80,8 +79,7 @@ export const useDataExport = () => {
     try {
       // This is a placeholder - would need to integrate with a PDF library
       // like jsPDF or pdfmake for actual PDF generation
-      toast({
-        title: 'Coming Soon',
+      toast('Coming Soon',{
         description: 'PDF export will be available in the next update',
       });
       return false;
@@ -113,8 +111,7 @@ export const useDataExport = () => {
       }
 
       if (success) {
-        toast({
-          title: 'Success',
+        toast.success('Success',{
           description: `Data exported successfully as ${options.format.toUpperCase()}`,
         });
       } else {
@@ -123,10 +120,8 @@ export const useDataExport = () => {
 
       return success;
     } catch (error: any) {
-      toast({
-        title: 'Export Failed',
+      toast.error('Export Failed',{
         description: error.message || 'Failed to export data',
-        variant: 'destructive',
       });
       return false;
     } finally {

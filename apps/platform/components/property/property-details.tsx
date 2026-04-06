@@ -262,7 +262,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
             <CardContent className="space-y-4">
               {/* Price */}
               <div className="text-3xl font-bold text-green-600">
-                {formatCurrency(currentPrice || 0, property.currency)}
+                {formatCurrency(Number(currentPrice) || 0, property.currency)}
                 <span className="text-sm font-normal text-gray-500">/month</span>
               </div>
 
@@ -389,7 +389,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                       {property.agent.agentReliabilityScore && (
                         <div className="flex items-center space-x-1">
                           <Star className="w-3 h-3 text-yellow-500" />
-                          <span className="text-sm">{property.agent.agentReliabilityScore}/5</span>
+                          <span className="text-sm">{Number(property.agent.agentReliabilityScore).toFixed(1)}/5</span>
                         </div>
                       )}
                     </div>
@@ -616,7 +616,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                             </div>
                             <div className="text-right">
                               <p className="text-lg font-bold text-green-600">
-                                {formatCurrency(unit.price, unit.currency)}
+                                {formatCurrency(Number(currentPrice) || 0, property.currency)}
                               </p>
                               <p className="text-sm text-gray-500">/month</p>
                             </div>

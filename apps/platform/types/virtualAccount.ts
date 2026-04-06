@@ -25,6 +25,18 @@ export interface VirtualAccount {
   };
 }
 
+export interface ReconciliationReport {
+  generatedAt: string;
+  systemBalance: number;
+  manualBalance: number;
+  discrepancy: number;
+  totalCredits: number;
+  totalDebits: number;
+  creditAmount: number;
+  debitAmount: number;
+  recommendations?: string[];
+}
+
 export interface VirtualAccountBalance {
   accountId: string;
   balance: number;

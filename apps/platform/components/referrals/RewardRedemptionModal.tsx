@@ -250,16 +250,16 @@ export function RewardRedemptionModal() {
                   variant="outline"
                   onClick={toggleRedemptionModal}
                   className="flex-1"
-                  disabled={redeemMutation.isLoading}
+                  disabled={redeemMutation.isPending}
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   className="flex-1"
-                  disabled={redeemMutation.isLoading}
+                  disabled={redeemMutation.isPending}
                 >
-                  {redeemMutation.isLoading ? (
+                  {redeemMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Processing...

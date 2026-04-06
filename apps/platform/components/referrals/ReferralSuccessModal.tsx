@@ -43,7 +43,20 @@ export function ReferralSuccessModal({
     }
   };
 
-  const getModalContent = () => {
+
+  type ModalAction = {
+    label: string;
+    variant?: 'default' | 'outline';
+    icon?: React.ReactNode;
+    onClick: () => void;
+  };
+
+  const getModalContent = (): {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    actions: ModalAction[];
+  } => {
     switch (type) {
       case "link_copied":
         return {

@@ -19,6 +19,7 @@ import PropertyStatsCards from "./PropertyStatsCards";
 import { useProperties } from "@/hooks/useProperties";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
+import { Property } from "@/types/api";
 
 type ViewMode = "grid" | "list";
 type FilterStatus = "all" | "published" | "draft" | "rented" | "pending";
@@ -32,11 +33,19 @@ export default function MyPropertiesContent() {
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  const { properties, isLoading, error, refetch, stats } = useProperties({
+  // The exact shape depends on what propertyApi.getProperties() returns. 
+  // If your API returns { properties: [...], stats: {...} } then data?.properties and data?.stats work. 
+  // If it returns the array directly, then just data ?? [].
+
+
+  const { data, isLoading, error, refetch } = useProperties({
     search: debouncedSearch,
     status: filterStatus === "all" ? undefined : filterStatus,
     sortBy,
   });
+
+  const properties = data?.properties ?? data ?? [];
+  const stats = data?.stats ?? null;
 
   useEffect(() => {
     if (error) {
@@ -159,13 +168,13 @@ export default function MyPropertiesContent() {
               : "space-y-4"
           }
         >
-          {properties.map((property) => (
+          {properties.map((property: Property) => (
             <PropertyCard
               key={property.id}
               property={property}
-              viewMode={viewMode}
+              // viewMode={viewMode}
               onClick={() => handlePropertyClick(property.id)}
-              onRefetch={refetch}
+              // onRefetch={refetch}
             />
           ))}
         </div>

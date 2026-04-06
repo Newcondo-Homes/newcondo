@@ -10,6 +10,7 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { formatCurrency } from '@/lib/utils/format';
 import { paymentsApi } from '@/lib/api/payments';
 
+
 interface RefundStatusProps {
   rentalId: string;
   paymentId: string;
@@ -33,7 +34,8 @@ export function RefundStatus({ rentalId, paymentId }: RefundStatusProps) {
   const { data: refund, isLoading, error } = useQuery({
     queryKey: ['refund-status', paymentId],
     queryFn: () => paymentsApi.getRefundStatus(paymentId),
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query.state.data;
       // Poll every 10 seconds if pending or processing
       if (data?.status === 'PENDING' || data?.status === 'PROCESSING') {
         return 10000;

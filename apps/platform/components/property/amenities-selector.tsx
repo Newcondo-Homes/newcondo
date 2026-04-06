@@ -23,7 +23,7 @@ import {
   Phone,
   Tv,
   Refrigerator,
-  Washing,
+  WashingMachine,
   AirVent,
   Plus,
   X
@@ -60,7 +60,7 @@ const amenityCategories = {
     { id: 'air_conditioning', label: 'Air Conditioning', icon: AirVent },
     { id: 'heating', label: 'Heating System', icon: Sun },
     { id: 'refrigerator', label: 'Refrigerator', icon: Refrigerator },
-    { id: 'washing_machine', label: 'Washing Machine', icon: Washing },
+    { id: 'washing_machine', label: 'Washing Machine', icon: WashingMachine },
     { id: 'television', label: 'Television', icon: Tv },
   ],
   'Recreational': [

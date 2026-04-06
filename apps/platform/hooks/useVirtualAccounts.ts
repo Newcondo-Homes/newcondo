@@ -38,6 +38,23 @@ export function useVirtualAccount(accountId: string) {
   });
 }
 
+// Add to apps/platform/hooks/useVirtualAccounts.ts
+
+export function useReconcileAccount() {
+  return useMutation({
+    mutationFn: (data: { 
+      accountId: string; 
+      startDate: string; 
+      endDate: string; 
+      manualBalance: number;
+      statementBalance: number;
+    }) => virtualAccountsApi.reconcileAccount(data),
+    onError: (error: any) => {
+      toast.error(error?.message || 'Failed to reconcile account');
+    },
+  });
+}
+
 export function useUserVirtualAccounts(userId?: string) {
   return useQuery({
     queryKey: VIRTUAL_ACCOUNTS_KEYS.userAccounts(userId || ''),

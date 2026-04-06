@@ -92,6 +92,21 @@ export interface PaymentForm {
   metadata?: Record<string, any>;
 }
 
+
+// Refund details
+export interface RefundDetails {
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  amount: number;
+  currency: string;
+  requestedAt: string;
+  processedAt?: string;
+  failureReason?: string;
+  estimatedCompletionTime?: string;
+  refundMethod: string;
+  transactionId?: string;
+}
+
+
 // Flutterwave specific types
 export interface FlutterwaveConfig {
   public_key: string;

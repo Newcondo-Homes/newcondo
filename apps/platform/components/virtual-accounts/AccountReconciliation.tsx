@@ -9,9 +9,9 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Separator } from '@newcondo/ui/components/separator';
 import { AlertCircle, CheckCircle2, Clock, DollarSign, FileText, Search } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
-import { useVirtualAccounts } from '@/hooks/useVirtualAccounts';
-import { useVirtualAccountStatements } from '@/hooks/useVirtualAccountStatements';
-import { VirtualAccount, ReconciliationReport, TransactionRecord } from '@/types/virtualAccount';
+import { useReconcileAccount } from '@/hooks/useVirtualAccounts';
+import { useVirtualAccountStatements, StatementTransaction } from '@/hooks/useVirtualAccountStatements';
+import { VirtualAccount, ReconciliationReport } from '@/types/virtualAccount';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 
@@ -20,9 +20,9 @@ interface AccountReconciliationProps {
   onReconciliationComplete?: (report: ReconciliationReport) => void;
 }
 
-export function AccountReconciliation({ 
-  account, 
-  onReconciliationComplete 
+export function AccountReconciliation({
+  account,
+  onReconciliationComplete
 }: AccountReconciliationProps) {
   const [reconciliationPeriod, setReconciliationPeriod] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
@@ -32,31 +32,31 @@ export function AccountReconciliation({
   const [reconciliationReport, setReconciliationReport] = useState<ReconciliationReport | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
 
-  const { reconcileAccount } = useVirtualAccounts();
-  const { 
-    statements, 
-    loading: statementsLoading, 
-    fetchStatements,
-    reconciliationData 
+  const reconcileMutation = useReconcileAccount();
+  const {
+    statements,
+    isStatementsLoading: statementsLoading,
+    setDateRange,
   } = useVirtualAccountStatements(account.id);
 
   useEffect(() => {
     if (account.id) {
-      fetchStatements(reconciliationPeriod.startDate, reconciliationPeriod.endDate);
+      setDateRange(reconciliationPeriod.startDate, reconciliationPeriod.endDate);
     }
-  }, [account.id, reconciliationPeriod, fetchStatements]);
+  }, [account.id, reconciliationPeriod, setDateRange]);
 
   const handleReconciliation = async () => {
     if (!manualBalance) return;
 
     setIsReconciling(true);
     try {
-      const report = await reconcileAccount(account.id, {
+      const report = await reconcileMutation.mutateAsync({
+        accountId: account.id,
         startDate: reconciliationPeriod.startDate,
         endDate: reconciliationPeriod.endDate,
         manualBalance: parseFloat(manualBalance),
-        statementBalance: account.balance
-      });
+        statementBalance: account.balance,
+      })as ReconciliationReport;
 
       setReconciliationReport(report);
       onReconciliationComplete?.(report);
@@ -69,7 +69,7 @@ export function AccountReconciliation({
 
   const getReconciliationStatus = () => {
     if (!reconciliationReport) return null;
-    
+
     const { discrepancy } = reconciliationReport;
     if (Math.abs(discrepancy) < 0.01) {
       return { status: 'balanced', color: 'success', icon: CheckCircle2 };
@@ -163,7 +163,7 @@ export function AccountReconciliation({
             </div>
           </div>
 
-          <Button 
+          <Button
             onClick={handleReconciliation}
             disabled={!manualBalance || isReconciling}
             className="w-full"
@@ -189,11 +189,10 @@ export function AccountReconciliation({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {reconciliationStatus && (
-                <reconciliationStatus.icon className={`h-5 w-5 ${
-                  reconciliationStatus.color === 'success' ? 'text-green-600' :
-                  reconciliationStatus.color === 'warning' ? 'text-yellow-600' :
-                  'text-red-600'
-                }`} />
+                <reconciliationStatus.icon className={`h-5 w-5 ${reconciliationStatus.color === 'success' ? 'text-green-600' :
+                    reconciliationStatus.color === 'warning' ? 'text-yellow-600' :
+                      'text-red-600'
+                  }`} />
               )}
               Reconciliation Report
             </CardTitle>
@@ -218,9 +217,8 @@ export function AccountReconciliation({
               </div>
               <div className="text-center p-3 border rounded-lg">
                 <p className="text-sm text-muted-foreground">Discrepancy</p>
-                <p className={`text-lg font-semibold ${
-                  Math.abs(reconciliationReport.discrepancy) < 0.01 ? 'text-green-600' : 'text-red-600'
-                }`}>
+                <p className={`text-lg font-semibold ${Math.abs(reconciliationReport.discrepancy) < 0.01 ? 'text-green-600' : 'text-red-600'
+                  }`}>
                   {formatCurrency(reconciliationReport.discrepancy, account.currency)}
                 </p>
               </div>
@@ -231,11 +229,11 @@ export function AccountReconciliation({
               <Alert className={`border-${reconciliationStatus.color}`}>
                 <reconciliationStatus.icon className="h-4 w-4" />
                 <AlertDescription>
-                  {reconciliationStatus.status === 'balanced' && 
+                  {reconciliationStatus.status === 'balanced' &&
                     'Perfect match! Your records are in sync with the system.'}
-                  {reconciliationStatus.status === 'minor_discrepancy' && 
+                  {reconciliationStatus.status === 'minor_discrepancy' &&
                     'Minor discrepancy detected. This might be due to pending transactions or timing differences.'}
-                  {reconciliationStatus.status === 'major_discrepancy' && 
+                  {reconciliationStatus.status === 'major_discrepancy' &&
                     'Significant discrepancy found. Please review your records and contact support if needed.'}
                 </AlertDescription>
               </Alert>
@@ -309,28 +307,25 @@ export function AccountReconciliation({
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {statements.slice(0, 10).map((transaction, index) => (
+              {statements.slice(0, 10).map((transaction: StatementTransaction, index: number) => (
                 <div key={index} className="flex items-center justify-between py-2 px-3 border rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className={`p-1 rounded-full ${
-                      transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100'
-                    }`}>
-                      <DollarSign className={`h-3 w-3 ${
-                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                      }`} />
+                    <div className={`p-1 rounded-full ${transaction.type === 'CREDIT' ? 'bg-green-100' : 'bg-red-100'
+                      }`}>
+                      <DollarSign className={`h-3 w-3 ${transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                        }`} />
                     </div>
                     <div>
                       <p className="text-sm font-medium">{transaction.description}</p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString()}
+                        {new Date(transaction.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-sm font-medium ${
-                      transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {transaction.type === 'credit' ? '+' : '-'}
+                    <p className={`text-sm font-medium ${transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                      {transaction.type === 'CREDIT' ? '+' : '-'}
                       {formatCurrency(transaction.amount, account.currency)}
                     </p>
                   </div>

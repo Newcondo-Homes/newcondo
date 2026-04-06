@@ -210,6 +210,16 @@ export const markingApi = {
         return response.data
     },
 
+    async getAgentAvailability(): Promise<{ data: AgentAvailability }> {
+    const response = await apiClient.get('/marking-jobs/agent/availability');
+    return response as { data: AgentAvailability };
+    },
+
+    async updateAgentAvailability(params: UpdateAvailabilityParams): Promise<{ data: AgentAvailability }> {
+    const response = await apiClient.patch('/marking-jobs/agent/availability', params);
+    return response as { data: AgentAvailability };
+    },
+
     // Find available agents for a property
     async findAvailableAgents(
         propertyId: string,

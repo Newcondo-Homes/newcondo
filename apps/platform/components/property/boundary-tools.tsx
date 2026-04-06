@@ -4,12 +4,12 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
-import { 
-  Square, 
-  Move, 
-  RotateCcw, 
-  Check, 
-  X, 
+import {
+  Square,
+  Move,
+  RotateCcw,
+  Check,
+  X,
   AlertTriangle,
   MapPin,
   Layers,
@@ -34,13 +34,13 @@ interface BoundaryToolsProps {
 
 type DrawingMode = 'none' | 'rectangle' | 'polygon' | 'move';
 
-export default function BoundaryTools({ 
-  mapRef, 
-  onBoundaryComplete, 
+export default function BoundaryTools({
+  mapRef,
+  onBoundaryComplete,
   onBoundaryCancel,
   existingBoundaries = [],
   userLocation,
-  className 
+  className
 }: BoundaryToolsProps) {
   const [drawingMode, setDrawingMode] = useState<DrawingMode>('none');
   const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
@@ -87,17 +87,23 @@ export default function BoundaryTools({
     // Handle overlay completion
     const handleOverlayComplete = (event: google.maps.drawing.OverlayCompleteEvent) => {
       const overlay = event.overlay;
-      
+
       if (currentOverlayRef.current) {
         currentOverlayRef.current.setMap(null);
       }
-      
-      currentOverlayRef.current = overlay;
+
+      // currentOverlayRef.current = overlay;
+      if (
+        event.type === google.maps.drawing.OverlayType.POLYGON ||
+        event.type === google.maps.drawing.OverlayType.RECTANGLE
+      ) {
+        currentOverlayRef.current = overlay as google.maps.Polygon | google.maps.Rectangle;
+      }
       setIsDrawing(false);
-      
+
       // Extract boundary points
       let boundaryPoints: BoundaryPoint[] = [];
-      
+
       if (event.type === google.maps.drawing.OverlayType.POLYGON) {
         const polygon = overlay as google.maps.Polygon;
         const path = polygon.getPath();
@@ -119,9 +125,9 @@ export default function BoundaryTools({
           ];
         }
       }
-      
+
       setCurrentBoundary(boundaryPoints);
-      
+
       // Validate boundary
       validateBoundary(boundaryPoints);
     };
@@ -156,7 +162,7 @@ export default function BoundaryTools({
           clickable: false,
           zIndex: 0
         });
-        
+
         polygon.setMap(mapRef.current);
         existingOverlaysRef.current.push(polygon);
       }
@@ -202,7 +208,7 @@ export default function BoundaryTools({
     }
 
     // Check for overlaps with existing boundaries
-    const hasOverlap = existingBoundaries.some(existing => 
+    const hasOverlap = existingBoundaries.some(existing =>
       checkBoundaryOverlap(boundary, existing)
     );
 
@@ -256,7 +262,7 @@ export default function BoundaryTools({
     let inside = false;
     for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
       if (((polygon[i].lat > point.lat) !== (polygon[j].lat > point.lat)) &&
-          (point.lng < (polygon[j].lng - polygon[i].lng) * (point.lat - polygon[i].lat) / (polygon[j].lat - polygon[i].lat) + polygon[i].lng)) {
+        (point.lng < (polygon[j].lng - polygon[i].lng) * (point.lat - polygon[i].lat) / (polygon[j].lat - polygon[i].lat) + polygon[i].lng)) {
         inside = !inside;
       }
     }
@@ -290,7 +296,7 @@ export default function BoundaryTools({
     setDrawingMode('none');
     setIsDrawing(false);
     setError(null);
-    
+
     if (drawingManagerRef.current) {
       drawingManagerRef.current.setDrawingMode(null);
     }
@@ -442,7 +448,7 @@ export default function BoundaryTools({
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              {drawingMode === 'rectangle' 
+              {drawingMode === 'rectangle'
                 ? 'Click and drag to draw a rectangle around your property'
                 : 'Click to add points. Double-click to finish drawing.'
               }

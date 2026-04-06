@@ -10,6 +10,7 @@ import { Input } from '@newcondo/ui/components/input';
 import { Label } from '@newcondo/ui/components/label';
 import { toast } from '@newcondo/ui/';
 import { cn } from '@/lib/utils';
+import { useUploadThing } from '@/lib/uploadthing';
 
 interface PropertyImage {
   id: string;
@@ -33,12 +34,21 @@ export function ImageUploader({
   images,
   onImagesChange,
   maxImages = 10,
-  maxSizeInMB = 5,
+  maxSizeInMB = 8,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'],
   className
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+
+  const { startUpload } = useUploadThing('propertyImages', {
+    onUploadError: (error) => {
+      toast.error('Upload failed', {
+        description: error.message || 'Failed to upload images. Please try again.',
+      });
+      setUploading(false);
+    },
+  });
 
   const validateFile = (file: File): string | null => {
     if (!acceptedTypes.includes(file.type)) {
@@ -52,14 +62,7 @@ export function ImageUploader({
     return null;
   };
 
-  const uploadToUploadThing = async (file: File): Promise<string> => {
-    // Simulate upload - replace with actual UploadThing implementation
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(URL.createObjectURL(file));
-      }, 1000);
-    });
-  };
+
 
   const handleFileUpload = useCallback(async (files: FileList) => {
     if (images.length + files.length > maxImages) {
@@ -69,40 +72,37 @@ export function ImageUploader({
       return;
     }
 
+    const validFiles: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const error = validateFile(files[i]);
+      if (error) {
+        toast.error('Upload failed', { description: error });
+      } else {
+        validFiles.push(files[i]);
+      }
+    }
+
+    if (validFiles.length === 0) return;
+
     setUploading(true);
-    const newImages: PropertyImage[] = [];
 
     try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const validationError = validateFile(file);
+      const uploaded = await startUpload(validFiles);
+      if (!uploaded) return;
 
-        if (validationError) {
-          toast.error("Upload failed", {
-            description: validationError,
-          });
-          continue;
-        }
-
-        const url = await uploadToUploadThing(file);
-
-        newImages.push({
-          id: crypto.randomUUID(),
-          url,
-          altText: `Property image ${images.length + i + 1}`,
-          isPrimary: images.length === 0 && i === 0,
-          order: images.length + i,
-          file
-        });
-      }
+      const newImages: PropertyImage[] = uploaded.map((file, i) => ({
+        id: crypto.randomUUID(),
+        url: file.url,
+        altText: `Property image ${images.length + i + 1}`,
+        isPrimary: images.length === 0 && i === 0,
+        order: images.length + i,
+      }));
 
       onImagesChange([...images, ...newImages]);
 
-      if (newImages.length > 0) {
-        toast.success("Images uploaded", {
-          description: `Successfully uploaded ${newImages.length} image(s).`
-        });
-      }
+      toast.success('Images uploaded', {
+        description: `Successfully uploaded ${newImages.length} image(s).`,
+      });
     } catch (error) {
       toast.error("Upload failed", {
         description: "Failed to upload images. Please try again.",
@@ -110,7 +110,7 @@ export function ImageUploader({
     } finally {
       setUploading(false);
     }
-  }, [images, maxImages, onImagesChange, toast]);
+  }, [images, maxImages, onImagesChange, startUpload]);
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();

@@ -13,12 +13,21 @@ import {
 import { Calendar as CalendarComponent } from '@newcondo/ui/';
 import { cn } from '@newcondo/ui/';
 import { format } from 'date-fns';
+import { SearchFilters } from '@/types/property';
 
 interface SearchBoxProps {
   className?: string;
   variant?: 'default' | 'compact' | 'hero';
   showFilters?: boolean;
   onSearch?: (params: SearchParams) => void;
+}
+
+interface SearchBoxProps {
+  className?: string;
+  variant?: 'default' | 'compact' | 'hero';
+  showFilters?: boolean;
+  onFiltersChange?: (filters: SearchFilters) => void; // renamed from onSearch
+  initialFilters?: SearchFilters;                      // added
 }
 
 interface SearchParams {
@@ -34,7 +43,8 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   className,
   variant = 'default',
   showFilters = true,
-  onSearch,
+  onFiltersChange,
+  initialFilters,
 }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,7 +53,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Search state
-  const [location, setLocation] = useState(searchParams.get('location') || '');
+  const [location, setLocation] = useState(initialFilters?.query || searchParams.get('location') || '');
   const [checkIn, setCheckIn] = useState<Date | undefined>(
     searchParams.get('checkIn') ? new Date(searchParams.get('checkIn')!) : undefined
   );
@@ -68,8 +78,13 @@ const SearchBox: React.FC<SearchBoxProps> = ({
 
   // Handle search submission
   const handleSearch = () => {
-    const params = new URLSearchParams();
+    const newFilters: SearchFilters = {
+      query: location || undefined,
+      city: location || undefined,
+    };
     
+    const params = new URLSearchParams();
+
     if (location) params.set('location', location);
     if (checkIn) params.set('checkIn', checkIn.toISOString());
     if (checkOut) params.set('checkOut', checkOut.toISOString());
@@ -77,16 +92,11 @@ const SearchBox: React.FC<SearchBoxProps> = ({
 
     const searchQuery = params.toString();
     const url = searchQuery ? `/properties?${searchQuery}` : '/properties';
-    
+
     router.push(url);
-    
-    if (onSearch) {
-      onSearch({
-        location,
-        checkIn,
-        checkOut,
-        guests,
-      });
+
+    if (onFiltersChange) {
+      onFiltersChange(newFilters);
     }
   };
 
@@ -329,7 +339,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {['Apartment', 'House', 'Duplex', 'Room'].map((type) => (
               <Button
@@ -342,7 +352,7 @@ const SearchBox: React.FC<SearchBoxProps> = ({
               </Button>
             ))}
           </div>
-          
+
           <div className="mt-4 pt-4 border-t">
             <Button
               variant="ghost"

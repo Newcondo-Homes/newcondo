@@ -1,18 +1,38 @@
 // apps/platform/lib/api/commissions.ts
 import { apiClient } from './client';
 
-export interface CommissionFilters {
-  status?: 'PENDING' | 'RELEASED' | 'WITHDRAWN' | 'ALL';
-  startDate?: Date;
-  endDate?: Date;
-  propertyId?: string;
-  type?: 'LISTING_AGENT' | 'SUB_AGENT' | 'MARKING_SERVICE';
-  page?: number;
-  limit?: number;
+import type {
+  CommissionFilters,
+  GetCommissionsResponse,
+  GetCommissionSummaryResponse,
+  Commission,
+} from '@/types/commission';
+
+// TODO: Commission endpoint is in payment-service backend
+
+export interface CommissionBreakdownItem {
+  key: string;        // property ID, month string, or type label
+  label: string;
+  amount: number;
+  currency: string;
+  count: number;
+}
+ 
+export interface GetCommissionBreakdownResponse {
+  items: CommissionBreakdownItem[];
+  total: number;
+  groupBy: 'type' | 'property' | 'month';
 }
 
+export interface GetCommissionHistoryResponse {
+  commissions: Commission[];
+  total: number;
+  hasMore: boolean;
+}
+
+
 // Get commissions
-export const getCommissions = async (filters?: CommissionFilters) => {
+export const getCommissions = async (filters?: CommissionFilters): Promise<GetCommissionsResponse> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -28,19 +48,19 @@ export const getCommissions = async (filters?: CommissionFilters) => {
   }
   
   const response = await apiClient.get(`/commissions?${params.toString()}`);
-  return response.data;
+  return response.data as GetCommissionsResponse ;
 };
 
 // Get commission summary
-export const getCommissionSummary = async () => {
+export const getCommissionSummary = async (): Promise<GetCommissionSummaryResponse> => {
   const response = await apiClient.get('/commissions/summary');
-  return response.data;
+  return response.data as GetCommissionSummaryResponse;
 };
 
 // Get single commission details
-export const getCommissionDetails = async (commissionId: string) => {
+export const getCommissionDetails = async (commissionId: string): Promise<Commission> => {
   const response = await apiClient.get(`/commissions/${commissionId}`);
-  return response.data;
+  return response.data as Commission;
 };
 
 // Get commission breakdown
@@ -48,7 +68,7 @@ export const getCommissionBreakdown = async (filters?: {
   startDate?: Date;
   endDate?: Date;
   groupBy?: 'type' | 'property' | 'month';
-}) => {
+}): Promise<GetCommissionBreakdownResponse> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -64,13 +84,14 @@ export const getCommissionBreakdown = async (filters?: {
   }
   
   const response = await apiClient.get(`/commissions/breakdown?${params.toString()}`);
-  return response.data;
+  return response.data as GetCommissionBreakdownResponse;
 };
 
+
 // Get property commissions
-export const getPropertyCommissions = async (propertyId: string) => {
+export const getPropertyCommissions = async (propertyId: string): Promise<GetCommissionsResponse> => {
   const response = await apiClient.get(`/commissions/property/${propertyId}`);
-  return response.data;
+  return response.data as GetCommissionsResponse;
 };
 
 // Get commission history
@@ -79,7 +100,7 @@ export const getCommissionHistory = async (filters?: {
   limit?: number;
   sortBy?: 'createdAt' | 'amount' | 'status';
   sortOrder?: 'asc' | 'desc';
-}) => {
+}): Promise<GetCommissionHistoryResponse> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -91,5 +112,5 @@ export const getCommissionHistory = async (filters?: {
   }
   
   const response = await apiClient.get(`/commissions/history?${params.toString()}`);
-  return response.data;
+  return response.data as GetCommissionHistoryResponse;
 };

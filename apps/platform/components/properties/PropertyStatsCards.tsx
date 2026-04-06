@@ -9,16 +9,20 @@ interface PropertyStats {
   published: number;
   rented: number;
   totalViews: number;
+  pending: number;  
+  totalRevenue: number;   
 }
 
 interface PropertyStatsCardsProps {
   stats?: PropertyStats;
-  isLoading: boolean;
+  isLoading?: boolean;
+  userRole?: 'OWNER' | 'AGENT';  
 }
 
 export default function PropertyStatsCards({
   stats,
   isLoading,
+  userRole,
 }: PropertyStatsCardsProps) {
   const statsData = [
     {
@@ -49,6 +53,13 @@ export default function PropertyStatsCards({
       description: "Across all properties",
       color: "text-orange-600",
     },
+    ...(userRole === 'AGENT' ? [{
+      title: "Total Revenue",
+      value: stats?.totalRevenue || 0,
+      icon: TrendingUp,
+      description: "Commission earned",
+      color: "text-green-600",
+    }] : []),
   ];
 
   if (isLoading) {

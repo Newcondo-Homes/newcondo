@@ -6,6 +6,7 @@ import * as searchApi from '@/lib/api/search';
 import * as favoritesApi from '@/lib/api/favorites';
 import type { Property, PropertyFilters, PropertySearchParams } from '@/types/api';
 
+
 // Query keys for React Query
 export const propertyKeys = {
   all: ['properties'] as const,
@@ -47,6 +48,7 @@ export function useProperties(filters?: PropertyFilters) {
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (previously cacheTime)
     refetchOnWindowFocus: false,
+    select: (data) => data,
   });
 }
 

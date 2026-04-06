@@ -8,7 +8,7 @@ import { useShareReferral } from '@/hooks/useShareReferral';
 import { useReferralLink } from '@/hooks/useReferralLink';
 import { SHARE_CHANNEL_CONFIG } from '@/lib/constants/shareMessages';
 import { Loader2 } from 'lucide-react';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@newcondo/auth/client';
 
 interface SocialShareButtonsProps {
   referrerRole?: string;

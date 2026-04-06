@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@newcondo/ui/components/select';
 import { useReferralStore } from '@/store/referralStore';
+import { Reward } from '@/types/reward';
 
 export function RewardsList() {
   const [page, setPage] = useState(1);
@@ -34,7 +35,7 @@ export function RewardsList() {
 
   const { toggleRedemptionModal, selectReward } = useReferralStore();
 
-  const handleRedeem = (reward: any) => {
+  const handleRedeem = (reward: Reward) => {
     selectReward(reward);
     toggleRedemptionModal();
   };
@@ -89,7 +90,7 @@ export function RewardsList() {
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {rewards.map((reward) => (
+            {rewards.map((reward: Reward ) => (
               <RewardCard
                 key={reward.id}
                 reward={reward}

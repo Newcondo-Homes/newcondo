@@ -1,6 +1,7 @@
 // apps/platform/store/referralStore.ts
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import {Reward} from '@/types/reward'
 
 interface Referral {
   id: string;
@@ -54,9 +55,18 @@ interface ReferralState {
   showPromotionLinkModal: boolean;
   showSubAgentApprovalModal: boolean;
   currentPropertyIdForPromotion: string | null;
+  selectedReward: Reward | null;  // you'll need to import Reward from '@/types/reward'
+  isRedemptionModalOpen: boolean;
+  selectReward: (reward: Reward | null) => void;
+  toggleRedemptionModal: () => void;
   
   // Recently copied links
   recentlyCopiedLinks: string[];
+
+  isInviteModalOpen: boolean;
+isShareModalOpen: boolean;
+toggleInviteModal: () => void;
+toggleShareModal: () => void;
   
   // Actions - Referrals
   setReferrals: (referrals: Referral[]) => void;
@@ -118,7 +128,33 @@ export const useReferralStore = create<ReferralState>()(
         showSubAgentApprovalModal: false,
         currentPropertyIdForPromotion: null,
         recentlyCopiedLinks: [],
+        isInviteModalOpen: false,
+        isShareModalOpen: false,
+        selectedReward: null,
+        isRedemptionModalOpen: false,
 
+        toggleInviteModal: () =>
+          set(
+            (state) => ({ isInviteModalOpen: !state.isInviteModalOpen }),
+            false,
+            'toggleInviteModal'
+          ),
+
+        toggleShareModal: () =>
+        set(
+          (state) => ({ isShareModalOpen: !state.isShareModalOpen }),
+          false,
+          'toggleShareModal'
+        ),
+        selectReward: (reward) =>
+          set({ selectedReward: reward }, false, 'selectReward'),
+
+        toggleRedemptionModal: () =>
+          set(
+            (state) => ({ isRedemptionModalOpen: !state.isRedemptionModalOpen }),
+            false,
+            'toggleRedemptionModal'
+          ),
         // Referral actions
         setReferrals: (referrals) =>
           set({ referrals }, false, 'setReferrals'),
