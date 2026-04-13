@@ -6,6 +6,12 @@
     "backend/*",
     "packages/*"
   ],
+  "pnpm": {
+    "overrides": {
+      "react-hook-form": "7.58.1",
+      "@hookform/resolvers": "3.10.0"
+    }
+  },
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",

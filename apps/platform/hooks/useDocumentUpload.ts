@@ -1,15 +1,22 @@
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useUploadThing } from 'uploadthing/react';
+// import { useUploadThing } from '@uploadthing/react';
+import { useUploadThing } from '@/lib/uploadthing';
 import { documentsApi } from '@/lib/api/documents';
 import { useLegalStore } from '@/store/legalStore';
-import type { 
-  DocumentUploadOptions,
-  UploadProgress,
-  DocumentFile,
-  DocumentType,
-  DocumentSide 
+import type { OurFileRouter } from '@/lib/uploadthing';
+import type {
+  DocumentUpload,
+  DocumentFilter,
+  CreateDocumentRequest,
+  UpdateDocumentRequest,
+  DocumentVerificationRequest,
+  DocumentShareRequest,
+  DocumentSignature,
+  DocumentMetadata,
+  DocumentUploadProgress,
 } from '@/types/documents';
+import type { DocumentType, DocumentSide } from '@newcondo/db';
 import { toast } from '@newcondo/ui';
 
 interface UseDocumentUploadOptions {
@@ -18,6 +25,27 @@ interface UseDocumentUploadOptions {
   maxFileSize?: number; // in MB
   allowedTypes?: string[];
   propertyId?: string;
+  userId?: string; 
+}
+
+interface DocumentUploadOptions {
+  documentSide?: DocumentSide;
+  pageNumber?: number;
+  documentNumber?: string;
+  propertyId?: string;
+}
+
+interface DocumentFile {
+  file: File;
+  documentType: DocumentType;
+  options?: DocumentUploadOptions;
+}
+
+interface UploadProgress {
+  fileName: string;
+  progress: number;
+  status: 'uploading' | 'processing' | 'completed' | 'error';
+  documentType?: DocumentType;
 }
 
 export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
@@ -26,26 +54,25 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
     onError,
     maxFileSize = 10, // 10MB default
     allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
-    propertyId
+    propertyId,
+    userId,
   } = options;
 
-  const { addUploadProgress, removeUploadProgress, updateUploadProgress } = useLegalStore();
+  const { setUploadProgress, clearUploadProgress } = useLegalStore();
   const [uploadQueue, setUploadQueue] = useState<DocumentFile[]>([]);
 
-  // UploadThing hook for file uploads
-  const { startUpload, permittedFileInfo, isUploading } = useUploadThing('documentUploader', {
+  // UploadThing hook for file uploads permittedFileInfo: routeConfig
+  const { startUpload, routeConfig, isUploading } = useUploadThing('propertyDocuments', {
     onClientUploadComplete: (files) => {
       files.forEach((file) => {
-        removeUploadProgress(file.name);
+        clearUploadProgress(file.name);
       });
     },
     onUploadError: (error) => {
       toast.error(`Upload failed: ${error.message}`);
       onError?.(error);
     },
-    onUploadProgress: ({ file, progress }) => {
-      updateUploadProgress(file, progress);
-    },
+   
   });
 
   // Validate file before upload
@@ -82,6 +109,7 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
       fileName: string;
       fileSizeBytes: number;
       mimeType: string;
+      userId: string;
     }) => {
       return documentsApi.createDocument(payload);
     },
@@ -114,11 +142,11 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
 
       // Add to upload progress tracking
       files.forEach((file) => {
-        addUploadProgress(file.name, {
+        setUploadProgress(file.name, {
+          documentId: file.name,
           fileName: file.name,
           progress: 0,
           status: 'uploading',
-          documentType
         });
       });
 
@@ -144,16 +172,29 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
           fileName: originalFile.name,
           fileSizeBytes: originalFile.size,
           mimeType: originalFile.type,
+          userId: userId ?? '',
         });
 
-        updateUploadProgress(originalFile.name, 100, 'completed');
+        // updateUploadProgress(originalFile.name, 100, 'completed');
+
+        setUploadProgress(originalFile.name, {
+          documentId: originalFile.name,
+          fileName: originalFile.name,
+          progress: 100,
+          status: 'completed',
+        });
       }
 
     } catch (error) {
       files.forEach((file) => {
-        updateUploadProgress(file.name, 0, 'error');
+        setUploadProgress(file.name, {
+          documentId: file.name,
+          fileName: file.name,
+          progress: 0,
+          status: 'failed',
+        });
       });
-      
+
       const errorMsg = error instanceof Error ? error.message : 'Upload failed';
       toast.error(errorMsg);
       onError?.(error as Error);
@@ -162,8 +203,7 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
     validateFile,
     startUpload,
     processDocumentMutation,
-    addUploadProgress,
-    updateUploadProgress,
+    setUploadProgress,
     propertyId,
     onError
   ]);
@@ -197,13 +237,13 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
       // Upload front side
       await uploadDocument([frontFile], documentType, {
         ...options,
-        documentSide: DocumentSide.FRONT
+        documentSide: 'FRONT' as DocumentSide
       });
 
       // Upload back side
       await uploadDocument([backFile], documentType, {
         ...options,
-        documentSide: DocumentSide.BACK
+        documentSide: 'BACK' as DocumentSide
       });
     } catch (error) {
       onError?.(error as Error);
@@ -260,12 +300,12 @@ export const useDocumentUpload = (options: UseDocumentUploadOptions = {}) => {
     // Utilities
     validateFile,
     getUploadProgress,
-    permittedFileInfo,
+    permittedFileInfo: routeConfig,
 
     // File type helpers
     isImageFile: (file: File) => file.type.startsWith('image/'),
     isPDFFile: (file: File) => file.type === 'application/pdf',
-    
+
     // Size helpers
     formatFileSize: (bytes: number) => {
       if (bytes === 0) return '0 Bytes';

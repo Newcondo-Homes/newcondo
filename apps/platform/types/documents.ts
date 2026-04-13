@@ -1,313 +1,287 @@
-import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db'
+import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
 
-// Base document interface
+// ---- Base ----
+
 export interface BaseDocument {
-  id: string
-  userId: string
-  propertyId?: string
-  documentType: DocumentType
-  status: DocumentStatus
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  userId: string;
+  propertyId?: string;
+  documentType: DocumentType;
+  documentSide?: DocumentSide;
+  pageNumber?: number;
+  documentNumber?: string;
+  fileName?: string;
+  fileUrl?: string;
+  fileSizeBytes?: number;
+  mimeType?: string;
+  status: DocumentStatus;
+  verificationNotes?: string;
+  isRequired: boolean;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-// Document upload and file management
-export interface DocumentFile {
-  id: string
-  fileName: string
-  fileUrl: string
-  fileSizeBytes: number
-  mimeType: string
-  uploadedAt: Date
-}
+// ---- Upload ----
 
 export interface DocumentUpload {
-  documentType: DocumentType
-  documentSide?: DocumentSide
-  pageNumber?: number
-  file: File
-  propertyId?: string
-  documentNumber?: string
-  expiresAt?: Date
-  metadata?: Record<string, any>
+  documentType: DocumentType;
+  documentSide?: DocumentSide;
+  pageNumber?: number;
+  file: File;
+  userId: string;
+  propertyId?: string;
+  documentNumber?: string;
+  expiresAt?: Date;
+  isRequired?: boolean;
+  metadata?: Record<string, unknown>;
+  tags?: string[];
+  onProgress?: (percent: number) => void;
 }
 
 export interface DocumentUploadProgress {
-  documentId: string
-  fileName: string
-  progress: number
-  status: 'uploading' | 'processing' | 'completed' | 'failed'
-  error?: string
+  documentId: string;
+  fileName: string;
+  progress: number;
+  status: 'uploading' | 'processing' | 'completed' | 'failed';
+  error?: string;
 }
 
 export interface DocumentUploadResponse {
-  success: boolean
-  data: {
-    documentId: string
-    fileUrl: string
-    uploadUrl?: string // For direct uploads
-  }
-  message?: string
+  documentId: string;
+  fileUrl: string;
+  uploadUrl?: string;
 }
 
-// Identity documents
-export interface IdentityDocument extends BaseDocument {
-  documentSide?: DocumentSide
-  documentNumber?: string
-  fileName?: string
-  fileUrl?: string
-  fileSizeBytes?: number
-  mimeType?: string
-  verificationNotes?: string
-  isRequired: boolean
-  expiresAt?: Date
+// ---- Requests ----
+
+export interface CreateDocumentRequest {
+  userId: string;
+  propertyId?: string;
+  documentType: DocumentType;
+  documentSide?: DocumentSide;
+  pageNumber?: number;
+  documentNumber?: string;
+  isRequired?: boolean;
+  expiresAt?: string;
+  metadata?: Record<string, unknown>;
 }
 
-export interface SelfieDocument extends BaseDocument {
-  fileUrl: string
-  fileName: string
-  fileSizeBytes: number
-  mimeType: string
-  verificationNotes?: string
-  faceMatchScore?: number
-  isLivenessDetected?: boolean
+export interface UpdateDocumentRequest {
+  documentNumber?: string;
+  expiresAt?: string;
+  isRequired?: boolean;
+  verificationNotes?: string;
+  metadata?: Record<string, unknown>;
 }
 
-// Property documents
-export interface PropertyDocument extends BaseDocument {
-  fileName: string
-  fileUrl: string
-  fileSizeBytes: number
-  mimeType: string
-  verificationNotes?: string
-  isRequired: boolean
-  expiresAt?: Date
-  verifiedBy?: string
-  verifiedAt?: Date
-}
-
-export interface OwnershipDocument extends PropertyDocument {
-  ownershipType: OwnershipDocumentType
-  registrationNumber?: string
-  issuedDate?: Date
-  expiryDate?: Date
-}
-
-export interface ConsentDocument extends PropertyDocument {
-  agentId: string
-  ownerId: string
-  permissionScope: string[]
-  signedDate?: Date
-  witnessName?: string
-  witnessSignature?: string
-}
-
-// Business documents
-export interface BusinessDocument extends BaseDocument {
-  businessName: string
-  registrationNumber: string
-  fileName: string
-  fileUrl: string
-  fileSizeBytes: number
-  mimeType: string
-  issuedDate?: Date
-  expiryDate?: Date
-  verificationNotes?: string
-}
-
-// Document verification
-export interface DocumentVerification {
-  id: string
-  documentId: string
-  verifiedBy: string
-  verificationStatus: DocumentVerificationStatus
-  verificationNotes?: string
-  verificationScore?: number
-  autoVerification?: boolean
-  verifiedAt: Date
-  rejectionReason?: string
+export interface DocumentFilter {
+  userId?: string;
+  propertyId?: string;
+  documentType?: DocumentType;
+  status?: DocumentStatus;
+  isRequired?: boolean;
+  page?: number;
+  limit?: number;
 }
 
 export interface DocumentVerificationRequest {
-  documentId: string
-  verificationNotes?: string
-  additionalInfo?: Record<string, any>
+  documentId: string;
+  verificationNotes?: string;
+  additionalInfo?: Record<string, unknown>;
 }
 
-export interface DocumentVerificationResponse {
-  success: boolean
-  data: DocumentVerification
-  message?: string
+export interface DocumentShareRequest {
+  sharedWith: string;
+  shareType: ShareType;
+  permissions: SharePermission[];
+  expiresAt?: string;
 }
 
-// Document validation and checks
-export interface DocumentValidationResult {
-  isValid: boolean
-  errors: DocumentValidationError[]
-  warnings: DocumentValidationWarning[]
-  requirements: DocumentRequirement[]
-  score: number
+// ---- Responses ----
+
+// Single document response
+export type DocumentResponse = BaseDocument;
+
+// List response
+export interface BulkDocumentResponse {
+  documents: BaseDocument[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
-export interface DocumentValidationError {
-  field: string
-  message: string
-  code: string
+// ---- Verification ----
+
+export interface DocumentVerification {
+  id: string;
+  documentId: string;
+  verifiedBy: string;
+  verificationStatus: DocumentVerificationStatus;
+  verificationNotes?: string;
+  verificationScore?: number;
+  autoVerification?: boolean;
+  verifiedAt: string;
+  rejectionReason?: string;
 }
 
-export interface DocumentValidationWarning {
-  field: string
-  message: string
-  code: string
+// ---- Versioning ----
+
+export interface DocumentVersion {
+  id: string;
+  documentId: string;
+  fileUrl: string;
+  fileName: string;
+  fileSizeBytes: number;
+  mimeType: string;
+  version: number;
+  replacedAt: string;
+  replacedBy: string;
+  reason?: string;
 }
 
-export interface DocumentRequirement {
-  type: DocumentType
-  isRequired: boolean
-  description: string
-  acceptedFormats: string[]
-  maxSizeBytes: number
-  expiryRequired: boolean
+// ---- Sharing ----
+
+export interface DocumentShare {
+  id: string;
+  documentId: string;
+  sharedBy: string;
+  sharedWith: string;
+  shareType: ShareType;
+  permissions: SharePermission[];
+  expiresAt?: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
-// Document categories and organization
-export interface DocumentCategory {
-  id: string
-  name: string
-  description: string
-  documentTypes: DocumentType[]
-  isRequired: boolean
-  order: number
-  icon?: string
+// ---- Signature ----
+
+export interface DocumentSignature {
+  id?: string;
+  documentId: string;
+  signedBy: string;
+  signatureData: string;       // base64 encoded signature image or hash
+  signedAt?: string;
+  ipAddress?: string;
 }
 
-export interface DocumentCollection {
-  categoryId: string
-  categoryName: string
-  documents: IdentityDocument[]
-  completionPercentage: number
-  missingDocuments: DocumentType[]
-  expiredDocuments: IdentityDocument[]
+// ---- Download & Preview ----
+
+export interface DocumentDownload {
+  url: string;                 // presigned/download URL
+  fileName: string;
+  mimeType: string;
+  expiresAt?: string;
 }
 
-// Document templates and forms
+export interface DocumentPreview {
+  url: string;
+  page?: number;
+  totalPages?: number;
+  mimeType: string;
+}
+
+// ---- Metadata ----
+
+export interface DocumentMetadata {
+  tags?: string[];
+  notes?: string;
+  customFields?: Record<string, unknown>;
+}
+
+// ---- Templates ----
+
 export interface DocumentTemplate {
-  id: string
-  templateType: DocumentTemplateType
-  name: string
-  description: string
-  fields: DocumentTemplateField[]
-  isActive: boolean
-  version: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  templateType: DocumentTemplateType;
+  name: string;
+  description: string;
+  fields: DocumentTemplateField[];
+  isActive: boolean;
+  version: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface DocumentTemplateField {
-  id: string
-  name: string
-  label: string
-  type: FieldType
-  isRequired: boolean
-  validation?: FieldValidation
-  options?: string[]
-  placeholder?: string
-  helpText?: string
+  id: string;
+  name: string;
+  label: string;
+  type: FieldType;
+  isRequired: boolean;
+  validation?: FieldValidation;
+  options?: string[];
+  placeholder?: string;
+  helpText?: string;
 }
 
 export interface FieldValidation {
-  pattern?: string
-  minLength?: number
-  maxLength?: number
-  min?: number
-  max?: number
-  customValidation?: string
+  pattern?: string;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
 }
 
-// Document search and filtering
-export interface DocumentSearchFilter {
-  documentType?: DocumentType[]
-  status?: DocumentStatus[]
-  propertyId?: string
-  userId?: string
-  isRequired?: boolean
-  hasExpiry?: boolean
-  expiringWithin?: number // days
-  createdAfter?: Date
-  createdBefore?: Date
-  verificationStatus?: DocumentVerificationStatus[]
-  search?: string
+// ---- Validation ----
+
+export interface DocumentValidationResult {
+  isValid: boolean;
+  errors: DocumentValidationError[];
+  warnings: DocumentValidationWarning[];
+  requirements: DocumentRequirement[];
+  score: number;
 }
 
-export interface DocumentSearchResult {
-  documents: IdentityDocument[]
-  totalCount: number
-  pagination: {
-    page: number
-    limit: number
-    totalPages: number
-  }
-  filters: DocumentSearchFilter
+export interface DocumentValidationError {
+  field: string;
+  message: string;
+  code: string;
 }
 
-// Document analytics and insights
+export interface DocumentValidationWarning {
+  field: string;
+  message: string;
+  code: string;
+}
+
+export interface DocumentRequirement {
+  type: DocumentType;
+  isRequired: boolean;
+  description: string;
+  acceptedFormats: string[];
+  maxSizeBytes: number;
+  expiryRequired: boolean;
+}
+
+// ---- Analytics ----
+
 export interface DocumentAnalytics {
-  totalDocuments: number
-  documentsByType: Record<DocumentType, number>
-  documentsByStatus: Record<DocumentStatus, number>
-  verificationRate: number
-  averageProcessingTime: number
-  expiringDocuments: number
-  overdueDocuments: number
-  uploadTrends: DocumentUploadTrend[]
+  totalDocuments: number;
+  documentsByType: Partial<Record<DocumentType, number>>;
+  documentsByStatus: Partial<Record<DocumentStatus, number>>;
+  verificationRate: number;
+  averageProcessingTime: number;
+  expiringDocuments: number;
+  overdueDocuments: number;
+  uploadTrends: DocumentUploadTrend[];
 }
 
 export interface DocumentUploadTrend {
-  date: string
-  uploads: number
-  verifications: number
-  rejections: number
+  date: string;
+  uploads: number;
+  verifications: number;
+  rejections: number;
 }
 
-// Document sharing and permissions
-export interface DocumentShare {
-  id: string
-  documentId: string
-  sharedBy: string
-  sharedWith: string
-  shareType: ShareType
-  permissions: SharePermission[]
-  expiresAt?: Date
-  isActive: boolean
-  createdAt: Date
-}
+// ---- Enums ----
 
-export interface DocumentAccess {
-  userId: string
-  documentId: string
-  accessType: AccessType
-  grantedAt: Date
-  grantedBy: string
-  expiresAt?: Date
-}
-
-// Enums
 export enum DocumentVerificationStatus {
   PENDING = 'PENDING',
   VERIFIED = 'VERIFIED',
   REJECTED = 'REJECTED',
   EXPIRED = 'EXPIRED',
-  REQUIRES_RESUBMISSION = 'REQUIRES_RESUBMISSION'
-}
-
-export enum OwnershipDocumentType {
-  CERTIFICATE_OF_OCCUPANCY = 'CERTIFICATE_OF_OCCUPANCY',
-  DEED_OF_ASSIGNMENT = 'DEED_OF_ASSIGNMENT',
-  PURCHASE_RECEIPT = 'PURCHASE_RECEIPT',
-  SURVEY_PLAN = 'SURVEY_PLAN',
-  BUILDING_PLAN_APPROVAL = 'BUILDING_PLAN_APPROVAL',
-  TAX_CLEARANCE = 'TAX_CLEARANCE',
-  POWER_OF_ATTORNEY = 'POWER_OF_ATTORNEY'
+  REQUIRES_RESUBMISSION = 'REQUIRES_RESUBMISSION',
 }
 
 export enum DocumentTemplateType {
@@ -315,7 +289,7 @@ export enum DocumentTemplateType {
   PROPERTY_OWNERSHIP = 'PROPERTY_OWNERSHIP',
   BUSINESS_REGISTRATION = 'BUSINESS_REGISTRATION',
   AGENT_CONSENT = 'AGENT_CONSENT',
-  RENTAL_AGREEMENT = 'RENTAL_AGREEMENT'
+  RENTAL_AGREEMENT = 'RENTAL_AGREEMENT',
 }
 
 export enum FieldType {
@@ -329,14 +303,14 @@ export enum FieldType {
   CHECKBOX = 'CHECKBOX',
   TEXTAREA = 'TEXTAREA',
   FILE = 'FILE',
-  SIGNATURE = 'SIGNATURE'
+  SIGNATURE = 'SIGNATURE',
 }
 
 export enum ShareType {
   VIEW_ONLY = 'VIEW_ONLY',
   DOWNLOAD = 'DOWNLOAD',
   VERIFY = 'VERIFY',
-  TEMPORARY_ACCESS = 'TEMPORARY_ACCESS'
+  TEMPORARY_ACCESS = 'TEMPORARY_ACCESS',
 }
 
 export enum SharePermission {
@@ -344,83 +318,435 @@ export enum SharePermission {
   DOWNLOAD = 'DOWNLOAD',
   SHARE = 'SHARE',
   VERIFY = 'VERIFY',
-  COMMENT = 'COMMENT'
+  COMMENT = 'COMMENT',
 }
 
-export enum AccessType {
-  OWNER = 'OWNER',
-  ADMIN = 'ADMIN',
-  VIEWER = 'VIEWER',
-  VERIFIER = 'VERIFIER',
-  TEMPORARY = 'TEMPORARY'
-}
 
-// Form types
-export interface DocumentFormData {
-  documentType: DocumentType
-  documentSide?: DocumentSide
-  pageNumber?: number
-  documentNumber?: string
-  file?: File
-  propertyId?: string
-  expiresAt?: string
-  metadata?: Record<string, any>
-}
 
-export interface BulkDocumentUpload {
-  documents: DocumentFormData[]
-  propertyId?: string
-  notes?: string
-}
 
-export interface DocumentUpdateData {
-  documentNumber?: string
-  expiresAt?: Date
-  metadata?: Record<string, any>
-  notes?: string
-}
+// import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db'
 
-// API response types
-export interface DocumentResponse {
-  success: boolean
-  data: IdentityDocument
-  message?: string
-}
+// // Base document interface
+// export interface BaseDocument {
+//   id: string
+//   userId: string
+//   propertyId?: string
+//   documentType: DocumentType
+//   status: DocumentStatus
+//   createdAt: Date
+//   updatedAt: Date
+// }
 
-export interface DocumentListResponse {
-  success: boolean
-  data: IdentityDocument[]
-  pagination?: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
-  message?: string
-}
+// // Document upload and file management
+// export interface DocumentFile {
+//   id: string
+//   fileName: string
+//   fileUrl: string
+//   fileSizeBytes: number
+//   mimeType: string
+//   uploadedAt: Date
+// }
 
-export interface DocumentCategoriesResponse {
-  success: boolean
-  data: DocumentCategory[]
-  message?: string
-}
+// export interface DocumentUpload {
+//   documentType: DocumentType
+//   documentSide?: DocumentSide
+//   pageNumber?: number
+//   file: File
+//   propertyId?: string
+//   documentNumber?: string
+//   expiresAt?: Date
+//   metadata?: Record<string, any>
+// }
 
-export interface DocumentAnalyticsResponse {
-  success: boolean
-  data: DocumentAnalytics
-  message?: string
-}
+// export interface DocumentUploadProgress {
+//   documentId: string
+//   fileName: string
+//   progress: number
+//   status: 'uploading' | 'processing' | 'completed' | 'failed'
+//   error?: string
+// }
 
-// Error types
-export interface DocumentError {
-  code: string
-  message: string
-  field?: string
-  documentId?: string
-}
+// export interface DocumentUploadResponse {
+//   success: boolean
+//   data: {
+//     documentId: string
+//     fileUrl: string
+//     uploadUrl?: string // For direct uploads
+//   }
+//   message?: string
+// }
 
-export interface DocumentUploadError {
-  fileName: string
-  error: DocumentError
-  retryable: boolean
-}
+// // Identity documents
+// export interface IdentityDocument extends BaseDocument {
+//   documentSide?: DocumentSide
+//   documentNumber?: string
+//   fileName?: string
+//   fileUrl?: string
+//   fileSizeBytes?: number
+//   mimeType?: string
+//   verificationNotes?: string
+//   isRequired: boolean
+//   expiresAt?: Date
+// }
+
+// export interface SelfieDocument extends BaseDocument {
+//   fileUrl: string
+//   fileName: string
+//   fileSizeBytes: number
+//   mimeType: string
+//   verificationNotes?: string
+//   faceMatchScore?: number
+//   isLivenessDetected?: boolean
+// }
+
+// // Property documents
+// export interface PropertyDocument extends BaseDocument {
+//   fileName: string
+//   fileUrl: string
+//   fileSizeBytes: number
+//   mimeType: string
+//   verificationNotes?: string
+//   isRequired: boolean
+//   expiresAt?: Date
+//   verifiedBy?: string
+//   verifiedAt?: Date
+// }
+
+// export interface OwnershipDocument extends PropertyDocument {
+//   ownershipType: OwnershipDocumentType
+//   registrationNumber?: string
+//   issuedDate?: Date
+//   expiryDate?: Date
+// }
+
+// export interface ConsentDocument extends PropertyDocument {
+//   agentId: string
+//   ownerId: string
+//   permissionScope: string[]
+//   signedDate?: Date
+//   witnessName?: string
+//   witnessSignature?: string
+// }
+
+// // Business documents
+// export interface BusinessDocument extends BaseDocument {
+//   businessName: string
+//   registrationNumber: string
+//   fileName: string
+//   fileUrl: string
+//   fileSizeBytes: number
+//   mimeType: string
+//   issuedDate?: Date
+//   expiryDate?: Date
+//   verificationNotes?: string
+// }
+
+// // Document verification
+// export interface DocumentVerification {
+//   id: string
+//   documentId: string
+//   verifiedBy: string
+//   verificationStatus: DocumentVerificationStatus
+//   verificationNotes?: string
+//   verificationScore?: number
+//   autoVerification?: boolean
+//   verifiedAt: Date
+//   rejectionReason?: string
+// }
+
+// export interface DocumentVerificationRequest {
+//   documentId: string
+//   verificationNotes?: string
+//   additionalInfo?: Record<string, any>
+// }
+
+// export interface DocumentVerificationResponse {
+//   success: boolean
+//   data: DocumentVerification
+//   message?: string
+// }
+
+// // Document validation and checks
+// export interface DocumentValidationResult {
+//   isValid: boolean
+//   errors: DocumentValidationError[]
+//   warnings: DocumentValidationWarning[]
+//   requirements: DocumentRequirement[]
+//   score: number
+// }
+
+// export interface DocumentValidationError {
+//   field: string
+//   message: string
+//   code: string
+// }
+
+// export interface DocumentValidationWarning {
+//   field: string
+//   message: string
+//   code: string
+// }
+
+// export interface DocumentRequirement {
+//   type: DocumentType
+//   isRequired: boolean
+//   description: string
+//   acceptedFormats: string[]
+//   maxSizeBytes: number
+//   expiryRequired: boolean
+// }
+
+// // Document categories and organization
+// export interface DocumentCategory {
+//   id: string
+//   name: string
+//   description: string
+//   documentTypes: DocumentType[]
+//   isRequired: boolean
+//   order: number
+//   icon?: string
+// }
+
+// export interface DocumentCollection {
+//   categoryId: string
+//   categoryName: string
+//   documents: IdentityDocument[]
+//   completionPercentage: number
+//   missingDocuments: DocumentType[]
+//   expiredDocuments: IdentityDocument[]
+// }
+
+// // Document templates and forms
+// export interface DocumentTemplate {
+//   id: string
+//   templateType: DocumentTemplateType
+//   name: string
+//   description: string
+//   fields: DocumentTemplateField[]
+//   isActive: boolean
+//   version: string
+//   createdAt: Date
+//   updatedAt: Date
+// }
+
+// export interface DocumentTemplateField {
+//   id: string
+//   name: string
+//   label: string
+//   type: FieldType
+//   isRequired: boolean
+//   validation?: FieldValidation
+//   options?: string[]
+//   placeholder?: string
+//   helpText?: string
+// }
+
+// export interface FieldValidation {
+//   pattern?: string
+//   minLength?: number
+//   maxLength?: number
+//   min?: number
+//   max?: number
+//   customValidation?: string
+// }
+
+// // Document search and filtering
+// export interface DocumentSearchFilter {
+//   documentType?: DocumentType[]
+//   status?: DocumentStatus[]
+//   propertyId?: string
+//   userId?: string
+//   isRequired?: boolean
+//   hasExpiry?: boolean
+//   expiringWithin?: number // days
+//   createdAfter?: Date
+//   createdBefore?: Date
+//   verificationStatus?: DocumentVerificationStatus[]
+//   search?: string
+// }
+
+// export interface DocumentSearchResult {
+//   documents: IdentityDocument[]
+//   totalCount: number
+//   pagination: {
+//     page: number
+//     limit: number
+//     totalPages: number
+//   }
+//   filters: DocumentSearchFilter
+// }
+
+// // Document analytics and insights
+// export interface DocumentAnalytics {
+//   totalDocuments: number
+//   documentsByType: Record<DocumentType, number>
+//   documentsByStatus: Record<DocumentStatus, number>
+//   verificationRate: number
+//   averageProcessingTime: number
+//   expiringDocuments: number
+//   overdueDocuments: number
+//   uploadTrends: DocumentUploadTrend[]
+// }
+
+// export interface DocumentUploadTrend {
+//   date: string
+//   uploads: number
+//   verifications: number
+//   rejections: number
+// }
+
+// // Document sharing and permissions
+// export interface DocumentShare {
+//   id: string
+//   documentId: string
+//   sharedBy: string
+//   sharedWith: string
+//   shareType: ShareType
+//   permissions: SharePermission[]
+//   expiresAt?: Date
+//   isActive: boolean
+//   createdAt: Date
+// }
+
+// export interface DocumentAccess {
+//   userId: string
+//   documentId: string
+//   accessType: AccessType
+//   grantedAt: Date
+//   grantedBy: string
+//   expiresAt?: Date
+// }
+
+// // Enums
+// export enum DocumentVerificationStatus {
+//   PENDING = 'PENDING',
+//   VERIFIED = 'VERIFIED',
+//   REJECTED = 'REJECTED',
+//   EXPIRED = 'EXPIRED',
+//   REQUIRES_RESUBMISSION = 'REQUIRES_RESUBMISSION'
+// }
+
+// export enum OwnershipDocumentType {
+//   CERTIFICATE_OF_OCCUPANCY = 'CERTIFICATE_OF_OCCUPANCY',
+//   DEED_OF_ASSIGNMENT = 'DEED_OF_ASSIGNMENT',
+//   PURCHASE_RECEIPT = 'PURCHASE_RECEIPT',
+//   SURVEY_PLAN = 'SURVEY_PLAN',
+//   BUILDING_PLAN_APPROVAL = 'BUILDING_PLAN_APPROVAL',
+//   TAX_CLEARANCE = 'TAX_CLEARANCE',
+//   POWER_OF_ATTORNEY = 'POWER_OF_ATTORNEY'
+// }
+
+// export enum DocumentTemplateType {
+//   IDENTITY_VERIFICATION = 'IDENTITY_VERIFICATION',
+//   PROPERTY_OWNERSHIP = 'PROPERTY_OWNERSHIP',
+//   BUSINESS_REGISTRATION = 'BUSINESS_REGISTRATION',
+//   AGENT_CONSENT = 'AGENT_CONSENT',
+//   RENTAL_AGREEMENT = 'RENTAL_AGREEMENT'
+// }
+
+// export enum FieldType {
+//   TEXT = 'TEXT',
+//   EMAIL = 'EMAIL',
+//   PHONE = 'PHONE',
+//   NUMBER = 'NUMBER',
+//   DATE = 'DATE',
+//   SELECT = 'SELECT',
+//   MULTI_SELECT = 'MULTI_SELECT',
+//   CHECKBOX = 'CHECKBOX',
+//   TEXTAREA = 'TEXTAREA',
+//   FILE = 'FILE',
+//   SIGNATURE = 'SIGNATURE'
+// }
+
+// export enum ShareType {
+//   VIEW_ONLY = 'VIEW_ONLY',
+//   DOWNLOAD = 'DOWNLOAD',
+//   VERIFY = 'VERIFY',
+//   TEMPORARY_ACCESS = 'TEMPORARY_ACCESS'
+// }
+
+// export enum SharePermission {
+//   VIEW = 'VIEW',
+//   DOWNLOAD = 'DOWNLOAD',
+//   SHARE = 'SHARE',
+//   VERIFY = 'VERIFY',
+//   COMMENT = 'COMMENT'
+// }
+
+// export enum AccessType {
+//   OWNER = 'OWNER',
+//   ADMIN = 'ADMIN',
+//   VIEWER = 'VIEWER',
+//   VERIFIER = 'VERIFIER',
+//   TEMPORARY = 'TEMPORARY'
+// }
+
+// // Form types
+// export interface DocumentFormData {
+//   documentType: DocumentType
+//   documentSide?: DocumentSide
+//   pageNumber?: number
+//   documentNumber?: string
+//   file?: File
+//   propertyId?: string
+//   expiresAt?: string
+//   metadata?: Record<string, any>
+// }
+
+// export interface BulkDocumentUpload {
+//   documents: DocumentFormData[]
+//   propertyId?: string
+//   notes?: string
+// }
+
+// export interface DocumentUpdateData {
+//   documentNumber?: string
+//   expiresAt?: Date
+//   metadata?: Record<string, any>
+//   notes?: string
+// }
+
+// // API response types
+// export interface DocumentResponse {
+//   success: boolean
+//   data: IdentityDocument
+//   message?: string
+// }
+
+// export interface DocumentListResponse {
+//   success: boolean
+//   data: IdentityDocument[]
+//   pagination?: {
+//     page: number
+//     limit: number
+//     total: number
+//     pages: number
+//   }
+//   message?: string
+// }
+
+// export interface DocumentCategoriesResponse {
+//   success: boolean
+//   data: DocumentCategory[]
+//   message?: string
+// }
+
+// export interface DocumentAnalyticsResponse {
+//   success: boolean
+//   data: DocumentAnalytics
+//   message?: string
+// }
+
+// // Error types
+// export interface DocumentError {
+//   code: string
+//   message: string
+//   field?: string
+//   documentId?: string
+// }
+
+// export interface DocumentUploadError {
+//   fileName: string
+//   error: DocumentError
+//   retryable: boolean
+// }

@@ -23,6 +23,7 @@ model User {
   role          Role      @default(RENTER)
   userType      UserType?
 
+
   // Verification fields
   verificationStatus          VerificationStatus @default(PENDING)
   // idDocument         String?           // URL to uploaded ID document
@@ -87,8 +88,11 @@ model User {
   refreshToken         RefreshToken[]
   documents            Document[] // New relation to documents
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  disputes         Dispute[]  
+  disputeComments  DisputeComment[]
+  disputeEvidences DisputeEvidence[]
 
   @@index([email])
   @@index([phone])
@@ -602,6 +606,7 @@ model Rental {
   endDate     DateTime?
   monthlyRent Decimal      @db.Decimal(10, 2)
   status      RentalStatus @default(ACTIVE)
+  disputes    Dispute[]
 
   // Confirmation System
   confirmationDeadline DateTime? // 7 days from payment
@@ -625,12 +630,13 @@ model Rental {
 }
 
 model Payment {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   userId       String
   rentalId     String?
   markingJobId String? // For property marking payments
-  amount       Decimal @db.Decimal(10, 2)
-  currency     String  @default("NGN")
+  amount       Decimal  @db.Decimal(10, 2)
+  currency     String   @default("NGN")
+  dispute      Dispute?
 
   // Payment details
   paymentType   PaymentType
@@ -1141,6 +1147,104 @@ enum AdminActionType {
   AGENT_SUSPENDED
 }
 
+model Dispute {
+  id        String @id @default(cuid())
+  rentalId  String
+  paymentId String @unique
+  renterId  String
+
+  // Core fields
+  reason              DisputeReason
+  description         String
+  preferredResolution PreferredResolution
+  status              DisputeStatus       @default(PENDING)
+
+  // Resolution
+  resolutionOutcome DisputeResolutionOutcome?
+  resolutionNotes   String?
+  refundAmount      Decimal?                  @db.Decimal(10, 2)
+  resolvedAt        DateTime?
+  assignedAdminId   String?
+
+  // Relations
+  rental   Rental            @relation(fields: [rentalId], references: [id])
+  payment  Payment           @relation(fields: [paymentId], references: [id])
+  renter   User              @relation(fields: [renterId], references: [id])
+  comments DisputeComment[]
+  evidence DisputeEvidence[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([rentalId])
+  @@index([paymentId])
+  @@index([renterId])
+  @@index([status])
+}
+
+model DisputeComment {
+  id         String @id @default(cuid())
+  disputeId  String
+  authorId   String
+  authorRole Role // Reuses your existing Role enum
+  comment    String
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([disputeId])
+}
+
+model DisputeEvidence {
+  id         String @id @default(cuid())
+  disputeId  String
+  uploadedBy String
+  fileUrl    String
+  fileType   String
+
+  dispute  Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  uploader User    @relation(fields: [uploadedBy], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([disputeId])
+}
+
+enum DisputeStatus {
+  PENDING
+  UNDER_REVIEW
+  INVESTIGATING
+  RESOLVED
+  REJECTED
+  CANCELLED
+}
+
+enum DisputeReason {
+  PROPERTY_NOT_AS_DESCRIBED
+  PROPERTY_NOT_AVAILABLE
+  UNAUTHORIZED_CHARGES
+  FRAUDULENT_LISTING
+  SAFETY_CONCERNS
+  PRICING_DISCREPANCY
+  OTHER
+}
+
+enum PreferredResolution {
+  REFUND
+  PARTIAL_REFUND
+  PROPERTY_FIX
+}
+
+enum DisputeResolutionOutcome {
+  FULL_REFUND
+  PARTIAL_REFUND
+  NO_REFUND
+  PROPERTY_FIX_REQUIRED
+  DISMISSED
+}
+
 enum PropertyPromotionType {
   PUBLIC // Anyone can share with 'share' button
   PERMISSION_BASED // Agents must request and get approved
@@ -1207,4 +1311,3 @@ enum VerificationStatus {
 
 // ... [Keep all other existing models like Account, Document, Session, etc.]
 // ... [I'm omitting them here for brevity, but they remain unchanged]
-

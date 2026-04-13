@@ -1,8 +1,8 @@
 // apps/platform/lib/api/documents.ts
 
-import { client } from './client';
+import { apiClient } from './client';
 import type {
-  Document,
+  BaseDocument,
   DocumentUpload,
   DocumentVerification,
   DocumentVersion,
@@ -19,82 +19,82 @@ import type {
   DocumentMetadata,
   DocumentSignature,
   DocumentDownload,
-  DocumentPreview
+  DocumentPreview,
 } from '@/types/documents';
+
 
 export const documentsApi = {
   // Document Management
-  async getDocuments(params?: DocumentFilter): Promise<BulkDocumentResponse> {
-    const response = await client.get('/api/documents', { params });
-    return response.data;
+  async getDocuments(filter?: DocumentFilter): Promise<BulkDocumentResponse> {
+    const response = await apiClient.get<BulkDocumentResponse>(
+      '/api/documents',
+      filter as Record<string, unknown>  // ← apiClient.get takes params directly, not { params }
+    );
+    return response.data!;
   },
 
   async getDocument(id: string): Promise<DocumentResponse> {
-    const response = await client.get(`/api/documents/${id}`);
-    return response.data;
+    const response = await apiClient.get<DocumentResponse>(`/api/documents/${id}`);
+    return response.data!;
   },
 
   async createDocument(data: CreateDocumentRequest): Promise<DocumentResponse> {
-    const response = await client.post('/api/documents', data);
-    return response.data;
+    const response = await apiClient.post<DocumentResponse>('/api/documents', data);
+    return response.data!;
   },
 
   async updateDocument(id: string, data: UpdateDocumentRequest): Promise<DocumentResponse> {
-    const response = await client.put(`/api/documents/${id}`, data);
-    return response.data;
+    const response = await apiClient.put<DocumentResponse>(`/api/documents/${id}`, data);
+    return response.data!;
   },
 
   async deleteDocument(id: string): Promise<{ success: boolean; message: string }> {
-    const response = await client.delete(`/api/documents/${id}`);
-    return response.data;
+    const response = await apiClient.delete<{ success: boolean; message: string }>(`/api/documents/${id}`);
+    return response.data!;
   },
 
   async restoreDocument(id: string): Promise<DocumentResponse> {
-    const response = await client.post(`/api/documents/${id}/restore`);
-    return response.data;
+    const response = await apiClient.post<DocumentResponse>(`/api/documents/${id}/restore`);
+    return response.data!;
   },
 
   // Document Upload
   async uploadDocument(data: DocumentUpload): Promise<DocumentUploadResponse> {
-    const formData = new FormData();
-    formData.append('file', data.file);
-    formData.append('documentType', data.documentType);
-    formData.append('userId', data.userId);
-    
-    if (data.propertyId) formData.append('propertyId', data.propertyId);
-    if (data.documentSide) formData.append('documentSide', data.documentSide);
-    if (data.pageNumber !== undefined) formData.append('pageNumber', data.pageNumber.toString());
-    if (data.documentNumber) formData.append('documentNumber', data.documentNumber);
-    if (data.expiresAt) formData.append('expiresAt', data.expiresAt.toISOString());
-    if (data.isRequired !== undefined) formData.append('isRequired', data.isRequired.toString());
-    if (data.metadata) formData.append('metadata', JSON.stringify(data.metadata));
-    if (data.tags?.length) formData.append('tags', JSON.stringify(data.tags));
+    const additionalData: Record<string, unknown> = {
+      documentType: data.documentType,
+      userId: data.userId,
+      ...(data.propertyId && { propertyId: data.propertyId }),
+      ...(data.documentSide && { documentSide: data.documentSide }),
+      ...(data.pageNumber !== undefined && { pageNumber: data.pageNumber }),
+      ...(data.documentNumber && { documentNumber: data.documentNumber }),
+      ...(data.expiresAt && { expiresAt: data.expiresAt.toISOString() }),
+      ...(data.isRequired !== undefined && { isRequired: data.isRequired }),
+      ...(data.metadata && { metadata: JSON.stringify(data.metadata) }),
+      ...(data.tags?.length && { tags: JSON.stringify(data.tags) }),
+    };
 
-    const response = await client.post('/api/documents/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: data.onProgress ? (progressEvent) => {
-        const percentCompleted = Math.round(
-          (progressEvent.loaded * 100) / (progressEvent.total || 1)
-        );
-        data.onProgress?.(percentCompleted);
-      } : undefined,
-    });
-    return response.data;
+    const response = await apiClient.uploadFile<DocumentUploadResponse>(
+      '/api/documents/upload',
+      data.file,
+      additionalData
+      // onProgress function not supported by apiClient — handle at component level via state
+    );
+
+    return response.data!;
   },
 
   async uploadMultipleDocuments(
     uploads: DocumentUpload[]
-  ): Promise<{ 
+  ): Promise<{
     successful: DocumentUploadResponse[];
-    failed: Array<{ file: File; error: string }>; 
+    failed: Array<{ file: File; error: string }>;
   }> {
-    const formData = new FormData();
-    
+    const files = uploads.map((u) => u.file);
+
+   // Serialize per-file metadata as a JSON string keyed by index
+    const additionalData: Record<string, unknown> = {};
     uploads.forEach((upload, index) => {
-      formData.append(`files`, upload.file);
-      formData.append(`data[${index}]`, JSON.stringify({
+      additionalData[`data[${index}]`] = JSON.stringify({
         documentType: upload.documentType,
         userId: upload.userId,
         propertyId: upload.propertyId,
@@ -104,16 +104,16 @@ export const documentsApi = {
         expiresAt: upload.expiresAt?.toISOString(),
         isRequired: upload.isRequired,
         metadata: upload.metadata,
-        tags: upload.tags
-      }));
+        tags: upload.tags,
+      });
     });
 
-    const response = await client.post('/api/documents/upload/bulk', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    const response = await apiClient.uploadFiles<{
+      successful: DocumentUploadResponse[];
+      failed: Array<{ file: File; error: string }>;
+    }>('/api/documents/upload/bulk', files, additionalData);
+
+    return response.data!;
   },
 
   async replaceDocument(
@@ -121,32 +121,28 @@ export const documentsApi = {
     file: File,
     reason?: string
   ): Promise<DocumentResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    if (reason) formData.append('reason', reason);
-
-    const response = await client.post(`/api/documents/${documentId}/replace`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
+    const response = await apiClient.uploadFile<DocumentResponse>(
+      `/api/documents/${documentId}/replace`,
+      file,
+      reason ? { reason } : undefined
+    );
+    return response.data!;
   },
 
   // Document Download & Preview
   async downloadDocument(
     id: string,
-    options?: { 
+    options?: {
       version?: string;
       watermark?: boolean;
       format?: 'original' | 'pdf' | 'image';
     }
   ): Promise<DocumentDownload> {
-    const response = await client.get(`/api/documents/${id}/download`, {
-      params: options,
-      responseType: 'blob', // Important for handling binary data
-    });
-    return response.data;
+    const response = await apiClient.get<DocumentDownload>(
+      `/api/documents/${id}/download`,
+      options as Record<string, unknown>
+    );
+    return response.data!;
   },
 
   async previewDocument(
@@ -156,11 +152,11 @@ export const documentsApi = {
       format?: 'pdf' | 'image';
     }
   ): Promise<DocumentPreview> {
-    const response = await client.get(`/api/documents/${id}/preview`, {
-      params: options,
-      responseType: 'arraybuffer'
-    });
-    return response.data;
+    const response = await apiClient.get<DocumentPreview>(
+      `/api/documents/${id}/preview`,
+      options as Record<string, unknown>
+    );
+    return response.data!;
   },
 
   // Document Verification
@@ -168,47 +164,63 @@ export const documentsApi = {
     id: string,
     data: DocumentVerificationRequest
   ): Promise<DocumentVerification> {
-    const response = await client.post(`/api/documents/${id}/verify`, data);
-    return response.data;
+    const response = await apiClient.post<DocumentVerification>(
+      `/api/documents/${id}/verify`,
+      data
+    );
+    return response.data!;
   },
 
   // Document Sharing
   async shareDocument(id: string, data: DocumentShareRequest): Promise<DocumentShare> {
-    const response = await client.post(`/api/documents/${id}/share`, data);
-    return response.data;
+    const response = await apiClient.post<DocumentShare>(
+      `/api/documents/${id}/share`,
+      data
+    );
+    return response.data!;
   },
-  
+
   // Document Templates
   async getDocumentTemplates(): Promise<DocumentTemplate[]> {
-    const response = await client.get('/api/documents/templates');
-    return response.data;
+    const response = await apiClient.get<DocumentTemplate[]>('/api/documents/templates');
+    return response.data!;
   },
 
   async getDocumentTemplate(templateId: string): Promise<DocumentTemplate> {
-    const response = await client.get(`/api/documents/templates/${templateId}`);
-    return response.data;
+    const response = await apiClient.get<DocumentTemplate>(
+      `/api/documents/templates/${templateId}`
+    );
+    return response.data!;
   },
 
   // Document Versioning
   async getDocumentVersions(id: string): Promise<DocumentVersion[]> {
-    const response = await client.get(`/api/documents/${id}/versions`);
-    return response.data;
+    const response = await apiClient.get<DocumentVersion[]>(`/api/documents/${id}/versions`);
+    return response.data!;
   },
 
   async getDocumentVersion(id: string, versionId: string): Promise<DocumentVersion> {
-    const response = await client.get(`/api/documents/${id}/versions/${versionId}`);
-    return response.data;
+    const response = await apiClient.get<DocumentVersion>(
+      `/api/documents/${id}/versions/${versionId}`
+    );
+    return response.data!;
   },
 
   // Document Signing
   async signDocument(id: string, signatureData: DocumentSignature): Promise<DocumentSignature> {
-    const response = await client.post(`/api/documents/${id}/sign`, signatureData);
-    return response.data;
+    const response = await apiClient.post<DocumentSignature>(
+      `/api/documents/${id}/sign`,
+      signatureData
+    );
+    return response.data!;
   },
 
   // Document Metadata
   async updateMetadata(id: string, metadata: DocumentMetadata): Promise<DocumentResponse> {
-    const response = await client.put(`/api/documents/${id}/metadata`, metadata);
-    return response.data;
+    const response = await apiClient.put<DocumentResponse>(
+      `/api/documents/${id}/metadata`,
+      metadata
+    );
+    return response.data!;
   },
 };
