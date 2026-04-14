@@ -1,30 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api/client';
+import  api  from '@/lib/api/client';
 
-interface PaymentStatusData {
-  id: string;
-  status: string;
-  amount: number;
-  currency: string;
-  isReleased: boolean;
-  releasedAt?: string;
-  confirmationPeriodEnd?: string;
-  agentCommission?: number;
-  platformFee?: number;
-  ownerAmount?: number;
-  canRequestRefund: boolean;
-  refundDeadline?: string;
-}
+import {
+  getPaymentStatus,
+  getPaymentReleaseSchedule,
+  type PaymentStatusData,
+  type PaymentReleaseSchedule,
+} from '@/lib/api/paymentStatus';
 
-interface PaymentReleaseSchedule {
-  paymentId: string;
-  scheduledReleaseDate: string;
-  daysRemaining: number;
-  hoursRemaining: number;
-  isInConfirmationPeriod: boolean;
-  canBeReleased: boolean;
-  releaseBlockedReason?: string;
-}
+
+
 
 export function usePaymentStatus(paymentId?: string) {
   const queryClient = useQueryClient();
@@ -35,15 +20,13 @@ export function usePaymentStatus(paymentId?: string) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<PaymentStatusData | null>({
     queryKey: ['payment-status', paymentId],
-    queryFn: async () => {
-      if (!paymentId) return null;
-      const response = await api.get<PaymentStatusData>(`/payments/${paymentId}/status`);
-      return response.data;
-    },
+    queryFn: async () => (paymentId ? getPaymentStatus(paymentId) : null),
     enabled: !!paymentId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query.state.data;
+
       // Refetch more frequently if payment is in confirmation period
       if (data?.confirmationPeriodEnd) {
         const deadline = new Date(data.confirmationPeriodEnd);
@@ -60,15 +43,9 @@ export function usePaymentStatus(paymentId?: string) {
   const {
     data: releaseSchedule,
     isLoading: isLoadingSchedule,
-  } = useQuery({
+  } = useQuery<PaymentReleaseSchedule | null>({
     queryKey: ['payment-release-schedule', paymentId],
-    queryFn: async () => {
-      if (!paymentId) return null;
-      const response = await api.get<PaymentReleaseSchedule>(
-        `/payments/${paymentId}/release-schedule`
-      );
-      return response.data;
-    },
+    queryFn: async () => (paymentId ? getPaymentReleaseSchedule(paymentId) : null),
     enabled: !!paymentId && !paymentStatus?.isReleased,
     refetchInterval: 30000, // Refetch every 30 seconds
   });

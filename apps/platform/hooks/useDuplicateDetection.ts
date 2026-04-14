@@ -1,5 +1,7 @@
 // apps/platform/hooks/useDuplicateDetection.ts
-import { useState, useCallback, useRef } from 'react';
+"use client"
+
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { geolocationApi, type GeolocationCoordinates, type DuplicateDetectionRequest, type DuplicateDetectionResponse, type PropertyBoundary } from '@/lib/api/geolocation';
 
@@ -41,7 +43,7 @@ export const useDuplicateDetection = (
         lastCheckedCoordinates: null,
     });
 
-    const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+    const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const lastCheckRef = useRef<{
         coordinates: GeolocationCoordinates;
         timestamp: number;

@@ -1,10 +1,20 @@
 'use client';
 
-import { useTranslation } from 'react-i18next';
+import { useTranslation, type CurrencyCode } from '@newcondo/i18n';
+
+// TODO: when you correct translations bug, make sure to effect the changes in @newcondo/i18n and 
+// uncomment the code below.
+// import { 
+//   languageMetadata,
+//   type CurrencyCode, 
+//   type Language,
+//   type Namespace,
+//   DEFAULT_CURRENCY,} from '@newcondo/i18n';
+
 import { useCallback, useMemo } from 'react';
 import { changeLanguage, getCurrentLanguage, getLanguageDirection } from '@/lib/i18n/client';
-import { type Language, type Namespace, languageMetadata } from '@/lib/i18n/translations';
-import { formatCurrency, type CurrencyCode, DEFAULT_CURRENCY } from '@/lib/utils/currency';
+import { type Language, type Namespace,languageMetadata } from '@/lib/i18n/translations';
+import { formatCurrency as formatCurrencyUtil, DEFAULT_CURRENCY } from '@/lib/utils/currency';
 
 /**
  * Enhanced i18n hook with additional utilities
@@ -28,7 +38,7 @@ export function useI18n(ns: Namespace | Namespace[] = 'common') {
    */
   const formatLocaleCurrency = useCallback(
     (amount: number | string, currency: CurrencyCode = DEFAULT_CURRENCY) => {
-      return formatCurrency(amount, currency, currentLanguage);
+      return formatCurrencyUtil(amount, currency, {locale: currentLanguage});
     },
     [currentLanguage]
   );
@@ -140,7 +150,7 @@ export function useLocaleFormat() {
   
   const formatCurrency = useCallback(
     (amount: number | string, currency: CurrencyCode = DEFAULT_CURRENCY) => {
-      return formatCurrency(amount, currency, currentLanguage);
+      return formatCurrencyUtil(amount, currency, { locale: currentLanguage });
     },
     [currentLanguage]
   );
@@ -200,7 +210,7 @@ export function useMultiNamespaceTranslation(namespaces: Namespace[]) {
 /**
  * Hook to check if translations are ready
  */
-export function useTranslationReady(ns?: Namespace | Namespace[]) {
+export function useTranslationReady(ns: Namespace | Namespace[] = 'common' ) {
   const { ready } = useTranslation(ns);
   return ready;
 }

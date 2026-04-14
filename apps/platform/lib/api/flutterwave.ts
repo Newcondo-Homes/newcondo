@@ -11,7 +11,7 @@ import type {
 
 declare global {
   interface Window {
-    FlutterwaveCheckout: (config: FlutterwaveConfig) => void;
+    FlutterwaveCheckout: ((config: FlutterwaveConfig) => void) | undefined;
   }
 }
 

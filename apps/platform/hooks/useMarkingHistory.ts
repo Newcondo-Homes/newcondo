@@ -1,6 +1,11 @@
 // apps/platform/hooks/useMarkingHistory.ts
 import { useQuery } from '@tanstack/react-query';
-import { getMarkingHistory, getMarkingJobDetails } from '@/lib/api/markingHistory';
+import {
+  getMarkingHistory,
+  getMarkingJobDetails,
+  type MarkingHistoryResponse,
+  type MarkingJobDetailsResponse
+} from '@/lib/api/markingHistory';
 
 export interface MarkingHistoryFilters {
   propertyId?: string;
@@ -12,7 +17,7 @@ export interface MarkingHistoryFilters {
 }
 
 export const useMarkingHistory = (filters?: MarkingHistoryFilters) => {
-  const query = useQuery({
+  const query = useQuery<MarkingHistoryResponse>({
     queryKey: ['marking-history', filters],
     queryFn: () => getMarkingHistory(filters),
     staleTime: 1000 * 60 * 3, // 3 minutes
@@ -24,7 +29,7 @@ export const useMarkingHistory = (filters?: MarkingHistoryFilters) => {
     totalCount: query.data?.totalCount || 0,
     totalPages: query.data?.totalPages || 0,
     currentPage: query.data?.currentPage || 1,
-    
+
     // Summary by status
     queuedCount: query.data?.queuedCount || 0,
     assignedCount: query.data?.assignedCount || 0,
@@ -32,16 +37,17 @@ export const useMarkingHistory = (filters?: MarkingHistoryFilters) => {
     completedCount: query.data?.completedCount || 0,
     cancelledCount: query.data?.cancelledCount || 0,
     expiredCount: query.data?.expiredCount || 0,
-    
+
     // Financial summary
     totalPaid: query.data?.totalPaid || 0,
     totalPending: query.data?.totalPending || 0,
-    
+    avgCompletionTime: query.data?.avgCompletionTime || 0,
+
     // States
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error,
-    
+
     // Actions
     refetch: query.refetch,
   };
@@ -49,17 +55,16 @@ export const useMarkingHistory = (filters?: MarkingHistoryFilters) => {
 
 // Hook for single marking job details
 export const useMarkingJobDetails = (jobId: string | undefined) => {
-  const query = useQuery({
+  const query = useQuery<MarkingJobDetailsResponse>({
     queryKey: ['marking-job-details', jobId],
     queryFn: () => getMarkingJobDetails(jobId!),
     enabled: !!jobId,
     staleTime: 1000 * 60 * 2, // 2 minutes
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh if job is in progress
-      const inProgress = ['QUEUED', 'ASSIGNED', 'IN_PROGRESS'].includes(
-        data?.job?.status || ''
-      );
-      return inProgress ? 1000 * 30 : false; // 30 seconds
+      const status = query.state.data?.job?.status;
+      const inProgress = ['QUEUED', 'ASSIGNED', 'IN_PROGRESS'].includes(status || '');
+      return inProgress ? 1000 * 30 : false;
     },
   });
 
@@ -70,7 +75,7 @@ export const useMarkingJobDetails = (jobId: string | undefined) => {
     assignedAgent: query.data?.assignedAgent,
     completionImages: query.data?.completionImages || [],
     boundaryData: query.data?.boundaryData,
-    
+
     // Status helpers
     isQueued: query.data?.job?.status === 'QUEUED',
     isAssigned: query.data?.job?.status === 'ASSIGNED',
@@ -78,22 +83,22 @@ export const useMarkingJobDetails = (jobId: string | undefined) => {
     isCompleted: query.data?.job?.status === 'COMPLETED',
     isCancelled: query.data?.job?.status === 'CANCELLED',
     isExpired: query.data?.job?.status === 'EXPIRED',
-    
+
     // Time tracking
     timeRemaining: query.data?.timeRemaining,
     isTimeExpired: query.data?.isTimeExpired || false,
     queuePosition: query.data?.queuePosition,
     estimatedCompletion: query.data?.estimatedCompletion,
-    
+
     // Payment info
     markingFee: query.data?.job?.markingFee || 0,
     paymentStatus: query.data?.job?.paymentStatus,
-    
+
     // States
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error,
-    
+
     // Actions
     refetch: query.refetch,
   };
@@ -106,16 +111,22 @@ export const usePropertyMarkingHistory = (propertyId: string) => {
 
 // Hook for marking statistics
 export const useMarkingStats = () => {
-  const { data } = useMarkingHistory({ limit: 1 });
-  
+  const {
+    totalCount,
+    completedCount,
+    queuedCount,
+    assignedCount,
+    inProgressCount,
+    totalPaid,
+    avgCompletionTime,
+  } = useMarkingHistory({ limit: 1 });
+
   return {
-    totalJobs: data?.totalCount || 0,
-    completedJobs: data?.completedCount || 0,
-    pendingJobs: (data?.queuedCount || 0) + (data?.assignedCount || 0) + (data?.inProgressCount || 0),
-    successRate: data?.totalCount 
-      ? ((data?.completedCount || 0) / data?.totalCount) * 100 
-      : 0,
-    totalSpent: data?.totalPaid || 0,
-    avgCompletionTime: data?.avgCompletionTime || 0,
+    totalJobs: totalCount,
+    completedJobs: completedCount,
+    pendingJobs: queuedCount + assignedCount + inProgressCount,
+    successRate: totalCount ? (completedCount / totalCount) * 100 : 0,
+    totalSpent: totalPaid,
+    avgCompletionTime: avgCompletionTime,
   };
 };

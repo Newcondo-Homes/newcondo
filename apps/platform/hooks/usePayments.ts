@@ -139,7 +139,7 @@ export const usePayments = () => {
   return {
     // Mutations
     createPayment: createPaymentMutation.mutate,
-    confirmPayment: confirmPaymentMutation.mutate,
+    confirmPayment: confirmPaymentMutation.mutateAsync,
     cancelPayment: cancelPaymentMutation.mutate,
     refundPayment: refundPaymentMutation.mutate,
     // retryPayment: retryPaymentMutation.mutate,

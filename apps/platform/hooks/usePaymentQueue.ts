@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui'
 
 interface QueuePosition {
   position: number;
@@ -28,7 +28,6 @@ interface JoinQueueParams {
 
 export function usePaymentQueue(propertyId?: string, unitId?: string) {
   const [isInQueue, setIsInQueue] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch queue status
@@ -50,7 +49,8 @@ export function usePaymentQueue(propertyId?: string, unitId?: string) {
       return response.json();
     },
     enabled: !!propertyId && isInQueue,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
+      const data = query.state.data;
       // Poll more frequently when processing or near front of queue
       if (data?.isProcessing || (data?.position ?? 0) <= 3) {
         return 2000; // 2 seconds
@@ -79,16 +79,13 @@ export function usePaymentQueue(propertyId?: string, unitId?: string) {
       setIsInQueue(true);
       queryClient.invalidateQueries({ queryKey: ['paymentQueue', propertyId, unitId] });
       
-      toast({
-        title: 'Added to Payment Queue',
+      toast.success('Added to Payment Queue',{
         description: `You are #${data.position} in line. Estimated wait: ${Math.ceil(data.estimatedWaitTime / 60)} minutes.`,
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Queue Join Failed',
+      toast.error('Queue Join Failed',{
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -112,8 +109,7 @@ export function usePaymentQueue(propertyId?: string, unitId?: string) {
       setIsInQueue(false);
       queryClient.invalidateQueries({ queryKey: ['paymentQueue', propertyId, unitId] });
       
-      toast({
-        title: 'Left Queue',
+      toast('Left Queue',{
         description: 'You have been removed from the payment queue.',
       });
     },
@@ -151,8 +147,7 @@ export function usePaymentQueue(propertyId?: string, unitId?: string) {
   // Notify when it's user's turn
   useEffect(() => {
     if (queueStatus?.position === 1 && !queueStatus.isProcessing) {
-      toast({
-        title: "It's Your Turn!",
+      toast.success("It's Your Turn!",{
         description: 'You can now proceed with payment.',
         duration: 10000,
       });

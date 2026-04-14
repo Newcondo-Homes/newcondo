@@ -10,10 +10,37 @@ export interface SubAgentFilters {
   limit?: number;
 }
 
+export interface PromotionLinkResponse {
+  promotionLink: string;
+  linkId: string;
+}
+
+export interface PromotionLinkStatsResponse {
+  totalClicks: number;
+  totalViews: number;
+  totalConversions: number;
+  conversionRate: number;
+  totalEarnings: number;
+  pendingEarnings: number;
+  recentClicks: any[];
+  recentConversions: any[];
+  clicksByDay: any[];
+  viewsByDay: any[];
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface PromotionSettingsResponse {
+  allowPublicPromotion: boolean;
+  allowPermissionBasedPromotion: boolean;
+  requireApproval: boolean;
+  commissionSplitPercentage: number;
+}
+
 // Get sub-agents
 export const getSubAgents = async (filters?: SubAgentFilters) => {
   const params = new URLSearchParams();
-  
+
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -21,7 +48,7 @@ export const getSubAgents = async (filters?: SubAgentFilters) => {
       }
     });
   }
-  
+
   const response = await apiClient.get(`/sub-agents?${params.toString()}`);
   return response.data;
 };
@@ -46,9 +73,9 @@ export const getSubAgentPerformance = async (subAgentId: string, propertyId?: st
 };
 
 // Generate promotion link
-export const generatePromotionLink = async (propertyId: string) => {
-  const response = await apiClient.post(`/properties/${propertyId}/promotion-link`);
-  return response.data;
+export const generatePromotionLink = async (propertyId: string): Promise<PromotionLinkResponse> => {
+  const response = await apiClient.post<PromotionLinkResponse>(`/properties/${propertyId}/promotion-link`);
+  return response.data as PromotionLinkResponse;
 };
 
 // Request promotion access
@@ -60,10 +87,10 @@ export const requestPromotionAccess = async (propertyId: string, message?: strin
 };
 
 // Get promotion link stats
-export const getPromotionLinkStats = async (propertyId: string, linkId?: string) => {
+export const getPromotionLinkStats = async (propertyId: string, linkId?: string): Promise<PromotionLinkStatsResponse> => {
   const params = linkId ? `?linkId=${linkId}` : '';
   const response = await apiClient.get(`/properties/${propertyId}/promotion-stats${params}`);
-  return response.data;
+  return response.data as PromotionLinkStatsResponse;
 };
 
 // Update promotion settings
@@ -75,18 +102,18 @@ export const updatePromotionSettings = async (
     requireApproval?: boolean;
     commissionSplitPercentage?: number;
   }
-) => {
-  const response = await apiClient.patch(
+): Promise<PromotionSettingsResponse> => {
+  const response = await apiClient.patch<PromotionSettingsResponse>(
     `/properties/${propertyId}/promotion-settings`,
     settings
   );
-  return response.data;
+  return response.data as PromotionSettingsResponse;
 };
 
 // Get promotion settings
-export const getPromotionSettings = async (propertyId: string) => {
-  const response = await apiClient.get(`/properties/${propertyId}/promotion-settings`);
-  return response.data;
+export const getPromotionSettings = async (propertyId: string): Promise<PromotionSettingsResponse> => {
+  const response = await apiClient.get<PromotionSettingsResponse>(`/properties/${propertyId}/promotion-settings`);
+  return response.data as PromotionSettingsResponse;
 };
 
 // Get sub-agent list for property

@@ -1,5 +1,5 @@
 {
-  "name": "@newcondo/auth-service",
+  "name": "@newcondo/referral-service",
   "version": "1.0.0",
   "description": "",
   "main": "dist/server.js",

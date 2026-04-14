@@ -1,5 +1,5 @@
 // apps/platform/hooks/useMapControls.ts
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useGeolocation } from './useGeolocation';
 
 interface Coordinates {
@@ -68,7 +68,8 @@ interface UseMapControlsReturn {
   userLocation: Coordinates | null;
   isLocationLoading: boolean;
   locationError: string | null;
-  requestUserLocation: () => void;
+  // requestUserLocation: () => void;
+  requestUserLocation: () => Promise<Coordinates>;
   
   // Map instance
   mapRef: React.MutableRefObject<google.maps.Map | null>;
@@ -95,10 +96,10 @@ export const useMapControls = (options: UseMapControlsOptions = {}): UseMapContr
 
   // Get user location
   const { 
-    location: userLocation, 
-    isLoading: isLocationLoading, 
+    coordinates: userLocation, 
+    loading: isLocationLoading, 
     error: locationError, 
-    requestLocation: requestUserLocation 
+    getCurrentLocation: requestUserLocation 
   } = useGeolocation();
 
   // Map state
@@ -115,7 +116,7 @@ export const useMapControls = (options: UseMapControlsOptions = {}): UseMapContr
   const [isDrawingMode, setIsDrawingMode] = useState(false);
 
   // Update map center when user location is available
-  React.useEffect(() => {
+  useEffect(() => {
     if (userLocation && !isDrawingMode) {
       setMapState(prev => ({
         ...prev,

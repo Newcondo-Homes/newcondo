@@ -1,6 +1,45 @@
 // apps/platform/lib/api/markingHistory.ts
 import { apiClient } from './client';
 
+
+export interface MarkingHistoryResponse {
+  markingJobs: MarkingJob[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  queuedCount: number;
+  assignedCount: number;
+  inProgressCount: number;
+  completedCount: number;
+  cancelledCount: number;
+  expiredCount: number;
+  totalPaid: number;
+  totalPending: number;
+  avgCompletionTime: number;
+}
+
+export interface MarkingJobDetailsResponse {
+  job: MarkingJob;
+  property: any;
+  assignedAgent?: any;
+  completionImages: string[];
+  boundaryData?: any;
+  timeRemaining?: number;
+  isTimeExpired: boolean;
+  queuePosition?: number;
+  estimatedCompletion?: string;
+}
+
+export interface MarkingJob {
+  id: string;
+  propertyId: string;
+  status: 'QUEUED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
+  markingFee: number;
+  paymentStatus: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface MarkingHistoryFilters {
   propertyId?: string;
   status?: 'QUEUED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
@@ -29,7 +68,7 @@ export interface CompleteMarkingData {
 }
 
 // Get marking history
-export const getMarkingHistory = async (filters?: MarkingHistoryFilters) => {
+export const getMarkingHistory = async (filters?: MarkingHistoryFilters): Promise<MarkingHistoryResponse> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -45,13 +84,13 @@ export const getMarkingHistory = async (filters?: MarkingHistoryFilters) => {
   }
   
   const response = await apiClient.get(`/marking-jobs/history?${params.toString()}`);
-  return response.data;
+  return response.data as MarkingHistoryResponse;
 };
 
 // Get marking job details
-export const getMarkingJobDetails = async (jobId: string) => {
+export const getMarkingJobDetails = async (jobId: string): Promise<MarkingJobDetailsResponse> => {
   const response = await apiClient.get(`/marking-jobs/${jobId}`);
-  return response.data;
+  return response.data as MarkingJobDetailsResponse;
 };
 
 // Create marking job

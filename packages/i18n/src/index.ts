@@ -17,8 +17,22 @@ export {
   type LocaleCode,
   type LocaleCode as Locale,
   type LocaleConfig,
-  type CurrencyCode
 } from './config/locales';
+
+export { 
+  languageMetadata,
+  languages,
+  fallbackLng,
+  // getOptions,
+  pluralRules,
+  // numberFormats,
+  type Language,
+} from './config/translations';
+
+export {
+  type CurrencyCode,
+  DEFAULT_CURRENCY
+} from './utils/currency'
 
 // Hook exports
 export { useTranslation } from './hooks/useTranslation';

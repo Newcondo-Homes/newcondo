@@ -6,6 +6,143 @@ import { Coordinates, BoundaryPolygon, PropertyBoundaryData } from './boundary';
 
 export type { Coordinates, BoundaryPolygon, PropertyBoundaryData };
 
+
+export type ImageType =
+  | 'BOUNDARY' | 'EXTERIOR_FRONT' | 'EXTERIOR_BACK' | 'EXTERIOR_SIDE'
+  | 'LIVING_ROOM' | 'BEDROOM' | 'KITCHEN' | 'BATHROOM'
+  | 'COMPOUND' | 'STREET_VIEW' | 'OTHER';
+
+export type PropertyCondition =
+  | 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR' | 'UNDER_CONSTRUCTION';
+
+export interface UploadCompletionImagesRequest {
+  images: Array<{
+    file: File;
+    type: ImageType;
+    description?: string;
+  }>;
+  notes?: string;
+}
+
+export interface CompletionImagesResponse {
+  success: boolean;
+  data: {
+    images: CompletionImage[];
+    totalUploaded: number;
+  };
+  message?: string;
+}
+
+export interface CompletionImage {
+  id: string;
+  url: string;
+  type: ImageType;
+  description?: string;
+  uploadedAt: string;
+}
+
+export interface SubmitBoundaryDataRequest {
+  boundaryCoordinates: Coordinates[];
+  centerPoint: Coordinates;
+  buildingArea?: number;
+  buildingHeight?: number;
+  numberOfFloors?: number;
+  accuracyLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+  notes?: string;
+}
+
+export interface BoundaryDataResponse {
+  success: boolean;
+  data: BoundaryData;
+  message?: string;
+}
+
+export interface BoundaryData {
+  coordinates: Coordinates[];
+  centerPoint: Coordinates;
+  buildingArea?: number;
+  buildingHeight?: number;
+  numberOfFloors?: number;
+  accuracyLevel: 'HIGH' | 'MEDIUM' | 'LOW';
+  notes?: string;
+}
+
+export interface CompleteMarkingJobRequest {
+  completionNotes: string;
+  boundaryMarked: boolean;
+  imagesUploaded: boolean;
+  propertyCondition: PropertyCondition;
+  isOccupied: boolean;
+  accessIssues?: string;
+  observations?: string;
+  completedAt: string;
+}
+
+export interface MarkingCompletionResponse {
+  success: boolean;
+  data: MarkingJob;
+  message?: string;
+  paymentInfo?: {
+    partialPayment: number;
+    remainingPayment: number;
+    confirmationRequired: boolean;
+    confirmationDeadline: string;
+  };
+}
+
+
+export interface ConfirmMarkingRequest {
+  rating: number;
+  feedback?: string;
+  aspectRatings?: {
+    accuracy: number;
+    timeliness: number;
+    communication: number;
+    professionalism: number;
+  };
+  boundaryAccurate: boolean;
+  imagesQualityAcceptable: boolean;
+  wouldRecommend?: boolean;
+  additionalComments?: string;
+}
+
+export interface RejectMarkingRequest {
+  primaryReason:
+    | 'INCORRECT_PROPERTY'
+    | 'POOR_BOUNDARY_MARKING'
+    | 'INSUFFICIENT_IMAGES'
+    | 'POOR_IMAGE_QUALITY'
+    | 'WRONG_LOCATION'
+    | 'INCOMPLETE_MARKING'
+    | 'UNPROFESSIONAL_CONDUCT'
+    | 'OTHER';
+  detailedExplanation: string;
+  issues: Array<{
+    type: 'BOUNDARY' | 'IMAGES' | 'LOCATION' | 'COMMUNICATION' | 'ACCESS' | 'OTHER';
+    description: string;
+  }>;
+  evidenceImages?: string[];
+  requestReMarking?: boolean;
+  requestRefund?: boolean;
+}
+
+export interface RequestRevisionRequest {
+  revisionType:
+    | 'BOUNDARY_ADJUSTMENT'
+    | 'ADDITIONAL_IMAGES'
+    | 'BETTER_IMAGE_QUALITY'
+    | 'CORRECT_LOCATION'
+    | 'COMPLETE_MISSING_AREAS'
+    | 'OTHER';
+  revisionRequests: Array<{
+    area: 'BOUNDARY' | 'EXTERIOR' | 'INTERIOR' | 'COMPOUND' | 'STREET_VIEW' | 'OTHER';
+    instruction: string;
+  }>;
+  revisionNotes: string;
+  priority?: 'LOW' | 'NORMAL' | 'HIGH';
+  revisionDeadline?: string;
+}
+
 // Marking job statuses (matches Prisma enum)
 export type MarkingJobStatus = 
   | 'QUEUED'

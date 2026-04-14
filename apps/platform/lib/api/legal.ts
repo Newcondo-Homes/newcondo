@@ -4,6 +4,7 @@ import { client } from './client';
 import type {
   LegalDocument,
   DocumentTemplate,
+  DocumentType,
   LegalUndertaking,
   DigitalSignature,
   ConsentDocument,
@@ -12,6 +13,8 @@ import type {
   LegalDocumentUpload,
   CreateLegalDocumentRequest,
   UpdateLegalDocumentRequest,
+  CreateLegalDocumentPayload,
+  UpdateLegalDocumentPayload,
   LegalDocumentResponse,
   BulkLegalDocumentResponse,
   DocumentVerificationRequest,
@@ -38,7 +41,7 @@ export const legalApi = {
   },
 
   async updateLegalDocument(
-    id: string, 
+    id: string,
     data: UpdateLegalDocumentRequest
   ): Promise<LegalDocumentResponse> {
     const response = await client.put(`/api/legal/documents/${id}`, data);
@@ -80,7 +83,7 @@ export const legalApi = {
   },
 
   async createDocumentFromTemplate(
-    templateId: string, 
+    templateId: string,
     data: LegalTemplateRequest
   ): Promise<LegalDocumentResponse> {
     const response = await client.post(`/api/legal/templates/${templateId}/generate`, data);
@@ -99,7 +102,7 @@ export const legalApi = {
   },
 
   async requestSignature(
-    documentId: string, 
+    documentId: string,
     data: { signerEmail: string; signerRole: string; message?: string }
   ): Promise<{ success: boolean; message: string }> {
     const response = await client.post(`/api/legal/documents/${documentId}/request-signature`, data);
@@ -302,4 +305,52 @@ export const legalApi = {
     const response = await client.get(`/api/legal/compliance/report/${propertyId}`);
     return response.data;
   }
+
+  // apps/platform/lib/api/legal.ts — add these to the legalApi object
+
+async getPropertyDocuments(propertyId: string): Promise<LegalDocument[]> {
+    const response = await client.get('/api/legal/documents', {
+      params: { propertyId }
+    });
+    return response.data.data;
+  },
+
+  async getUserDocuments(): Promise<LegalDocument[]> {
+    const response = await client.get('/api/legal/documents/user');
+    return response.data.data;
+  },
+
+  async createDocument(payload: CreateLegalDocumentPayload): Promise<LegalDocument> {
+    const response = await client.post('/api/legal/documents', payload);
+    return response.data.data;
+  },
+
+  async updateDocument(
+    id: string,
+    payload: UpdateLegalDocumentPayload
+  ): Promise<LegalDocument> {
+    const response = await client.put(`/api/legal/documents/${id}`, payload);
+    return response.data.data;
+  },
+
+  async deleteDocument(id: string): Promise<void> {
+    await client.delete(`/api/legal/documents/${id}`);
+  },
+
+  async getRequiredDocuments(
+    propertyType: string,
+    userRole: string
+  ): Promise<LegalDocument[]> {
+    const response = await client.get('/api/legal/documents/required', {
+      params: { propertyType, userRole }
+    });
+    return response.data.data;
+  },
+
+  async downloadTemplate(templateType: DocumentType): Promise<Blob> {
+    const response = await client.get(`/api/legal/templates/${templateType}/download`, {
+      responseType: 'blob'
+    });
+    return response.data;
+  },
 };

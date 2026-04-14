@@ -11,15 +11,15 @@
 export const NAMESPACES = [
   'common',        // General UI text (buttons, labels, common phrases)
   'auth',          // Authentication-related text (login, register, verify)
-  'property',      // Property listing text (titles, descriptions, filters)
-  'payment',       // Payment and transaction text
+  'properties',      // Property listing text (titles, descriptions, filters)
+  'payments',       // Payment and transaction text
   'profile',       // User profile and settings text
   'admin',         // Admin dashboard text
   'errors',        // Error messages and validation text
   'marking',       // Property marking service text
   'legal',         // Terms, conditions, and legal text
-  'referral',      // Referral system text
-  'notification',  // Notification messages
+  'referrals',      // Referral system text
+  'notifications',  // Notification messages
   'email',         // Email templates text
   'validation',    // Form validation messages
   'dashboard',     // Dashboard-specific text
@@ -37,15 +37,15 @@ export type Namespace = typeof NAMESPACES[number];
 export const NAMESPACE_DESCRIPTIONS: Record<Namespace, string> = {
   common: 'General UI elements, buttons, labels, and common phrases used throughout the application',
   auth: 'Login, registration, OTP verification, password reset, and authentication flows',
-  property: 'Property listings, details, creation, editing, filters, and property-related actions',
-  payment: 'Payment forms, transaction history, virtual accounts, and payment-related messages',
+  properties: 'Property listings, details, creation, editing, filters, and property-related actions',
+  payments: 'Payment forms, transaction history, virtual accounts, and payment-related messages',
   profile: 'User profiles, settings, preferences, and account management',
   admin: 'Admin dashboard, user management, approvals, and administrative functions',
   errors: 'Error messages, validation errors, and error states',
   marking: 'Property marking service, agent assignment, job management, and completion',
   legal: 'Terms of service, privacy policy, disclaimers, and legal agreements',
-  referral: 'Referral program, invite links, rewards, and referral tracking',
-  notification: 'In-app notifications, alerts, and notification preferences',
+  referrals: 'Referral program, invite links, rewards, and referral tracking',
+  notifications: 'In-app notifications, alerts, and notification preferences',
   email: 'Email template content and email-specific messages',
   validation: 'Form field validation messages and input requirements',
   dashboard: 'Dashboard widgets, statistics, and dashboard-specific content',
@@ -76,11 +76,11 @@ export const LAZY_NAMESPACES: Namespace[] = NAMESPACES.filter(
  */
 export const NAMESPACE_DEPENDENCIES: Partial<Record<Namespace, Namespace[]>> = {
   auth: ['validation', 'errors'],
-  property: ['validation', 'errors', 'search'],
-  payment: ['validation', 'errors'],
+  properties: ['validation', 'errors', 'search'],
+  payments: ['validation', 'errors'],
   profile: ['validation', 'errors'],
-  marking: ['validation', 'errors', 'payment'],
-  admin: ['validation', 'errors', 'property', 'payment'],
+  marking: ['validation', 'errors', 'payments'],
+  admin: ['validation', 'errors', 'properties', 'payments'],
 };
 
 /**

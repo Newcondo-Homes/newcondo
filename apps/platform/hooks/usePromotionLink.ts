@@ -6,7 +6,7 @@ import {
   getPromotionLinkStats,
   updatePromotionSettings,
 } from '@/lib/api/subAgents';
-import { useToast } from '@/hooks/useToast';
+import { toast } from '@newcondo/ui';
 import { useState } from 'react';
 
 export interface PromotionSettings {
@@ -18,7 +18,6 @@ export interface PromotionSettings {
 
 export const usePromotionLink = (propertyId: string) => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   // Generate promotion link mutation
@@ -26,28 +25,25 @@ export const usePromotionLink = (propertyId: string) => {
     mutationFn: () => generatePromotionLink(propertyId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agent-referrals'] });
-      
+
       // Copy to clipboard
       if (navigator.clipboard && data.promotionLink) {
         navigator.clipboard.writeText(data.promotionLink);
         setCopiedLink(data.promotionLink);
-        
-        toast({
-          title: 'Success',
+
+        toast.success('Success', {
           description: 'Promotion link copied to clipboard',
         });
-        
+
         // Reset copied state after 3 seconds
         setTimeout(() => setCopiedLink(null), 3000);
       }
-      
+
       return data;
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to generate promotion link',
-        variant: 'destructive',
       });
     },
   });
@@ -56,36 +52,30 @@ export const usePromotionLink = (propertyId: string) => {
   const requestAccessMutation = useMutation({
     mutationFn: (message?: string) => requestPromotionAccess(propertyId, message),
     onSuccess: () => {
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: 'Promotion access requested. Awaiting approval.',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to request promotion access',
-        variant: 'destructive',
       });
     },
   });
 
   // Update promotion settings mutation (for property owners/listing agents)
   const updateSettingsMutation = useMutation({
-    mutationFn: (settings: PromotionSettings) => 
+    mutationFn: (settings: PromotionSettings) =>
       updatePromotionSettings(propertyId, settings),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promotion-settings', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: 'Promotion settings updated successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to update promotion settings',
-        variant: 'destructive',
       });
     },
   });
@@ -96,17 +86,17 @@ export const usePromotionLink = (propertyId: string) => {
     generateLinkAsync: generateLinkMutation.mutateAsync,
     requestAccess: requestAccessMutation.mutate,
     updateSettings: updateSettingsMutation.mutate,
-    
+
     // States
     isGenerating: generateLinkMutation.isPending,
     isRequesting: requestAccessMutation.isPending,
     isUpdatingSettings: updateSettingsMutation.isPending,
     copiedLink,
-    
+
     // Data
     generatedLink: generateLinkMutation.data?.promotionLink,
     linkId: generateLinkMutation.data?.linkId,
-    
+
     // Errors
     generateError: generateLinkMutation.error,
     requestError: requestAccessMutation.error,
@@ -130,27 +120,27 @@ export const usePromotionLinkStats = (propertyId: string, linkId?: string) => {
     totalViews: query.data?.totalViews || 0,
     totalConversions: query.data?.totalConversions || 0,
     conversionRate: query.data?.conversionRate || 0,
-    
+
     // Earnings
     totalEarnings: query.data?.totalEarnings || 0,
     pendingEarnings: query.data?.pendingEarnings || 0,
-    
+
     // Recent activity
     recentClicks: query.data?.recentClicks || [],
     recentConversions: query.data?.recentConversions || [],
-    
+
     // Time-series data
     clicksByDay: query.data?.clicksByDay || [],
     viewsByDay: query.data?.viewsByDay || [],
-    
+
     // Link info
     linkCreatedAt: query.data?.createdAt,
     isActive: query.data?.isActive || false,
-    
+
     // States
     isLoading: query.isLoading,
     error: query.error,
-    
+
     // Actions
     refetch: query.refetch,
   };
@@ -175,12 +165,11 @@ export const usePromotionSettings = (propertyId: string) => {
 
 // Utility hook for sharing property link
 export const useShareProperty = () => {
-  const { toast } = useToast();
   const [isSharing, setIsSharing] = useState(false);
 
   const shareProperty = async (propertyId: string, title: string, url: string) => {
     setIsSharing(true);
-    
+
     try {
       if (navigator.share) {
         // Use native share API if available
@@ -189,26 +178,22 @@ export const useShareProperty = () => {
           text: `Check out this property on Newcondo`,
           url: url,
         });
-        
-        toast({
-          title: 'Success',
+
+        toast.success('Success', {
           description: 'Property shared successfully',
         });
       } else {
         // Fallback to clipboard
         await navigator.clipboard.writeText(url);
-        
-        toast({
-          title: 'Success',
+
+        toast.success('Success', {
           description: 'Property link copied to clipboard',
         });
       }
     } catch (error: any) {
       if (error.name !== 'AbortError') {
-        toast({
-          title: 'Error',
+        toast.error('Error', {
           description: 'Failed to share property',
-          variant: 'destructive',
         });
       }
     } finally {

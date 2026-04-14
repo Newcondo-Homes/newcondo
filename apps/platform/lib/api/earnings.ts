@@ -1,5 +1,6 @@
 // apps/platform/lib/api/earnings.ts
 import { apiClient } from './client';
+import type { EarningsResponse, EarningsBreakdownResponse} from '@/types/earnings'
 
 export interface EarningsFilters {
   startDate?: Date;
@@ -9,7 +10,7 @@ export interface EarningsFilters {
 }
 
 // Get earnings
-export const getEarnings = async (filters?: EarningsFilters) => {
+export const getEarnings = async (filters?: EarningsFilters) : Promise<EarningsResponse>  => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -28,11 +29,11 @@ export const getEarnings = async (filters?: EarningsFilters) => {
   }
   
   const response = await apiClient.get(`/earnings?${params.toString()}`);
-  return response.data;
+  return response.data as EarningsResponse;
 };
 
 // Get earnings breakdown
-export const getEarningsBreakdown = async (filters?: EarningsFilters) => {
+export const getEarningsBreakdown = async (filters?: EarningsFilters): Promise<EarningsBreakdownResponse> => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -51,7 +52,7 @@ export const getEarningsBreakdown = async (filters?: EarningsFilters) => {
   }
   
   const response = await apiClient.get(`/earnings/breakdown?${params.toString()}`);
-  return response.data;
+  return response.data as EarningsBreakdownResponse;
 };
 
 // Initiate withdrawal

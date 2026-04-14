@@ -54,11 +54,14 @@ export interface UseTranslationResult {
  * ```
  */
 export const useTranslation = (
-  namespace: Namespace = 'common',
+  namespace: Namespace | Namespace[],
   options?: UseTranslationOptions<string>
 ): UseTranslationResult => {
   // Load namespace with its dependencies
-  const namespacesWithDeps = getNamespaceWithDependencies(namespace);
+  // const namespacesWithDeps = getNamespaceWithDependencies(namespace);
+   const namespacesWithDeps = Array.isArray(namespace)
+    ? [...new Set(namespace.flatMap(ns => getNamespaceWithDependencies(ns)))]
+    : getNamespaceWithDependencies(namespace ?? 'common');
   
   const { t, i18n, ready } = useI18NextTranslation(namespacesWithDeps, options);
 

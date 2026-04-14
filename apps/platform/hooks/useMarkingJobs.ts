@@ -45,6 +45,17 @@ interface MarkingJob {
   updatedAt: Date;
 }
 
+export const markingJobKeys = {
+  all: ['marking-jobs'] as const,
+  lists: () => [...markingJobKeys.all, 'list'] as const,
+  list: (filters?: any) => [...markingJobKeys.lists(), filters] as const,
+  details: () => [...markingJobKeys.all, 'detail'] as const,
+  detail: (id: string) => [...markingJobKeys.details(), id] as const,
+  stats: () => [...markingJobKeys.all, 'stats'] as const,
+  myAssignments: () => [...markingJobKeys.all, 'my-assignments'] as const,
+  myRequests: () => [...markingJobKeys.all, 'my-requests'] as const,
+};
+
 export function useMarkingJobs() {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);

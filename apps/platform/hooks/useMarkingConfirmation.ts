@@ -93,17 +93,24 @@ export function useConfirmMarking(jobId: string) {
     mutationFn: (data: ConfirmMarkingRequest) => confirmMarking(jobId, data),
     onSuccess: (response) => {
       toast.success('Marking confirmed successfully! Payment has been released to the agent.');
-      
+
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: markingJobKeys.detail(jobId) });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.status(jobId) });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.pending() });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.history() });
-      
+
       // Invalidate agent rating if agent ID is available
+      // if (response.data.agentRating) {
+      //   queryClient.invalidateQueries({ queryKey: confirmationKeys.agentRating(response.data.agentId)  });
+      // }
+
       if (response.data.agentRating) {
-        queryClient.invalidateQueries({ queryKey: confirmationKeys.agentRating });
+        queryClient.invalidateQueries({
+          queryKey: [...confirmationKeys.all, 'agent-rating']
+        });
       }
+
     },
     onError: (error: any) => {
       toast.error(error.message || 'Failed to confirm marking');
@@ -119,7 +126,7 @@ export function useRejectMarking(jobId: string) {
     mutationFn: (data: RejectMarkingRequest) => rejectMarking(jobId, data),
     onSuccess: () => {
       toast.success('Marking rejected. The issue has been escalated to support.');
-      
+
       queryClient.invalidateQueries({ queryKey: markingJobKeys.detail(jobId) });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.status(jobId) });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.pending() });
@@ -139,7 +146,7 @@ export function useRequestRevision(jobId: string) {
     mutationFn: (data: RequestRevisionRequest) => requestRevision(jobId, data),
     onSuccess: () => {
       toast.success('Revision request sent to the agent');
-      
+
       queryClient.invalidateQueries({ queryKey: markingJobKeys.detail(jobId) });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.status(jobId) });
     },
@@ -154,11 +161,11 @@ export function useExtendConfirmationDeadline(jobId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (extensionDays: number) => 
+    mutationFn: (extensionDays: number) =>
       extendConfirmationDeadline(jobId, extensionDays),
     onSuccess: (response) => {
       toast.success(`Deadline extended to ${new Date(response.newDeadline).toLocaleDateString()}`);
-      
+
       queryClient.invalidateQueries({ queryKey: confirmationKeys.deadline(jobId) });
       queryClient.invalidateQueries({ queryKey: confirmationKeys.status(jobId) });
     },

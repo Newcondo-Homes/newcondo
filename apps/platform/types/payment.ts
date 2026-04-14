@@ -66,6 +66,21 @@ export interface PaymentWithRental extends Payment {
   } | null;
 }
 
+export interface FlutterwaveCustomer {
+  email: string;
+  name: string;
+  phone?: string;
+  phone_number?: string; // Flutterwave SDK uses phone_number
+}
+
+export interface FlutterwaveCustomization {
+  title: string;
+  description: string;
+  logo?: string;
+}
+
+export type PaymentCallback = (response: FlutterwaveResponse) => void;
+
 // Form data for creating payments
 export interface PaymentForm {
   amount: number;
@@ -114,18 +129,12 @@ export interface FlutterwaveConfig {
   amount: number;
   currency: string;
   payment_options: string;
-  redirect_url: string;
-  customer: {
-    email: string;
-    phone_number: string;
-    name: string;
-  };
-  customizations: {
-    title: string;
-    description: string;
-    logo?: string;
-  };
+  redirect_url?: string;
+  customer: FlutterwaveCustomer; // ✅ use the interface instead of inline type
+  customizations: FlutterwaveCustomization;
   meta?: Record<string, any>;
+  callback?: PaymentCallback;
+  onclose?: () => void;
 }
 
 export interface FlutterwaveResponse {

@@ -1,12 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLegalStore } from '@/store/legalStore';
 import { legalApi } from '@/lib/api/legal';
-import type { 
-  LegalDocument, 
-  DocumentType, 
+import {
+  LegalDocument,
+  DocumentType,
   DocumentStatus,
   CreateLegalDocumentPayload,
-  UpdateLegalDocumentPayload 
+  UpdateLegalDocumentPayload
 } from '@/types/legal';
 import { toast } from 'sonner';
 
@@ -25,7 +25,7 @@ export const useLegalDocuments = (propertyId?: string) => {
     queryFn: async () => {
       setLoading(true);
       try {
-        const data = propertyId 
+        const data = propertyId
           ? await legalApi.getPropertyDocuments(propertyId)
           : await legalApi.getUserDocuments();
         setDocuments(data);
@@ -44,11 +44,11 @@ export const useLegalDocuments = (propertyId?: string) => {
 
   // Create new legal document
   const createDocumentMutation = useMutation({
-    mutationFn: (payload: CreateLegalDocumentPayload) => 
+    mutationFn: (payload: CreateLegalDocumentPayload) =>
       legalApi.createDocument(payload),
     onSuccess: (newDocument) => {
       queryClient.setQueryData(
-        ['legal-documents', propertyId], 
+        ['legal-documents', propertyId],
         (old: LegalDocument[] = []) => [...old, newDocument]
       );
       toast.success('Legal document uploaded successfully');

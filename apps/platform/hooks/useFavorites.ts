@@ -11,7 +11,7 @@ const addToFavoritesAPI = async (propertyId: string): Promise<void> => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ propertyId }),
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to add to favorites');
   }
@@ -22,7 +22,7 @@ const removeFromFavoritesAPI = async (propertyId: string): Promise<void> => {
   const response = await fetch(`/api/favorites/${propertyId}`, {
     method: 'DELETE',
   });
-  
+
   if (!response.ok) {
     throw new Error('Failed to remove from favorites');
   }
@@ -31,11 +31,11 @@ const removeFromFavoritesAPI = async (propertyId: string): Promise<void> => {
 const getFavoritesAPI = async (): Promise<string[]> => {
   // This would make an API call to get user's favorite property IDs
   const response = await fetch('/api/favorites');
-  
+
   if (!response.ok) {
     throw new Error('Failed to fetch favorites');
   }
-  
+
   const data = await response.json();
   return data.favoriteIds || [];
 };
@@ -48,21 +48,36 @@ const getFavoritesAPI = async (): Promise<string[]> => {
  */
 export function useFavorites() {
   const { session } = useAuth();
+  // const {
+  //   favorites,
+  //   isLoading,
+  //   error,
+  //   addFavorite,
+  //   removeFavorite,
+  //   setFavorites,
+  //   setLoading,
+  //   setError,
+  //   clearFavorites,
+  // } = useFavoritesStore();
+
   const {
-    favorites,
+    favoriteIds,
     isLoading,
     error,
-    addFavorite,
-    removeFavorite,
-    setFavorites,
-    setLoading,
-    setError,
+    addToFavorites,
+    removeFromFavorites,
     clearFavorites,
+    getFavoriteProperties,
+    getFavoriteCount,
+    loadFavoritesFromServer,
   } = useFavoritesStore();
 
   /**
    * Check if a property is in favorites
    */
+
+  const favorites = Array.from(favoriteIds);
+
   const isFavorite = useCallback((propertyId: string): boolean => {
     return favorites.includes(propertyId);
   }, [favorites]);
@@ -70,55 +85,40 @@ export function useFavorites() {
   /**
    * Toggle favorite status of a property
    */
-  const toggleFavorite = useCallback(async (propertyId: string) => {
+  const toggleFavorite = useCallback(async (propertyId: string, property?: any) => {
     if (!session?.user) {
       toast.error('Please login to save favorites');
       return;
     }
 
-    const isCurrentlyFavorite = isFavorite(propertyId);
-    setLoading(true);
-    setError(null);
+    const isCurrentlyFavorite = favoriteIds.has(propertyId);
+
 
     try {
       if (isCurrentlyFavorite) {
-        // Optimistic update - remove immediately
-        removeFavorite(propertyId);
-        
-        // API call
-        await removeFromFavoritesAPI(propertyId);
-        
+        removeFromFavorites(propertyId);
+
         toast.success('Removed from favorites');
       } else {
         // Optimistic update - add immediately
-        addFavorite(propertyId);
-        
+        if (!property) {
+          toast.error('Property data required to add to favorites');
+          return;
+        }
+
         // API call
-        await addToFavoritesAPI(propertyId);
-        
+        addToFavorites(property);
         toast.success('Added to favorites');
       }
-    } catch (error) {
-      // Revert optimistic update on error
-      if (isCurrentlyFavorite) {
-        addFavorite(propertyId);
-      } else {
-        removeFavorite(propertyId);
-      }
-      
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
-      setError(errorMessage);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
     }
   }, [
     session,
-    isFavorite,
-    addFavorite,
-    removeFavorite,
-    setLoading,
-    setError,
+    favoriteIds,
+    addToFavorites,
+    removeFromFavorites,
   ]);
 
   /**
@@ -130,54 +130,34 @@ export function useFavorites() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
-      const favoriteIds = await getFavoritesAPI();
-      setFavorites(favoriteIds);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load favorites';
-      setError(errorMessage);
-      console.error('Error loading favorites:', error);
-    } finally {
-      setLoading(false);
+      await loadFavoritesFromServer();
+    } catch (err) {
+      console.error('Error loading favorites:', err);
     }
-  }, [session, setFavorites, setLoading, setError, clearFavorites]);
+  }, [session, loadFavoritesFromServer, clearFavorites,]);
 
   /**
    * Add multiple properties to favorites
    */
-  const addMultipleFavorites = useCallback(async (propertyIds: string[]) => {
+  const addMultipleFavorites = useCallback(async (properties: any[]) => {
     if (!session?.user) {
       toast.error('Please login to save favorites');
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
       // Add all properties optimistically
-      propertyIds.forEach(id => addFavorite(id));
+      properties.forEach(property => addToFavorites(property));
+      toast.success(`Added ${properties.length} properties to favorites`);
 
-      // API calls for each property (in practice, you'd want a batch API)
-      await Promise.all(
-        propertyIds.map(id => addToFavoritesAPI(id))
-      );
-
-      toast.success(`Added ${propertyIds.length} properties to favorites`);
-    } catch (error) {
+    } catch (err) {
       // Revert optimistic updates on error
-      propertyIds.forEach(id => removeFavorite(id));
-      
-      const errorMessage = error instanceof Error ? error.message : 'Failed to add favorites';
-      setError(errorMessage);
+      properties.forEach(p => removeFromFavorites(p.id));
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add favorites';
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
     }
-  }, [session, addFavorite, removeFavorite, setLoading, setError]);
+  }, [session, addToFavorites, removeFromFavorites]);
 
   /**
    * Remove multiple properties from favorites
@@ -185,30 +165,14 @@ export function useFavorites() {
   const removeMultipleFavorites = useCallback(async (propertyIds: string[]) => {
     if (!session?.user) return;
 
-    setLoading(true);
-    setError(null);
-
     try {
-      // Remove all properties optimistically
-      propertyIds.forEach(id => removeFavorite(id));
-
-      // API calls for each property
-      await Promise.all(
-        propertyIds.map(id => removeFromFavoritesAPI(id))
-      );
-
+      propertyIds.forEach(id => removeFromFavorites(id));
       toast.success(`Removed ${propertyIds.length} properties from favorites`);
-    } catch (error) {
-      // Revert optimistic updates on error
-      propertyIds.forEach(id => addFavorite(id));
-      
-      const errorMessage = error instanceof Error ? error.message : 'Failed to remove favorites';
-      setError(errorMessage);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to remove favorites';
       toast.error(errorMessage);
-    } finally {
-      setLoading(false);
     }
-  }, [session, addFavorite, removeFavorite, setLoading, setError]);
+  }, [session, removeFromFavorites]);
 
   /**
    * Get count of favorites
@@ -234,12 +198,16 @@ export function useFavorites() {
 
     if (!confirmed) return;
 
-    await removeMultipleFavorites(favorites);
+    clearFavorites();
+    toast.success('All favorites cleared');
+
+    // await removeMultipleFavorites(favorites);
   }, [session, favorites, removeMultipleFavorites]);
 
   return {
     // State
     favorites,
+    favoriteProperties: getFavoriteProperties(),
     isLoading,
     error,
     favoritesCount: favoritesCount(),

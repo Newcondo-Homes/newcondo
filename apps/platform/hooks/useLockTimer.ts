@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { api } from '@/lib/api/client';
+import { lockTimerApi } from '@/lib/api/lockTimer';
 
 interface LockTimerState {
   isLocked: boolean;
@@ -68,21 +68,7 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
 
   // Acquire lock mutation
   const acquireLockMutation = useMutation({
-    mutationFn: async () => {
-      const endpoint = unitId
-        ? `/api/properties/${propertyId}/units/${unitId}/acquire-lock`
-        : `/api/properties/${propertyId}/acquire-lock`;
-
-      const response = await api.post<{
-        success: boolean;
-        lockId: string;
-        lockExpiry: string;
-      }>(endpoint, {
-        lockDuration,
-      });
-
-      return response.data;
-    },
+    mutationFn: () => lockTimerApi.acquireLock(propertyId, { lockDuration }, unitId),
     onSuccess: (data) => {
       const expiry = new Date(data.lockExpiry);
       setState({
@@ -97,18 +83,14 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
 
   // Release lock mutation
   const releaseLockMutation = useMutation({
-    mutationFn: async () => {
-      if (!state.lockId) return { success: false };
+    mutationFn: () => {
+      if (!state.lockId) return Promise.resolve({ success: false });;
 
-      const endpoint = unitId
-        ? `/api/properties/${propertyId}/units/${unitId}/release-lock`
-        : `/api/properties/${propertyId}/release-lock`;
-
-      const response = await api.post<{ success: boolean }>(endpoint, {
-        lockId: state.lockId,
-      });
-
-      return response.data;
+      return lockTimerApi.releaseLock(
+        propertyId,
+        { lockId: state.lockId },
+        unitId
+      );
     },
     onSuccess: () => {
       setState({
@@ -118,33 +100,25 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
         lockId: null,
       });
       hasWarned.current = false;
-      if (onLockReleased) {
-        onLockReleased();
-      }
+      onLockReleased?.();
     },
   });
 
   // Extend lock mutation
   const extendLockMutation = useMutation({
     mutationFn: async (additionalSeconds: number = lockDuration) => {
-      if (!state.lockId) return { success: false, lockExpiry: null };
+      if (!state.lockId) {
+        Promise.resolve({ success: false, lockExpiry: '' });
+      }
 
-      const endpoint = unitId
-        ? `/api/properties/${propertyId}/units/${unitId}/extend-lock`
-        : `/api/properties/${propertyId}/extend-lock`;
-
-      const response = await api.post<{
-        success: boolean;
-        lockExpiry: string;
-      }>(endpoint, {
-        lockId: state.lockId,
-        additionalSeconds,
-      });
-
-      return response.data;
+      return lockTimerApi.extendLock(
+        propertyId,
+        { lockId: state.lockId, additionalSeconds },
+        unitId
+      );
     },
     onSuccess: (data) => {
-      if (data.lockExpiry) {
+      if (!data.lockExpiry) {
         const expiry = new Date(data.lockExpiry);
         setState((prev) => ({
           ...prev,
@@ -152,9 +126,7 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
           lockExpiry: expiry,
         }));
         hasWarned.current = false;
-        if (onLockExtended) {
-          onLockExtended(expiry);
-        }
+        onLockExtended?.(expiry);
       }
     },
   });
@@ -177,11 +149,10 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
       if (
         !hasWarned.current &&
         remaining <= warningThreshold &&
-        remaining > 0 &&
-        onWarning
+        remaining > 0 
       ) {
         hasWarned.current = true;
-        onWarning(remaining);
+        onWarning?.(remaining);
       }
 
       // Check for expiration
@@ -212,15 +183,7 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
     return () => {
       if (autoRelease && state.isLocked && state.lockId) {
         // Use navigator.sendBeacon for reliable cleanup on page unload
-        const endpoint = unitId
-          ? `/api/properties/${propertyId}/units/${unitId}/release-lock`
-          : `/api/properties/${propertyId}/release-lock`;
-
-        const blob = new Blob(
-          [JSON.stringify({ lockId: state.lockId })],
-          { type: 'application/json' }
-        );
-        navigator.sendBeacon(endpoint, blob);
+        lockTimerApi.beaconReleaseLock(propertyId, state.lockId, unitId);
       }
     };
   }, [autoRelease, state.isLocked, state.lockId, propertyId, unitId]);
@@ -282,8 +245,8 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
     isAcquiring: acquireLockMutation.isPending,
     isReleasing: releaseLockMutation.isPending,
     isExtending: extendLockMutation.isPending,
-    canExtend,
-    isWarning,
+    canExtend:state.isLocked && state.remainingTime > 0,
+    isWarning: state.remainingTime <= warningThreshold && state.remainingTime > 0,
     error: (acquireLockMutation.error || releaseLockMutation.error || extendLockMutation.error) as Error | null,
     formatRemainingTime,
   };

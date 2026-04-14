@@ -20,6 +20,30 @@ export interface LegalDocument {
   updatedAt: Date
 }
 
+export { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
+
+export interface CreateLegalDocumentPayload {
+  documentType: DocumentType;
+  documentSide?: DocumentSide;
+  pageNumber?: number;
+  documentNumber?: string;
+  file?: File;
+  propertyId?: string;
+  isRequired?: boolean;
+  expiresAt?: Date;
+}
+
+export interface UpdateLegalDocumentPayload {
+  documentSide?: DocumentSide;
+  pageNumber?: number;
+  documentNumber?: string;
+  fileName?: string;
+  fileUrl?: string;
+  verificationNotes?: string;
+  isRequired?: boolean;
+  expiresAt?: Date;
+}
+
 export interface LegalDocumentUpload {
   documentType: DocumentType
   documentSide?: DocumentSide
