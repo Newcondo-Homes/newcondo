@@ -1,6 +1,7 @@
 // apps/platform/hooks/useRentalMetrics.ts
 import { useQuery } from '@tanstack/react-query';
-import { getRentalMetrics } from '@/lib/api/rentalHistory';
+import { getRentalMetrics, RentalMetrics } from '@/lib/api/rentalHistory';
+import type { RentalMetricsFilters as ApiRentalMetricsFilters } from '@/lib/api/rentalHistory';
 
 export interface RentalMetricsFilters {
   propertyId?: string;
@@ -13,7 +14,7 @@ export const useRentalMetrics = (
   propertyId?: string,
   filters?: Omit<RentalMetricsFilters, 'propertyId'>
 ) => {
-  const query = useQuery({
+  const query = useQuery<RentalMetrics>({
     queryKey: ['rental-metrics', propertyId, filters],
     queryFn: () => getRentalMetrics(propertyId, filters),
     enabled: true,
@@ -64,7 +65,7 @@ export const usePortfolioRentalMetrics = (filters?: Omit<RentalMetricsFilters, '
 
 // Hook for comparing property performance
 export const usePropertyComparison = (propertyIds: string[], filters?: RentalMetricsFilters) => {
-  const query = useQuery({
+  const query = useQuery<RentalMetrics[]>({
     queryKey: ['property-comparison', propertyIds, filters],
     queryFn: async () => {
       // Fetch metrics for each property and compare

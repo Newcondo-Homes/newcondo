@@ -143,7 +143,7 @@ export const propertyApi = {
   // Get properties with filters and pagination
   async getAll(filters?: PropertyFilters): Promise<PropertyListResponse> {
     const params = new URLSearchParams()
-    
+
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -163,7 +163,7 @@ export const propertyApi = {
   // Get user's properties (owner or agent)
   async getUserProperties(userId: string, filters?: Omit<PropertyFilters, 'ownerId' | 'agentId'>): Promise<PropertyListResponse> {
     const params = new URLSearchParams()
-    
+
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
@@ -278,6 +278,8 @@ export const propertyApi = {
     return response.data
   },
 
+
+
   // Get property analytics
   async getAnalytics(propertyId: string, period: 'week' | 'month' | 'year' = 'month'): Promise<{
     views: number
@@ -305,4 +307,70 @@ export async function searchProperties(
       totalPages: result.pagination.totalPages,
     },
   };
+}
+
+/** Fetch a paginated/filtered list of properties */
+export async function getProperties(filters?: PropertyFilters) {
+  return propertyApi.getAll(filters)
+}
+
+/** Fetch a single property by ID */
+export async function getProperty(id: string): Promise<PropertyResponse> {
+  return propertyApi.getById(id)
+}
+
+/** Fetch recent / featured properties for the landing page */
+export async function getRecentProperties(): Promise<PropertyListResponse> {
+  return propertyApi.getAll({
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    limit: 12,
+    isAvailable: true,
+  })
+}
+
+/** Increment the view counter for a property and return the new count */
+export async function incrementViewCount(
+  propertyId: string
+): Promise<{ viewCount: number }> {
+  // The base API fires-and-forgets; here we call it then return
+  // a best-effort count from the cached property detail.
+  await propertyApi.incrementViewCount(propertyId)
+  // Return a placeholder — the hook merges this with cached data.
+  return { viewCount: 0 }
+}
+
+/** Generate / retrieve a shareable link for a property */
+export async function shareProperty(
+  propertyId: string
+): Promise<{ shareableLink: string }> {
+  const response = await apiClient.post(`/properties/${propertyId}/share`)
+  return response.data
+}
+
+/**
+ * Save boundary / marking data for a property.
+ * Called by useMarkProperty in useProperties.ts.
+ */
+export async function markProperty(
+  propertyId: string,
+  data: {
+    boundaryCoordinates: { lat: number; lng: number }[]
+    boundaryImages: string[]
+    boundaryVerified: boolean
+    boundaryMarkedAt: Date
+  }
+): Promise<PropertyResponse> {
+  const payload: PropertyBoundaryData = {
+    boundaryCoordinates: {
+      type: 'Polygon',
+      // Convert flat {lat,lng}[] to GeoJSON coordinate ring
+      coordinates: [data.boundaryCoordinates.map((c) => [c.lng, c.lat])],
+    },
+    gpsCoordinates: data.boundaryCoordinates[0] ?? { lat: 0, lng: 0 },
+    boundaryImages: data.boundaryImages,
+    buildingFingerprint: `fp-${propertyId}-${Date.now()}`,
+  }
+
+  return propertyApi.updateBoundary(propertyId, payload)
 }

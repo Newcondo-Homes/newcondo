@@ -1,14 +1,7 @@
 // apps/platform/hooks/usePropertyAnalytics.ts
 import { useQuery } from '@tanstack/react-query';
-import { getPropertyAnalytics } from '@/lib/api/propertyAnalytics';
-
-export interface AnalyticsFilters {
-  propertyId?: string;
-  startDate?: Date;
-  endDate?: Date;
-  period?: 'day' | 'week' | 'month' | 'year' | 'all';
-  metrics?: ('views' | 'favorites' | 'shares' | 'inquiries' | 'bookings')[];
-}
+import { getPropertyAnalytics, getPortfolioAnalytics  } from '@/lib/api/propertyAnalytics';
+import type { AnalyticsFilters } from '@/types/propertyAnalytics';
 
 export const usePropertyAnalytics = (
   propertyId: string | undefined,
@@ -55,10 +48,10 @@ export const usePropertyAnalytics = (
 };
 
 // Hook for portfolio-wide analytics
-export const usePortfolioAnalytics = (filters?: Omit<AnalyticsFilters, 'propertyId'>) => {
+export const usePortfolioAnalytics = (filters?: AnalyticsFilters) => {
   const query = useQuery({
     queryKey: ['portfolio-analytics', filters],
-    queryFn: () => getPropertyAnalytics(undefined, filters),
+    queryFn: () => getPortfolioAnalytics(filters),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 

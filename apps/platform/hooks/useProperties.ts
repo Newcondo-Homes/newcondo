@@ -7,6 +7,7 @@ import * as favoritesApi from '@/lib/api/favorites';
 import type { Property, PropertyFilters, PropertySearchParams } from '@/types/api';
 
 
+
 // Query keys for React Query
 export const propertyKeys = {
   all: ['properties'] as const,

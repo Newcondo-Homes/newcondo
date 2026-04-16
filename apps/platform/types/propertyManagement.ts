@@ -16,6 +16,49 @@ import type {
  * Property Management Types
  * Type definitions for property management features
  */
+export interface PropertyDetailsResponse {
+  property: ManagedProperty;
+  units: PropertyUnit[];
+  owner: {
+    id: string;
+    name: string | null;
+    email: string;
+    phone?: string | null;
+    image?: string | null;
+  };
+  agent?: {
+    id: string;
+    name: string | null;
+    email: string;
+    phone?: string | null;
+    image?: string | null;
+  } | null;
+  analytics?: {
+    totalViews: number;
+    totalFavorites: number;
+    totalShares: number;
+    totalInquiries: number;
+  };
+  rentals: {
+    id: string;
+    startDate: Date;
+    endDate?: Date;
+    monthlyRent: number;
+    status: string;
+    renter: { id: string; name: string | null; email: string };
+  }[];
+  markingHistory: {
+    id: string;
+    status: string;
+    createdAt: Date;
+    completedAt?: Date;
+    assignedAgent?: { id: string; name: string | null } | null;
+  }[];
+  isOwner: boolean;
+  isAgent: boolean;
+  canEdit: boolean;
+}
+
 
 // Base property interface for management
 export interface ManagedProperty {
@@ -139,16 +182,34 @@ export interface PropertyListFilters {
   maxPrice?: number;
   hasAgent?: boolean;
   boundaryVerified?: boolean;
-  search?: string;
+  search?: string
+  isAvailable?: boolean;
+  searchQuery?: string;
+  sortBy?: 'createdAt' | 'updatedAt' | 'viewCount' | 'price' | 'title';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
 }
 
 // Property list response
 export interface PropertyListResponse {
   properties: ManagedProperty[];
-  total: number;
-  page: number;
-  pageSize: number;
+  totalCount: number;         // was: total
   totalPages: number;
+  currentPage: number;        // was: page
+  pageSize: number;
+  hasNextPage: boolean;       // add
+  hasPreviousPage: boolean;   // add
+  stats: {
+    totalProperties: number;
+    publishedProperties: number;
+    draftProperties: number;
+    rentedProperties: number;
+    availableProperties: number;
+    totalViews: number;
+    totalUnits: number;
+    availableUnits: number;
+  };
 }
 
 // Property statistics
@@ -211,13 +272,32 @@ export interface PropertyMarketingData {
 
 // Property dashboard data
 export interface PropertyDashboardData {
-  overview: PropertyStatistics;
-  recentProperties: ManagedProperty[];
-  topPerformingProperties: ManagedProperty[];
+  properties: ManagedProperty[];
+  totalCount: number;
+  stats: {
+    totalProperties: number;
+    publishedProperties: number;
+    draftProperties: number;
+    rentedProperties: number;
+    availableProperties: number;
+    totalViews: number;
+    totalUnits: number;
+    availableUnits: number;
+  };
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+  // Keep summary fields for dashboard widgets
   pendingApprovals: number;
   unverifiedBoundaries: number;
   activeRentals: number;
   pendingConfirmations: number;
+  topPerformingProperties: ManagedProperty[];
+  recentProperties: ManagedProperty[];
 }
 
 // Property management action

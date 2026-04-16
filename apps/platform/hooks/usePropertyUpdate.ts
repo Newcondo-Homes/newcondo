@@ -6,7 +6,7 @@ import {
   reorderPropertyImages,
   deletePropertyImage,
 } from '@/lib/api/propertyManagement';
-import { useToast } from '@/hooks/useToast';
+import { toast } from '@newcondo/ui';
 import { useRouter } from 'next/navigation';
 
 export interface PropertyUpdateData {
@@ -29,7 +29,6 @@ export interface PropertyUpdateData {
 
 export const usePropertyUpdate = (propertyId: string) => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const router = useRouter();
 
   // Update property mutation
@@ -39,16 +38,13 @@ export const usePropertyUpdate = (propertyId: string) => {
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-management'] });
       queryClient.invalidateQueries({ queryKey: ['my-properties'] });
-      toast({
-        title: 'Success',
+      toast.success('Success',{
         description: 'Property updated successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: error.message || 'Failed to update property',
-        variant: 'destructive',
       });
     },
   });
@@ -59,16 +55,13 @@ export const usePropertyUpdate = (propertyId: string) => {
       updatePropertyImages(propertyId, images),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success',{
         description: 'Property images updated successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: error.message || 'Failed to update property images',
-        variant: 'destructive',
       });
     },
   });
@@ -78,16 +71,13 @@ export const usePropertyUpdate = (propertyId: string) => {
     mutationFn: (imageIds: string[]) => reorderPropertyImages(propertyId, imageIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success',{
         description: 'Images reordered successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: error.message || 'Failed to reorder images',
-        variant: 'destructive',
       });
     },
   });
@@ -97,16 +87,13 @@ export const usePropertyUpdate = (propertyId: string) => {
     mutationFn: (imageId: string) => deletePropertyImage(propertyId, imageId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success',{
         description: 'Image deleted successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: error.message || 'Failed to delete image',
-        variant: 'destructive',
       });
     },
   });

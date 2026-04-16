@@ -1,16 +1,18 @@
 // apps/platform/hooks/useReferralLink.ts
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useReferralStore } from '@/store/referralStore';
 import * as referralApi from '@/lib/api/referrals';
 import { copyToClipboard } from '@/lib/utils/shareHelpers';
 import { generateReferralLink } from '@/lib/utils/referralHelpers';
+import type { ReferralLink } from '@/types/referral';
 import { toast } from 'sonner';
 
 export function useReferralLink() {
-  const { referralLink, setReferralLink } = useReferralStore();
+  const addRecentlyCopiedLink = useReferralStore((s) => s.addRecentlyCopiedLink);
   const [isCopying, setIsCopying] = useState(false);
+  const [ referralLink, setReferralLink ] = useState<ReferralLink | null>(null);
 
   // Fetch referral link
   const {
@@ -18,16 +20,19 @@ export function useReferralLink() {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<ReferralLink>({
     queryKey: ['referral-link'],
     queryFn: referralApi.getReferralLink,
     staleTime: Infinity, // Cache indefinitely unless manually refetched
-    onSuccess: (data) => {
-      setReferralLink(data);
-    },
   });
 
-  const link = data || referralLink;
+   useEffect(() => {
+    if (data) {
+      setReferralLink(data);
+    }
+  }, [data]);
+
+  const link = data ?? referralLink;
 
   // Copy link to clipboard
   const copyLink = useCallback(async () => {
@@ -42,12 +47,13 @@ export function useReferralLink() {
 
     if (success) {
       toast.success('Link copied to clipboard!');
+      addRecentlyCopiedLink(link.url);
     } else {
       toast.error('Failed to copy link');
     }
 
     return success;
-  }, [link]);
+  }, [link, addRecentlyCopiedLink]);
 
   // Copy code to clipboard
   const copyCode = useCallback(async () => {

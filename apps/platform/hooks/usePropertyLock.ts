@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 interface PropertyLockData {
   propertyId: string;
   unitId?: string;
   isLocked: boolean;
-  lockExpiry: Date | null;
+  lockExpiry: string | null;
   lockedBy: string | null;
 }
 
@@ -16,6 +16,12 @@ interface LockPropertyParams {
   lockDuration?: number; // in milliseconds, default 15 minutes
 }
 
+interface ExtendLockParams {
+  propertyId: string;
+  unitId?: string;
+  additionalTime?: number;
+}
+
 interface ReleaseLockParams {
   propertyId: string;
   unitId?: string;
@@ -23,7 +29,6 @@ interface ReleaseLockParams {
 
 export function usePropertyLock(propertyId?: string, unitId?: string) {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch current lock status
@@ -68,16 +73,13 @@ export function usePropertyLock(propertyId?: string, unitId?: string) {
       queryClient.invalidateQueries({ queryKey: ['propertyLock', propertyId, unitId] });
       queryClient.invalidateQueries({ queryKey: ['propertyAvailability', propertyId] });
       
-      toast({
-        title: 'Property Locked',
+      toast('Property Locked',{
         description: 'You have 15 minutes to complete your payment.',
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Lock Failed',
+      toast.error('Lock Failed',{
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -109,7 +111,7 @@ export function usePropertyLock(propertyId?: string, unitId?: string) {
       propertyId, 
       unitId, 
       additionalTime = 300000 // 5 minutes default
-    }: LockPropertyParams) => {
+    }: ExtendLockParams) => {
       const response = await fetch('/api/booking/lock/extend', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -124,8 +126,7 @@ export function usePropertyLock(propertyId?: string, unitId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['propertyLock', propertyId, unitId] });
-      toast({
-        title: 'Lock Extended',
+      toast('Lock Extended',{
         description: 'You have additional time to complete payment.',
       });
     },
@@ -139,7 +140,7 @@ export function usePropertyLock(propertyId?: string, unitId?: string) {
     }
 
     const calculateTimeRemaining = () => {
-      const expiry = new Date(lockStatus.lockExpiry).getTime();
+      const expiry = new Date(lockStatus.lockExpiry!).getTime();
       const now = Date.now();
       const remaining = Math.max(0, expiry - now);
       setTimeRemaining(remaining);

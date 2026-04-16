@@ -1,22 +1,33 @@
 // apps/platform/lib/api/propertyManagement.ts
 import { apiClient } from './client';
-import { PropertyStatus } from '@prisma/client';
+import { PropertyStatus } from '@newcondo/db';
+import type {
+  PropertyDetailsResponse,
+  PropertyListResponse,
+  PropertyDashboardData,
+  ApiResponse,
+  PropertyUnit,
+} from '@/types/propertyManagement';
 
 export interface PropertyManagementFilters {
-  status?: PropertyStatus;
-  structure?: 'SINGLE_UNIT' | 'MULTI_FAMILY';
+  status?: PropertyStatus | PropertyStatus[];  // was: PropertyStatus only
+  structure?: 'SINGLE_UNIT' | 'MULTI_FAMILY'| ('SINGLE_UNIT' | 'MULTI_FAMILY')[];
   isAvailable?: boolean;
   searchQuery?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
+  minPrice?: number;           // add — hook uses these
+  maxPrice?: number;           // add
+  city?: string;               // add
+  state?: string;              // add
 }
 
 // Get property management dashboard data
-export const getPropertyManagementDashboard = async (filters?: PropertyManagementFilters) => {
+export const getPropertyManagementDashboard = async (filters?: PropertyManagementFilters): Promise<PropertyDashboardData> => {
   const params = new URLSearchParams();
-  
+
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -24,15 +35,15 @@ export const getPropertyManagementDashboard = async (filters?: PropertyManagemen
       }
     });
   }
-  
-  const response = await apiClient.get(`/properties/management?${params.toString()}`);
-  return response.data;
+
+  const response = await apiClient.get<PropertyDashboardData>(`/properties/management?${params.toString()}`);
+  return response.data as PropertyDashboardData;
 };
 
 // Get user's properties list
-export const getMyProperties = async (filters?: PropertyManagementFilters) => {
+export const getMyProperties = async (filters?: PropertyManagementFilters): Promise<PropertyListResponse> => {
   const params = new URLSearchParams();
-  
+
   if (filters) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
@@ -40,28 +51,37 @@ export const getMyProperties = async (filters?: PropertyManagementFilters) => {
       }
     });
   }
-  
-  const response = await apiClient.get(`/properties/my-properties?${params.toString()}`);
-  return response.data;
+
+  const response = await apiClient.get<PropertyListResponse>(`/properties/my-properties?${params.toString()}`);
+  return response.data as PropertyListResponse;
 };
 
 // Get single property details
-export const getPropertyDetails = async (propertyId: string, options?: { basicOnly?: boolean }) => {
+export const getPropertyDetails = async (
+  propertyId: string, 
+  options?: { basicOnly?: boolean }
+): Promise<PropertyDetailsResponse> => {
   const params = options?.basicOnly ? '?basicOnly=true' : '';
-  const response = await apiClient.get(`/properties/${propertyId}${params}`);
-  return response.data;
+  const response = await apiClient.get<PropertyDetailsResponse>(`/properties/${propertyId}${params}`);
+  return response.data as PropertyDetailsResponse;
 };
 
 // Update property
-export const updateProperty = async (propertyId: string, data: any) => {
+export const updateProperty = async (
+  propertyId: string, 
+  data: Partial<import('@/types/propertyManagement').PropertyUpdatePayload>
+): Promise<ApiResponse<import('@/types/propertyManagement').ManagedProperty>> => {
   const response = await apiClient.patch(`/properties/${propertyId}`, data);
-  return response.data;
+  return response.data as ApiResponse<import('@/types/propertyManagement').ManagedProperty>;
 };
 
 // Update property status
-export const updatePropertyStatus = async (propertyId: string, status: PropertyStatus) => {
+export const updatePropertyStatus = async (
+  propertyId: string, 
+  status: PropertyStatus
+): Promise<ApiResponse<import('@/types/propertyManagement').ManagedProperty>> => {
   const response = await apiClient.patch(`/properties/${propertyId}/status`, { status });
-  return response.data;
+  return response.data as ApiResponse<import('@/types/propertyManagement').ManagedProperty>;
 };
 
 // Toggle property availability
@@ -109,9 +129,11 @@ export const deletePropertyImage = async (propertyId: string, imageId: string) =
 };
 
 // Unit management for multi-family properties
-export const getPropertyUnits = async (propertyId: string) => {
-  const response = await apiClient.get(`/properties/${propertyId}/units`);
-  return response.data;
+export const getPropertyUnits = async (
+  propertyId: string
+): Promise<PropertyUnit[]> => {
+  const response = await apiClient.get<PropertyUnit[]>(`/properties/${propertyId}/units`);
+  return response.data as PropertyUnit[];
 };
 
 export const createUnit = async (propertyId: string, unitData: any) => {

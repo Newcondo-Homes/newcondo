@@ -1,32 +1,13 @@
 // apps/platform/store/referralStore.ts
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import {Reward} from '@/types/reward'
-
-interface Referral {
-  id: string;
-  propertyId: string;
-  propertyTitle: string;
-  promotionLink: string;
-  views: number;
-  clicks: number;
-  conversions: number;
-  earnings: number;
-  status: 'ACTIVE' | 'EXPIRED' | 'PAUSED';
-  createdAt: string;
-}
-
-interface SubAgent {
-  id: string;
-  agentId: string;
-  agentName: string;
-  propertyId: string;
-  status: 'PENDING' | 'APPROVED' | 'REVOKED';
-  views: number;
-  conversions: number;
-  earnings: number;
-  approvedAt?: string;
-}
+import {
+  Referral,
+  ReferralStats,
+  ReferralLink,
+  ReferralLeaderboardEntry,
+} from '@/types/referral';
+import { Reward } from '@/types/reward';
 
 interface PromotionSettings {
   allowPublicPromotion: boolean;
@@ -37,73 +18,86 @@ interface PromotionSettings {
 
 interface ReferralState {
   // Referral data
+  referralLink: ReferralLink | null;
   referrals: Referral[];
-  subAgents: SubAgent[];
-  
-  // Selected items
-  selectedReferralId: string | null;
-  selectedSubAgentIds: string[];
-  
-  // Filters
-  referralStatusFilter: 'ALL' | 'ACTIVE' | 'EXPIRED' | 'PAUSED';
-  subAgentStatusFilter: 'ALL' | 'PENDING' | 'APPROVED' | 'REVOKED';
-  
-  // Property-specific promotion settings cache
-  promotionSettingsCache: Record<string, PromotionSettings>;
-  
-  // UI state
-  showPromotionLinkModal: boolean;
-  showSubAgentApprovalModal: boolean;
-  currentPropertyIdForPromotion: string | null;
-  selectedReward: Reward | null;  // you'll need to import Reward from '@/types/reward'
+  stats: ReferralStats | null;
+  leaderboard: ReferralLeaderboardEntry[];
+  userRank: number | null;
+
+  // Pagination
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  totalItems: number;
+
+  // Loading states
+  isLoadingReferrals: boolean;
+  isLoadingStats: boolean;
+  isLoadingLeaderboard: boolean;
+
+  // Error states
+  error: string | null;
+
+  // UI states
+  selectedReferral: Referral | null;
+  selectedReward: Reward | null;
+  isShareModalOpen: boolean;
+  isInviteModalOpen: boolean;
   isRedemptionModalOpen: boolean;
-  selectReward: (reward: Reward | null) => void;
-  toggleRedemptionModal: () => void;
-  
+
+  // Promotion settings cache
+  promotionSettingsCache: Record<string, PromotionSettings>;
+
   // Recently copied links
   recentlyCopiedLinks: string[];
 
-  isInviteModalOpen: boolean;
-isShareModalOpen: boolean;
-toggleInviteModal: () => void;
-toggleShareModal: () => void;
-  
+  // Actions - Referral Link
+  setReferralLink: (link: ReferralLink) => void;
+
   // Actions - Referrals
   setReferrals: (referrals: Referral[]) => void;
   addReferral: (referral: Referral) => void;
   updateReferral: (id: string, updates: Partial<Referral>) => void;
   removeReferral: (id: string) => void;
-  
-  setSelectedReferralId: (id: string | null) => void;
-  setReferralStatusFilter: (status: 'ALL' | 'ACTIVE' | 'EXPIRED' | 'PAUSED') => void;
-  
-  // Actions - Sub-agents
-  setSubAgents: (subAgents: SubAgent[]) => void;
-  addSubAgent: (subAgent: SubAgent) => void;
-  updateSubAgent: (id: string, updates: Partial<SubAgent>) => void;
-  removeSubAgent: (id: string) => void;
-  
-  toggleSubAgentSelection: (id: string) => void;
-  clearSubAgentSelection: () => void;
-  setSubAgentStatusFilter: (status: 'ALL' | 'PENDING' | 'APPROVED' | 'REVOKED') => void;
-  
+
+  // Actions - Stats
+  setStats: (stats: ReferralStats) => void;
+  incrementClickCount: () => void;
+
+  // Actions - Leaderboard
+  setLeaderboard: (leaderboard: ReferralLeaderboardEntry[], userRank: number | null) => void;
+  setLoadingLeaderboard: (loading: boolean) => void;
+
+  // Actions - Pagination
+  setPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+  setPaginationData: (data: { page: number; pageSize: number; totalPages: number; totalItems: number }) => void;
+
+  // Actions - Loading
+  setLoadingReferrals: (loading: boolean) => void;
+  setLoadingStats: (loading: boolean) => void;
+
+  // Actions - Error
+  setError: (error: string | null) => void;
+
+  // Actions - UI
+  selectReferral: (referral: Referral | null) => void;
+  selectReward: (reward: Reward | null) => void;
+  toggleShareModal: () => void;
+  toggleInviteModal: () => void;
+  toggleRedemptionModal: () => void;
+
   // Actions - Promotion settings
   cachePromotionSettings: (propertyId: string, settings: PromotionSettings) => void;
   getPromotionSettings: (propertyId: string) => PromotionSettings | undefined;
   clearPromotionSettingsCache: () => void;
-  
-  // Actions - UI
-  togglePromotionLinkModal: (propertyId?: string) => void;
-  toggleSubAgentApprovalModal: () => void;
-  
+
+  // Actions - Recently copied links
   addRecentlyCopiedLink: (link: string) => void;
   clearRecentlyCopiedLinks: () => void;
-  
-  // Computed values
-  getFilteredReferrals: () => Referral[];
-  getFilteredSubAgents: () => SubAgent[];
-  getTotalReferralEarnings: () => number;
-  getPendingSubAgentsCount: () => number;
+
+  // Actions - Reset
+  reset: () => void;
 }
 
 const defaultPromotionSettings: PromotionSettings = {
@@ -113,51 +107,38 @@ const defaultPromotionSettings: PromotionSettings = {
   commissionSplitPercentage: 50,
 };
 
+const initialState = {
+  referralLink: null,
+  referrals: [],
+  stats: null,
+  leaderboard: [],
+  userRank: null,
+  currentPage: 1,
+  pageSize: 20,
+  totalPages: 0,
+  totalItems: 0,
+  isLoadingReferrals: false,
+  isLoadingStats: false,
+  isLoadingLeaderboard: false,
+  error: null,
+  selectedReferral: null,
+  selectedReward: null,
+  isShareModalOpen: false,
+  isInviteModalOpen: false,
+  isRedemptionModalOpen: false,
+  promotionSettingsCache: {},
+  recentlyCopiedLinks: [],
+};
+
 export const useReferralStore = create<ReferralState>()(
   devtools(
     persist(
       (set, get) => ({
-        referrals: [],
-        subAgents: [],
-        selectedReferralId: null,
-        selectedSubAgentIds: [],
-        referralStatusFilter: 'ALL',
-        subAgentStatusFilter: 'ALL',
-        promotionSettingsCache: {},
-        showPromotionLinkModal: false,
-        showSubAgentApprovalModal: false,
-        currentPropertyIdForPromotion: null,
-        recentlyCopiedLinks: [],
-        isInviteModalOpen: false,
-        isShareModalOpen: false,
-        selectedReward: null,
-        isRedemptionModalOpen: false,
+        ...initialState,
 
-        toggleInviteModal: () =>
-          set(
-            (state) => ({ isInviteModalOpen: !state.isInviteModalOpen }),
-            false,
-            'toggleInviteModal'
-          ),
+        setReferralLink: (link) => set({ referralLink: link }, false, 'setReferralLink'),
 
-        toggleShareModal: () =>
-        set(
-          (state) => ({ isShareModalOpen: !state.isShareModalOpen }),
-          false,
-          'toggleShareModal'
-        ),
-        selectReward: (reward) =>
-          set({ selectedReward: reward }, false, 'selectReward'),
-
-        toggleRedemptionModal: () =>
-          set(
-            (state) => ({ isRedemptionModalOpen: !state.isRedemptionModalOpen }),
-            false,
-            'toggleRedemptionModal'
-          ),
-        // Referral actions
-        setReferrals: (referrals) =>
-          set({ referrals }, false, 'setReferrals'),
+        setReferrals: (referrals) => set({ referrals }, false, 'setReferrals'),
 
         addReferral: (referral) =>
           set(
@@ -179,68 +160,81 @@ export const useReferralStore = create<ReferralState>()(
 
         removeReferral: (id) =>
           set(
-            (state) => ({
-              referrals: state.referrals.filter((r) => r.id !== id),
-            }),
+            (state) => ({ referrals: state.referrals.filter((r) => r.id !== id) }),
             false,
             'removeReferral'
           ),
 
-        setSelectedReferralId: (id) =>
-          set({ selectedReferralId: id }, false, 'setSelectedReferralId'),
+        setStats: (stats) => set({ stats }, false, 'setStats'),
 
-        setReferralStatusFilter: (status) =>
-          set({ referralStatusFilter: status }, false, 'setReferralStatusFilter'),
-
-        // Sub-agent actions
-        setSubAgents: (subAgents) =>
-          set({ subAgents }, false, 'setSubAgents'),
-
-        addSubAgent: (subAgent) =>
-          set(
-            (state) => ({ subAgents: [subAgent, ...state.subAgents] }),
-            false,
-            'addSubAgent'
-          ),
-
-        updateSubAgent: (id, updates) =>
+        incrementClickCount: () =>
           set(
             (state) => ({
-              subAgents: state.subAgents.map((sa) =>
-                sa.id === id ? { ...sa, ...updates } : sa
-              ),
+              stats: state.stats
+                ? { ...state.stats, clickCount: state.stats.clickCount + 1 }
+                : null,
             }),
             false,
-            'updateSubAgent'
+            'incrementClickCount'
           ),
 
-        removeSubAgent: (id) =>
+        setLeaderboard: (leaderboard, userRank) =>
+          set({ leaderboard, userRank }, false, 'setLeaderboard'),
+
+        setLoadingLeaderboard: (loading) =>
+          set({ isLoadingLeaderboard: loading }, false, 'setLoadingLeaderboard'),
+
+        setPage: (page) => set({ currentPage: page }, false, 'setPage'),
+
+        setPageSize: (size) => set({ pageSize: size, currentPage: 1 }, false, 'setPageSize'),
+
+        setPaginationData: (data) =>
           set(
-            (state) => ({
-              subAgents: state.subAgents.filter((sa) => sa.id !== id),
-            }),
+            {
+              currentPage: data.page,
+              pageSize: data.pageSize,
+              totalPages: data.totalPages,
+              totalItems: data.totalItems,
+            },
             false,
-            'removeSubAgent'
+            'setPaginationData'
           ),
 
-        toggleSubAgentSelection: (id) =>
+        setLoadingReferrals: (loading) =>
+          set({ isLoadingReferrals: loading }, false, 'setLoadingReferrals'),
+
+        setLoadingStats: (loading) =>
+          set({ isLoadingStats: loading }, false, 'setLoadingStats'),
+
+        setError: (error) => set({ error }, false, 'setError'),
+
+        selectReferral: (referral) =>
+          set({ selectedReferral: referral }, false, 'selectReferral'),
+
+        selectReward: (reward) =>
+          set({ selectedReward: reward }, false, 'selectReward'),
+
+        toggleShareModal: () =>
           set(
-            (state) => ({
-              selectedSubAgentIds: state.selectedSubAgentIds.includes(id)
-                ? state.selectedSubAgentIds.filter((saId) => saId !== id)
-                : [...state.selectedSubAgentIds, id],
-            }),
+            (state) => ({ isShareModalOpen: !state.isShareModalOpen }),
             false,
-            'toggleSubAgentSelection'
+            'toggleShareModal'
           ),
 
-        clearSubAgentSelection: () =>
-          set({ selectedSubAgentIds: [] }, false, 'clearSubAgentSelection'),
+        toggleInviteModal: () =>
+          set(
+            (state) => ({ isInviteModalOpen: !state.isInviteModalOpen }),
+            false,
+            'toggleInviteModal'
+          ),
 
-        setSubAgentStatusFilter: (status) =>
-          set({ subAgentStatusFilter: status }, false, 'setSubAgentStatusFilter'),
+        toggleRedemptionModal: () =>
+          set(
+            (state) => ({ isRedemptionModalOpen: !state.isRedemptionModalOpen }),
+            false,
+            'toggleRedemptionModal'
+          ),
 
-        // Promotion settings actions
         cachePromotionSettings: (propertyId, settings) =>
           set(
             (state) => ({
@@ -255,31 +249,11 @@ export const useReferralStore = create<ReferralState>()(
 
         getPromotionSettings: (propertyId) => {
           const { promotionSettingsCache } = get();
-          return promotionSettingsCache[propertyId] || defaultPromotionSettings;
+          return promotionSettingsCache[propertyId] ?? defaultPromotionSettings;
         },
 
         clearPromotionSettingsCache: () =>
           set({ promotionSettingsCache: {} }, false, 'clearPromotionSettingsCache'),
-
-        // UI actions
-        togglePromotionLinkModal: (propertyId) =>
-          set(
-            (state) => ({
-              showPromotionLinkModal: !state.showPromotionLinkModal,
-              currentPropertyIdForPromotion: propertyId || null,
-            }),
-            false,
-            'togglePromotionLinkModal'
-          ),
-
-        toggleSubAgentApprovalModal: () =>
-          set(
-            (state) => ({
-              showSubAgentApprovalModal: !state.showSubAgentApprovalModal,
-            }),
-            false,
-            'toggleSubAgentApprovalModal'
-          ),
 
         addRecentlyCopiedLink: (link) =>
           set(
@@ -287,7 +261,7 @@ export const useReferralStore = create<ReferralState>()(
               recentlyCopiedLinks: [
                 link,
                 ...state.recentlyCopiedLinks.filter((l) => l !== link),
-              ].slice(0, 5), // Keep only last 5
+              ].slice(0, 5),
             }),
             false,
             'addRecentlyCopiedLink'
@@ -296,42 +270,13 @@ export const useReferralStore = create<ReferralState>()(
         clearRecentlyCopiedLinks: () =>
           set({ recentlyCopiedLinks: [] }, false, 'clearRecentlyCopiedLinks'),
 
-        // Computed values
-        getFilteredReferrals: () => {
-          const { referrals, referralStatusFilter } = get();
-          
-          if (referralStatusFilter === 'ALL') {
-            return referrals;
-          }
-          
-          return referrals.filter((r) => r.status === referralStatusFilter);
-        },
-
-        getFilteredSubAgents: () => {
-          const { subAgents, subAgentStatusFilter } = get();
-          
-          if (subAgentStatusFilter === 'ALL') {
-            return subAgents;
-          }
-          
-          return subAgents.filter((sa) => sa.status === subAgentStatusFilter);
-        },
-
-        getTotalReferralEarnings: () => {
-          const { referrals } = get();
-          return referrals.reduce((sum, r) => sum + r.earnings, 0);
-        },
-
-        getPendingSubAgentsCount: () => {
-          const { subAgents } = get();
-          return subAgents.filter((sa) => sa.status === 'PENDING').length;
-        },
+        reset: () => set(initialState, false, 'reset'),
       }),
       {
         name: 'referral-storage',
         partialize: (state) => ({
-          referralStatusFilter: state.referralStatusFilter,
-          subAgentStatusFilter: state.subAgentStatusFilter,
+          referralLink: state.referralLink,
+          stats: state.stats,
           recentlyCopiedLinks: state.recentlyCopiedLinks,
         }),
       }
@@ -340,266 +285,9 @@ export const useReferralStore = create<ReferralState>()(
   )
 );
 
+// Selectors
+export const selectQualifiedReferrals = (state: ReferralState) =>
+  state.referrals.filter((r) => r.qualificationMet);
 
-
-
-
-
-
-
-//////////////////////////////////////////
-
-
-// apps/platform/store/referralStore.ts
-
-// import { create } from 'zustand';
-// import { devtools, persist } from 'zustand/middleware';
-// import {
-//   Referral,
-//   ReferralStats,
-//   ReferralLink,
-//   ReferralLeaderboardEntry,
-// } from '@/types/referral';
-// import { Reward, RewardSummary } from '@/types/reward';
-
-// interface ReferralState {
-//   // Referral data
-//   referralLink: ReferralLink | null;
-//   referrals: Referral[];
-//   stats: ReferralStats | null;
-//   leaderboard: ReferralLeaderboardEntry[];
-//   userRank: number | null;
-  
-//   // Rewards data
-//   rewards: Reward[];
-//   rewardsSummary: RewardSummary | null;
-  
-//   // Pagination
-//   currentPage: number;
-//   pageSize: number;
-//   totalPages: number;
-//   totalItems: number;
-  
-//   // Loading states
-//   isLoadingReferrals: boolean;
-//   isLoadingStats: boolean;
-//   isLoadingRewards: boolean;
-//   isLoadingLeaderboard: boolean;
-  
-//   // Error states
-//   error: string | null;
-  
-//   // UI states
-//   selectedReferral: Referral | null;
-//   selectedReward: Reward | null;
-//   isShareModalOpen: boolean;
-//   isInviteModalOpen: boolean;
-//   isRedemptionModalOpen: boolean;
-  
-//   // Actions - Referral Link
-//   setReferralLink: (link: ReferralLink) => void;
-  
-//   // Actions - Referrals
-//   setReferrals: (referrals: Referral[]) => void;
-//   addReferral: (referral: Referral) => void;
-//   updateReferral: (id: string, updates: Partial<Referral>) => void;
-//   removeReferral: (id: string) => void;
-  
-//   // Actions - Stats
-//   setStats: (stats: ReferralStats) => void;
-//   incrementClickCount: () => void;
-  
-//   // Actions - Rewards
-//   setRewards: (rewards: Reward[]) => void;
-//   setRewardsSummary: (summary: RewardSummary) => void;
-//   addReward: (reward: Reward) => void;
-//   updateReward: (id: string, updates: Partial<Reward>) => void;
-//   markRewardAsRedeemed: (id: string) => void;
-  
-//   // Actions - Leaderboard
-//   setLeaderboard: (leaderboard: ReferralLeaderboardEntry[], userRank: number | null) => void;
-  
-//   // Actions - Pagination
-//   setPage: (page: number) => void;
-//   setPageSize: (size: number) => void;
-//   setPaginationData: (data: { page: number; pageSize: number; totalPages: number; totalItems: number }) => void;
-  
-//   // Actions - Loading
-//   setLoadingReferrals: (loading: boolean) => void;
-//   setLoadingStats: (loading: boolean) => void;
-//   setLoadingRewards: (loading: boolean) => void;
-//   setLoadingLeaderboard: (loading: boolean) => void;
-  
-//   // Actions - Error
-//   setError: (error: string | null) => void;
-  
-//   // Actions - UI
-//   selectReferral: (referral: Referral | null) => void;
-//   selectReward: (reward: Reward | null) => void;
-//   toggleShareModal: () => void;
-//   toggleInviteModal: () => void;
-//   toggleRedemptionModal: () => void;
-  
-//   // Actions - Reset
-//   reset: () => void;
-// }
-
-// const initialState = {
-//   referralLink: null,
-//   referrals: [],
-//   stats: null,
-//   leaderboard: [],
-//   userRank: null,
-//   rewards: [],
-//   rewardsSummary: null,
-//   currentPage: 1,
-//   pageSize: 20,
-//   totalPages: 0,
-//   totalItems: 0,
-//   isLoadingReferrals: false,
-//   isLoadingStats: false,
-//   isLoadingRewards: false,
-//   isLoadingLeaderboard: false,
-//   error: null,
-//   selectedReferral: null,
-//   selectedReward: null,
-//   isShareModalOpen: false,
-//   isInviteModalOpen: false,
-//   isRedemptionModalOpen: false,
-// };
-
-// export const useReferralStore = create<ReferralState>()(
-//   devtools(
-//     persist(
-//       (set) => ({
-//         ...initialState,
-        
-//         // Referral Link
-//         setReferralLink: (link) => set({ referralLink: link }),
-        
-//         // Referrals
-//         setReferrals: (referrals) => set({ referrals }),
-        
-//         addReferral: (referral) =>
-//           set((state) => ({ referrals: [referral, ...state.referrals] })),
-        
-//         updateReferral: (id, updates) =>
-//           set((state) => ({
-//             referrals: state.referrals.map((ref) =>
-//               ref.id === id ? { ...ref, ...updates } : ref
-//             ),
-//           })),
-        
-//         removeReferral: (id) =>
-//           set((state) => ({
-//             referrals: state.referrals.filter((ref) => ref.id !== id),
-//           })),
-        
-//         // Stats
-//         setStats: (stats) => set({ stats }),
-        
-//         incrementClickCount: () =>
-//           set((state) => ({
-//             stats: state.stats
-//               ? { ...state.stats, clickCount: state.stats.clickCount + 1 }
-//               : null,
-//           })),
-        
-//         // Rewards
-//         setRewards: (rewards) => set({ rewards }),
-        
-//         setRewardsSummary: (summary) => set({ rewardsSummary: summary }),
-        
-//         addReward: (reward) =>
-//           set((state) => ({ rewards: [reward, ...state.rewards] })),
-        
-//         updateReward: (id, updates) =>
-//           set((state) => ({
-//             rewards: state.rewards.map((reward) =>
-//               reward.id === id ? { ...reward, ...updates } : reward
-//             ),
-//           })),
-        
-//         markRewardAsRedeemed: (id) =>
-//           set((state) => ({
-//             rewards: state.rewards.map((reward) =>
-//               reward.id === id
-//                 ? { ...reward, isRedeemed: true, redeemedAt: new Date().toISOString() }
-//                 : reward
-//             ),
-//           })),
-        
-//         // Leaderboard
-//         setLeaderboard: (leaderboard, userRank) => set({ leaderboard, userRank }),
-        
-//         // Pagination
-//         setPage: (page) => set({ currentPage: page }),
-        
-//         setPageSize: (size) => set({ pageSize: size, currentPage: 1 }),
-        
-//         setPaginationData: (data) =>
-//           set({
-//             currentPage: data.page,
-//             pageSize: data.pageSize,
-//             totalPages: data.totalPages,
-//             totalItems: data.totalItems,
-//           }),
-        
-//         // Loading
-//         setLoadingReferrals: (loading) => set({ isLoadingReferrals: loading }),
-        
-//         setLoadingStats: (loading) => set({ isLoadingStats: loading }),
-        
-//         setLoadingRewards: (loading) => set({ isLoadingRewards: loading }),
-        
-//         setLoadingLeaderboard: (loading) => set({ isLoadingLeaderboard: loading }),
-        
-//         // Error
-//         setError: (error) => set({ error }),
-        
-//         // UI
-//         selectReferral: (referral) => set({ selectedReferral: referral }),
-        
-//         selectReward: (reward) => set({ selectedReward: reward }),
-        
-//         toggleShareModal: () =>
-//           set((state) => ({ isShareModalOpen: !state.isShareModalOpen })),
-        
-//         toggleInviteModal: () =>
-//           set((state) => ({ isInviteModalOpen: !state.isInviteModalOpen })),
-        
-//         toggleRedemptionModal: () =>
-//           set((state) => ({ isRedemptionModalOpen: !state.isRedemptionModalOpen })),
-        
-//         // Reset
-//         reset: () => set(initialState),
-//       }),
-//       {
-//         name: 'referral-storage',
-//         partialize: (state) => ({
-//           referralLink: state.referralLink,
-//           stats: state.stats,
-//         }),
-//       }
-//     ),
-//     { name: 'ReferralStore' }
-//   )
-// );
-
-// // Selectors for computed values
-// export const selectAvailableRewards = (state: ReferralState) =>
-//   state.rewards.filter((r) => r.status === 'APPROVED' && !r.isRedeemed);
-
-// export const selectPendingRewards = (state: ReferralState) =>
-//   state.rewards.filter((r) => r.status === 'PENDING');
-
-// export const selectTotalAvailableBalance = (state: ReferralState) =>
-//   state.rewards
-//     .filter((r) => r.status === 'APPROVED' && !r.isRedeemed)
-//     .reduce((sum, r) => sum + r.amount, 0);
-
-// export const selectQualifiedReferrals = (state: ReferralState) =>
-//   state.referrals.filter((r) => r.qualificationMet);
-
-// export const selectPendingReferrals = (state: ReferralState) =>
-//   state.referrals.filter((r) => r.status === 'PENDING');
+export const selectPendingReferrals = (state: ReferralState) =>
+  state.referrals.filter((r) => r.status === 'PENDING');

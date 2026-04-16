@@ -1,6 +1,37 @@
 // apps/platform/lib/api/rentalHistory.ts
 import { apiClient } from './client';
 
+
+export interface RentalMetrics {
+  // Financial
+  totalRevenue: number;
+  expectedRevenue: number;
+  averageRent: number;
+  occupancyRate: number;
+
+  // Rental statistics
+  totalRentals: number;
+  activeRentals: number;
+  completedRentals: number;
+  cancelledRentals: number;
+
+  // Performance
+  avgRentalDuration: number;
+  renewalRate: number;
+  vacancyRate: number;
+  avgDaysToRent: number;
+
+  // Trends
+  revenueByMonth: { month: string; revenue: number }[];
+  rentalsByMonth: { month: string; count: number }[];
+  occupancyTrend: 'up' | 'down' | 'stable';
+
+  // Forecasting
+  projectedRevenue: number;
+  projectedOccupancy: number;
+}
+
+
 export interface RentalHistoryFilters {
   propertyId?: string;
   status?: 'ACTIVE' | 'EXPIRED' | 'TERMINATED' | 'PENDING_CONFIRMATION';
@@ -17,7 +48,7 @@ export interface RentalMetricsFilters {
 }
 
 // Get rental history
-export const getRentalHistory = async (filters?: RentalHistoryFilters) => {
+export const getRentalHistory = async (filters?: RentalHistoryFilters)  => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -40,7 +71,7 @@ export const getRentalHistory = async (filters?: RentalHistoryFilters) => {
 export const getRentalMetrics = async (
   propertyId?: string,
   filters?: RentalMetricsFilters
-) => {
+): Promise<RentalMetrics>  => {
   const params = new URLSearchParams();
   
   if (filters) {
@@ -60,7 +91,7 @@ export const getRentalMetrics = async (
     : '/rentals/metrics';
   
   const response = await apiClient.get(`${endpoint}?${params.toString()}`);
-  return response.data;
+  return response.data as RentalMetrics;
 };
 
 // Get single rental details

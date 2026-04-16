@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 
 // Types based on the Prisma schema
-interface PropertyForComparison {
+export interface PropertyForComparison {
   id: string;
   title: string;
   price: number;

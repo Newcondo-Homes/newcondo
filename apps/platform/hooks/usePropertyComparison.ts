@@ -1,26 +1,8 @@
 import { useCallback } from 'react';
 import { useComparisonStore } from '@/store/comparisonStore';
-import { toast } from 'sonner';
+import type { PropertyForComparison } from '@/store/comparisonStore';
+import { toast } from '@newcondo/ui';
 
-// Type for property data used in comparison
-export interface PropertyComparisonData {
-  id: string;
-  title: string;
-  price: number;
-  currency: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: string;
-  propertyType: string;
-  city: string;
-  state: string;
-  features: string[];
-  images: Array<{ url: string; altText?: string; isPrimary: boolean }>;
-  address: string;
-  isAvailable: boolean;
-  ownerId: string;
-  agentId?: string;
-}
 
 const MAX_COMPARISON_ITEMS = 4; // Maximum number of properties that can be compared
 
@@ -32,26 +14,33 @@ const MAX_COMPARISON_ITEMS = 4; // Maximum number of properties that can be comp
  */
 export function usePropertyComparison() {
   const {
-    comparisonList,
     isComparisonOpen,
     addToComparison,
     removeFromComparison,
     clearComparison,
-    setComparisonOpen,
+    openComparison,
+    closeComparison,
     reorderComparison,
+    getComparisonProperties,
+    getComparisonStats: storeGetComparisonStats,
+    isInComparison: storeIsInComparison,
+    canAddMore,
   } = useComparisonStore();
+
+
+  // Derive comparisonList from the store's ordered properties
+  const comparisonList = useComparisonStore((state) => state.getComparisonProperties());
+
 
   /**
    * Check if a property is in comparison list
    */
-  const isInComparison = useCallback((propertyId: string): boolean => {
-    return comparisonList.some(property => property.id === propertyId);
-  }, [comparisonList]);
+  const isInComparison = useCallback((propertyId: string): boolean => storeIsInComparison(propertyId), [storeIsInComparison]);
 
   /**
    * Add property to comparison list
    */
-  const addPropertyToComparison = useCallback((property: PropertyComparisonData) => {
+  const addPropertyToComparison = useCallback((property: PropertyForComparison) => {
     // Check if already in comparison
     if (isInComparison(property.id)) {
       toast.info('Property is already in comparison');
@@ -59,21 +48,20 @@ export function usePropertyComparison() {
     }
 
     // Check maximum limit
-    if (comparisonList.length >= MAX_COMPARISON_ITEMS) {
+    if (!canAddMore()) {
       toast.error(`You can only compare up to ${MAX_COMPARISON_ITEMS} properties at once`);
       return false;
     }
-
-    addToComparison(property);
-    toast.success(`${property.title} added to comparison`);
-    return true;
-  }, [isInComparison, comparisonList.length, addToComparison]);
+    const added = addToComparison(property);
+    if (added) toast.success(`${property.title} added to comparison`);
+    return added;
+  }, [isInComparison, canAddMore, addToComparison]);
 
   /**
    * Remove property from comparison list
    */
   const removePropertyFromComparison = useCallback((propertyId: string) => {
-    const property = comparisonList.find(p => p.id === propertyId);
+    const property = comparisonList.find((p) => p.id === propertyId);
     if (!property) return false;
 
     removeFromComparison(propertyId);
@@ -84,7 +72,7 @@ export function usePropertyComparison() {
   /**
    * Toggle property in comparison list
    */
-  const togglePropertyComparison = useCallback((property: PropertyComparisonData) => {
+  const togglePropertyComparison = useCallback((property: PropertyForComparison) => {
     if (isInComparison(property.id)) {
       return removePropertyFromComparison(property.id);
     } else {
@@ -111,79 +99,38 @@ export function usePropertyComparison() {
     }
   }, [comparisonList.length, clearComparison]);
 
-  /**
-   * Open comparison view
-   */
-  const openComparison = useCallback(() => {
+
+  const handleOpenComparison = useCallback(() => {
     if (comparisonList.length === 0) {
       toast.info('Add properties to comparison first');
       return;
     }
-
     if (comparisonList.length < 2) {
       toast.info('Add at least 2 properties to start comparison');
       return;
     }
-
-    setComparisonOpen(true);
-  }, [comparisonList.length, setComparisonOpen]);
-
-  /**
-   * Close comparison view
-   */
-  const closeComparison = useCallback(() => {
-    setComparisonOpen(false);
-  }, [setComparisonOpen]);
+    openComparison();
+  }, [comparisonList.length, openComparison]);
 
   /**
    * Move property to a different position in comparison list
    */
   const moveProperty = useCallback((fromIndex: number, toIndex: number) => {
-    if (fromIndex < 0 || fromIndex >= comparisonList.length ||
-        toIndex < 0 || toIndex >= comparisonList.length) {
-      return;
-    }
-
-    const newOrder = [...comparisonList];
-    const [movedItem] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, movedItem);
-    
-    reorderComparison(newOrder);
+    if (
+      fromIndex < 0 || fromIndex >= comparisonList.length ||
+      toIndex < 0 || toIndex >= comparisonList.length
+    ) return;
+    reorderComparison(fromIndex, toIndex);
   }, [comparisonList, reorderComparison]);
+
 
   /**
    * Get comparison statistics
    */
   const getComparisonStats = useCallback(() => {
-    if (comparisonList.length === 0) {
-      return null;
-    }
-
-    const prices = comparisonList.map(p => p.price).filter(Boolean);
-    const bedrooms = comparisonList.map(p => p.bedrooms).filter(Boolean) as number[];
-    const bathrooms = comparisonList.map(p => p.bathrooms).filter(Boolean) as number[];
-
-    return {
-      count: comparisonList.length,
-      priceRange: prices.length > 0 ? {
-        min: Math.min(...prices),
-        max: Math.max(...prices),
-        average: prices.reduce((a, b) => a + b, 0) / prices.length,
-      } : null,
-      bedroomRange: bedrooms.length > 0 ? {
-        min: Math.min(...bedrooms),
-        max: Math.max(...bedrooms),
-        average: bedrooms.reduce((a, b) => a + b, 0) / bedrooms.length,
-      } : null,
-      bathroomRange: bathrooms.length > 0 ? {
-        min: Math.min(...bathrooms),
-        max: Math.max(...bathrooms),
-        average: bathrooms.reduce((a, b) => a + b, 0) / bathrooms.length,
-      } : null,
-      cities: [...new Set(comparisonList.map(p => p.city))],
-      propertyTypes: [...new Set(comparisonList.map(p => p.propertyType))],
-      allFeatures: [...new Set(comparisonList.flatMap(p => p.features))],
-    };
+    if (comparisonList.length === 0) return null;
+    
+    return storeGetComparisonStats();
   }, [comparisonList]);
 
   /**
@@ -196,7 +143,7 @@ export function usePropertyComparison() {
     }
 
     const exportData = {
-      properties: comparisonList.map(property => ({
+      properties: comparisonList.map((property: PropertyForComparison) => ({
         id: property.id,
         title: property.title,
         price: property.price,
@@ -219,15 +166,15 @@ export function usePropertyComparison() {
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
-    
+
     const link = document.createElement('a');
     link.href = url;
     link.download = `property-comparison-${Date.now()}.json`;
     link.click();
-    
+
     URL.revokeObjectURL(url);
     toast.success('Comparison data exported');
-    
+
     return exportData;
   }, [comparisonList, getComparisonStats]);
 
@@ -268,13 +215,6 @@ export function usePropertyComparison() {
   }, [comparisonList.length]);
 
   /**
-   * Check if comparison is full
-   */
-  const isComparisonFull = useCallback((): boolean => {
-    return comparisonList.length >= MAX_COMPARISON_ITEMS;
-  }, [comparisonList.length]);
-
-  /**
    * Check if comparison is ready (has at least 2 properties)
    */
   const isComparisonReady = useCallback((): boolean => {
@@ -288,12 +228,12 @@ export function usePropertyComparison() {
     comparisonCount: comparisonList.length,
     maxComparisonItems: MAX_COMPARISON_ITEMS,
     availableSlots: getAvailableSlots(),
-    
+
     // Status checks
     isInComparison,
-    isComparisonFull: isComparisonFull(),
-    isComparisonReady: isComparisonReady(),
-    
+    isComparisonFull: !canAddMore(),
+    isComparisonReady: comparisonList.length >= 2,
+
     // Actions
     addPropertyToComparison,
     removePropertyFromComparison,
@@ -302,7 +242,7 @@ export function usePropertyComparison() {
     openComparison,
     closeComparison,
     moveProperty,
-    
+
     // Utilities
     getComparisonStats,
     exportComparison,

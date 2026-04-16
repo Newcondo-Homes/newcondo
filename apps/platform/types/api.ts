@@ -1,5 +1,5 @@
 // Core API Response Types
-import type { User} from '@newcondo/db'
+import type { User } from '@newcondo/db'
 import { PropertyType } from '@newcondo/db';
 // types/api.ts
 
@@ -56,7 +56,7 @@ export interface PaginatedResponse<T> {
 }
 
 // User Types
-export type { User}
+export type { User }
 //   id: string;
 //   email: string;
 //   phone?: string;
@@ -105,7 +105,7 @@ export interface IdentificationDocument {
 }
 
 // Auth Types
-export interface AuthResponse<T=any> {
+export interface AuthResponse<T = any> {
   user?: User;
   token?: string;
   refreshToken?: string;
@@ -114,7 +114,7 @@ export interface AuthResponse<T=any> {
   data?: T;
   error?: string;
   requiresOTP?: boolean
-  requiresVerification?: boolean 
+  requiresVerification?: boolean
   message?: string;
 }
 export interface RegisterData {
@@ -543,37 +543,55 @@ export interface ProfileFormData {
 
 // Search and Filter Types
 export interface PropertySearchParams {
-  query?: string;
-  type?: PropertyType;
-  category?: PropertyCategory;
-  city?: string;
-  state?: string;
-  minPrice?: number;
-  maxPrice?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  furnished?: boolean;
-  parking?: boolean;
-  petFriendly?: boolean;
-  amenities?: string[];
-  page?: number;
-  limit?: number;
-  sortBy?: 'price' | 'createdAt' | 'rating';
-  sortOrder?: 'asc' | 'desc';
+  query?: string
+  type?: PropertyType
+  category?: PropertyCategory
+  city?: string
+  state?: string
+  minPrice?: number
+  maxPrice?: number
+  bedrooms?: number
+  bathrooms?: number
+  furnished?: boolean
+  parking?: boolean
+  petFriendly?: boolean
+  amenities?: string[]
+  page?: number
+  limit?: number
+  sortBy?: 'price' | 'createdAt' | 'rating'
+  sortOrder?: 'asc' | 'desc'
+  // kept for backward compat with existing callers that pass filters object
+  filters?: Partial<PropertyFilters>
 }
 
 export interface PropertyFilters {
-  search?: string;
-  status?: string;
-  sortBy?: string;
-  type?: PropertyType[];
-  priceRange?: [number, number];
-  bedrooms?: number[];
-  bathrooms?: number[];
-  furnished?: boolean;
-  parking?: boolean;
-  petFriendly?: boolean;
-  amenities?: string[];
+  // Flat fields used by usePropertyFiltersFromURL & API calls
+  city?: string
+  state?: string
+  propertyType?: PropertyType
+  minPrice?: number
+  maxPrice?: number
+  bedrooms?: number
+  bathrooms?: number
+  amenities?: string[]
+  isAvailable?: boolean
+
+  // UI filter-panel fields (arrays / ranges)
+  search?: string
+  status?: string
+  sortBy?: 'price' | 'createdAt' | 'updatedAt' | 'viewCount'
+  sortOrder?: 'asc' | 'desc'
+  type?: PropertyType[]           // multi-select variant
+  priceRange?: [number, number]   // alternative to min/maxPrice
+  bedroomsRange?: number[]        // alternative multi-select
+  bathroomsRange?: number[]
+  furnished?: boolean
+  parking?: boolean
+  petFriendly?: boolean
+
+  // Pagination
+  page?: number
+  limit?: number
 }
 
 // Analytics Types

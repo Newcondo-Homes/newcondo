@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useToast } from "@newcondo/ui/components/use-toast";
+import { toast } from "@newcondo/ui/";
 
 interface ReferralNotification {
   id: string;
@@ -34,7 +34,6 @@ export function useReferralNotifications(): UseReferralNotificationsReturn {
     []
   );
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   // Fetch notifications
   const fetchNotifications = useCallback(async () => {
@@ -130,8 +129,7 @@ export function useReferralNotifications(): UseReferralNotificationsReturn {
           notification.type === "reward_earned" ||
           notification.type === "referral_qualified"
         ) {
-          toast({
-            title: notification.title,
+          toast(notification.title,{
             description: notification.message,
             duration: 5000,
           });
@@ -176,7 +174,6 @@ export function useReferralNotifications(): UseReferralNotificationsReturn {
 
 // Hook for showing real-time toast notifications
 export function useReferralToasts() {
-  const { toast } = useToast();
 
   useEffect(() => {
     const eventSource = new EventSource("/api/referrals/notifications/stream");
@@ -188,41 +185,35 @@ export function useReferralToasts() {
         // Show toast based on notification type
         switch (notification.type) {
           case "referral_signup":
-            toast({
-              title: "🎉 New Referral Signup!",
+            toast.success("🎉 New Referral Signup!",{
               description: notification.message,
               duration: 5000,
             });
             break;
 
           case "referral_qualified":
-            toast({
-              title: "✅ Referral Qualified!",
+            toast("✅ Referral Qualified!",{
               description: notification.message,
               duration: 7000,
             });
             break;
 
           case "reward_earned":
-            toast({
-              title: "💰 Reward Earned!",
+            toast.success("💰 Reward Earned!",{
               description: notification.message,
               duration: 7000,
             });
             break;
 
           case "reward_expiring":
-            toast({
-              title: "⏰ Reward Expiring Soon",
+            toast("⏰ Reward Expiring Soon",{
               description: notification.message,
-              variant: "destructive",
               duration: 10000,
             });
             break;
 
           case "milestone_reached":
-            toast({
-              title: "🏆 Milestone Reached!",
+            toast("🏆 Milestone Reached!",{
               description: notification.message,
               duration: 7000,
             });

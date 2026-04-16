@@ -83,7 +83,7 @@ const searchPropertiesAPI = async (
   limit: number = 48
 ): Promise<PropertySearchResponse> => {
   const searchParams = new URLSearchParams();
-  
+
   // Add filters to search params
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -101,7 +101,7 @@ const searchPropertiesAPI = async (
   searchParams.append('limit', limit.toString());
 
   const response = await fetch(`/api/properties/search?${searchParams}`);
-  
+
   if (!response.ok) {
     throw new Error('Failed to search properties');
   }
@@ -115,35 +115,26 @@ const searchPropertiesAPI = async (
  * * @returns Object with search state and functions
  */
 export function usePropertySearch() {
-  const {
-    filters,
-    results,
-    isLoading,
-    error,
-    totalCount,
-    totalPages,
-    currentPage,
-    hasNextPage,
-    hasPreviousPage,
-    availableFilters,
-    searchHistory,
-    savedSearches,
-    setFilters,
-    setResults,
-    setLoading,
-    setError,
-    setPagination,
-    setAvailableFilters,
-    addToSearchHistory,
-    addSavedSearch,
-    removeSavedSearch,
-    clearSearchHistory,
-    resetSearch,
-  } = useSearchStore();
+  const query = useSearchStore(s => s.query);
+  const setQuery = useSearchStore(s => s.setQuery);
+  const isSearching = useSearchStore(s => s.isSearching);
+  const setSearching = useSearchStore(s => s.setSearching);
+  const searchResults = useSearchStore(s => s.searchResults);
+  const searchResultsCount = useSearchStore(s => s.searchResultsCount);
+  const error = useSearchStore(s => s.error);
+  const setError = useSearchStore(s => s.setError);
+  const searchHistory = useSearchStore(s => s.searchHistory);
+  const addToHistory = useSearchStore(s => s.addToHistory);
+  const savedSearches = useSearchStore(s => s.savedSearches);
+  const saveSearch = useSearchStore(s => s.saveSearch);
+  const removeSavedSearch = useSearchStore(s => s.removeSavedSearch);
+  const clearHistory = useSearchStore(s => s.clearHistory);
+  const clearSearch = useSearchStore(s => s.clearSearch);
+  const quickFilters = useSearchStore(s => s.quickFilters);
+  const locationSuggestions = useSearchStore(s => s.locationSuggestions);
 
   // Debounce search query to avoid excessive API calls
-  const debouncedQuery = useDebounce(filters.query, 300);
-  const debouncedFilters = useDebounce(filters, 500);
+  const debouncedQuery = useDebounce(query, 300);
 
   /**
    * Perform property search
@@ -151,49 +142,35 @@ export function usePropertySearch() {
   const searchProperties = useCallback(async (
     searchFilters: PropertySearchFilters,
     page: number = 1,
-    replaceResults: boolean = true
   ) => {
-    setLoading(true);
+    setSearching(true);
     setError(null);
 
     try {
       const response = await searchPropertiesAPI(searchFilters, page);
-      
-      if (replaceResults) {
-        setResults(response.properties);
-      } else {
-        // Append results for infinite scroll
-        setResults([...results, ...response.properties]);
-      }
 
-      setPagination({
-        totalCount: response.totalCount,
-        totalPages: response.totalPages,
-        currentPage: response.currentPage,
-        hasNextPage: response.hasNextPage,
-        hasPreviousPage: response.hasPreviousPage,
+      useSearchStore.setState({
+        searchResults: response.properties,
+        searchResultsCount: response.totalCount,
+        lastSearchTime: Date.now(),
       });
 
-      setAvailableFilters(response.filters.availableFilters);
-
-      // Add to search history if it's a new search
-      if (searchFilters.query && replaceResults) {
-        addToSearchHistory({
-          query: searchFilters.query,
-          filters: searchFilters,
-          timestamp: new Date().toISOString(),
-          resultCount: response.totalCount,
-        });
+      if (searchFilters.query) {
+        addToHistory(searchFilters.query, response.totalCount);
       }
+
+      return response;
+
+
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Search failed';
       setError(errorMessage);
       console.error('Property search error:', error);
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
-  }, [setLoading, setError, setResults, setPagination, setAvailableFilters, addToSearchHistory, results]);
+  }, [setSearching, setError, addToHistory]);
 
   /**
    * Effect to trigger a new search when filters change.
@@ -201,20 +178,11 @@ export function usePropertySearch() {
    */
   useEffect(() => {
     // Only run if filters have meaningful values
-    if (debouncedFilters && Object.keys(debouncedFilters).length > 0) {
-      searchProperties(debouncedFilters, 1, true);
+    if (debouncedQuery) {
+      searchProperties({ query: debouncedQuery });
     }
-  }, [debouncedFilters, searchProperties]);
+  }, [debouncedQuery, searchProperties]);
 
-  /**
-   * Effect to handle pagination requests.
-   * Triggers when currentPage changes and is not 1.
-   */
-  useEffect(() => {
-    if (currentPage > 1) {
-      searchProperties(filters, currentPage, false);
-    }
-  }, [currentPage, searchProperties, filters]);
 
   /**
    * User-facing handlers for search state
@@ -223,78 +191,65 @@ export function usePropertySearch() {
     key: K,
     value: PropertySearchFilters[K]
   ) => {
-    setFilters({ ...filters, [key]: value });
-  }, [filters, setFilters]);
+    // Update the query string in the store if the key is 'query',
+    // otherwise trigger a one-off search with the new filter merged in.
+    if (key === 'query' && typeof value === 'string') {
+      setQuery(value);
+    } else {
+      searchProperties({ query, [key]: value });
+    }
+  }, [query, setQuery, searchProperties]);
 
   const handleSortChange = useCallback((sortBy: PropertySearchFilters['sortBy']) => {
-    setFilters({ ...filters, sortBy });
-  }, [filters, setFilters]);
+    searchProperties({ query, sortBy });
+  }, [query, searchProperties]);
 
   const handleClearFilters = useCallback(() => {
-    setFilters({});
-  }, [setFilters]);
+    setQuery('');
+    clearSearch();
+  }, [setQuery, clearSearch]);
 
-  const goToNextPage = useCallback(() => {
-    if (hasNextPage) {
-      setPagination({ currentPage: currentPage + 1 });
-    }
-  }, [currentPage, hasNextPage, setPagination]);
 
-  const goToPreviousPage = useCallback(() => {
-    if (hasPreviousPage) {
-      setPagination({ currentPage: currentPage - 1 });
-    }
-  }, [currentPage, hasPreviousPage, setPagination]);
 
   // Memoize the returned object to prevent unnecessary re-renders
   const api = useMemo(() => ({
-    filters,
-    results,
-    isLoading,
+    query,
+    results: searchResults as PropertySearchResult[],
+    isLoading: isSearching,
     error,
-    totalCount,
-    totalPages,
-    currentPage,
-    hasNextPage,
-    hasPreviousPage,
-    availableFilters,
+    totalCount: searchResultsCount,
     searchHistory,
     savedSearches,
-    
+    quickFilters,
+    locationSuggestions,
+
     // Actions
     searchProperties,
     handleFilterChange,
     handleSortChange,
     handleClearFilters,
-    goToNextPage,
-    goToPreviousPage,
-    addSavedSearch,
+    addSavedSearch: saveSearch,
     removeSavedSearch,
-    clearSearchHistory,
-    resetSearch,
+    clearSearchHistory: clearHistory,
+    resetSearch: clearSearch,
   }), [
-    filters,
-    results,
-    isLoading,
+    query,
+    searchResults,
+    isSearching,
     error,
-    totalCount,
-    totalPages,
-    currentPage,
-    hasNextPage,
-    hasPreviousPage,
-    availableFilters,
+    searchResultsCount,
     searchHistory,
     savedSearches,
+    quickFilters,
+    locationSuggestions,
     searchProperties,
     handleFilterChange,
     handleSortChange,
     handleClearFilters,
-    goToNextPage,
-    goToPreviousPage,
-    addSavedSearch,
+    saveSearch,
     removeSavedSearch,
-    clearSearchHistory,
-    resetSearch,
+    clearHistory,
+    clearSearch,
   ]);
 
   return api;

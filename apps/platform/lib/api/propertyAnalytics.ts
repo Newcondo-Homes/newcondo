@@ -1,48 +1,48 @@
 // apps/platform/lib/api/propertyAnalytics.ts
 import { apiClient } from './client';
+import type {
+  ComparisonData,
+  AnalyticsApiResponse,
+  PropertyInsights,
+  RealTimeAnalyticsUpdate,
+  AnalyticsEvent,
+} from '@/types/analytics';
+import type { AnalyticsTimePeriod } from '@/lib/constants/propertyManagement';
+import type
+{
+  AnalyticsFilters,
+  PropertyAnalyticsResponse,
+  PortfolioAnalyticsResponse
+} from '@/types/propertyAnalytics'
 
-export interface AnalyticsFilters {
-  startDate?: Date;
-  endDate?: Date;
-  period?: 'day' | 'week' | 'month' | 'year' | 'all';
-  metrics?: string[];
-}
 
-// Get property analytics
 export const getPropertyAnalytics = async (
-  propertyId?: string,
+  propertyId: string,
   filters?: AnalyticsFilters
-) => {
-  const params = new URLSearchParams();
-  
-  if (propertyId) {
-    params.append('propertyId', propertyId);
+): Promise<PropertyAnalyticsResponse> => {
+  const params = buildQueryParams({ ...filtersToQueryParams(filters) });
+  const response = await apiClient.get<AnalyticsApiResponse<PropertyAnalyticsResponse>>(
+    `/analytics/properties/${propertyId}?${params}`
+  );
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error ?? 'Failed to fetch property analytics');
   }
-  
-  if (filters) {
-    if (filters.startDate) {
-      params.append('startDate', filters.startDate.toISOString());
-    }
-    if (filters.endDate) {
-      params.append('endDate', filters.endDate.toISOString());
-    }
-    if (filters.period) {
-      params.append('period', filters.period);
-    }
-    if (filters.metrics) {
-      params.append('metrics', filters.metrics.join(','));
-    }
-  }
-  
-  const endpoint = propertyId 
-    ? `/analytics/properties/${propertyId}` 
-    : '/analytics/portfolio';
-  
-  const response = await apiClient.get(`${endpoint}?${params.toString()}`);
-  return response.data;
+  return response.data.data;
 };
 
-// Track property view
+export const getPortfolioAnalytics = async (
+  filters?: AnalyticsFilters
+): Promise<PortfolioAnalyticsResponse> => {
+  const params = buildQueryParams(filtersToQueryParams(filters));
+  const response = await apiClient.get<AnalyticsApiResponse<PortfolioAnalyticsResponse>>(
+    `/analytics/portfolio?${params}`
+  );
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error ?? 'Failed to fetch portfolio analytics');
+  }
+  return response.data.data;
+};
+
 export const trackPropertyView = async (
   propertyId: string,
   metadata?: {
@@ -52,64 +52,104 @@ export const trackPropertyView = async (
     agentReferralCode?: string;
     subAgentId?: string;
   }
-) => {
-  const response = await apiClient.post(`/analytics/properties/${propertyId}/view`, {
+): Promise<void> => {
+  const event: Partial<AnalyticsEvent> = {
+    propertyId,
+    timestamp: new Date(),
     metadata,
-    timestamp: new Date().toISOString(),
+  };
+  await apiClient.post(`/analytics/properties/${propertyId}/view`, {
+    ...event,
+    timestamp: event.timestamp!.toISOString(),
   });
-  return response.data;
 };
 
-// Track property engagement
 export const trackPropertyEngagement = async (
   propertyId: string,
   duration: number,
   interactions: string[]
-) => {
-  const response = await apiClient.post(`/analytics/properties/${propertyId}/engagement`, {
+): Promise<void> => {
+  await apiClient.post(`/analytics/properties/${propertyId}/engagement`, {
     duration,
     interactions,
     timestamp: new Date().toISOString(),
   });
-  return response.data;
 };
 
-// Get portfolio analytics
-export const getPortfolioAnalytics = async (filters?: AnalyticsFilters) => {
-  return getPropertyAnalytics(undefined, filters);
-};
-
-// Get analytics comparison
 export const getAnalyticsComparison = async (
   propertyIds: string[],
   filters?: AnalyticsFilters
-) => {
-  const params = new URLSearchParams();
-  
-  params.append('propertyIds', propertyIds.join(','));
-  
-  if (filters) {
-    if (filters.startDate) {
-      params.append('startDate', filters.startDate.toISOString());
-    }
-    if (filters.endDate) {
-      params.append('endDate', filters.endDate.toISOString());
-    }
-    if (filters.period) {
-      params.append('period', filters.period);
-    }
+): Promise<ComparisonData[]> => {
+  const params = buildQueryParams({
+    propertyIds: propertyIds.join(','),
+    ...filtersToQueryParams(filters),
+  });
+  const response = await apiClient.get<AnalyticsApiResponse<ComparisonData[]>>(
+    `/analytics/comparison?${params}`
+  );
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error ?? 'Failed to fetch comparison analytics');
   }
-  
-  const response = await apiClient.get(`/analytics/comparison?${params.toString()}`);
+  return response.data.data;
+};
+
+export const getRealTimeAnalytics = async (
+  propertyId?: string
+): Promise<RealTimeAnalyticsUpdate[]> => {
+  const endpoint = propertyId
+    ? `/analytics/properties/${propertyId}/realtime`
+    : '/analytics/realtime';
+  const response = await apiClient.get<AnalyticsApiResponse<RealTimeAnalyticsUpdate[]>>(endpoint);
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error ?? 'Failed to fetch real-time analytics');
+  }
+  return response.data.data;
+};
+
+export const getPropertyInsights = async (
+  propertyId: string,
+  timePeriod?: AnalyticsTimePeriod
+): Promise<PropertyInsights> => {
+  const params = timePeriod ? `?timePeriod=${timePeriod}` : '';
+  const response = await apiClient.get<AnalyticsApiResponse<PropertyInsights>>(
+    `/analytics/properties/${propertyId}/insights${params}`
+  );
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error ?? 'Failed to fetch property insights');
+  }
+  return response.data.data;
+};
+
+export const exportAnalytics = async (
+  format: 'csv' | 'pdf' | 'excel' | 'json',
+  filters?: AnalyticsFilters & { propertyIds?: string[] }
+): Promise<Blob> => {
+  const params = buildQueryParams({ format, ...filtersToQueryParams(filters) });
+  const response = await apiClient.get(`/analytics/export?${params}`, {
+    responseType: 'blob',
+  });
   return response.data;
 };
 
-// Get real-time analytics
-export const getRealTimeAnalytics = async (propertyId?: string) => {
-  const endpoint = propertyId 
-    ? `/analytics/properties/${propertyId}/realtime` 
-    : '/analytics/realtime';
-  
-  const response = await apiClient.get(endpoint);
-  return response.data;
-};
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function filtersToQueryParams(filters?: AnalyticsFilters): Record<string, string> {
+  if (!filters) return {};
+  const out: Record<string, string> = {};
+  if (filters.startDate) out.startDate = filters.startDate.toISOString();
+  if (filters.endDate) out.endDate = filters.endDate.toISOString();
+  if (filters.period) out.period = filters.period;
+  if (filters.timePeriod) out.timePeriod = filters.timePeriod;
+  if (filters.aggregation) out.aggregation = filters.aggregation;
+  if (filters.comparison) out.comparison = filters.comparison;
+  if (filters.metrics?.length) out.metrics = filters.metrics.join(',');
+  return out;
+}
+
+function buildQueryParams(obj: Record<string, unknown>): string {
+  const params = new URLSearchParams();
+  Object.entries(obj).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) params.append(k, String(v));
+  });
+  return params.toString();
+}

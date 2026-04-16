@@ -2,21 +2,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { getMyProperties } from '@/lib/api/propertyManagement';
 import { PropertyStatus } from '@newcondo/db';
+import type { PropertyListFilters } from '@/types/propertyManagement';
 
-export interface PropertyListFilters {
-  status?: PropertyStatus[];
-  structure?: 'SINGLE_UNIT' | 'MULTI_FAMILY';
-  isAvailable?: boolean;
-  searchQuery?: string;
-  sortBy?: 'createdAt' | 'updatedAt' | 'viewCount' | 'price' | 'title';
-  sortOrder?: 'asc' | 'desc';
-  page?: number;
-  limit?: number;
-  minPrice?: number;
-  maxPrice?: number;
-  city?: string;
-  state?: string;
-}
 
 export const usePropertyList = (filters?: PropertyListFilters) => {
   const query = useQuery({
