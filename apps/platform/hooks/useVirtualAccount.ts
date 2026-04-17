@@ -1,54 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
-import { api } from '@/lib/api/client';
+import { toast } from '@newcondo/ui';
+import { apiClient } from '@/lib/api/client';
+import {
+  fetchMyVirtualAccount,
+  fetchVirtualAccountById,
+  fetchAllVirtualAccounts,
+  fetchAccountTransactions,
+  fetchWithdrawalSettings,
+  updateWithdrawalSettings,
+} from '@/lib/api/virtualAccounts';
+import type {
+  TransactionListParams,
+  UpdateWithdrawalSettingsParams,
+  AccountStatus,
+  UseVirtualAccountReturn,
+  VirtualAccount
+} from '@/types/virtualAccount';
 
-interface VirtualAccountData {
-  id: string;
-  accountNumber: string;
-  accountName: string;
-  bankCode: string;
-  bankName: string;
-  balance: number;
-  currency: string;
-  isActive: boolean;
-  userId: string;
-  propertyId?: string;
-  createdAt: string;
-}
 
-interface TransactionData {
-  id: string;
-  type: 'CREDIT' | 'DEBIT';
-  amount: number;
-  currency: string;
-  description: string;
-  reference: string;
-  status: string;
-  balanceBefore: number;
-  balanceAfter: number;
-  createdAt: string;
-}
-
-interface TransactionListParams {
-  page?: number;
-  limit?: number;
-  type?: 'CREDIT' | 'DEBIT';
-  startDate?: string;
-  endDate?: string;
-}
-
-interface WithdrawalSettingsData {
-  autoWithdraw: boolean;
-  withdrawalSchedule?: 'IMMEDIATE' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
-  minimumBalance?: number;
-  destinationAccountNumber: string;
-  destinationAccountName: string;
-  destinationBankCode: string;
-}
-
-export function useVirtualAccount(accountId?: string) {
+export function useVirtualAccount(accountId?: string): UseVirtualAccountReturn {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   // Fetch virtual account details
   const {
@@ -56,17 +27,12 @@ export function useVirtualAccount(accountId?: string) {
     isLoading,
     error,
     refetch,
-  } = useQuery({
+  } = useQuery<VirtualAccount>({
     queryKey: ['virtual-account', accountId],
-    queryFn: async () => {
-      if (!accountId) {
-        // Fetch user's primary virtual account
-        const response = await api.get<VirtualAccountData>('/virtual-accounts/me');
-        return response.data;
-      }
-      const response = await api.get<VirtualAccountData>(`/virtual-accounts/${accountId}`);
-      return response.data;
-    },
+    queryFn: () =>
+      accountId
+        ? fetchVirtualAccountById(accountId)
+        : fetchMyVirtualAccount(),
     refetchInterval: 30000, // Refetch every 30 seconds to keep balance updated
   });
 
@@ -76,21 +42,32 @@ export function useVirtualAccount(accountId?: string) {
     isLoading: isLoadingAccounts,
   } = useQuery({
     queryKey: ['virtual-accounts-list'],
-    queryFn: async () => {
-      const response = await api.get<VirtualAccountData[]>('/virtual-accounts');
-      return response.data;
-    },
+    queryFn: fetchAllVirtualAccounts,
   });
 
-  // Fetch transaction history
+  // ─── Withdrawal settings ─────────────────────────────────────────────────────
+
+  const resolvedAccountId = accountId ?? account?.id;
+
+  const { data: withdrawalSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ['withdrawal-settings', resolvedAccountId],
+    queryFn: () => fetchWithdrawalSettings(resolvedAccountId!),
+    enabled: !!resolvedAccountId,
+  });
+
+
+
+
+  // ─── Fetch transaction history ───────────────────────────────────────────────
+
   const fetchTransactions = (params: TransactionListParams = {}) => {
     return useQuery({
       queryKey: ['virtual-account-transactions', accountId, params],
       queryFn: async () => {
         const targetAccountId = accountId || account?.id;
         if (!targetAccountId) return null;
-        
-        const response = await api.get(`/virtual-accounts/${targetAccountId}/transactions`, {
+
+        const response = await apiClient.get(`/virtual-accounts/${targetAccountId}/transactions`, {
           params,
         });
         return response.data;
@@ -99,56 +76,31 @@ export function useVirtualAccount(accountId?: string) {
     });
   };
 
-  // Fetch withdrawal settings
-  const {
-    data: withdrawalSettings,
-    isLoading: isLoadingSettings,
-  } = useQuery({
-    queryKey: ['withdrawal-settings', accountId],
-    queryFn: async () => {
-      const targetAccountId = accountId || account?.id;
-      if (!targetAccountId) return null;
-      
-      const response = await api.get<WithdrawalSettingsData>(
-        `/virtual-accounts/${targetAccountId}/withdrawal-settings`
-      );
-      return response.data;
-    },
-    enabled: !!(accountId || account?.id),
-  });
+  // ─── Update withdrawal settings ───────────────────────────────────────────────
 
-  // Update withdrawal settings
   const updateWithdrawalSettingsMutation = useMutation({
-    mutationFn: async (settings: Partial<WithdrawalSettingsData>) => {
-      const targetAccountId = accountId || account?.id;
-      if (!targetAccountId) throw new Error('No account ID available');
-      
-      const response = await api.patch(
-        `/virtual-accounts/${targetAccountId}/withdrawal-settings`,
-        settings
-      );
-      return response.data;
+    mutationFn: async (settings: UpdateWithdrawalSettingsParams) => {
+      if (!resolvedAccountId) throw new Error('No account ID available');
+      return updateWithdrawalSettings(resolvedAccountId, settings);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['withdrawal-settings'] });
-      
-      toast({
-        title: 'Settings Updated',
+      toast.success('Settings Updated', {
         description: 'Your withdrawal settings have been updated successfully.',
-        variant: 'default',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Update Failed',
+      toast.error('Update Failed', {
         description: error.response?.data?.message || 'Failed to update withdrawal settings.',
-        variant: 'destructive',
       });
     },
   });
 
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────────
+
   // Format balance
-  const formatBalance = (amount?: number) => {
+  const formatBalance = (amount?: number): string => {
     if (amount === undefined) return 'Loading...';
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -157,13 +109,16 @@ export function useVirtualAccount(accountId?: string) {
   };
 
   // Check if account has sufficient balance
-  const hasSufficientBalance = (amount: number) => {
+  const hasSufficientBalance = (amount: number): boolean => {
     if (!account) return false;
     return account.balance >= amount;
+
+    //one-liner
+    // !!account && account.balance >= amount;
   };
 
   // Get account status
-  const getAccountStatus = () => {
+  const getAccountStatus = (): AccountStatus  => {
     if (!account) return 'Unknown';
     if (!account.isActive) return 'Inactive';
     if (account.balance === 0) return 'Zero Balance';
@@ -173,10 +128,10 @@ export function useVirtualAccount(accountId?: string) {
   // Calculate available balance for withdrawal
   const getAvailableBalance = () => {
     if (!account) return 0;
-    
+
     const minimumBalance = withdrawalSettings?.minimumBalance || 0;
     const availableBalance = account.balance - minimumBalance;
-    
+
     return Math.max(0, availableBalance);
   };
 
@@ -186,37 +141,50 @@ export function useVirtualAccount(accountId?: string) {
     queryClient.invalidateQueries({ queryKey: ['virtual-accounts-list'] });
   };
 
+  const availableBalance = getAvailableBalance();
+
   return {
     // Data
     account,
     accounts,
     withdrawalSettings,
-    
+
     // Loading states
     isLoading,
     isLoadingAccounts,
     isLoadingSettings,
-    
-    // Error
-    error,
-    
-    // Queries
-    fetchTransactions,
-    
-    // Mutations
-    updateWithdrawalSettings: updateWithdrawalSettingsMutation.mutate,
     isUpdatingSettings: updateWithdrawalSettingsMutation.isPending,
-    
+
+    // Error
+    error: error as Error | null,
+
+    updateWithdrawalSettings: updateWithdrawalSettingsMutation.mutate,
+
     // Helpers
     formatBalance,
     hasSufficientBalance,
+    fetchTransactions,
     getAccountStatus: getAccountStatus(),
-    getAvailableBalance: getAvailableBalance(),
+    getAvailableBalance: availableBalance,
     refreshBalance,
     refetch,
-    
+
     // Formatted data
     formattedBalance: formatBalance(account?.balance),
-    formattedAvailableBalance: formatBalance(getAvailableBalance()),
+    formattedAvailableBalance: formatBalance(availableBalance),
   };
+}
+
+
+// ─── Transactions hook (separate — Rules of Hooks) ──────────────────────────
+
+export function useVirtualAccountTransactions(
+  accountId: string | undefined,
+  params: TransactionListParams = {}
+) {
+  return useQuery({
+    queryKey: ['virtual-account-transactions', accountId, params],
+    queryFn: () => fetchAccountTransactions(accountId!, params),
+    enabled: !!accountId,
+  });
 }

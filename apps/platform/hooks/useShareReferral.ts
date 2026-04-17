@@ -181,6 +181,6 @@ export function useShareTracking() {
   return {
     trackShare: trackShare.mutateAsync,
     trackClick: trackClick.mutateAsync,
-    isTracking: trackShare.isLoading || trackClick.isLoading,
+    isTracking: trackShare.isPending  || trackClick.isPending ,
   };
 }

@@ -5,6 +5,7 @@ import type {
   PropertyManagementView,
   AnalyticsTimePeriod,
 } from '@/lib/constants/propertyManagement';
+
 import type {
   PropertyStatus,
   AdminApprovalStatus,
@@ -59,6 +60,12 @@ export interface PropertyDetailsResponse {
   canEdit: boolean;
 }
 
+export interface PropertyUnitsResponse {
+  units: PropertyUnit[];
+  totalCount: number;
+  availableCount: number;
+  occupiedCount: number;
+}
 
 // Base property interface for management
 export interface ManagedProperty {

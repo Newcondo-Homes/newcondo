@@ -7,6 +7,7 @@ import type {
   PropertyDashboardData,
   ApiResponse,
   PropertyUnit,
+  PropertyUnitsResponse
 } from '@/types/propertyManagement';
 
 export interface PropertyManagementFilters {
@@ -131,9 +132,9 @@ export const deletePropertyImage = async (propertyId: string, imageId: string) =
 // Unit management for multi-family properties
 export const getPropertyUnits = async (
   propertyId: string
-): Promise<PropertyUnit[]> => {
-  const response = await apiClient.get<PropertyUnit[]>(`/properties/${propertyId}/units`);
-  return response.data as PropertyUnit[];
+): Promise<PropertyUnitsResponse> => {
+  const response = await apiClient.get<PropertyUnitsResponse>(`/properties/${propertyId}/units`);
+  return response.data as PropertyUnitsResponse;
 };
 
 export const createUnit = async (propertyId: string, unitData: any) => {

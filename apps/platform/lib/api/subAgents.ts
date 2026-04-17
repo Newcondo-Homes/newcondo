@@ -1,44 +1,19 @@
 // apps/platform/lib/api/subAgents.ts
 import { apiClient } from './client';
+import type 
+{
+ SubAgentFilters,
+ PromotionLinkResponse,
+ PromotionLinkStatsResponse,
+ PromotionSettingsResponse,
+ SubAgent,
+ SubAgentsResponse,
+ SubAgentPerformanceResponse
+ } from '@/types/subagents'
 
-export interface SubAgentFilters {
-  propertyId?: string;
-  status?: 'PENDING' | 'APPROVED' | 'REVOKED';
-  sortBy?: 'earnings' | 'views' | 'conversions' | 'createdAt';
-  sortOrder?: 'asc' | 'desc';
-  page?: number;
-  limit?: number;
-}
-
-export interface PromotionLinkResponse {
-  promotionLink: string;
-  linkId: string;
-}
-
-export interface PromotionLinkStatsResponse {
-  totalClicks: number;
-  totalViews: number;
-  totalConversions: number;
-  conversionRate: number;
-  totalEarnings: number;
-  pendingEarnings: number;
-  recentClicks: any[];
-  recentConversions: any[];
-  clicksByDay: any[];
-  viewsByDay: any[];
-  createdAt: string;
-  isActive: boolean;
-}
-
-export interface PromotionSettingsResponse {
-  allowPublicPromotion: boolean;
-  allowPermissionBasedPromotion: boolean;
-  requireApproval: boolean;
-  commissionSplitPercentage: number;
-}
 
 // Get sub-agents
-export const getSubAgents = async (filters?: SubAgentFilters) => {
+export const getSubAgents = async (filters?: SubAgentFilters): Promise<SubAgentsResponse> => {
   const params = new URLSearchParams();
 
   if (filters) {
@@ -50,13 +25,16 @@ export const getSubAgents = async (filters?: SubAgentFilters) => {
   }
 
   const response = await apiClient.get(`/sub-agents?${params.toString()}`);
-  return response.data;
+  return response.data as SubAgentsResponse;
 };
 
 // Approve sub-agent
-export const approveSubAgent = async (subAgentId: string, propertyId: string) => {
+export const approveSubAgent = async (
+  subAgentId: string, 
+  propertyId: string
+): Promise<SubAgentPerformanceResponse> => {
   const response = await apiClient.post(`/sub-agents/${subAgentId}/approve`, { propertyId });
-  return response.data;
+  return response.data as SubAgentPerformanceResponse;
 };
 
 // Revoke sub-agent access
@@ -66,10 +44,13 @@ export const revokeSubAgent = async (subAgentId: string, propertyId: string) => 
 };
 
 // Get sub-agent performance
-export const getSubAgentPerformance = async (subAgentId: string, propertyId?: string) => {
+export const getSubAgentPerformance = async (
+  subAgentId: string, 
+  propertyId?: string
+): Promise<SubAgentPerformanceResponse> => {
   const params = propertyId ? `?propertyId=${propertyId}` : '';
   const response = await apiClient.get(`/sub-agents/${subAgentId}/performance${params}`);
-  return response.data;
+  return response.data as SubAgentPerformanceResponse;
 };
 
 // Generate promotion link

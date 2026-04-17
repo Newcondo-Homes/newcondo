@@ -4,9 +4,9 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   checkBookingConflicts,
   bulkCheckConflicts,
-  type ConflictCheckRequest,
-  type ConflictCheckResponse,
 } from '@/lib/api/conflicts';
+
+import type { ConflictCheckRequest, ConflictCheckResponse } from '@/types/conflicts';
 
 interface UseConflictDetectionOptions {
   enabled?: boolean;

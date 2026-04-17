@@ -7,7 +7,7 @@ import {
   ReferralLink,
   ReferralLeaderboardEntry,
 } from '@/types/referral';
-import { Reward } from '@/types/reward';
+import { Reward, RewardSummary } from '@/types/reward';
 
 interface PromotionSettings {
   allowPublicPromotion: boolean;
@@ -24,6 +24,10 @@ interface ReferralState {
   leaderboard: ReferralLeaderboardEntry[];
   userRank: number | null;
 
+  // rewards data
+  rewards: Reward[];
+  rewardsSummary: RewardSummary | null;
+
   // Pagination
   currentPage: number;
   pageSize: number;
@@ -34,6 +38,7 @@ interface ReferralState {
   isLoadingReferrals: boolean;
   isLoadingStats: boolean;
   isLoadingLeaderboard: boolean;
+  isLoadingRewards: boolean;
 
   // Error states
   error: string | null;
@@ -59,6 +64,14 @@ interface ReferralState {
   addReferral: (referral: Referral) => void;
   updateReferral: (id: string, updates: Partial<Referral>) => void;
   removeReferral: (id: string) => void;
+
+  // Actions - rewards
+  setRewards: (rewards: Reward[]) => void;
+  setRewardsSummary: (summary: RewardSummary) => void;
+  addReward: (reward: Reward) => void;
+  updateReward: (id: string, updates: Partial<Reward>) => void;
+  markRewardAsRedeemed: (id: string) => void;
+  setLoadingRewards: (loading: boolean) => void;
 
   // Actions - Stats
   setStats: (stats: ReferralStats) => void;
@@ -109,6 +122,8 @@ const defaultPromotionSettings: PromotionSettings = {
 
 const initialState = {
   referralLink: null,
+  rewards: [],
+  rewardsSummary: null,
   referrals: [],
   stats: null,
   leaderboard: [],
@@ -126,6 +141,7 @@ const initialState = {
   isShareModalOpen: false,
   isInviteModalOpen: false,
   isRedemptionModalOpen: false,
+  isLoadingRewards: false,
   promotionSettingsCache: {},
   recentlyCopiedLinks: [],
 };
@@ -147,6 +163,45 @@ export const useReferralStore = create<ReferralState>()(
             'addReferral'
           ),
 
+        setRewards: (rewards) => set({ rewards }, false, 'setRewards'),
+
+        setRewardsSummary: (summary) => set({ rewardsSummary: summary }, false, 'setRewardsSummary'),
+
+        addReward: (reward) =>
+          set(
+            (state) => ({ rewards: [reward, ...state.rewards] }),
+            false,
+            'addReward'
+          ),
+
+        updateReward: (id, updates) =>
+          set(
+            (state) => ({
+              rewards: state.rewards.map((r) =>
+                r.id === id ? { ...r, ...updates } : r
+              ),
+            }),
+            false,
+            'updateReward'
+          ),
+
+        markRewardAsRedeemed: (id) =>
+          set(
+            (state) => ({
+              rewards: state.rewards.map((r) =>
+                r.id === id
+                  ? { ...r, isRedeemed: true, redeemedAt: new Date().toISOString() }
+                  : r
+              ),
+            }),
+            false,
+            'markRewardAsRedeemed'
+          ),
+
+        setLoadingRewards: (loading) =>
+          set({ isLoadingRewards: loading }, false, 'setLoadingRewards'),
+
+        
         updateReferral: (id, updates) =>
           set(
             (state) => ({

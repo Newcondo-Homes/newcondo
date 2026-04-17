@@ -15,6 +15,64 @@ export type PaymentType =
   | 'PREMIUM_UPGRADE' 
   | 'PROPERTY_MARKING';
 
+
+export interface PaymentCreateRequest {
+  amount: number;
+  currency: string;
+  paymentType: PaymentType;
+  description?: string;
+  
+  // Context-specific IDs
+  rentalId?: string;
+  markingJobId?: string;
+  propertyId?: string;
+  unitId?: string;
+  
+  // Payer information
+  payerName: string;
+  payerEmail: string;
+  payerPhone: string;
+  
+  // Payment preferences
+  paymentMethod?: string;
+  redirectUrl?: string;
+  
+  // Additional metadata
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentRefundRequest {
+  reason: string;
+  amount?: number; // Optional for partial refunds
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentHistoryParams {
+  page?: number;
+  limit?: number;
+  status?: PaymentStatus;
+  paymentType?: PaymentType;
+  fromDate?: string;
+  toDate?: string;
+}
+
+export interface VirtualAccountRequest {
+  accountName: string;
+  propertyId?: string;
+  currency?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface PaymentConfirmRequest {
+  transactionId: string;
+  flutterwaveRef: string;
+  status: 'successful' | 'cancelled' | 'failed';
+  amount?: number;
+  currency?: string;
+  paymentMethod?: string;
+  metadata?: Record<string, any>;
+}
+
 // Core payment interface matching Prisma model
 export interface Payment {
   id: string;

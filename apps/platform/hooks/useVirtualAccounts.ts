@@ -1,23 +1,22 @@
 // apps/platform/hooks/useVirtualAccounts.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { virtualAccountsApi } from '../lib/api/virtualAccounts';
+import { virtualAccountsApi } from '@/lib/api/virtualAccounts';
 import { toast } from 'sonner';
-import type { 
-  VirtualAccount, 
+import type {
   CreateVirtualAccountRequest,
-  VirtualAccountQueryParams 
-} from '../types/virtualAccount';
+  VirtualAccountQueryParams
+} from '@/types/virtualAccount';
 
 export const VIRTUAL_ACCOUNTS_KEYS = {
   all: ['virtualAccounts'] as const,
   lists: () => [...VIRTUAL_ACCOUNTS_KEYS.all, 'list'] as const,
-  list: (params: VirtualAccountQueryParams) => 
+  list: (params: VirtualAccountQueryParams) =>
     [...VIRTUAL_ACCOUNTS_KEYS.lists(), params] as const,
   details: () => [...VIRTUAL_ACCOUNTS_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...VIRTUAL_ACCOUNTS_KEYS.details(), id] as const,
-  userAccounts: (userId: string) => 
+  userAccounts: (userId: string) =>
     [...VIRTUAL_ACCOUNTS_KEYS.all, 'user', userId] as const,
-  propertyAccount: (propertyId: string) => 
+  propertyAccount: (propertyId: string) =>
     [...VIRTUAL_ACCOUNTS_KEYS.all, 'property', propertyId] as const,
 };
 
@@ -42,10 +41,10 @@ export function useVirtualAccount(accountId: string) {
 
 export function useReconcileAccount() {
   return useMutation({
-    mutationFn: (data: { 
-      accountId: string; 
-      startDate: string; 
-      endDate: string; 
+    mutationFn: (data: {
+      accountId: string;
+      startDate: string;
+      endDate: string;
       manualBalance: number;
       statementBalance: number;
     }) => virtualAccountsApi.reconcileAccount(data),
@@ -77,23 +76,23 @@ export function useCreateVirtualAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateVirtualAccountRequest) => 
+    mutationFn: (data: CreateVirtualAccountRequest) =>
       virtualAccountsApi.createVirtualAccount(data),
     onSuccess: (data) => {
       // Invalidate and refetch virtual accounts list
-      queryClient.invalidateQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists() 
+      queryClient.invalidateQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
       });
-      
+
       // Invalidate user's virtual accounts
-      queryClient.invalidateQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.userAccounts(data.userId) 
+      queryClient.invalidateQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.userAccounts(data.userId)
       });
 
       // If property account, invalidate property account query
       if (data.propertyId) {
-        queryClient.invalidateQueries({ 
-          queryKey: VIRTUAL_ACCOUNTS_KEYS.propertyAccount(data.propertyId) 
+        queryClient.invalidateQueries({
+          queryKey: VIRTUAL_ACCOUNTS_KEYS.propertyAccount(data.propertyId)
         });
       }
 
@@ -109,7 +108,7 @@ export function useActivateVirtualAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (accountId: string) => 
+    mutationFn: (accountId: string) =>
       virtualAccountsApi.activateVirtualAccount(accountId),
     onSuccess: (data) => {
       // Update the specific account in cache
@@ -119,8 +118,8 @@ export function useActivateVirtualAccount() {
       );
 
       // Invalidate lists to reflect status change
-      queryClient.invalidateQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists() 
+      queryClient.invalidateQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
       });
 
       toast.success('Virtual account activated successfully');
@@ -135,7 +134,7 @@ export function useDeactivateVirtualAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (accountId: string) => 
+    mutationFn: (accountId: string) =>
       virtualAccountsApi.deactivateVirtualAccount(accountId),
     onSuccess: (data) => {
       // Update the specific account in cache
@@ -145,8 +144,8 @@ export function useDeactivateVirtualAccount() {
       );
 
       // Invalidate lists to reflect status change
-      queryClient.invalidateQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists() 
+      queryClient.invalidateQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
       });
 
       toast.success('Virtual account deactivated successfully');
@@ -161,7 +160,7 @@ export function useUpdateVirtualAccountName() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ accountId, name }: { accountId: string; name: string }) => 
+    mutationFn: ({ accountId, name }: { accountId: string; name: string }) =>
       virtualAccountsApi.updateVirtualAccountName(accountId, name),
     onSuccess: (data) => {
       // Update the specific account in cache
@@ -171,8 +170,8 @@ export function useUpdateVirtualAccountName() {
       );
 
       // Invalidate lists to reflect name change
-      queryClient.invalidateQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists() 
+      queryClient.invalidateQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
       });
 
       toast.success('Account name updated successfully');
@@ -187,17 +186,17 @@ export function useDeleteVirtualAccount() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (accountId: string) => 
+    mutationFn: (accountId: string) =>
       virtualAccountsApi.deleteVirtualAccount(accountId),
     onSuccess: (_, accountId) => {
       // Remove the specific account from cache
-      queryClient.removeQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.detail(accountId) 
+      queryClient.removeQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.detail(accountId)
       });
 
       // Invalidate all lists to reflect deletion
-      queryClient.invalidateQueries({ 
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists() 
+      queryClient.invalidateQueries({
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
       });
 
       toast.success('Virtual account deleted successfully');

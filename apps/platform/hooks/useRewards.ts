@@ -1,10 +1,12 @@
 // apps/platform/hooks/useRewards.ts
 
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useReferralStore } from '@/store/referralStore';
 import * as rewardsApi from '@/lib/api/rewards';
-import { RewardQuery, RewardRedemptionInput } from '@/lib/validations/reward';
+import { RewardQuery } from '@/lib/validations/reward';
 import { toast } from 'sonner';
+
 
 export function useRewards(query?: RewardQuery) {
   const {
@@ -23,7 +25,10 @@ export function useRewards(query?: RewardQuery) {
     queryKey: ['rewards', query],
     queryFn: () => rewardsApi.getRewards(query),
     staleTime: 5 * 60 * 1000,
-    onSuccess: (data) => {
+  });
+
+  useEffect(() => {
+    if (data) {
       setRewards(data.rewards);
       setPaginationData({
         page: data.page,
@@ -32,15 +37,18 @@ export function useRewards(query?: RewardQuery) {
         totalItems: data.totalCount,
       });
       setLoadingRewards(false);
-    },
-    onError: (error: Error) => {
-      setError(error.message);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      setError((error as Error).message);
       setLoadingRewards(false);
       toast.error('Failed to load rewards', {
-        description: error.message,
+        description: (error as Error).message,
       });
-    },
-  });
+    }
+  }, [error]);
 
   return {
     rewards: data?.rewards ?? [],
@@ -66,10 +74,13 @@ export function useRewardsSummary() {
     queryKey: ['rewards-summary'],
     queryFn: rewardsApi.getRewardsSummary,
     staleTime: 5 * 60 * 1000,
-    onSuccess: (data) => {
-      setRewardsSummary(data);
-    },
   });
+
+  useEffect(() => {
+    if (summary) {
+      setRewardsSummary(summary);
+    }
+  }, [summary]);
 
   return {
     summary,
@@ -90,10 +101,13 @@ export function useRewardById(id: string) {
     queryKey: ['reward', id],
     queryFn: () => rewardsApi.getRewardById(id),
     enabled: !!id,
-    onSuccess: (data) => {
-      selectReward(data);
-    },
   });
+
+  useEffect(() => {
+    if (reward) {
+      selectReward(reward);
+    }
+  }, [reward]);
 
   return {
     reward,
@@ -113,8 +127,8 @@ export function useRedeemReward() {
       toast.success('Reward redeemed successfully!', {
         description: data.message,
       });
-      queryClient.invalidateQueries(['rewards']);
-      queryClient.invalidateQueries(['rewards-summary']);
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['rewards-summary'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to redeem reward', {
@@ -133,8 +147,8 @@ export function useRedeemMultipleRewards() {
       toast.success(`Redeemed ${data.success} rewards!`, {
         description: `Total amount: ₦${data.totalAmount.toLocaleString()}`,
       });
-      queryClient.invalidateQueries(['rewards']);
-      queryClient.invalidateQueries(['rewards-summary']);
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['rewards-summary'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to redeem rewards', {
@@ -285,8 +299,8 @@ export function useApplyServiceCredit() {
       toast.success('Service credit applied!', {
         description: `₦${data.creditApplied.toLocaleString()} added to your account`,
       });
-      queryClient.invalidateQueries(['rewards']);
-      queryClient.invalidateQueries(['rewards-summary']);
+      queryClient.invalidateQueries({ queryKey: ['rewards'] });
+      queryClient.invalidateQueries({ queryKey: ['rewards-summary'] });
     },
     onError: (error: Error) => {
       toast.error('Failed to apply credit', {

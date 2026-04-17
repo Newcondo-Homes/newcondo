@@ -8,7 +8,7 @@ import {
   toggleUnitAvailability,
   updateUnitImages,
 } from '@/lib/api/propertyManagement';
-import { useToast } from '@/hooks/useToast';
+import { toast } from '@newcondo/ui';
 
 export interface UnitData {
   unitNumber: string;
@@ -31,7 +31,6 @@ export interface UnitImageData {
 
 export const useUnitManagement = (propertyId: string) => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   // Fetch units query
   const { data, isLoading, error, refetch } = useQuery({
@@ -48,16 +47,13 @@ export const useUnitManagement = (propertyId: string) => {
       queryClient.invalidateQueries({ queryKey: ['property-units', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-management'] });
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: 'Unit created successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to create unit',
-        variant: 'destructive',
       });
     },
   });
@@ -69,16 +65,13 @@ export const useUnitManagement = (propertyId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-units', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: 'Unit updated successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to update unit',
-        variant: 'destructive',
       });
     },
   });
@@ -90,16 +83,13 @@ export const useUnitManagement = (propertyId: string) => {
       queryClient.invalidateQueries({ queryKey: ['property-units', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-management'] });
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: 'Unit deleted successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to delete unit',
-        variant: 'destructive',
       });
     },
   });
@@ -111,16 +101,13 @@ export const useUnitManagement = (propertyId: string) => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['property-units', propertyId] });
       queryClient.invalidateQueries({ queryKey: ['property-details', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: `Unit ${variables.isAvailable ? 'activated' : 'deactivated'} successfully`,
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to update unit availability',
-        variant: 'destructive',
       });
     },
   });
@@ -131,16 +118,13 @@ export const useUnitManagement = (propertyId: string) => {
       updateUnitImages(propertyId, unitId, images),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-units', propertyId] });
-      toast({
-        title: 'Success',
+      toast.success('Success', {
         description: 'Unit images updated successfully',
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
+      toast.error('Error', {
         description: error.message || 'Failed to update unit images',
-        variant: 'destructive',
       });
     },
   });
@@ -151,11 +135,11 @@ export const useUnitManagement = (propertyId: string) => {
     totalUnits: data?.totalCount || 0,
     availableUnits: data?.availableCount || 0,
     occupiedUnits: data?.occupiedCount || 0,
-    
+
     // States
     isLoading,
     error,
-    
+
     // Actions
     refetch,
     createUnit: createMutation.mutate,
@@ -164,7 +148,7 @@ export const useUnitManagement = (propertyId: string) => {
     deleteUnit: deleteMutation.mutate,
     toggleAvailability: toggleAvailabilityMutation.mutate,
     updateImages: updateImagesMutation.mutate,
-    
+
     // Mutation states
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

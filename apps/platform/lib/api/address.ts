@@ -145,7 +145,7 @@ export interface NearbyLocationsResponse {
  */
 export async function getStates(): Promise<GetStatesResponse> {
   const response = await apiClient.get<GetStatesResponse>('/api/address/states');
-  return response.data;
+  return response.data as GetStatesResponse;
 }
 
 /**
@@ -155,7 +155,7 @@ export async function getLGAs(stateId: string): Promise<GetLGAsResponse> {
   const response = await apiClient.get<GetLGAsResponse>(
     `/api/address/states/${stateId}/lgas`
   );
-  return response.data;
+  return response.data as GetLGAsResponse;
 }
 
 /**
@@ -165,7 +165,7 @@ export async function getLocations(lgaId: string): Promise<GetLocationsResponse>
   const response = await apiClient.get<GetLocationsResponse>(
     `/api/address/lgas/${lgaId}/locations`
   );
-  return response.data;
+  return response.data as GetLocationsResponse;
 }
 
 /**
@@ -178,7 +178,7 @@ export async function searchAddress(
     '/api/address/search',
     { params }
   );
-  return response.data;
+  return response.data as SearchAddressResponse;
 }
 
 /**
@@ -191,7 +191,7 @@ export async function validateAddress(
     '/api/address/validate',
     data
   );
-  return response.data;
+  return response.data as ValidateAddressResponse;
 }
 
 /**
@@ -203,7 +203,7 @@ export async function getAddressHierarchy(
   const response = await apiClient.get<GetAddressHierarchyResponse>(
     `/api/address/locations/${locationId}/hierarchy`
   );
-  return response.data;
+  return response.data as GetAddressHierarchyResponse;
 }
 
 /**
@@ -216,7 +216,7 @@ export async function reverseGeocode(
     '/api/address/reverse-geocode',
     params
   );
-  return response.data;
+  return response.data as ReverseGeocodeResponse;
 }
 
 /**
@@ -229,7 +229,7 @@ export async function getNearbyLocations(
     '/api/address/nearby',
     { params }
   );
-  return response.data;
+  return response.data as NearbyLocationsResponse;
 }
 
 /**

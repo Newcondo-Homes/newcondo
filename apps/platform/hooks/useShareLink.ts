@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 interface ShareLinkData {
   id: string;
@@ -32,7 +32,6 @@ interface ShareLinkAnalytics {
 
 export function useShareLink(propertyId?: string, unitId?: string) {
   const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch existing share link
@@ -110,16 +109,13 @@ export function useShareLink(propertyId?: string, unitId?: string) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['shareLink', propertyId, unitId] });
       
-      toast({
-        title: 'Share Link Generated',
+      toast.success('Share Link Generated',{
         description: 'Your property share link is ready!',
       });
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Generation Failed',
+      toast.error('Generation Failed',{
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -142,8 +138,7 @@ export function useShareLink(propertyId?: string, unitId?: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shareLink', propertyId, unitId] });
       
-      toast({
-        title: 'Share Link Revoked',
+      toast('Share Link Revoked',{
         description: 'The share link has been deactivated.',
       });
     },
@@ -152,10 +147,8 @@ export function useShareLink(propertyId?: string, unitId?: string) {
   // Copy link to clipboard
   const copyToClipboard = useCallback(async () => {
     if (!shareLink?.shareableLink) {
-      toast({
-        title: 'No Link Available',
+      toast('No Link Available',{
         description: 'Generate a share link first.',
-        variant: 'destructive',
       });
       return;
     }
@@ -164,17 +157,14 @@ export function useShareLink(propertyId?: string, unitId?: string) {
       await navigator.clipboard.writeText(shareLink.shareableLink);
       setCopied(true);
       
-      toast({
-        title: 'Link Copied!',
+      toast.success('Link Copied!',{
         description: 'Share link copied to clipboard.',
       });
 
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast({
-        title: 'Copy Failed',
+      toast.error('Copy Failed',{
         description: 'Failed to copy link to clipboard.',
-        variant: 'destructive',
       });
     }
   }, [shareLink, toast]);

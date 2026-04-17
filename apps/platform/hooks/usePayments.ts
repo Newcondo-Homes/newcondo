@@ -1,7 +1,7 @@
 // apps/platform/hooks/usePayments.ts
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 import { paymentsApi } from '@/lib/api/payments';
 import { useAuthStore } from '@/store/authStore';
 import type {
@@ -15,25 +15,21 @@ import type { PaginatedResponse } from '@/types/api';
 
 export const usePayments = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const { user } = useAuthStore();
 
   // Create payment mutation
   const createPaymentMutation = useMutation({
     mutationFn: (data: PaymentCreateRequest) => paymentsApi.createPayment(data),
     onSuccess: (response) => {
-      toast({
-        title: 'Payment initiated',
+      toast.success('Payment initiated', {
         description: 'Your payment has been successfully initiated.'
       });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
       return response.data;
     },
     onError: (error: any) => {
-      toast({
-        title: 'Payment failed',
+      toast.error('Payment failed', {
         description: error.response?.data?.message || 'Failed to initiate payment.',
-        variant: 'destructive'
       });
     }
   });
@@ -43,17 +39,14 @@ export const usePayments = () => {
     mutationFn: ({ paymentId, data }: { paymentId: string; data: any }) =>
       paymentsApi.confirmPayment(paymentId, data),
     onSuccess: () => {
-      toast({
-        title: 'Payment confirmed',
+      toast.success('Payment confirmed', {
         description: 'Your payment has been confirmed successfully.'
       });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Payment confirmation failed',
+      toast.error('Payment confirmation failed', {
         description: error.response?.data?.message || 'Failed to confirm payment.',
-        variant: 'destructive'
       });
     }
   });
@@ -62,17 +55,14 @@ export const usePayments = () => {
   const cancelPaymentMutation = useMutation({
     mutationFn: (paymentId: string) => paymentsApi.cancelPayment(paymentId),
     onSuccess: () => {
-      toast({
-        title: 'Payment cancelled',
+      toast('Payment cancelled', {
         description: 'The payment has been cancelled successfully.'
       });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Cancellation failed',
+      toast.error('Cancellation failed', {
         description: error.response?.data?.message || 'Failed to cancel payment.',
-        variant: 'destructive'
       });
     }
   });
@@ -82,17 +72,14 @@ export const usePayments = () => {
     mutationFn: ({ paymentId, data }: { paymentId: string; data: PaymentRefundRequest }) =>
       paymentsApi.refundPayment(paymentId, data),
     onSuccess: () => {
-      toast({
-        title: 'Refund requested',
+      toast('Refund requested', {
         description: 'Your refund request has been submitted successfully.'
       });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Refund failed',
+      toast.error('Refund failed', {
         description: error.response?.data?.message || 'Failed to request refund.',
-        variant: 'destructive'
       });
     }
   });
@@ -102,17 +89,14 @@ export const usePayments = () => {
     mutationFn: ({ paymentId, data }: { paymentId: string; data: PaymentRetryRequest }) =>
       paymentsApi.retryPayment(paymentId, data),
     onSuccess: () => {
-      toast({
-        title: 'Payment retry initiated',
+      toast('Payment retry initiated', {
         description: 'Your payment retry has been initiated.'
       });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Retry failed',
+      toast.error('Retry failed', {
         description: error.response?.data?.message || 'Failed to retry payment.',
-        variant: 'destructive'
       });
     }
   });
@@ -121,17 +105,14 @@ export const usePayments = () => {
   const releasePaymentMutation = useMutation({
     mutationFn: (paymentId: string) => paymentsApi.releasePayment(paymentId),
     onSuccess: () => {
-      toast({
-        title: 'Payment released',
+      toast.success('Payment released', {
         description: 'The payment has been released successfully.'
       });
       queryClient.invalidateQueries({ queryKey: ['payments'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Release failed',
+      toast.error('Release failed', {
         description: error.response?.data?.message || 'Failed to release payment.',
-        variant: 'destructive'
       });
     }
   });
@@ -143,7 +124,7 @@ export const usePayments = () => {
     cancelPayment: cancelPaymentMutation.mutate,
     refundPayment: refundPaymentMutation.mutate,
     // retryPayment: retryPaymentMutation.mutate,
-    retryPayment: retryPaymentMutation.mutateAsync, 
+    retryPayment: retryPaymentMutation.mutateAsync,
     releasePayment: releasePaymentMutation.mutate,
     initiatePayment: createPaymentMutation.mutateAsync, // use mutateAsync so it returns a promise
 
@@ -155,8 +136,8 @@ export const usePayments = () => {
     isRetryingPayment: retryPaymentMutation.isPending,
     isReleasingPayment: releasePaymentMutation.isPending,
     isLoading: createPaymentMutation.isPending,
-    
-    
+
+
     // Data
     downloadReceipt: (paymentId: string) => usePaymentReceipt().downloadReceipt(paymentId), // ← or just use the hook separately
     fetchPaymentHistory: (params?: PaymentHistoryParams) => paymentsApi.getPaymentHistory(params).then(r => r.data),
@@ -205,7 +186,6 @@ export const usePaymentAnalytics = (propertyId?: string) => {
 
 // Hook for downloading payment receipt
 export const usePaymentReceipt = () => {
-  const { toast } = useToast();
 
   const downloadReceipt = async (paymentId: string, fileName?: string) => {
     try {
@@ -225,15 +205,12 @@ export const usePaymentReceipt = () => {
       // Clean up
       window.URL.revokeObjectURL(url);
 
-      toast({
-        title: 'Receipt downloaded',
+      toast.success('Receipt downloaded', {
         description: 'Payment receipt has been downloaded successfully.'
       });
     } catch (error: any) {
-      toast({
-        title: 'Download failed',
+      toast.error('Download failed', {
         description: error.response?.data?.message || 'Failed to download receipt.',
-        variant: 'destructive'
       });
     }
   };
@@ -244,23 +221,19 @@ export const usePaymentReceipt = () => {
 // Hook for virtual accounts
 export const useVirtualAccounts = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   // Create virtual account mutation
   const createVirtualAccountMutation = useMutation({
     mutationFn: paymentsApi.createVirtualAccount,
     onSuccess: () => {
-      toast({
-        title: 'Virtual account created',
+      toast.success('Virtual account created', {
         description: 'Your virtual account has been created successfully.'
       });
       queryClient.invalidateQueries({ queryKey: ['virtualAccounts'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Account creation failed',
+      toast.error('Account creation failed', {
         description: error.response?.data?.message || 'Failed to create virtual account.',
-        variant: 'destructive'
       });
     }
   });
@@ -284,7 +257,6 @@ export const useVirtualAccounts = () => {
 
 // Hook for payment verification
 export const usePaymentVerification = () => {
-  const { toast } = useToast();
   const [isVerifying, setIsVerifying] = useState(false);
 
   const verifyPayment = async (transactionId: string) => {
@@ -292,17 +264,14 @@ export const usePaymentVerification = () => {
     try {
       const response = await paymentsApi.verifyPaymentStatus(transactionId);
 
-      toast({
-        title: 'Payment verified',
+      toast.success('Payment verified', {
         description: 'Payment status has been verified successfully.'
       });
 
       return response.data;
     } catch (error: any) {
-      toast({
-        title: 'Verification failed',
+      toast.error('Verification failed', {
         description: error.response?.data?.message || 'Failed to verify payment.',
-        variant: 'destructive'
       });
       throw error;
     } finally {

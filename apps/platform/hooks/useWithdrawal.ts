@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 interface WithdrawalRequest {
   virtualAccountId: string;
@@ -44,7 +44,6 @@ interface WithdrawalHistory {
 }
 
 export function useWithdrawal() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -130,18 +129,15 @@ export function useWithdrawal() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: 'Withdrawal Initiated',
+      toast.success( 'Withdrawal Initiated',{
         description: 'Your withdrawal request has been submitted successfully.',
       });
       queryClient.invalidateQueries({ queryKey: ['virtualAccountBalance'] });
       queryClient.invalidateQueries({ queryKey: ['withdrawalHistory'] });
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Withdrawal Failed',
+      toast.error('Withdrawal Failed',{
         description: error.message,
-        variant: 'destructive',
       });
     },
   });
@@ -166,17 +162,14 @@ export function useWithdrawal() {
       return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: 'Settings Updated',
+      toast.success('Settings Updated',{
         description: 'Auto-transfer settings have been updated successfully.',
       });
       queryClient.invalidateQueries({ queryKey: ['autoTransferSettings'] });
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Update Failed',
+      toast.error('Update Failed',{
         description: error.message,
-        variant: 'destructive',
       });
     },
   });

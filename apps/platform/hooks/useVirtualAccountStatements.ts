@@ -2,7 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
-import { virtualAccountApi } from '../lib/api/virtualAccount';
+import {
+  fetchAccountStatements,
+  exportAccountStatement,
+} from '@/lib/api/virtualAccounts';
 import { useAuth } from './useAuth';
 
 export interface StatementTransaction {
@@ -64,7 +67,7 @@ export interface StatementResponse {
 export const useVirtualAccountStatements = (propertyId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const [filters, setFilters] = useState<StatementFilters>({
     type: 'ALL',
     status: 'ALL',
@@ -80,24 +83,51 @@ export const useVirtualAccountStatements = (propertyId?: string) => {
     refetch: refetchStatements,
   } = useQuery({
     queryKey: ['virtualAccountStatements', user?.id, propertyId, filters],
-    queryFn: () => virtualAccountApi.getStatements(propertyId, filters),
-    enabled: !!user?.id,
+    queryFn: async () => {
+
+      const result = await fetchAccountStatements({
+        accountId: propertyId!,
+        page: filters.page,
+        limit: filters.limit,
+        type: filters.type !== 'ALL' ? filters.type : undefined,
+        status: filters.status !== 'ALL' ? filters.status : undefined,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+      })
+
+      return {
+        ...result,
+        pagination: {
+          ...result.pagination,
+          hasNext: result.pagination.page < result.pagination.totalPages,
+          hasPrev: result.pagination.page > 1
+        }
+      }
+
+    },
+    enabled: !!user?.id && !!propertyId,
     staleTime: 30000, // 30 seconds
+
   });
 
   // Generate statement PDF mutation
   const generatePDFMutation = useMutation({
-    mutationFn: (params: { 
-      startDate: string; 
-      endDate: string; 
+    mutationFn: (params: {
+      startDate: string;
+      endDate: string;
       propertyId?: string;
       format?: 'PDF' | 'CSV' | 'EXCEL';
-    }) => virtualAccountApi.generateStatement(params),
+    }) => exportAccountStatement({
+      accountId: params.propertyId!,
+      startDate: params.startDate,
+      endDate: params.endDate,
+      format: params.format === 'PDF' ? 'pdf' : 'csv', // exportAccountStatement only accepts 'pdf' | 'csv'
+    }),
     onSuccess: (data) => {
       // Download the file
       const link = document.createElement('a');
       link.href = data.downloadUrl;
-      link.download = data.filename;
+      link.download = 'statement'
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -116,7 +146,10 @@ export const useVirtualAccountStatements = (propertyId?: string) => {
       endDate: string;
       propertyId?: string;
       format?: 'PDF' | 'CSV' | 'EXCEL';
-    }) => virtualAccountApi.emailStatement(params),
+    }) => {
+      // TODO: replace with real API call e.g. emailAccountStatement(params) once added to virtualAccounts.ts
+      return Promise.reject(new Error('Email statement not yet implemented'));
+    },
     onSuccess: () => {
       toast.success('Statement sent to your email');
     },
@@ -261,54 +294,53 @@ export const useVirtualAccountStatements = (propertyId?: string) => {
 
   return {
     // Data
-    statements: statementData?.transactions || [],
-    period: statementData?.period,
+    statements: statementData?.data ?? [],
     pagination: statementData?.pagination,
-    
+
     // Loading states
     isStatementsLoading,
     isGeneratingStatement: generatePDFMutation.isPending,
     isEmailingStatement: emailStatementMutation.isPending,
-    
+
     // Error states
     statementsError,
     generateError: generatePDFMutation.error,
     emailError: emailStatementMutation.error,
-    
+
     // Filter state
     filters,
-    
+
     // Filter actions
     updateFilters,
     resetFilters,
     setDateRange,
     setTransactionType,
     setAmountRange,
-    
+
     // Pagination actions
     goToPage,
     nextPage,
     prevPage,
-    
+
     // Statement actions
     generateStatement,
     emailStatement,
     refetchStatements,
-    
+
     // Helpers
     formatAmount,
     formatTransactionType,
     getTransactionIcon,
     getTransactionColor,
     getQuickDateRanges,
-    
+
     // Computed values
-    hasStatements: (statementData?.transactions.length || 0) > 0,
+    hasStatements: (statementData?.data.length || 0) > 0,
     totalTransactions: statementData?.pagination?.total || 0,
     currentPage: filters.page || 1,
     totalPages: statementData?.pagination?.totalPages || 1,
-    hasFiltersApplied: !!(filters.startDate || filters.endDate || 
-                           filters.type !== 'ALL' || filters.status !== 'ALL' ||
-                           filters.minAmount || filters.maxAmount || filters.source),
+    hasFiltersApplied: !!(filters.startDate || filters.endDate ||
+      filters.type !== 'ALL' || filters.status !== 'ALL' ||
+      filters.minAmount || filters.maxAmount || filters.source),
   };
 };

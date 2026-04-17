@@ -5,6 +5,7 @@ export interface VirtualAccount {
   accountNumber: string;
   accountName: string;
   bankCode: string;
+  bankName?: string;
   userId: string;
   propertyId?: string;
   balance: number;
@@ -25,17 +26,14 @@ export interface VirtualAccount {
   };
 }
 
-export interface ReconciliationReport {
-  generatedAt: string;
-  systemBalance: number;
-  manualBalance: number;
-  discrepancy: number;
-  totalCredits: number;
-  totalDebits: number;
-  creditAmount: number;
-  debitAmount: number;
-  recommendations?: string[];
+export interface VirtualAccountQueryParams {
+  page?: number;
+  limit?: number;
+  isActive?: boolean;
+  userId?: string;
+  propertyId?: string;
 }
+
 
 export interface VirtualAccountBalance {
   accountId: string;
@@ -44,6 +42,7 @@ export interface VirtualAccountBalance {
   lastUpdated: string;
   pendingTransactions: number;
   availableBalance: number;
+  isActive?: boolean;
 }
 
 export interface VirtualAccountTransaction {
@@ -55,7 +54,10 @@ export interface VirtualAccountTransaction {
   status: TransactionStatus;
   reference: string;
   description: string;
-  metadata?: Record<string, any>;
+  balanceBefore: number;
+  balanceAfter: number;
+  // metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -75,6 +77,15 @@ export interface VirtualAccountStatement {
   generatedAt: string;
 }
 
+export interface WithdrawalSettings {
+  autoWithdraw: boolean;
+  withdrawalSchedule?: WithdrawalSchedule;
+  minimumBalance?: number;
+  destinationAccountNumber: string;
+  destinationAccountName: string;
+  destinationBankCode: string;
+}
+
 export interface FundTransfer {
   id?: string;
   fromAccountId: string;
@@ -87,7 +98,30 @@ export interface FundTransfer {
   transferType: TransferType;
   status?: TransferStatus;
   reference?: string;
-  metadata?: Record<string, any>;
+  // metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ReconciliationReport {
+  generatedAt: string;
+  systemBalance: number;
+  manualBalance: number;
+  discrepancy: number;
+  totalCredits: number;
+  totalDebits: number;
+  creditAmount: number;
+  debitAmount: number;
+  recommendations?: string[];
+}
+
+export interface ReconciliationItem {
+  id: string;
+  transactionId?: string;
+  description: string;
+  amount: number;
+  type: 'CREDIT' | 'DEBIT' | 'ADJUSTMENT';
+  status: 'MATCHED' | 'UNMATCHED' | 'DISPUTED';
+  notes?: string;
 }
 
 export interface AccountReconciliation {
@@ -119,7 +153,24 @@ export interface ReconciliationItem {
   notes?: string;
 }
 
+export interface ReconciliationReport {
+  generatedAt: string;
+  systemBalance: number;
+  manualBalance: number;
+  discrepancy: number;
+  totalCredits: number;
+  totalDebits: number;
+  creditAmount: number;
+  debitAmount: number;
+  recommendations?: string[];
+}
+
+
+ 
+// ─────────────────────────────────────────────────────────────────────────────
 // Enums
+// ─────────────────────────────────────────────────────────────────────────────
+ 
 export enum TransactionType {
   CREDIT = 'CREDIT',
   DEBIT = 'DEBIT',
@@ -130,7 +181,7 @@ export enum TransactionType {
   COMMISSION = 'COMMISSION',
   REFUND = 'REFUND',
   WITHDRAWAL = 'WITHDRAWAL',
-  DEPOSIT = 'DEPOSIT'
+  DEPOSIT = 'DEPOSIT',
 }
 
 export enum TransactionStatus {
@@ -164,11 +215,74 @@ export enum ReconciliationStatus {
   REQUIRES_ATTENTION = 'REQUIRES_ATTENTION'
 }
 
-// API Request/Response Types
+
+export enum WithdrawalSchedule {
+  IMMEDIATE = 'IMMEDIATE',
+  DAILY = 'DAILY',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+}
+
+export type AccountStatus = 'Active' | 'Inactive' | 'Zero Balance' | 'Unknown';
+
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API Request / Param Types
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface CreateVirtualAccountRequest {
   userId: string;
   propertyId?: string;
   accountName: string;
+}
+
+export interface TransactionListParams {
+  page?: number;
+  limit?: number;
+  type?: TransactionType;
+  status?: TransactionStatus;
+  startDate?: string;
+  endDate?: string;
+}
+ 
+export interface UpdateWithdrawalSettingsParams extends Partial<WithdrawalSettings> {}
+ 
+export interface InitiateFundTransferRequest {
+  fromAccountId: string;
+  toAccountId?: string;
+  toAccountNumber?: string;
+  toBankCode?: string;
+  amount: number;
+  currency: string;
+  description: string;
+  transferType: TransferType;
+  pin?: string; // Transaction PIN for security
+}
+
+export interface ReconcileAccountRequest {
+  accountId: string;
+  period: {
+    startDate: string;
+    endDate: string;
+  };
+  actualBalance: number;
+  reconciliationItems?: Partial<ReconciliationItem>[];
+  notes?: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// API Response Types
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface CreateVirtualAccountResponse {
@@ -198,17 +312,6 @@ export interface GetVirtualAccountStatementResponse {
   data: VirtualAccountStatement;
 }
 
-export interface InitiateFundTransferRequest {
-  fromAccountId: string;
-  toAccountId?: string;
-  toAccountNumber?: string;
-  toBankCode?: string;
-  amount: number;
-  currency: string;
-  description: string;
-  transferType: TransferType;
-  pin?: string; // Transaction PIN for security
-}
 
 export interface InitiateFundTransferResponse {
   success: boolean;
@@ -221,24 +324,19 @@ export interface InitiateFundTransferResponse {
   message: string;
 }
 
-export interface ReconcileAccountRequest {
-  accountId: string;
-  period: {
-    startDate: string;
-    endDate: string;
-  };
-  actualBalance: number;
-  reconciliationItems?: Partial<ReconciliationItem>[];
-  notes?: string;
-}
-
 export interface ReconcileAccountResponse {
   success: boolean;
   data: AccountReconciliation;
   message: string;
 }
 
+export interface PaginatedTransactionsResponse
+  extends PaginatedResponse<VirtualAccountTransaction> {}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Filter and Search Types
+// ─────────────────────────────────────────────────────────────────────────────
+
 export interface VirtualAccountFilters {
   userId?: string;
   propertyId?: string;
@@ -261,7 +359,11 @@ export interface TransactionFilters {
   search?: string;
 }
 
-// UI Component Props
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UI Component Props/ Form Types
+// ─────────────────────────────────────────────────────────────────────────────
+ 
 export interface VirtualAccountCardProps {
   account: VirtualAccount;
   showBalance?: boolean;
@@ -300,3 +402,42 @@ export interface ReconciliationFormData {
     notes?: string;
   }[];
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Hook Return Type
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+export interface UseVirtualAccountReturn {
+  // Data
+  account: VirtualAccount | undefined;
+  accounts: VirtualAccount[] | undefined;
+  withdrawalSettings: WithdrawalSettings | null | undefined;
+ 
+  // Loading states
+  isLoading: boolean;
+  isLoadingAccounts: boolean;
+  isLoadingSettings: boolean;
+  isUpdatingSettings: boolean;
+ 
+  // Error
+  error: Error | null;
+ 
+  // Queries
+  fetchTransactions: (params?: TransactionListParams) => ReturnType<typeof import('@tanstack/react-query').useQuery>;
+ 
+  // Mutations
+  updateWithdrawalSettings: (settings: UpdateWithdrawalSettingsParams) => void;
+ 
+  // Helpers
+  formatBalance: (amount?: number) => string;
+  hasSufficientBalance: (amount: number) => boolean;
+  getAccountStatus: AccountStatus;
+  getAvailableBalance: number;
+  refreshBalance: () => void;
+  refetch: () => void;
+ 
+  // Formatted convenience values
+  formattedBalance: string;
+  formattedAvailableBalance: string;
+}
+ 

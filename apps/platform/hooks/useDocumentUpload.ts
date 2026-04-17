@@ -4,18 +4,6 @@ import { useMutation } from '@tanstack/react-query';
 import { useUploadThing } from '@/lib/uploadthing';
 import { documentsApi } from '@/lib/api/documents';
 import { useLegalStore } from '@/store/legalStore';
-import type { OurFileRouter } from '@/lib/uploadthing';
-import type {
-  DocumentUpload,
-  DocumentFilter,
-  CreateDocumentRequest,
-  UpdateDocumentRequest,
-  DocumentVerificationRequest,
-  DocumentShareRequest,
-  DocumentSignature,
-  DocumentMetadata,
-  DocumentUploadProgress,
-} from '@/types/documents';
 import type { DocumentType, DocumentSide } from '@newcondo/db';
 import { toast } from '@newcondo/ui';
 

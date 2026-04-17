@@ -2,19 +2,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
-import { virtualAccountApi } from '../lib/api/virtualAccount';
+import {
+  fetchAccountBalance,
+  fetchAccountTransactions,
+  createVirtualAccount,
+} from '@/lib/api/virtualAccounts';
 import { useAuth } from './useAuth';
 
-export interface VirtualAccountBalance {
-  id: string;
-  accountNumber: string;
-  accountName: string;
-  balance: number;
-  currency: string;
-  isActive: boolean;
-  propertyId?: string;
-  lastUpdated: string;
-}
+import type {
+  VirtualAccountBalance,
+  VirtualAccountTransaction,
+} from '@/types/virtualAccount';
+
 
 export interface BalanceHistory {
   id: string;
@@ -36,10 +35,10 @@ export const useVirtualAccountBalance = (propertyId?: string) => {
     isLoading: isBalanceLoading,
     error: balanceError,
     refetch: refetchBalance,
-  } = useQuery({
+  } = useQuery<VirtualAccountBalance>({
     queryKey: ['virtualAccountBalance', user?.id, propertyId],
-    queryFn: () => virtualAccountApi.getBalance(propertyId),
-    enabled: !!user?.id,
+    queryFn: () => fetchAccountBalance(propertyId!),
+    enabled: !!user?.id && !!propertyId,
     staleTime: 30000, // 30 seconds
     refetchInterval: 60000, // Refetch every minute
   });
@@ -49,16 +48,16 @@ export const useVirtualAccountBalance = (propertyId?: string) => {
     data: balanceHistory,
     isLoading: isHistoryLoading,
     error: historyError,
-  } = useQuery({
+  } = useQuery<VirtualAccountTransaction[]>({
     queryKey: ['virtualAccountHistory', user?.id, propertyId],
-    queryFn: () => virtualAccountApi.getBalanceHistory(propertyId),
-    enabled: !!user?.id && !!balance,
+    queryFn: () => fetchAccountTransactions(propertyId!, { limit: 50 }).then((r) => r.data),
+    enabled: !!user?.id && !!balance && !!propertyId,
     staleTime: 60000, // 1 minute
   });
 
   // Refresh balance mutation
   const refreshBalanceMutation = useMutation({
-    mutationFn: () => virtualAccountApi.refreshBalance(propertyId),
+    mutationFn: () => fetchAccountBalance(propertyId!),
     onSuccess: (data) => {
       queryClient.setQueryData(
         ['virtualAccountBalance', user?.id, propertyId],
@@ -74,7 +73,7 @@ export const useVirtualAccountBalance = (propertyId?: string) => {
   // Create virtual account mutation
   const createAccountMutation = useMutation({
     mutationFn: (data: { propertyId?: string; accountName: string }) =>
-      virtualAccountApi.createAccount(data),
+      createVirtualAccount({ ...data, userId: user!.id }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ['virtualAccountBalance', user?.id],
@@ -109,10 +108,10 @@ export const useVirtualAccountBalance = (propertyId?: string) => {
     []
   );
 
-  const getBalanceStatus = useCallback((balance?: VirtualAccountBalance) => {
-    if (!balance) return 'no-account';
-    if (!balance.isActive) return 'inactive';
-    if (balance.balance > 0) return 'positive';
+  const getBalanceStatus = useCallback((bal?: VirtualAccountBalance) => {
+    if (!bal) return 'no-account';
+    if (!bal.isActive) return 'inactive';
+    if (bal.balance > 0) return 'positive';
     return 'zero';
   }, []);
 
@@ -120,28 +119,28 @@ export const useVirtualAccountBalance = (propertyId?: string) => {
     // Data
     balance,
     balanceHistory,
-    
+
     // Loading states
     isBalanceLoading,
     isHistoryLoading,
     isRefreshing: refreshBalanceMutation.isPending,
     isCreatingAccount: createAccountMutation.isPending,
-    
+
     // Error states
     balanceError,
     historyError,
     refreshError: refreshBalanceMutation.error,
     createError: createAccountMutation.error,
-    
+
     // Actions
     refreshBalance,
     refetchBalance,
     createAccount,
-    
+
     // Helpers
     formatBalance,
     getBalanceStatus,
-    
+
     // Computed values
     hasAccount: !!balance,
     isPositiveBalance: balance && balance.balance > 0,
