@@ -39,7 +39,11 @@ export const confirmationsApi = {
     isExpired: boolean;
   }> => {
     const response = await apiClient.get(`/api/confirmations/${rentalId}/timer`);
-    return response.data;
+    return response.data as {
+      remainingTime: number;
+      deadline: string;
+      isExpired: boolean;
+    };
   },
 
   /**
@@ -56,7 +60,12 @@ export const confirmationsApi = {
     limit: number;
   }> => {
     const response = await apiClient.get('/api/confirmations/history', { params });
-    return response.data;
+    return response.data as {
+      confirmations: ConfirmationStatusResponse[];
+      total: number;
+      page: number;
+      limit: number;
+    };
   },
 
   disputeProperty: async (
@@ -78,6 +87,9 @@ export const confirmationsApi = {
     issues?: string[];
   }> => {
     const response = await apiClient.get(`/api/confirmations/property/${propertyId}/readiness`);
-    return response.data;
+    return response.data as {
+      isReady: boolean;
+      issues?: string[];
+    };
   }
 };

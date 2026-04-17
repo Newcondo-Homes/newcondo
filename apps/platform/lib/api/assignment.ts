@@ -4,7 +4,7 @@
  * Location: apps/platform/lib/api/assignment.ts
  */
 
-import client  from './client';
+import client from './client';
 
 // Types for assignment operations
 export interface AssignmentResponse {
@@ -67,7 +67,7 @@ export interface ReassignmentData {
 export async function getQueuePosition(jobId: string): Promise<QueuePosition> {
   try {
     const response = await client.get(`/marking-service/queue/${jobId}/position`);
-    return response.data;
+    return response.data as QueuePosition;
   } catch (error) {
     throw new Error(`Failed to fetch queue position: ${error}`);
   }
@@ -82,7 +82,7 @@ export async function getQueuePosition(jobId: string): Promise<QueuePosition> {
 export async function getAgentQueuePositions(agentId: string): Promise<QueuePosition[]> {
   try {
     const response = await client.get(`/marking-service/queue/agent/${agentId}/positions`);
-    return response.data;
+    return response.data as QueuePosition[];
   } catch (error) {
     throw new Error(`Failed to fetch agent queue positions: ${error}`);
   }
@@ -101,7 +101,7 @@ export async function acceptAssignment(jobId: string, agentId: string): Promise<
       agentId,
       acceptedAt: new Date().toISOString(),
     });
-    return response.data;
+    return response.data as AssignmentDetails;
   } catch (error) {
     throw new Error(`Failed to accept assignment: ${error}`);
   }
@@ -126,7 +126,7 @@ export async function declineAssignment(
       reason,
       declinedAt: new Date().toISOString(),
     });
-    return response.data;
+    return response.data as AssignmentResponse;
   } catch (error) {
     throw new Error(`Failed to decline assignment: ${error}`);
   }
@@ -141,7 +141,7 @@ export async function declineAssignment(
 export async function getAssignmentDetails(jobId: string): Promise<AssignmentDetails> {
   try {
     const response = await client.get(`/marking-service/assignments/${jobId}/details`);
-    return response.data;
+    return response.data as AssignmentDetails;
   } catch (error) {
     throw new Error(`Failed to fetch assignment details: ${error}`);
   }
@@ -155,7 +155,7 @@ export async function getAssignmentDetails(jobId: string): Promise<AssignmentDet
 export async function checkQueueStatus(jobId: string): Promise<QueueStatusResponse> {
   try {
     const response = await client.get(`/marking-service/queue/${jobId}/status`);
-    return response.data;
+    return response.data as QueueStatusResponse;
   } catch (error) {
     throw new Error(`Failed to check queue status: ${error}`);
   }
@@ -168,8 +168,8 @@ export async function checkQueueStatus(jobId: string): Promise<QueueStatusRespon
  */
 export async function getEstimatedCompletionTime(jobId: string): Promise<number> {
   try {
-    const response = await client.get(`/marking-service/queue/${jobId}/estimated-time`);
-    return response.data.estimatedMinutes;
+    const response = await client.get<{ estimatedMinutes: number }>(`/marking-service/queue/${jobId}/estimated-time`);
+    return response.data?.estimatedMinutes as number;
   } catch (error) {
     throw new Error(`Failed to fetch estimated completion time: ${error}`);
   }
@@ -194,7 +194,7 @@ export async function notifyAgentEnRoute(
       currentLocation,
       enRouteAt: new Date().toISOString(),
     });
-    return response.data;
+    return response.data as AssignmentResponse;
   } catch (error) {
     throw new Error(`Failed to notify en route status: ${error}`);
   }
@@ -218,7 +218,7 @@ export async function notifyAgentArrived(
       arrivalLocation,
       arrivedAt: new Date().toISOString(),
     });
-    return response.data;
+    return response.data as AssignmentResponse;
   } catch (error) {
     throw new Error(`Failed to notify arrival status: ${error}`);
   }
@@ -248,7 +248,7 @@ export async function getAvailableJobs(
     const response = await client.get(
       `/marking-service/queue/agent/${agentId}/available-jobs?${params.toString()}`
     );
-    return response.data;
+    return response.data as QueueStatusResponse[];
   } catch (error) {
     throw new Error(`Failed to fetch available jobs: ${error}`);
   }
@@ -270,7 +270,7 @@ export async function triggerReassignment(
       reason,
       reassignedAt: new Date().toISOString(),
     });
-    return response.data;
+    return response.data as ReassignmentData;
   } catch (error) {
     throw new Error(`Failed to trigger reassignment: ${error}`);
   }
@@ -297,7 +297,7 @@ export async function extendTimeSlot(
         extendedAt: new Date().toISOString(),
       }
     );
-    return response.data;
+    return response.data as AssignmentDetails;
   } catch (error) {
     throw new Error(`Failed to extend time slot: ${error}`);
   }
@@ -323,7 +323,10 @@ export async function getAssignmentHistory(
     const response = await client.get(
       `/marking-service/assignments/history/${agentId}?limit=${limit}&offset=${offset}`
     );
-    return response.data;
+    return response.data as {
+      total: number;
+      assignments: AssignmentDetails[];
+    };
   } catch (error) {
     throw new Error(`Failed to fetch assignment history: ${error}`);
   }

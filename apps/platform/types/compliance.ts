@@ -3,7 +3,172 @@ import { LegalDocument, UndertakingType } from './legal'
 
 export type { Role, PropertyType }
 
+// Compliance Check (distinct from ComplianceChecklist)
+export interface ComplianceCheck {
+  id: string
+  entityId: string
+  entityType: 'user' | 'property' | 'agent'
+  checkTypes: string[]
+  status: ComplianceRequirementStatus
+  result: ComplianceCheckResult
+  createdAt: Date
+  updatedAt: Date
+}
 
+// Audit
+export interface ComplianceAudit {
+  id: string
+  entityId: string
+  entityType: 'user' | 'property' | 'agent'
+  auditType: 'routine' | 'targeted' | 'incident-based'
+  scope: string[]
+  auditorId?: string
+  scheduledDate?: string
+  completedAt?: Date
+  findings: string[]
+  recommendations: string[]
+  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface ComplianceAuditFilter {
+  entityId?: string
+  entityType?: 'user' | 'property' | 'agent'
+  auditType?: 'routine' | 'targeted' | 'incident-based'
+  status?: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  fromDate?: string
+  toDate?: string
+  page?: number
+  limit?: number
+}
+
+// Privacy & Terms
+export interface PrivacyConsent {
+  id: string
+  userId: string
+  consentType: string
+  version: string
+  isGranted: boolean
+  grantedAt?: Date
+  withdrawnAt?: Date
+  ipAddress?: string
+  userAgent?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface PrivacyConsentRequest {
+  userId: string
+  consentType: string
+  version: string
+  isGranted: boolean
+  ipAddress?: string
+  userAgent?: string
+  metadata?: Record<string, any>
+}
+
+export interface TermsAcceptance {
+  id: string
+  userId: string
+  version: string
+  acceptedAt: Date
+  ipAddress?: string
+  userAgent?: string
+  createdAt: Date
+}
+
+export interface TermsAcceptanceRequest {
+  userId: string
+  version: string
+  ipAddress?: string
+  userAgent?: string
+  metadata?: Record<string, any>
+}
+
+// Alerts
+export interface ComplianceAlert {
+  id: string
+  entityId: string
+  entityType: 'user' | 'property' | 'agent'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  title: string
+  message: string
+  isResolved: boolean
+  resolvedAt?: Date
+  resolution?: string
+  isDismissed: boolean
+  dismissedAt?: Date
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Policy
+export interface CompliancePolicy {
+  id: string
+  title: string
+  description: string
+  jurisdiction: string
+  policyType: string
+  rules: Array<{
+    id: string
+    rule: string
+    severity: string
+    description: string
+    remediation: string
+  }>
+  effectiveDate: Date
+  expiryDate?: Date
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Filters
+export interface ComplianceFilter {
+  entityType?: 'user' | 'property' | 'agent'
+  status?: ComplianceStatusValue
+  level?: ComplianceLevel
+  isCompliant?: boolean
+  fromDate?: string
+  toDate?: string
+  page?: number
+  limit?: number
+}
+
+// Request types
+export interface CreateComplianceCheckRequest {
+  entityId: string
+  entityType: 'user' | 'property' | 'agent'
+  checkTypes?: string[]
+  metadata?: Record<string, any>
+}
+
+export interface UpdateComplianceStatusRequest {
+  status?: ComplianceStatusValue
+  isCompliant?: boolean
+  notes?: string
+  reviewedBy?: string
+  metadata?: Record<string, any>
+}
+
+// API response wrappers
+export interface ComplianceResponse<T> {
+  success: boolean
+  data: T
+  message?: string
+  error?: string
+}
+
+export interface BulkComplianceResponse<T> {
+  success: boolean
+  data: T[]
+  total: number
+  page?: number
+  limit?: number
+  message?: string
+  error?: string
+}
 // Compliance status and scoring
 export interface ComplianceStatus {
   id: string

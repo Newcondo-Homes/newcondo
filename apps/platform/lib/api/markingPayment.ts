@@ -5,7 +5,7 @@
  * Handles all API calls related to property marking payments
  */
 
-import { client } from './client';
+import client from './client';
 
 // Payment Types
 export interface InitiateMarkingPaymentData {
@@ -152,7 +152,8 @@ export interface PaymentSummaryResponse {
 export async function initiateMarkingPayment(
   data: InitiateMarkingPaymentData
 ): Promise<InitiateMarkingPaymentResponse> {
-  return client.post('/api/payments/marking/initiate', data);
+  const response = await client.post('/api/payments/marking/initiate', data);
+  return response.data as InitiateMarkingPaymentResponse
 }
 
 /**
@@ -162,7 +163,8 @@ export async function initiateMarkingPayment(
 export async function verifyMarkingPayment(
   data: VerifyPaymentData
 ): Promise<VerifyPaymentResponse> {
-  return client.post('/api/payments/marking/verify', data);
+  const response = await client.post('/api/payments/marking/verify', data);
+  return response.data as VerifyPaymentResponse
 }
 
 /**
@@ -171,7 +173,8 @@ export async function verifyMarkingPayment(
 export async function getPaymentStatus(
   paymentId: string
 ): Promise<PaymentStatusResponse> {
-  return client.get(`/api/payments/marking/${paymentId}/status`);
+  const response = await client.get(`/api/payments/marking/${paymentId}/status`);
+  return response.data as PaymentStatusResponse
 }
 
 /**
@@ -187,7 +190,7 @@ export async function getMarkingPaymentHistory(
   }
 ): Promise<MarkingJobPaymentHistoryResponse> {
   const queryParams = new URLSearchParams();
-  
+
   if (params?.page) queryParams.append('page', params.page.toString());
   if (params?.pageSize) queryParams.append('pageSize', params.pageSize.toString());
   if (params?.status) queryParams.append('status', params.status);
@@ -195,14 +198,16 @@ export async function getMarkingPaymentHistory(
   if (params?.endDate) queryParams.append('endDate', params.endDate);
 
   const query = queryParams.toString();
-  return client.get(`/api/payments/marking/history${query ? `?${query}` : ''}`);
+  const response = await client.get(`/api/payments/marking/history${query ? `?${query}` : ''}`);
+  return response.data as MarkingJobPaymentHistoryResponse
 }
 
 /**
  * Get agent earnings from marking jobs
  */
 export async function getAgentEarnings(): Promise<AgentEarningsResponse> {
-  return client.get('/api/payments/marking/agent/earnings');
+  const response = await client.get('/api/payments/marking/agent/earnings');
+  return response.data as AgentEarningsResponse
 }
 
 /**
@@ -211,14 +216,16 @@ export async function getAgentEarnings(): Promise<AgentEarningsResponse> {
 export async function withdrawAgentEarnings(
   data: WithdrawEarningsData
 ): Promise<WithdrawEarningsResponse> {
-  return client.post('/api/payments/marking/agent/withdraw', data);
+  const response = await client.post('/api/payments/marking/agent/withdraw', data);
+  return response.data as WithdrawEarningsResponse
 }
 
 /**
  * Get payment summary for user
  */
 export async function getMarkingPaymentSummary(): Promise<PaymentSummaryResponse> {
-  return client.get('/api/payments/marking/summary');
+  const response = await client.get('/api/payments/marking/summary');
+  return response.data as PaymentSummaryResponse
 }
 
 /**
@@ -227,7 +234,8 @@ export async function getMarkingPaymentSummary(): Promise<PaymentSummaryResponse
 export async function cancelMarkingPayment(
   paymentId: string
 ): Promise<{ success: boolean; message: string }> {
-  return client.post(`/api/payments/marking/${paymentId}/cancel`);
+  const response = await client.post(`/api/payments/marking/${paymentId}/cancel`);
+  return response.data as { success: boolean; message: string }
 }
 
 /**
@@ -237,7 +245,8 @@ export async function requestMarkingPaymentRefund(
   paymentId: string,
   reason: string
 ): Promise<{ success: boolean; message: string }> {
-  return client.post(`/api/payments/marking/${paymentId}/refund`, { reason });
+  const response = await client.post(`/api/payments/marking/${paymentId}/refund`, { reason });
+  return response.data as { success: boolean; message: string }
 }
 
 /**
@@ -256,7 +265,18 @@ export async function getMarkingVirtualAccount(
   };
   message: string;
 }> {
-  return client.get(`/api/payments/marking/virtual-account/${userId}`);
+  const response = await client.get(`/api/payments/marking/virtual-account/${userId}`);
+  return response.data as {
+    success: boolean;
+    data: {
+      accountNumber: string;
+      accountName: string;
+      bankCode: string;
+      bankName: string;
+      balance: number;
+    };
+    message: string;
+  }
 }
 
 /**
@@ -266,7 +286,8 @@ export async function getMarkingVirtualAccount(
 export async function handlePaymentWebhook(
   webhookData: any
 ): Promise<{ success: boolean; message: string }> {
-  return client.post('/api/payments/marking/webhook', webhookData);
+  const response = await client.post('/api/payments/marking/webhook', webhookData);
+  return response.data as { success: boolean; message: string }
 }
 
 /**
@@ -289,7 +310,22 @@ export async function getPaymentReceipt(
   };
   message: string;
 }> {
-  return client.get(`/api/payments/marking/${paymentId}/receipt`);
+  const response = await client.get(`/api/payments/marking/${paymentId}/receipt`);
+  return response.data as {
+    success: boolean;
+    data: {
+      receiptUrl: string;
+      paymentDetails: {
+        id: string;
+        amount: number;
+        currency: string;
+        paidAt: string;
+        reference: string;
+        description: string;
+      };
+    };
+    message: string;
+  }
 }
 
 /**
@@ -309,7 +345,21 @@ export async function hasPendingMarkingPayments(): Promise<{
   };
   message: string;
 }> {
-  return client.get('/api/payments/marking/pending/check');
+  const response = await client.get('/api/payments/marking/pending/check');
+  return response.data as {
+    success: boolean;
+    data: {
+      hasPending: boolean;
+      count: number;
+      pendingPayments: Array<{
+        id: string;
+        markingJobId: string;
+        amount: number;
+        createdAt: string;
+      }>;
+    };
+    message: string;
+  }
 }
 
 /**
@@ -334,10 +384,23 @@ export async function getMarkingPaymentStats(
   message: string;
 }> {
   const queryParams = new URLSearchParams();
-  
+
   if (params?.startDate) queryParams.append('startDate', params.startDate);
   if (params?.endDate) queryParams.append('endDate', params.endDate);
 
   const query = queryParams.toString();
-  return client.get(`/api/payments/marking/stats${query ? `?${query}` : ''}`);
+  const response = await client.get(`/api/payments/marking/stats${query ? `?${query}` : ''}`);
+  return response.data as {
+    success: boolean;
+    data: {
+      totalRevenue: number;
+      totalPayments: number;
+      successfulPayments: number;
+      failedPayments: number;
+      averagePaymentAmount: number;
+      agentEarningsPaid: number;
+      platformEarnings: number;
+    };
+    message: string;
+  }
 }

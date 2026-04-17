@@ -1,5 +1,5 @@
 // apps/platform/lib/api/markingConfirmation.ts
-import { client } from './client';
+import client from './client';
 import type {
   ConfirmMarkingRequest,
   MarkingConfirmationResponse,
@@ -17,7 +17,8 @@ export async function confirmMarking(
   jobId: string,
   data: ConfirmMarkingRequest
 ): Promise<MarkingConfirmationResponse> {
-  return client.post(`/marking-confirmation/${jobId}/confirm`, data);
+  const response = await client.post(`/marking-confirmation/${jobId}/confirm`, data);
+  return response.data as MarkingConfirmationResponse
 }
 
 /**
@@ -29,7 +30,8 @@ export async function rejectMarking(
   jobId: string,
   data: RejectMarkingRequest
 ): Promise<MarkingConfirmationResponse> {
-  return client.post(`/marking-confirmation/${jobId}/reject`, data);
+  const response = await client.post(`/marking-confirmation/${jobId}/reject`, data);
+  return response.data as MarkingConfirmationResponse
 }
 
 /**
@@ -41,7 +43,8 @@ export async function requestRevision(
   jobId: string,
   data: RequestRevisionRequest
 ): Promise<MarkingConfirmationResponse> {
-  return client.post(`/marking-confirmation/${jobId}/revision`, data);
+  const response = await client.post(`/marking-confirmation/${jobId}/revision`, data);
+  return response.data as MarkingConfirmationResponse
 }
 
 /**
@@ -51,7 +54,8 @@ export async function requestRevision(
 export async function getConfirmationStatus(
   jobId: string
 ): Promise<ConfirmationStatusResponse> {
-  return client.get(`/marking-confirmation/${jobId}/status`);
+  const response = await client.get(`/marking-confirmation/${jobId}/status`);
+  return response.data as ConfirmationStatusResponse
 }
 
 /**
@@ -71,7 +75,21 @@ export async function getPendingConfirmations(): Promise<{
   }>;
   total: number;
 }> {
-  return client.get('/marking-confirmation/pending');
+  const response = await client.get('/marking-confirmation/pending');
+  return response.data as {
+    jobs: Array<{
+      id: string;
+      propertyId: string;
+      propertyTitle: string;
+      completedAt: string;
+      confirmationDeadline: string;
+      agentName: string;
+      agentId: string;
+      daysRemaining: number;
+      images: string[];
+    }>;
+    total: number;
+  }
 }
 
 /**
@@ -85,7 +103,14 @@ export async function getConfirmationDeadline(jobId: string): Promise<{
   isExpired: boolean;
   autoConfirmAt?: string;
 }> {
-  return client.get(`/marking-confirmation/${jobId}/deadline`);
+  const response = await client.get(`/marking-confirmation/${jobId}/deadline`);
+  return response.data as {
+    deadline: string;
+    hoursRemaining: number;
+    daysRemaining: number;
+    isExpired: boolean;
+    autoConfirmAt?: string;
+  }
 }
 
 /**
@@ -101,7 +126,12 @@ export async function extendConfirmationDeadline(
   newDeadline: string;
   message: string;
 }> {
-  return client.post(`/marking-confirmation/${jobId}/extend`, { extensionDays });
+  const response = await client.post(`/marking-confirmation/${jobId}/extend`, { extensionDays });
+  return response.data as {
+    success: boolean;
+    newDeadline: string;
+    message: string;
+  }
 }
 
 /**
@@ -136,7 +166,26 @@ export async function getConfirmationHistory(filters?: {
   if (filters?.page) params.append('page', filters.page.toString());
   if (filters?.limit) params.append('limit', filters.limit.toString());
 
-  return client.get(`/marking-confirmation/history?${params.toString()}`);
+  const response = await client.get(`/marking-confirmation/history?${params.toString()}`);
+  return response.data as {
+    confirmations: Array<{
+      id: string;
+      jobId: string;
+      propertyTitle: string;
+      agentName: string;
+      status: string;
+      confirmedAt?: string;
+      rejectedAt?: string;
+      rating?: number;
+      feedback?: string;
+    }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      pages: number;
+    };
+  }
 }
 
 /**
@@ -156,7 +205,20 @@ export async function getAgentConfirmationRating(agentId: string): Promise<{
     propertyOwner: string;
   }>;
 }> {
-  return client.get(`/marking-confirmation/agent/${agentId}/rating`);
+  const response = await client.get(`/marking-confirmation/agent/${agentId}/rating`);
+  return response.data as {
+    averageRating: number;
+    totalReviews: number;
+    confirmedJobs: number;
+    rejectedJobs: number;
+    reliabilityScore: number;
+    recentReviews: Array<{
+      rating: number;
+      feedback: string;
+      confirmedAt: string;
+      propertyOwner: string;
+    }>;
+  }
 }
 
 /**
@@ -176,7 +238,12 @@ export async function reportConfirmationIssue(
   ticketId: string;
   message: string;
 }> {
-  return client.post(`/marking-confirmation/${jobId}/issue`, issue);
+  const response = await client.post(`/marking-confirmation/${jobId}/issue`, issue);
+  return response.data as {
+    success: boolean;
+    ticketId: string;
+    message: string;
+  }
 }
 
 /**
@@ -186,5 +253,9 @@ export async function autoConfirmExpiredJobs(): Promise<{
   confirmedCount: number;
   jobIds: string[];
 }> {
-  return client.post('/marking-confirmation/auto-confirm');
+  const response = await client.post('/marking-confirmation/auto-confirm');
+  return response.data as {
+    confirmedCount: number;
+    jobIds: string[];
+  }
 }

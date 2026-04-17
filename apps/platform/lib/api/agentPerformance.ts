@@ -4,7 +4,7 @@
  * Location: apps/platform/lib/api/agentPerformance.ts
  */
 
-import client  from './client';
+import client from './client';
 
 // Types for performance tracking
 export interface AgentPerformanceMetrics {
@@ -100,7 +100,7 @@ export async function getAgentPerformanceMetrics(
 ): Promise<AgentPerformanceMetrics> {
   try {
     const response = await client.get(`/marking-service/agents/${agentId}/performance`);
-    return response.data;
+    return response.data as AgentPerformanceMetrics;
   } catch (error) {
     throw new Error(`Failed to fetch agent performance metrics: ${error}`);
   }
@@ -119,7 +119,7 @@ export async function getReliabilityScoreBreakdown(
     const response = await client.get(
       `/marking-service/agents/${agentId}/reliability-score/breakdown`
     );
-    return response.data;
+    return response.data as ReliabilityScoreBreakdown;
   } catch (error) {
     throw new Error(`Failed to fetch reliability score breakdown: ${error}`);
   }
@@ -141,7 +141,7 @@ export async function getPerformanceHistory(
     const response = await client.get(
       `/marking-service/agents/${agentId}/performance/history?period=${period}&days=${days}`
     );
-    return response.data;
+    return response.data as PerformanceHistory[];
   } catch (error) {
     throw new Error(`Failed to fetch performance history: ${error}`);
   }
@@ -162,7 +162,7 @@ export async function getPerformanceTrend(
     const response = await client.get(
       `/marking-service/agents/${agentId}/performance/trend?period=${period}`
     );
-    return response.data;
+    return response.data as PerformanceTrend;
   } catch (error) {
     throw new Error(`Failed to fetch performance trend: ${error}`);
   }
@@ -188,7 +188,11 @@ export async function getAgentRatings(
     const response = await client.get(
       `/marking-service/agents/${agentId}/ratings?limit=${limit}&offset=${offset}`
     );
-    return response.data;
+    return response.data as {
+      total: number;
+      ratings: AgentRating[];
+      averageRating: number;
+    };
   } catch (error) {
     throw new Error(`Failed to fetch agent ratings: ${error}`);
   }
@@ -227,7 +231,11 @@ export async function submitAgentRating(
       tags,
       ratedAt: new Date().toISOString(),
     });
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message: string;
+      averageRatingUpdated: number;
+    };
   } catch (error) {
     throw new Error(`Failed to submit agent rating: ${error}`);
   }
@@ -248,7 +256,7 @@ export async function getAgentLeaderboard(
     const response = await client.get(
       `/marking-service/leaderboard?period=${period}&limit=${limit}`
     );
-    return response.data;
+    return response.data as AgentLeaderboard;
   } catch (error) {
     throw new Error(`Failed to fetch agent leaderboard: ${error}`);
   }
@@ -274,7 +282,12 @@ export async function checkPremiumEligibility(
     const response = await client.get(
       `/marking-service/agents/${agentId}/premium-eligibility?minScore=${minReliabilityScore}`
     );
-    return response.data;
+    return response.data as {
+      isEligible: boolean;
+      currentScore: number;
+      scoreGap: number;
+      monthsToNextEvaluation: number;
+    };
   } catch (error) {
     throw new Error(`Failed to check premium eligibility: ${error}`);
   }
@@ -300,7 +313,16 @@ export async function getAgentAchievements(
 }> {
   try {
     const response = await client.get(`/marking-service/agents/${agentId}/achievements`);
-    return response.data;
+    return response.data as {
+      badges: Array<{
+        name: string;
+        description: string;
+        icon: string;
+        unlockedAt: Date;
+      }>;
+      totalPoints: number;
+      level: number;
+    };
   } catch (error) {
     throw new Error(`Failed to fetch agent achievements: ${error}`);
   }
@@ -324,7 +346,12 @@ export async function compareAgentPerformance(
     const response = await client.post(`/marking-service/agents/compare-performance`, {
       agentIds,
     });
-    return response.data;
+    return response.data as {
+      agents: AgentPerformanceMetrics[];
+      topPerformer: string;
+      lowestPerformer: string;
+      averageMetrics: Partial<AgentPerformanceMetrics>;
+    };
   } catch (error) {
     throw new Error(`Failed to compare agent performance: ${error}`);
   }
@@ -362,7 +389,19 @@ export async function getPerformanceReport(
         endDate: endDate.toISOString(),
       },
     });
-    return response.data;
+    return response.data as {
+      agentId: string;
+      agentName: string;
+      period: {
+        start: Date;
+        end: Date;
+      };
+      metrics: AgentPerformanceMetrics;
+      highlights: string[];
+      areasForImprovement: string[];
+      recommendations: string[];
+      generatedAt: Date;
+    };
   } catch (error) {
     throw new Error(`Failed to fetch performance report: ${error}`);
   }
@@ -395,7 +434,12 @@ export async function updateAgentAvailability(
         updatedAt: new Date().toISOString(),
       }
     );
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message: string;
+      previousStatus: boolean;
+      newStatus: boolean;
+    };
   } catch (error) {
     throw new Error(`Failed to update agent availability: ${error}`);
   }
@@ -419,7 +463,14 @@ export async function getAgentServiceAreas(
 }> {
   try {
     const response = await client.get(`/marking-service/agents/${agentId}/service-areas`);
-    return response.data;
+    return response.data as {
+      agentId: string;
+      serviceAreas: Array<{
+        state: string;
+        cities: string[];
+      }>;
+      maxOperatingRadius: number; // in kilometers
+    };
   } catch (error) {
     throw new Error(`Failed to fetch agent service areas: ${error}`);
   }
@@ -447,7 +498,16 @@ export async function getCompletionMetricsByLocation(
     const response = await client.get(
       `/marking-service/agents/${agentId}/performance/by-location`
     );
-    return response.data;
+    return response.data as {
+      agentId: string;
+      metrics: Array<{
+        location: string;
+        jobsCompleted: number;
+        averageCompletionTime: number;
+        onTimeRate: number;
+        averageRating: number;
+      }>;
+    };
   } catch (error) {
     throw new Error(`Failed to fetch location-based metrics: ${error}`);
   }

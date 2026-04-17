@@ -1,5 +1,88 @@
 import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db'
 
+export interface DocumentTemplate {
+  id: string
+  templateType: TemplateType
+  title: string
+  content: string
+  version: string
+  isActive: boolean
+  requiresSignature: boolean
+  expiryDays?: number
+  applicableRoles: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface LegalTemplate {
+  id: string
+  templateType: TemplateType
+  title: string
+  content: string
+  version: string
+  isActive: boolean
+  requiresSignature: boolean
+  expiryDays?: number
+  applicableRoles: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CreateLegalDocumentRequest {
+  documentType: DocumentType
+  documentSide?: DocumentSide
+  pageNumber?: number
+  documentNumber?: string
+  file?: File
+  propertyId?: string
+  isRequired?: boolean
+  expiresAt?: Date
+}
+
+export interface UpdateLegalDocumentRequest {
+  documentSide?: DocumentSide
+  pageNumber?: number
+  documentNumber?: string
+  fileName?: string
+  fileUrl?: string
+  verificationNotes?: string
+  isRequired?: boolean
+  expiresAt?: Date
+}
+
+export interface BulkLegalDocumentResponse {
+  success: boolean
+  data: LegalDocument[]
+  pagination?: {
+    page: number
+    limit: number
+    total: number
+    pages: number
+  }
+  message?: string
+}
+
+export interface DocumentVerificationRequest {
+  documentId: string
+  verificationNotes?: string
+  verifiedBy?: string
+}
+
+export interface DocumentSigningRequest {
+  documentId: string
+  signatureData: string
+  signatureMethod: SignatureMethod
+  witnessId?: string
+  witnessSignature?: string
+}
+
+export interface LegalTemplateRequest {
+  propertyId?: string
+  userId: string
+  variables?: Record<string, string>
+  requiresSignature?: boolean
+}
+
 export interface LegalDocument {
   id: string
   userId: string
@@ -19,6 +102,7 @@ export interface LegalDocument {
   createdAt: Date
   updatedAt: Date
 }
+
 
 export { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
 
@@ -53,7 +137,10 @@ export interface LegalDocumentUpload {
   propertyId?: string
   isRequired?: boolean
   expiresAt?: Date
+  userId?: string
+  metadata?: string
 }
+
 
 export interface ConsentDocument {
   id: string

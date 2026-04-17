@@ -1,5 +1,5 @@
 // apps/platform/lib/api/markingCompletion.ts
-import client  from './client';
+import client from './client';
 import type {
   CompleteMarkingJobRequest,
   MarkingCompletionResponse,
@@ -14,7 +14,9 @@ import type {
  * @param jobId - The marking job ID
  */
 export async function startMarkingJob(jobId: string): Promise<MarkingCompletionResponse> {
-  return client.post(`/marking-completion/${jobId}/start`);
+  const response = await client.post(`/marking-completion/${jobId}/start`);
+
+  return response.data as MarkingCompletionResponse;
 }
 
 /**
@@ -27,7 +29,7 @@ export async function uploadCompletionImages(
   data: UploadCompletionImagesRequest
 ): Promise<CompletionImagesResponse> {
   const formData = new FormData();
-  
+
   data.images.forEach((image, index) => {
     formData.append('images', image.file);
     formData.append(`imageDescriptions[${index}]`, image.description || '');
@@ -38,11 +40,8 @@ export async function uploadCompletionImages(
     formData.append('notes', data.notes);
   }
 
-  return client.post(`/marking-completion/${jobId}/images`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+  const response = await client.post(`/marking-completion/${jobId}/images`, formData);
+  return response.data as CompletionImagesResponse
 }
 
 /**
@@ -54,7 +53,8 @@ export async function submitBoundaryData(
   jobId: string,
   data: SubmitBoundaryDataRequest
 ): Promise<BoundaryDataResponse> {
-  return client.post(`/marking-completion/${jobId}/boundary`, data);
+  const response = await client.post(`/marking-completion/${jobId}/boundary`, data);
+  return response.data as BoundaryDataResponse
 }
 
 /**
@@ -66,7 +66,8 @@ export async function completeMarkingJob(
   jobId: string,
   data: CompleteMarkingJobRequest
 ): Promise<MarkingCompletionResponse> {
-  return client.post(`/marking-completion/${jobId}/complete`, data);
+  const response = await client.post(`/marking-completion/${jobId}/complete`, data);
+  return response.data as MarkingCompletionResponse
 }
 
 /**
@@ -81,7 +82,15 @@ export async function getCompletionProgress(jobId: string): Promise<{
   canComplete: boolean;
   missingSteps: string[];
 }> {
-  return client.get(`/marking-completion/${jobId}/progress`);
+  const response = await client.get(`/marking-completion/${jobId}/progress`);
+  return response.data as {
+    imagesUploaded: number;
+    requiredImages: number;
+    boundarySubmitted: boolean;
+    notesProvided: boolean;
+    canComplete: boolean;
+    missingSteps: string[];
+  }
 }
 
 /**
@@ -96,7 +105,11 @@ export async function deleteCompletionImage(
   success: boolean;
   message: string;
 }> {
-  return client.delete(`/marking-completion/${jobId}/images/${imageId}`);
+  const response = await client.delete(`/marking-completion/${jobId}/images/${imageId}`);
+  return response.data as {
+    success: boolean;
+    message: string;
+  }
 }
 
 /**
@@ -111,7 +124,11 @@ export async function updateCompletionNotes(
   success: boolean;
   notes: string;
 }> {
-  return client.put(`/marking-completion/${jobId}/notes`, { notes });
+  const response = await client.put(`/marking-completion/${jobId}/notes`, { notes });
+  return response.data as {
+    success: boolean;
+    notes: string;
+  }
 }
 
 /**
@@ -131,7 +148,20 @@ export async function getCompletionData(jobId: string): Promise<{
   completedAt?: string;
   status: string;
 }> {
-  return client.get(`/marking-completion/${jobId}/data`);
+  const response = await client.get(`/marking-completion/${jobId}/data`);
+  return response.data as {
+    images: Array<{
+      id: string;
+      url: string;
+      type: string;
+      description?: string;
+      uploadedAt: string;
+    }>;
+    boundaryData?: any;
+    notes?: string;
+    completedAt?: string;
+    status: string;
+  }
 }
 
 /**
@@ -147,7 +177,12 @@ export async function saveDraft(
   message: string;
   savedAt: string;
 }> {
-  return client.post(`/marking-completion/${jobId}/draft`, data);
+  const response = await client.post(`/marking-completion/${jobId}/draft`, data);
+  return response.data as {
+    success: boolean;
+    message: string;
+    savedAt: string;
+  }
 }
 
 /**
@@ -160,5 +195,12 @@ export async function getAgentCompletionStats(): Promise<{
   averageRating: number;
   totalEarnings: number;
 }> {
-  return client.get('/marking-completion/stats');
+  const response = await client.get('/marking-completion/stats');
+  return response.data as {
+    totalCompleted: number;
+    averageCompletionTime: number; // in hours
+    onTimeCompletionRate: number; // percentage
+    averageRating: number;
+    totalEarnings: number;
+  }
 }

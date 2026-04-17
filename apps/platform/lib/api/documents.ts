@@ -2,7 +2,6 @@
 
 import { apiClient } from './client';
 import type {
-  BaseDocument,
   DocumentUpload,
   DocumentVerification,
   DocumentVersion,

@@ -24,6 +24,36 @@ export interface UploadCompletionImagesRequest {
   notes?: string;
 }
 
+export interface MarkingConfirmationResponse {
+    success: boolean
+    data: {
+        jobId: string
+        status: string
+        confirmedAt?: string
+        rejectedAt?: string
+        paymentReleased?: boolean
+        agentRating?: number
+    }
+    message?: string
+}
+
+export interface ConfirmationStatusResponse {
+    success: boolean
+    data: {
+        jobId: string
+        isConfirmed: boolean
+        isRejected: boolean
+        confirmationDeadline: string
+        hoursRemaining: number
+        daysRemaining: number
+        isExpired: boolean
+        canConfirm: boolean
+        canReject: boolean
+        canRequestRevision: boolean
+    }
+    message?: string
+}
+
 export interface CompletionImagesResponse {
   success: boolean;
   data: {

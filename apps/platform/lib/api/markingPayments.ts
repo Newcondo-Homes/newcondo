@@ -69,7 +69,7 @@ export async function initiateMarkingPayment(
   data: InitiateMarkingPaymentRequest
 ): Promise<InitiateMarkingPaymentResponse> {
   const response = await apiClient.post('/api/marking-payments/initiate', data);
-  return response.data;
+  return response.data as InitiateMarkingPaymentResponse;
 }
 
 /**
@@ -82,7 +82,7 @@ export async function verifyMarkingPayment(
   const response = await apiClient.get(`/api/marking-payments/verify/${paymentId}`, {
     params: { transactionId },
   });
-  return response.data;
+  return response.data as VerifyMarkingPaymentResponse;
 }
 
 /**
@@ -99,7 +99,12 @@ export async function getMarkingPaymentHistory(params?: {
   totalPages: number;
 }> {
   const response = await apiClient.get('/api/marking-payments/history', { params });
-  return response.data;
+  return response.data as {
+    payments: MarkingPaymentHistory[];
+    total: number;
+    page: number;
+    totalPages: number;
+  };
 }
 
 /**
@@ -109,7 +114,7 @@ export async function getMarkingPaymentDetails(
   paymentId: string
 ): Promise<MarkingPaymentHistory> {
   const response = await apiClient.get(`/api/marking-payments/${paymentId}`);
-  return response.data;
+  return response.data as MarkingPaymentHistory;
 }
 
 /**
@@ -117,7 +122,7 @@ export async function getMarkingPaymentDetails(
  */
 export async function getAgentEarnings(): Promise<AgentEarningsBreakdown> {
   const response = await apiClient.get('/api/marking-payments/agent-earnings');
-  return response.data;
+  return response.data as AgentEarningsBreakdown;
 }
 
 /**
@@ -128,7 +133,7 @@ export async function releaseAgentCompensation(
   jobId: string
 ): Promise<{ success: boolean; message: string; amount: number }> {
   const response = await apiClient.post(`/api/marking-payments/release/${jobId}`);
-  return response.data;
+  return response.data as { success: boolean; message: string; amount: number };
 }
 
 /**
@@ -138,7 +143,7 @@ export async function processPartialPayment(
   jobId: string
 ): Promise<{ success: boolean; message: string; amount: number }> {
   const response = await apiClient.post(`/api/marking-payments/partial/${jobId}`);
-  return response.data;
+  return response.data as { success: boolean; message: string; amount: number };
 }
 
 /**
@@ -155,7 +160,12 @@ export async function requestWithdrawal(data: {
   estimatedTime: string;
 }> {
   const response = await apiClient.post('/api/marking-payments/withdraw', data);
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    withdrawalId: string;
+    estimatedTime: string;
+  };
 }
 
 /**
@@ -180,7 +190,20 @@ export async function getWithdrawalHistory(params?: {
   totalPages: number;
 }> {
   const response = await apiClient.get('/api/marking-payments/withdrawals', { params });
-  return response.data;
+  return response.data as {
+    withdrawals: Array<{
+      id: string;
+      amount: number;
+      status: string;
+      accountNumber: string;
+      bankCode: string;
+      requestedAt: string;
+      processedAt?: string;
+    }>;
+    total: number;
+    page: number;
+    totalPages: number;
+  };
 }
 
 /**
@@ -201,5 +224,15 @@ export async function calculateMarkingCost(params: {
   }[];
 }> {
   const response = await apiClient.get('/api/marking-payments/calculate-cost', { params });
-  return response.data;
+  return response.data as {
+    baseFee: number;
+    urgencyMultiplier: number;
+    totalCost: number;
+    agentShare: number;
+    platformShare: number;
+    breakdown: {
+      description: string;
+      amount: number;
+    }[];
+  };
 }

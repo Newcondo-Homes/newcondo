@@ -77,32 +77,32 @@ export interface BoundaryValidationResponse {
 class BoundaryService {
   async createBoundary(data: CreateBoundaryRequest): Promise<BoundaryResponse> {
     const response = await apiClient.post('/boundaries', data);
-    return response.data;
+    return response.data as BoundaryResponse;
   }
 
   async getNearbyBoundaries(params: NearbyBoundariesRequest): Promise<BoundaryResponse[]> {
     const response = await apiClient.get('/boundaries/nearby', { params });
-    return response.data;
+    return response.data as BoundaryResponse[];
   }
 
   async checkForDuplicates(data: DuplicateCheckRequest): Promise<DuplicateCheckResponse> {
     const response = await apiClient.post('/boundaries/check-duplicates', data);
-    return response.data;
+    return response.data as DuplicateCheckResponse;
   }
 
   async validateBoundary(data: BoundaryValidationRequest): Promise<BoundaryValidationResponse> {
     const response = await apiClient.post('/boundaries/validate', data);
-    return response.data;
+    return response.data as BoundaryValidationResponse;
   }
 
   async getBoundaryById(id: string): Promise<BoundaryResponse> {
     const response = await apiClient.get(`/boundaries/${id}`);
-    return response.data;
+    return response.data as BoundaryResponse;
   }
 
   async updateBoundary(id: string, data: Partial<CreateBoundaryRequest>): Promise<BoundaryResponse> {
     const response = await apiClient.put(`/boundaries/${id}`, data);
-    return response.data;
+    return response.data as BoundaryResponse;
   }
 
   async deleteBoundary(id: string): Promise<void> {
@@ -111,7 +111,7 @@ class BoundaryService {
 
   async getUserBoundaries(userId: string): Promise<BoundaryResponse[]> {
     const response = await apiClient.get(`/boundaries/user/${userId}`);
-    return response.data;
+    return response.data as BoundaryResponse[];
   }
 
   async reportBoundaryConflict(data: {
@@ -125,7 +125,7 @@ class BoundaryService {
 
   async getConflictingBoundaries(boundaryId: string): Promise<BoundaryResponse[]> {
     const response = await apiClient.get(`/boundaries/${boundaryId}/conflicts`);
-    return response.data;
+    return response.data as BoundaryResponse[];
   }
 
   // Geolocation utilities

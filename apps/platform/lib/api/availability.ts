@@ -1,4 +1,4 @@
-import client  from './client';
+import client from './client';
 
 export interface AvailabilityStatus {
   propertyId: string;
@@ -45,7 +45,7 @@ export async function checkAvailability(
     const response = await client.get<AvailabilityStatus>(
       `/api/availability/check?${params.toString()}`
     );
-    return response.data;
+    return response.data as AvailabilityStatus;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to check availability'
@@ -64,7 +64,7 @@ export async function bulkCheckAvailability(
       '/api/availability/bulk-check',
       data
     );
-    return response.data.statuses;
+    return response.data?.statuses as AvailabilityStatus[];
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to bulk check availability'
@@ -84,7 +84,11 @@ export async function updateAvailability(
 }> {
   try {
     const response = await client.post('/api/availability/update', data);
-    return response.data;
+    return response.data as {
+      success: boolean;
+      availability?: AvailabilityStatus;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to update availability'
@@ -109,7 +113,10 @@ export async function markAsUnavailable(
       unitId,
       reason: reason || 'Property rented',
     });
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to mark as unavailable'
@@ -123,7 +130,7 @@ export async function markAsUnavailable(
 export async function autoDelistProperty(
   propertyId: string,
   unitId?: string,
-  paymentId: string
+  paymentId?: string
 ): Promise<{
   success: boolean;
   message?: string;
@@ -134,7 +141,10 @@ export async function autoDelistProperty(
       unitId,
       paymentId,
     });
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to auto-delist property'
@@ -159,7 +169,10 @@ export async function restoreAvailability(
       unitId,
       reason,
     });
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to restore availability'
@@ -179,7 +192,11 @@ export async function subscribeToAvailability(
 }> {
   try {
     const response = await client.post('/api/availability/subscribe', data);
-    return response.data;
+    return response.data as {
+      success: boolean;
+      subscriptionId?: string;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to subscribe to availability'
@@ -200,11 +217,14 @@ export async function unsubscribeFromAvailability(
     const response = await client.delete(
       `/api/availability/subscribe/${subscriptionId}`
     );
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message ||
-        'Failed to unsubscribe from availability'
+      'Failed to unsubscribe from availability'
     );
   }
 }
@@ -216,7 +236,7 @@ export async function getAvailabilityHistory(
   propertyId: string,
   unitId?: string,
   limit: number = 50
-): Promise
+): Promise<
   Array<{
     timestamp: string;
     isAvailable: boolean;
@@ -231,7 +251,12 @@ export async function getAvailabilityHistory(
     const response = await client.get<{ history: any[] }>(
       `/api/availability/history?${params.toString()}`
     );
-    return response.data.history;
+    return response.data?.history as Array<{
+      timestamp: string;
+      isAvailable: boolean;
+      reason?: string;
+      changedBy?: string;
+    }>;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch availability history'
@@ -249,7 +274,7 @@ export async function getUpcomingAvailability(
     const response = await client.get<{ properties: AvailabilityStatus[] }>(
       `/api/availability/upcoming?days=${days}`
     );
-    return response.data.properties;
+    return response.data?.properties as AvailabilityStatus[];
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch upcoming availability'

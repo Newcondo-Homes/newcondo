@@ -2,6 +2,7 @@
 import { PropertyMarkingJob, MarkingJobStatus, UrgencyLevel, PaymentStatus } from '@newcondo/db'
 import { apiClient } from './client'
 
+//TODO: Arrange these types to marking types file ( it exist already, so add it)
 export interface CreateMarkingJobPayload {
     propertyId: string
     contactPersonName: string
@@ -68,6 +69,20 @@ export interface AvailableAgent {
     distance: number // distance from property in km
     isAvailable: boolean
     estimatedFee: number
+}
+
+export interface AgentAvailability {
+    isAvailable: boolean
+    serviceAreas: string[]
+    currentJobs: number
+    maxJobs: number
+    updatedAt: string
+}
+
+export interface UpdateAvailabilityParams {
+    isAvailable?: boolean
+    serviceAreas?: string[]
+    maxJobs?: number
 }
 
 export interface MarkingJobFilters {
@@ -139,13 +154,17 @@ export const markingApi = {
         paymentUrl?: string // For Flutterwave payment
     }> {
         const response = await apiClient.post('/marking-jobs', data)
-        return response.data
+        return response.data as {
+        job: MarkingJobResponse
+        feeCalculation: MarkingFeeCalculation
+        paymentUrl?: string // For Flutterwave payment
+    }
     },
 
     // Get marking job by ID
     async getJobById(jobId: string): Promise<MarkingJobResponse> {
         const response = await apiClient.get(`/marking-jobs/${jobId}`)
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Get user's marking jobs (requested or assigned)
@@ -169,7 +188,7 @@ export const markingApi = {
         }
 
         const response = await apiClient.get(`/marking-jobs/user/${userId}?${params.toString()}`)
-        return response.data
+        return response.data as MarkingJobListResponse
     },
 
     // Get available marking jobs (for agents)
@@ -193,7 +212,7 @@ export const markingApi = {
         }
 
         const response = await apiClient.get(`/marking-jobs/available/${agentId}?${params.toString()}`)
-        return response.data
+        return response.data as MarkingJobListResponse
     },
 
     // Calculate marking fee for a property
@@ -207,7 +226,7 @@ export const markingApi = {
             urgencyLevel,
             agentId
         })
-        return response.data
+        return response.data as MarkingFeeCalculation
     },
 
     async getAgentAvailability(): Promise<{ data: AgentAvailability }> {
@@ -229,7 +248,7 @@ export const markingApi = {
         const response = await apiClient.get(`/marking-jobs/available-agents/${propertyId}`, {
             params: { maxDistance, limit }
         })
-        return response.data
+        return response.data as AvailableAgent[]
     },
 
     // Accept marking job (for agents)
@@ -238,26 +257,29 @@ export const markingApi = {
         queuePosition: AgentQueuePosition
     }> {
         const response = await apiClient.post(`/marking-jobs/${jobId}/accept`, { agentId })
-        return response.data
+        return response.data as {
+        job: MarkingJobResponse
+        queuePosition: AgentQueuePosition
+    }
     },
 
     // Start working on marking job
     async startJob(jobId: string): Promise<MarkingJobResponse> {
         const response = await apiClient.post(`/marking-jobs/${jobId}/start`)
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Complete marking job
     async completeJob(data: CompleteMarkingJobPayload): Promise<MarkingJobResponse> {
         const { jobId, ...completionData } = data
         const response = await apiClient.post(`/marking-jobs/${jobId}/complete`, completionData)
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Cancel marking job
     async cancelJob(jobId: string, reason: string): Promise<MarkingJobResponse> {
         const response = await apiClient.post(`/marking-jobs/${jobId}/cancel`, { reason })
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Reassign marking job to different agent
@@ -266,13 +288,13 @@ export const markingApi = {
             newAgentId,
             reason
         })
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Get job queue position
     async getQueuePosition(jobId: string): Promise<AgentQueuePosition> {
         const response = await apiClient.get(`/marking-jobs/${jobId}/queue-position`)
-        return response.data
+        return response.data as AgentQueuePosition
     },
 
     // Update job urgency level (with fee recalculation)
@@ -286,7 +308,12 @@ export const markingApi = {
         additionalAmount?: number
     }> {
         const response = await apiClient.patch(`/marking-jobs/${jobId}/urgency`, { urgencyLevel })
-        return response.data
+        return response.data as {
+        job: MarkingJobResponse
+        newFeeCalculation: MarkingFeeCalculation
+        requiresAdditionalPayment: boolean
+        additionalAmount?: number
+    }
     },
 
     // Extend job deadline
@@ -295,13 +322,13 @@ export const markingApi = {
             newDeadline,
             reason
         })
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Request job status update
     async requestStatusUpdate(jobId: string): Promise<MarkingJobResponse> {
         const response = await apiClient.post(`/marking-jobs/${jobId}/status-update`)
-        return response.data
+        return response.data as MarkingJobResponse
     },
 
     // Rate completed marking job
@@ -314,7 +341,7 @@ export const markingApi = {
             rating,
             review
         })
-        return response.data
+        return response.data as { success: boolean }
     },
 
     // Report issue with marking job
@@ -329,7 +356,7 @@ export const markingApi = {
             description,
             evidence
         })
-        return response.data
+        return response.data as { ticketId: string }
     },
 
     // Get marking job statistics
@@ -350,7 +377,21 @@ export const markingApi = {
     }> {
         const params = userId ? `?userId=${userId}` : ''
         const response = await apiClient.get(`/marking-jobs/stats${params}`)
-        return response.data
+        return response.data as {
+        totalJobs: number
+        completedJobs: number
+        pendingJobs: number
+        cancelledJobs: number
+        averageCompletionTime: number // hours
+        averageRating: number
+        totalEarnings?: number // for agents
+        recentJobs: Array<{
+            id: string
+            status: MarkingJobStatus
+            completedAt: string | null
+            property: { title: string; address: string }
+        }>
+    }
     },
 
     // Search marking jobs
@@ -375,7 +416,7 @@ export const markingApi = {
 
 
         const response = await apiClient.get(`/marking-jobs/search?${params.toString()}`)
-        return response.data
+        return response.data as MarkingJobListResponse
     }
 }
 

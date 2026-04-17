@@ -1,4 +1,4 @@
-import client  from './client';
+import client from './client';
 
 export interface PropertyLock {
   propertyId: string;
@@ -47,7 +47,7 @@ export async function acquirePropertyLock(
       propertyId,
       unitId,
     });
-    return response.data;
+    return response.data as LockResponse;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to acquire property lock'
@@ -63,7 +63,7 @@ export async function releasePropertyLock(
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const response = await client.post('/api/locking/release', data);
-    return response.data;
+    return response.data as { success: boolean; message?: string };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to release property lock'
@@ -82,7 +82,7 @@ export async function extendPropertyLock(
       '/api/locking/extend',
       data
     );
-    return response.data;
+    return response.data as LockResponse;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to extend property lock'
@@ -104,7 +104,7 @@ export async function checkLockStatus(
     const response = await client.get<LockStatusResponse>(
       `/api/locking/status?${params.toString()}`
     );
-    return response.data;
+    return response.data as LockStatusResponse;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to check lock status'
@@ -126,7 +126,7 @@ export async function forceReleaseLock(
       unitId,
       reason,
     });
-    return response.data;
+    return response.data as { success: boolean; message?: string };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to force release lock'
@@ -139,10 +139,10 @@ export async function forceReleaseLock(
  */
 export async function getUserActiveLocks(): Promise<PropertyLock[]> {
   try {
-    const response = await client.get<{ locks: PropertyLock[] }>(
+    const response = await client.get<PropertyLock[]>(
       '/api/locking/user-locks'
     );
-    return response.data.locks;
+    return response.data as PropertyLock[];
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch user locks'
@@ -159,7 +159,10 @@ export async function cleanupExpiredLocks(): Promise<{
 }> {
   try {
     const response = await client.post('/api/locking/cleanup');
-    return response.data;
+    return response.data as {
+      success: boolean;
+      cleanedCount: number;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to cleanup expired locks'
