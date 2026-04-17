@@ -119,20 +119,20 @@ export const propertyApi = {
   // Create new property
   async create(data: CreatePropertyPayload): Promise<PropertyResponse> {
     const response = await apiClient.post('/properties', data)
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Get property by ID
   async getById(id: string): Promise<PropertyResponse> {
     const response = await apiClient.get(`/properties/${id}`)
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Update property
   async update(data: UpdatePropertyPayload): Promise<PropertyResponse> {
     const { id, ...updateData } = data
     const response = await apiClient.put(`/properties/${id}`, updateData)
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Delete property
@@ -157,7 +157,7 @@ export const propertyApi = {
     }
 
     const response = await apiClient.get(`/properties?${params.toString()}`)
-    return response.data
+    return response.data as PropertyListResponse
   },
 
   // Get user's properties (owner or agent)
@@ -177,31 +177,31 @@ export const propertyApi = {
     }
 
     const response = await apiClient.get(`/properties/user/${userId}?${params.toString()}`)
-    return response.data
+    return response.data as PropertyListResponse
   },
 
   // Update property boundary data
   async updateBoundary(propertyId: string, boundaryData: PropertyBoundaryData): Promise<PropertyResponse> {
     const response = await apiClient.put(`/properties/${propertyId}/boundary`, boundaryData)
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Verify property boundary
   async verifyBoundary(propertyId: string): Promise<PropertyResponse> {
     const response = await apiClient.post(`/properties/${propertyId}/boundary/verify`)
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Update property status
   async updateStatus(propertyId: string, status: PropertyStatus): Promise<PropertyResponse> {
     const response = await apiClient.patch(`/properties/${propertyId}/status`, { status })
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Toggle property availability
   async toggleAvailability(propertyId: string, isAvailable: boolean): Promise<PropertyResponse> {
     const response = await apiClient.patch(`/properties/${propertyId}/availability`, { isAvailable })
-    return response.data
+    return response.data as PropertyResponse
   },
 
   // Increment property view count
@@ -235,31 +235,31 @@ export const propertyApi = {
     }
 
     const response = await apiClient.get(`/properties/search/location?${params.toString()}`)
-    return response.data
+    return response.data as PropertyListResponse
   },
 
   // Get property suggestions based on user preferences
   async getSuggestions(userId: string, limit: number = 10): Promise<PropertyResponse[]> {
     const response = await apiClient.get(`/properties/suggestions/${userId}?limit=${limit}`)
-    return response.data
+    return response.data as PropertyResponse[]
   },
 
   // Get similar properties
   async getSimilar(propertyId: string, limit: number = 5): Promise<PropertyResponse[]> {
     const response = await apiClient.get(`/properties/${propertyId}/similar?limit=${limit}`)
-    return response.data
+    return response.data as PropertyResponse[]
   },
 
   // Lock property for payment (prevent double booking)
   async lockForPayment(propertyId: string, unitId?: string): Promise<{ success: boolean; lockExpiry: string }> {
     const response = await apiClient.post(`/properties/${propertyId}/lock`, { unitId })
-    return response.data
+    return response.data as { success: boolean; lockExpiry: string }
   },
 
   // Release property payment lock
   async releaseLock(propertyId: string, unitId?: string): Promise<{ success: boolean }> {
     const response = await apiClient.post(`/properties/${propertyId}/unlock`, { unitId })
-    return response.data
+    return response.data as { success: boolean }
   },
 
   // Bulk operations for multi-family properties
@@ -275,7 +275,7 @@ export const propertyApi = {
     isAvailable?: boolean
   }>): Promise<PropertyResponse> {
     const response = await apiClient.put(`/properties/${propertyId}/units/bulk`, { units })
-    return response.data
+    return response.data as PropertyResponse
   },
 
 
@@ -290,7 +290,14 @@ export const propertyApi = {
     popularFeatures: Array<{ feature: string; count: number }>
   }> {
     const response = await apiClient.get(`/properties/${propertyId}/analytics?period=${period}`)
-    return response.data
+    return response.data as {
+      views: number
+      inquiries: number
+      rentals: number
+      revenue: number
+      viewsOverTime: Array<{ date: string; count: number }>
+      popularFeatures: Array<{ feature: string; count: number }>
+    }
   }
 }
 
@@ -345,7 +352,7 @@ export async function shareProperty(
   propertyId: string
 ): Promise<{ shareableLink: string }> {
   const response = await apiClient.post(`/properties/${propertyId}/share`)
-  return response.data
+  return response.data as { shareableLink: string }
 }
 
 /**

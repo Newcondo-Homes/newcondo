@@ -5,7 +5,7 @@ import {
   VerificationProgress,
   VerificationFormData,
 } from "../../types/verification";
-import { DocumentType, DocumentStatus, VerificationStatus } from "@newcondo/db";
+import { DocumentType, VerificationStatus } from "@newcondo/db";
 
 export interface UploadResponse {
   success: boolean;

@@ -1,4 +1,4 @@
-import { client } from './client';
+import client from './client';
 
 export interface ShareableLink {
   id: string;
@@ -53,7 +53,7 @@ export async function createShareableLink(
       '/api/sharing/create',
       data
     );
-    return response.data;
+    return response.data as ShareableLink;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to create shareable link'
@@ -75,7 +75,7 @@ export async function getShareableLink(
     const response = await client.get<ShareableLink>(
       `/api/sharing/link?${params.toString()}`
     );
-    return response.data;
+    return response.data as ShareableLink | null;
   } catch (error: any) {
     if (error.response?.status === 404) {
       return null;
@@ -96,7 +96,11 @@ export async function getPropertyByShortCode(shortCode: string): Promise<{
 }> {
   try {
     const response = await client.get(`/api/sharing/resolve/${shortCode}`);
-    return response.data;
+    return response.data as {
+      propertyId: string;
+      unitId?: string;
+      isAvailable: boolean;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to resolve share link'
@@ -119,7 +123,7 @@ export async function trackShareLinkView(
     const response = await client.post(`/api/sharing/${shortCode}/view`, {
       metadata,
     });
-    return response.data;
+    return response.data as { success: boolean };
   } catch (error: any) {
     // Don't throw error for tracking failures
     console.error('Failed to track share link view:', error);
@@ -136,7 +140,10 @@ export async function deactivateShareLink(linkId: string): Promise<{
 }> {
   try {
     const response = await client.post(`/api/sharing/${linkId}/deactivate`);
-    return response.data;
+    return response.data as {
+      success: boolean;
+      message?: string;
+    };
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to deactivate share link'
@@ -159,7 +166,7 @@ export async function regenerateShareLink(
         unitId,
       }
     );
-    return response.data;
+    return response.data as ShareableLink;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to regenerate share link'
@@ -183,7 +190,7 @@ export async function getShareLinkStats(
     const response = await client.get<ShareLinkStats>(
       `/api/sharing/${linkId}/stats?${params.toString()}`
     );
-    return response.data;
+    return response.data as ShareLinkStats;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to get share link stats'
@@ -199,7 +206,7 @@ export async function getUserShareLinks(): Promise<ShareableLink[]> {
     const response = await client.get<{ links: ShareableLink[] }>(
       '/api/sharing/user-links'
     );
-    return response.data.links;
+    return response.data?.links as ShareableLink[];
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch user share links'
@@ -218,7 +225,7 @@ export async function bulkCreateShareLinks(
       '/api/sharing/bulk-create',
       { properties }
     );
-    return response.data.links;
+    return response.data?.links as ShareableLink[];
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to bulk create share links'
@@ -235,10 +242,10 @@ export async function copyShareLink(
 ): Promise<{ success: boolean }> {
   try {
     await navigator.clipboard.writeText(shareUrl);
-    
+
     // Track copy action
     await client.post(`/api/sharing/${shortCode}/copy`);
-    
+
     return { success: true };
   } catch (error: any) {
     console.error('Failed to copy share link:', error);

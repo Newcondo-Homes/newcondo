@@ -65,7 +65,12 @@ export async function calculateDistance(
   estimatedTravelTimeUnit: 'minutes';
 }> {
   const response = await apiClient.post('/api/proximity/calculate-distance', { from, to });
-  return response.data;
+  return response.data as {
+    distance: number;
+    unit: 'km';
+    estimatedTravelTime: number;
+    estimatedTravelTimeUnit: 'minutes';
+  };
 }
 
 /**
@@ -83,7 +88,11 @@ export async function getNearbyAgents(params: {
   searchRadius: number;
 }> {
   const response = await apiClient.post('/api/proximity/nearby-agents', params);
-  return response.data;
+  return response.data as {
+    agents: ProximityAgent[];
+    total: number;
+    searchRadius: number;
+  };
 }
 
 /**
@@ -93,7 +102,7 @@ export async function broadcastMarkingJob(
   data: BroadcastRequest
 ): Promise<BroadcastResponse> {
   const response = await apiClient.post('/api/proximity/broadcast-job', data);
-  return response.data;
+  return response.data as BroadcastResponse;
 }
 
 /**
@@ -107,7 +116,11 @@ export async function getNearbyProperties(
   searchRadius: number;
 }> {
   const response = await apiClient.post('/api/proximity/nearby-properties', params);
-  return response.data;
+  return response.data as {
+    properties: NearbyProperty[];
+    total: number;
+    searchRadius: number;
+  };
 }
 
 /**
@@ -117,7 +130,7 @@ export async function updateUserLocation(
   location: LocationCoordinates
 ): Promise<{ success: boolean; message: string }> {
   const response = await apiClient.put('/api/proximity/update-location', location);
-  return response.data;
+  return response.data as { success: boolean; message: string };
 }
 
 /**
@@ -129,7 +142,11 @@ export async function getUserLocation(): Promise<{
   accuracy?: number;
 }> {
   const response = await apiClient.get('/api/proximity/my-location');
-  return response.data;
+  return response.data as {
+    location: LocationCoordinates;
+    lastUpdated: string;
+    accuracy?: number;
+  };
 }
 
 /**
@@ -145,7 +162,12 @@ export async function validateServiceArea(params: {
   message: string;
 }> {
   const response = await apiClient.post('/api/proximity/validate-service-area', params);
-  return response.data;
+  return response.data as {
+    isWithinServiceArea: boolean;
+    distance: number;
+    nearestServiceArea?: string;
+    message: string;
+  };
 }
 
 /**
@@ -159,7 +181,11 @@ export async function getOptimalSearchRadius(
   estimatedAgentsInRadius: number;
 }> {
   const response = await apiClient.post('/api/proximity/optimal-radius', { location });
-  return response.data;
+  return response.data as {
+    recommendedRadius: number;
+    agentDensity: 'high' | 'medium' | 'low';
+    estimatedAgentsInRadius: number;
+  };
 }
 
 /**
@@ -175,7 +201,13 @@ export async function geocodeAddress(
   country?: string;
 }> {
   const response = await apiClient.post('/api/proximity/geocode', { address });
-  return response.data;
+  return response.data as {
+    coordinates: LocationCoordinates;
+    formattedAddress: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  };
 }
 
 /**
@@ -191,7 +223,13 @@ export async function reverseGeocode(
   postalCode?: string;
 }> {
   const response = await apiClient.post('/api/proximity/reverse-geocode', location);
-  return response.data;
+  return response.data as {
+    address: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postalCode?: string;
+  };
 }
 
 /**
@@ -206,7 +244,12 @@ export async function validateLocationInNigeria(
   message: string;
 }> {
   const response = await apiClient.post('/api/proximity/validate-nigeria', location);
-  return response.data;
+  return response.data as {
+    isInNigeria: boolean;
+    state?: string;
+    city?: string;
+    message: string;
+  };
 }
 
 /**
@@ -229,5 +272,17 @@ export async function getAgentCoverageMap(params?: {
   }>;
 }> {
   const response = await apiClient.get('/api/proximity/coverage-map', { params });
-  return response.data;
+  return response.data as {
+    coverageAreas: Array<{
+      area: string;
+      agentCount: number;
+      averageResponseTime: number;
+      coordinates: LocationCoordinates;
+    }>;
+    totalCoverage: number;
+    gaps: Array<{
+      area: string;
+      coordinates: LocationCoordinates;
+    }>;
+  };
 }

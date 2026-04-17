@@ -102,7 +102,7 @@ export async function generateShareableLink(
     '/api/marking/shareable-links/generate',
     data
   );
-  return response.data;
+  return response.data as GenerateShareableLinkResponse;
 }
 
 /**
@@ -114,7 +114,7 @@ export async function validateShareableLink(
   const response = await apiClient.get<ValidateShareableLinkResponse>(
     `/api/marking/shareable-links/validate/${token}`
   );
-  return response.data;
+  return response.data as ValidateShareableLinkResponse;
 }
 
 /**
@@ -127,7 +127,7 @@ export async function revokeShareableLink(
     '/api/marking/shareable-links/revoke',
     data
   );
-  return response.data;
+  return response.data as RevokeShareableLinkResponse;
 }
 
 /**
@@ -140,7 +140,7 @@ export async function useShareableLink(
     '/api/marking/shareable-links/use',
     data
   );
-  return response.data;
+  return response.data as ShareableLinkUsageResponse;
 }
 
 /**
@@ -151,7 +151,10 @@ export async function getMyShareableLinks(): Promise<{
   data: ShareableLinkData[];
 }> {
   const response = await apiClient.get('/api/marking/shareable-links/my-links');
-  return response.data;
+  return response.data as {
+    success: boolean;
+    data: ShareableLinkData[];
+  };
 }
 
 /**
@@ -164,7 +167,10 @@ export async function getShareableLinkById(linkId: string): Promise<{
   const response = await apiClient.get(
     `/api/marking/shareable-links/${linkId}`
   );
-  return response.data;
+  return response.data as {
+    success: boolean;
+    data: ShareableLinkData;
+  };
 }
 
 /**
@@ -178,7 +184,11 @@ export async function resendShareableLink(linkId: string): Promise<{
   const response = await apiClient.post(
     `/api/marking/shareable-links/${linkId}/resend`
   );
-  return response.data;
+  return response.data as {
+    success: boolean;
+    data: ShareableLinkData;
+    message: string;
+  };
 }
 
 /**
@@ -199,7 +209,18 @@ export async function getShareableLinkHistory(linkId: string): Promise<{
   const response = await apiClient.get(
     `/api/marking/shareable-links/${linkId}/history`
   );
-  return response.data;
+  return response.data as {
+    success: boolean;
+    data: {
+      attempts: Array<{
+        timestamp: string;
+        ipAddress?: string;
+        userAgent?: string;
+        success: boolean;
+        reason?: string;
+      }>;
+    };
+  };
 }
 
 /**

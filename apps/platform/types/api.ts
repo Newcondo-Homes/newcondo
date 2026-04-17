@@ -20,6 +20,60 @@ export interface WithdrawalRequest {
   narration?: string;
 }
 
+export interface PaymentReleaseResponse {
+  id: string
+  paymentId: string
+  amount: number
+  currency: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  releasedAt?: string
+  estimatedReleaseDate?: string
+  confirmationDeadline?: string
+  failureReason?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReleaseScheduleResponse {
+  id: string
+  paymentId: string
+  amount: number
+  currency: string
+  scheduledFor: string
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  confirmationDeadline: string
+  daysRemaining: number
+  property: {
+    id: string
+    title: string
+    address: string
+  }
+  renter: {
+    id: string
+    name: string
+    email: string
+  }
+  createdAt: string
+}
+
+export interface CommissionBreakdownResponse {
+  paymentId: string
+  totalAmount: number
+  currency: string
+  breakdown: {
+    agentCommission: number
+    platformFee: number
+    ownerAmount: number
+  }
+  percentages: {
+    agentCommission: number
+    platformFee: number
+    ownerAmount: number
+  }
+  releaseStatus: 'pending' | 'processing' | 'completed' | 'failed'
+  releasedAt?: string
+}
+
 export interface WithdrawalResponse {
   id: string;
   status: string;

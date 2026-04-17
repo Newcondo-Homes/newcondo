@@ -6,7 +6,6 @@ import type {
   PropertyListResponse,
   PropertyDashboardData,
   ApiResponse,
-  PropertyUnit,
   PropertyUnitsResponse
 } from '@/types/propertyManagement';
 

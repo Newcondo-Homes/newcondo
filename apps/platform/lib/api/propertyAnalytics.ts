@@ -24,8 +24,9 @@ export const getPropertyAnalytics = async (
   const response = await apiClient.get<AnalyticsApiResponse<PropertyAnalyticsResponse>>(
     `/analytics/properties/${propertyId}?${params}`
   );
-  if (!response.data.success || !response.data.data) {
-    throw new Error(response.data.error ?? 'Failed to fetch property analytics');
+
+  if (!response.data?.success || !response.data.data) {
+    throw new Error(response.data?.error ?? 'Failed to fetch property analytics');
   }
   return response.data.data;
 };
@@ -37,8 +38,8 @@ export const getPortfolioAnalytics = async (
   const response = await apiClient.get<AnalyticsApiResponse<PortfolioAnalyticsResponse>>(
     `/analytics/portfolio?${params}`
   );
-  if (!response.data.success || !response.data.data) {
-    throw new Error(response.data.error ?? 'Failed to fetch portfolio analytics');
+  if (!response.data?.success || !response.data.data) {
+    throw new Error(response.data?.error ?? 'Failed to fetch portfolio analytics');
   }
   return response.data.data;
 };
@@ -87,8 +88,8 @@ export const getAnalyticsComparison = async (
   const response = await apiClient.get<AnalyticsApiResponse<ComparisonData[]>>(
     `/analytics/comparison?${params}`
   );
-  if (!response.data.success || !response.data.data) {
-    throw new Error(response.data.error ?? 'Failed to fetch comparison analytics');
+  if (!response.data?.success || !response.data.data) {
+    throw new Error(response.data?.error ?? 'Failed to fetch comparison analytics');
   }
   return response.data.data;
 };
@@ -100,8 +101,8 @@ export const getRealTimeAnalytics = async (
     ? `/analytics/properties/${propertyId}/realtime`
     : '/analytics/realtime';
   const response = await apiClient.get<AnalyticsApiResponse<RealTimeAnalyticsUpdate[]>>(endpoint);
-  if (!response.data.success || !response.data.data) {
-    throw new Error(response.data.error ?? 'Failed to fetch real-time analytics');
+  if (!response.data?.success || !response.data.data) {
+    throw new Error(response.data?.error ?? 'Failed to fetch real-time analytics');
   }
   return response.data.data;
 };
@@ -114,8 +115,8 @@ export const getPropertyInsights = async (
   const response = await apiClient.get<AnalyticsApiResponse<PropertyInsights>>(
     `/analytics/properties/${propertyId}/insights${params}`
   );
-  if (!response.data.success || !response.data.data) {
-    throw new Error(response.data.error ?? 'Failed to fetch property insights');
+  if (!response.data?.success || !response.data.data) {
+    throw new Error(response.data?.error ?? 'Failed to fetch property insights');
   }
   return response.data.data;
 };
@@ -128,7 +129,7 @@ export const exportAnalytics = async (
   const response = await apiClient.get(`/analytics/export?${params}`, {
     responseType: 'blob',
   });
-  return response.data;
+  return response.data as Blob;
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

@@ -1,8 +1,8 @@
 import { apiClient } from './client';
-import type { 
-  PaymentReleaseResponse, 
+import type {
+  PaymentReleaseResponse,
   ReleaseScheduleResponse,
-  CommissionBreakdownResponse 
+  CommissionBreakdownResponse
 } from '@/types/api';
 
 export const releasesApi = {
@@ -11,7 +11,7 @@ export const releasesApi = {
    */
   getReleaseStatus: async (paymentId: string): Promise<PaymentReleaseResponse> => {
     const response = await apiClient.get(`/api/releases/${paymentId}/status`);
-    return response.data;
+    return response.data as PaymentReleaseResponse;
   },
 
   /**
@@ -28,7 +28,12 @@ export const releasesApi = {
     limit: number;
   }> => {
     const response = await apiClient.get('/api/releases/scheduled', { params });
-    return response.data;
+    return response.data as {
+      releases: ReleaseScheduleResponse[];
+      total: number;
+      page: number;
+      limit: number;
+    };
   },
 
   /**
@@ -36,7 +41,7 @@ export const releasesApi = {
    */
   getCommissionBreakdown: async (paymentId: string): Promise<CommissionBreakdownResponse> => {
     const response = await apiClient.get(`/api/releases/${paymentId}/commission-breakdown`);
-    return response.data;
+    return response.data as CommissionBreakdownResponse;
   },
 
   /**
@@ -55,7 +60,13 @@ export const releasesApi = {
     limit: number;
   }> => {
     const response = await apiClient.get('/api/releases/history', { params });
-    return response.data;
+    return response.data as {
+      releases: PaymentReleaseResponse[];
+      total: number;
+      totalAmount: number;
+      page: number;
+      limit: number;
+    };
   },
 
   /**
@@ -63,7 +74,7 @@ export const releasesApi = {
    */
   triggerManualRelease: async (paymentId: string): Promise<PaymentReleaseResponse> => {
     const response = await apiClient.post(`/api/releases/${paymentId}/manual-trigger`);
-    return response.data;
+    return response.data as PaymentReleaseResponse;
   },
 
   /**
@@ -75,6 +86,10 @@ export const releasesApi = {
     daysRemaining: number;
   }> => {
     const response = await apiClient.get(`/api/releases/${paymentId}/estimated-date`);
-    return response.data;
+    return response.data as {
+      estimatedDate: string;
+      confirmationDeadline: string;
+      daysRemaining: number;
+    };
   }
 };

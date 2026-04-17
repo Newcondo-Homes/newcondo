@@ -1,4 +1,4 @@
-import { client } from './client';
+import client  from './client';
 
 export interface QueuePosition {
   position: number;
@@ -42,7 +42,7 @@ export async function joinPaymentQueue(
       '/api/queue/join',
       data
     );
-    return response.data;
+    return response.data as JoinQueueResponse;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to join payment queue'
@@ -59,7 +59,10 @@ export async function leavePaymentQueue(queueId: string): Promise<{
 }> {
   try {
     const response = await client.post(`/api/queue/${queueId}/leave`);
-    return response.data;
+    return response.data as {
+  success: boolean;
+  message?: string;
+};
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to leave payment queue'
@@ -77,7 +80,7 @@ export async function getQueuePosition(
     const response = await client.get<QueuePosition>(
       `/api/queue/${queueId}/position`
     );
-    return response.data;
+    return response.data as QueuePosition;
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to get queue position'
@@ -93,7 +96,7 @@ export async function getUserQueueEntries(): Promise<QueueEntry[]> {
     const response = await client.get<{ entries: QueueEntry[] }>(
       '/api/queue/user-entries'
     );
-    return response.data.entries;
+    return response.data?.entries as QueueEntry[];
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch queue entries'
@@ -119,7 +122,11 @@ export async function getPropertyQueueStatus(
     const response = await client.get(
       `/api/queue/property-status?${params.toString()}`
     );
-    return response.data;
+    return response.data as {
+  totalInQueue: number;
+  averageWaitTime: number;
+  isQueueActive: boolean;
+};
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to get queue status'
@@ -143,7 +150,11 @@ export async function processNextInQueue(
       propertyId,
       unitId,
     });
-    return response.data;
+    return response.data as {
+  success: boolean;
+  nextEntry?: QueueEntry;
+  message?: string;
+};
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to process next in queue'
@@ -160,7 +171,10 @@ export async function completeQueueEntry(queueId: string): Promise<{
 }> {
   try {
     const response = await client.post(`/api/queue/${queueId}/complete`);
-    return response.data;
+    return response.data as {
+  success: boolean;
+  message?: string;
+};
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to complete queue entry'
@@ -177,7 +191,10 @@ export async function cleanupExpiredQueueEntries(): Promise<{
 }> {
   try {
     const response = await client.post('/api/queue/cleanup');
-    return response.data;
+    return response.data as {
+  success: boolean;
+  cleanedCount: number;
+};
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to cleanup expired entries'
@@ -205,7 +222,12 @@ export async function getQueueStatistics(
     const response = await client.get(
       `/api/queue/statistics?${params.toString()}`
     );
-    return response.data;
+    return response.data as {
+  totalProcessed: number;
+  averageWaitTime: number;
+  peakQueueSize: number;
+  completionRate: number;
+};
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch queue statistics'

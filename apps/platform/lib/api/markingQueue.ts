@@ -62,7 +62,12 @@ export async function getAvailableMarkingJobs(params?: {
   totalPages: number;
 }> {
   const response = await apiClient.get('/api/marking-queue/available-jobs', { params });
-  return response.data;
+  return response.data as {
+    jobs: AvailableMarkingJob[];
+    total: number;
+    page: number;
+    totalPages: number;
+  };
 }
 
 /**
@@ -72,7 +77,7 @@ export async function joinMarkingQueue(
   data: JoinQueueRequest
 ): Promise<JoinQueueResponse> {
   const response = await apiClient.post('/api/marking-queue/join', data);
-  return response.data;
+  return response.data as JoinQueueResponse;
 }
 
 /**
@@ -83,7 +88,7 @@ export async function leaveMarkingQueue(
   reason?: string
 ): Promise<{ success: boolean; message: string }> {
   const response = await apiClient.post(`/api/marking-queue/${jobId}/leave`, { reason });
-  return response.data;
+  return response.data as { success: boolean; message: string };
 }
 
 /**
@@ -95,7 +100,11 @@ export async function getMyQueuePositions(): Promise<{
   totalQueues: number;
 }> {
   const response = await apiClient.get('/api/marking-queue/my-positions');
-  return response.data;
+  return response.data as {
+    activeQueues: QueuePosition[];
+    waitingQueues: QueuePosition[];
+    totalQueues: number;
+  };
 }
 
 /**
@@ -122,7 +131,24 @@ export async function getJobQueueStatus(
   }>;
 }> {
   const response = await apiClient.get(`/api/marking-queue/job/${jobId}/status`);
-  return response.data;
+  return response.data as {
+    totalAgents: number;
+    currentPosition: number;
+    activeAgent?: {
+      id: string;
+      name: string;
+      timeSlotStart: string;
+      timeSlotEnd: string;
+    };
+    queuePositions: Array<{
+      position: number;
+      agentId: string;
+      agentName: string;
+      status: string;
+      timeSlotStart: string;
+      timeSlotEnd: string;
+    }>;
+  };
 }
 
 /**
@@ -133,7 +159,7 @@ export async function updateAgentAvailability(data: {
   serviceAreas?: string[];
 }): Promise<{ success: boolean; message: string }> {
   const response = await apiClient.put('/api/marking-queue/availability', data);
-  return response.data;
+  return response.data as { success: boolean; message: string };
 }
 
 /**
@@ -147,7 +173,13 @@ export async function getAgentAvailability(): Promise<{
   canAcceptMore: boolean;
 }> {
   const response = await apiClient.get('/api/marking-queue/availability');
-  return response.data;
+  return response.data as {
+    isAvailable: boolean;
+    serviceAreas: string[];
+    activeJobs: number;
+    queuedJobs: number;
+    canAcceptMore: boolean;
+  };
 }
 
 /**
@@ -161,7 +193,7 @@ export async function notifyArrival(
   }
 ): Promise<{ success: boolean; message: string; startMarking: boolean }> {
   const response = await apiClient.post(`/api/marking-queue/${jobId}/arrival`, { location });
-  return response.data;
+  return response.data as { success: boolean; message: string; startMarking: boolean };
 }
 
 /**
@@ -171,9 +203,9 @@ export async function requestTimeExtension(
   jobId: string,
   reason: string,
   additionalMinutes: number
-): Promise<{ 
-  success: boolean; 
-  message: string; 
+): Promise<{
+  success: boolean;
+  message: string;
   newTimeSlotEnd?: string;
   granted: boolean;
 }> {
@@ -181,7 +213,12 @@ export async function requestTimeExtension(
     reason,
     additionalMinutes,
   });
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    newTimeSlotEnd?: string;
+    granted: boolean;
+  };
 }
 
 /**
@@ -196,7 +233,14 @@ export async function getQueueStatistics(): Promise<{
   successRate: number;
 }> {
   const response = await apiClient.get('/api/marking-queue/statistics');
-  return response.data;
+  return response.data as {
+    totalJobsJoined: number;
+    jobsCompleted: number;
+    jobsExpired: number;
+    averageWaitTime: number;
+    averageCompletionTime: number;
+    successRate: number;
+  };
 }
 
 /**
@@ -216,7 +260,15 @@ export async function getQueueUpdates(
   const response = await apiClient.get('/api/marking-queue/updates', {
     params: { since: lastUpdateTime },
   });
-  return response.data;
+  return response.data as {
+    updates: Array<{
+      jobId: string;
+      type: 'POSITION_CHANGED' | 'TURN_STARTED' | 'JOB_COMPLETED' | 'JOB_EXPIRED';
+      data: any;
+      timestamp: string;
+    }>;
+    hasMore: boolean;
+  };
 }
 
 

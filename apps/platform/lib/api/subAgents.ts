@@ -6,7 +6,6 @@ import type
  PromotionLinkResponse,
  PromotionLinkStatsResponse,
  PromotionSettingsResponse,
- SubAgent,
  SubAgentsResponse,
  SubAgentPerformanceResponse
  } from '@/types/subagents'
