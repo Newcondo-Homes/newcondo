@@ -161,21 +161,22 @@ export function getUrgencyInfo(urgency: UrgencyLevel) {
  * Check if status is terminal (job is finished)
  */
 export function isTerminalStatus(status: MarkingJobStatus): boolean {
-  return [
+  const terminalStatuses: MarkingJobStatus[] = [
     MARKING_JOB_STATUSES.COMPLETED,
     MARKING_JOB_STATUSES.CANCELLED,
     MARKING_JOB_STATUSES.EXPIRED,
-  ].includes(status);
+  ];
+  return terminalStatuses.includes(status);
 }
-
 /**
  * Check if status allows cancellation
  */
 export function canCancelJob(status: MarkingJobStatus): boolean {
-  return [
+  const cancellableStatuses: MarkingJobStatus[] = [
     MARKING_JOB_STATUSES.QUEUED,
     MARKING_JOB_STATUSES.ASSIGNED,
-  ].includes(status);
+  ];
+  return cancellableStatuses.includes(status);
 }
 
 /**

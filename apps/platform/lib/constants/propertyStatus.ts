@@ -192,7 +192,11 @@ export const VERIFICATION_STATUS_COLORS: Record<VerificationStatus, string> = {
 
 // Helper function to check if property can be edited
 export const canEditProperty = (status: PropertyStatus): boolean => {
-  return [PROPERTY_STATUS.DRAFT, PROPERTY_STATUS.UNAVAILABLE].includes(status);
+  const editableStatuses: PropertyStatus[] = [
+    PROPERTY_STATUS.DRAFT,
+    PROPERTY_STATUS.UNAVAILABLE,
+  ];
+  return editableStatuses.includes(status);
 };
 
 // Helper function to check if property can be published

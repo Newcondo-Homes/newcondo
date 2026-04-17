@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 // apps/platform/lib/auth/errorHandler.ts
-import { toast } from "sonner";
+import { toast } from "@newcondo/ui";
 
 export interface AuthError {
   code: string;

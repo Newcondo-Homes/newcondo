@@ -185,7 +185,7 @@ export const timeWindowHelpers = {
     
     return hour >= WORKING_HOURS.START && 
            hour < WORKING_HOURS.END && 
-           WORKING_HOURS.DAYS.includes(day);
+           (WORKING_HOURS.DAYS as readonly string[]).includes(day);
   },
 };
 
