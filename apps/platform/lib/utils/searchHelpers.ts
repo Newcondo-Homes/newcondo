@@ -1,6 +1,6 @@
 // apps/platform/lib/utils/searchHelpers.ts
 
-import { PropertyType, PropertyStructure } from '@prisma/client'
+import { PropertyType, PropertyStructure } from '@newcondo/db'
 import { SearchFilters, SearchOptions, SortOption } from '@/types/search'
 import { PropertySearchResult } from '@/types/property'
 

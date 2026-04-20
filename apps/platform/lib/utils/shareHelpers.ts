@@ -247,6 +247,14 @@ export interface ShareData {
 /**
  * Get appropriate share message based on channel and user role
  */
+type ChannelWithRoles = {
+  default: string | { subject: string; template: string };
+  owner?: string | { subject: string; template: string };
+  agent?: string | { subject: string; template: string };
+  renter?: string | { subject: string; template: string };
+  maxLength?: number;
+};
+
 export function getShareMessage(
   channel: keyof typeof SHARE_MESSAGES,
   data: ShareData,
@@ -256,15 +264,16 @@ export function getShareMessage(
     return formatShareMessage(customMessage, data);
   }
 
-  const channelMessages = SHARE_MESSAGES[channel];
+  const channelMessages = SHARE_MESSAGES[channel] as ChannelWithRoles;
   
   if (channel === 'email') {
     const roleKey = data.referrerRole.toLowerCase() as 'owner' | 'agent' | 'renter';
     const emailConfig = channelMessages[roleKey] || channelMessages.default;
     
+    const config = emailConfig as { subject: string; template: string}
     return {
-      subject: emailConfig.subject,
-      template: formatShareMessage(emailConfig.template, data)
+      subject: config.subject,
+      template: formatShareMessage(config.template, data)
     };
   }
 

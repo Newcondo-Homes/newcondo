@@ -200,16 +200,16 @@ export function createLockStatus(
 /**
  * Sanitize lock data for client-side use (remove sensitive info)
  */
-export function sanitizeLockData<T extends Record<string, any>>(
+export function sanitizeLockData<T extends Record<string, unknown>>(
   lockData: T,
   currentUserId: string
 ): Partial<T> {
-  const { userId, ...rest } = lockData;
+  const { userId, ...rest } = lockData as Record<string, unknown>;
   
   // Only include user ID if it matches current user
   if (userId === currentUserId) {
     return lockData;
   }
   
-  return rest;
+  return rest as Partial<T>;
 }

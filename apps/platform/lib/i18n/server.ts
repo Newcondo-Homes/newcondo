@@ -9,13 +9,13 @@ import { getOptions, fallbackLng, languages } from './translations';
  */
 async function initI18next(lng: string, ns: string | string[]) {
   const i18nInstance = createInstance();
-  
+
   await i18nInstance
     .use(initReactI18next)
     .use(
       resourcesToBackend(
         (language: string, namespace: string) =>
-          import(`./locales/${language}/${namespace}.json`)
+          import(`@newcondo/i18n/src/locales/${language}/${namespace}.json`)
       )
     )
     .init({
@@ -24,7 +24,7 @@ async function initI18next(lng: string, ns: string | string[]) {
       ns,
       preload: languages,
     });
-  
+
   return i18nInstance;
 }
 
@@ -40,14 +40,14 @@ export async function getServerTranslation(
   options: { keyPrefix?: string } = {}
 ) {
   // Validate language
-  const validLng = languages.includes(lng) ? lng : fallbackLng;
-  
+  const validLng = (languages as readonly string[]).includes(lng) ? lng : fallbackLng;
+
   const i18nextInstance = await initI18next(validLng, ns);
-  
+
   return {
     t: i18nextInstance.getFixedT(
       validLng,
-      Array.isArray(ns) ? ns[0] : ns,
+      (Array.isArray(ns) ? ns[0] : ns) as any ?? null,
       options.keyPrefix
     ),
     i18n: i18nextInstance,
@@ -76,19 +76,21 @@ export async function getNamespaceTranslations(
   lng: string = fallbackLng,
   ns: string = 'common'
 ) {
-  const validLng = languages.includes(lng) ? lng : fallbackLng;
-  
+  const validLng = (languages as readonly string[]).includes(lng) ? lng : fallbackLng;
+
   try {
-    const translations = await import(`./locales/${validLng}/${ns}.json`);
+    const translations = await import(
+      `@newcondo/i18n/locales/${validLng}/${ns}.json`
+    );
     return translations.default || translations;
   } catch (error) {
     console.error(`Failed to load translations for ${validLng}/${ns}:`, error);
-    
+
     // Fallback to default language
     if (validLng !== fallbackLng) {
       try {
         const fallbackTranslations = await import(
-          `./locales/${fallbackLng}/${ns}.json`
+          `@newcondo/i18n/locales/${fallbackLng}/${ns}.json`
         );
         return fallbackTranslations.default || fallbackTranslations;
       } catch (fallbackError) {
@@ -96,9 +98,10 @@ export async function getNamespaceTranslations(
           `Failed to load fallback translations for ${fallbackLng}/${ns}:`,
           fallbackError
         );
+        return {}
       }
     }
-    
+
     return {};
   }
 }
@@ -111,13 +114,13 @@ export async function getMultipleNamespaceTranslations(
   namespaces: string[] = ['common']
 ) {
   const translations: Record<string, any> = {};
-  
+
   await Promise.all(
     namespaces.map(async (ns) => {
       translations[ns] = await getNamespaceTranslations(lng, ns);
     })
   );
-  
+
   return translations;
 }
 
@@ -163,7 +166,7 @@ export async function preloadTranslations(
   const preloadPromises = languages.flatMap((lng) =>
     namespaces.map((ns) => getNamespaceTranslations(lng, ns))
   );
-  
+
   await Promise.all(preloadPromises);
 }
 
@@ -179,11 +182,11 @@ export async function getTranslationWithFallback(
 ): Promise<string> {
   const { t } = await getServerTranslation(lng, ns);
   const translation = t(key);
-  
+
   // If translation equals the key, it wasn't found
   if (translation === key) {
     return defaultValue || key;
   }
-  
+
   return translation;
 }

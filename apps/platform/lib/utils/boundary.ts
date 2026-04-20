@@ -477,24 +477,7 @@ export const isPointInBoundary = (
   return isPointInPolygon(point, boundary.coordinates);
 };
 
-/**
- * Point-in-polygon test using ray casting
- */
-const isPointInPolygon = (point: Coordinates, polygon: Coordinates[]): boolean => {
-  let inside = false;
 
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    if (
-      ((polygon[i].lat > point.lat) !== (polygon[j].lat > point.lat)) &&
-      (point.lng < (polygon[j].lng - polygon[i].lng) * (point.lat - polygon[i].lat) /
-        (polygon[j].lat - polygon[i].lat) + polygon[i].lng)
-    ) {
-      inside = !inside;
-    }
-  }
-
-  return inside;
-};
 
 /**
 * Buffer polygon by a specified distance (simplified version)

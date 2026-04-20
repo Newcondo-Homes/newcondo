@@ -208,7 +208,7 @@ export function preloadImage(src: string, sizes?: string): void {
  * Lazy load images with Intersection Observer
  */
 export function createImageObserver(
-  callback: (entry: IntersectionObserverEntry) => void,
+  callback: (entry: IntersectionObserverEntry[]) => void,
   options: IntersectionObserverInit = {}
 ): IntersectionObserver | null {
   if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {

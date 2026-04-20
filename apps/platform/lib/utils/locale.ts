@@ -13,10 +13,10 @@ import {
 /**
  * Get user's preferred locale
  */
-export function getUserLocale(): Language {
+export async function getUserLocale(): Promise<Language> {
   try {
-    const cookieStore = cookies();
-    const localeCookie = cookieStore.get('i18next');
+    const cookieStore = await cookies();
+    const localeCookie =  cookieStore.get('i18next');
     
     if (localeCookie?.value && languages.includes(localeCookie.value as Language)) {
       return localeCookie.value as Language;
@@ -31,14 +31,15 @@ export function getUserLocale(): Language {
 /**
  * Set user's preferred locale
  */
-export function setUserLocale(locale: Language): void {
+export async function setUserLocale(locale: Language): Promise<void> {
   if (!languages.includes(locale)) {
     console.warn(`Invalid locale: ${locale}. Using fallback: ${fallbackLng}`);
     locale = fallbackLng;
   }
   
   try {
-    cookies().set('i18next', locale, {
+    const cookieStore = await cookies();
+    cookieStore.set('i18next', locale, {
       path: '/',
       maxAge: 365 * 24 * 60 * 60, // 1 year
       sameSite: 'lax',

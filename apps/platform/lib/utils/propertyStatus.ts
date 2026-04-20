@@ -116,7 +116,7 @@ export const PROPERTY_STATUS_CONFIG: Record<PropertyStatus, StatusConfig> = {
 /**
  * Admin Approval Status Configurations
  */
-export const ADMIN_APPROVAL_CONFIG: Record
+export const ADMIN_APPROVAL_CONFIG: Record<
   AdminApprovalStatus,
   Omit<StatusConfig, "canEdit" | "canPublish" | "canRent" | "isActive">
 > = {
@@ -152,7 +152,7 @@ export const ADMIN_APPROVAL_CONFIG: Record
 /**
  * Unit Status Configurations
  */
-export const UNIT_STATUS_CONFIG: Record
+export const UNIT_STATUS_CONFIG: Record <
   UnitStatus,
   Omit<StatusConfig, "canEdit" | "canPublish" | "canRent">
 > = {

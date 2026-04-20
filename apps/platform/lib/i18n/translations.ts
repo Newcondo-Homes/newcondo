@@ -1,89 +1,40 @@
-import type { InitOptions } from 'i18next';
+export {
+  SUPPORTED_LOCALES as languages,
+  DEFAULT_LOCALE as fallbackLng,
+  NAMESPACES as namespaces,
+  languageMetadata,
+  pluralRules,
+  type Language,
+  type Namespace,
+} from '@newcondo/i18n';
 
-/**
- * Supported languages configuration
- */
-export const languages = ['en', 'fr', 'pcm'] as const; // English, French, Nigerian Pidgin
-export const fallbackLng = 'en';
+// Keep getOptions locally since it's not exported from the package yet
+import type { InitOptions } from 'i18next';
+import {
+  SUPPORTED_LOCALES, DEFAULT_LOCALE, NAMESPACES,
+  languageMetadata,
+  pluralRules,
+  type Language,
+  type Namespace,
+} from '@newcondo/i18n';
+
 export const defaultNS = 'common';
 export const cookieName = 'i18next';
 
-/**
- * Language metadata
- */
-export const languageMetadata = {
-  en: {
-    code: 'en',
-    name: 'English',
-    nativeName: 'English',
-    flag: '🇬🇧',
-    direction: 'ltr' as const,
-    currency: 'NGN', // Nigerian Naira (default for platform)
-    dateFormat: 'MM/DD/YYYY',
-    timeFormat: '12h',
-  },
-  fr: {
-    code: 'fr',
-    name: 'French',
-    nativeName: 'Français',
-    flag: '🇫🇷',
-    direction: 'ltr' as const,
-    currency: 'NGN',
-    dateFormat: 'DD/MM/YYYY',
-    timeFormat: '24h',
-  },
-  pcm: {
-    code: 'pcm',
-    name: 'Nigerian Pidgin',
-    nativeName: 'Naija Pidgin',
-    flag: '🇳🇬',
-    direction: 'ltr' as const,
-    currency: 'NGN',
-    dateFormat: 'DD/MM/YYYY',
-    timeFormat: '12h',
-  },
-} as const;
 
-export type Language = (typeof languages)[number];
-export type LanguageMetadata = typeof languageMetadata;
-
-/**
- * Available namespaces
- */
-export const namespaces = [
-  'common',
-  'auth',
-  'properties',
-  'payments',
-  'profile',
-  'referrals',
-  'admin',
-  'errors',
-  'validation',
-  'marking',
-  'notifications',
-  'legal',
-] as const;
-
-export type Namespace = (typeof namespaces)[number];
-
-/**
- * i18next configuration options
- */
 export function getOptions(
-  lng: string = fallbackLng,
+  lng: string = DEFAULT_LOCALE,
   ns: string | string[] = defaultNS
 ): InitOptions {
   return {
-    // debug: process.env.NODE_ENV === 'development',
-    supportedLngs: languages,
-    fallbackLng,
+    supportedLngs: SUPPORTED_LOCALES,
+    fallbackLng: DEFAULT_LOCALE,
     lng,
     fallbackNS: defaultNS,
     defaultNS,
     ns,
     interpolation: {
-      escapeValue: false, // React already escapes values
+      escapeValue: false,
       formatSeparator: ',',
       format: (value, format, lng) => {
         if (format === 'uppercase') return value.toUpperCase();
@@ -91,57 +42,41 @@ export function getOptions(
         if (format === 'capitalize') {
           return value.charAt(0).toUpperCase() + value.slice(1);
         }
-        
-        // Date formatting
         if (value instanceof Date) {
           if (format === 'short') {
             return new Intl.DateTimeFormat(lng, {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
+              year: 'numeric', month: 'short', day: 'numeric',
             }).format(value);
           }
           if (format === 'long') {
             return new Intl.DateTimeFormat(lng, {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: 'numeric',
-              minute: 'numeric',
+              year: 'numeric', month: 'long', day: 'numeric',
+              hour: 'numeric', minute: 'numeric',
             }).format(value);
           }
           return new Intl.DateTimeFormat(lng).format(value);
         }
-        
-        // Number formatting
         if (typeof value === 'number') {
           if (format === 'currency') {
             return new Intl.NumberFormat(lng, {
-              style: 'currency',
-              currency: 'NGN',
+              style: 'currency', currency: 'NGN',
             }).format(value);
           }
           if (format === 'percent') {
-            return new Intl.NumberFormat(lng, {
-              style: 'percent',
-            }).format(value);
+            return new Intl.NumberFormat(lng, { style: 'percent' }).format(value);
           }
         }
-        
         return value;
       },
     },
-    react: {
-      useSuspense: false,
-    },
+    react: { useSuspense: false },
     detection: {
       order: ['cookie', 'header', 'navigator'],
       caches: ['cookie'],
-      cookieName,
+      lookupCookie: cookieName,
     },
   };
 }
-
 /**
  * Get language metadata
  */
@@ -153,7 +88,7 @@ export function getLanguageMetadata(lang: Language) {
  * Get all language options for language selector
  */
 export function getLanguageOptions() {
-  return languages.map((lang) => ({
+  return SUPPORTED_LOCALES.map((lang) => ({
     value: lang,
     label: languageMetadata[lang].nativeName,
     flag: languageMetadata[lang].flag,
@@ -165,7 +100,7 @@ export function getLanguageOptions() {
  */
 export function isRTL(lang: string): boolean {
   return (
-    languageMetadata[lang as Language]?.direction === 'rtl'
+    (languageMetadata[lang as Language]?.direction as string) === 'rtl'
   );
 }
 
@@ -238,15 +173,6 @@ export function getRegionalSettings(region: Region) {
 }
 
 /**
- * Pluralization rules for different languages
- */
-export const pluralRules: Record<Language, (count: number) => number> = {
-  en: (count: number) => (count === 1 ? 0 : 1),
-  fr: (count: number) => (count <= 1 ? 0 : 1),
-  pcm: (count: number) => (count === 1 ? 0 : 1),
-};
-
-/**
  * Get plural form index
  */
 export function getPluralForm(count: number, lang: Language): number {
@@ -272,7 +198,7 @@ export function parseTranslationKey(key: string): {
   if (!isValidTranslationKey(key)) {
     return null;
   }
-  
+
   const [namespace, ...pathParts] = key.split(':');
   return {
     namespace,
@@ -290,7 +216,7 @@ export function buildTranslationKey(namespace: string, path: string): string {
 /**
  * Language-specific number formats
  */
-export const numberFormats: Record
+export const numberFormats: Record<  // 
   Language,
   {
     decimal: string;
@@ -298,21 +224,9 @@ export const numberFormats: Record
     precision: number;
   }
 > = {
-  en: {
-    decimal: '.',
-    thousand: ',',
-    precision: 2,
-  },
-  fr: {
-    decimal: ',',
-    thousand: ' ',
-    precision: 2,
-  },
-  pcm: {
-    decimal: '.',
-    thousand: ',',
-    precision: 2,
-  },
+  en: { decimal: '.', thousand: ',', precision: 2 },
+  fr: { decimal: ',', thousand: ' ', precision: 2 },
+  pcm: { decimal: '.', thousand: ',', precision: 2 },
 };
 
 /**
@@ -328,7 +242,7 @@ export function getNumberFormat(lang: Language) {
 export const loadingStrategy = {
   // Namespaces to load on initial page load
   initial: ['common', 'errors'] as Namespace[],
-  
+
   // Namespaces to lazy load
   lazy: [
     'properties',
@@ -339,7 +253,7 @@ export const loadingStrategy = {
     'notifications',
     'legal',
   ] as Namespace[],
-  
+
   // Admin-only namespaces
   admin: ['admin'] as Namespace[],
 };
@@ -349,10 +263,10 @@ export const loadingStrategy = {
  */
 export function getNamespacesToPreload(userRole?: string): Namespace[] {
   const baseNamespaces = [...loadingStrategy.initial];
-  
+
   if (userRole === 'ADMIN') {
     baseNamespaces.push(...loadingStrategy.admin);
   }
-  
+
   return baseNamespaces;
 }

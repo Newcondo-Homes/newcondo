@@ -1,63 +1,53 @@
 'use client';
 
-import i18n from 'i18next';
+import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import i18n , { initI18n, getI18n } from '@newcondo/i18n';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import resourcesToBackend from 'i18next-resources-to-backend';
-import { getOptions, languages, fallbackLng, defaultNS } from './translations';
+import { getOptions, languages, fallbackLng } from './translations';
+
+export { 
+  useTranslation, 
+  useLocale, 
+  useCurrency 
+} from '@newcondo/i18n';
 
 const runsOnServerSide = typeof window === 'undefined';
 
-// Initialize i18next for client-side usage
-i18n
-  .use(initReactI18next)
-  .use(LanguageDetector)
-  .use(
-    resourcesToBackend(
-      (language: string, namespace: string) =>
-        import(`./locales/${language}/${namespace}.json`)
+
+if (!i18next.isInitialized) {
+  i18next
+    .use(initReactI18next)
+    .use(LanguageDetector)
+    .use(
+      resourcesToBackend(
+        (language: string, namespace: string) =>
+          import(`@newcondo/i18n/src/locales/${language}/${namespace}.json`)
+      )
     )
-  )
-  .init({
-    ...getOptions(),
-    lng: undefined, // Let detect the language on client side
-    detection: {
-      // Detection order and caches
-      order: ['cookie', 'localStorage', 'navigator', 'htmlTag'],
-      caches: ['cookie', 'localStorage'],
-      cookieName: 'i18next',
-      lookupCookie: 'i18next',
-      lookupLocalStorage: 'i18nextLng',
-    },
-    preload: runsOnServerSide ? languages : [],
-  });
-
-export default i18n;
-
-// Export types
-export type TranslationFunction = typeof i18n.t;
-
-/**
- * Client-side translation hook wrapper
- * Usage: const { t, i18n } = useClientTranslation('common');
- */
-export function useClientTranslation(ns: string = defaultNS) {
-  if (!i18n.isInitialized) {
-    i18n.init(getOptions());
-  }
-  
-  return {
-    t: i18n.t,
-    i18n,
-    ready: i18n.isInitialized,
-  };
+    .init({
+      ...getOptions(),
+      lng: undefined,
+      detection: {
+        order: ['cookie', 'localStorage', 'navigator', 'htmlTag'],
+        caches: ['cookie', 'localStorage'],
+        lookupCookie: 'i18next',
+        lookupLocalStorage: 'i18nextLng',
+      },
+      preload: runsOnServerSide ? [...languages] : [],
+    });
 }
+
 
 /**
  * Change language on client side
  */
 export async function changeLanguage(lng: string) {
-  if (!languages.includes(lng)) {
+  const { initI18n } = await import('@newcondo/i18n');
+  const i18n = await initI18n(); 
+
+  if (!languages.includes(lng as any)) {
     console.warn(`Language ${lng} is not supported. Falling back to ${fallbackLng}`);
     lng = fallbackLng;
   }
@@ -80,7 +70,19 @@ export async function changeLanguage(lng: string) {
  * Get current language
  */
 export function getCurrentLanguage(): string {
-  return i18n.language || fallbackLng;
+  // useLocale hook is preferred in components, this is for non-hook contexts
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('i18nextLng') || fallbackLng;
+  }
+  return fallbackLng;
+}
+
+export function isLanguageSupported(lng: string): boolean {
+  return (languages as readonly string[]).includes(lng);
+}
+
+export function getSupportedLanguages() {
+  return languages;
 }
 
 /**
@@ -91,20 +93,6 @@ export function getLanguageDirection(): 'ltr' | 'rtl' {
   // Add RTL languages here (e.g., Arabic, Hebrew)
   const rtlLanguages = ['ar', 'he'];
   return rtlLanguages.includes(lng) ? 'rtl' : 'ltr';
-}
-
-/**
- * Check if a language is supported
- */
-export function isLanguageSupported(lng: string): boolean {
-  return languages.includes(lng);
-}
-
-/**
- * Get all supported languages
- */
-export function getSupportedLanguages() {
-  return languages;
 }
 
 /**
@@ -147,7 +135,7 @@ export function formatRelativeTime(
   const diffInSeconds = Math.floor((baseDate.getTime() - dateObj.getTime()) / 1000);
   
   if (diffInSeconds < 60) {
-    return i18n.t('common:time.justNow');
+    return getI18n().t('common:time.justNow');
   }
   
   const rtf = new Intl.RelativeTimeFormat(lng, { numeric: 'auto' });
@@ -168,7 +156,7 @@ export function formatRelativeTime(
     }
   }
   
-  return i18n.t('common:time.justNow');
+  return getI18n().t('common:time.justNow');
 }
 
 /**
