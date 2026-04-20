@@ -6,7 +6,7 @@
  */
 
 // Configuration exports
-export { i18nConfig, initI18n } from './config/i18n.config';
+export { i18nConfig, initI18n, getI18n } from './config/i18n.config';
 export { NAMESPACES, type Namespace } from './config/namespaces';
 export { 
   SUPPORTED_LOCALES,
@@ -65,3 +65,4 @@ export type {
 
 // Re-export i18next types for convenience
 export type { TFunction, i18n } from 'i18next';
+

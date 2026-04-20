@@ -25,8 +25,13 @@
       "types": "./dist/middleware/index.d.ts",
       "import": "./dist/middleware/index.mjs",
       "require": "./dist/middleware/index.js"
-    }
+    },
+    "./locales/*": "./src/locales/*"
   },
+  "files": [
+    "dist",
+    "src/locales"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
