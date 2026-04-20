@@ -36,7 +36,7 @@ export interface VirtualAccountState {
   // Account data
   accounts: VirtualAccount[];
   selectedAccountId: string | null;
-  
+
   // Transaction data
   transactions: Record<string, AccountTransaction[]>;
   transactionFilters: {
@@ -52,21 +52,21 @@ export interface VirtualAccountState {
       max?: number;
     };
   };
-  
+
   // UI state
   isLoading: boolean;
   isCreatingAccount: boolean;
   isRefreshingBalance: boolean;
   error: string | null;
   lastRefresh: string | null;
-  
+
   // Balance history
   balanceHistory: Record<string, { date: string; balance: number }[]>;
-  
+
   // Statement generation
   isGeneratingStatement: boolean;
   statementProgress: number;
-  
+
   // Reconciliation
   reconciledTransactions: Set<string>;
   pendingReconciliation: AccountTransaction[];
@@ -79,34 +79,34 @@ export interface VirtualAccountActions {
   updateAccount: (accountId: string, updates: Partial<VirtualAccount>) => void;
   removeAccount: (accountId: string) => void;
   selectAccount: (accountId: string | null) => void;
-  
+
   // Balance management
   updateBalance: (accountId: string, balance: number) => void;
   refreshBalance: (accountId: string) => void;
   setBalanceHistory: (accountId: string, history: { date: string; balance: number }[]) => void;
-  
+
   // Transaction management
   setTransactions: (accountId: string, transactions: AccountTransaction[]) => void;
   addTransaction: (accountId: string, transaction: AccountTransaction) => void;
   updateTransaction: (accountId: string, transactionId: string, updates: Partial<AccountTransaction>) => void;
   markTransactionReconciled: (transactionId: string) => void;
   addPendingReconciliation: (transaction: AccountTransaction) => void;
-  
+
   // Filtering
   setTransactionFilters: (filters: Partial<VirtualAccountState['transactionFilters']>) => void;
   resetFilters: () => void;
-  
+
   // UI state management
   setLoading: (isLoading: boolean) => void;
   setCreatingAccount: (isCreating: boolean) => void;
   setRefreshingBalance: (isRefreshing: boolean) => void;
   setError: (error: string | null) => void;
   setLastRefresh: (timestamp: string) => void;
-  
+
   // Statement generation
   setGeneratingStatement: (isGenerating: boolean) => void;
   setStatementProgress: (progress: number) => void;
-  
+
   // Computed selectors
   getSelectedAccount: () => VirtualAccount | null;
   getAccountById: (accountId: string) => VirtualAccount | null;
@@ -115,7 +115,7 @@ export interface VirtualAccountActions {
   getFilteredTransactions: (accountId: string) => AccountTransaction[];
   getTotalBalance: () => number;
   getBalanceByProperty: (propertyId: string) => number;
-  
+
   // Utility actions
   clearAll: () => void;
   reset: () => void;
@@ -160,7 +160,7 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
 
         addAccount: (account) =>
           set((state) => {
-            const exists = state.accounts.find(acc => acc.id === account.id);
+            const exists = state.accounts.find((acc: VirtualAccount) => acc.id === account.id);
             if (!exists) {
               state.accounts.push(account);
             }
@@ -168,7 +168,7 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
 
         updateAccount: (accountId, updates) =>
           set((state) => {
-            const accountIndex = state.accounts.findIndex(acc => acc.id === accountId);
+            const accountIndex = state.accounts.findIndex((acc: VirtualAccount) => acc.id === accountId);
             if (accountIndex !== -1) {
               state.accounts[accountIndex] = {
                 ...state.accounts[accountIndex],
@@ -180,7 +180,7 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
 
         removeAccount: (accountId) =>
           set((state) => {
-            state.accounts = state.accounts.filter(acc => acc.id !== accountId);
+            state.accounts = state.accounts.filter((acc: VirtualAccount) => acc.id !== accountId);
             if (state.selectedAccountId === accountId) {
               state.selectedAccountId = null;
             }
@@ -197,12 +197,12 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
         // Balance management
         updateBalance: (accountId, balance) =>
           set((state) => {
-            const account = state.accounts.find(acc => acc.id === accountId);
+            const account = state.accounts.find((acc: VirtualAccount) => acc.id === accountId);
             if (account) {
               account.balance = balance;
               account.lastUpdated = new Date().toISOString();
             }
-            
+
             // Add to balance history
             if (!state.balanceHistory[accountId]) {
               state.balanceHistory[accountId] = [];
@@ -211,7 +211,7 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
               date: new Date().toISOString(),
               balance,
             });
-            
+
             // Keep only last 100 entries
             if (state.balanceHistory[accountId].length > 100) {
               state.balanceHistory[accountId] = state.balanceHistory[accountId].slice(-100);
@@ -240,14 +240,14 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
             if (!state.transactions[accountId]) {
               state.transactions[accountId] = [];
             }
-            
+
             // Avoid duplicates
-            const exists = state.transactions[accountId].find(t => t.id === transaction.id);
+            const exists = state.transactions[accountId].find((t: AccountTransaction) => t.id === transaction.id);
             if (!exists) {
               state.transactions[accountId].unshift(transaction);
-              
+
               // Update account balance if this is the latest transaction
-              const account = state.accounts.find(acc => acc.id === accountId);
+              const account = state.accounts.find((acc: VirtualAccount) => acc.id === accountId);
               if (account && transaction.status === 'SUCCESS') {
                 account.balance = transaction.balanceAfter;
                 account.lastUpdated = new Date().toISOString();
@@ -259,7 +259,7 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
           set((state) => {
             if (state.transactions[accountId]) {
               const transactionIndex = state.transactions[accountId].findIndex(
-                t => t.id === transactionId
+                (t: AccountTransaction) => t.id === transactionId
               );
               if (transactionIndex !== -1) {
                 state.transactions[accountId][transactionIndex] = {
@@ -273,16 +273,16 @@ export const useVirtualAccountStore = create<VirtualAccountStore>()(
         markTransactionReconciled: (transactionId) =>
           set((state) => {
             state.reconciledTransactions.add(transactionId);
-            
+
             // Remove from pending reconciliation
             state.pendingReconciliation = state.pendingReconciliation.filter(
-              t => t.id !== transactionId
+              (t: AccountTransaction) => t.id !== transactionId
             );
           }),
 
         addPendingReconciliation: (transaction) =>
           set((state) => {
-            const exists = state.pendingReconciliation.find(t => t.id === transaction.id);
+            const exists = state.pendingReconciliation.find((t: AccountTransaction) => t.id === transaction.id);
             if (!exists) {
               state.pendingReconciliation.push(transaction);
             }

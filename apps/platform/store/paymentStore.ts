@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { devtools, subscriptWithSelector } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type {
   Payment,
@@ -136,7 +136,8 @@ export const usePaymentStore = create<PaymentState>()(
 
       updatePaymentStatus: (paymentId, status) =>
         set((state) => {
-          const paymentIndex = state.payments.findIndex(p => p.id === paymentId);
+          const paymentIndex = state.payments.findIndex(
+            (p: Payment) => p.id === paymentId);
           if (paymentIndex !== -1) {
             state.payments[paymentIndex].status = status;
             if (status === 'SUCCESS') {
@@ -150,7 +151,8 @@ export const usePaymentStore = create<PaymentState>()(
 
       addPayment: (payment) =>
         set((state) => {
-          const existingIndex = state.payments.findIndex(p => p.id === payment.id);
+          const existingIndex = state.payments.findIndex(
+            (p: Payment) => p.id === payment.id);
           if (existingIndex !== -1) {
             state.payments[existingIndex] = payment;
           } else {
@@ -207,7 +209,8 @@ export const usePaymentStore = create<PaymentState>()(
 
       addVirtualAccount: (account) =>
         set((state) => {
-          const existingIndex = state.virtualAccounts.findIndex(a => a.id === account.id);
+          const existingIndex = state.virtualAccounts.findIndex(
+            (a: VirtualAccount) => a.id === account.id);
           if (existingIndex !== -1) {
             state.virtualAccounts[existingIndex] = account;
           } else {
@@ -217,7 +220,8 @@ export const usePaymentStore = create<PaymentState>()(
 
       updateVirtualAccountBalance: (accountId, balance) =>
         set((state) => {
-          const accountIndex = state.virtualAccounts.findIndex(a => a.id === accountId);
+          const accountIndex = state.virtualAccounts.findIndex(
+            (a: VirtualAccount) => a.id === accountId);
           if (accountIndex !== -1) {
             state.virtualAccounts[accountIndex].balance = balance;
           }
@@ -259,11 +263,6 @@ export const usePaymentStore = create<PaymentState>()(
     })),
     {
       name: 'payment-store',
-      partialize: (state) => ({
-        payments: state.payments,
-        paymentHistory: state.paymentHistory,
-        virtualAccounts: state.virtualAccounts,
-      }),
     }
   )
 );

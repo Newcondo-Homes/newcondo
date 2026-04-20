@@ -2,10 +2,10 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { 
-  LegalDocument, 
-  LegalDocumentTemplate, 
-  LegalAgreement, 
+import type {
+  LegalDocument,
+  LegalDocumentTemplate,
+  LegalAgreement,
   DigitalSignatureData,
   DocumentUploadProgress,
   LegalDocumentStatus,
@@ -17,22 +17,22 @@ interface LegalState {
   documents: LegalDocument[];
   activeDocument: LegalDocument | null;
   templates: LegalDocumentTemplate[];
-  
+
   // Agreements
   agreements: LegalAgreement[];
   pendingAgreements: LegalAgreement[];
-  
+
   // Upload state
   uploadProgress: Record<string, DocumentUploadProgress>;
-  
+
   // UI state
   isLoading: boolean;
   isUploading: boolean;
   selectedDocumentType: LegalDocumentType | null;
-  
+
   // Signatures
   signatures: Record<string, DigitalSignatureData>;
-  
+
   // Error state
   error: string | null;
 }
@@ -44,30 +44,30 @@ interface LegalActions {
   updateDocument: (id: string, updates: Partial<LegalDocument>) => void;
   removeDocument: (id: string) => void;
   setActiveDocument: (document: LegalDocument | null) => void;
-  
+
   // Templates
   setTemplates: (templates: LegalDocumentTemplate[]) => void;
-  
+
   // Agreements
   setAgreements: (agreements: LegalAgreement[]) => void;
   addAgreement: (agreement: LegalAgreement) => void;
   updateAgreement: (id: string, updates: Partial<LegalAgreement>) => void;
   acceptAgreement: (id: string, signature: DigitalSignatureData) => void;
-  
+
   // Upload management
   setUploadProgress: (documentId: string, progress: DocumentUploadProgress) => void;
   clearUploadProgress: (documentId: string) => void;
-  
+
   // Signatures
   addSignature: (documentId: string, signature: DigitalSignatureData) => void;
   removeSignature: (documentId: string) => void;
-  
+
   // UI state
   setLoading: (loading: boolean) => void;
   setUploading: (uploading: boolean) => void;
   setSelectedDocumentType: (type: LegalDocumentType | null) => void;
   setError: (error: string | null) => void;
-  
+
   // Utilities
   getDocumentsByType: (type: LegalDocumentType) => LegalDocument[];
   getDocumentsByStatus: (status: LegalDocumentStatus) => LegalDocument[];
@@ -75,7 +75,7 @@ interface LegalActions {
   getRequiredDocuments: () => LegalDocument[];
   isDocumentSigned: (documentId: string) => boolean;
   areAllRequiredDocumentsSigned: () => boolean;
-  
+
   // Reset
   reset: () => void;
   resetError: () => void;
@@ -113,14 +113,16 @@ export const useLegalStore = create<LegalStore>()(
         }),
 
         updateDocument: (id, updates) => set((state) => {
-          const index = state.documents.findIndex(doc => doc.id === id);
+          const index = state.documents.findIndex(
+            (doc: LegalDocument) => doc.id === id);
           if (index !== -1) {
             Object.assign(state.documents[index], updates);
           }
         }),
 
         removeDocument: (id) => set((state) => {
-          state.documents = state.documents.filter(doc => doc.id !== id);
+          state.documents = state.documents.filter(
+            (doc: LegalDocument) => doc.id !== id);
           if (state.activeDocument?.id === id) {
             state.activeDocument = null;
           }
@@ -153,12 +155,14 @@ export const useLegalStore = create<LegalStore>()(
         }),
 
         updateAgreement: (id, updates) => set((state) => {
-          const agreementIndex = state.agreements.findIndex(agreement => agreement.id === id);
+          const agreementIndex = state.agreements.findIndex(
+            (agreement: LegalAgreement) => agreement.id === id);
           if (agreementIndex !== -1) {
             Object.assign(state.agreements[agreementIndex], updates);
           }
 
-          const pendingIndex = state.pendingAgreements.findIndex(agreement => agreement.id === id);
+          const pendingIndex = state.pendingAgreements.findIndex(
+            (agreement: LegalAgreement) => agreement.id === id);
           if (pendingIndex !== -1) {
             if (updates.acceptedAt) {
               state.pendingAgreements.splice(pendingIndex, 1);
@@ -170,9 +174,10 @@ export const useLegalStore = create<LegalStore>()(
 
         acceptAgreement: (id, signature) => set((state) => {
           const now = new Date().toISOString();
-          
+
           // Update agreement
-          const agreementIndex = state.agreements.findIndex(agreement => agreement.id === id);
+          const agreementIndex = state.agreements.findIndex(
+            (agreement: LegalAgreement) => agreement.id === id);
           if (agreementIndex !== -1) {
             state.agreements[agreementIndex].acceptedAt = now;
             state.agreements[agreementIndex].signature = signature;
@@ -180,7 +185,7 @@ export const useLegalStore = create<LegalStore>()(
 
           // Remove from pending
           state.pendingAgreements = state.pendingAgreements.filter(
-            agreement => agreement.id !== id
+            (agreement: LegalAgreement) => agreement.id !== id
           );
 
           // Store signature
@@ -232,7 +237,7 @@ export const useLegalStore = create<LegalStore>()(
         },
 
         getPendingDocuments: () => {
-          return get().documents.filter(doc => 
+          return get().documents.filter(doc =>
             doc.status === 'PENDING' && doc.isRequired
           );
         },
@@ -248,7 +253,7 @@ export const useLegalStore = create<LegalStore>()(
         areAllRequiredDocumentsSigned: () => {
           const { documents, signatures } = get();
           const requiredDocs = documents.filter(doc => doc.isRequired);
-          
+
           return requiredDocs.every(doc => {
             const isSigned = doc.id in signatures;
             const isApproved = doc.status === 'APPROVED';

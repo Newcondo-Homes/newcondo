@@ -70,33 +70,33 @@ export interface MapState {
 export interface BoundaryStore {
   // Current boundary being worked on
   currentBoundary: PropertyBoundary | null;
-  
+
   // Drawing state
   drawingState: DrawingState;
-  
+
   // Map state
   mapState: MapState;
-  
+
   // Validation
   validationErrors: BoundaryValidationError[];
   isValidating: boolean;
-  
+
   // Existing boundaries (for conflict detection)
   existingBoundaries: PropertyBoundary[];
   overlappingProperties: OverlappingProperty[];
-  
+
   // Conflicts
   boundaryConflicts: BoundaryConflict[];
-  
+
   // Loading states
   isLoading: boolean;
   isSaving: boolean;
   isLoadingExisting: boolean;
-  
+
   // Actions
   setCurrentBoundary: (boundary: PropertyBoundary | null) => void;
   updateBoundaryCoordinates: (coordinates: BoundaryCoordinates[]) => void;
-  
+
   // Drawing actions
   startDrawing: () => void;
   stopDrawing: () => void;
@@ -105,7 +105,7 @@ export interface BoundaryStore {
   completeBoundary: () => void;
   clearDrawing: () => void;
   setDrawingMode: (mode: DrawingState['mode']) => void;
-  
+
   // Map actions
   setMapCenter: (center: BoundaryCoordinates) => void;
   setMapZoom: (zoom: number) => void;
@@ -113,21 +113,27 @@ export interface BoundaryStore {
   toggleExistingBoundaries: () => void;
   toggleConflictDisplay: () => void;
   setSelectedProperty: (propertyId: string | undefined) => void;
-  
+
   // Validation actions
   validateBoundary: (coordinates: BoundaryCoordinates[]) => Promise<void>;
   clearValidationErrors: () => void;
-  
+
   // Boundary management
   loadExistingBoundaries: (area: { bounds: BoundaryCoordinates[] }) => Promise<void>;
   saveBoundary: (propertyId: string, coordinates: BoundaryCoordinates[]) => Promise<void>;
   deleteBoundary: (propertyId: string) => Promise<void>;
-  
+  doLinesIntersect: (
+    p1: BoundaryCoordinates,
+    p2: BoundaryCoordinates,
+    p3: BoundaryCoordinates,
+    p4: BoundaryCoordinates
+  ) => boolean;
+
   // Conflict management
   checkForConflicts: (coordinates: BoundaryCoordinates[]) => Promise<void>;
   reportConflict: (conflict: Omit<BoundaryConflict, 'id' | 'reportedAt'>) => Promise<void>;
   resolveConflict: (conflictId: string, resolution: string) => Promise<void>;
-  
+
   // Utility functions
   calculateArea: (coordinates: BoundaryCoordinates[]) => number;
   calculatePerimeter: (coordinates: BoundaryCoordinates[]) => number;
@@ -135,7 +141,7 @@ export interface BoundaryStore {
   getBoundaryCenter: (coordinates: BoundaryCoordinates[]) => BoundaryCoordinates;
   hasSelfIntersections: (coordinates: BoundaryCoordinates[]) => boolean;
   checkOverlaps: (coordinates: BoundaryCoordinates[]) => Promise<OverlappingProperty[]>;
-  
+
   // Reset
   reset: () => void;
 }
@@ -250,10 +256,10 @@ export const useBoundaryStore = create<BoundaryStore>()(
               mode: 'VIEW'
             }
           });
-          
+
           // Validate the completed boundary
           await get().validateBoundary(drawingState.currentPath);
-          
+
           // Check for conflicts
           await get().checkForConflicts(drawingState.currentPath);
         }
@@ -336,10 +342,10 @@ export const useBoundaryStore = create<BoundaryStore>()(
       // Validation actions
       validateBoundary: async (coordinates) => {
         set({ isValidating: true });
-        
+
         try {
           const errors: BoundaryValidationError[] = [];
-          
+
           // Check minimum area (e.g., 50 square meters)
           const area = get().calculateArea(coordinates);
           if (area < 50) {
@@ -348,7 +354,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
               message: 'Property boundary must be at least 50 square meters'
             });
           }
-          
+
           // Check maximum area (e.g., 5000 square meters for residential)
           if (area > 5000) {
             errors.push({
@@ -356,7 +362,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
               message: 'Property boundary exceeds maximum allowed size of 5000 square meters'
             });
           }
-          
+
           // Check for self-intersections
           if (get().hasSelfIntersections(coordinates)) {
             errors.push({
@@ -364,7 +370,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
               message: 'Property boundary cannot intersect with itself'
             });
           }
-          
+
           // Check for overlaps with existing boundaries
           const overlaps = await get().checkOverlaps(coordinates);
           if (overlaps.length > 0) {
@@ -374,7 +380,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
               coordinates: overlaps[0]?.coordinates
             });
           }
-          
+
           set({ validationErrors: errors });
         } catch (error) {
           console.error('Boundary validation error:', error);
@@ -396,7 +402,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
       // Boundary management
       loadExistingBoundaries: async (area) => {
         set({ isLoadingExisting: true });
-        
+
         try {
           // Mock API call - replace with actual API
           const response = await fetch('/api/boundaries/search', {
@@ -404,7 +410,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ bounds: area.bounds })
           });
-          
+
           const boundaries = await response.json();
           set({ existingBoundaries: boundaries });
         } catch (error) {
@@ -416,7 +422,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
 
       saveBoundary: async (propertyId, coordinates) => {
         set({ isSaving: true });
-        
+
         try {
           const boundary: PropertyBoundary = {
             id: `boundary_${Date.now()}`,
@@ -427,14 +433,14 @@ export const useBoundaryStore = create<BoundaryStore>()(
             isVerified: false,
             markedAt: new Date()
           };
-          
+
           // Mock API call - replace with actual API
           const response = await fetch('/api/boundaries', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(boundary)
           });
-          
+
           if (response.ok) {
             set({
               currentBoundary: boundary,
@@ -450,12 +456,12 @@ export const useBoundaryStore = create<BoundaryStore>()(
 
       deleteBoundary: async (propertyId) => {
         set({ isLoading: true });
-        
+
         try {
           const response = await fetch(`/api/boundaries/${propertyId}`, {
             method: 'DELETE'
           });
-          
+
           if (response.ok) {
             set({
               existingBoundaries: get().existingBoundaries.filter(b => b.propertyId !== propertyId)
@@ -476,7 +482,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ coordinates })
           });
-          
+
           const conflicts = await response.json();
           set({ overlappingProperties: conflicts });
         } catch (error) {
@@ -491,13 +497,13 @@ export const useBoundaryStore = create<BoundaryStore>()(
             id: `conflict_${Date.now()}`,
             reportedAt: new Date()
           };
-          
+
           const response = await fetch('/api/boundary-conflicts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(newConflict)
           });
-          
+
           if (response.ok) {
             set({
               boundaryConflicts: [...get().boundaryConflicts, newConflict]
@@ -515,7 +521,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ resolution })
           });
-          
+
           if (response.ok) {
             set({
               boundaryConflicts: get().boundaryConflicts.map(conflict =>
@@ -533,19 +539,19 @@ export const useBoundaryStore = create<BoundaryStore>()(
       // Utility functions
       calculateArea: (coordinates) => {
         if (coordinates.length < 3) return 0;
-        
+
         // Using the Shoelace formula
         let area = 0;
         const n = coordinates.length;
-        
+
         for (let i = 0; i < n; i++) {
           const j = (i + 1) % n;
           area += coordinates[i].lat * coordinates[j].lng;
           area -= coordinates[j].lat * coordinates[i].lng;
         }
-        
+
         area = Math.abs(area) / 2;
-        
+
         // Convert to square meters (rough approximation)
         // 1 degree ≈ 111,000 meters at equator
         return area * 111000 * 111000;
@@ -553,44 +559,44 @@ export const useBoundaryStore = create<BoundaryStore>()(
 
       calculatePerimeter: (coordinates) => {
         if (coordinates.length < 2) return 0;
-        
+
         let perimeter = 0;
         const n = coordinates.length;
-        
+
         for (let i = 0; i < n; i++) {
           const j = (i + 1) % n;
           const dx = (coordinates[j].lng - coordinates[i].lng) * 111000;
           const dy = (coordinates[j].lat - coordinates[i].lat) * 111000;
           perimeter += Math.sqrt(dx * dx + dy * dy);
         }
-        
+
         return perimeter;
       },
 
       isPointInBoundary: (point, boundary) => {
         if (boundary.length < 3) return false;
-        
+
         let inside = false;
         const n = boundary.length;
-        
+
         for (let i = 0, j = n - 1; i < n; j = i++) {
           const xi = boundary[i].lat;
           const yi = boundary[i].lng;
           const xj = boundary[j].lat;
           const yj = boundary[j].lng;
-          
+
           if (((yi > point.lng) !== (yj > point.lng)) &&
-              (point.lat < (xj - xi) * (point.lng - yi) / (yj - yi) + xi)) {
+            (point.lat < (xj - xi) * (point.lng - yi) / (yj - yi) + xi)) {
             inside = !inside;
           }
         }
-        
+
         return inside;
       },
 
       getBoundaryCenter: (coordinates) => {
         if (coordinates.length === 0) return { lat: 0, lng: 0 };
-        
+
         const sum = coordinates.reduce(
           (acc, coord) => ({
             lat: acc.lat + coord.lat,
@@ -598,7 +604,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
           }),
           { lat: 0, lng: 0 }
         );
-        
+
         return {
           lat: sum.lat / coordinates.length,
           lng: sum.lng / coordinates.length
@@ -607,32 +613,37 @@ export const useBoundaryStore = create<BoundaryStore>()(
 
       hasSelfIntersections: (coordinates) => {
         if (coordinates.length < 4) return false;
-        
+
         const n = coordinates.length;
-        
+
         for (let i = 0; i < n; i++) {
           for (let j = i + 2; j < n; j++) {
             if (i === 0 && j === n - 1) continue; // Skip adjacent segments
-            
+
             const p1 = coordinates[i];
             const p2 = coordinates[(i + 1) % n];
             const p3 = coordinates[j];
             const p4 = coordinates[(j + 1) % n];
-            
+
             if (get().doLinesIntersect(p1, p2, p3, p4)) {
               return true;
             }
           }
         }
-        
+
         return false;
       },
 
-      doLinesIntersect: (p1, p2, p3, p4) => {
+      doLinesIntersect: (
+        p1: BoundaryCoordinates,
+        p2: BoundaryCoordinates,
+        p3: BoundaryCoordinates,
+        p4: BoundaryCoordinates
+      ) => {
         const ccw = (A: BoundaryCoordinates, B: BoundaryCoordinates, C: BoundaryCoordinates) => {
           return (C.lng - A.lng) * (B.lat - A.lat) > (B.lng - A.lng) * (C.lat - A.lat);
         };
-        
+
         return ccw(p1, p3, p4) !== ccw(p2, p3, p4) && ccw(p1, p2, p3) !== ccw(p1, p2, p4);
       },
 
@@ -643,7 +654,7 @@ export const useBoundaryStore = create<BoundaryStore>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ coordinates })
           });
-          
+
           return await response.json();
         } catch (error) {
           console.error('Error checking overlaps:', error);

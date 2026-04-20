@@ -39,7 +39,7 @@ interface FavoritesState {
   getFavoriteProperties: () => PropertyBasic[];
   clearFavorites: () => void;
   getFavoriteCount: () => number;
-  
+
   // Async actions
   syncFavoritesWithServer: () => Promise<void>;
   loadFavoritesFromServer: () => Promise<void>;
@@ -79,7 +79,7 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       toggleFavorite: (property: PropertyBasic) => {
         const { isFavorite, addToFavorites, removeFromFavorites } = get();
-        
+
         if (isFavorite(property.id)) {
           removeFromFavorites(property.id);
         } else {
@@ -155,7 +155,7 @@ export const useFavoritesStore = create<FavoritesState>()(
           });
 
           const response = await fetch('/api/favorites');
-          
+
           if (!response.ok) {
             throw new Error('Failed to load favorites from server');
           }
@@ -185,23 +185,39 @@ export const useFavoritesStore = create<FavoritesState>()(
     })),
     {
       name: 'newcondo-favorites',
-      storage: createJSONStorage(() => localStorage),
-      // Custom serialization for Set and Map
-      serialize: (state) => {
-        return JSON.stringify({
-          ...state,
-          favoriteIds: Array.from(state.favoriteIds),
-          favoriteProperties: Array.from(state.favoriteProperties.entries()),
-        });
-      },
-      deserialize: (str) => {
-        const parsed = JSON.parse(str);
-        return {
-          ...parsed,
-          favoriteIds: new Set(parsed.favoriteIds || []),
-          favoriteProperties: new Map(parsed.favoriteProperties || []),
-        };
-      },
+      storage: createJSONStorage(() => ({
+        getItem: (name: string) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          const parsed = JSON.parse(str);
+          return {
+            ...parsed,
+            state: {
+              ...parsed.state,
+              favoriteIds: new Set<string>(parsed.state?.favoriteIds || []),
+              favoriteProperties: new Map<string, PropertyBasic>(
+                parsed.state?.favoriteProperties || []
+              ),
+            },
+          };
+        },
+        setItem: (name: string, value: string) => {
+          const parsed = JSON.parse(value);
+          const serialized = JSON.stringify({
+            ...parsed,
+            state: {
+              ...parsed.state,
+              favoriteIds: Array.from(parsed.state?.favoriteIds || []),
+              favoriteProperties: Array.from(
+                parsed.state?.favoriteProperties?.entries?.() || []
+              ),
+            },
+          });
+          localStorage.setItem(name, serialized);
+        },
+        removeItem: (name: string) => localStorage.removeItem(name),
+      })),
+
       // Only persist essential data
       partialize: (state) => ({
         favoriteIds: state.favoriteIds,
@@ -215,7 +231,7 @@ export const useFavoritesStore = create<FavoritesState>()(
 export const useFavoriteIds = () => useFavoritesStore((state) => state.favoriteIds);
 export const useFavoriteProperties = () => useFavoritesStore((state) => state.getFavoriteProperties());
 export const useFavoriteCount = () => useFavoritesStore((state) => state.getFavoriteCount());
-export const useIsFavorite = (propertyId: string) => 
+export const useIsFavorite = (propertyId: string) =>
   useFavoritesStore((state) => state.isFavorite(propertyId));
 
 // Action hooks

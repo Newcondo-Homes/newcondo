@@ -47,7 +47,7 @@ interface ComparisonState {
   comparisonItems: ComparisonItem[];
   isComparisonOpen: boolean;
   maxItems: number;
-  
+
   // Actions
   addToComparison: (property: PropertyForComparison) => boolean;
   removeFromComparison: (propertyId: string) => void;
@@ -56,17 +56,17 @@ interface ComparisonState {
   isInComparison: (propertyId: string) => boolean;
   getComparisonCount: () => number;
   getComparisonProperties: () => PropertyForComparison[];
-  
+
   // UI Actions
   openComparison: () => void;
   closeComparison: () => void;
   toggleComparisonPanel: () => void;
-  
+
   // Utility Actions
   reorderComparison: (fromIndex: number, toIndex: number) => void;
   getOldestItem: () => ComparisonItem | null;
   canAddMore: () => boolean;
-  
+
   // Comparison Analytics
   getComparisonStats: () => {
     avgPrice: number;
@@ -88,7 +88,7 @@ export const useComparisonStore = create<ComparisonState>()(
       // Actions
       addToComparison: (property: PropertyForComparison) => {
         const state = get();
-        
+
         // Check if already in comparison
         if (state.isInComparison(property.id)) {
           return false;
@@ -104,7 +104,7 @@ export const useComparisonStore = create<ComparisonState>()(
           if (draft.comparisonItems.length >= draft.maxItems) {
             // Find and remove the oldest item
             const oldestIndex = draft.comparisonItems.reduce(
-              (oldestIdx, item, index, items) =>
+              (oldestIdx: number, item: ComparisonItem, index: number, items: ComparisonItem[]) =>
                 item.addedAt < items[oldestIdx].addedAt ? index : oldestIdx,
               0
             );
@@ -121,9 +121,9 @@ export const useComparisonStore = create<ComparisonState>()(
       removeFromComparison: (propertyId: string) => {
         set((draft) => {
           const index = draft.comparisonItems.findIndex(
-            (item) => item.property.id === propertyId
+            (item: ComparisonItem) => item.property.id === propertyId
           );
-          
+
           if (index !== -1) {
             draft.comparisonItems.splice(index, 1);
           }
@@ -144,7 +144,7 @@ export const useComparisonStore = create<ComparisonState>()(
 
       toggleComparison: (property: PropertyForComparison) => {
         const { isInComparison, addToComparison, removeFromComparison } = get();
-        
+
         if (isInComparison(property.id)) {
           removeFromComparison(property.id);
           return false;
@@ -190,8 +190,8 @@ export const useComparisonStore = create<ComparisonState>()(
       reorderComparison: (fromIndex: number, toIndex: number) => {
         set((draft) => {
           const items = draft.comparisonItems;
-          if (fromIndex < 0 || fromIndex >= items.length || 
-              toIndex < 0 || toIndex >= items.length) {
+          if (fromIndex < 0 || fromIndex >= items.length ||
+            toIndex < 0 || toIndex >= items.length) {
             return;
           }
 
@@ -216,7 +216,7 @@ export const useComparisonStore = create<ComparisonState>()(
       // Comparison Analytics
       getComparisonStats: () => {
         const properties = get().getComparisonProperties();
-        
+
         if (properties.length === 0) {
           return {
             avgPrice: 0,
@@ -231,13 +231,13 @@ export const useComparisonStore = create<ComparisonState>()(
         const prices = properties
           .map(p => Number(p.price))
           .filter(p => !isNaN(p) && p > 0);
-        
-        const avgPrice = prices.length > 0 
-          ? prices.reduce((sum, price) => sum + price, 0) / prices.length 
+
+        const avgPrice = prices.length > 0
+          ? prices.reduce((sum, price) => sum + price, 0) / prices.length
           : 0;
 
         // Calculate price range
-        const priceRange = prices.length > 0 
+        const priceRange = prices.length > 0
           ? { min: Math.min(...prices), max: Math.max(...prices) }
           : { min: 0, max: 0 };
 
@@ -246,7 +246,7 @@ export const useComparisonStore = create<ComparisonState>()(
           ...p.features,
           ...(p.buildingFeatures || [])
         ]);
-        
+
         const featureCounts = allFeatures.reduce((acc, feature) => {
           acc[feature] = (acc[feature] || 0) + 1;
           return acc;
@@ -260,7 +260,7 @@ export const useComparisonStore = create<ComparisonState>()(
         // Location summary
         const locations = properties.map(p => `${p.city}, ${p.state}`);
         const uniqueLocations = [...new Set(locations)];
-        
+
         // Property types
         const propertyTypes = [...new Set(properties.map(p => p.propertyType))];
 
@@ -275,27 +275,42 @@ export const useComparisonStore = create<ComparisonState>()(
     })),
     {
       name: 'newcondo-comparison',
-      storage: createJSONStorage(() => localStorage),
-      // Custom serialization for Date objects
-      serialize: (state) => {
-        return JSON.stringify({
-          ...state,
-          comparisonItems: state.comparisonItems.map(item => ({
-            ...item,
-            addedAt: item.addedAt.toISOString(),
-          })),
-        });
-      },
-      deserialize: (str) => {
-        const parsed = JSON.parse(str);
-        return {
-          ...parsed,
-          comparisonItems: (parsed.comparisonItems || []).map((item: any) => ({
-            ...item,
-            addedAt: new Date(item.addedAt),
-          })),
-        };
-      },
+      storage: createJSONStorage(() => ({
+        getItem: (name: string) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          const parsed = JSON.parse(str);
+          return {
+            ...parsed,
+            state: {
+              ...parsed.state,
+              comparisonItems: (parsed.state?.comparisonItems || []).map(
+                (item: ComparisonItem & { addedAt: string }) => ({
+                  ...item,
+                  addedAt: new Date(item.addedAt),
+                })
+              ),
+            },
+          };
+        },
+        setItem: (name: string, value: string) => {
+          const parsed = JSON.parse(value);
+          const serialized = JSON.stringify({
+            ...parsed,
+            state: {
+              ...parsed.state,
+              comparisonItems: (parsed.state?.comparisonItems || []).map(
+                (item: ComparisonItem) => ({
+                  ...item,
+                  addedAt: item.addedAt.toISOString(),
+                })
+              ),
+            },
+          });
+          localStorage.setItem(name, serialized);
+        },
+        removeItem: (name: string) => localStorage.removeItem(name),
+      })),
       // Only persist essential data
       partialize: (state) => ({
         comparisonItems: state.comparisonItems,
@@ -306,10 +321,10 @@ export const useComparisonStore = create<ComparisonState>()(
 );
 
 // Selector hooks for better performance
-export const useComparisonItems = () => 
+export const useComparisonItems = () =>
   useComparisonStore((state) => state.getComparisonProperties());
 
-export const useComparisonCount = () => 
+export const useComparisonCount = () =>
   useComparisonStore((state) => state.getComparisonCount());
 
 export const useIsInComparison = (propertyId: string) =>

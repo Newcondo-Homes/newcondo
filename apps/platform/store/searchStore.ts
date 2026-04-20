@@ -332,7 +332,7 @@ export const useSearchStore = create<SearchState & SearchActions>()(
         
         removeFromHistory: (historyId) => {
           set((state) => {
-            state.searchHistory = state.searchHistory.filter((item) => item.id !== historyId);
+            state.searchHistory = state.searchHistory.filter((item: SearchHistory) => item.id !== historyId);
           });
         },
         
@@ -340,7 +340,7 @@ export const useSearchStore = create<SearchState & SearchActions>()(
           set((state) => {
             // Remove if it already exists to move it to the front
             state.recentSearches = state.recentSearches.filter(
-              (recentQuery) => recentQuery !== query
+              (recentQuery: string) => recentQuery !== query
             );
             state.recentSearches.unshift(query);
             // Cap recent searches at 5
@@ -368,13 +368,13 @@ export const useSearchStore = create<SearchState & SearchActions>()(
         
         removeSavedSearch: (searchId) => {
           set((state) => {
-            state.savedSearches = state.savedSearches.filter((s) => s.id !== searchId);
+            state.savedSearches = state.savedSearches.filter((s: SavedSearch) => s.id !== searchId);
           });
         },
         
         updateSavedSearch: (searchId, updates) => {
           set((state) => {
-            const searchToUpdate = state.savedSearches.find((s) => s.id === searchId);
+            const searchToUpdate = state.savedSearches.find((s: SavedSearch) => s.id === searchId);
             if (searchToUpdate) {
               Object.assign(searchToUpdate, updates);
             }
@@ -383,7 +383,7 @@ export const useSearchStore = create<SearchState & SearchActions>()(
         
         toggleSearchAlerts: (searchId) => {
           set((state) => {
-            const searchToUpdate = state.savedSearches.find((s) => s.id === searchId);
+            const searchToUpdate = state.savedSearches.find((s: SavedSearch) => s.id === searchId);
             if (searchToUpdate) {
               searchToUpdate.alertsEnabled = !searchToUpdate.alertsEnabled;
             }
@@ -415,7 +415,7 @@ export const useSearchStore = create<SearchState & SearchActions>()(
           // Simulate an API call
           await new Promise((resolve) => setTimeout(resolve, 500));
           
-          const mockTrending = [
+          const mockTrending: LocationSuggestion[] = [
             { id: '1', name: 'Lekki', city: 'Lagos', state: 'Lagos', type: 'area', propertyCount: 1500, coordinates: { lat: 6.4462, lng: 3.472 } },
             { id: '2', name: 'Wuse', city: 'Abuja', state: 'FCT', type: 'area', propertyCount: 1200, coordinates: { lat: 9.0628, lng: 7.464 } },
             { id: '3', name: 'Ikeja', city: 'Lagos', state: 'Lagos', type: 'area', propertyCount: 950, coordinates: { lat: 6.6018, lng: 3.351 } },

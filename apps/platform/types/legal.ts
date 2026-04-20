@@ -28,6 +28,62 @@ export interface LegalTemplate {
   updatedAt: Date
 }
 
+// Add these to your types/legal.ts
+
+export interface LegalDocumentTemplate {
+  id: string
+  templateType: TemplateType
+  title: string
+  content: string
+  version: string
+  isActive: boolean
+  requiresSignature: boolean
+  expiryDays?: number
+  applicableRoles: string[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface LegalAgreement {
+  id: string
+  userId: string
+  propertyId?: string
+  agreementType: UndertakingType
+  title: string
+  content: string
+  version: string
+  acceptedAt?: string
+  signature?: DigitalSignatureData
+  ipAddress?: string
+  userAgent?: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface DigitalSignatureData {
+  signatureData: string
+  signatureMethod: SignatureMethod
+  signedAt: string
+  ipAddress?: string
+  userAgent?: string
+  witnessId?: string
+  witnessSignature?: string
+}
+
+export interface DocumentUploadProgress {
+  documentId: string
+  fileName: string
+  progress: number        // 0-100
+  status: 'uploading' | 'processing' | 'complete' | 'error'
+  error?: string
+  uploadedBytes?: number
+  totalBytes?: number
+}
+
+// These are aliases to existing types for clarity
+export type LegalDocumentStatus = DocumentStatus
+export type LegalDocumentType = DocumentType
+
 export interface CreateLegalDocumentRequest {
   documentType: DocumentType
   documentSide?: DocumentSide

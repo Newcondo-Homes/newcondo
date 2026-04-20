@@ -285,7 +285,7 @@ export const useUIStore = create<UIState>()(
 
       removeToast: (id) => {
         set((draft) => {
-          const index = draft.toasts.findIndex((toast) => toast.id === id);
+          const index = draft.toasts.findIndex((toast: Toast) => toast.id === id);
           if (index > -1) {
             draft.toasts.splice(index, 1);
           }

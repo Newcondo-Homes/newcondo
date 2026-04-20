@@ -2,37 +2,38 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { 
+import type { Role } from '@newcondo/db';
+
+const RoleValues = {
+  OWNER: 'OWNER',
+  AGENT: 'AGENT',
+  RENTER: 'RENTER',
+  ADMIN: 'ADMIN',
+} as const;
+
+import {
+  ComplianceWarningLevel,
+  ComplianceReportType,
+  ComplianceReportPeriod,
+  ComplianceReportScope,
+  ComplianceRequirementStatus,
+  ComplianceLevel
+} from '../types/compliance';
+
+// Type-only imports
+import type {
   ComplianceStatus,
   ComplianceRequirement,
   ComplianceReport,
   ComplianceIssue,
-  ComplianceLevel,
+  ComplianceCheck,
+  TermsAcceptance,
+  PrivacyConsent,
   CompliancePriority,
-  ComplianceRequirementStatus,
-  ComplianceWarningLevel
+  ComplianceRoleStats,
+  ComplianceReportData,
 } from '../types/compliance';
 
-// A placeholder type since it's not defined in the provided 'compliance.ts'
-interface ComplianceCheck {
-  id: string;
-  requirementId: string;
-  status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PENDING';
-  lastChecked: string;
-}
-
-// Placeholder types for the store
-interface TermsAcceptance {
-  version: string;
-  acceptedAt: string;
-  signature: any;
-}
-
-interface PrivacyConsent {
-  version: string;
-  consentedAt: string;
-  consentData: any;
-}
 
 // Specific types for the store's internal state
 type OverallStatus = 'COMPLIANT' | 'NON_COMPLIANT' | 'PENDING' | 'PARTIAL';
@@ -45,22 +46,22 @@ interface ComplianceState {
   requirements: ComplianceRequirement[];
   overallStatus: OverallStatus;
   complianceLevel: ZustandComplianceLevel;
-  
+
   // Terms and Privacy
   termsAcceptance: TermsAcceptance[];
   privacyConsents: PrivacyConsent[];
-  
+
   // Issues and Reports
   issues: ComplianceIssue[];
   reports: ComplianceReport[];
   lastCheck: string | null;
-  
+
   // UI state
   isChecking: boolean;
   isGeneratingReport: boolean;
   showComplianceModal: boolean;
   selectedRequirement: ComplianceRequirement | null;
-  
+
   // Error state
   error: string | null;
 }
@@ -70,36 +71,36 @@ interface ComplianceActions {
   setComplianceChecks: (checks: ComplianceCheck[]) => void;
   updateComplianceCheck: (id: string, updates: Partial<ComplianceCheck>) => void;
   addComplianceCheck: (check: ComplianceCheck) => void;
-  
+
   // Requirements
   setRequirements: (requirements: ComplianceRequirement[]) => void;
   updateRequirement: (id: string, updates: Partial<ComplianceRequirement>) => void;
-  
+
   // Status management
   setOverallStatus: (status: OverallStatus) => void;
   setComplianceLevel: (level: ZustandComplianceLevel) => void;
   calculateOverallStatus: () => void;
-  
+
   // Terms and Privacy
   setTermsAcceptance: (acceptance: TermsAcceptance[]) => void;
   addTermsAcceptance: (acceptance: TermsAcceptance) => void;
   setPrivacyConsents: (consents: PrivacyConsent[]) => void;
   addPrivacyConsent: (consent: PrivacyConsent) => void;
-  
+
   // Issues and Reports
   setIssues: (issues: ComplianceIssue[]) => void;
   addIssue: (issue: ComplianceIssue) => void;
   resolveIssue: (id: string) => void;
   setReports: (reports: ComplianceReport[]) => void;
   addReport: (report: ComplianceReport) => void;
-  
+
   // UI state
   setChecking: (checking: boolean) => void;
   setGeneratingReport: (generating: boolean) => void;
   setShowComplianceModal: (show: boolean) => void;
   setSelectedRequirement: (requirement: ComplianceRequirement | null) => void;
   setError: (error: string | null) => void;
-  
+
   // Utilities
   getRequirementsByStatus: (status: ComplianceRequirementStatus) => ComplianceRequirement[];
   getPendingRequirements: () => ComplianceRequirement[];
@@ -109,13 +110,13 @@ interface ComplianceActions {
   getComplianceScore: () => number;
   hasValidTermsAcceptance: (version: string) => boolean;
   hasValidPrivacyConsent: (version: string) => boolean;
-  
+
   // Actions
   performComplianceCheck: () => void;
   generateComplianceReport: () => void;
   acceptTerms: (version: string, signature?: any) => void;
   grantPrivacyConsent: (version: string, consentData: any) => void;
-  
+
   // Reset
   reset: () => void;
   resetError: () => void;
@@ -153,7 +154,8 @@ export const useComplianceStore = create<ComplianceStore>()(
         }),
 
         updateComplianceCheck: (id, updates) => set((state) => {
-          const index = state.complianceChecks.findIndex(check => check.id === id);
+          const index = state.complianceChecks.findIndex(
+            (check: ComplianceCheck) => check.id === id);
           if (index !== -1) {
             Object.assign(state.complianceChecks[index], updates);
           }
@@ -169,7 +171,8 @@ export const useComplianceStore = create<ComplianceStore>()(
         }),
 
         updateRequirement: (id, updates) => set((state) => {
-          const index = state.requirements.findIndex(req => req.id === id);
+          const index = state.requirements.findIndex(
+            (req: ComplianceRequirement) => req.id === id);
           if (index !== -1) {
             Object.assign(state.requirements[index], updates);
           }
@@ -187,16 +190,21 @@ export const useComplianceStore = create<ComplianceStore>()(
         calculateOverallStatus: () => set((state) => {
           const { requirements } = state;
           const totalRequirements = requirements.length;
-          
+
           if (totalRequirements === 0) {
             state.overallStatus = 'PENDING';
             return;
           }
 
-          const passedRequirements = requirements.filter(req => req.status === 'COMPLETED').length;
-          const failedRequirements = requirements.filter(req => req.status === 'REJECTED' || req.status === 'EXPIRED').length;
-          const criticalFailed = requirements.filter(req => 
-            (req.status === 'REJECTED' || req.status === 'EXPIRED') && req.isCritical
+          const passedRequirements = requirements.filter(
+            (req: ComplianceRequirement) => req.status === 'COMPLETED').length;
+
+          const failedRequirements = requirements.filter(
+            (req: ComplianceRequirement) => req.status === 'REJECTED' || req.status === 'EXPIRED').length;
+
+          const criticalFailed = requirements.filter(
+            (req: ComplianceRequirement) =>
+              (req.status === 'REJECTED' || req.status === 'EXPIRED') && req.isCritical
           ).length;
 
           if (criticalFailed > 0) {
@@ -248,8 +256,8 @@ export const useComplianceStore = create<ComplianceStore>()(
           state.issues.push(issue);
         }),
 
-        resolveIssue: (id) => set((state) => {
-          const index = state.issues.findIndex(issue => issue.id === id);
+        resolveIssue: (type) => set((state) => {
+          const index = state.issues.findIndex((issue: ComplianceIssue) => issue.type === type);
           if (index !== -1) {
             state.issues.splice(index, 1);
           }
@@ -298,8 +306,9 @@ export const useComplianceStore = create<ComplianceStore>()(
         },
 
         getCriticalIssues: () => {
-          return get().issues.filter(issue => 
-            issue.severity === ComplianceWarningLevel.CRITICAL
+          return get().issues.filter(
+            (issue: ComplianceIssue) =>
+              issue.severity === ComplianceWarningLevel.CRITICAL
           );
         },
 
@@ -309,21 +318,21 @@ export const useComplianceStore = create<ComplianceStore>()(
         },
 
         getComplianceScore: () => {
-          const { requirements } = get();
+          const requirements: ComplianceRequirement[] = get().requirements;;
           if (requirements.length === 0) return 0;
 
-          const totalWeight = requirements.reduce((sum, req) => {
+          const totalWeight = requirements.reduce((sum: number, req: ComplianceRequirement) => {
             const priorityWeight = req.isCritical ? 3 : (req.weight || 1);
             return sum + priorityWeight;
           }, 0);
 
           const passedWeight = requirements
-            .filter(req => req.status === 'COMPLETED')
-            .reduce((sum, req) => {
+            .filter((req: ComplianceRequirement) => req.status === 'COMPLETED')
+            .reduce((sum: number, req: ComplianceRequirement) => {
               const priorityWeight = req.isCritical ? 3 : (req.weight || 1);
               return sum + priorityWeight;
             }, 0);
-          
+
           return (passedWeight / totalWeight) * 100;
         },
 
@@ -333,10 +342,10 @@ export const useComplianceStore = create<ComplianceStore>()(
         },
 
         hasValidPrivacyConsent: (version) => {
-          const latestConsent = get().privacyConsents.sort((a, b) => new Date(b.consentedAt).getTime() - new Date(a.consentedAt).getTime())[0];
+          const latestConsent = get().privacyConsents.sort((a, b) => new Date(b.grantedAt!).getTime() - new Date(a.grantedAt!).getTime())[0];
           return latestConsent?.version === version;
         },
-        
+
         // Actions (placeholder implementations)
         performComplianceCheck: () => {
           set({ isChecking: true });
@@ -345,8 +354,22 @@ export const useComplianceStore = create<ComplianceStore>()(
             set((state) => {
               // Simulating check results
               state.complianceChecks = [
-                { id: '1', requirementId: 'req1', status: 'COMPLIANT', lastChecked: new Date().toISOString() },
-                { id: '2', requirementId: 'req2', status: 'PENDING', lastChecked: new Date().toISOString() },
+                {
+                  id: '1',
+                  entityId: 'user-1',
+                  entityType: 'user',
+                  checkTypes: ['identity'],
+                  status: ComplianceRequirementStatus.COMPLETED,
+                  result: {
+                    id: 'result-1',
+                    status: 'COMPLIANT',
+                    isCompliant: true,
+                    checkedAt: new Date(),
+                    completedRequirements: [],
+                  },
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                },
               ];
               state.isChecking = false;
               get().calculateOverallStatus();
@@ -358,14 +381,25 @@ export const useComplianceStore = create<ComplianceStore>()(
           set({ isGeneratingReport: true });
           setTimeout(() => {
             set((state) => {
+              const roleStats = (role: Role): ComplianceRoleStats => ({
+                role,
+                totalUsers: 0,
+                compliantUsers: 0,
+                averageScore: 0,
+                commonIssues: [],
+              });
               // Simulating report generation
               const newReport: ComplianceReport = {
                 id: `report-${Date.now()}`,
-                reportType: 'OVERALL_COMPLIANCE',
+                reportType: ComplianceReportType.OVERALL_COMPLIANCE,
                 generatedBy: 'System',
                 generatedAt: new Date(),
-                period: 'WEEKLY',
-                scope: 'ALL_USERS',
+                period: ComplianceReportPeriod.WEEKLY,
+                scope: ComplianceReportScope.ALL_USERS,
+                status: 'COMPLIANT',
+                isCompliant: true,
+                level: ComplianceLevel.HIGH,
+                completedRequirements: [],
                 data: {
                   totalUsers: 100,
                   compliantUsers: 75,
@@ -378,7 +412,12 @@ export const useComplianceStore = create<ComplianceStore>()(
                     rejectedDocuments: 0,
                     averageProcessingDays: 2.5
                   },
-                  complianceByRole: {},
+                  complianceByRole: {
+                    [RoleValues.OWNER]: roleStats(RoleValues.OWNER),
+                    [RoleValues.AGENT]: roleStats(RoleValues.AGENT),
+                    [RoleValues.RENTER]: roleStats(RoleValues.RENTER),
+                    [RoleValues.ADMIN]: roleStats(RoleValues.ADMIN),
+                  },
                   trendData: [],
                   topIssues: []
                 },
@@ -398,12 +437,29 @@ export const useComplianceStore = create<ComplianceStore>()(
 
         acceptTerms: (version, signature) => {
           set((state) => {
+            const acceptance: TermsAcceptance = {
+              id: `terms-${Date.now()}`,
+              userId: '',           // pass userId in or get from auth store
+              version,
+              acceptedAt: new Date(),
+              createdAt: new Date(),
+            };
             state.termsAcceptance.push({ version, acceptedAt: new Date().toISOString(), signature });
           });
         },
 
         grantPrivacyConsent: (version, consentData) => {
           set((state) => {
+            const consent: PrivacyConsent = {
+              id: `consent-${Date.now()}`,
+              userId: '',           // pass userId in or get from auth store
+              consentType: consentData?.consentType || 'general',
+              version,
+              isGranted: true,
+              grantedAt: new Date(),
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            };
             state.privacyConsents.push({ version, consentedAt: new Date().toISOString(), consentData });
           });
         },
