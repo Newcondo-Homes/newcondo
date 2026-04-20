@@ -1,15 +1,12 @@
 // apps/platform/types/markingJob.ts
 // Property marking job specific types
 
-import { 
-  MarkingJobStatus, 
-  UrgencyLevel, 
-  PaymentStatus 
+import {
+  MarkingJobStatus,
+  UrgencyLevel,
+  PaymentStatus
 } from "@newcondo/db";
-import { 
-  ContactPerson, 
-  MarkingOption, 
-  MarkerType,
+import {
   MarkingConfirmationStatus,
   BoundaryCoordinates,
   GPSCoordinates,

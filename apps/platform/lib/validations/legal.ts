@@ -82,18 +82,18 @@ export const documentVerificationSchema = z.object({
   documentId: z.string().cuid(),
   status: z.nativeEnum(DocumentStatus),
   verificationNotes: z.string().max(1000).optional(),
-  rejectionReason: z.string().max(500).optional().refine(
-    (reason, ctx) => {
-      if (ctx.parent.status === DocumentStatus.REJECTED && !reason) {
-        return false;
-      }
-      return true;
-    },
-    { message: 'Rejection reason is required when rejecting a document' }
-  ),
+  rejectionReason: z.string().max(500).optional(),
   requiresResubmission: z.boolean().default(false),
   adminId: z.string().cuid(),
   verifiedAt: z.date().optional(),
+}).superRefine((data, ctx) => {
+  if (data.status === DocumentStatus.REJECTED && !data.rejectionReason) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Rejection reason is required when rejecting a document',
+      path: ['rejectionReason'],
+    });
+  }
 });
 
 // Compliance check validation

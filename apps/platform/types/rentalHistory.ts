@@ -106,7 +106,7 @@ export interface RentalSummary {
   // Overview
   totalRentals: number;
   activeRentals: number;
-  pendingConfirmations: number;
+  pendingConfirmationsNo: number;
   completedRentals: number;
   terminatedRentals: number;
   

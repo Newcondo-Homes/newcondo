@@ -21,7 +21,7 @@ export const hierarchicalAddressSchema = z.object({
   country: z.literal('Nigeria'),
   
   // State (top level)
-  state: z.enum(NIGERIAN_STATES as [string, ...string[]], {
+  state: z.enum([...NIGERIAN_STATES], {
     errorMap: () => ({ message: 'Please select a valid Nigerian state' }),
   }),
   
@@ -114,7 +114,7 @@ export const addressSearchSchema = z.object({
     .min(2, 'Search query must be at least 2 characters')
     .max(200, 'Search query must not exceed 200 characters'),
   
-  state: z.enum(NIGERIAN_STATES as [string, ...string[]]).optional(),
+  state: z.enum([...NIGERIAN_STATES]).optional(),
   
   lga: z.string().optional(),
   
@@ -132,7 +132,7 @@ export const addressSearchSchema = z.object({
  * Service area schema (for agents)
  */
 export const serviceAreaSchema = z.object({
-  state: z.enum(NIGERIAN_STATES as [string, ...string[]]),
+  state: z.enum([...NIGERIAN_STATES]),
   
   lgas: z
     .array(z.string())
@@ -181,7 +181,7 @@ export const proximitySearchSchema = z.object({
     .default(10),
   
   // Filter by state/LGA
-  state: z.enum(NIGERIAN_STATES as [string, ...string[]]).optional(),
+  state: z.enum([...NIGERIAN_STATES]).optional(),
   
   lga: z.string().optional(),
   
@@ -218,7 +218,7 @@ export const validateAddressSchema = z.object({
 export const geocodeAddressSchema = z.object({
   address: z.string().min(5, 'Address must be at least 5 characters'),
   
-  state: z.enum(NIGERIAN_STATES as [string, ...string[]]).optional(),
+  state: z.enum([...NIGERIAN_STATES]).optional(),
   
   country: z.literal('Nigeria').default('Nigeria'),
 });

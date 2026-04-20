@@ -4,12 +4,22 @@
  * Queue Item Status
  */
 export enum QueueStatus {
+  // From top declaration
   WAITING = 'WAITING',
   PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+  
+  // From bottom declaration
+  PENDING = 'PENDING',
+  ASSIGNED = 'ASSIGNED',
+  ACCEPTED = 'ACCEPTED',
+  ACTIVE = 'ACTIVE',
+  SKIPPED = 'SKIPPED',
+  
+  // Shared by both (keep once)
+  COMPLETED = 'COMPLETED',
   EXPIRED = 'EXPIRED',
-  CANCELLED = 'CANCELLED'
 }
 
 /**
@@ -466,16 +476,6 @@ export enum MarkingJobQueueStatus {
   COMPLETED = "COMPLETED",
   CANCELLED = "CANCELLED",
   EXPIRED = "EXPIRED",
-}
-
-export enum QueueStatus {
-  PENDING = "PENDING", // Waiting in queue
-  ASSIGNED = "ASSIGNED", // Offered to agent, awaiting response
-  ACCEPTED = "ACCEPTED", // Agent accepted the job
-  ACTIVE = "ACTIVE", // Time slot is active
-  EXPIRED = "EXPIRED", // Time slot expired without completion
-  COMPLETED = "COMPLETED", // Job completed successfully
-  SKIPPED = "SKIPPED", // Agent skipped, moved to next
 }
 
 export enum NotificationType {

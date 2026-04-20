@@ -1,5 +1,14 @@
 import { z } from 'zod';
-import { DocumentType, DocumentStatus, Role, UserType } from '@newcondo/db';
+import type  { DocumentType, DocumentStatus, Role, UserType } from '@newcondo/db';
+
+const RoleEnum = z.enum(['OWNER', 'AGENT', 'RENTER', 'ADMIN']);
+const UserTypeEnum = z.enum(['LANDLORD', 'PROPERTY_MANAGER', 'AGENT', 'RENTER', 'ADMIN']);
+const DocumentTypeEnum = z.enum([
+  'NIN', 'BVN', 'PASSPORT', 'VOTERS_CARD', 'DRIVERS_LICENSE',
+  'SELFIE', 'OWNERSHIP_DOCUMENT', 'CONSENT_DOCUMENT', 'UNDERTAKING_DOCUMENT',
+  'BUSINESS_REGISTRATION', 'TAX_CERTIFICATE', 'UTILITY_BILL', 'BANK_STATEMENT', 'OTHER'
+]);
+const DocumentStatusEnum = z.enum(['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED']);
 
 // Terms and conditions acceptance validation
 export const termsAcceptanceSchema = z.object({
@@ -15,7 +24,7 @@ export const termsAcceptanceSchema = z.object({
   acceptsTerms: z.boolean().refine(val => val === true, {
     message: 'You must accept the terms and conditions'
   }),
-});
+}); 
 
 // Privacy policy acceptance validation  
 export const privacyPolicyAcceptanceSchema = z.object({
@@ -67,7 +76,7 @@ export const gdprComplianceSchema = z.object({
 export const kycComplianceSchema = z.object({
   userId: z.string().cuid(),
   kycLevel: z.enum(['BASIC', 'ENHANCED', 'PREMIUM']),
-  requiredDocuments: z.array(z.nativeEnum(DocumentType)),
+  requiredDocuments: z.array(DocumentTypeEnum),
   completedDocuments: z.array(z.string().cuid()),
   verificationStatus: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'FAILED']),
   riskLevel: z.enum(['LOW', 'MEDIUM', 'HIGH']),
@@ -258,8 +267,8 @@ export const documentVerificationSchema = z.object({
 // User compliance profile
 export const userComplianceProfileSchema = z.object({
   userId: z.string().cuid(),
-  role: z.nativeEnum(Role),
-  userType: z.nativeEnum(UserType),
+  role: RoleEnum,
+  userType: UserTypeEnum,
   overallStatus: z.enum(['COMPLIANT', 'PARTIAL', 'NON_COMPLIANT', 'PENDING']),
   kyc: kycComplianceSchema.optional(),
   aml: amlComplianceSchema.optional(),
@@ -277,9 +286,9 @@ export const propertyComplianceProfileSchema = z.object({
   ownership: ownershipVerificationSchema,
   isListingCompliant: z.boolean(),
   isRentalCompliant: z.boolean(),
-  requiredDocuments: z.array(z.nativeEnum(DocumentType)),
+  requiredDocuments: z.array(DocumentTypeEnum),
   uploadedDocuments: z.array(z.string().cuid()),
-  documentCompliance: z.record(z.nativeEnum(DocumentType), z.enum(['COMPLIANT', 'PENDING', 'EXPIRED', 'REJECTED'])),
+  documentCompliance: z.record(DocumentTypeEnum, z.enum(['COMPLIANT', 'PENDING', 'EXPIRED', 'REJECTED'])),
   lastUpdated: z.date(),
   notes: z.string().max(1000).optional(),
 });

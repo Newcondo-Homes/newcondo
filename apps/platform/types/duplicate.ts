@@ -116,7 +116,7 @@ export interface QualityMetrics {
 
 // Extended boundary interface for duplicate detection context
 export interface PropertyBoundary extends PropertyBoundaryData {
-  source: 'survey' | 'satellite' | 'manual' | 'mixed';
+  source: 'user_drawn' | 'agent_marked' | 'satellite_detected';
   confidence: number; // 0-100 confidence in accuracy
   verified: boolean;
 }

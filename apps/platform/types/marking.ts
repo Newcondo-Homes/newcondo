@@ -6,6 +6,33 @@ import { Coordinates, BoundaryPolygon, PropertyBoundaryData } from './boundary';
 
 export type { Coordinates, BoundaryPolygon, PropertyBoundaryData };
 
+// Add to marking.ts
+
+export type MarkingConfirmationStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'REJECTED'
+  | 'EXPIRED';
+
+export interface BoundaryCoordinates {
+  coordinates: Coordinates[];
+  centerPoint: Coordinates;
+  accuracyLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface GPSCoordinates {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  altitude?: number;
+}
+
+export interface MarkingImage {
+  url: string;
+  type: ImageType;
+  description?: string;
+  uploadedAt: string;
+}
 
 export type ImageType =
   | 'BOUNDARY' | 'EXTERIOR_FRONT' | 'EXTERIOR_BACK' | 'EXTERIOR_SIDE'
