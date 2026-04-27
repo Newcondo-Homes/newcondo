@@ -3,26 +3,52 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui";
-import { Button } from "@newcondo/ui";
-import { Alert, AlertDescription } from "@newcondo/ui";
-import { Separator } from "@newcondo/ui";
-import { ConsentDocumentForm } from "@/components/legal/ConsentDocumentForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Button } from "@newcondo/ui/components/button";
+import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
+import { Separator } from "@newcondo/ui/components/separator";
+
+// FIX: import each component with the correct named/default export
 import { OwnershipProofUpload } from "@/components/legal/OwnershipProofUpload";
+import ConsentDocumentForm from "@/components/legal/ConsentDocumentForm";
 import { AgentPermissionForm } from "@/components/legal/AgentPermissionForm";
 import { UndertakingForm } from "@/components/legal/UndertakingForm";
 import { LegalDocumentsList } from "@/components/legal/LegalDocumentsList";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowLeft, FileCheck, AlertTriangle, CheckCircle } from "lucide-react";
 
-interface LegalFormData {
-  ownershipProof: File | null;
-  consentDocument: File | null;
-  agentPermission: File | null;
-  undertaking: {
-    accepted: boolean;
-    signedDocument: File | null;
-  };
+// ─── Types matching LegalDocumentsList's Document interface ──────────────────
+
+// LegalDocumentsList.Document requires these fields — no arbitrary `type` key
+interface LegalDocument {
+  id: string;
+  documentType: string;       // ← 'type' was wrong; this is the correct field name
+  fileName?: string;
+  fileUrl?: string;
+  fileSizeBytes?: number;
+  mimeType?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
+  verificationNotes?: string;
+  isRequired: boolean;
+  expiresAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  documentSide?: "FRONT" | "BACK" | "SINGLE";
+  documentNumber?: string;
+  pageNumber?: number;
+  propertyId?: string;
+}
+
+// ─── Page state ───────────────────────────────────────────────────────────────
+
+// Track uploaded document IDs instead of raw File objects —
+// OwnershipProofUpload and AgentPermissionForm call their own APIs and
+// return document records, not File handles.
+interface UploadedDocs {
+  ownershipDocumentId: string | null;
+  consentDocumentId: string | null;
+  agentPermissionSubmitted: boolean;
+  undertakingDocumentId: string | null;
   termsAccepted: boolean;
   privacyAccepted: boolean;
 }
@@ -30,52 +56,57 @@ interface LegalFormData {
 export default function PropertyCreateLegalPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [formData, setFormData] = useState<LegalFormData>({
-    ownershipProof: null,
-    consentDocument: null,
-    agentPermission: null,
-    undertaking: {
-      accepted: false,
-      signedDocument: null
-    },
+
+  const [uploadedDocs, setUploadedDocs] = useState<UploadedDocs>({
+    ownershipDocumentId: null,
+    consentDocumentId: null,
+    agentPermissionSubmitted: false,
+    undertakingDocumentId: null,
     termsAccepted: false,
-    privacyAccepted: false
+    privacyAccepted: false,
   });
-  
+
+  // Collected document records to show in LegalDocumentsList
+  const [documents, setDocuments] = useState<LegalDocument[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isAgent = user?.role === "AGENT";
   const isOwner = user?.role === "OWNER";
 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  const addDocument = (doc: LegalDocument) => {
+    setDocuments((prev) => {
+      const exists = prev.find((d) => d.id === doc.id);
+      return exists ? prev : [...prev, doc];
+    });
+  };
+
+  const removeDocument = (docId: string) => {
+    setDocuments((prev) => prev.filter((d) => d.id !== docId));
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Owner requirements
-    if (isOwner && !formData.ownershipProof) {
+    if (isOwner && !uploadedDocs.ownershipDocumentId) {
       newErrors.ownershipProof = "Proof of ownership is required";
     }
-
-    // Agent requirements
-    if (isAgent) {
-      if (!formData.consentDocument) {
-        newErrors.consentDocument = "Property owner consent is required";
-      }
-      if (!formData.agentPermission) {
-        newErrors.agentPermission = "Agent permission document is required";
-      }
+    if (isAgent && !uploadedDocs.consentDocumentId) {
+      newErrors.consentDocument = "Property owner consent is required";
     }
-
-    // Universal requirements
-    if (!formData.undertaking.accepted) {
-      newErrors.undertaking = "Legal undertaking must be accepted";
+    if (isAgent && !uploadedDocs.agentPermissionSubmitted) {
+      newErrors.agentPermission = "Agent permission form must be submitted";
     }
-
-    if (!formData.termsAccepted) {
+    if (!uploadedDocs.undertakingDocumentId) {
+      newErrors.undertaking = "Legal undertaking must be completed";
+    }
+    if (!uploadedDocs.termsAccepted) {
       newErrors.terms = "Terms of service must be accepted";
     }
-
-    if (!formData.privacyAccepted) {
+    if (!uploadedDocs.privacyAccepted) {
       newErrors.privacy = "Privacy policy must be accepted";
     }
 
@@ -84,17 +115,11 @@ export default function PropertyCreateLegalPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     try {
-      // Here you would submit the legal documents
-      // This would typically upload files and create document records
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-      
-      // Redirect to property creation success or next step
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       router.push("/dashboard/properties/create/success");
     } catch (error) {
       console.error("Error submitting legal documents:", error);
@@ -103,42 +128,35 @@ export default function PropertyCreateLegalPage() {
     }
   };
 
-  const completionPercentage = () => {
+  const completionPercentage = (): number => {
     let completed = 0;
     let total = 0;
 
-    // Owner documents
     if (isOwner) {
       total += 1;
-      if (formData.ownershipProof) completed += 1;
+      if (uploadedDocs.ownershipDocumentId) completed += 1;
     }
-
-    // Agent documents
     if (isAgent) {
       total += 2;
-      if (formData.consentDocument) completed += 1;
-      if (formData.agentPermission) completed += 1;
+      if (uploadedDocs.consentDocumentId) completed += 1;
+      if (uploadedDocs.agentPermissionSubmitted) completed += 1;
     }
 
-    // Universal requirements
     total += 3;
-    if (formData.undertaking.accepted) completed += 1;
-    if (formData.termsAccepted) completed += 1;
-    if (formData.privacyAccepted) completed += 1;
+    if (uploadedDocs.undertakingDocumentId) completed += 1;
+    if (uploadedDocs.termsAccepted) completed += 1;
+    if (uploadedDocs.privacyAccepted) completed += 1;
 
     return Math.round((completed / total) * 100);
   };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.back()}
-          className="p-2"
-        >
+        <Button variant="ghost" size="sm" onClick={() => router.back()} className="p-2">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -149,7 +167,7 @@ export default function PropertyCreateLegalPage() {
         </div>
       </div>
 
-      {/* Progress Indicator */}
+      {/* Progress */}
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-2">
@@ -167,19 +185,19 @@ export default function PropertyCreateLegalPage() {
         </CardContent>
       </Card>
 
-      {/* Requirements Overview */}
+      {/* Requirements notice */}
       <Alert className="mb-6">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          {isAgent 
-            ? "As an agent, you must provide property owner consent and agent permission documents before listing properties."
-            : "As a property owner, you must provide proof of ownership and accept our legal undertakings."
-          }
+          {isAgent
+            ? "As an agent, you must provide property owner consent and submit the agent permission form before listing properties."
+            : "As a property owner, you must provide proof of ownership and accept our legal undertakings."}
         </AlertDescription>
       </Alert>
 
       <div className="grid gap-6">
-        {/* Owner-specific Documents */}
+
+        {/* ── Owner: Ownership proof ─────────────────────────────────────── */}
         {isOwner && (
           <Card>
             <CardHeader>
@@ -189,15 +207,42 @@ export default function PropertyCreateLegalPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* FIX 1: OwnershipProofUpload doesn't have onFileUpload/error props.
+                  It uses onUploadComplete (receives an OwnershipDocument record)
+                  and onRemoveDocument (receives a documentId string). */}
               <OwnershipProofUpload
-                onFileUpload={(file) => setFormData(prev => ({ ...prev, ownershipProof: file }))}
-                error={errors.ownershipProof}
+                onUploadComplete={(doc) => {
+                  setUploadedDocs((prev) => ({
+                    ...prev,
+                    ownershipDocumentId: doc.id,
+                  }));
+                  addDocument({
+                    id: doc.id,
+                    documentType: "OWNERSHIP_DOCUMENT",
+                    fileName: doc.fileName,
+                    fileUrl: doc.fileUrl,
+                    fileSizeBytes: doc.fileSizeBytes,
+                    status: doc.status,
+                    verificationNotes: doc.verificationNotes,
+                    isRequired: true,
+                    createdAt: doc.createdAt,
+                    updatedAt: doc.createdAt,
+                  });
+                  setErrors((e) => ({ ...e, ownershipProof: "" }));
+                }}
+                onRemoveDocument={(docId) => {
+                  setUploadedDocs((prev) => ({ ...prev, ownershipDocumentId: null }));
+                  removeDocument(docId);
+                }}
               />
+              {errors.ownershipProof && (
+                <p className="text-sm text-red-600 mt-2">{errors.ownershipProof}</p>
+              )}
             </CardContent>
           </Card>
         )}
 
-        {/* Agent-specific Documents */}
+        {/* ── Agent: Consent document ────────────────────────────────────── */}
         {isAgent && (
           <>
             <Card>
@@ -208,10 +253,23 @@ export default function PropertyCreateLegalPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* FIX 2: ConsentDocumentForm expects { properties, onSubmit, isLoading }.
+                    It handles its own file upload internally. We listen via onSubmit. */}
                 <ConsentDocumentForm
-                  onFileUpload={(file) => setFormData(prev => ({ ...prev, consentDocument: file }))}
-                  error={errors.consentDocument}
+                  properties={[]}          // pass real properties array if available
+                  onSubmit={async (data) => {
+                    // data includes the form fields; treat submission as consent provided
+                    setUploadedDocs((prev) => ({
+                      ...prev,
+                      // Use a placeholder ID since ConsentDocumentForm manages upload itself
+                      consentDocumentId: `consent-${Date.now()}`,
+                    }));
+                    setErrors((e) => ({ ...e, consentDocument: "" }));
+                  }}
                 />
+                {errors.consentDocument && (
+                  <p className="text-sm text-red-600 mt-2">{errors.consentDocument}</p>
+                )}
               </CardContent>
             </Card>
 
@@ -223,16 +281,27 @@ export default function PropertyCreateLegalPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* FIX 3: AgentPermissionForm expects { propertyId, onSubmit }.
+                    It handles document upload internally via UploadDropzone. */}
                 <AgentPermissionForm
-                  onFileUpload={(file) => setFormData(prev => ({ ...prev, agentPermission: file }))}
-                  error={errors.agentPermission}
+                  propertyId=""            // pass real propertyId if available
+                  onSubmit={(data) => {
+                    setUploadedDocs((prev) => ({
+                      ...prev,
+                      agentPermissionSubmitted: true,
+                    }));
+                    setErrors((e) => ({ ...e, agentPermission: "" }));
+                  }}
                 />
+                {errors.agentPermission && (
+                  <p className="text-sm text-red-600 mt-2">{errors.agentPermission}</p>
+                )}
               </CardContent>
             </Card>
           </>
         )}
 
-        {/* Legal Undertaking */}
+        {/* ── Legal Undertaking ──────────────────────────────────────────── */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -241,19 +310,32 @@ export default function PropertyCreateLegalPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {/* FIX 4: UndertakingForm expects { propertyId, onSuccess, onCancel }.
+                onSuccess receives a documentId string, not (accepted, document). */}
             <UndertakingForm
-              onAcceptanceChange={(accepted, document) => 
-                setFormData(prev => ({ 
-                  ...prev, 
-                  undertaking: { accepted, signedDocument: document } 
-                }))
-              }
-              error={errors.undertaking}
+              onSuccess={(documentId: string) => {
+                setUploadedDocs((prev) => ({
+                  ...prev,
+                  undertakingDocumentId: documentId,
+                }));
+                addDocument({
+                  id: documentId,
+                  documentType: "UNDERTAKING_DOCUMENT",
+                  status: "PENDING",
+                  isRequired: true,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                });
+                setErrors((e) => ({ ...e, undertaking: "" }));
+              }}
             />
+            {errors.undertaking && (
+              <p className="text-sm text-red-600 mt-2">{errors.undertaking}</p>
+            )}
           </CardContent>
         </Card>
 
-        {/* Terms and Privacy Acceptance */}
+        {/* ── Terms & Privacy ────────────────────────────────────────────── */}
         <Card>
           <CardHeader>
             <CardTitle>Legal Agreements</CardTitle>
@@ -263,8 +345,10 @@ export default function PropertyCreateLegalPage() {
               <input
                 type="checkbox"
                 id="terms"
-                checked={formData.termsAccepted}
-                onChange={(e) => setFormData(prev => ({ ...prev, termsAccepted: e.target.checked }))}
+                checked={uploadedDocs.termsAccepted}
+                onChange={(e) =>
+                  setUploadedDocs((prev) => ({ ...prev, termsAccepted: e.target.checked }))
+                }
                 className="rounded border-gray-300"
               />
               <label htmlFor="terms" className="text-sm">
@@ -278,16 +362,16 @@ export default function PropertyCreateLegalPage() {
                 </Button>
               </label>
             </div>
-            {errors.terms && (
-              <p className="text-sm text-red-600">{errors.terms}</p>
-            )}
+            {errors.terms && <p className="text-sm text-red-600">{errors.terms}</p>}
 
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 id="privacy"
-                checked={formData.privacyAccepted}
-                onChange={(e) => setFormData(prev => ({ ...prev, privacyAccepted: e.target.checked }))}
+                checked={uploadedDocs.privacyAccepted}
+                onChange={(e) =>
+                  setUploadedDocs((prev) => ({ ...prev, privacyAccepted: e.target.checked }))
+                }
                 className="rounded border-gray-300"
               />
               <label htmlFor="privacy" className="text-sm">
@@ -301,34 +385,55 @@ export default function PropertyCreateLegalPage() {
                 </Button>
               </label>
             </div>
-            {errors.privacy && (
-              <p className="text-sm text-red-600">{errors.privacy}</p>
-            )}
+            {errors.privacy && <p className="text-sm text-red-600">{errors.privacy}</p>}
           </CardContent>
         </Card>
 
-        {/* Uploaded Documents List */}
+        {/* ── Uploaded documents list ────────────────────────────────────── */}
         <Card>
           <CardHeader>
             <CardTitle>Uploaded Documents</CardTitle>
           </CardHeader>
           <CardContent>
+            {/* FIX 5: LegalDocumentsList.Document has no `type` field — it uses
+                `documentType`. We pass the documents state which already uses
+                the correct shape. Required props: documents, properties,
+                userRole, and the four action callbacks. */}
             <LegalDocumentsList
-              documents={[
-                ...(formData.ownershipProof ? [{ type: "ownership", file: formData.ownershipProof }] : []),
-                ...(formData.consentDocument ? [{ type: "consent", file: formData.consentDocument }] : []),
-                ...(formData.agentPermission ? [{ type: "agent_permission", file: formData.agentPermission }] : []),
-                ...(formData.undertaking.signedDocument ? [{ type: "undertaking", file: formData.undertaking.signedDocument }] : [])
-              ]}
-              onRemoveDocument={(type) => {
-                setFormData(prev => ({
-                  ...prev,
-                  [type === "ownership" ? "ownershipProof" : 
-                   type === "consent" ? "consentDocument" :
-                   type === "agent_permission" ? "agentPermission" : "undertaking"]: 
-                   type === "undertaking" ? { ...prev.undertaking, signedDocument: null } : null
-                }));
+              documents={documents}
+              properties={[]}
+              userRole={isAgent ? "AGENT" : "OWNER"}
+              onUploadDocument={(documentType) => {
+                // open relevant upload UI based on documentType
+                console.log("upload requested for", documentType);
               }}
+              onViewDocument={(docId) => {
+                const doc = documents.find((d) => d.id === docId);
+                if (doc?.fileUrl) window.open(doc.fileUrl, "_blank");
+              }}
+              onDownloadDocument={(docId) => {
+                const doc = documents.find((d) => d.id === docId);
+                if (doc?.fileUrl) {
+                  const a = document.createElement("a");
+                  a.href = doc.fileUrl;
+                  a.download = doc.fileName ?? "document";
+                  a.click();
+                }
+              }}
+              onDeleteDocument={(docId) => {
+                removeDocument(docId);
+                // also clear the relevant uploadedDocs entry
+                setUploadedDocs((prev) => {
+                  const doc = documents.find((d) => d.id === docId);
+                  if (!doc) return prev;
+                  if (doc.documentType === "OWNERSHIP_DOCUMENT")
+                    return { ...prev, ownershipDocumentId: null };
+                  if (doc.documentType === "UNDERTAKING_DOCUMENT")
+                    return { ...prev, undertakingDocumentId: null };
+                  return prev;
+                });
+              }}
+              onRetryUpload={(docId) => console.log("retry", docId)}
             />
           </CardContent>
         </Card>
@@ -336,7 +441,7 @@ export default function PropertyCreateLegalPage() {
 
       <Separator className="my-8" />
 
-      {/* Submit Actions */}
+      {/* Submit actions */}
       <div className="flex justify-between">
         <Button
           variant="outline"
@@ -344,7 +449,7 @@ export default function PropertyCreateLegalPage() {
         >
           Save as Draft
         </Button>
-        
+
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting || completionPercentage() < 100}

@@ -19,7 +19,6 @@ import {
   AlertCircle,
   CheckCircle,
   Users,
-  TrendingUp,
   Settings,
   Play,
   Pause,

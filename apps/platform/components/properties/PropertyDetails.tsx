@@ -16,9 +16,11 @@ import {
   Building2,
   Shield,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  Pencil
 } from 'lucide-react';
 import Image from 'next/image';
+import type { Decimal } from '@newcondo/db';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
@@ -29,15 +31,128 @@ import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyBoundaryMap from './PropertyBoundaryMap';
 import PropertyShare from './PropertyShare';
 // import { Property } from '@/types/api';
-import type { PropertyWithDetails as Property } from '@/types/property';
+// import type { PropertyWithDetails } from '@/types/property';
 import { usePropertyStore } from '@/store/propertyStore';
 
-interface PropertyDetailsProps {
-  property: Property;
-  className?: string;
+interface PropertyImageShape {
+  id: string;
+  url: string;
+  altText?: string | null;
+  isPrimary: boolean;
+  order: number;
+  propertyId?: string | null;  // optional — not always selected
+  createdAt?: Date | null;     // optional — not always selected
+}
+ 
+// ─── Fix 1 (continued): Loosened owner/agent shape ───────────────────────────
+//
+// PropertyResponse.owner comes back with `phone` from the API,
+// but PropertyWithDetails.owner doesn't declare it.
+// We also add `phone` as optional here so the contact section can use it.
+ 
+interface PersonShape {
+  id: string;
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  verificationStatus?: string | null;
+}
+ 
+interface PropertyUnitShape {
+  id: string;
+  unitNumber: string;
+  floor?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  area?: string | null;
+  price: number;
+  status: string;
+  isAvailable: boolean;
+  features: string[];
+  propertyId?: string | null;
+  currency?: string | null;
+  isPaymentLocked?: boolean | null;
+  paymentLockExpiry?: Date | null;
+  availableFrom?: Date | null;
+  images?: PropertyImageShape[];
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
 }
 
-export default function PropertyDetails({ property, className }: PropertyDetailsProps) {
+// A display-ready property type that accepts both the strict
+// PropertyWithDetails and the leaner API PropertyResponse.
+interface PropertyForDisplay {
+  id: string;
+  title: string;
+  description: string;
+  structure: string;
+  price?: number | Decimal | null;
+  currency: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  gpsCoordinates?: string | null;       // Prisma: null, types: undefined — both accepted
+  boundaryCoordinates?: any;
+  boundaryVerified: boolean;
+  boundaryMarkedBy?: string | null;
+  boundaryMarkedAt?: Date | null;
+  boundaryImages: string[];
+  buildingFingerprint?: string | null;
+  totalUnits?: number | null;
+  availableUnits?: number | null;
+  buildingFeatures: string[];
+  propertyType: string;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  area?: string | null;
+  features: string[];
+  ownerId: string;
+  agentId?: string | null;
+  isOwnerListing: boolean;
+  status: string;
+  adminApprovalStatus: string;
+  rejectionReason?: string | null;
+  approvedAt?: Date | null;
+  approvedBy?: string | null;
+  isAvailable: boolean;
+  availableFrom?: Date | null;
+  isPaymentLocked: boolean;
+  paymentLockExpiry?: Date | null;
+  shareableLink?: string | null;
+  viewCount: number;
+  favoriteCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+  // Relations
+  images: PropertyImageShape[];
+  owner?: PersonShape | null;
+  agent?: PersonShape | null;
+  units?: PropertyUnitShape[];
+  _count?: {
+    images?: number;
+    units?: number;
+    rentals?: number;
+    duplicateReports?: number;
+  };
+}
+
+interface CurrentUser {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+  userType?: string | null;
+}
+
+interface PropertyDetailsProps {
+  property: PropertyForDisplay;
+  className?: string;
+  currentUser?: CurrentUser | null;  
+  canEdit?: boolean;
+}
+
+export default function PropertyDetails({ property, className, currentUser, canEdit = false, }: PropertyDetailsProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'amenities' | 'location'>('overview');
 
@@ -123,14 +238,31 @@ export default function PropertyDetails({ property, className }: PropertyDetails
       {/* Header Section */}
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div className="flex-1">
-          {/* Title and Location */}
           <div className="mb-4">
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-              {property.title}
-            </h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+                {property.title}
+              </h1>
+              {/* Edit button — only visible to owners/agents with edit rights */}
+              {canEdit && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="shrink-0 gap-1"
+                >
+                  <a href={`/properties/my-listings/${property.id}`}>
+                    <Pencil className="h-3.5 w-3.5" />
+                    Edit
+                  </a>
+                </Button>
+              )}
+            </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="h-4 w-4 mr-1" />
-              <span>{property.address}, {property.city}, {property.state}</span>
+              <span>
+                {property.address}, {property.city}, {property.state}
+              </span>
             </div>
           </div>
 
@@ -275,7 +407,7 @@ export default function PropertyDetails({ property, className }: PropertyDetails
               </div>
               <PropertyBoundaryMap
                 propertyId={property.id}
-                gpsCoordinates={property.gpsCoordinates}
+                gpsCoordinates={property.gpsCoordinates as string | undefined}
                 boundaryCoordinates={property.boundaryCoordinates}
                 boundaryVerified={property.boundaryVerified}
                 boundaryImages={property.boundaryImages}

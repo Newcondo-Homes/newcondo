@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMarkingStore } from "@/store/markingStore";
-import { markingJobsApi } from "@/lib/api/markingJobs";
-import { Badge } from "@newcondo/ui/components/badge";
+import { markingApi } from "@/lib/api/marking";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Textarea } from "@newcondo/ui/components/textarea";
@@ -36,8 +35,15 @@ export default function MarkingJobConfirmPage() {
   const params = useParams();
   const router = useRouter();
   const jobId = params.id as string;
-  const { currentJob, setCurrentJob, isLoading, setLoading, error, setError } = useMarkingStore();
-  
+  const {
+    selectedJob,
+    setSelectedJob,
+    isLoadingJobDetails,
+    setIsLoadingJobDetails,
+    error,
+    setError,
+  } = useMarkingStore();
+
   const [decision, setDecision] = useState<ConfirmationDecision>("");
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,20 +56,20 @@ export default function MarkingJobConfirmPage() {
 
   const fetchJobDetails = async () => {
     try {
-      setLoading(true);
+      setIsLoadingJobDetails(true);
       setError(null);
-      const response = await markingJobsApi.getJobById(jobId);
+      const response = await markingApi.getJobById(jobId);
       
-      if (response.data.status !== "COMPLETED") {
+      if (response.status !== "COMPLETED") {
         router.push(`/marking-jobs/${jobId}`);
         return;
       }
       
-      setCurrentJob(response.data);
+      setSelectedJob(response as any);
     } catch (err: any) {
       setError(err.message || "Failed to fetch job details");
     } finally {
-      setLoading(false);
+      setIsLoadingJobDetails(false);
     }
   };
 
@@ -78,11 +84,20 @@ export default function MarkingJobConfirmPage() {
       setError(null);
 
       if (decision === "accept") {
-        await markingJobsApi.confirmJob(jobId, { feedback });
-      } else {
-        await markingJobsApi.rejectJob(jobId, { 
-          reason: feedback || "Property marking did not meet expectations" 
+        // TODO: confirmJob / rejectJob aren't in markingApi yet — call via the
+        // generic complete / cancel endpoints until dedicated ones are added.
+        await markingApi.completeJob({
+          jobId,
+          completionNotes: feedback,
+          completionImages: [],
+          boundaryData: selectedJob?.boundaryData as any,
         });
+      } else {
+        if (!feedback) {
+          setError("Please provide a reason for rejection");
+          return;
+        }
+        await markingApi.cancelJob(jobId, feedback);
       }
 
       setConfirmDialogOpen(false);
@@ -94,7 +109,7 @@ export default function MarkingJobConfirmPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoadingJobDetails) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner />
@@ -102,7 +117,7 @@ export default function MarkingJobConfirmPage() {
     );
   }
 
-  if (error || !currentJob) {
+  if (error || !selectedJob) {
     return (
       <div className="container mx-auto py-8 px-4">
         <Alert variant="destructive">
@@ -116,6 +131,8 @@ export default function MarkingJobConfirmPage() {
       </div>
     );
   }
+
+  const job = selectedJob as any;
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -138,21 +155,21 @@ export default function MarkingJobConfirmPage() {
       {/* Property Info */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{currentJob.property?.title}</CardTitle>
+          <CardTitle>{job.property?.title}</CardTitle>
           <CardDescription>
-            {currentJob.property?.address}, {currentJob.property?.city}
+            {job.property?.address}, {job.property?.city}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-500">Agent</p>
-              <p className="font-medium">{currentJob.assignedAgent?.name}</p>
+              <p className="font-medium">{job.assignedAgent?.name}</p>
             </div>
             <div>
               <p className="text-gray-500">Completed At</p>
               <p className="font-medium">
-                {currentJob.completedAt && format(new Date(currentJob.completedAt), "PPp")}
+                {job.completedAt && format(new Date(job.completedAt), "PPp")}
               </p>
             </div>
           </div>
@@ -168,9 +185,9 @@ export default function MarkingJobConfirmPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {currentJob.completionImages.length > 0 ? (
+          {Array.isArray(job.completionImages) && job.completionImages.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-              {currentJob.completionImages.map((image, index) => (
+              {(job.completionImages as string[]).map((image: string, index: number) => (
                 <div
                   key={index}
                   className="relative aspect-square cursor-pointer group"
@@ -194,13 +211,13 @@ export default function MarkingJobConfirmPage() {
             </Alert>
           )}
 
-          {currentJob.completionNotes && (
+          {job.completionNotes && (
             <div className="mt-4">
               <div className="flex items-start gap-2 p-4 bg-gray-50 rounded-lg">
                 <MessageSquare className="h-5 w-5 text-gray-500 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium mb-1">Agent Notes</p>
-                  <p className="text-sm text-gray-700">{currentJob.completionNotes}</p>
+                  <p className="text-sm text-gray-700">{job.completionNotes}</p>
                 </div>
               </div>
             </div>

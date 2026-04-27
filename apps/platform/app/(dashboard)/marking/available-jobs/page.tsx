@@ -18,28 +18,8 @@ import {
   SelectValue 
 } from '@newcondo/ui/components/select';
 import { formatCurrency, formatDate, formatTimeRemaining } from '@/lib/utils/format';
+import type { MarkingJob} from "@/types/markingJob"
 
-interface MarkingJob {
-  id: string;
-  propertyId: string;
-  contactPersonName: string;
-  contactPersonPhone: string;
-  accessInstructions?: string;
-  preferredTime?: string;
-  urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  markingFee: number;
-  status: string;
-  timeSlotExpiry?: string;
-  queuePosition?: number;
-  property: {
-    title: string;
-    address: string;
-    city: string;
-    state: string;
-    images: { url: string }[];
-  };
-  createdAt: string;
-}
 
 export default function AvailableMarkingJobsPage() {
   const router = useRouter();

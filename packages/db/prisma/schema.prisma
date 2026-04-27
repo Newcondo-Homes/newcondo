@@ -23,7 +23,6 @@ model User {
   role          Role      @default(RENTER)
   userType      UserType?
 
-
   // Verification fields
   verificationStatus          VerificationStatus @default(PENDING)
   // idDocument         String?           // URL to uploaded ID document
@@ -88,11 +87,12 @@ model User {
   refreshToken         RefreshToken[]
   documents            Document[] // New relation to documents
 
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  disputes         Dispute[]  
-  disputeComments  DisputeComment[]
-  disputeEvidences DisputeEvidence[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  disputes           Dispute[]
+  disputeComments    DisputeComment[]
+  disputeEvidences   DisputeEvidence[]
+  paymentAttemptLogs PaymentAttemptLog[]
 
   @@index([email])
   @@index([phone])
@@ -315,8 +315,9 @@ model Property {
   promotionRequests PromotionRequest[]         @relation("PromotionRequests")
   promotionSettings PropertyPromotionSettings?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  paymentAttemptLogs PaymentAttemptLog[]
 
   @@index([ownerId])
   @@index([agentId])
@@ -368,8 +369,9 @@ model PropertyUnit {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   rentals  Rental[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  paymentAttemptLogs PaymentAttemptLog[]
 
   @@unique([propertyId, unitNumber], name: "unique_unit_per_property")
   @@index([propertyId])
@@ -393,6 +395,10 @@ model PaymentAttemptLog {
   ipAddress     String?
   userAgent     String?
   createdAt     DateTime @default(now())
+
+  user     User          @relation(fields: [userId], references: [id])
+  property Property      @relation(fields: [propertyId], references: [id])
+  unit     PropertyUnit? @relation(fields: [unitId], references: [id])
 
   @@index([userId])
   @@index([propertyId])

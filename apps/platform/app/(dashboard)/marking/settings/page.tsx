@@ -1,17 +1,43 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
-import  AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
-import MarkingServiceTerms  from '@/components/marking/MarkingServiceTerms';
+import { redirect } from 'next/navigation';
+import { getServerSession } from '@newcondo/auth';
+import { prisma } from '@newcondo/db';
+import AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
+import MarkingServiceTerms from '@/components/marking/MarkingServiceTerms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
 import { Skeleton } from '@newcondo/ui';
 import { Separator } from '@newcondo/ui';
-
+import { useAuth } from '@/hooks/useAuth';
 export const metadata: Metadata = {
   title: 'Marking Service Settings | Newcondo',
   description: 'Configure your property marking service preferences',
 };
 
-export default function MarkingSettingsPage() {
+export default async function MarkingSettingsPage() {
+
+  const session = await getServerSession();
+
+  const { user } = useAuth();
+
+  if (!session?.user?.id) redirect('/login');
+
+  if (!user) redirect('/login');
+
+  // Derive userType for MarkingServiceTerms
+  const userType: 'property_owner' | 'agent' | 'renter' =
+    user.role === 'OWNER' ? 'property_owner'
+      : user.role === 'AGENT' ? 'agent'
+        : 'renter';
+
+  // Only AGENT, OWNER, or premium RENTERs should access this page
+  const canAccessMarking =
+    user.role === 'AGENT' ||
+    user.role === 'OWNER' ||
+    (user.role === 'RENTER' && user.isPremium);
+
+  if (!canAccessMarking) redirect('/dashboard');
+
   return (
     <div className="container max-w-4xl py-8 space-y-8">
       <div>
@@ -33,7 +59,9 @@ export default function MarkingSettingsPage() {
         </CardHeader>
         <CardContent>
           <Suspense fallback={<AvailabilitySkeleton />}>
-            <AgentAvailabilityToggle />
+            userId={user.id}
+            initialAvailability={user.isAvailableForMarking}
+            serviceAreas={user.agentServiceAreas}
           </Suspense>
         </CardContent>
       </Card>
@@ -77,7 +105,7 @@ export default function MarkingSettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <MarkingServiceTerms />
+          <MarkingServiceTerms userType={userType} showDialog />
         </CardContent>
       </Card>
     </div>

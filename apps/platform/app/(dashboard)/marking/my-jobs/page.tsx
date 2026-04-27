@@ -53,7 +53,7 @@ interface MyMarkingJob {
 export default function MyMarkingJobsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { myJobs, isLoading } = useMarkingJobs();
+  const { markingJobs: myJobs, isLoading } = useMarkingJobs();
   const [activeTab, setActiveTab] = useState('active');
 
   useEffect(() => {
@@ -166,7 +166,7 @@ export default function MyMarkingJobsPage() {
                 Time Remaining
               </span>
               <Badge variant={getTimeRemainingColor(job.timeSlotExpiry)}>
-                {formatTimeRemaining(job.timeSlotExpiry)}
+                {formatTimeRemaining(new Date(job.timeSlotExpiry))}
               </Badge>
             </div>
             <Progress 

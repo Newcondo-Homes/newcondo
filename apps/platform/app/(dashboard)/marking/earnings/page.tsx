@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { CompensationBreakdown } from '@/components/marking/CompensationBreakdown';
-import MarkingHistoryList  from '@/components/marking/MarkingHistoryList';
+import MarkingHistoryList from '@/components/marking/MarkingHistoryList';
 import { Button } from '@newcondo/ui';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui';
 import {
@@ -13,6 +13,7 @@ import {
   Download,
   DollarSign,
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface EarningsData {
   totalEarnings: number;
@@ -41,6 +42,8 @@ export default function MarkingEarningsPage() {
   const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchEarningsData();
@@ -108,8 +111,8 @@ export default function MarkingEarningsPage() {
   const earningsGrowth =
     earningsData.lastMonthEarnings > 0
       ? ((earningsData.thisMonthEarnings - earningsData.lastMonthEarnings) /
-          earningsData.lastMonthEarnings) *
-        100
+        earningsData.lastMonthEarnings) *
+      100
       : 0;
 
   return (
@@ -184,9 +187,8 @@ export default function MarkingEarningsPage() {
                 ₦{earningsData.thisMonthEarnings.toLocaleString()}
               </div>
               <p
-                className={`text-xs mt-1 ${
-                  earningsGrowth >= 0 ? 'text-green-600' : 'text-red-600'
-                }`}
+                className={`text-xs mt-1 ${earningsGrowth >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}
               >
                 {earningsGrowth >= 0 ? '+' : ''}
                 {earningsGrowth.toFixed(1)}% from last month
@@ -215,13 +217,22 @@ export default function MarkingEarningsPage() {
 
       {/* Compensation Breakdown */}
       <div className="mb-8">
-        <CompensationBreakdown />
+        <CompensationBreakdown
+          markingType="agent_network"
+          isPropertyOwner={false}
+          userRole={user?.role as 'OWNER' | 'AGENT' | 'RENTER'}
+        />
       </div>
 
       {/* Earnings History */}
       <div className="bg-card rounded-lg border p-6">
         <h2 className="text-xl font-semibold mb-4">Earnings History</h2>
-        <MarkingHistoryList earnings={earningsData.earnings} />
+        {user && (
+          <MarkingHistoryList
+            userId={user.id}
+            role={user.role === 'AGENT' ? 'agent' : 'requester'}
+          />
+        )}
       </div>
     </div>
   );

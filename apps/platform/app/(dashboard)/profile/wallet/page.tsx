@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { auth } from '@newcondo/auth';
 import { notFound } from 'next/navigation';
 import { prisma } from '@newcondo/db';
 import { WalletBalance } from '@/components/profile/WalletBalance';
@@ -9,7 +8,7 @@ import { TransactionHistory } from '@/components/profile/TransactionHistory';
 import { AutoWithdrawalSettings } from '@/components/profile/AutoWithdrawalSettings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
-import { Wallet, ArrowDownToLine, History, Settings } from 'lucide-react';
+import { ArrowDownToLine, History, Settings } from 'lucide-react';
 
 async function getWalletData(userId: string) {
   const user = await prisma.user.findUnique({
@@ -114,7 +113,7 @@ async function getWalletData(userId: string) {
 }
 
 export default async function WalletPage() {
-  const session = await getServerSession(authOptions);
+  const session = await auth();
 
   if (!session?.user?.id) {
     notFound();

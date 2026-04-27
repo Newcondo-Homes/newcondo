@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession } from '@newcondo/auth/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Separator } from '@newcondo/ui/components/separator';
 import { MapPin, User, Phone, Calendar, Clock, AlertCircle, CheckCircle, Link as LinkIcon, Building2, Share2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@newcondo/ui';
 
 type MarkingOption = 'SELF' | 'NEWCONDO' | 'KNOWN_PERSON' | 'ASSIGN_AGENT';
 
@@ -44,7 +44,6 @@ export default function PropertyMarkingPage() {
   const params = useParams();
   const router = useRouter();
   const { data: session } = useSession();
-  const { toast } = useToast();
   const propertyId = params.id as string;
 
   const [property, setProperty] = useState<Property | null>(null);
@@ -78,10 +77,8 @@ export default function PropertyMarkingPage() {
         contactPersonPhone: data.owner.phone || ''
       }));
     } catch (error) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: 'Failed to load property details',
-        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -105,16 +102,12 @@ export default function PropertyMarkingPage() {
       const data = await res.json();
       
       setShareableLink(data.shareableLink);
-      toast({
-        title: 'Link Generated',
+      toast.success('Link Generated',{
         description: 'Share this link with your chosen marker',
-        variant: 'default'
       });
     } catch (error) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: 'Failed to generate shareable link',
-        variant: 'destructive'
       });
     }
   };
@@ -122,8 +115,7 @@ export default function PropertyMarkingPage() {
   const handleCopyLink = () => {
     if (shareableLink) {
       navigator.clipboard.writeText(shareableLink);
-      toast({
-        title: 'Link Copied',
+      toast.success('Link Copied',{
         description: 'Shareable link copied to clipboard'
       });
     }
@@ -133,10 +125,8 @@ export default function PropertyMarkingPage() {
     e.preventDefault();
     
     if (markingOption === 'KNOWN_PERSON' && !shareableLink) {
-      toast({
-        title: 'Generate Link First',
+      toast('Generate Link First',{
         description: 'Please generate a shareable link before proceeding',
-        variant: 'destructive'
       });
       return;
     }
@@ -165,8 +155,7 @@ export default function PropertyMarkingPage() {
       if (markingOption === 'SELF') {
         router.push(`/dashboard/properties/${propertyId}/mark/complete`);
       } else if (markingOption === 'KNOWN_PERSON') {
-        toast({
-          title: 'Link Generated',
+        toast.success('Link Generated',{
           description: 'Share the link with your chosen marker'
         });
         router.push(`/dashboard/properties/${propertyId}/marking-status`);
@@ -175,10 +164,8 @@ export default function PropertyMarkingPage() {
         router.push(`/dashboard/payments/marking/${data.jobId}`);
       }
     } catch (error: any) {
-      toast({
-        title: 'Error',
+      toast.error('Error',{
         description: error.message || 'Failed to create marking job',
-        variant: 'destructive'
       });
     } finally {
       setSubmitting(false);

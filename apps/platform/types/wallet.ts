@@ -1,3 +1,118 @@
+import { $Enums, Decimal} from '@newcondo/db';
+
+export type VirtualAccountWithProperty = {
+  property: {
+    id: string;
+    address: string;
+    title: string;
+  } | null;
+} & {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  currency: string;
+  isActive: boolean;
+  propertyId: string | null;
+  accountNumber: string;
+  accountName: string;
+  bankCode: string;
+  balance: Decimal;
+  flutterwaveAccountId: string | null;
+};
+ 
+export type PendingRelease = {
+  rental: ({
+    property: {
+      address: string;
+      title: string;
+    };
+  } & {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    status: $Enums.RentalStatus;
+    propertyId: string;
+    unitId: string | null;
+    renterId: string;
+    startDate: Date;
+    endDate: Date | null;
+    monthlyRent: Decimal;
+    confirmationDeadline: Date | null;
+    isConfirmed: boolean;
+    confirmedAt: Date | null;
+  }) | null;
+} & {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  description: string | null;
+  currency: string;
+  status: $Enums.PaymentStatus;
+  amount: Decimal;
+  paymentType: $Enums.PaymentType;
+  paymentMethod: string | null;
+  flutterwaveRef: string | null;
+  transactionId: string | null;
+  agentCommission: Decimal | null;
+  platformFee: Decimal | null;
+  ownerAmount: Decimal | null;
+  confirmationPeriodEnd: Date | null;
+  isReleased: boolean;
+  releasedAt: Date | null;
+  failureReason: string | null;
+  paidAt: Date | null;
+  rentalId: string | null;
+  markingJobId: string | null;
+};
+ 
+export type RecentTransaction = {
+  rental: ({
+    property: {
+      title: string;
+    };
+  } & {
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    status: $Enums.RentalStatus;
+    propertyId: string;
+    unitId: string | null;
+    renterId: string;
+    startDate: Date;
+    endDate: Date | null;
+    monthlyRent: Decimal;
+    confirmationDeadline: Date | null;
+    isConfirmed: boolean;
+    confirmedAt: Date | null;
+  }) | null;
+} & {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  userId: string;
+  description: string | null;
+  currency: string;
+  status: $Enums.PaymentStatus;
+  amount: Decimal;
+  paymentType: $Enums.PaymentType;
+  paymentMethod: string | null;
+  flutterwaveRef: string | null;
+  transactionId: string | null;
+  agentCommission: Decimal | null;
+  platformFee: Decimal | null;
+  ownerAmount: Decimal | null;
+  confirmationPeriodEnd: Date | null;
+  isReleased: boolean;
+  releasedAt: Date | null;
+  failureReason: string | null;
+  paidAt: Date | null;
+  rentalId: string | null;
+  markingJobId: string | null;
+};
+
+
 // Virtual account and wallet types
 export interface VirtualAccount {
   id: string;

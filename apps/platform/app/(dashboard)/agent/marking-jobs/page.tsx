@@ -16,7 +16,6 @@ import {
   Search,
   Filter,
   TrendingUp,
-  DollarSign,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";

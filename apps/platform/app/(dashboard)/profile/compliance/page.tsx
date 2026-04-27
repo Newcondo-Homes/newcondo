@@ -133,7 +133,7 @@ export default function ProfileCompliancePage() {
     return 'text-red-600';
   };
 
-  const getRequiredDocuments = () => {
+  const getRequiredDocuments = (): DocumentType[] => {
     if (!compliance) return [];
     
     const baseRequirements = [DocumentType.NIN, DocumentType.SELFIE];

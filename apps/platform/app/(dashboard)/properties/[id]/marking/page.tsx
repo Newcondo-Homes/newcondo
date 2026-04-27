@@ -52,7 +52,6 @@ export default function MarkingJobManagementPage() {
   const params = useParams();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const { properties, isLoading: propertiesLoading } = useProperties();
 
   const propertyId = params.id as string;
   const [markingJobs, setMarkingJobs] = useState<MarkingJob[]>([]);

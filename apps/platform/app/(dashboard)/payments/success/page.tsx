@@ -110,23 +110,17 @@ export default function PaymentSuccessPage({ searchParams }: PageProps) {
               <li>You'll receive a confirmation notification once complete</li>
               <li>If no issues arise, funds will be released automatically</li>
             </ul>
+            {paymentId && (
+              <div className="mt-4">
+                <Button asChild size="sm" className="bg-blue-700 hover:bg-blue-800">
+                  <Link href={`/dashboard/payments/confirmation/${paymentId}`}>
+                    Go to Confirmation Page
+                  </Link>
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
-
-        {/* Receipt Download */}
-        {paymentId && (
-          <Suspense fallback={
-            <Card>
-              <CardContent className="py-6">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          }>
-            <PaymentReceipt paymentId={paymentId} />
-          </Suspense>
-        )}
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
@@ -161,33 +155,19 @@ export default function PaymentSuccessPage({ searchParams }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm">
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-blue-100 p-1 mt-0.5">
-                  <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
+              {[
+                `You'll receive email and SMS confirmations shortly`,
+                'The landlord will be notified of your payment',
+                'Visit the confirmation page to verify your property within 24 hours',
+                'Contact support if you have any questions',
+              ].map((step) => (
+                <div key={step} className="flex items-start gap-3">
+                  <div className="rounded-full bg-blue-100 p-1 mt-0.5 shrink-0">
+                    <div className="h-2 w-2 bg-blue-600 rounded-full" />
+                  </div>
+                  <p>{step}</p>
                 </div>
-                <p>You'll receive email and SMS confirmations shortly</p>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-blue-100 p-1 mt-0.5">
-                  <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-                </div>
-                <p>The landlord will be notified of your payment</p>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-blue-100 p-1 mt-0.5">
-                  <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-                </div>
-                <p>You can track your payment status in your dashboard</p>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="rounded-full bg-blue-100 p-1 mt-0.5">
-                  <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
-                </div>
-                <p>Contact support if you have any questions</p>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>

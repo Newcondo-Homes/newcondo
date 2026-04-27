@@ -55,7 +55,7 @@ interface PerformanceMetrics {
 
 export default function AgentPerformancePage() {
   const router = useRouter();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

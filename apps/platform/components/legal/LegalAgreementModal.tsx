@@ -10,7 +10,7 @@ import { Badge } from '@newcondo/ui/components/badge'
 import { Separator } from '@newcondo/ui/components/separator'
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 
-interface LegalDocument {
+export interface LegalDocument {
   id: string
   title: string
   type: 'TERMS_CONDITIONS' | 'PRIVACY_POLICY' | 'PROPERTY_AGREEMENT' | 'AGENT_AGREEMENT' | 'UNDERTAKING'
@@ -19,6 +19,7 @@ interface LegalDocument {
   isRequired: boolean
   lastUpdated: Date
 }
+
 
 interface LegalAgreementModalProps {
   isOpen: boolean

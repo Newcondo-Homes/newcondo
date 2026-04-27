@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: "View and manage marking job requests",
 };
 
+
 export default function MarkingRequestsPage() {
   return (
     <div className="container mx-auto p-6">

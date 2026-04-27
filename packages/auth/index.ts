@@ -1,10 +1,8 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-// import { getUserById } from "@/actions/dbUtils";
 import { getUserById } from "./src/utils";
 import authConfig from "./auth.config";
 import NextAuth from "next-auth";
 import { prisma, Role, User, UserType, VerificationStatus } from "@newcondo/db";
-import getServerSessions from "next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
@@ -149,3 +147,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // },
   ...authConfig,
 });
+
+export const getServerSession = auth;

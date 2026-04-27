@@ -7,6 +7,32 @@ export interface QueuePosition {
   queueId: string;
 }
 
+export interface LocationSettings {
+  isAvailableForMarking: boolean;
+  serviceAreas: string[];
+  maxRadius: number;
+  notificationsEnabled: boolean;
+}
+
+export interface AvailableJob {
+  id: string;
+  propertyId: string;
+  markingFee: number;
+  urgencyLevel: string;
+  queuePosition: number;
+  totalInQueue: number;
+  distance?: number;
+  property: {
+    id: string;
+    title: string;
+    address: string;
+    city: string;
+    state: string;
+    images: Array<{ url: string }>;
+  };
+  createdAt: Date;
+}
+
 export interface QueueEntry {
   id: string;
   userId: string;
@@ -29,6 +55,86 @@ export interface JoinQueueResponse {
   queueEntry?: QueueEntry;
   queuePosition?: QueuePosition;
   message?: string;
+}
+
+export async function getJobDetails(jobId: string): Promise<{ data: any }> {
+  try {
+    const response = await client.get<{ data: any }>(`/api/marking/jobs/${jobId}`);
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch job details');
+  }
+}
+
+export async function completeJob(
+  jobId: string,
+  payload: {
+    completionNotes: string;
+    completionImages: string[];
+    boundaryData?: any;
+  }
+): Promise<{ success: boolean }> {
+  try {
+    const response = await client.post<{ success: boolean }>(
+      `/api/marking/jobs/${jobId}/complete`,
+      payload
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to complete job');
+  }
+}
+
+
+export async function getAvailableJobs(filters?: {
+  urgency?: string;
+  sortBy?: string;
+}): Promise<{ data: AvailableJob[] }> {
+  try {
+    const params = new URLSearchParams();
+    if (filters?.urgency && filters.urgency !== 'all') {
+      params.append('urgency', filters.urgency);
+    }
+    if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+
+    const response = await client.get<{ data: AvailableJob[] }>(
+      `/api/marking/jobs/available?${params.toString()}`
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch available jobs');
+  }
+}
+
+export async function getMyAssignedJobs(): Promise<{ data: any[] }> {
+  try {
+    const response = await client.get<{ data: any[] }>('/api/marking/jobs/assigned');
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch assigned jobs');
+  }
+}
+
+export async function startJob(jobId: string): Promise<{ success: boolean }> {
+  try {
+    const response = await client.post<{ success: boolean }>(
+      `/api/marking/jobs/${jobId}/start`
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to start job');
+  }
+}
+
+export async function joinQueue(jobId: string): Promise<{ success: boolean }> {
+  try {
+    const response = await client.post<{ success: boolean }>(
+      `/api/marking/jobs/${jobId}/join-queue`
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to join queue');
+  }
 }
 
 /**
@@ -69,6 +175,28 @@ export async function leavePaymentQueue(queueId: string): Promise<{
     );
   }
 }
+
+
+export async function getLocationSettings(): Promise<LocationSettings> {
+  try {
+    const response = await client.get<LocationSettings>('/api/agent/location-settings');
+    return response.data! ;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch location settings');
+  }
+}
+
+export async function updateLocationSettings(data: LocationSettings & {
+  coordinates?: { lat: number; lng: number } | null;
+}): Promise<{ success: boolean }> {
+  try {
+    const response = await client.post<{ success: boolean }>('/api/agent/location-settings', data);
+    return response.data as { success: boolean };
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to update location settings');
+  }
+}
+
 
 /**
  * Get current queue position
@@ -202,6 +330,55 @@ export async function cleanupExpiredQueueEntries(): Promise<{
   }
 }
 
+export async function getMyQueue(): Promise<{
+  data: { queueItems: any[]; activeJobs: any[] };
+}> {
+  try {
+    const response = await client.get<{ data: { queueItems: any[]; activeJobs: any[] } }>(
+      '/api/marking/jobs/my-queue'
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch queue');
+  }
+}
+
+export async function getMyStats(): Promise<{ data: any }> {
+  try {
+    const response = await client.get<{ data: any }>('/api/marking/jobs/my-stats');
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to fetch stats');
+  }
+}
+
+export async function toggleAvailability(
+  isAvailable: boolean
+): Promise<{ success: boolean }> {
+  try {
+    const response = await client.post<{ success: boolean }>(
+      '/api/agent/toggle-availability',
+      { isAvailable }
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to toggle availability');
+  }
+}
+
+export async function leaveQueue(
+  queueItemId: string
+): Promise<{ success: boolean }> {
+  try {
+    const response = await client.post<{ success: boolean }>(
+      `/api/marking/jobs/${queueItemId}/leave-queue`
+    );
+    return response.data!;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || 'Failed to leave queue');
+  }
+}
+
 /**
  * Get queue statistics (admin)
  */
@@ -236,9 +413,29 @@ export async function getQueueStatistics(
 }
 
 
-
-
-
+export const queueApi = {
+  getAvailableJobs,
+  getMyAssignedJobs,
+  getJobDetails,
+  completeJob,
+  startJob,
+  joinQueue,
+  joinPaymentQueue,
+  leavePaymentQueue,
+  getLocationSettings,
+  updateLocationSettings,
+  getQueuePosition,
+  getUserQueueEntries,
+  getPropertyQueueStatus,
+  processNextInQueue,
+  completeQueueEntry,
+  cleanupExpiredQueueEntries,
+  getQueueStatistics,
+  getMyQueue,
+  getMyStats,
+  toggleAvailability,
+  leaveQueue,
+};
 
 
 

@@ -137,7 +137,7 @@ export default function QueueStatusPage() {
     if (!job?.timeSlotExpiry) return;
 
     const updateCountdown = () => {
-      const expiry = new Date(job.timeSlotExpiry).getTime();
+      const expiry = new Date(job.timeSlotExpiry!).getTime();
       const now = new Date().getTime();
       const diff = expiry - now;
 

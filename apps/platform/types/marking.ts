@@ -525,8 +525,56 @@ export interface MarkingDispute {
   updatedAt: Date;
 }
 
+/**
+ * Marking option types for property owners
+ */
+export enum MarkingOption {
+  SELF_MARK = "SELF_MARK", // Mark the property themselves
+  NEWCONDO_AGENT = "NEWCONDO_AGENT", // Assign to Newcondo admin
+  SEND_LINK = "SEND_LINK", // Send link to someone they know
+  ASSIGN_TO_AGENTS = "ASSIGN_TO_AGENTS", // Assign to platform agents/renters
+}
 
 
+export interface MarkingJobRequest {
+  propertyId: string;
+  markingType: MarkingType;
+  contactPersonName: string;
+  contactPersonPhone: string;
+  accessInstructions?: string;
+  preferredTime?: Date;
+  urgencyLevel?: UrgencyLevel;
+}
+
+export enum MarkingType {
+  SELF_MARK = "SELF_MARK", // Owner marks themselves
+  CONTACT_PERSON = "CONTACT_PERSON", // Send to known contact
+  AGENT_QUEUE = "AGENT_QUEUE", // Broadcast to agent queue (25% comp)
+  NEWCONDO_MARK = "NEWCONDO_MARK", // Newcondo marks (25,000 fee)
+}
+
+/**
+ * Marking job creation request
+ */
+export interface CreateMarkingJobRequest {
+  propertyId: string;
+  markingOption: MarkingOption;
+  contactPerson: ContactPerson;
+  accessInstructions?: string;
+  preferredTime?: string;
+  urgencyLevel: UrgencyLevel;
+  propertyImages?: string[]; // Images provided by owner for identification
+}
+
+/**
+ * Marking confirmation request
+ */
+export interface MarkingConfirmationRequest {
+  markingJobId: string;
+  confirmed: boolean;
+  reason?: string; // Required if rejected
+  feedback?: string;
+}
 
 
 // // apps/platform/types/marking.ts
@@ -923,15 +971,6 @@ export interface MarkingDispute {
 
 // import { MarkingJobStatus, UrgencyLevel } from "@newcondo/db";
 
-// /**
-//  * Marking option types for property owners
-//  */
-// export enum MarkingOption {
-//   SELF_MARK = "SELF_MARK", // Mark the property themselves
-//   NEWCONDO_AGENT = "NEWCONDO_AGENT", // Assign to Newcondo admin
-//   SEND_LINK = "SEND_LINK", // Send link to someone they know
-//   ASSIGN_TO_AGENTS = "ASSIGN_TO_AGENTS", // Assign to platform agents/renters
-// }
 
 // /**
 //  * Marker types - who can mark properties
@@ -1046,28 +1085,7 @@ export interface MarkingDispute {
 //   instructions?: string;
 // }
 
-// /**
-//  * Marking job creation request
-//  */
-// export interface CreateMarkingJobRequest {
-//   propertyId: string;
-//   markingOption: MarkingOption;
-//   contactPerson: ContactPerson;
-//   accessInstructions?: string;
-//   preferredTime?: string;
-//   urgencyLevel: UrgencyLevel;
-//   propertyImages?: string[]; // Images provided by owner for identification
-// }
 
-// /**
-//  * Marking confirmation request
-//  */
-// export interface MarkingConfirmationRequest {
-//   markingJobId: string;
-//   confirmed: boolean;
-//   reason?: string; // Required if rejected
-//   feedback?: string;
-// }
 
 // /**
 //  * Marking job summary for display

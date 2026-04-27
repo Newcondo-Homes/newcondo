@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { queueApi } from "@/lib/api/queue";
+import * as z from "zod";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Label } from "@newcondo/ui/components/label";
@@ -20,8 +20,9 @@ import {
   CheckCircle,
   MapPin,
 } from "lucide-react";
-import LoadingSpinner from "@/components/shared/feedback/LoadingSpinner";
-import { UploadButton } from "@/lib/uploadthing";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
+import { UploadButton } from "@uploadthing/react";
+import type { OurFileRouter } from "@/lib/uploadthing";
 
 const completionSchema = z.object({
   completionNotes: z.string().min(10, "Please provide at least 10 characters of notes"),
@@ -155,7 +156,7 @@ export default function AgentJobCompletePage() {
           <span className="text-sm text-gray-600">{Math.round(progressPercentage)}% Complete</span>
         </div>
         <Progress value={progressPercentage} className="h-2" />
-        
+
         <div className="flex justify-between mt-4 text-sm">
           <div className={`flex items-center gap-2 ${currentStep >= 1 ? "text-blue-600" : "text-gray-400"}`}>
             <div className={`w-6 h-6 rounded-full flex items-center justify-center ${currentStep >= 1 ? "bg-blue-600 text-white" : "bg-gray-200"}`}>
@@ -203,7 +204,7 @@ export default function AgentJobCompletePage() {
               {/* Upload Button */}
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                 <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <UploadButton
+                <UploadButton<OurFileRouter, "propertyImages">
                   endpoint="propertyImages"
                   onClientUploadComplete={(res) => {
                     const urls = res.map((file) => file.url);
@@ -286,7 +287,7 @@ export default function AgentJobCompletePage() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Use the satellite view to accurately mark the property boundaries. 
+                  Use the satellite view to accurately mark the property boundaries.
                   Zoom in to the last level for precision.
                 </AlertDescription>
               </Alert>

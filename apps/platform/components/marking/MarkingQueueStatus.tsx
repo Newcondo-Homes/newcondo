@@ -19,7 +19,7 @@ interface QueueAgent {
 interface MarkingQueueStatusProps {
   jobId: string;
   queuePosition?: number;
-  totalInQueue: number;
+  totalInQueue?: number;
   estimatedWaitTime?: number; // in minutes
   currentAgentExpiry?: Date;
   queueAgents?: QueueAgent[];
@@ -69,7 +69,7 @@ export default function MarkingQueueStatus({
   };
 
   const getProgressPercentage = () => {
-    if (!queuePosition || totalInQueue === 0) return 0;
+    if (!queuePosition || !totalInQueue) return 0;
     return ((totalInQueue - queuePosition + 1) / totalInQueue) * 100;
   };
 

@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { notFound } from 'next/navigation';
 import { prisma } from '@newcondo/db';
 import { PaymentHistoryTable } from '@/components/payments/PaymentHistoryTable';
@@ -116,7 +115,7 @@ async function getPaymentHistory(userId: string) {
 }
 
 export default async function PaymentHistoryPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user?.id) {
     notFound();

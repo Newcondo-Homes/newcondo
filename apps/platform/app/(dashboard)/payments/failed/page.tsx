@@ -26,8 +26,8 @@ interface PageProps {
 export default function PaymentFailedPage({ searchParams }: PageProps) {
   const { paymentId, amount, propertyId, transactionId, error, reason } = searchParams
 
-  const formattedAmount = amount ? 
-    `₦${parseInt(amount).toLocaleString()}` : 
+  const formattedAmount = amount ?
+    `₦${parseInt(amount).toLocaleString()}` :
     '₦0'
 
   // Common failure reasons and their user-friendly messages
@@ -67,7 +67,7 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
               <XCircle className="h-12 w-12 text-red-600" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-red-900">Payment Failed</h1>
             <p className="text-lg text-muted-foreground">
@@ -94,7 +94,7 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
                 <span className="font-mono text-sm">{transactionId}</span>
               </div>
             )}
-            
+
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Amount</span>
               <span className="text-lg font-bold">{formattedAmount}</span>
@@ -120,12 +120,20 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
         </Card>
 
         {/* Retry Payment Section */}
-        {propertyId && (
+        {propertyId && paymentId && (
           <PaymentRetry
-            propertyId={propertyId}
-            amount={amount}
-            failedPaymentId={paymentId}
-            failureReason={failureMessage}
+            payment={{
+              id: paymentId,
+              userId: '',           // not available from search params, backend will resolve
+              amount: amount ? parseInt(amount) : 0,
+              currency: 'NGN',
+              paymentType: 'RENT',
+              status: 'FAILED',
+              isReleased: false,
+              failureReason: failureMessage,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            }}
           />
         )}
 
@@ -148,7 +156,7 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
                   <p className="text-muted-foreground">Ensure you have sufficient funds for this payment</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-blue-100 p-1 mt-0.5">
                   <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
@@ -158,7 +166,7 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
                   <p className="text-muted-foreground">Make sure your card number, expiry date, and CVV are correct</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-blue-100 p-1 mt-0.5">
                   <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
@@ -168,7 +176,7 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
                   <p className="text-muted-foreground">A stable connection is required for payment processing</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-blue-100 p-1 mt-0.5">
                   <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
@@ -178,7 +186,7 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
                   <p className="text-muted-foreground">Your bank might have blocked the transaction for security reasons</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-3">
                 <div className="rounded-full bg-blue-100 p-1 mt-0.5">
                   <div className="h-2 w-2 bg-blue-600 rounded-full"></div>
@@ -202,13 +210,13 @@ export default function PaymentFailedPage({ searchParams }: PageProps) {
               </Link>
             </Button>
           )}
-          
+
           <Button variant="outline" asChild className="flex-1">
             <Link href="/dashboard/payments">
               View Payment History
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild className="flex-1">
             <Link href="/dashboard">
               <Home className="h-4 w-4 mr-2" />

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMarkingStore } from "@/store/markingStore";
-import { markingJobsApi } from "@/lib/api/markingJobs";
+import { markingApi } from "@/lib/api/marking";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
@@ -22,8 +22,8 @@ import {
   Eye,
   Download,
 } from "lucide-react";
-import { format, formatDistanceToNow, differenceInHours } from "date-fns";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { format, differenceInHours } from "date-fns";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -32,21 +32,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@newcondo/ui/components/dialog";
+import type { MarkingJobResponse } from "@/lib/api/marking";
 
-const statusConfig = {
-  QUEUED: { label: "Queued", color: "bg-blue-500", icon: Clock },
-  ASSIGNED: { label: "Assigned", color: "bg-purple-500", icon: User },
-  IN_PROGRESS: { label: "In Progress", color: "bg-yellow-500", icon: Clock },
-  COMPLETED: { label: "Completed", color: "bg-green-500", icon: CheckCircle },
-  CANCELLED: { label: "Cancelled", color: "bg-gray-500", icon: XCircle },
-  EXPIRED: { label: "Expired", color: "bg-red-500", icon: AlertCircle },
+
+const statusConfig: Record<
+  string,
+  { label: string; color: string; hexColor: string; icon: React.ElementType }
+> = {
+  QUEUED: { label: "Queued", color: "bg-blue-500", hexColor: "#3b82f6", icon: Clock },
+  ASSIGNED: { label: "Assigned", color: "bg-purple-500", hexColor: "#a855f7", icon: User },
+  IN_PROGRESS: { label: "In Progress", color: "bg-yellow-500", hexColor: "#eab308", icon: Clock },
+  COMPLETED: { label: "Completed", color: "bg-green-500", hexColor: "#22c55e", icon: CheckCircle },
+  CANCELLED: { label: "Cancelled", color: "bg-gray-500", hexColor: "#6b7280", icon: XCircle },
+  EXPIRED: { label: "Expired", color: "bg-red-500", hexColor: "#ef4444", icon: AlertCircle },
 };
 
 export default function MarkingJobDetailPage() {
   const params = useParams();
   const router = useRouter();
   const jobId = params.id as string;
-  const { currentJob, setCurrentJob, isLoading, setLoading, error, setError } = useMarkingStore();
+  const {
+    selectedJob,
+    setSelectedJob,
+    isLoadingJobDetails,
+    setIsLoadingJobDetails,
+    error,
+    setError,
+  } = useMarkingStore();
+
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
@@ -56,31 +69,33 @@ export default function MarkingJobDetailPage() {
 
   const fetchJobDetails = async () => {
     try {
-      setLoading(true);
+      setIsLoadingJobDetails(true);
       setError(null);
-      const response = await markingJobsApi.getJobById(jobId);
-      setCurrentJob(response.data);
+      const response = await markingApi.getJobById(jobId);
+      setSelectedJob(response as any);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch job details");
+      const message = err instanceof Error ? err.message : "Failed to fetch job details";
+      setError(message);
     } finally {
-      setLoading(false);
+      setIsLoadingJobDetails(false);
     }
   };
 
   const handleCancelJob = async () => {
     try {
       setIsCancelling(true);
-      await markingJobsApi.cancelJob(jobId);
+      await markingApi.cancelJob(jobId, "Cancelled by property owner");
       await fetchJobDetails();
       setCancelDialogOpen(false);
     } catch (err: any) {
-      setError(err.message || "Failed to cancel job");
+      const message = err instanceof Error ? err.message : "Failed to cancel job";
+      setError(message);
     } finally {
       setIsCancelling(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoadingJobDetails) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <LoadingSpinner />
@@ -88,7 +103,7 @@ export default function MarkingJobDetailPage() {
     );
   }
 
-  if (error || !currentJob) {
+  if (error || !selectedJob) {
     return (
       <div className="container mx-auto py-8 px-4">
         <Alert variant="destructive">
@@ -103,13 +118,21 @@ export default function MarkingJobDetailPage() {
     );
   }
 
-  const StatusIcon = statusConfig[currentJob.status].icon;
-  const timeRemaining = currentJob.maxCompletionTime
-    ? differenceInHours(new Date(currentJob.maxCompletionTime), new Date())
-    : null;
+  // Cast to the richer API shape; MarkingJob in the store is the base model
+  const job = selectedJob as unknown as MarkingJobResponse;
 
-  const canConfirm = currentJob.status === "COMPLETED" && currentJob.completionImages.length > 0;
-  const canCancel = currentJob.status === "QUEUED" || currentJob.status === "ASSIGNED";
+  const config = statusConfig[job.status] ?? statusConfig.QUEUED;
+  const StatusIcon = config.icon;
+
+  const timeRemaining =
+    job.maxCompletionTime
+      ? differenceInHours(new Date(job.maxCompletionTime), new Date())
+      : null;
+
+  const completionImages = (job.completionImages ?? []) as string[];
+
+  const canConfirm = job.status === "COMPLETED" && completionImages.length > 0;
+  const canCancel = job.status === "QUEUED" || job.status === "ASSIGNED";
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl">
@@ -136,20 +159,20 @@ export default function MarkingJobDetailPage() {
       </div>
 
       {/* Status Banner */}
-      <Card className="mb-6 border-l-4" style={{ borderLeftColor: statusConfig[currentJob.status].color.replace('bg-', '#') }}>
+      <Card className="mb-6 border-l-4" style={{ borderLeftColor: config.hexColor }}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <StatusIcon className="h-6 w-6" />
               <div>
-                <CardTitle className="text-2xl">{currentJob.property?.title}</CardTitle>
+                <CardTitle className="text-2xl">{job.property?.title}</CardTitle>
                 <CardDescription className="text-base mt-1">
-                  Job ID: {currentJob.id.slice(0, 8).toUpperCase()}
+                  Job ID: {job.id.slice(0, 8).toUpperCase()}
                 </CardDescription>
               </div>
             </div>
-            <Badge className={`${statusConfig[currentJob.status].color} text-lg px-4 py-2`}>
-              {statusConfig[currentJob.status].label}
+            <Badge className={`${config.color} text-lg px-4 py-2`}>
+              {config.label}
             </Badge>
           </div>
         </CardHeader>
@@ -174,22 +197,22 @@ export default function MarkingJobDetailPage() {
               <CardTitle>Property Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentJob.property?.images?.[0] && (
+              {job.property?.images?.[0] && (
                 <img
-                  src={currentJob.property.images[0].url}
-                  alt={currentJob.property.title}
+                  src={job.property.images[0].url}
+                  alt={job.property.title}
                   className="w-full h-64 object-cover rounded-lg"
                 />
               )}
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Address</p>
-                  <p className="font-medium">{currentJob.property?.address}</p>
+                  <p className="font-medium">{job.property?.address}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">City</p>
-                  <p className="font-medium">{currentJob.property?.city}, {currentJob.property?.state}</p>
+                  <p className="font-medium">{job.property?.city}, {job.property?.state}</p>
                 </div>
               </div>
             </CardContent>
@@ -206,24 +229,24 @@ export default function MarkingJobDetailPage() {
                   <User className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-500">Name</p>
-                    <p className="font-medium">{currentJob.contactPersonName}</p>
+                    <p className="font-medium">{job.contactPersonName}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-gray-500" />
                   <div>
                     <p className="text-sm text-gray-500">Phone</p>
-                    <p className="font-medium">{currentJob.contactPersonPhone}</p>
+                    <p className="font-medium">{job.contactPersonPhone}</p>
                   </div>
                 </div>
               </div>
 
-              {currentJob.accessInstructions && (
+              {job.accessInstructions && (
                 <>
                   <Separator />
                   <div>
                     <p className="text-sm text-gray-500 mb-2">Access Instructions</p>
-                    <p className="text-sm">{currentJob.accessInstructions}</p>
+                    <p className="text-sm">{job.accessInstructions}</p>
                   </div>
                 </>
               )}
@@ -231,7 +254,7 @@ export default function MarkingJobDetailPage() {
           </Card>
 
           {/* Completion Evidence */}
-          {currentJob.completionImages.length > 0 && (
+          {completionImages.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle>Completion Evidence</CardTitle>
@@ -239,7 +262,7 @@ export default function MarkingJobDetailPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
-                  {currentJob.completionImages.map((image, index) => (
+                  {completionImages.map((image: string, index: number) => (
                     <div key={index} className="relative group">
                       <img
                         src={image}
@@ -260,12 +283,12 @@ export default function MarkingJobDetailPage() {
                   ))}
                 </div>
 
-                {currentJob.completionNotes && (
+                {job.completionNotes && (
                   <>
                     <Separator className="my-4" />
                     <div>
                       <p className="text-sm text-gray-500 mb-2">Agent Notes</p>
-                      <p className="text-sm">{currentJob.completionNotes}</p>
+                      <p className="text-sm">{job.completionNotes as string}</p>
                     </div>
                   </>
                 )}
@@ -287,30 +310,30 @@ export default function MarkingJobDetailPage() {
                 <div>
                   <p className="font-medium">Job Created</p>
                   <p className="text-sm text-gray-500">
-                    {format(new Date(currentJob.createdAt), "PPp")}
+                    {format(new Date(job.createdAt), "PPp")}
                   </p>
                 </div>
               </div>
 
-              {currentJob.assignedAt && (
+              {job.assignedAt && (
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-blue-500 mt-2" />
                   <div>
                     <p className="font-medium">Agent Assigned</p>
                     <p className="text-sm text-gray-500">
-                      {format(new Date(currentJob.assignedAt), "PPp")}
+                      {format(new Date(job.assignedAt), "PPp")}
                     </p>
                   </div>
                 </div>
               )}
 
-              {currentJob.completedAt && (
+              {job.completedAt && (
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-purple-500 mt-2" />
                   <div>
                     <p className="font-medium">Job Completed</p>
                     <p className="text-sm text-gray-500">
-                      {format(new Date(currentJob.completedAt), "PPp")}
+                      {format(new Date(job.completedAt), "PPp")}
                     </p>
                   </div>
                 </div>
@@ -319,7 +342,7 @@ export default function MarkingJobDetailPage() {
           </Card>
 
           {/* Assigned Agent */}
-          {currentJob.assignedAgent && (
+          {job.assignedAgent && (
             <Card>
               <CardHeader>
                 <CardTitle>Assigned Agent</CardTitle>
@@ -327,15 +350,15 @@ export default function MarkingJobDetailPage() {
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm text-gray-500">Name</p>
-                  <p className="font-medium">{currentJob.assignedAgent.name}</p>
+                  <p className="font-medium">{job.assignedAgent.name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Phone</p>
-                  <p className="font-medium">{currentJob.assignedAgent.phone}</p>
+                  <p className="font-medium">{job.assignedAgent.phone}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{currentJob.assignedAgent.email}</p>
+                  <p className="font-medium">{job.assignedAgent.email}</p>
                 </div>
               </CardContent>
             </Card>
@@ -349,12 +372,12 @@ export default function MarkingJobDetailPage() {
             <CardContent className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Marking Fee</p>
-                <p className="text-2xl font-bold">₦{currentJob.markingFee.toLocaleString()}</p>
+                <p className="text-2xl font-bold">₦{job.markingFee.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Payment Status</p>
-                <Badge variant={currentJob.paymentStatus === "SUCCESS" ? "default" : "secondary"}>
-                  {currentJob.paymentStatus}
+                <Badge variant={job.paymentStatus === "SUCCESS" ? "default" : "secondary"}>
+                  {job.paymentStatus}
                 </Badge>
               </div>
             </CardContent>
@@ -368,19 +391,19 @@ export default function MarkingJobDetailPage() {
             <CardContent className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Urgency Level</p>
-                <Badge variant="outline">{currentJob.urgencyLevel}</Badge>
+                <Badge variant="outline">{job.urgencyLevel}</Badge>
               </div>
-              {currentJob.queuePosition && (
+              {job.queuePosition && (
                 <div>
                   <p className="text-sm text-gray-500">Queue Position</p>
-                  <p className="font-medium">#{currentJob.queuePosition}</p>
+                  <p className="font-medium">#{job.queuePosition}</p>
                 </div>
               )}
-              {currentJob.preferredTime && (
+              {job.preferredTime && (
                 <div>
                   <p className="text-sm text-gray-500">Preferred Time</p>
                   <p className="font-medium">
-                    {format(new Date(currentJob.preferredTime), "PPp")}
+                    {format(new Date(job.preferredTime), "PPp")}
                   </p>
                 </div>
               )}

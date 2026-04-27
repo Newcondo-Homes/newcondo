@@ -18,12 +18,10 @@ import {
   Calendar, 
   AlertCircle,
   CheckCircle,
-  XCircle,
   Info,
   Navigation,
   Home,
   FileText,
-  DollarSign
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
 import { cn } from '@/lib/utils';

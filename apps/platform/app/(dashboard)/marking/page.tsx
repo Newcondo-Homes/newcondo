@@ -12,11 +12,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/component
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkingJobs } from '@/hooks/useMarkingJobs';
-import { 
-  Clock, 
-  MapPin, 
-  TrendingUp, 
-  CheckCircle, 
+import {
+  Clock,
+  MapPin,
+  TrendingUp,
+  CheckCircle,
   AlertCircle,
   Calendar,
   DollarSign,
@@ -29,13 +29,13 @@ import { formatDistanceToNow } from 'date-fns';
 export default function MarkingDashboardPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
-  const { 
-    stats, 
-    currentJob, 
+  const {
+    stats,
+    currentJob,
     upcomingJobs,
     isLoading,
     error,
-    fetchDashboardData 
+    fetchDashboardData
   } = useMarkingJobs();
 
   useEffect(() => {
@@ -96,8 +96,8 @@ export default function MarkingDashboardPage() {
               <div>
                 <h3 className="font-semibold">Availability Status</h3>
                 <p className="text-sm text-muted-foreground">
-                  {user.isAvailableForMarking 
-                    ? "You're currently available for marking jobs" 
+                  {user.isAvailableForMarking
+                    ? "You're currently available for marking jobs"
                     : "You're currently unavailable for marking jobs"}
                 </p>
               </div>
@@ -184,9 +184,15 @@ export default function MarkingDashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-semibold">Active Job in Progress</p>
-                <p className="text-sm">
-                  Time remaining: {formatDistanceToNow(new Date(currentJob.timeSlotExpiry), { addSuffix: true })}
-                </p>
+                {currentJob.timeSlotExpiry && (
+                  <p className="text-sm">
+                    Time remaining:{" "}
+                    {formatDistanceToNow(
+                      new Date(currentJob.timeSlotExpiry),
+                      { addSuffix: true }
+                    )}
+                  </p>
+                )}
               </div>
               <Button asChild>
                 <Link href={`/marking/${currentJob.id}/details`}>
@@ -255,8 +261,8 @@ export default function MarkingDashboardPage() {
                           <h4 className="font-medium">{job.property.title}</h4>
                           <Badge variant={
                             job.status === 'COMPLETED' ? 'default' :
-                            job.status === 'IN_PROGRESS' ? 'secondary' :
-                            'outline'
+                              job.status === 'IN_PROGRESS' ? 'secondary' :
+                                'outline'
                           }>
                             {job.status}
                           </Badge>

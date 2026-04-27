@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import { ConfirmationInterface } from '@/components/payments/ConfirmationInterface';
 import { ConfirmationSkeleton } from '@/components/payments/ConfirmationSkeleton';
@@ -82,7 +81,7 @@ async function getRentalDetails(rentalId: string, userId: string) {
 }
 
 export default async function ConfirmationPage({ params }: PageProps) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user?.id) {
     notFound();

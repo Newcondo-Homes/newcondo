@@ -1,11 +1,10 @@
 import { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import CheckoutForm from '@/components/payments/CheckoutForm';
-import {PaymentLockStatus} from '@/components/payments/PaymentLockStatus';
-import {ConflictWarning} from '@/components/payments/ConflictWarning';
+import { PaymentLockStatus } from '@/components/payments/PaymentLockStatus';
+import { ConflictWarning } from '@/components/payments/ConflictWarning';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
 import { AlertTriangle } from 'lucide-react';
@@ -42,17 +41,25 @@ async function getPropertyData(propertyId: string, unitId?: string) {
         where: { isPrimary: true },
         take: 1,
       },
+      // FIX 3: Always include units with their images so targetUnit.images exists
       units: unitId
         ? {
-            where: { id: unitId },
-            include: {
-              images: {
-                where: { isPrimary: true },
-                take: 1,
-              },
+          where: { id: unitId },
+          include: {
+            images: {
+              where: { isPrimary: true },
+              take: 1,
             },
-          }
-        : undefined,
+          },
+        }
+        : {
+          include: {
+            images: {
+              where: { isPrimary: true },
+              take: 1,
+            },
+          },
+        },
     },
   });
 
@@ -83,7 +90,7 @@ async function getPropertyData(propertyId: string, unitId?: string) {
 }
 
 export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user) {
     redirect('/login?callbackUrl=/properties/' + params.id + '/checkout');
@@ -139,6 +146,11 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     );
   }
 
+
+  const hasActiveLock = locks.length > 0;
+  const activeLockExpiry = hasActiveLock && lockExpiry ? new Date(lockExpiry) : undefined;
+
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -153,18 +165,26 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
             {/* Lock Status Indicator */}
             {locks.length > 0 && (
               <PaymentLockStatus
-                locks={locks}
-                propertyId={property.id}
-                unitId={targetUnit?.id}
+                isLocked={!!isLocked && !isLockExpired}
+                lockExpiry={activeLockExpiry}
+                isCurrentUser={false}
               />
             )}
 
             {/* Conflict Warning */}
             {!canProceed && (
               <ConflictWarning
-                isLocked={isLocked && !isLockExpired}
-                lockExpiry={lockExpiry}
-                isAvailable={isAvailable}
+                type={
+                  !isAvailable
+                    ? 'ALREADY_RENTED'
+                    : 'PAYMENT_IN_PROGRESS'
+                }
+                severity={!isAvailable ? 'error' : 'warning'}
+                details={
+                  lockExpiry
+                    ? { lockedUntil: new Date(lockExpiry) }
+                    : undefined
+                }
               />
             )}
 
@@ -181,7 +201,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4">
                   {(isMultiUnit && targetUnit?.images[0]?.url) ||
-                  property.images[0]?.url ? (
+                    property.images[0]?.url ? (
                     <img
                       src={
                         (isMultiUnit ? targetUnit?.images[0]?.url : property.images[0]?.url) ||
@@ -231,7 +251,6 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
                 unitId={targetUnit?.id}
                 amount={Number(price)}
                 currency={currency || 'NGN'}
-                userId={session.user.id}
               />
             ) : (
               <Alert>

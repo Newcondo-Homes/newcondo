@@ -22,6 +22,7 @@ export interface MarkingJobResponse extends PropertyMarkingJob {
         city: string
         state: string
         gpsCoordinates: string | null
+        images?: { url: string }[] 
     }
     requestingUser: {
         id: string

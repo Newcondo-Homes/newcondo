@@ -2,8 +2,7 @@
 
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import { JobDetailsClient } from '@/components/marking/JobDetailsClient';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
@@ -108,7 +107,7 @@ async function getRelatedPayment(jobId: string) {
 }
 
 export default async function MarkingJobDetailsPage({ params }: PageProps) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user?.id) {
     redirect('/login');

@@ -69,7 +69,7 @@ export default function VirtualAccountsPage() {
   const fetchVirtualAccounts = async () => {
     try {
       const response = await api.get('/virtual-accounts');
-      setAccounts(response.data);
+      setAccounts(response.data as any);
     } catch (error) {
       console.error('Error fetching virtual accounts:', error);
       toast.error('Failed to load virtual accounts');

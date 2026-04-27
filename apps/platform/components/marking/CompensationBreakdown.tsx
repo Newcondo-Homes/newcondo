@@ -14,12 +14,6 @@ interface CompensationBreakdownProps {
   userRole?: 'OWNER' | 'AGENT' | 'RENTER';
 }
 
-// interface CompensationBreakdownProps {
-//   totalFee: number;
-//   agentCompensation: number;
-//   platformFee: number;
-//   currency?: string;
-// }
 
 interface CompensationDetails {
   totalFee: number;

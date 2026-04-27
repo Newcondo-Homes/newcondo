@@ -56,38 +56,55 @@ export interface MarkingJob {
   confirmationAttempts?: number;
   ownerFeedback?: string;
 
+  //
+  distanceFromAgent?: number;
+  address: string;
+  city: string;
+  state: string;
+
   // Metadata
   createdAt: string;
   updatedAt: string;
-}
 
-/**
- * Marking job with related data
- */
-export interface MarkingJobWithRelations extends MarkingJob {
+  // property details
   property: {
-    id: string;
+    id?: string;
     title: string;
     address: string;
     city: string;
     state: string;
     gpsCoordinates?: string;
-    images?: string[];
-  };
-  requestingUser: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-  };
-  assignedAgent?: {
-    id: string;
-    name: string;
-    email: string;
-    phone: string;
-    reliabilityScore?: number;
+    images: { url: string }[];
   };
 }
+
+/**
+ * Marking job with related data
+ */
+// export interface MarkingJobWithRelations extends MarkingJob {
+//   property: {
+//     id: string;
+//     title: string;
+//     address: string;
+//     city: string;
+//     state: string;
+//     gpsCoordinates?: string;
+//     images?: string[];
+//   };
+//   requestingUser: {
+//     id: string;
+//     name: string;
+//     email: string;
+//     phone: string;
+//   };
+//   assignedAgent?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//     phone: string;
+//     reliabilityScore?: number;
+//   };
+// }
 
 /**
  * Job assignment details

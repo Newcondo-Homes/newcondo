@@ -3,12 +3,12 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getServerSession } from '@newcondo/auth';
-import { authOptions } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import { CompleteMarkingJobClient } from '@/components/marking/CompleteMarkingJobClient';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { Card } from '@newcondo/ui';
 import { AlertCircle, Lock } from 'lucide-react';
+import { markingApi, MarkingJobResponse } from '@/lib/api/marking';
 
 export const metadata: Metadata = {
   title: 'Complete Marking Job | Newcondo',
@@ -21,32 +21,12 @@ interface PageProps {
   };
 }
 
-async function getMarkingJobForCompletion(jobId: string, userId: string) {
+async function getMarkingJobForCompletion(jobId: string, userId: string): Promise<{
+  job: MarkingJobResponse | null;
+  error: string | null;
+}>  {
   try {
-    const job = await prisma.propertyMarkingJob.findUnique({
-      where: { id: jobId },
-      include: {
-        property: {
-          include: {
-            owner: {
-              select: {
-                id: true,
-                name: true,
-                phone: true,
-              },
-            },
-            images: true,
-          },
-        },
-        assignedAgent: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
+    const job = await markingApi.getJobById(jobId);
 
     if (!job) {
       return { job: null, error: 'Job not found' };
@@ -78,7 +58,7 @@ async function getMarkingJobForCompletion(jobId: string, userId: string) {
 }
 
 export default async function CompleteMarkingJobPage({ params }: PageProps) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user?.id) {
     redirect('/login');

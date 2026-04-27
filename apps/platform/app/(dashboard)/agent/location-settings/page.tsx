@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQueueStore } from "@/store/queueStore";
-import { queueApi } from "@/lib/api/queue";
+import { getLocationSettings, updateLocationSettings } from "@/lib/api/queue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Label } from "@newcondo/ui/components/label";
@@ -81,8 +81,7 @@ export default function AgentLocationSettingsPage() {
   const fetchLocationSettings = async () => {
     try {
       setIsLoading(true);
-      const response = await queueApi.getLocationSettings();
-      const settings = response.data;
+      const settings = await getLocationSettings();
       
       setValue("isAvailableForMarking", settings.isAvailableForMarking);
       setValue("serviceAreas", settings.serviceAreas || []);
@@ -129,7 +128,7 @@ export default function AgentLocationSettingsPage() {
       setError(null);
       setSuccess(false);
 
-      await queueApi.updateLocationSettings({
+      await updateLocationSettings({
         isAvailableForMarking: data.isAvailableForMarking,
         serviceAreas: data.serviceAreas,
         maxRadius: data.maxRadius,

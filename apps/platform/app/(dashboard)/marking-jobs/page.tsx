@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMarkingStore } from "@/store/markingStore";
+import { useMarkingStore, type MarkingJob } from "@/store/markingStore";
 import { useAuth } from "@/hooks/useAuth";
-import { markingJobsApi } from "@/lib/api/markingJobs";
+import { markingApi } from "@/lib/api/marking";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
@@ -12,10 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
 import { Clock, MapPin, Plus, Filter, AlertCircle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 
-const statusConfig = {
+const statusConfig: Record<MarkingJob["status"], { label: string; color: string }> = {
   QUEUED: { label: "Queued", color: "bg-blue-500" },
   ASSIGNED: { label: "Assigned", color: "bg-purple-500" },
   IN_PROGRESS: { label: "In Progress", color: "bg-yellow-500" },
@@ -24,49 +24,68 @@ const statusConfig = {
   EXPIRED: { label: "Expired", color: "bg-red-500" },
 };
 
-const urgencyConfig = {
+const urgencyConfig: Record<MarkingJob["urgencyLevel"], { label: string; color: string }> = {
   LOW: { label: "Low", color: "text-gray-600" },
   NORMAL: { label: "Normal", color: "text-blue-600" },
   HIGH: { label: "High", color: "text-orange-600" },
   URGENT: { label: "Urgent", color: "text-red-600" },
 };
 
+type UrgencyFilter = MarkingJob["urgencyLevel"] | "all";
+
+
 export default function MarkingJobsPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { jobs, setJobs, isLoading, setLoading, error, setError, filters, setFilters } = useMarkingStore();
+
+  const {
+    markingJobs,
+    setMarkingJobs,
+    isLoadingJobs,
+    setIsLoadingJobs,
+    error,
+    setError,
+  } = useMarkingStore();
+
   const [activeTab, setActiveTab] = useState<string>("all");
+  const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
 
   useEffect(() => {
     fetchMarkingJobs();
-  }, [filters]);
+  }, []);
 
   const fetchMarkingJobs = async () => {
+    if (!user?.id) return;
     try {
-      setLoading(true);
+      setIsLoadingJobs(true);
       setError(null);
-      const response = await markingJobsApi.getMyJobs(filters);
-      setJobs(response.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch marking jobs");
+      const response = await markingApi.getUserJobs(user.id, "requested");
+      setMarkingJobs(response.jobs as unknown as MarkingJob[]);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to fetch marking jobs");
     } finally {
-      setLoading(false);
+      setIsLoadingJobs(false);
     }
   };
 
-  const filteredJobs = jobs.filter((job) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "pending") return job.status === "QUEUED" || job.status === "ASSIGNED";
-    if (activeTab === "active") return job.status === "IN_PROGRESS";
-    if (activeTab === "completed") return job.status === "COMPLETED";
-    return true;
-  });
+  // Apply urgency filter first, then tab filter
+  const filteredJobs = markingJobs
+    .filter((job: MarkingJob) =>
+      urgencyFilter === "all" ? true : job.urgencyLevel === urgencyFilter
+    )
+    .filter((job: MarkingJob) => {
+      if (activeTab === "all") return true;
+      if (activeTab === "pending") return job.status === "QUEUED" || job.status === "ASSIGNED";
+      if (activeTab === "active") return job.status === "IN_PROGRESS";
+      if (activeTab === "completed") return job.status === "COMPLETED";
+      return true;
+    });
 
   const stats = {
-    total: jobs.length,
-    pending: jobs.filter((j) => j.status === "QUEUED" || j.status === "ASSIGNED").length,
-    active: jobs.filter((j) => j.status === "IN_PROGRESS").length,
-    completed: jobs.filter((j) => j.status === "COMPLETED").length,
+    total: markingJobs.length,
+    pending: markingJobs.filter((j: MarkingJob) => j.status === "QUEUED" || j.status === "ASSIGNED").length,
+    active: markingJobs.filter((j: MarkingJob) => j.status === "IN_PROGRESS").length,
+    completed: markingJobs.filter((j: MarkingJob) => j.status === "COMPLETED").length,
   };
 
   return (
@@ -114,9 +133,9 @@ export default function MarkingJobsPage() {
       {/* Filters */}
       <div className="flex items-center gap-4 mb-6">
         <Select
-          value={filters.urgencyLevel[0] || "all"}
+          value={urgencyFilter}
           onValueChange={(value) =>
-            setFilters({ urgencyLevel: value === "all" ? [] : [value] })
+            setUrgencyFilter(value as UrgencyFilter)
           }
         >
           <SelectTrigger className="w-[180px]">
@@ -151,7 +170,7 @@ export default function MarkingJobsPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
-          {isLoading ? (
+          {isLoadingJobs  ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner />
             </div>
@@ -177,7 +196,6 @@ export default function MarkingJobsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-xl font-semibold">{job.property?.title}</h3>
                           <Badge className={statusConfig[job.status].color}>
                             {statusConfig[job.status].label}
                           </Badge>
@@ -190,7 +208,7 @@ export default function MarkingJobsPage() {
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
                             <span>
-                              {job.property?.address}, {job.property?.city}
+                              Job #{job.id.slice(-6).toUpperCase()}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
@@ -210,10 +228,11 @@ export default function MarkingJobsPage() {
                             <span className="text-gray-500">Fee:</span>
                             <p className="font-medium">₦{job.markingFee.toLocaleString()}</p>
                           </div>
-                          {job.assignedAgent && (
+                          {job.assignedAgentId  && (
                             <div>
                               <span className="text-gray-500">Assigned Agent:</span>
-                              <p className="font-medium">{job.assignedAgent.name}</p>
+                              <p className="font-medium text-purple-600">Yes</p>
+                              {/* <p className="font-medium">{job.assignedAgent.name}</p> */}
                             </div>
                           )}
                           {job.queuePosition && (
@@ -225,13 +244,6 @@ export default function MarkingJobsPage() {
                         </div>
                       </div>
 
-                      {job.property?.images?.[0] && (
-                        <img
-                          src={job.property.images[0].url}
-                          alt={job.property.title}
-                          className="w-32 h-32 object-cover rounded-lg ml-4"
-                        />
-                      )}
                     </div>
                   </CardContent>
                 </Card>

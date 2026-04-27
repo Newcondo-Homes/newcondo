@@ -2,6 +2,9 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import type { MarkingJob} from "@/types/markingJob"
+
+import { MARKING_FEES } from "@/lib/constants/markingFees"
 
 interface MarkingJobData {
   propertyId: string;
@@ -13,37 +16,22 @@ interface MarkingJobData {
   markingType: 'SELF' | 'NEWCONDO_ADMIN' | 'SHAREABLE_LINK' | 'ASSIGN_AGENT';
 }
 
-interface MarkingJob {
-  id: string;
-  propertyId: string;
-  requestedBy: string;
-  assignedAgentId?: string;
-  contactPersonName: string;
-  contactPersonPhone: string;
-  accessInstructions?: string;
-  // preferredTime?: Date;
-  preferredTime?: string;      // ✅ instead of Date
-  // urgencyLevel: string;
-  urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  markingFee: number;
-  paymentStatus: string;
-  status: string;
-  assignedAt?: Date;
-  completedAt?: Date;
-  timeSlotExpiry?: Date;
-  completionNotes?: string;
-  completionImages: string[];
-  boundaryData?: any;
-  queuePosition?: number;
-  // maxCompletionTime?: Date;
-  maxCompletionTime?: string;
-  distanceFromAgent?: number;
-  address: string;
-  city: string;
-  state: string;
-  createdAt: Date;
-  updatedAt: Date;
+
+// Derived dashboard stats shape
+export interface MarkingDashboardStats {
+  totalJobs: number;
+  completedJobs: number;
+  totalEarnings: number;
+  monthlyEarnings: number;
+  successRate: number;
+  completedOnTime: number;
+  recentJobs: MarkingJob[];
 }
+
+// Marking fee per completed job (25% of ₦20,000)
+const AGENT_COMMISSION_RATE = MARKING_FEES.AGENT_COMMISSION_PERCENTAGE;
+const MARKING_FEE = MARKING_FEES.BASE_MARKING_FEE;
+const AGENT_FEE = MARKING_FEE * AGENT_COMMISSION_RATE;
 
 export const markingJobKeys = {
   all: ['marking-jobs'] as const,
@@ -64,7 +52,7 @@ export function useMarkingJobs() {
   const {
     data: markingJobs,
     isLoading,
-    error,
+    error: rawError,
     refetch
   } = useQuery<MarkingJob[]>({
     queryKey: ['markingJobs'],
@@ -77,6 +65,12 @@ export function useMarkingJobs() {
     },
     staleTime: 30000, // 30 seconds
   });
+
+  // Coerce Error | null to string | null for easy consumption
+  const error: string | null = rawError
+    ? (rawError as Error).message ?? 'An unexpected error occurred'
+    : null;
+
 
   // Fetch available jobs (for agents)
   const fetchAvailableJobs = useCallback(
@@ -117,6 +111,51 @@ export function useMarkingJobs() {
     if (!res.ok) throw new Error('Failed to fetch marking job');
     return res.json();
   }, []);
+
+  const pendingJobs = markingJobs?.filter(
+    (job) => job.status === 'QUEUED' || job.status === 'ASSIGNED'
+  ) ?? [];
+
+  const completedJobs = markingJobs?.filter(
+    (job) => job.status === 'COMPLETED'
+  ) ?? [];
+
+  // The single in-progress job assigned to this agent
+  const currentJob = markingJobs?.find((job) => job.status === 'IN_PROGRESS') ?? null;
+
+  // Jobs that are ASSIGNED but not yet started (upcoming queue items)
+  const upcomingJobs = markingJobs?.filter((job) => job.status === 'ASSIGNED') ?? [];
+
+  // Build dashboard stats from local data so no extra API call is needed
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+
+  const stats: MarkingDashboardStats = {
+    totalJobs: markingJobs?.length ?? 0,
+    completedJobs: completedJobs.length,
+    totalEarnings: completedJobs.length * AGENT_FEE,
+    monthlyEarnings:
+      completedJobs.filter((j) => new Date(j.createdAt) >= startOfMonth).length *
+      AGENT_FEE,
+    successRate:
+      markingJobs && markingJobs.length > 0
+        ? Math.round((completedJobs.length / markingJobs.length) * 100)
+        : 0,
+    completedOnTime: completedJobs.filter(
+      (j) => j.timeSlotExpiry && new Date(j.completedAt!) <= new Date(j.timeSlotExpiry)
+    ).length,
+    recentJobs: [...(markingJobs ?? [])]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5),
+  };
+
+   // Kept as a no-op so the page doesn't need to change its call site;
+  // data is already fetched by the query above.
+  const fetchDashboardData = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['markingJobs'] });
+  }, [queryClient]);
+
 
   // Create marking job
   const createMarkingJob = useMutation({
@@ -255,26 +294,22 @@ export function useMarkingJobs() {
     [markingJobs]
   );
 
-  // Get pending jobs
-  const pendingJobs = markingJobs?.filter(
-    job => job.status === 'QUEUED' || job.status === 'ASSIGNED'
-  ) || [];
-
-  // Get completed jobs
-  const completedJobs = markingJobs?.filter(
-    job => job.status === 'COMPLETED'
-  ) || [];
 
   return {
     markingJobs,
     availableJobs,
     pendingJobs,
     completedJobs,
+    currentJob,
+    upcomingJobs,
+    stats,
     isLoading,
     loading: isLoading, 
     error,
     isSubmitting,
+    isAccepting: acceptJobMutation.isPending,
     refetch,
+    fetchDashboardData,
     fetchMarkingJob,
     fetchAvailableJobs,
     acceptJob: acceptJobMutation.mutateAsync,

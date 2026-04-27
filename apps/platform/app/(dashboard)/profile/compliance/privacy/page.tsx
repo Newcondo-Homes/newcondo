@@ -1,11 +1,15 @@
 // apps/platform/app/(dashboard)/profile/compliance/privacy/page.tsx
 import { Suspense } from "react";
 import { Metadata } from "next";
+import { getServerSession } from "@newcondo/auth";
+import { prisma } from "@newcondo/db";
+import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui";
 import { DocumentTemplateViewer } from "@/components/legal/DocumentTemplateViewer";
 import LegalAgreementModal  from "@/components/legal/LegalAgreementModal";
 import { ComplianceStatus } from "@/components/legal/ComplianceStatus";
 import { Shield, Lock, Eye, UserCheck } from "lucide-react";
+import { PrivacyPageClient } from "@/components/legal/PrivacyPageClient";
 
 export const metadata: Metadata = {
   title: "Privacy Policy - NewCondo",
@@ -35,7 +39,53 @@ const privacyHighlights = [
   }
 ];
 
-export default function PrivacyPage() {
+async function getUserData(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      role: true,
+      verificationStatus: true,
+      documents: {
+        select: {
+          id: true,
+          documentType: true,
+          status: true,
+          createdAt: true,
+          verificationNotes: true,
+        },
+      },
+    },
+  });
+  return user;
+}
+
+
+export default async function PrivacyPage() {
+  const session = await getServerSession();
+  if (!session?.user?.id) notFound();
+
+  const user = await getUserData(session.user.id);
+  if (!user) notFound();
+
+  // Map Prisma role to the union ComplianceStatus expects
+  const roleMap: Record<string, 'OWNER' | 'AGENT' | 'RENTER'> = {
+    OWNER: 'OWNER',
+    AGENT: 'AGENT',
+    RENTER: 'RENTER',
+    ADMIN: 'RENTER', // fallback for admin
+  };
+
+  const userRole = roleMap[user.role] ?? 'RENTER';
+
+  // Shape documents to match ComplianceStatus's expected interface
+  const documents = user.documents.map((doc) => ({
+    id: doc.id,
+    documentType: doc.documentType,
+    status: doc.status as 'PENDING' | 'APPROVED' | 'REJECTED',
+    createdAt: doc.createdAt.toISOString(),
+    verificationNotes: doc.verificationNotes ?? undefined,
+  }));
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <div className="mb-6">
@@ -46,17 +96,12 @@ export default function PrivacyPage() {
       </div>
 
       <div className="grid gap-6">
-        {/* Compliance Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Privacy Compliance Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Suspense fallback={<div className="animate-pulse h-20 bg-gray-200 rounded"></div>}>
-              <ComplianceStatus documentType="privacy" />
-            </Suspense>
-          </CardContent>
-        </Card>
+        {/*ComplianceStatus + LegalAgreementModal — client component */}
+        <PrivacyPageClient
+          userRole={userRole}
+          userVerificationStatus={user.verificationStatus}
+          documents={documents}
+        />
 
         {/* Privacy Highlights */}
         <Card>
@@ -91,9 +136,8 @@ export default function PrivacyPage() {
           <CardContent>
             <Suspense fallback={<div className="animate-pulse h-96 bg-gray-200 rounded"></div>}>
               <DocumentTemplateViewer
-                templateType="privacy"
-                version="2025.1"
-                showAcceptButton={true}
+                templateType="PRIVACY_POLICY"
+                previewOnly={true}
               />
             </Suspense>
           </CardContent>
@@ -128,13 +172,6 @@ export default function PrivacyPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Agreement Modal */}
-      <LegalAgreementModal
-        documentType="privacy"
-        title="Accept Privacy Policy"
-        description="By accepting this privacy policy, you acknowledge that you have read and understood how we collect, use, and protect your personal data."
-      />
     </div>
   );
 }

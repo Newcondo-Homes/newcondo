@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import { DisputeForm } from '@/components/payments/DisputeForm';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
@@ -73,7 +72,7 @@ async function getRentalForDispute(rentalId: string, userId: string) {
 }
 
 export default async function DisputePage({ params }: PageProps) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user?.id) {
     notFound();
@@ -155,9 +154,6 @@ export default async function DisputePage({ params }: PageProps) {
           <Suspense fallback={<div>Loading form...</div>}>
             <DisputeForm
               rentalId={rental.id}
-              propertyId={rental.property.id}
-              unitId={rental.unit?.id}
-              amount={rental.monthlyRent}
               paymentId={rental.payments[0]?.id}
             />
           </Suspense>

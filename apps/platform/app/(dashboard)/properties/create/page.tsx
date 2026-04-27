@@ -3,16 +3,94 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { usePropertyListingStore } from "@/store/propertyListingStore";
+import { usePropertyListingStore, PropertyListingFormData } from "@/store/propertyListingStore";
 import { PropertyListingForm } from "@/components/property/property-listing-form";
 import { BoundaryMarkingMap } from "@/components/property/boundary-marking-map";
 import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/";
 import { Button } from "@newcondo/ui/";
-import { Stepper } from "@/components/shared/stepper";
-import { ArrowLeft, MapPin, FileText, Image, CheckCircle } from "lucide-react";
+import { cn } from "@newcondo/ui/lib/utils";
+import { ArrowLeft, MapPin, FileText, Image, CheckCircle, Loader2 } from "lucide-react";
 import { toast } from "@newcondo/ui";
 
-const steps = [
+
+interface Step {
+  id: string;
+  title: string;
+  icon: React.ElementType;
+  description: string;
+}
+
+interface StepperProps {
+  steps: Step[];
+  currentStep: number;
+  onStepClick?: (index: number) => void;
+  className?: string;
+}
+
+function Stepper({ steps, currentStep, onStepClick, className }: StepperProps) {
+  return (
+    <div className={cn("flex items-center w-full", className)}>
+      {steps.map((step, index) => {
+        const Icon = step.icon;
+        const isCompleted = index < currentStep;
+        const isCurrent = index === currentStep;
+
+        return (
+          <div key={step.id} className="flex items-center flex-1 last:flex-none">
+            <button
+              type="button"
+              onClick={() => onStepClick?.(index)}
+              className={cn(
+                "flex flex-col items-center gap-1 group",
+                onStepClick ? "cursor-pointer" : "cursor-default"
+              )}
+            >
+              <div
+                className={cn(
+                  "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
+                  isCompleted
+                    ? "bg-primary border-primary text-primary-foreground"
+                    : isCurrent
+                      ? "border-primary text-primary"
+                      : "border-muted text-muted-foreground"
+                )}
+              >
+                {isCompleted ? (
+                  <CheckCircle className="w-5 h-5" />
+                ) : (
+                  <Icon className="w-5 h-5" />
+                )}
+              </div>
+              <div className="hidden sm:block text-center">
+                <p
+                  className={cn(
+                    "text-xs font-medium",
+                    isCurrent ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  {step.title}
+                </p>
+              </div>
+            </button>
+
+            {/* Connector line between steps */}
+            {index < steps.length - 1 && (
+              <div
+                className={cn(
+                  "flex-1 h-0.5 mx-2 transition-colors",
+                  index < currentStep ? "bg-primary" : "bg-muted"
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
+const steps: Step[] = [
   {
     id: "property-details",
     title: "Property Details",
@@ -39,19 +117,42 @@ const steps = [
   }
 ];
 
+function isStepValid(stepId: string, formData: PropertyListingFormData): boolean {
+  switch (stepId) {
+    case "property-details":
+      return (
+        !!formData.title.trim() &&
+        !!formData.description.trim() &&
+        formData.price > 0 &&
+        !!formData.address.trim() &&
+        !!formData.city.trim() &&
+        !!formData.state.trim()
+      );
+    case "boundary-marking":
+      return !!formData.boundaryCoordinates && formData.boundaryCoordinates.length > 0;
+    case "images":
+      return formData.images.length > 0;
+    case "review":
+      return true;
+    default:
+      return false;
+  }
+}
+
+
 export default function CreatePropertyPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
-    propertyData,
-    boundaryData,
-    images,
-    submitProperty,
+    formData,
+    submitListing,
     resetForm,
-    isValidStep
+    updateFormData,
   } = usePropertyListingStore();
+
+  const canProceed = isStepValid(steps[currentStep].id, formData);
 
   const handleNext = async () => {
     if (currentStep < steps.length - 1) {
@@ -70,7 +171,7 @@ export default function CreatePropertyPage() {
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-      await submitProperty();
+      await submitListing();
 
       toast.success("Property Listed Successfully!", {
         description: "Your property has been submitted for review.",
@@ -87,7 +188,6 @@ export default function CreatePropertyPage() {
     }
   };
 
-  const canProceed = isValidStep(steps[currentStep].id);
 
   const renderStepContent = () => {
     switch (steps[currentStep].id) {
@@ -103,7 +203,16 @@ export default function CreatePropertyPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <BoundaryMarkingMap />
+              <BoundaryMarkingMap
+                onBoundarySelected={(coordinates) => {
+                  updateFormData({ boundaryCoordinates: coordinates });
+                }}
+                onLocationConfirmed={(location) => {
+                  updateFormData({
+                    gpsCoordinates: JSON.stringify(location),
+                  });
+                }}
+              />
             </CardContent>
           </Card>
         );
@@ -183,8 +292,8 @@ export default function CreatePropertyPage() {
         <Button
           onClick={handleNext}
           disabled={!canProceed || isSubmitting}
-          loading={isSubmitting}
         >
+          {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {currentStep === steps.length - 1 ? "Submit Listing" : "Next"}
         </Button>
       </div>
@@ -194,21 +303,25 @@ export default function CreatePropertyPage() {
 
 // Additional components for image upload and review
 function PropertyImageUpload() {
-  const { images, addImage, removeImage, setImageAsPrimary } = usePropertyListingStore();
+  const { formData, updateFormData } = usePropertyListingStore();
 
   // Implementation for image upload component
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Upload high-quality photos of your property. The first image will be the main photo.
+        Upload high-quality photos of your property. The first image will be the
+        main photo.
       </p>
-      {/* Image upload implementation */}
+      <p className="text-sm text-muted-foreground">
+        {formData.images.length} image{formData.images.length !== 1 ? "s" : ""} selected
+      </p>
+      {/* Full image upload UI goes here */}
     </div>
   );
 }
 
 function PropertyReview() {
-  const { propertyData, boundaryData, images } = usePropertyListingStore();
+  const { formData } = usePropertyListingStore();
 
   return (
     <div className="space-y-6">
@@ -216,24 +329,25 @@ function PropertyReview() {
         <h3 className="text-lg font-semibold mb-2">Property Details</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="font-medium">Title:</span> {propertyData.title}
+            <span className="font-medium">Title:</span> {formData.title}
           </div>
           <div>
-            <span className="font-medium">Price:</span> ₦{propertyData.price?.toLocaleString()}/month
+            <span className="font-medium">Price:</span> ₦
+            {formData.price?.toLocaleString()}/month
           </div>
           <div>
-            <span className="font-medium">Type:</span> {propertyData.propertyType}
+            <span className="font-medium">Type:</span> {formData.propertyType}
           </div>
           <div>
-            <span className="font-medium">Bedrooms:</span> {propertyData.bedrooms}
+            <span className="font-medium">Bedrooms:</span> {formData.bedrooms}
           </div>
         </div>
       </div>
 
       <div>
         <h3 className="text-lg font-semibold mb-2">Location</h3>
-        <p className="text-sm">{propertyData.address}</p>
-        {boundaryData && (
+        <p className="text-sm">{formData.address}</p>
+        {formData.boundaryCoordinates && formData.boundaryCoordinates.length > 0 && (
           <p className="text-sm text-green-600 mt-1">
             ✓ Property boundary marked and verified
           </p>
@@ -243,7 +357,8 @@ function PropertyReview() {
       <div>
         <h3 className="text-lg font-semibold mb-2">Images</h3>
         <p className="text-sm">
-          {images.length} image{images.length !== 1 ? 's' : ''} uploaded
+          {formData.images.length} image
+          {formData.images.length !== 1 ? "s" : ""} uploaded
         </p>
       </div>
     </div>

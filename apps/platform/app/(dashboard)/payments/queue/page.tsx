@@ -1,9 +1,6 @@
-import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
-import QueuePosition from '@/components/payments/QueuePosition';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
 import { Badge } from '@newcondo/ui/components/badge';
@@ -99,7 +96,7 @@ function getStatusBadge(status: string) {
 }
 
 export default async function PaymentQueuePage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
 
   if (!session?.user) {
     redirect('/login?callbackUrl=/payments/queue');

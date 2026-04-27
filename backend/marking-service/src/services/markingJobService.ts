@@ -2,6 +2,8 @@
 
 import { PrismaClient, PropertyMarkingJob, MarkingJobStatus, UrgencyLevel } from '@newcondo/db';
 import { CreateMarkingJobData, UpdateMarkingJobData, MarkingJobFilters } from '../types/markingJob';
+import { AppError } from '../../../shared/src/utils/response';
+import { logger } from '../../../shared/src/middleware/logger';
 
 const prisma = new PrismaClient();
 
@@ -144,6 +146,53 @@ export class MarkingJobService {
       },
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+
+  async getMarkingJob(jobId: string): Promise<PropertyMarkingJob> {
+    try {
+      const markingJob = await prisma.propertyMarkingJob.findUnique({
+        where: { id: jobId },
+        include: {
+          property: {
+            select: {
+              id: true,
+              title: true,
+              address: true,
+              city: true,
+              state: true,
+              gpsCoordinates: true,
+            },
+          },
+          requestingUser: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+          assignedAgent: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              agentReliabilityScore: true,
+            },
+          },
+        },
+      });
+
+      if (!markingJob) {
+        throw new AppError('Marking job not found', 404);
+      }
+
+      return markingJob;
+    } catch (error) {
+      logger.error('Error fetching marking job', { error, jobId });
+      throw error;
+    }
   }
 
   async cancelJob(jobId: string): Promise<PropertyMarkingJob> {
@@ -340,55 +389,7 @@ export class MarkingJobService {
 //     }
 //   }
 
-//   /**
-//    * Get marking job details
-//    */
-//   async getMarkingJob(jobId: string) {
-//     try {
-//       const markingJob = await this.prisma.propertyMarkingJob.findUnique({
-//         where: { id: jobId },
-//         include: {
-//           property: {
-//             select: {
-//               id: true,
-//               title: true,
-//               address: true,
-//               city: true,
-//               state: true,
-//               gpsCoordinates: true,
-//             },
-//           },
-//           requestingUser: {
-//             select: {
-//               id: true,
-//               name: true,
-//               email: true,
-//               phone: true,
-//             },
-//           },
-//           assignedAgent: {
-//             select: {
-//               id: true,
-//               name: true,
-//               email: true,
-//               phone: true,
-//               agentReliabilityScore: true,
-//             },
-//           },
-//         },
-//       });
-
-//       if (!markingJob) {
-//         throw new AppError('Marking job not found', 404);
-//       }
-
-//       return markingJob;
-//     } catch (error) {
-//       logger.error('Error fetching marking job', { error, jobId });
-//       throw error;
-//     }
-//   }
-
+//   
 //   /**
 //    * Update marking job details
 //    */

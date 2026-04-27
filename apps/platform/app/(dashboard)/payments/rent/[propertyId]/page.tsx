@@ -3,11 +3,9 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import {PaymentForm} from '@/components/payments/PaymentForm'
-import PropertyDetails from '@/components/properties/PropertyDetails'
 import VirtualAccountInfo from '@/components/payments/VirtualAccountInfo'
 import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
-import { Badge } from '@newcondo/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui'
 import { CalendarDays, MapPin, Building2 } from 'lucide-react'
 
 interface PageProps {
@@ -31,6 +29,9 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
 
   // This would typically fetch data from your API
   // For now, we'll simulate the data structure
+  // TODO: check the account-number and account-name in this propertyData
+  // and see if you need to change it accordingly. you can put values in constants 
+  // and use them here to promote one single source of truth
   const propertyData = {
     id: propertyId,
     title: 'Modern 2-Bedroom Apartment',
@@ -42,10 +43,16 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
       phone: '+234 801 234 5678'
     },
     virtualAccount: {
+      id: 'va-' + propertyId,
       accountNumber: '0123456789',
       accountName: 'NEWCONDO-' + propertyId.slice(-6).toUpperCase(),
       bankCode: '044',
-      bankName: 'Access Bank'
+      balance: 0,
+      currency: 'NGN',
+      isActive: true,
+      flutterwaveAccountId: undefined,
+      property: undefined,
+      createdAt: new Date().toISOString(),
     }
   }
 
@@ -129,7 +136,7 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
                 amount={propertyData.monthlyRent}
                 currency={propertyData.currency}
                 paymentType="RENT"
-                propertyTitle={propertyData.title}
+                description={`Rent payment for ${propertyData.title}`}
               />
             </Suspense>
           </div>

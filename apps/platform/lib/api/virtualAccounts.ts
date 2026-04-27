@@ -19,7 +19,7 @@ import type {
 
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Account Endpoints
+// Account Endpointss
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Fetches the authenticated user's primary virtual account. */

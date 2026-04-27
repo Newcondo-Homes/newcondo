@@ -52,7 +52,7 @@ export default function LegalDocumentDetailsPage() {
   const router = useRouter();
   const documentId = params.documentId as string;
 
-  const [document, setDocument] = useState<DocumentData | null>(null);
+  const [docData, setDocData] = useState<DocumentData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -76,7 +76,7 @@ export default function LegalDocumentDetailsPage() {
       }
 
       const data = await response.json();
-      setDocument(data.document);
+      setDocData(data.document);
     } catch (error) {
       console.error('Error fetching document:', error);
       setError('Failed to load document details');
@@ -106,7 +106,7 @@ export default function LegalDocumentDetailsPage() {
       router.push('/dashboard/properties/legal-documents');
     } catch (error) {
       console.error('Error deleting document:', error);
-      toast.error("Error"{
+      toast.error("Error",{
         description: "Failed to delete document. Please try again.",
       });
     } finally {
@@ -116,26 +116,24 @@ export default function LegalDocumentDetailsPage() {
   };
 
   const handleDownload = async () => {
-    if (!document?.fileUrl) return;
+    if (!docData?.fileUrl) return;
 
     try {
-      const response = await fetch(document.fileUrl);
+      const response = await fetch(docData.fileUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = window.document.createElement('a');
       a.style.display = 'none';
       a.href = url;
-      a.download = document.fileName || `document-${documentId}`;
-      document.body.appendChild(a);
+      a.download = docData.fileName || `document-${documentId}`;
+      window.document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      window.document.body.removeChild(a);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast({
-        title: "Download Failed",
+      toast.error("Download Failed",{
         description: "Failed to download document. Please try again.",
-        variant: "destructive",
       });
     }
   };
@@ -191,7 +189,7 @@ export default function LegalDocumentDetailsPage() {
     );
   }
 
-  if (error || !document) {
+  if (error || !docData) {
     return (
       <div className="container mx-auto p-6">
         <Alert variant="destructive">
@@ -231,46 +229,46 @@ export default function LegalDocumentDetailsPage() {
                 <div className="flex items-center gap-3">
                   <FileText className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <CardTitle>{formatDocumentType(document.documentType)}</CardTitle>
+                    <CardTitle>{formatDocumentType(docData.documentType)}</CardTitle>
                     <CardDescription>
-                      {document.property ? `For ${document.property.title}` : 'User document'}
+                      {docData.property ? `For ${docData.property.title}` : 'User document'}
                     </CardDescription>
                   </div>
                 </div>
-                <Badge className={getStatusColor(document.status)}>
+                <Badge className={getStatusColor(docData.status)}>
                   <div className="flex items-center gap-1">
-                    {getStatusIcon(document.status)}
-                    {document.status}
+                    {getStatusIcon(docData.status)}
+                    {docData.status}
                   </div>
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Document Number */}
-              {document.documentNumber && (
+              {docData.documentNumber && (
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">
                     Document Number
                   </Label>
-                  <p className="mt-1 font-mono">{document.documentNumber}</p>
+                  <p className="mt-1 font-mono">{docData.documentNumber}</p>
                 </div>
               )}
 
               {/* File Information */}
-              {document.fileName && (
+              {docData.fileName && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">
                       File Name
                     </Label>
-                    <p className="mt-1">{document.fileName}</p>
+                    <p className="mt-1">{docData.fileName}</p>
                   </div>
-                  {document.fileSizeBytes && (
+                  {docData.fileSizeBytes && (
                     <div>
                       <Label className="text-sm font-medium text-muted-foreground">
                         File Size
                       </Label>
-                      <p className="mt-1">{formatFileSize(document.fileSizeBytes)}</p>
+                      <p className="mt-1">{formatFileSize(docData.fileSizeBytes)}</p>
                     </div>
                   )}
                 </div>
@@ -278,20 +276,20 @@ export default function LegalDocumentDetailsPage() {
 
               {/* Document Side & Page */}
               <div className="grid grid-cols-2 gap-4">
-                {document.documentSide && (
+                {docData.documentSide && (
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">
                       Document Side
                     </Label>
-                    <p className="mt-1 capitalize">{document.documentSide.toLowerCase()}</p>
+                    <p className="mt-1 capitalize">{docData.documentSide.toLowerCase()}</p>
                   </div>
                 )}
-                {document.pageNumber && (
+                {docData.pageNumber && (
                   <div>
                     <Label className="text-sm font-medium text-muted-foreground">
                       Page Number
                     </Label>
-                    <p className="mt-1">{document.pageNumber}</p>
+                    <p className="mt-1">{docData.pageNumber}</p>
                   </div>
                 )}
               </div>
@@ -302,37 +300,37 @@ export default function LegalDocumentDetailsPage() {
                   <Label className="text-sm font-medium text-muted-foreground">
                     Uploaded
                   </Label>
-                  <p className="mt-1">{new Date(document.createdAt).toLocaleDateString()}</p>
+                  <p className="mt-1">{new Date(docData.createdAt).toLocaleDateString()}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">
                     Last Updated
                   </Label>
-                  <p className="mt-1">{new Date(document.updatedAt).toLocaleDateString()}</p>
+                  <p className="mt-1">{new Date(docData.updatedAt).toLocaleDateString()}</p>
                 </div>
               </div>
 
               {/* Expiration */}
-              {document.expiresAt && (
+              {docData.expiresAt && (
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">
                     Expires On
                   </Label>
-                  <p className="mt-1">{new Date(document.expiresAt).toLocaleDateString()}</p>
+                  <p className="mt-1">{new Date(docData.expiresAt).toLocaleDateString()}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Verification Notes */}
-          {document.verificationNotes && (
+          {docData.verificationNotes && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Verification Notes</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-muted p-4 rounded-lg">
-                  <p className="text-sm">{document.verificationNotes}</p>
+                  <p className="text-sm">{docData.verificationNotes}</p>
                 </div>
               </CardContent>
             </Card>
@@ -347,7 +345,7 @@ export default function LegalDocumentDetailsPage() {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {document.fileUrl && (
+              {docData.fileUrl && (
                 <>
                   <Button
                     variant="outline"
@@ -360,7 +358,7 @@ export default function LegalDocumentDetailsPage() {
                   <Button
                     variant="outline"
                     className="w-full justify-start"
-                    onClick={() => window.open(document.fileUrl, '_blank')}
+                    onClick={() => window.open(docData.fileUrl, '_blank')}
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View
@@ -368,7 +366,7 @@ export default function LegalDocumentDetailsPage() {
                 </>
               )}
 
-              {document.status !== DocumentStatus.APPROVED && (
+              {docData.status !== DocumentStatus.APPROVED && (
                 <Button
                   variant="outline"
                   className="w-full justify-start"
@@ -400,12 +398,12 @@ export default function LegalDocumentDetailsPage() {
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm">Required</span>
-                <Badge variant={document.isRequired ? "default" : "secondary"}>
-                  {document.isRequired ? "Yes" : "No"}
+                <Badge variant={docData.isRequired ? "default" : "secondary"}>
+                  {docData.isRequired ? "Yes" : "No"}
                 </Badge>
               </div>
 
-              {document.status === DocumentStatus.PENDING && (
+              {docData.status === DocumentStatus.PENDING && (
                 <Alert>
                   <Clock className="h-4 w-4" />
                   <AlertDescription>
@@ -414,7 +412,7 @@ export default function LegalDocumentDetailsPage() {
                 </Alert>
               )}
 
-              {document.status === DocumentStatus.REJECTED && (
+              {docData.status === DocumentStatus.REJECTED && (
                 <Alert variant="destructive">
                   <X className="h-4 w-4" />
                   <AlertDescription>
@@ -423,7 +421,7 @@ export default function LegalDocumentDetailsPage() {
                 </Alert>
               )}
 
-              {document.status === DocumentStatus.EXPIRED && (
+              {docData.status === DocumentStatus.EXPIRED && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
