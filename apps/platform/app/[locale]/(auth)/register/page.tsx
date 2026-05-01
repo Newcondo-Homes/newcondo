@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { RegisterForm } from '@/components/auth/RegisterForm';
+import RegisterForm  from '@/components/auth/RegisterForm';
 
 export async function generateMetadata({
   params: { locale },
@@ -28,7 +28,11 @@ export default function RegisterPage({
         <RegisterContent keyPrefix="register.subtitle" className="text-muted-foreground" />
       </div>
 
-      <RegisterForm locale={locale} />
+
+      // TODO: see if you'll pass locale to RegisterForm for internationalization
+      {/* <RegisterForm locale={locale} /> */}
+      <RegisterForm />
+
 
       <div className="text-center text-sm">
         <RegisterContent keyPrefix="register.haveAccount" className="text-muted-foreground inline" />

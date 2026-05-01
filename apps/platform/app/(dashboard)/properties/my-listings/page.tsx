@@ -2,14 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Edit, Eye, Trash2, MapPin, Clock, DollarSign } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { useAuth } from '@/hooks/useAuth';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperties, propertyKeys } from '@/hooks/useProperties';
+import { propertyApi } from '@/lib/api/properties';
+import type { PropertyResponse } from '@/lib/api/properties';
 import { PropertyStatus, PropertyStructure } from '@newcondo/db';
+
+const statusColors: Record<string, string> = {
+  DRAFT: 'bg-gray-100 text-gray-800',
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  PUBLISHED: 'bg-green-100 text-green-800',
+  RENTED: 'bg-blue-100 text-blue-800',
+  UNAVAILABLE: 'bg-red-100 text-red-800',
+};
 
 interface Property {
   id: string;
@@ -47,23 +58,25 @@ interface Property {
   updatedAt: string;
 }
 
-const statusColors = {
-  DRAFT: 'bg-gray-100 text-gray-800',
-  PENDING: 'bg-yellow-100 text-yellow-800',
-  PUBLISHED: 'bg-green-100 text-green-800',
-  RENTED: 'bg-blue-100 text-blue-800',
-  UNAVAILABLE: 'bg-red-100 text-red-800',
-};
 
 export default function MyListingsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { properties, loading, deleteProperty } = useProperties();
+  const { data, isLoading: loading, } = useProperties();
   const [selectedTab, setSelectedTab] = useState('all');
 
-  const userProperties = properties?.filter(p => p.ownerId === user?.id) || [];
+  const properties: PropertyResponse[] = data?.properties ?? [];
 
-  const filteredProperties = userProperties.filter(property => {
+  // const userProperties = properties?.filter(p => p.ownerId === user?.id) || [];
+const { mutateAsync: deleteProperty } = useMutation({
+    mutationFn: (id: string) => propertyApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: propertyKeys.lists() });
+    },
+  });
+
+  const filteredProperties = properties.filter(property => {
     switch (selectedTab) {
       case 'published':
         return property.status === 'PUBLISHED';
@@ -104,13 +117,13 @@ export default function MyListingsPage() {
     }).format(price);
   };
 
-  const getPrimaryImage = (images: Property['images']) => {
+  const getPrimaryImage = (images: PropertyResponse['images']) => {
     const primary = images.find(img => img.isPrimary);
     return primary?.url || images[0]?.url || '/images/placeholders/property.jpg';
   };
 
-  const getPropertySummary = (property: Property) => {
-    if (property.structure === 'MULTI_FAMILY') {
+  const getPropertySummary = (property: PropertyResponse) => {
+    if ((property.structure as PropertyStructure) === 'MULTI_FAMILY') {
       return `${property.totalUnits} units • ${property.availableUnits} available`;
     }
     return `${property.bedrooms || 0} bed • ${property.bathrooms || 0} bath`;
@@ -150,7 +163,7 @@ export default function MyListingsPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Listings</h1>
           <p className="text-gray-600 mt-1">
-            {userProperties.length} {userProperties.length === 1 ? 'property' : 'properties'} listed
+            {properties.length} {properties.length === 1 ? 'property' : 'properties'} listed
           </p>
         </div>
         <Button 
@@ -164,18 +177,18 @@ export default function MyListingsPage() {
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">All ({userProperties.length})</TabsTrigger>
+          <TabsTrigger value="all">All ({properties.length})</TabsTrigger>
           <TabsTrigger value="published">
-            Published ({userProperties.filter(p => p.status === 'PUBLISHED').length})
+            Published ({properties.filter((p: PropertyResponse) => p.status === 'PUBLISHED').length})
           </TabsTrigger>
           <TabsTrigger value="draft">
-            Draft ({userProperties.filter(p => p.status === 'DRAFT').length})
+            Draft ({properties.filter((p: PropertyResponse) => p.status === 'DRAFT').length})
           </TabsTrigger>
           <TabsTrigger value="pending">
-            Pending ({userProperties.filter(p => p.status === 'PENDING').length})
+            Pending ({properties.filter((p: PropertyResponse) => p.status === 'PENDING').length})
           </TabsTrigger>
           <TabsTrigger value="rented">
-            Rented ({userProperties.filter(p => p.status === 'RENTED').length})
+            Rented ({properties.filter((p: PropertyResponse) => p.status === 'RENTED').length})
           </TabsTrigger>
         </TabsList>
 
@@ -205,7 +218,7 @@ export default function MyListingsPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProperties.map((property) => (
+              {filteredProperties.map((property: PropertyResponse) => (
                 <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative">
                     <img
@@ -258,7 +271,7 @@ export default function MyListingsPage() {
                       {property.structure === 'SINGLE_UNIT' ? (
                         <div className="flex items-center justify-between">
                           <span className="text-xl font-bold text-green-600">
-                            {property.price ? formatPrice(property.price, property.currency) : 'Price TBD'}
+                            {property.price ? formatPrice(Number(property.price), property.currency) : 'Price TBD'}
                           </span>
                           {property.price && (
                             <span className="text-sm text-gray-500">per month</span>
@@ -268,7 +281,8 @@ export default function MyListingsPage() {
                         <div className="text-sm text-gray-600">
                           {property.units && property.units.length > 0 && (
                             <span>
-                              From {formatPrice(
+                              From{' '}
+                              {formatPrice(
                                 Math.min(...property.units.map(u => u.price)), 
                                 property.currency
                               )} per month

@@ -9,7 +9,7 @@ import crypto from 'crypto';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const headersList = headers();
+    const headersList = await headers();
     const signature = headersList.get('verif-hash');
 
     // Verify webhook signature

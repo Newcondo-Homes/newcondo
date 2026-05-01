@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import MarkingQueueStatus  from '@/components/marking/MarkingQueueStatus';
+import MarkingQueueStatus from '@/components/marking/MarkingQueueStatus';
 import { MarkingJobCard } from '@/components/marking/MarkingJobCard';
-import  AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
+import AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
 import { MarkingTimerCountdown } from '@/components/marking/MarkingTimerCountdown';
 import { Button } from '@newcondo/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
@@ -13,21 +13,28 @@ import { Loader2, MapPin, Clock, CheckCircle } from 'lucide-react';
 interface MarkingJob {
   id: string;
   propertyId: string;
-  property: {
-    title: string;
-    address: string;
-    city: string;
-    state: string;
-    images: { url: string }[];
-  };
-  status: string;
+  // FIX: flat fields instead of nested property object
+  propertyTitle: string;
+  propertyAddress: string;
+  propertyImages?: string[];
+  status: 'QUEUED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
+  // FIX: paymentStatus was missing — required by MarkingJobCard
+  paymentStatus: 'PENDING' | 'SUCCESS' | 'HELD' | 'RELEASED';
   queuePosition?: number;
   timeSlotExpiry?: string;
   markingFee: number;
   contactPersonName: string;
   contactPersonPhone: string;
   accessInstructions?: string;
+  preferredTime?: string;
+  assignedAgent?: {
+    id: string;
+    name: string;
+    image?: string;
+    phone?: string;
+  };
   assignedAt?: string;
+  completedAt?: string;
   createdAt: string;
 }
 
@@ -47,6 +54,8 @@ export default function MarkingQueuePage() {
   const fetchMarkingJobs = async () => {
     try {
       setIsLoading(true);
+      //TODO: see if you can put this and all other
+      // api calls in this page to an appropriate lib/api file
       const response = await fetch('/api/marking/jobs', {
         headers: {
           'Content-Type': 'application/json',
@@ -92,10 +101,6 @@ export default function MarkingQueuePage() {
     }
   };
 
-  const handleAvailabilityChange = async (available: boolean) => {
-    setIsAvailable(available);
-    await fetchMarkingJobs();
-  };
 
   if (isLoading) {
     return (
@@ -115,10 +120,16 @@ export default function MarkingQueuePage() {
               Manage your property marking assignments
             </p>
           </div>
-          <AgentAvailabilityToggle
-            isAvailable={isAvailable}
-            onToggle={handleAvailabilityChange}
-          />
+          {user?.id && (
+            <AgentAvailabilityToggle
+              userId={user.id}
+              initialAvailability={isAvailable}
+              serviceAreas={
+                // agentServiceAreas comes from the user object if your session includes it
+                (user as any).agentServiceAreas ?? []
+              }
+            />
+          )}
         </div>
 
         {/* Stats Overview */}
@@ -187,14 +198,16 @@ export default function MarkingQueuePage() {
             <div className="space-y-4">
               {activeJobs.map((job) => (
                 <div key={job.id}>
-                  <MarkingTimerCountdown
-                    expiryTime={job.timeSlotExpiry!}
-                    jobId={job.id}
-                  />
+                  {job.timeSlotExpiry && (
+                    <MarkingTimerCountdown
+                      expiryTime={job.timeSlotExpiry}
+                    />
+                  )}
                   <MarkingJobCard
                     job={job}
-                    onAccept={() => handleAcceptJob(job.id)}
-                    onRefresh={fetchMarkingJobs}
+                    viewType="agent"
+                    onViewDetails={() => { }}
+                    onComplete={() => handleAcceptJob(job.id)}
                   />
                 </div>
               ))}
@@ -216,12 +229,16 @@ export default function MarkingQueuePage() {
               {queuedJobs.map((job) => (
                 <div key={job.id}>
                   {job.queuePosition && (
-                    <MarkingQueueStatus position={job.queuePosition} />
+                    <MarkingQueueStatus
+                      jobId={job.id}
+                      queuePosition={job.queuePosition}
+                    />
                   )}
                   <MarkingJobCard
                     job={job}
-                    onAccept={() => handleAcceptJob(job.id)}
-                    onRefresh={fetchMarkingJobs}
+                    viewType="agent"
+                    onViewDetails={() => { }}
+                    onComplete={() => handleAcceptJob(job.id)}
                   />
                 </div>
               ))}
@@ -244,7 +261,8 @@ export default function MarkingQueuePage() {
                 <MarkingJobCard
                   key={job.id}
                   job={job}
-                  onRefresh={fetchMarkingJobs}
+                  viewType="agent"
+                  onViewDetails={() => { }}
                 />
               ))}
             </div>

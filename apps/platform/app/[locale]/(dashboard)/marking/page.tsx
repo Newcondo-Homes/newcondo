@@ -1,10 +1,9 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { getServerSession } from '@newcondo/auth';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui';
+import { Button } from '@newcondo/ui';
+import { Badge } from '@newcondo/ui';
 import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
 import { DateDisplay } from '@/components/i18n/DateDisplay';
 import { MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -27,7 +26,7 @@ export default async function MarkingPage({
 }: {
   params: { locale: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   const t = await getTranslations({ locale, namespace: 'marking' });
 
   // Mock data - replace with actual API calls

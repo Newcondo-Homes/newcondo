@@ -1,12 +1,13 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { getCurrentUser } from '@/lib/api/auth'
-import { Navbar } from '@/components/shared/navigation/Navbar'
-import { PropertyCard } from '@/components/properties/PropertyCard'
+import { getServerSession } from '@newcondo/auth'
+import Navbar from '@/components/shared/navigation/Navbar'
+import PropertyCard from '@/components/properties/PropertyCard'
 import { EmptyState } from '@/components/shared/feedback/EmptyState'
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs'
 import { PropertyGridSkeleton } from '@/components/properties/PropertyGridSkeleton'
+import type { PropertyResponse } from '@/lib/api/properties'
 
 export const metadata: Metadata = {
   title: 'Favorite Properties | NewCondo',
@@ -21,7 +22,9 @@ interface FavoritesPageProps {
 
 export default async function FavoritesPage({ searchParams }: FavoritesPageProps) {
   // Check authentication
-  const user = await getCurrentUser()
+  const session = await getServerSession()
+
+  const user = session?.user
   if (!user) {
     redirect('/login?callbackUrl=/properties/favorites')
   }
@@ -35,12 +38,12 @@ export default async function FavoritesPage({ searchParams }: FavoritesPageProps
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
+
       {/* Header */}
       <div className="bg-white border-b">
         <div className="container mx-auto px-4 py-6">
           <Breadcrumbs items={breadcrumbs} />
-          
+
           <div className="mt-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -65,8 +68,8 @@ export default async function FavoritesPage({ searchParams }: FavoritesPageProps
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <Suspense fallback={<PropertyGridSkeleton />}>
-          <FavoriteProperties 
-            userId={user.id} 
+          <FavoriteProperties
+            userId={user.id}
             sortBy={searchParams.sortBy || 'newest'}
           />
         </Suspense>
@@ -99,23 +102,23 @@ function FavoritesSortSelect({ defaultValue }: { defaultValue?: string }) {
 }
 
 // Favorite properties component
-async function FavoriteProperties({ 
-  userId, 
-  sortBy 
-}: { 
+async function FavoriteProperties({
+  userId,
+  sortBy
+}: {
   userId: string
-  sortBy: string 
+  sortBy: string
 }) {
   const favorites = await getFavoriteProperties(userId, sortBy)
 
   if (!favorites || favorites.length === 0) {
     return (
       <EmptyState
+        variant="favorites"
         title="No favorite properties yet"
         description="Start browsing properties and click the heart icon to save them here for easy access later."
-        actionLabel="Browse Properties"
-        actionHref="/properties"
-        icon="💔"
+        actionText="Browse Properties"
+        onAction={undefined}
       />
     )
   }
@@ -135,13 +138,12 @@ async function FavoriteProperties({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {favorites.map((favorite) => (
           <div key={favorite.id} className="relative">
-            <PropertyCard 
+            <PropertyCard
               property={favorite.property}
-              showFavoriteButton={true}
-              isFavorited={true}
+              showComparison={false}
               className="h-full"
             />
-            
+
             {/* Favorite Date Badge */}
             <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
               Saved {new Date(favorite.createdAt).toLocaleDateString()}
@@ -161,7 +163,7 @@ async function FavoriteProperties({
               Remove Selected
             </button>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
               Compare Selected
@@ -176,95 +178,146 @@ async function FavoriteProperties({
   )
 }
 
+
+function makeMockProperty(overrides: {
+  id: string
+  title: string
+  price: number
+  address: string
+  city: string
+  state: string
+  bedrooms: number
+  bathrooms: number
+  propertyType: string
+  features: string[]
+  imageUrl: string
+}): PropertyResponse {
+  const now = new Date().toISOString()
+  return {
+    id: overrides.id,
+    title: overrides.title,
+    description: '',
+    structure: 'SINGLE_UNIT' as any,
+    price: overrides.price as any,
+    currency: 'NGN',
+    address: overrides.address,
+    city: overrides.city,
+    state: overrides.state,
+    country: 'Nigeria',
+    gpsCoordinates: null,
+    boundaryCoordinates: null,
+    boundaryVerified: false,
+    boundaryMarkedBy: null,
+    boundaryMarkedAt: null,
+    boundaryImages: [],
+    buildingFingerprint: null,
+    totalUnits: null,
+    availableUnits: null,
+    buildingFeatures: [],
+    propertyType: overrides.propertyType as any,
+    bedrooms: overrides.bedrooms,
+    bathrooms: overrides.bathrooms,
+    area: null,
+    features: overrides.features,
+    ownerId: 'mock-owner',
+    agentId: null,
+    isOwnerListing: true,
+    status: 'PUBLISHED' as any,
+    adminApprovalStatus: 'APPROVED' as any,
+    rejectionReason: null,
+    approvedAt: null,
+    approvedBy: null,
+    isAvailable: true,
+    availableFrom: null,
+    isPaymentLocked: false,
+    paymentLockExpiry: null,
+    shareableLink: null,
+    viewCount: 0,
+    favoriteCount: 0,
+    createdAt: now as any,
+    updatedAt: now as any,
+    images: [{ id: `${overrides.id}-img`, url: overrides.imageUrl, altText: null, isPrimary: true, order: 0 }],
+    owner: { id: 'mock-owner', name: null, email: 'owner@example.com', phone: null, verificationStatus: 'VERIFIED' },
+  }
+}
+
 // Mock function - replace with actual API call
 async function getFavoriteProperties(userId: string, sortBy: string) {
-  // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 300))
-  
-  // Mock favorite properties data - replace with actual API call
+ 
   const mockFavorites = [
     {
-      id: "fav1",
+      id: 'fav1',
       userId,
-      propertyId: "prop1",
+      propertyId: 'prop1',
       createdAt: new Date('2024-05-20T10:00:00Z'),
-      property: {
-        id: "prop1",
-        title: "Modern 2-Bedroom Apartment in Lekki",
+      property: makeMockProperty({
+        id: 'prop1',
+        title: 'Modern 2-Bedroom Apartment in Lekki',
         price: 1800000,
-        currency: "NGN",
-        images: [
-          { url: 'https://placehold.co/600x400/FFF/000?text=Apartment+1', isPrimary: true },
-        ],
-        address: "123 Banana Island Rd, Ikoyi",
+        address: '123 Banana Island Rd, Ikoyi',
+        city: 'Lagos',
+        state: 'Lagos',
         bedrooms: 2,
         bathrooms: 2,
-        propertyType: "APARTMENT",
-        features: ["Parking", "Generator"]
-      }
+        propertyType: 'APARTMENT',
+        features: ['Parking', 'Generator'],
+        imageUrl: 'https://placehold.co/600x400/FFF/000?text=Apartment+1',
+      }),
     },
     {
-      id: "fav2",
+      id: 'fav2',
       userId,
-      propertyId: "prop2",
+      propertyId: 'prop2',
       createdAt: new Date('2024-05-18T10:00:00Z'),
-      property: {
-        id: "prop2",
-        title: "Spacious 4-Bedroom Duplex in Lekki",
+      property: makeMockProperty({
+        id: 'prop2',
+        title: 'Spacious 4-Bedroom Duplex in Lekki',
         price: 5500000,
-        currency: "NGN",
-        images: [
-          { url: 'https://placehold.co/600x400/FFF/000?text=Duplex+1', isPrimary: true },
-        ],
-        address: "456 Main St, Lekki Phase 1",
+        address: '456 Main St, Lekki Phase 1',
+        city: 'Lagos',
+        state: 'Lagos',
         bedrooms: 4,
         bathrooms: 3,
-        propertyType: "DUPLEX",
-        features: ["Security", "Swimming Pool"]
-      }
+        propertyType: 'DUPLEX',
+        features: ['Security', 'Swimming Pool'],
+        imageUrl: 'https://placehold.co/600x400/FFF/000?text=Duplex+1',
+      }),
     },
     {
-      id: "fav3",
+      id: 'fav3',
       userId,
-      propertyId: "prop3",
+      propertyId: 'prop3',
       createdAt: new Date('2024-05-22T10:00:00Z'),
-      property: {
-        id: "prop3",
-        title: "Cozy Studio Flat in Ikoyi",
+      property: makeMockProperty({
+        id: 'prop3',
+        title: 'Cozy Studio Flat in Ikoyi',
         price: 800000,
-        currency: "NGN",
-        images: [
-          { url: 'https://placehold.co/600x400/FFF/000?text=Studio+Flat', isPrimary: true },
-        ],
-        address: "789 Royal Rd, Ikoyi",
+        address: '789 Royal Rd, Ikoyi',
+        city: 'Lagos',
+        state: 'Lagos',
         bedrooms: 1,
         bathrooms: 1,
-        propertyType: "APARTMENT",
-        features: ["Fitted Kitchen", "24/7 Power"]
-      }
+        propertyType: 'APARTMENT',
+        features: ['Fitted Kitchen', '24/7 Power'],
+        imageUrl: 'https://placehold.co/600x400/FFF/000?text=Studio+Flat',
+      }),
     },
   ]
-
-  // Sort the mock data based on the sortBy parameter
-  let sortedFavorites = [...mockFavorites];
+ 
+  const sorted = [...mockFavorites]
   switch (sortBy) {
     case 'oldest':
-      sortedFavorites.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-      break;
+      sorted.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()); break
     case 'price-low':
-      sortedFavorites.sort((a, b) => a.property.price - b.property.price);
-      break;
+      sorted.sort((a, b) => Number(a.property.price) - Number(b.property.price)); break
     case 'price-high':
-      sortedFavorites.sort((a, b) => b.property.price - a.property.price);
-      break;
+      sorted.sort((a, b) => Number(b.property.price) - Number(a.property.price)); break
     case 'alphabetical':
-      sortedFavorites.sort((a, b) => a.property.title.localeCompare(b.property.title));
-      break;
-    case 'newest':
+      sorted.sort((a, b) => a.property.title.localeCompare(b.property.title)); break
     default:
-      sortedFavorites.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      break;
+      sorted.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }
-
-  return sortedFavorites;
+ 
+  return sorted
 }

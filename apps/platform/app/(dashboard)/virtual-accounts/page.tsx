@@ -8,11 +8,11 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Separator } from '@newcondo/ui/components/separator';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { ErrorBoundary } from '@/components/shared/feedback/ErrorBoundary';
-import { 
-  CreditCard, 
-  Building2, 
-  Plus, 
-  Eye, 
+import {
+  CreditCard,
+  Building2,
+  Plus,
+  Eye,
   Download,
   TrendingUp,
   TrendingDown,
@@ -22,7 +22,7 @@ import {
   Check
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import api  from '@/lib/api/client';
+import api from '@/lib/api/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -51,6 +51,11 @@ interface AccountStats {
   monthlyOutflow: number;
 }
 
+// Shape your api client wraps list responses in
+interface VirtualAccountsApiResponse {
+  data: VirtualAccount[];
+}
+
 export default function VirtualAccountsPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -68,8 +73,8 @@ export default function VirtualAccountsPage() {
 
   const fetchVirtualAccounts = async () => {
     try {
-      const response = await api.get('/virtual-accounts');
-      setAccounts(response.data as any);
+      const response = await api.get<VirtualAccountsApiResponse>('/virtual-accounts');
+      setAccounts(response.data?.data ?? []);
     } catch (error) {
       console.error('Error fetching virtual accounts:', error);
       toast.error('Failed to load virtual accounts');
@@ -78,8 +83,8 @@ export default function VirtualAccountsPage() {
 
   const fetchAccountStats = async () => {
     try {
-      const response = await api.get('/virtual-accounts/stats');
-      setStats(response.data);
+      const response = await api.get<AccountStats>('/virtual-accounts/stats');
+      setStats(response.data ?? null);
     } catch (error) {
       console.error('Error fetching account stats:', error);
     } finally {
@@ -92,7 +97,7 @@ export default function VirtualAccountsPage() {
       await navigator.clipboard.writeText(accountNumber);
       setCopiedAccount(accountNumber);
       toast.success('Account number copied to clipboard');
-      
+
       setTimeout(() => {
         setCopiedAccount(null);
       }, 2000);
@@ -103,11 +108,17 @@ export default function VirtualAccountsPage() {
 
   const downloadStatement = async (accountId: string) => {
     try {
-      const response = await api.get(`/virtual-accounts/${accountId}/statement`, {
-        responseType: 'blob'
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      //TODO: confirm NEXT_PUBLIC_API_BASE_URL exist in enviroment variable
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/virtual-accounts/${accountId}/statement`,
+        { credentials: 'include' }
+      );
+
+      if (!response.ok) throw new Error('Failed to download statement');
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `statement-${accountId}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
@@ -115,7 +126,7 @@ export default function VirtualAccountsPage() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
-      
+
       toast.success('Statement downloaded successfully');
     } catch (error) {
       console.error('Error downloading statement:', error);
@@ -149,7 +160,7 @@ export default function VirtualAccountsPage() {
             <h1 className="text-2xl font-bold text-gray-900">Virtual Accounts</h1>
             <p className="text-gray-600">Manage your property virtual accounts and track transactions</p>
           </div>
-          <Button 
+          <Button
             onClick={() => router.push('/properties/create')}
             className="sm:w-auto"
           >
@@ -226,7 +237,7 @@ export default function VirtualAccountsPage() {
         {/* Virtual Accounts List */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">Your Virtual Accounts</h2>
-          
+
           {accounts.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
@@ -240,7 +251,7 @@ export default function VirtualAccountsPage() {
                       Create your first property listing to automatically generate a virtual account
                     </p>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => router.push('/properties/create')}
                     className="mt-4"
                   >
@@ -266,7 +277,7 @@ export default function VirtualAccountsPage() {
                           </CardDescription>
                         )}
                       </div>
-                      <Badge 
+                      <Badge
                         variant={account.isActive ? 'default' : 'secondary'}
                         className={account.isActive ? 'bg-green-100 text-green-800' : ''}
                       >
@@ -363,8 +374,8 @@ export default function VirtualAccountsPage() {
               <div>
                 <h3 className="font-medium text-blue-900">About Virtual Accounts</h3>
                 <p className="text-blue-700 text-sm mt-1">
-                  Virtual accounts are automatically created when you list a property. They allow tenants to pay rent 
-                  directly to your dedicated account, making rent collection seamless and transparent. All transactions 
+                  Virtual accounts are automatically created when you list a property. They allow tenants to pay rent
+                  directly to your dedicated account, making rent collection seamless and transparent. All transactions
                   are tracked and reconciled automatically.
                 </p>
               </div>

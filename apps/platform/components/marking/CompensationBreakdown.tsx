@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 
 interface CompensationBreakdownProps {
-  markingType: 'self' | 'known_person' | 'newcondo' | 'agent_network';
+  markingType?: 'self' | 'known_person' | 'newcondo' | 'agent_network';
   isPropertyOwner?: boolean;
   userRole?: 'OWNER' | 'AGENT' | 'RENTER';
 }
@@ -40,9 +40,9 @@ const MARKING_FEES = {
 };
 
 export const CompensationBreakdown: React.FC<CompensationBreakdownProps> = ({
-  markingType,
-  isPropertyOwner = true,
-  userRole = 'OWNER',
+  markingType = 'agent_network',
+  isPropertyOwner = false,
+  userRole = 'AGENT',
 }) => {
   const compensation = useMemo((): CompensationDetails => {
     switch (markingType) {

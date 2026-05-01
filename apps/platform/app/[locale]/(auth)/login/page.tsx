@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import { LoginForm } from '@/components/auth/LoginForm';
+import LoginForm  from '@/components/auth/LoginForm';
 
 export async function generateMetadata({
   params: { locale },
@@ -28,7 +28,10 @@ export default function LoginPage({
         <LoginContent keyPrefix="login.subtitle" className="text-muted-foreground" />
       </div>
 
-      <LoginForm locale={locale} />
+      // TODO: see if you'll pass locale to loginform for internationalization
+      {/* <LoginForm locale={locale} /> */}
+      <LoginForm  />
+
 
       <div className="text-center text-sm">
         <LoginContent keyPrefix="login.noAccount" className="text-muted-foreground inline" />

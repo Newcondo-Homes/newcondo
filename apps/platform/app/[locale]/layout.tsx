@@ -2,9 +2,9 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Inter } from 'next/font/google';
-import { locales, rtlLocales } from '@/i18n';
+import { locales, rtlLocales } from '@newcondo/i18n';
 import { Providers } from '@/components/providers';
-import { Toaster } from '@/components/ui/toaster';
+import { Toaster } from '@newcondo/ui';
 import '@/app/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });

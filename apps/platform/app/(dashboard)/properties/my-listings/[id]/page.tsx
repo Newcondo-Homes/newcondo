@@ -17,8 +17,11 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { Separator } from '@newcondo/ui/components/separator';
 import { useAuth } from '@/hooks/useAuth';
-import { useProperties } from '@/hooks/useProperties';
+import { useProperty } from '@/hooks/useProperties';
+//TODO: check to use filerouter here
+import { useUploadThing } from '@/lib/uploadthing';
 import { useUpload } from '@/hooks/useUpload';
+import { propertyApi } from '@/lib/api/properties';
 import { PropertyType, PropertyStatus, PropertyStructure } from '@newcondo/db';
 
 const propertyFormSchema = z.object({
@@ -101,11 +104,12 @@ export default function EditListingPage() {
     const params = useParams();
     const propertyId = params.id as string;
     const { user } = useAuth();
-    const { getProperty, updateProperty } = useProperties();
-    const { uploadFiles, uploading } = useUpload();
+    const { data: propertyData, isLoading: propertyLoading } = useProperty(propertyId);;
+    const { startUpload, isUploading } = useUploadThing('propertyImages');
 
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+
     const [saving, setSaving] = useState(false);
     const [images, setImages] = useState<PropertyImage[]>([]);
     const [units, setUnits] = useState<PropertyUnit[]>([]);
@@ -136,74 +140,67 @@ export default function EditListingPage() {
     const watchStructure = form.watch('structure');
 
     useEffect(() => {
-        loadProperty();
-    }, [propertyId]);
+        if (!propertyData) return;
 
-    const loadProperty = async () => {
-        try {
-            setLoading(true);
-            const propertyData = await getProperty(propertyId);
-
-            if (!propertyData) {
-                router.push('/dashboard/properties/my-listings');
-                return;
-            }
-
-            // Check if user owns this property
-            if (propertyData.ownerId !== user?.id) {
-                router.push('/dashboard/properties/my-listings');
-                return;
-            }
-
-            setProperty(propertyData);
-
-            // Populate form
-            form.reset({
-                title: propertyData.title,
-                description: propertyData.description,
-                price: propertyData.price || undefined,
-                currency: propertyData.currency,
-                address: propertyData.address,
-                city: propertyData.city,
-                state: propertyData.state,
-                country: propertyData.country,
-                propertyType: propertyData.propertyType,
-                structure: propertyData.structure,
-                bedrooms: propertyData.bedrooms || undefined,
-                bathrooms: propertyData.bathrooms || undefined,
-                area: propertyData.area || undefined,
-                features: propertyData.features || [],
-                totalUnits: propertyData.totalUnits || undefined,
-                availableUnits: propertyData.availableUnits || undefined,
-                buildingFeatures: propertyData.buildingFeatures || [],
-                status: propertyData.status,
-                isAvailable: propertyData.isAvailable,
-            });
-
-            setImages(propertyData.images || []);
-            setUnits(propertyData.units || []);
-        } catch (error) {
-            console.error('Failed to load property:', error);
+        // Redirect if user doesn't own this property
+        if (propertyData.ownerId !== user?.id) {
             router.push('/dashboard/properties/my-listings');
-        } finally {
-            setLoading(false);
+            return;
         }
-    };
+
+        form.reset({
+            title: propertyData.title,
+            description: propertyData.description,
+            price: propertyData.price ? Number(propertyData.price) : undefined,
+            currency: propertyData.currency,
+            address: propertyData.address,
+            city: propertyData.city,
+            state: propertyData.state,
+            country: propertyData.country,
+            propertyType: propertyData.propertyType,
+            structure: propertyData.structure,
+            bedrooms: propertyData.bedrooms ?? undefined,
+            bathrooms: propertyData.bathrooms ?? undefined,
+            area: propertyData.area ?? undefined,
+            features: propertyData.features ?? [],
+            totalUnits: propertyData.totalUnits ?? undefined,
+            availableUnits: propertyData.availableUnits ?? undefined,
+            buildingFeatures: propertyData.buildingFeatures ?? [],
+            status: propertyData.status,
+            isAvailable: propertyData.isAvailable,
+        });
+
+        setImages((propertyData.images ?? []).map((img, i) => ({
+            id: img.id,
+            url: img.url,
+            altText: img.altText ?? undefined,
+            isPrimary: img.isPrimary,
+            order: img.order ?? i,
+        })));
+
+        setUnits(
+            ((propertyData as any).units ?? []).map((u: PropertyUnit) => u)
+        );
+    }, [propertyData, user?.id]);
+
+
+
 
     const handleImageUpload = async (files: FileList) => {
-        try {
-            const uploadedFiles = await uploadFiles(Array.from(files));
-            const newImages = uploadedFiles.map((file, index) => ({
+        const fileArray = Array.from(files);
+        const uploaded = await startUpload(fileArray);
+        if (!uploaded) return;
+
+        const newImages: PropertyImage[] = uploaded.map(
+            (file: { url: string; name: string }, index: number) => ({
                 id: `new-${Date.now()}-${index}`,
                 url: file.url,
                 altText: file.name,
                 isPrimary: images.length === 0 && index === 0,
                 order: images.length + index,
-            }));
-            setImages([...images, ...newImages]);
-        } catch (error) {
-            console.error('Failed to upload images:', error);
-        }
+            })
+        );
+        setImages((prev) => [...prev, ...newImages]);
     };
 
     const handleImageDelete = (imageId: string) => {
@@ -217,13 +214,9 @@ export default function EditListingPage() {
         })));
     };
 
-    const handleAddUnit = async (data: UnitFormData) => {
-        const newUnit: PropertyUnit = {
-            id: `new-${Date.now()}`,
-            ...data,
-            images: [],
-        };
-        setUnits([...units, newUnit]);
+    const handleAddUnit = (data: UnitFormData) => {
+        const newUnit: PropertyUnit = { id: `new-${Date.now()}`, ...data, images: [] };
+        setUnits((prev) => [...prev, newUnit]);
         setShowAddUnit(false);
         unitForm.reset();
     };
@@ -233,35 +226,28 @@ export default function EditListingPage() {
         unitForm.reset(unit);
     };
 
-    const handleUpdateUnit = async (data: UnitFormData) => {
+    const handleUpdateUnit = (data: UnitFormData) => {
         if (!editingUnit) return;
-
-        setUnits(units.map(unit =>
-            unit.id === editingUnit.id
-                ? { ...unit, ...data }
-                : unit
-        ));
+        setUnits((prev) =>
+            prev.map((u) => (u.id === editingUnit.id ? { ...u, ...data } : u))
+        );
         setEditingUnit(null);
         unitForm.reset();
     };
 
     const handleDeleteUnit = (unitId: string) => {
         if (confirm('Are you sure you want to delete this unit?')) {
-            setUnits(units.filter(unit => unit.id !== unitId));
+            setUnits((prev) => prev.filter((u) => u.id !== unitId));
         }
     };
 
     const onSubmit = async (data: PropertyFormData) => {
         try {
             setSaving(true);
-
-            const updateData = {
+            await propertyApi.update({
+                id: propertyId,
                 ...data,
-                images: images,
-                units: watchStructure === 'MULTI_FAMILY' ? units : [],
-            };
-
-            await updateProperty(propertyId, updateData);
+            });
             router.push('/dashboard/properties/my-listings');
         } catch (error) {
             console.error('Failed to update property:', error);
@@ -270,7 +256,7 @@ export default function EditListingPage() {
         }
     };
 
-    if (loading) {
+    if (propertyLoading) {
         return (
             <div className="space-y-6">
                 <div className="flex items-center gap-4">
@@ -642,8 +628,8 @@ export default function EditListingPage() {
                                             id="image-upload"
                                         />
                                         <label htmlFor="image-upload">
-                                            <Button type="button" variant="outline" disabled={uploading}>
-                                                {uploading ? 'Uploading...' : 'Select Images'}
+                                            <Button type="button" variant="outline" disabled={isUploading}>
+                                                {isUploading ? 'Uploading...' : 'Select Images'}
                                             </Button>
                                         </label>
                                     </div>

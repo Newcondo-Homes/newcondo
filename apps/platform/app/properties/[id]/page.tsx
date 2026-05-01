@@ -115,7 +115,6 @@ export default async function PropertyPage({ params, searchParams }: PropertyPag
               }>
                 <PropertyDetails 
                   property={property} 
-                  selectedUnit={searchParams.unit} 
                 />
               </Suspense>
             </section>
@@ -309,51 +308,104 @@ function CopyLinkButton({ url }: { url: string }) {
   )
 }
 
-// Mock function - replace with actual API call
+//TODO: Mock function - replace with actual API call
 async function getProperty(id: string) {
-  // Simulate API call delay
   await new Promise(resolve => setTimeout(resolve, 200))
-  
-  // Mock property data - replace with actual API call
+ 
   return {
+    // ── identity ──────────────────────────────────────────────────────────
     id,
-    title: "Luxury 3-Bedroom Apartment in Victoria Island",
-    description: "Beautiful modern apartment with stunning city views, premium finishes, and excellent amenities. Perfect for professionals and families looking for comfort and convenience in the heart of Lagos.",
+    title: 'Luxury 3-Bedroom Apartment in Victoria Island',
+    description:
+      'Beautiful modern apartment with stunning city views, premium finishes, and excellent amenities. Perfect for professionals and families.',
+    propertyType: 'APARTMENT',
+ 
+    // ── structure (required by PropertyForDisplay & PropertyActions) ──────
+    structure: 'SINGLE_UNIT' as const,
+ 
+    // ── pricing ───────────────────────────────────────────────────────────
     price: 2500000,
-    currency: "NGN",
-    propertyType: "APARTMENT",
+    currency: 'NGN',
+ 
+    // ── unit details ──────────────────────────────────────────────────────
     bedrooms: 3,
     bathrooms: 2,
-    area: "120 sqm",
-    address: "123 Ahmadu Bello Way, Victoria Island",
-    city: "Lagos",
-    state: "Lagos",
-    country: "Nigeria",
-    features: ["Parking", "Generator", "Security", "Swimming Pool", "Gym", "24/7 Water"],
-    isAvailable: true,
-    availableFrom: new Date(),
-    images: [
-      {
-        id: "1",
-        url: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop",
-        altText: "Living room view",
-        isPrimary: true,
-        order: 0
-      }
-    ],
+    area: '120 sqm',
+ 
+    // ── location ──────────────────────────────────────────────────────────
+    address: '123 Ahmadu Bello Way, Victoria Island',
+    city: 'Lagos',
+    state: 'Lagos',
+    country: 'Nigeria',
+    gpsCoordinates: JSON.stringify({ lat: 6.4541, lng: 3.424 }),
+ 
+    // ── boundary (required by PropertyForDisplay) ─────────────────────────
     boundaryCoordinates: {
-      type: "Polygon",
-      coordinates: [[[6.4541, 3.4240], [6.4542, 3.4240], [6.4542, 3.4241], [6.4541, 3.4241], [6.4541, 3.4240]]]
+      type: 'Polygon',
+      coordinates: [
+        [[3.424, 6.4541], [3.4241, 6.4541], [3.4241, 6.4542], [3.424, 6.4542], [3.424, 6.4541]],
+      ],
     },
     boundaryVerified: true,
-    gpsCoordinates: JSON.stringify({ lat: 6.4541, lng: 3.4240 }),
+    boundaryMarkedBy: null,
+    boundaryMarkedAt: null,
+    boundaryImages: [] as string[],           // required by PropertyForDisplay
+    buildingFingerprint: null,
+ 
+    // ── multi-family fields (required by PropertyForDisplay) ──────────────
+    totalUnits: null,
+    availableUnits: null,
+    buildingFeatures: [] as string[],         // required by PropertyForDisplay
+ 
+    // ── features ──────────────────────────────────────────────────────────
+    features: ['Parking', 'Generator', 'Security', 'Swimming Pool', 'Gym'],
+ 
+    // ── ownership (required by PropertyForDisplay) ────────────────────────
+    ownerId: 'owner1',                        // required by PropertyForDisplay
+    agentId: null,
+    isOwnerListing: true,
+ 
+    // ── status (required by PropertyActions & PropertyForDisplay) ─────────
+    status: 'PUBLISHED' as const,
+    adminApprovalStatus: 'APPROVED' as const,
+    rejectionReason: null,
+    approvedAt: new Date('2024-01-16'),
+    approvedBy: null,
+ 
+    // ── availability ──────────────────────────────────────────────────────
+    isAvailable: true,
+    availableFrom: new Date(),
+    isPaymentLocked: false,
+    paymentLockExpiry: null,
+ 
+    // ── marketing ─────────────────────────────────────────────────────────
+    shareableLink: null,
     viewCount: 1247,
     favoriteCount: 89,
+ 
+    // ── timestamps ────────────────────────────────────────────────────────
     createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15'),
+ 
+    // ── relations ─────────────────────────────────────────────────────────
+    images: [
+      {
+        id: '1',
+        url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=600&fit=crop',
+        altText: 'Living room view',
+        isPrimary: true,
+        order: 0,
+      },
+    ],
+    units: undefined,
     owner: {
-      id: "owner1",
-      name: "John Doe",
-      image: null
-    }
+      id: 'owner1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      phone: '+2348012345678',
+      verificationStatus: 'VERIFIED',
+    },
+    agent: null,
+    _count: { rentals: 0, duplicateReports: 0 },
   }
 }

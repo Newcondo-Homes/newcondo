@@ -3,24 +3,24 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@newcondo/ui";
 import { Button } from "@newcondo/ui";
 import { Badge } from "@newcondo/ui";
 import { Alert, AlertDescription } from "@newcondo/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui";
-import { ConsentDocumentForm } from "@/components/legal/ConsentDocumentForm";
+import ConsentDocumentForm from "@/components/legal/ConsentDocumentForm";
 import { OwnershipProofUpload } from "@/components/legal/OwnershipProofUpload";
 import { AgentPermissionForm } from "@/components/legal/AgentPermissionForm";
 import { UndertakingForm } from "@/components/legal/UndertakingForm";
 import { LegalDocumentsList } from "@/components/legal/LegalDocumentsList";
 import { ComplianceStatus } from "@/components/legal/ComplianceStatus";
 import { useAuth } from "@/hooks/useAuth";
-import { useProperties } from "@/hooks/useProperties";
-import { 
-  ArrowLeft, 
-  FileCheck, 
-  AlertTriangle, 
-  CheckCircle, 
+import { useProperty } from "@/hooks/useProperties";
+import {
+  ArrowLeft,
+  FileCheck,
+  AlertTriangle,
+  CheckCircle,
   Clock,
   XCircle,
   RefreshCw,
@@ -29,13 +29,20 @@ import {
 
 interface LegalDocument {
   id: string;
-  type: string;
-  fileName: string;
-  fileUrl: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
+  documentType: string;       // ← was `type` — wrong field name
+  fileName?: string;
+  fileUrl?: string;
+  fileSizeBytes?: number;
+  status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
   verificationNotes?: string;
+  isRequired: boolean;        // ← was missing
   createdAt: string;
   updatedAt: string;
+  documentSide?: "FRONT" | "BACK" | "SINGLE";
+  documentNumber?: string;
+  pageNumber?: number;
+  propertyId?: string;
+  expiresAt?: string;
 }
 
 interface PropertyLegal {
@@ -50,25 +57,19 @@ export default function PropertyLegalPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { getPropertyById } = useProperties();
   const propertyId = params.id as string;
 
-  const [property, setProperty] = useState<any>(null);
+  const { data: property, isLoading: propertyLoading } = useProperty(propertyId);
+
   const [legalData, setLegalData] = useState<PropertyLegal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchLegalData = async () => {
       setIsLoading(true);
       try {
-        // Fetch property data
-        const propertyData = await getPropertyById(propertyId);
-        setProperty(propertyData);
-
-        // Fetch legal compliance data
-        // This would be an API call to get legal documents
+        // Mock legal data — replace with real API call
         const mockLegalData: PropertyLegal = {
           id: "legal_" + propertyId,
           propertyId,
@@ -77,26 +78,27 @@ export default function PropertyLegalPage() {
           documents: [
             {
               id: "doc1",
-              type: "OWNERSHIP_DOCUMENT",
+              documentType: "OWNERSHIP_DOCUMENT",  // ← correct field name
               fileName: "property_deed.pdf",
               fileUrl: "/documents/property_deed.pdf",
               status: "APPROVED",
+              isRequired: true,
               createdAt: "2025-01-01T10:00:00Z",
-              updatedAt: "2025-01-02T10:00:00Z"
+              updatedAt: "2025-01-02T10:00:00Z",
             },
             {
               id: "doc2",
-              type: "UNDERTAKING_DOCUMENT",
+              documentType: "UNDERTAKING_DOCUMENT",
               fileName: "signed_undertaking.pdf",
               fileUrl: "/documents/signed_undertaking.pdf",
               status: "PENDING",
+              isRequired: true,
               verificationNotes: "Signature verification in progress",
               createdAt: "2025-01-01T10:00:00Z",
-              updatedAt: "2025-01-01T10:00:00Z"
-            }
-          ]
+              updatedAt: "2025-01-01T10:00:00Z",
+            },
+          ],
         };
-        
         setLegalData(mockLegalData);
       } catch (error) {
         console.error("Error fetching legal data:", error);
@@ -105,27 +107,11 @@ export default function PropertyLegalPage() {
       }
     };
 
-    if (propertyId) {
-      fetchData();
-    }
-  }, [propertyId, getPropertyById]);
+    if (propertyId) fetchLegalData();
+  }, [propertyId]);
 
-  const handleDocumentUpdate = async (documentType: string, file: File) => {
-    setIsUpdating(true);
-    try {
-      // Upload and update document
-      // This would be an API call to upload the new document
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-      
-      // Refresh legal data
-      // In real app, you'd refetch from API
-      console.log(`Updated ${documentType} document`);
-    } catch (error) {
-      console.error("Error updating document:", error);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
+
+
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -153,7 +139,7 @@ export default function PropertyLegalPage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || propertyLoading) {
     return (
       <div className="container mx-auto p-6 max-w-4xl">
         <div className="animate-pulse space-y-6">
@@ -178,6 +164,11 @@ export default function PropertyLegalPage() {
     );
   }
 
+  // Derive user role for components that need it
+  const userRole: "OWNER" | "AGENT" | "RENTER" =
+    user?.role === "AGENT" ? "AGENT" :
+      user?.role === "OWNER" ? "OWNER" : "RENTER";
+
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       {/* Header */}
@@ -200,7 +191,6 @@ export default function PropertyLegalPage() {
           variant="outline"
           size="sm"
           onClick={() => window.location.reload()}
-          disabled={isUpdating}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
@@ -218,9 +208,24 @@ export default function PropertyLegalPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ComplianceStatus 
-            propertyId={propertyId}
-            documentType="property_legal"
+          <ComplianceStatus
+            userRole={userRole}
+            userVerificationStatus={
+              (user as any)?.verificationStatus ?? "PENDING"
+            }
+            documents={legalData.documents.map((d) => ({
+              id: d.id,
+              documentType: d.documentType,
+              status: d.status as "PENDING" | "APPROVED" | "REJECTED",
+              createdAt: d.createdAt,
+              verificationNotes: d.verificationNotes,
+            }))}
+            onUploadDocument={(documentType) => {
+              router.push(
+                `/dashboard/properties/legal-documents/upload?propertyId=${propertyId}&type=${documentType}`
+              );
+            }}
+            onViewDetails={() => setActiveTab("documents")}
           />
         </CardContent>
       </Card>
@@ -255,7 +260,7 @@ export default function PropertyLegalPage() {
                       <div className="flex items-center space-x-4">
                         <span className="text-xl">{getStatusIcon(doc.status)}</span>
                         <div>
-                          <p className="font-semibold">{doc.type.replace(/_/g, " ")}</p>
+                          <p className="font-semibold">{doc.documentType.replace(/_/g, " ")}</p>
                           <p className="text-sm text-muted-foreground">Status: <span className={getStatusColor(doc.status)}>{doc.status}</span></p>
                           {doc.verificationNotes && (
                             <p className="text-xs text-red-500 mt-1">Notes: {doc.verificationNotes}</p>
@@ -291,7 +296,44 @@ export default function PropertyLegalPage() {
                   </AlertDescription>
                 </Alert>
               ) : (
-                <LegalDocumentsList documents={legalData.documents} />
+                <LegalDocumentsList
+                  documents={legalData.documents}
+                  properties={[{ id: propertyId, title: property.title, address: property.address }]}
+                  userRole={userRole}
+                  onUploadDocument={(documentType) => {
+                    router.push(
+                      `/dashboard/properties/legal-documents/upload?propertyId=${propertyId}&type=${documentType}`
+                    );
+                  }}
+                  onViewDocument={(docId) => {
+                    const doc = legalData.documents.find((d) => d.id === docId);
+                    if (doc?.fileUrl) window.open(doc.fileUrl, "_blank");
+                  }}
+                  onDownloadDocument={(docId) => {
+                    const doc = legalData.documents.find((d) => d.id === docId);
+                    if (doc?.fileUrl) {
+                      const a = window.document.createElement("a");
+                      a.href = doc.fileUrl;
+                      a.download = doc.fileName ?? "document";
+                      a.click();
+                    }
+                  }}
+                  onDeleteDocument={(docId) => {
+                    setLegalData((prev) =>
+                      prev
+                        ? { ...prev, documents: prev.documents.filter((d) => d.id !== docId) }
+                        : prev
+                    );
+                  }}
+                  onRetryUpload={(docId) => {
+                    const doc = legalData.documents.find((d) => d.id === docId);
+                    if (doc) {
+                      router.push(
+                        `/dashboard/properties/legal-documents/upload?propertyId=${propertyId}&type=${doc.documentType}`
+                      );
+                    }
+                  }}
+                />
               )}
             </CardContent>
           </Card>
@@ -307,16 +349,86 @@ export default function PropertyLegalPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {user?.userType === 'LANDLORD' && (
-                  <OwnershipProofUpload propertyId={propertyId} onUpdate={handleDocumentUpdate} isLoading={isUpdating} />
+                {user?.userType === "LANDLORD" && (
+                  <OwnershipProofUpload
+                    propertyId={propertyId}
+                    onUploadComplete={(doc) => {
+                      setLegalData((prev) =>
+                        prev
+                          ? {
+                            ...prev,
+                            documents: [
+                              ...prev.documents,
+                              {
+                                id: doc.id,
+                                documentType: "OWNERSHIP_DOCUMENT",
+                                fileName: doc.fileName,
+                                fileUrl: doc.fileUrl,
+                                fileSizeBytes: doc.fileSizeBytes,
+                                status: doc.status,
+                                isRequired: true,
+                                createdAt: doc.createdAt,
+                                updatedAt: doc.createdAt,
+                              },
+                            ],
+                          }
+                          : prev
+                      );
+                    }}
+                  />
                 )}
-                {user?.userType === 'AGENT' && (
-                  <ConsentDocumentForm propertyId={propertyId} onUpdate={handleDocumentUpdate} isLoading={isUpdating} />
+
+                {user?.userType === "AGENT" && (
+                  <ConsentDocumentForm
+                    properties={[
+                      {
+                        id: propertyId,
+                        title: property.title,
+                        address: property.address,
+                        city: property.city,
+                        state: property.state,
+                      },
+                    ]}
+                    onSubmit={async (_data) => {
+                      //TODO: 
+                      // handle consent form submission
+                    }}
+                  />
                 )}
-                {user?.userType === 'AGENT' && (
-                  <AgentPermissionForm propertyId={propertyId} onUpdate={handleDocumentUpdate} isLoading={isUpdating} />
+
+                {user?.userType === "AGENT" && (
+                  <AgentPermissionForm
+                    propertyId={propertyId}
+                    onSubmit={(_data) => {
+                      // TODO:
+                      // handle permission form submission
+                    }}
+                  />
                 )}
-                <UndertakingForm propertyId={propertyId} onUpdate={handleDocumentUpdate} isLoading={isUpdating} />
+
+                <UndertakingForm
+                  propertyId={propertyId}
+                  onSuccess={(documentId) => {
+                    setLegalData((prev) =>
+                      prev
+                        ? {
+                          ...prev,
+                          documents: [
+                            ...prev.documents,
+                            {
+                              id: documentId,
+                              documentType: "UNDERTAKING_DOCUMENT",
+                              status: "PENDING",
+                              isRequired: true,
+                              createdAt: new Date().toISOString(),
+                              updatedAt: new Date().toISOString(),
+                            },
+                          ],
+                        }
+                        : prev
+                    );
+                  }}
+                />
               </div>
             </CardContent>
           </Card>

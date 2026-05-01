@@ -6,7 +6,7 @@ import { cn } from '@newcondo/ui/lib/utils';
 
 interface BreadcrumbItem {
   label: string;
-  href: string;
+  href?: string;
 }
 
 interface BreadcrumbsProps {
@@ -31,9 +31,9 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
         const isLast = index === items.length - 1;
 
         return (
-          <span key={item.href} className="flex items-center space-x-1">
+          <span key={index} className="flex items-center space-x-1">
             <ChevronRight className="h-4 w-4 flex-shrink-0" />
-            {isLast ? (
+            {isLast || !item.href ? (
               <span className="font-medium text-foreground truncate max-w-[200px]">
                 {item.label}
               </span>

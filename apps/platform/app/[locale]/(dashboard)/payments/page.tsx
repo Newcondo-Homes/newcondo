@@ -1,11 +1,10 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { PaymentHistory } from '@/components/payments/PaymentHistory';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui';
 import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
 import { Wallet, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
 
 export async function generateMetadata({
@@ -26,7 +25,7 @@ export default async function PaymentsPage({
 }: {
   params: { locale: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   const t = await getTranslations({ locale, namespace: 'payments' });
 
   // Mock data - replace with actual API calls
@@ -105,19 +104,23 @@ export default async function PaymentsPage({
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          <PaymentHistory locale={locale} filter="all" />
+          {/* <PaymentHistory locale={locale} filter="all" /> */}
+          <PaymentHistory  />
         </TabsContent>
 
         <TabsContent value="received" className="space-y-4">
-          <PaymentHistory locale={locale} filter="received" />
+          {/* <PaymentHistory locale={locale} filter="received" /> */}
+          <PaymentHistory  />
         </TabsContent>
 
         <TabsContent value="sent" className="space-y-4">
-          <PaymentHistory locale={locale} filter="sent" />
+          {/* <PaymentHistory locale={locale} filter="sent" /> */}
+          <PaymentHistory  />
         </TabsContent>
 
         <TabsContent value="pending" className="space-y-4">
-          <PaymentHistory locale={locale} filter="pending" />
+          {/* <PaymentHistory locale={locale} filter="pending" /> */}
+          <PaymentHistory  />
         </TabsContent>
       </Tabs>
     </div>

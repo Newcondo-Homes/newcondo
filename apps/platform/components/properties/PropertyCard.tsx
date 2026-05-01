@@ -9,28 +9,59 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@newcondo/ui/lib/utils';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyShare from './PropertyShare';
-import type { PropertyWithDetails as Property } from '@/types/property';
 import type { PropertyResponse } from '@/lib/api/properties';
 import { usePropertyStore } from '@/store/propertyStore';
 
-// interface PropertyCardProps {
-//   property: Property;
-//   showComparison?: boolean;
-//   isSelected?: boolean;
-//   onToggleComparison?: () => void;
-//   className?: string;
-//   priority?: boolean; // For above-the-fold images
-//   onClick?: () => void;
-// }
+function toNumber(val: unknown): number {
+  if (val == null) return 0;
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') return parseFloat(val) || 0;
+  if (typeof val === 'object' && 'toNumber' in (val as any)) return (val as any).toNumber();
+  return Number(val) || 0;
+}
+
+export interface PropertyCardData {
+  id: string;
+  title: string;
+  description?: string | null;
+  price?:  number | string | { toNumber(): number; toString(): string } | null;
+  currency: string;
+  address: string;
+  city: string;
+  state: string;
+  propertyType: string;
+  structure?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  area?: string | null;
+  features: string[];
+  images: Array<{
+    id: string;
+    url: string;
+    altText?: string | null;
+    isPrimary: boolean;
+    order?: number;
+  }>;
+  totalUnits?: number | null;
+  availableUnits?: number | null;
+  isAvailable: boolean;
+  isPaymentLocked?: boolean | null;
+  status?: string | null;
+  availableFrom?: string | Date | null;
+  viewCount?: number;
+  favoriteCount?: number;
+}
 
 interface PropertyCardProps {
-  property: PropertyResponse;
+  property: PropertyCardData;
   showComparison?: boolean;
   isSelected?: boolean;
   onToggleComparison?: () => void;
   className?: string;
   priority?: boolean; // For above-the-fold images
   onClick?: () => void;
+  showFavoriteButton?: boolean;
+  isFavorited?: boolean;
 }
 
 const PropertyCard = memo(function PropertyCard({

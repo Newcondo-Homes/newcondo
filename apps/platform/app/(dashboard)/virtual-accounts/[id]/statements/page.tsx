@@ -25,6 +25,9 @@ import {
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@newcondo/ui/components/table';
 
+// TODO: remember to implement virtualAccount webhooks and websockets 
+// for instant notifications.
+// look at the newcondo prompts folder for virtual accounts
 interface Statement {
   id: string;
   month: string; // YYYY-MM format
@@ -64,8 +67,7 @@ interface VirtualAccountInfo {
 export default function VirtualAccountStatementsPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { user } = useAuth();
-  
+
   const [accountInfo, setAccountInfo] = useState<VirtualAccountInfo | null>(null);
   const [statements, setStatements] = useState<Statement[]>([]);
   const [selectedStatement, setSelectedStatement] = useState<Statement | null>(null);
@@ -74,7 +76,7 @@ export default function VirtualAccountStatementsPage() {
   const [loadingTransactions, setLoadingTransactions] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
-  
+
   useEffect(() => {
     fetchAccountInfo();
     fetchStatements();
@@ -93,9 +95,7 @@ export default function VirtualAccountStatementsPage() {
   const fetchAccountInfo = async () => {
     try {
       const response = await fetch(`/api/virtual-accounts/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -120,9 +120,7 @@ export default function VirtualAccountStatementsPage() {
     try {
       setLoading(true);
       const response = await fetch(`/api/virtual-accounts/${id}/statements`, {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -131,7 +129,7 @@ export default function VirtualAccountStatementsPage() {
 
       const data = await response.json();
       setStatements(data.data);
-      
+
       // Auto-select current month if available
       if (data.data.length > 0 && !selectedPeriod) {
         const currentMonth = format(new Date(), 'yyyy-MM');
@@ -140,7 +138,7 @@ export default function VirtualAccountStatementsPage() {
           setSelectedPeriod(currentMonth);
         } else {
           // Select most recent statement
-          const sortedStatements = data.data.sort((a: Statement, b: Statement) => 
+          const sortedStatements = data.data.sort((a: Statement, b: Statement) =>
             new Date(b.month + '-01').getTime() - new Date(a.month + '-01').getTime()
           );
           setSelectedPeriod(sortedStatements[0].month);
@@ -163,9 +161,7 @@ export default function VirtualAccountStatementsPage() {
       const response = await fetch(
         `/api/virtual-accounts/${id}/transactions?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
         {
-          headers: {
-            'Authorization': `Bearer ${user?.accessToken}`,
-          },
+          credentials: 'include'
         }
       );
 
@@ -187,10 +183,7 @@ export default function VirtualAccountStatementsPage() {
     try {
       const response = await fetch(`/api/virtual-accounts/${id}/statements/generate`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ period }),
       });
 
@@ -207,11 +200,9 @@ export default function VirtualAccountStatementsPage() {
 
   const downloadStatement = async (statement: Statement) => {
     try {
-      const response = await fetch(`/api/virtual-accounts/${id}/statements/${statement.month}/download`, {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-        },
-      });
+      const response = await fetch(`/api/virtual-accounts/${id}/statements/${statement.month}/download`,
+        { credentials: 'include' }
+      );
 
       if (!response.ok) {
         throw new Error('Failed to download statement');
@@ -248,7 +239,7 @@ export default function VirtualAccountStatementsPage() {
   const getAvailablePeriods = () => {
     const periods = [];
     const currentDate = new Date();
-    
+
     for (let i = 0; i < 12; i++) {
       const date = subMonths(currentDate, i);
       const period = format(date, 'yyyy-MM');
@@ -258,7 +249,7 @@ export default function VirtualAccountStatementsPage() {
         hasStatement: statements.some(s => s.month === period)
       });
     }
-    
+
     return periods;
   };
 
@@ -335,7 +326,7 @@ export default function VirtualAccountStatementsPage() {
                 ))}
               </SelectContent>
             </Select>
-            
+
             {selectedPeriod && !statements.find(s => s.month === selectedPeriod) && (
               <Button
                 onClick={() => generateStatement(selectedPeriod)}
@@ -366,7 +357,7 @@ export default function VirtualAccountStatementsPage() {
                 <div className="flex items-center gap-2">
                   <Badge variant={
                     selectedStatement.status === 'READY' ? 'default' :
-                    selectedStatement.status === 'GENERATING' ? 'secondary' : 'destructive'
+                      selectedStatement.status === 'GENERATING' ? 'secondary' : 'destructive'
                   }>
                     {selectedStatement.status}
                   </Badge>
@@ -411,9 +402,9 @@ export default function VirtualAccountStatementsPage() {
                   </p>
                 </div>
               </div>
-              
+
               <Separator className="my-4" />
-              
+
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span>Total Transactions: {selectedStatement.transactionCount}</span>
                 <span>•</span>

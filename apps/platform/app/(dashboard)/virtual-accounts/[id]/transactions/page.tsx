@@ -99,10 +99,7 @@ export default async function VirtualAccountTransactionsPage({
 
             <Suspense fallback={<LoadingSpinner />}>
               <VirtualAccountTransactions
-                virtualAccountId={params.id}
-                filters={transactionFilters}
-                showHeader={false}
-                showPagination={true}
+                accountId={params.id}
               />
             </Suspense>
           </div>

@@ -1,8 +1,20 @@
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
-import { Navbar } from '@/components/shared/navigation/Navbar';
-import { Sidebar } from '@/components/shared/navigation/Sidebar';
+import { getServerSession } from '@newcondo/auth';
+import Navbar  from '@/components/shared/navigation/Navbar';
+import  Sidebar from '@/components/shared/navigation/Sidebar';
+import { Role, VerificationStatus } from '@newcondo/db';
+
+
+interface SidebarUser {
+  id: string;
+  email: string;
+  name?: string | null | undefined;
+  role: Role;
+  image?: string | null | undefined;
+  phone?: string | null | undefined;
+  verificationStatus: VerificationStatus;
+  isAvailableForMarking?: boolean
+}
 
 export default async function DashboardLayout({
   children,
@@ -11,7 +23,8 @@ export default async function DashboardLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
+  const user = session?.user
 
   if (!session) {
     redirect(`/${locale}/login`);
@@ -19,10 +32,14 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar locale={locale} />
+      {/* <Navbar locale={locale} /> */}
+      <Navbar/>
+
       
       <div className="flex">
-        <Sidebar locale={locale} />
+        {/* <Sidebar locale={locale} /> */}
+        <Sidebar user={user as SidebarUser} />
+
         
         <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">

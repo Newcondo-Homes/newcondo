@@ -14,6 +14,8 @@ import {
   DollarSign,
 } from 'lucide-react';
 
+import { useAuth } from "@/hooks/useAuth"
+
 interface EarningsData {
   totalEarnings: number;
   pendingEarnings: number;
@@ -41,6 +43,7 @@ export default function MarkingEarningsPage() {
   const [earningsData, setEarningsData] = useState<EarningsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const user = useAuth()
 
   useEffect(() => {
     fetchEarningsData();
@@ -221,7 +224,7 @@ export default function MarkingEarningsPage() {
       {/* Earnings History */}
       <div className="bg-card rounded-lg border p-6">
         <h2 className="text-xl font-semibold mb-4">Earnings History</h2>
-        <MarkingHistoryList earnings={earningsData.earnings} />
+        <MarkingHistoryList userId={user?.user?.id ?? ''} role='agent'/>
       </div>
     </div>
   );

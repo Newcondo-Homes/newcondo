@@ -10,20 +10,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/component
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
-import { 
-  ArrowLeft, 
-  Copy, 
-  Eye, 
-  EyeOff, 
-  AlertCircle, 
-  CheckCircle, 
-  Building, 
+import {
+  ArrowLeft,
+  Copy,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle,
+  Building,
   User,
   CreditCard,
   Activity,
   FileText
 } from 'lucide-react';
-import { VirtualAccountBalance } from '@/components/virtual-accounts/VirtualAccountBalance';
+import VirtualAccountBalance from '@/components/virtual-accounts/VirtualAccountBalance';
 import { format } from 'date-fns';
 
 interface VirtualAccount {
@@ -80,13 +80,11 @@ export default function VirtualAccountDetailsPage() {
   const fetchVirtualAccountDetails = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch virtual account details
-      const accountResponse = await fetch(`/api/virtual-accounts/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-        },
-      });
+      const accountResponse = await fetch(`/api/virtual-accounts/${id}`,
+        { credentials: 'include' }
+      );
 
       if (!accountResponse.ok) {
         throw new Error('Failed to fetch virtual account details');
@@ -96,11 +94,8 @@ export default function VirtualAccountDetailsPage() {
       setVirtualAccount(accountData.data);
 
       // Fetch recent transactions
-      const transactionsResponse = await fetch(`/api/virtual-accounts/${id}/transactions?limit=5`, {
-        headers: {
-          'Authorization': `Bearer ${user?.accessToken}`,
-        },
-      });
+      const transactionsResponse = await fetch(`/api/virtual-accounts/${id}/transactions?limit=5`,
+        { credentials: 'include' });
 
       if (transactionsResponse.ok) {
         const transactionsData = await transactionsResponse.json();
@@ -268,9 +263,9 @@ export default function VirtualAccountDetailsPage() {
                   </div>
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Created:</span>
@@ -360,16 +355,15 @@ export default function VirtualAccountDetailsPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-medium ${
-                          transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                        }`}>
+                        <p className={`font-medium ${transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                          }`}>
                           {transaction.type === 'CREDIT' ? '+' : '-'}
                           {formatCurrency(transaction.amount, transaction.currency)}
                         </p>
                         <Badge
                           variant={
                             transaction.status === 'SUCCESS' ? 'default' :
-                            transaction.status === 'PENDING' ? 'secondary' : 'destructive'
+                              transaction.status === 'PENDING' ? 'secondary' : 'destructive'
                           }
                           className="text-xs"
                         >
@@ -388,9 +382,7 @@ export default function VirtualAccountDetailsPage() {
         <div className="space-y-6">
           {/* Balance Card */}
           <VirtualAccountBalance
-            balance={virtualAccount.balance}
-            currency={virtualAccount.currency}
-            isActive={virtualAccount.isActive}
+            propertyId={virtualAccount.property?.id}
           />
 
           {/* Quick Actions */}

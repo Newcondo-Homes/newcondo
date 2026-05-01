@@ -1,8 +1,9 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-import { PropertyGrid } from '@/components/properties/PropertyGrid';
+import PropertyGrid  from '@/components/properties/PropertyGrid';
 import { PropertySearch } from '@/components/properties/PropertySearch';
 import { PropertyFilters } from '@/components/properties/PropertyFilters';
+import { SearchBox } from '@/components/properties/PropertySearchWrapper';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -47,12 +48,18 @@ export default async function PropertiesPage({
 
       {/* Search and Filters */}
       <div className="space-y-4">
-        <PropertySearch locale={locale} />
-        <PropertyFilters locale={locale} />
+        // TODO: see how to pass locale into the components that may need locale
+        {/* <PropertySearch locale={locale} />
+        <PropertyFilters locale={locale} /> */}
+        <SearchBox  />
+        // TODO: uncomment propertfilters comment below
+        {/* <PropertyFilters  /> */}
       </div>
 
       {/* Property Grid */}
-      <PropertyGrid locale={locale} searchParams={searchParams} />
+      {/* <PropertyGrid locale={locale} searchParams={searchParams} /> */}
+      <PropertyGrid />
+
     </div>
   );
 }

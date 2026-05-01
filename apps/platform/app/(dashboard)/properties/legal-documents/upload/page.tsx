@@ -13,12 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
-import { 
-  Upload, 
-  FileText, 
-  X, 
-  CheckCircle, 
-  AlertCircle, 
+import {
+  Upload,
+  FileText,
+  X,
+  CheckCircle,
+  AlertCircle,
   Image as ImageIcon,
   Shield,
   Info,
@@ -26,11 +26,41 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { UploadButton } from '@uploadthing/react';
+import type { OurFileRouter } from '@/lib/uploadthing';
 import { useAuthStore } from '@/store/authStore';
 import { usePropertyStore } from '@/store/propertyStore';
-import api  from '@/lib/api/client';
-import { getFileIcon } from '@/lib/utils/helpers';
+import api from '@/lib/api/client';
 import { DocumentType as PrismaDocumentType } from '@newcondo/db';
+
+function getFileIcon(mimeType: string, className = 'h-5 w-5'): React.ReactNode {
+  if (mimeType.startsWith('image/')) {
+    return <ImageIcon className={className} />;
+  }
+  return <FileText className={className} />;
+}
+
+
+interface DocumentTypeConfig {
+  key: PrismaDocumentType;
+  name: string;
+  description: string;
+  // FIX: instructions was used in JSX but never declared — add it as optional
+  instructions?: string[];
+  required: boolean;
+  acceptedFormats: string[];
+  maxSizeBytes: number;
+  requiresUpload: boolean;
+  requiresNumber: boolean;
+  hasExpiry: boolean;
+  adminVerificationRequired: boolean;
+}
+
+interface UploadedFile {
+  url: string;
+  name: string;
+  size: number;
+  type: string;
+}
 
 interface DocumentType {
   key: PrismaDocumentType;
@@ -51,6 +81,7 @@ interface UploadedFile {
   size: number;
   type: string;
 }
+
 
 const DOCUMENT_TYPES: DocumentType[] = [
   {
@@ -179,32 +210,35 @@ export default function UploadLegalDocumentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
-  const user = useAuthStore(state => state.user);
-  const { fetchPropertyById, selectedProperty } = usePropertyStore();
 
-  const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType | null>(null);
+  //TODO: you may use the useAuth hook to get the user here
+  const user = useAuthStore(state => state.user);
+  const { properties, fetchProperties } = usePropertyStore();
+  const selectedProperty = properties?.find((p) => p.id === propertyId) ?? null;
+
+  const [selectedDocType, setSelectedDocType] = useState<DocumentTypeConfig | null>(null);
   const [documentNumber, setDocumentNumber] = useState('');
   const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
-    if (propertyId) {
-      fetchPropertyById(propertyId);
+    if (propertyId && !properties?.length) {
+      fetchProperties?.();
     }
-  }, [propertyId, fetchPropertyById]);
+  }, [propertyId]);
 
   const handleDocumentTypeChange = (value: string) => {
     const docType = DOCUMENT_TYPES.find(d => d.key === value);
     if (docType) {
-      setSelectedDocumentType(docType);
+      setSelectedDocType(docType);
       // Reset form on type change
       setDocumentNumber('');
       setUploadedFile(null);
     }
   };
 
-  const handleUploadComplete = (res: any) => {
+  const handleUploadComplete = (res: { url: string; name: string; size: number; type?: string }[]) => {
     setIsUploading(false);
     if (res && res.length > 0) {
       const file = res[0];
@@ -212,7 +246,7 @@ export default function UploadLegalDocumentPage() {
         url: file.url,
         name: file.name,
         size: file.size,
-        type: file.type,
+        type: file.type ?? 'application/octet-stream',
       });
       toast.success('File uploaded successfully!');
     }
@@ -227,53 +261,48 @@ export default function UploadLegalDocumentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedDocumentType) {
+    if (!selectedDocType) {
       toast.error('Please select a document type.');
       return;
     }
 
-    if (selectedDocumentType.requiresNumber && !documentNumber) {
+    if (selectedDocType.requiresNumber && !documentNumber) {
       toast.error('Please enter the document number.');
       return;
     }
 
-    if (selectedDocumentType.requiresUpload && !uploadedFile) {
+    if (selectedDocType.requiresUpload && !uploadedFile) {
       toast.error('Please upload a file.');
       return;
     }
 
     const payload = {
-      documentType: selectedDocumentType.key,
+      documentType: selectedDocType.key,
       propertyId: propertyId || undefined,
-      documentNumber: selectedDocumentType.requiresNumber ? documentNumber : undefined,
-      fileName: selectedDocumentType.requiresUpload ? uploadedFile?.name : undefined,
-      fileUrl: selectedDocumentType.requiresUpload ? uploadedFile?.url : undefined,
-      fileSizeBytes: selectedDocumentType.requiresUpload ? uploadedFile?.size : undefined,
-      mimeType: selectedDocumentType.requiresUpload ? uploadedFile?.type : undefined,
+      documentNumber: selectedDocType.requiresNumber ? documentNumber : undefined,
+      fileName: selectedDocType.requiresUpload ? uploadedFile?.name : undefined,
+      fileUrl: selectedDocType.requiresUpload ? uploadedFile?.url : undefined,
+      fileSizeBytes: selectedDocType.requiresUpload ? uploadedFile?.size : undefined,
+      mimeType: selectedDocType.requiresUpload ? uploadedFile?.type : undefined,
     };
 
     try {
-      const { data, error } = await api.post('/properties/legal/documents', payload);
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      await api.post('/properties/legal/documents', payload);
       toast.success('Document submitted for verification!');
       router.push(`/dashboard/profile/verification`);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Submission error:', err);
-      toast.error(err.message || 'Failed to submit document. Please try again.');
+      const message = err instanceof Error ? err.message : 'Failed to submit document. Please try again.';
+      toast.error(message);
     }
   };
 
-  const userCanUploadOwnership = user?.userType === 'LANDLORD' || user?.userType === 'AGENT' && selectedProperty?.ownerId === user?.id;
+  const userCanUploadOwnership = user?.userType === 'LANDLORD' || (user?.userType === 'AGENT' && selectedProperty?.owner?.id === user?.id);
   const userCanUploadConsent = user?.userType === 'AGENT';
 
-  const isNINOrBVNSelected = selectedDocumentType?.key === 'NIN' || selectedDocumentType?.key === 'BVN';
-  const isUploadRequired = selectedDocumentType?.requiresUpload;
-  const isNumberRequired = selectedDocumentType?.requiresNumber;
+  const isUploadRequired = selectedDocType?.requiresUpload;
+  const isNumberRequired = selectedDocType?.requiresNumber;
 
   return (
     <div className="flex flex-col items-center justify-center p-4">
@@ -307,7 +336,7 @@ export default function UploadLegalDocumentPage() {
               <Label htmlFor="documentType" className="font-semibold">
                 Document Type
               </Label>
-              <Select onValueChange={handleDocumentTypeChange} value={selectedDocumentType?.key || ''}>
+              <Select onValueChange={handleDocumentTypeChange} value={selectedDocType?.key || ''}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a document type" />
                 </SelectTrigger>
@@ -333,15 +362,15 @@ export default function UploadLegalDocumentPage() {
               </Select>
             </div>
 
-            {selectedDocumentType && (
+            {selectedDocType && (
               <div className="space-y-4">
                 <Alert className="bg-gray-50 border-gray-200">
                   <Info className="h-4 w-4" />
-                  <AlertTitle>{selectedDocumentType.name}</AlertTitle>
+                  <AlertTitle>{selectedDocType.name}</AlertTitle>
                   <AlertDescription>
-                    <p>{selectedDocumentType.description}</p>
+                    <p>{selectedDocType.description}</p>
                     <ul className="list-disc list-inside mt-2 text-sm text-gray-600">
-                      {selectedDocumentType.instructions?.map((instruction, index) => (
+                      {selectedDocType.instructions?.map((instruction, index) => (
                         <li key={index}>{instruction}</li>
                       ))}
                     </ul>
@@ -356,7 +385,7 @@ export default function UploadLegalDocumentPage() {
                     <Input
                       id="documentNumber"
                       type="text"
-                      placeholder={`Enter your ${selectedDocumentType.name} number`}
+                      placeholder={`Enter your ${selectedDocType.name} number`}
                       value={documentNumber}
                       onChange={(e) => setDocumentNumber(e.target.value)}
                       required
@@ -369,18 +398,23 @@ export default function UploadLegalDocumentPage() {
                     <Label htmlFor="documentUpload" className="font-semibold">
                       Document File
                     </Label>
-                    <UploadButton
-                      endpoint="documentUploader"
+                    <UploadButton<OurFileRouter, 'propertyDocuments'>
+                      endpoint="propertyDocuments"
                       onClientUploadComplete={handleUploadComplete}
                       onUploadError={handleUploadError}
                       onUploadBegin={() => {
                         setIsUploading(true);
                         setUploadProgress(0);
                       }}
-                      onProgress={(p) => setUploadProgress(p)}
+                      onUploadProgress={(p: number) => setUploadProgress(p)}
                       content={{
-                        button({ ready }) {
-                          if (ready) return <div className="flex items-center gap-2"><Upload className="h-4 w-4" /> Choose File</div>;
+                        button({ ready }: { ready: boolean }) {
+                          if (ready)
+                            return (
+                              <div className="flex items-center gap-2">
+                                <Upload className="h-4 w-4" /> Choose File
+                              </div>
+                            );
                           return 'Getting ready...';
                         },
                       }}
@@ -393,7 +427,7 @@ export default function UploadLegalDocumentPage() {
                         <Progress value={uploadProgress} className="w-full" />
                       </div>
                     )}
-                    
+
                     {uploadedFile && (
                       <div className="flex items-center justify-between p-4 border border-gray-200 rounded-md mt-4 bg-green-50">
                         <div className="flex items-center gap-3">
@@ -425,7 +459,7 @@ export default function UploadLegalDocumentPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={!selectedDocumentType || isUploading || (isUploadRequired && !uploadedFile) || (isNumberRequired && !documentNumber)}
+              disabled={!selectedDocType  || isUploading || (isUploadRequired && !uploadedFile) || (isNumberRequired && !documentNumber)}
             >
               Submit for Verification
             </Button>

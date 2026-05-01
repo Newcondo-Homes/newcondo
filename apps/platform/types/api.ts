@@ -11,8 +11,6 @@ export interface ApiResponse<T = any> {
   errors?: Record<string, string[]>;
 }
 
-// Add to apps/platform/types/api.ts
-
 export interface WithdrawalRequest {
   accountNumber: string;
   bankCode: string;
@@ -249,6 +247,46 @@ export interface Property {
   similarProperties?: string[];
 }
 
+export interface PropertyCreateRequest {
+  title: string;
+  description: string;
+  type: PropertyType;
+  structure?: PropertyStructure;
+  category: PropertyCategory;
+  address: string;
+  city: string;
+  state: string;
+  country?: string;
+  price: number;
+  currency?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  areaUnit?: AreaUnit;
+  furnished?: boolean;
+  parking?: boolean;
+  petFriendly?: boolean;
+  utilities?: string[];
+  amenities?: string[];
+  features?: string[];
+  rules?: string[];
+  availability?: {
+    startDate: string;
+    endDate?: string;
+    minimumStay?: number;
+    maximumStay?: number;
+    instantBooking?: boolean;
+    advanceNotice?: number;
+    preparationTime?: number;
+  };
+  /** IDs of already-uploaded images */
+  imageIds?: string[];
+  /** For multi-family buildings */
+  totalUnits?: number;
+}
+
+export type PropertyUpdateRequest = Partial<PropertyCreateRequest>;
+
 export interface PropertyImage {
   id: string;
   url: string;
@@ -456,6 +494,11 @@ export type OTPType = 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET'
 // }
 
 export { PropertyType }
+
+export enum PropertyStructure {
+  SINGLE_UNIT = 'SINGLE_UNIT',
+  MULTI_FAMILY = 'MULTI_FAMILY',
+}
 
 export enum PropertyCategory {
   RENTAL = 'RENTAL',

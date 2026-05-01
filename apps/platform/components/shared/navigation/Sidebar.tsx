@@ -43,10 +43,10 @@ import {
 interface SidebarUser {
   id: string;
   email: string;
-  name?: string | null;
+  name?: string | null | undefined;
   role: Role;
-  image?: string | null;
-  phone?: string | null;
+  image?: string | null | undefined;
+  phone?: string | null | undefined;
   verificationStatus: VerificationStatus;
   isAvailableForMarking?: boolean
 }

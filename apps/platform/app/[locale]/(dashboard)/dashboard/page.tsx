@@ -1,11 +1,10 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@newcondo/auth';
+import { getServerSession } from '@newcondo/auth';
 import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
 import { DateDisplay } from '@/components/i18n/DateDisplay';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui';
 import { Home, Wallet, FileText, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
@@ -27,7 +26,7 @@ export default async function DashboardPage({
 }: {
   params: { locale: string };
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession();
   const t = await getTranslations({ locale, namespace: 'dashboard' });
 
   // Mock data - replace with actual API calls

@@ -71,7 +71,7 @@ export function PaymentHistory({
 
   const { retryPayment } = usePayments();
 
-  const { data: historyData, isLoading, refetch: loadPaymentHistory } = usePaymentHistory({ userId, limit });
+  const { data: historyData, isLoading, refetch: loadPaymentHistory } = usePaymentHistory({  limit });
 
   useEffect(() => {
     loadPaymentHistory();
