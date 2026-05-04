@@ -91,7 +91,7 @@ export function AgentLocationForm({
               <div>
                 <Label className="text-base font-semibold">Service Areas</Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Select the areas where you're willing to accept marking jobs
+                  Select the areas where you&apos;re willing to accept marking jobs
                 </p>
               </div>
 
@@ -113,9 +113,9 @@ export function AgentLocationForm({
                 <div className="flex gap-3">
                   <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
                   <div className="text-sm space-y-2">
-                    <p className="font-semibold text-green-900">You're Available!</p>
+                    <p className="font-semibold text-green-900">You&apos;re Available!</p>
                     <ul className="list-disc list-inside space-y-1 text-green-800">
-                      <li>You'll receive notifications for jobs in your service areas</li>
+                      <li>You&apos;ll receive notifications for jobs in your service areas</li>
                       <li>Earn up to ₦5,000 per completed marking job</li>
                       <li>First-come-first-served queue system</li>
                       <li>3-hour time slot per job assignment</li>
@@ -151,7 +151,7 @@ export function AgentLocationForm({
                   <li>Property owner requests marking in your service area</li>
                   <li>You receive instant notification (email/SMS/in-app)</li>
                   <li>Accept job to join the queue (first-come-first-served)</li>
-                  <li>Get 3-hour time slot when it's your turn</li>
+                  <li>Get 3-hour time slot when it&apos;s your turn</li>
                   <li>Visit property, mark boundaries, upload photos</li>
                   <li>Receive ₦1,000 initial payment immediately</li>
                   <li>Get remaining ₦4,000 after owner confirmation</li>

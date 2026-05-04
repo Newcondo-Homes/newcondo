@@ -38,7 +38,7 @@ export const ShareableLinkCopy: React.FC<ShareableLinkCopyProps> = ({
         description: 'The shareable link has been copied to your clipboard.',
       });
       setTimeout(() => setCopied(false), 3000);
-    } catch (error) {
+    } catch {
       toast.error('Copy Failed',{
         description: 'Unable to copy link. Please try again.',
       });
@@ -123,7 +123,7 @@ export const ShareableLinkCopy: React.FC<ShareableLinkCopyProps> = ({
               <li>Share this link with the person who will mark your property</li>
               <li>They should open the link when they arrive at the property</li>
               <li>The link will guide them through the marking process</li>
-              <li>You'll receive a notification when marking is complete</li>
+              <li>You&apos;ll receive a notification when marking is complete</li>
               <li>You must verify the marking within 2-3 days</li>
             </ul>
           </AlertDescription>

@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@newcondo/ui/components/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Button } from "@newcondo/ui/components/button";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Separator } from "@newcondo/ui/components/separator";
@@ -10,7 +10,6 @@ import {
   CheckCircle, 
   XCircle, 
   AlertCircle, 
-  Clock,
   MapPin,
   DollarSign,
   User
@@ -18,6 +17,7 @@ import {
 import { ConfirmationTimer } from "./ConfirmationTimer";
 import { ConfirmationPhotos } from "./ConfirmationPhotos";
 import { RejectionForm } from "./RejectionForm";
+import { BoundaryData } from "@/types/marking";
 
 interface ConfirmationInterfaceProps {
   job: {
@@ -37,7 +37,7 @@ interface ConfirmationInterfaceProps {
     confirmationDeadline: string;
     completionNotes: string;
     completionImages: string[];
-    boundaryData: any;
+    boundaryData: BoundaryData;
     markingFee: number;
   };
   onConfirm: () => Promise<void>;
@@ -167,11 +167,11 @@ export function ConfirmationInterface({
                   {job.boundaryData.coordinates?.length || 0} points
                 </span>
               </div>
-              {job.boundaryData.area && (
+              {job.boundaryData.buildingArea && (
                 <div className="flex items-center justify-between text-sm mt-2">
                   <span className="text-muted-foreground">Approximate Area</span>
                   <span className="font-medium">
-                    {job.boundaryData.area.toFixed(2)} m²
+                    {job.boundaryData.buildingArea.toFixed(2)} m²
                   </span>
                 </div>
               )}
@@ -183,7 +183,7 @@ export function ConfirmationInterface({
       {/* Agent Notes */}
       <Card>
         <CardHeader>
-          <CardTitle>Agent's Completion Notes</CardTitle>
+          <CardTitle>Agent&apos;s Completion Notes</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm whitespace-pre-wrap">{job.completionNotes}</p>
@@ -319,8 +319,8 @@ export function ConfirmationInterface({
             <div className="text-sm space-y-1">
               <p className="font-semibold text-yellow-900">Important Notice</p>
               <p className="text-yellow-800">
-                If you don't confirm or reject within the deadline, a small compensation 
-                will be automatically paid to the agent, and you'll need to request a new 
+                If you don&apos;t confirm or reject within the deadline, a small compensation 
+                will be automatically paid to the agent, and you&apos;ll need to request a new 
                 marking job.
               </p>
             </div>

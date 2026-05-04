@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Menu, X, User, Heart, Bell, Settings, LogOut } from 'lucide-react';
+import { Menu, X, User, Heart, Settings, LogOut } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/avatar';
 import {

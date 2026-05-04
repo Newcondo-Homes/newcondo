@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Textarea } from '@newcondo/ui/components/textarea';
-import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import {
     Form,
@@ -24,6 +23,11 @@ import { MapPin, Phone, User, AlertCircle, CheckCircle2, Clock } from 'lucide-re
 import { markingApi } from '@/lib/api/marking';
 import { toast } from 'sonner';
 import type { MarkingJobResponse } from '@/lib/api/marking';
+import Image from 'next/image';
+
+interface PropertyImage {
+    url: string;
+}
 
 interface UploadedImage {
     id: string;
@@ -178,7 +182,7 @@ export function CompleteMarkingJobClient({
             </Card>
 
             {/* Property Images (if provided) */}
-            {job.property?.images  && job.property.images.length > 0 && (
+            {job.property?.images && job.property.images.length > 0 && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base">Property Reference Images</CardTitle>
@@ -187,10 +191,12 @@ export function CompleteMarkingJobClient({
                     <CardContent>
                         <div className="grid grid-cols-3 gap-2">
                             {job.property.images.slice(0, 6).map((img, i) => (
-                                <img
+                                <Image
                                     key={i}
-                                    src={typeof img === 'string' ? img : (img as any).url}
+                                    src={typeof img === 'string' ? img : (img as PropertyImage).url}
                                     alt={`Property image ${i + 1}`}
+                                    width={200}
+                                    height={96}
                                     className="w-full h-24 object-cover rounded-md border"
                                 />
                             ))}

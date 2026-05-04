@@ -1,4 +1,6 @@
 // apps/platform/hooks/usePropertyAnalytics.ts
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
 import { getPropertyAnalytics, getPortfolioAnalytics  } from '@/lib/api/propertyAnalytics';
 import type { AnalyticsFilters } from '@/types/propertyAnalytics';

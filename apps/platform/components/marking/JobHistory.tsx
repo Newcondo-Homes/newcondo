@@ -327,7 +327,7 @@ export default function JobHistory() {
                         </div>
                         {job.ownerFeedback && (
                           <span className="text-sm text-gray-600 italic">
-                            "{job.ownerFeedback}"
+                            {`${job.ownerFeedback}`}
                           </span>
                         )}
                       </div>

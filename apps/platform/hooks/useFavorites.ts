@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback } from 'react';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { useAuth } from '@/hooks/useAuth';

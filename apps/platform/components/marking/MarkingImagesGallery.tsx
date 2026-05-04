@@ -18,6 +18,7 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface MarkingImage {
   id: string;
@@ -128,10 +129,11 @@ export function MarkingImagesGallery({
                 className="group relative aspect-square cursor-pointer overflow-hidden rounded-lg border bg-muted"
                 onClick={() => openLightbox(index)}
               >
-                <img
+                <Image
                   src={image.url}
                   alt={image.description || `Marking image ${index + 1}`}
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <ImageIcon className="h-8 w-8 text-white" />
@@ -183,14 +185,14 @@ export function MarkingImagesGallery({
           </DialogHeader>
 
           {selectedImage && (
-            <div className="relative">
-              <img
+            <div className="relative w-full max-h-[70vh] aspect-video">
+              <Image
                 src={selectedImage.url}
                 alt={
                   selectedImage.description ||
                   `Marking image ${selectedIndex! + 1}`
                 }
-                className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+                className="object-contain rounded-lg"
               />
 
               {selectedImage.description && (

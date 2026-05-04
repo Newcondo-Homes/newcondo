@@ -1,4 +1,5 @@
 // apps/platform/hooks/useBoundaryMarking.ts
+'use client'
 
 import { useState, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';

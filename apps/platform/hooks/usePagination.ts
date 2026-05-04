@@ -1,4 +1,6 @@
 // apps/platform/hooks/usePagination.ts
+'use client'
+
 import { useState, useMemo, useCallback } from 'react';
 
 export interface PaginationOptions {

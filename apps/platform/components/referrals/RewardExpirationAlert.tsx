@@ -77,7 +77,7 @@ export function RewardExpirationAlert({
   };
 
   const mostUrgentReward = sortedRewards[0];
-  const urgencyLevel = getUrgencyLevel(mostUrgentReward.daysUntilExpiration);
+  // const urgencyLevel = getUrgencyLevel(mostUrgentReward.daysUntilExpiration);
 
   // Alert variant (default)
   if (variant === "alert") {
@@ -109,7 +109,7 @@ export function RewardExpirationAlert({
                     {formatDistanceToNow(new Date(reward.expiresAt), {
                       addSuffix: true,
                     })}
-                    . Use it before it's gone!
+                    . Use it before it&apos;s gone!
                   </AlertDescription>
                   <div className="flex gap-2 mt-2">
                     <Button asChild size="sm" variant="default">

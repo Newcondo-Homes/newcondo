@@ -1,6 +1,7 @@
 // apps/platform/lib/api/markingHistory.ts
+import { Property } from '@/types/property';
 import { apiClient } from './client';
-
+import { BoundaryData, BoundaryCoordinates } from '@/types/marking'
 
 export interface MarkingHistoryResponse {
   markingJobs: MarkingJob[];
@@ -20,10 +21,10 @@ export interface MarkingHistoryResponse {
 
 export interface MarkingJobDetailsResponse {
   job: MarkingJob;
-  property: any;
-  assignedAgent?: any;
+  property: Property;
+  assignedAgent?: string;
   completionImages: string[];
-  boundaryData?: any;
+  boundaryData?: BoundaryData;
   timeRemaining?: number;
   isTimeExpired: boolean;
   queuePosition?: number;
@@ -63,7 +64,7 @@ export interface CreateMarkingJobData {
 export interface CompleteMarkingData {
   completionNotes?: string;
   completionImages: string[];
-  boundaryCoordinates: any;
+  boundaryCoordinates: BoundaryCoordinates;
   buildingFingerprint?: string;
 }
 

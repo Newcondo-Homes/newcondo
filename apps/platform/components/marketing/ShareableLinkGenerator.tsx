@@ -17,7 +17,6 @@ interface ShareableLinkGeneratorProps {
 }
 
 export function ShareableLinkGenerator({
-  propertyId,
   currentLink,
   onGenerate,
   onRegenerate,

@@ -13,7 +13,7 @@ import {
   Clock,
   AlertCircle
 } from 'lucide-react';
-import { DocumentType, DocumentStatus } from '@newcondo/db';
+import { DocumentType, DocumentStatus } from '@/types/enums';
 
 interface VerificationOverviewProps {
   documents: any[];

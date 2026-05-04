@@ -8,10 +8,17 @@ import { Card } from "@newcondo/ui/components/card";
 import { Badge } from "@newcondo/ui/components/badge";
 import { MapPin, Trash2, Undo, Save, AlertCircle } from "lucide-react";
 
+interface BoundaryData {
+  coordinates: google.maps.LatLngLiteral[];
+  area: number;
+  timestamp: string;
+}
+
+
 interface BoundaryUploadProps {
-  jobId: string;
-  onBoundaryComplete: (data: any) => void;
-  initialData?: any;
+  // jobId?: string;
+  onBoundaryComplete: (data: BoundaryData) => void;
+  initialData?: BoundaryData;
 }
 
 const mapContainerStyle = {
@@ -25,18 +32,18 @@ const defaultCenter = {
 };
 
 export function BoundaryUpload({
-  jobId,
+  // jobId,
   onBoundaryComplete,
   initialData,
 }: BoundaryUploadProps) {
   const [points, setPoints] = useState<google.maps.LatLngLiteral[]>(
     initialData?.coordinates || []
   );
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  // const [map, setMap] = useState<google.maps.Map | null>(null);
   const [isDrawing, setIsDrawing] = useState(true);
 
   const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
+    // setMap(map);
   }, []);
 
   const handleMapClick = useCallback(
@@ -64,7 +71,7 @@ export function BoundaryUpload({
 
   const calculateArea = (coords: google.maps.LatLngLiteral[]) => {
     if (coords.length < 3) return 0;
-    
+
     // Simple polygon area calculation (approximate)
     let area = 0;
     for (let i = 0; i < coords.length; i++) {
@@ -117,7 +124,7 @@ export function BoundaryUpload({
               <li>Place at least 3 points to create a boundary</li>
               <li>The polygon will automatically close</li>
               <li>Use satellite view for better accuracy</li>
-              <li>Click "Save Boundary" when done</li>
+              <li>Click &quot;Save Boundary&quot; when done</li>
             </ol>
           </div>
         </div>

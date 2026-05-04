@@ -1,4 +1,5 @@
 // apps/platform/hooks/useReferralLink.ts
+'use client'
 
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';

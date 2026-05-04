@@ -22,7 +22,7 @@ import { useProperty } from '@/hooks/useProperties';
 import { useUploadThing } from '@/lib/uploadthing';
 import { useUpload } from '@/hooks/useUpload';
 import { propertyApi } from '@/lib/api/properties';
-import { PropertyType, PropertyStatus, PropertyStructure } from '@newcondo/db';
+import { PropertyType, PropertyStatus, PropertyStructure } from '@/types/enums';
 
 const propertyFormSchema = z.object({
     title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),

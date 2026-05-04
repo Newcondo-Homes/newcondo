@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@newcondo/ui/components/alert-dialog';
+import Image from 'next/image';
 
 interface OwnerConfirmationPromptProps {
   jobId: string;
@@ -102,10 +103,12 @@ export const OwnerConfirmationPrompt: React.FC<OwnerConfirmationPromptProps> = (
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Marking Completed By</h3>
           <div className="flex items-center gap-3">
             {agentPhoto ? (
-              <img
+              <Image
                 src={agentPhoto}
                 alt={agentName}
-                className="w-12 h-12 rounded-full object-cover"
+                width={48}
+                height={48}
+                className="rounded-full object-cover"
               />
             ) : (
               <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
@@ -137,12 +140,13 @@ export const OwnerConfirmationPrompt: React.FC<OwnerConfirmationPromptProps> = (
                 {completionImages.slice(0, 3).map((image, idx) => (
                   <div
                     key={idx}
-                    className="aspect-square rounded-lg bg-gray-100 overflow-hidden border border-gray-200"
+                    className="relative aspect-square rounded-lg bg-gray-100 overflow-hidden border border-gray-200"
                   >
-                    <img
+                    <Image
                       src={image}
                       alt={`Marking photo ${idx + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
                 ))}
@@ -172,12 +176,13 @@ export const OwnerConfirmationPrompt: React.FC<OwnerConfirmationPromptProps> = (
                       {completionImages.map((image, idx) => (
                         <div
                           key={idx}
-                          className="rounded-lg overflow-hidden border border-gray-200"
+                          className="relative rounded-lg overflow-hidden border border-gray-200"
                         >
-                          <img
+                          <Image
                             src={image}
                             alt={`Marking photo ${idx + 1}`}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                       ))}
@@ -210,7 +215,7 @@ export const OwnerConfirmationPrompt: React.FC<OwnerConfirmationPromptProps> = (
               <div>
                 <p className="text-sm font-semibold text-red-900">Confirmation Overdue</p>
                 <p className="text-xs text-red-700 mt-1">
-                  The agent will receive compensation for this marking if you don't confirm soon.
+                  The agent will receive compensation for this marking if you don&apos;t confirm soon.
                 </p>
               </div>
             </div>

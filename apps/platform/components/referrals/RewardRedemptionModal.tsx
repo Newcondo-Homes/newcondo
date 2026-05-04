@@ -38,7 +38,7 @@ export function RewardRedemptionModal() {
   const redeemMutation = useRedeemReward();
   const [selectedMethod, setSelectedMethod] = useState<'bank_transfer' | 'wallet_credit' | 'service_credit'>('wallet_credit');
 
-  const { eligible, reason, minAmount } = useCheckRedemptionEligibility(selectedReward?.id || '');
+  const { eligible, reason } = useCheckRedemptionEligibility(selectedReward?.id || '');
 
   const form = useForm<RewardRedemptionInput>({
     resolver: zodResolver(rewardRedemptionSchema),
@@ -81,7 +81,7 @@ export function RewardRedemptionModal() {
         <DialogHeader>
           <DialogTitle>Redeem Reward</DialogTitle>
           <DialogDescription>
-            Choose how you'd like to receive your reward
+            Choose how you&apos;d like to receive your reward
           </DialogDescription>
         </DialogHeader>
 
@@ -126,9 +126,9 @@ export function RewardRedemptionModal() {
                 <Label>Redemption Method</Label>
                 <RadioGroup
                   value={selectedMethod}
-                  onValueChange={(v: any) => {
-                    setSelectedMethod(v);
-                    form.setValue('method', v);
+                  onValueChange={(v: string) => {
+                    setSelectedMethod(v as 'bank_transfer' | 'wallet_credit' | 'service_credit');
+                    form.setValue('method', v as 'bank_transfer' | 'wallet_credit' | 'service_credit');
                   }}
                   className="space-y-3"
                 >

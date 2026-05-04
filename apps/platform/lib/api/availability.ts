@@ -1,5 +1,21 @@
 import client from './client';
 
+
+interface HistoryEntry {
+  timestamp: string;
+  isAvailable: boolean;
+  reason?: string;
+  changedBy?: string;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export interface AvailabilityStatus {
   propertyId: string;
   unitId?: string;
@@ -46,10 +62,9 @@ export async function checkAvailability(
       `/api/availability/check?${params.toString()}`
     );
     return response.data as AvailabilityStatus;
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to check availability'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -65,10 +80,9 @@ export async function bulkCheckAvailability(
       data
     );
     return response.data?.statuses as AvailabilityStatus[];
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to bulk check availability'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -89,10 +103,9 @@ export async function updateAvailability(
       availability?: AvailabilityStatus;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to update availability'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -117,10 +130,9 @@ export async function markAsUnavailable(
       success: boolean;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to mark as unavailable'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -145,10 +157,9 @@ export async function autoDelistProperty(
       success: boolean;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to auto-delist property'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -173,10 +184,9 @@ export async function restoreAvailability(
       success: boolean;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to restore availability'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -197,10 +207,9 @@ export async function subscribeToAvailability(
       subscriptionId?: string;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to subscribe to availability'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -221,11 +230,9 @@ export async function unsubscribeFromAvailability(
       success: boolean;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Failed to unsubscribe from availability'
-    );
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
+    throw new Error(apiError.response?.data?.message || 'Failed to ...');
   }
 }
 
@@ -248,15 +255,10 @@ export async function getAvailabilityHistory(
     const params = new URLSearchParams({ propertyId, limit: limit.toString() });
     if (unitId) params.append('unitId', unitId);
 
-    const response = await client.get<{ history: any[] }>(
+    const response = await client.get<{ history: HistoryEntry[] }>(
       `/api/availability/history?${params.toString()}`
     );
-    return response.data?.history as Array<{
-      timestamp: string;
-      isAvailable: boolean;
-      reason?: string;
-      changedBy?: string;
-    }>;
+    return response.data?.history ?? []
   } catch (error: any) {
     throw new Error(
       error.response?.data?.message || 'Failed to fetch availability history'

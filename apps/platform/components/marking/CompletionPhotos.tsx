@@ -1,7 +1,6 @@
 // apps/platform/components/marking/CompletionPhotos.tsx
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent } from "@newcondo/ui/components/card";
 import { Button } from "@newcondo/ui/components/button";
 import { Input } from "@newcondo/ui/components/input";
@@ -11,6 +10,7 @@ import { Badge } from "@newcondo/ui/components/badge";
 import { Upload, X, Image as ImageIcon, AlertCircle, CheckCircle } from "lucide-react";
 import { UploadButton } from "@uploadthing/react";
 import type { OurFileRouter } from '@/lib/uploadthing';
+import Image from "next/image";
 
 interface Photo {
   url: string;
@@ -43,7 +43,6 @@ export function CompletionPhotos({
   onPhotosChange,
   minPhotos = 4,
 }: CompletionPhotosProps) {
-  const [editingPhoto, setEditingPhoto] = useState<number | null>(null);
 
   const handlePhotoUpload = (url: string) => {
     const newPhoto: Photo = {
@@ -155,10 +154,11 @@ export function CompletionPhotos({
           {photos.map((photo, index) => (
             <Card key={index} className="overflow-hidden">
               <div className="relative aspect-video bg-gray-100">
-                <img
+                <Image
                   src={photo.url}
                   alt={photo.description || `Photo ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
                 <Button
                   variant="destructive"
@@ -169,9 +169,8 @@ export function CompletionPhotos({
                   <X className="h-4 w-4" />
                 </Button>
                 <Badge
-                  className={`absolute bottom-2 left-2 ${
-                    categoryColors[photo.category]
-                  }`}
+                  className={`absolute bottom-2 left-2 ${categoryColors[photo.category]
+                    }`}
                 >
                   {categoryLabels[photo.category]}
                 </Badge>
@@ -182,7 +181,7 @@ export function CompletionPhotos({
                   <Select
                     value={photo.category}
                     onValueChange={(value) =>
-                      updatePhoto(index, { category: value as any })
+                      updatePhoto(index, { category: value as Photo["category"] })
                     }
                   >
                     <SelectTrigger>

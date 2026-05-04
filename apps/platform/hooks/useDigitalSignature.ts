@@ -1,4 +1,6 @@
 // apps/platform/hooks/useDigitalSignature.ts
+'use client'
+
 import { useState, useCallback, useRef } from 'react';
 import { toast } from '@newcondo/ui';
 

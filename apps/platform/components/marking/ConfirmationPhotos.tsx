@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@newcondo/ui/components/dialog";
 import { Button } from "@newcondo/ui/components/button";
 import { ChevronLeft, ChevronRight, X, ZoomIn, Download } from "lucide-react";
+import Image from "next/image";
 
 interface ConfirmationPhotosProps {
   photos: string[];
@@ -67,10 +68,11 @@ export function ConfirmationPhotos({ photos }: ConfirmationPhotosProps) {
             className="relative group aspect-square bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
             onClick={() => openLightbox(index)}
           >
-            <img
+            <Image
               src={photo}
               alt={`Property photo ${index + 1}`}
-              className="w-full h-full object-cover transition-transform group-hover:scale-110"
+              fill
+              className="object-cover transition-transform group-hover:scale-110"
             />
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
               <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -124,10 +126,11 @@ export function ConfirmationPhotos({ photos }: ConfirmationPhotosProps) {
 
             {/* Image */}
             {selectedPhoto !== null && (
-              <img
+              <Image
                 src={photos[selectedPhoto]}
                 alt={`Property photo ${selectedPhoto + 1}`}
-                className="max-h-full max-w-full object-contain"
+                fill
+                className="object-contain"
               />
             )}
 
@@ -160,16 +163,16 @@ export function ConfirmationPhotos({ photos }: ConfirmationPhotosProps) {
                     <button
                       key={index}
                       onClick={() => setSelectedPhoto(index)}
-                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all ${
-                        index === selectedPhoto
-                          ? "border-white scale-110"
-                          : "border-transparent opacity-50 hover:opacity-100"
-                      }`}
+                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden border-2 transition-all ${index === selectedPhoto
+                        ? "border-white scale-110"
+                        : "border-transparent opacity-50 hover:opacity-100"
+                        }`}
                     >
-                      <img
+                      <Image
                         src={photo}
                         alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     </button>
                   ))}

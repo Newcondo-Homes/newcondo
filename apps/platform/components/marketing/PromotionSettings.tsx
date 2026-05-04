@@ -19,7 +19,6 @@ interface PromotionSettingsProps {
 }
 
 export function PromotionSettings({
-  propertyId,
   currentSetting,
   onSave,
 }: PromotionSettingsProps) {

@@ -29,12 +29,7 @@ import { cn } from "@/lib/utils"
 import { 
   ChevronDown, 
   X, 
-  Check,
   Filter,
-  Home,
-  MapPin,
-  Bed,
-  Bath
 } from "lucide-react"
 
 export interface FilterOption {
@@ -93,7 +88,7 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
 
     const clearSelection = () => onChange([]);
     
-    const selectedLabels = selectedOptions.map(val => options.find(opt => opt.value === val)?.label).filter(Boolean);
+    // const selectedLabels = selectedOptions.map(val => options.find(opt => opt.value === val)?.label).filter(Boolean);
 
     return (
       <Popover>

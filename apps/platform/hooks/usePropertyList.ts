@@ -1,7 +1,9 @@
 // apps/platform/hooks/usePropertyList.ts
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
 import { getMyProperties } from '@/lib/api/propertyManagement';
-import { PropertyStatus } from '@newcondo/db';
+import { PropertyStatus } from '@/types/enums';
 import type { PropertyListFilters } from '@/types/propertyManagement';
 
 

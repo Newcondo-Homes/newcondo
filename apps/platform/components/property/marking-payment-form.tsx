@@ -25,7 +25,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from '@newcondo/ui/';
-import { UrgencyLevel, PaymentStatus } from '@newcondo/db';
+import { UrgencyLevel, PaymentStatus } from '@/types/enums';
 
 interface ContactPerson {
   name: string;

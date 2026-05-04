@@ -79,7 +79,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 }
 
 // Default error fallback component
-function DefaultErrorFallback({ error, resetError, retry, goHome }: ErrorFallbackProps) {
+function DefaultErrorFallback({ error, retry }: ErrorFallbackProps) {
   const router = useRouter()
 
   return (
@@ -146,7 +146,7 @@ export function PropertyErrorBoundary({ children }: { children: React.ReactNode 
   )
 }
 
-function PropertyErrorFallback({ error, resetError }: ErrorFallbackProps) {
+function PropertyErrorFallback({ resetError }: ErrorFallbackProps) {
   return (
     <Card className="p-6">
       <div className="flex flex-col items-center text-center space-y-4">
@@ -175,7 +175,7 @@ export function SearchErrorBoundary({ children }: { children: React.ReactNode })
   )
 }
 
-function SearchErrorFallback({ error, resetError }: ErrorFallbackProps) {
+function SearchErrorFallback({ resetError }: ErrorFallbackProps) {
   return (
     <div className="text-center py-8">
       <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />

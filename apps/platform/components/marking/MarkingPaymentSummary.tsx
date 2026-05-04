@@ -137,7 +137,7 @@ export function MarkingPaymentSummary({
               <div className="text-sm">
                 <p className="font-semibold text-yellow-900">Refund Policy</p>
                 <p className="text-yellow-800 mt-1">
-                  If marking is not completed within 3 days, you'll receive a full refund.
+                  If marking is not completed within 3 days, youyou&apos;ll receive a full refund.
                   Confirmed markings are non-refundable.
                 </p>
               </div>

@@ -12,7 +12,7 @@ import {
   XCircle,
   Clock,
 } from 'lucide-react';
-import { RentalStatus } from '@newcondo/db';
+import { RentalStatus } from '@/types/enums';
 
 interface RentalDetailsCardProps {
   rental: {

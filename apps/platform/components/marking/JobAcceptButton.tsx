@@ -69,7 +69,7 @@ export function JobAcceptButton({
           <h3 className="font-semibold text-green-900">Job Accepted!</h3>
         </div>
         <p className="text-sm text-green-700">
-          You have 3 hours to complete the property marking. You'll receive a preliminary payment of ₦1,000 upon completion.
+          You have 3 hours to complete the property marking. You&apos;ll receive a preliminary payment of ₦1,000 upon completion.
         </p>
       </div>
     );
@@ -144,7 +144,7 @@ export function JobAcceptButton({
         </div>
 
         <p className="text-xs text-blue-600 mb-4">
-          ✓ You'll have 3 hours to complete the marking
+          ✓ You&apos;ll have 3 hours to complete the marking
           <br />✓ Property owner must confirm within 3 days
           <br />✓ Full payment released upon confirmation
         </p>

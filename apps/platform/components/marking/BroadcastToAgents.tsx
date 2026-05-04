@@ -1,13 +1,14 @@
 // apps/platform/components/marking/BroadcastToAgents.tsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Users, MapPin, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { formatDistance } from '@/lib/utils/format';
+import Image from 'next/image';
 
 interface Agent {
   id: string;
@@ -43,16 +44,11 @@ export function BroadcastToAgents({
   const [loadingAgents, setLoadingAgents] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch nearby agents on component mount
-  // useState(() => {
-  //   fetchNearbyAgents();
-  // });
-
   useEffect(() => {
     fetchNearbyAgents();
   }, []);
 
-  const fetchNearbyAgents = async () => {
+  const fetchNearbyAgents = useCallback(async () => {
     try {
       setLoadingAgents(true);
       const response = await fetch(
@@ -70,7 +66,12 @@ export function BroadcastToAgents({
     } finally {
       setLoadingAgents(false);
     }
-  };
+  }, [propertyLocation.lat, propertyLocation.lng, propertyId]);
+
+  // Then add fetchNearbyAgents to useEffect deps
+  useEffect(() => {
+    fetchNearbyAgents();
+  }, [fetchNearbyAgents]);
 
   const handleBroadcast = async () => {
     try {
@@ -157,10 +158,12 @@ export function BroadcastToAgents({
                   className="flex items-center gap-3 p-3 bg-muted rounded-md"
                 >
                   {agent.image ? (
-                    <img
+                    <Image
                       src={agent.image}
                       alt={agent.name}
-                      className="h-10 w-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
                     />
                   ) : (
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">

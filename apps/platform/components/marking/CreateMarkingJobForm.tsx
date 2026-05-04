@@ -38,7 +38,7 @@ interface CreateMarkingJobFormProps {
 }
 
 export function CreateMarkingJobForm({
-  propertyId,
+  propertyId: _propertyId,
   propertyTitle,
   onSubmit,
   isSubmitting = false,
@@ -113,7 +113,7 @@ export function CreateMarkingJobForm({
             value={markingOption}
             onValueChange={(value) => {
               setMarkingOption(value);
-              setValue("markingOption", value as any);
+              setValue("markingOption", value as CreateMarkingJobFormData["markingOption"]);
             }}
             className="space-y-4"
           >
@@ -244,7 +244,7 @@ export function CreateMarkingJobForm({
             <div className="space-y-2">
               <Label htmlFor="urgencyLevel">Urgency Level</Label>
               <Select
-                onValueChange={(value) => setValue("urgencyLevel", value as any)}
+                onValueChange={(value) => setValue("urgencyLevel", value as CreateMarkingJobFormData["urgencyLevel"])}
                 defaultValue="NORMAL"
               >
                 <SelectTrigger>

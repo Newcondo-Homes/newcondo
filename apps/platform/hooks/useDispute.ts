@@ -1,3 +1,5 @@
+'use client'
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@newcondo/ui';
 import { disputesApi } from '@/lib/api/disputes';

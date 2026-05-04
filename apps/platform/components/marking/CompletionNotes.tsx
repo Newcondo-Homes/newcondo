@@ -1,7 +1,6 @@
 // apps/platform/components/marking/CompletionNotes.tsx
 "use client";
 
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Textarea } from "@newcondo/ui/components/textarea";
 import { Label } from "@newcondo/ui/components/label";

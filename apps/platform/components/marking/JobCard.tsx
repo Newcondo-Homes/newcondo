@@ -12,7 +12,6 @@ import {
   Loader2,
   Zap,
 } from 'lucide-react';
-import { formatDistance } from '@/lib/utils/format';
 
 interface JobCardProps {
   job: {

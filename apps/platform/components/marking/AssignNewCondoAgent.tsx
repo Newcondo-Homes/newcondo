@@ -15,7 +15,6 @@ interface AssignmentData {
 }
 
 export const AssignNewCondoAgent: React.FC<AssignNewCondoAgentProps> = ({
-  propertyId,
   onAssign,
   isLoading = false,
 }) => {
@@ -115,7 +114,7 @@ export const AssignNewCondoAgent: React.FC<AssignNewCondoAgentProps> = ({
             <div className="text-sm text-amber-800">
               <p className="font-medium">Confirmation Required</p>
               <p className="mt-1">
-                Once marked, you'll have 2-3 days to confirm and verify the marking.
+                Once marked, you&apos;ll have 2-3 days to confirm and verify the marking.
               </p>
             </div>
           </div>
@@ -131,7 +130,7 @@ export const AssignNewCondoAgent: React.FC<AssignNewCondoAgentProps> = ({
           </Button>
 
           <p className="text-xs text-gray-500">
-            You'll proceed to payment after confirming this selection
+            You&apos;ll proceed to payment after confirming this selection
           </p>
         </div>
       </div>

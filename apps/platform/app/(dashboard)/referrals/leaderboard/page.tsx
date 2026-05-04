@@ -3,10 +3,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Metadata } from 'next';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/avatar';
-import { Badge } from '@newcondo/ui/components/badge';
+import { Avatar, AvatarFallback} from '@newcondo/ui/components/avatar';
 import { useReferralLeaderboard } from '@/hooks/useReferrals';
 import { formatCurrency } from '@/lib/utils/referralHelpers';
 import { Trophy, Medal, Award, Crown, User } from 'lucide-react';

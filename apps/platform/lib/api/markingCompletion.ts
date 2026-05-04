@@ -6,8 +6,17 @@ import type {
   UploadCompletionImagesRequest,
   CompletionImagesResponse,
   SubmitBoundaryDataRequest,
-  BoundaryDataResponse
+  BoundaryDataResponse,
+  BoundaryData
 } from '@/types/marking';
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
 
 /**
  * Mark a job as in progress (agent starts working)
@@ -143,7 +152,7 @@ export async function getCompletionData(jobId: string): Promise<{
     description?: string;
     uploadedAt: string;
   }>;
-  boundaryData?: any;
+  boundaryData?: BoundaryData;
   notes?: string;
   completedAt?: string;
   status: string;
@@ -157,7 +166,7 @@ export async function getCompletionData(jobId: string): Promise<{
       description?: string;
       uploadedAt: string;
     }>;
-    boundaryData?: any;
+    boundaryData?: BoundaryData;
     notes?: string;
     completedAt?: string;
     status: string;

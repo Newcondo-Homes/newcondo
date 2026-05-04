@@ -51,7 +51,6 @@ import { toast } from "@newcondo/ui/";
 import { Skeleton } from "@newcondo/ui/";
 
 import type { MarkingJobStatus, UrgencyLevel, MarkingType } from "@/types/marking";
-import { useMarkingStore } from "@/store/markingStore";
 
 // ---------------------------------------------------------------------------
 // Types

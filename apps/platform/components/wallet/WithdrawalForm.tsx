@@ -29,6 +29,15 @@ import { formatCurrency } from '@/lib/utils/format';
 import { withdrawalsApi } from '@/lib/api/withdrawals';
 import { toast } from 'sonner';
 
+interface BankAccount {
+  id?: string;
+  accountName: string;
+  accountNumber: string;
+  bankName: string;
+  bankCode: string;
+  isDefault?: boolean;
+}
+
 const withdrawalSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
   bankAccountId: z.string().min(1, 'Please select a bank account'),
@@ -51,7 +60,7 @@ export function WithdrawalForm({
   onCancel,
 }: WithdrawalFormProps) {
   const queryClient = useQueryClient();
-  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [selectedAccount, setSelectedAccount] = useState<BankAccount | null>(null);
 
   const form = useForm<WithdrawalFormData>({
     resolver: zodResolver(withdrawalSchema),
@@ -70,12 +79,12 @@ export function WithdrawalForm({
 
   const withdrawalMutation = useMutation({
     mutationFn: (data: WithdrawalFormData) => withdrawalsApi.createWithdrawal({
-      accountNumber: selectedAccount?.accountNumber,
-      bankCode: selectedAccount?.bankCode,
+      accountNumber: selectedAccount?.accountNumber as string,
+      bankCode: selectedAccount?.bankCode as string,
       amount: parseFloat(data.amount),
       narration: data.narration,
     }),
-    
+
     onSuccess: () => {
       toast.success('Withdrawal initiated successfully');
       queryClient.invalidateQueries({ queryKey: ['virtual-account-balance'] });
@@ -83,7 +92,7 @@ export function WithdrawalForm({
       form.reset();
       onSuccess?.();
     },
-    onError: (error: any) => {
+    onError: (error: { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || 'Failed to process withdrawal');
     },
   });
@@ -161,8 +170,8 @@ export function WithdrawalForm({
               <Select
                 onValueChange={(value) => {
                   field.onChange(value);
-                  const account = bankAccounts?.find((acc: any) => acc.id === value);
-                  setSelectedAccount(account);
+                  const account = bankAccounts?.find((acc: BankAccount) => acc.id === value);
+                  setSelectedAccount(account as BankAccount);
                 }}
                 value={field.value}
               >
@@ -177,8 +186,8 @@ export function WithdrawalForm({
                       Loading accounts...
                     </div>
                   ) : bankAccounts && bankAccounts.length > 0 ? (
-                    bankAccounts.map((account: any) => (
-                      <SelectItem key={account.id} value={account.id}>
+                    bankAccounts.map((account: BankAccount) => (
+                      <SelectItem key={account.id} value={account.id as string}>
                         {account.bankName} - {account.accountNumber}
                       </SelectItem>
                     ))

@@ -7,7 +7,7 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Separator } from '@newcondo/ui/components/separator';
 import { useRouter } from 'next/navigation';
-import { DocumentType, UserType } from '@newcondo/db';
+import { DocumentType, UserType } from '@/types/enums';
 
 interface ComplianceItem {
   id: string;

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
-import { DocumentStatus, DocumentType, VerificationStatus, UserType } from '@newcondo/db';
+import { DocumentStatus, DocumentType, VerificationStatus, UserType } from '@/types/enums';
 
 interface ComplianceData {
   user: {
@@ -41,7 +41,7 @@ interface ComplianceData {
   documents: {
     id: string;
     documentType: DocumentType;
-    status: DocumentStatus;
+    status:  DocumentStatus;
     isRequired: boolean;
     fileName?: string;
     fileUrl?: string;

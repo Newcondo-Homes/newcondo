@@ -21,7 +21,7 @@ export function ReferralEmptyState() {
       
       <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
         Start inviting friends to NewCondo and earn rewards when they join.
-        You'll earn rewards for every qualified referral!
+        You&apos;ll earn rewards for every qualified referral!
       </p>
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center">

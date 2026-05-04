@@ -75,7 +75,7 @@ export function ReferralOnboarding({ isOpen, onClose }: ReferralOnboardingProps)
             <div>
               <h4 className="font-medium mb-1">Friends Sign Up</h4>
               <p className="text-sm text-muted-foreground">
-                When they join using your link and complete their profile, they're tracked as your referral
+                When they join using your link and complete their profile, they&apos;re tracked as your referral
               </p>
             </div>
           </div>
@@ -165,7 +165,7 @@ export function ReferralOnboarding({ isOpen, onClose }: ReferralOnboardingProps)
       content: (
         <div className="space-y-6 text-center">
           <p className="text-muted-foreground">
-            You're all set! Start sharing your referral link and watch your rewards grow.
+            You&apos;re all set! Start sharing your referral link and watch your rewards grow.
           </p>
 
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">

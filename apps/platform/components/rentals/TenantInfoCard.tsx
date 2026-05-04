@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@newcondo/ui/components/ava
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { Mail, Phone, MapPin, User, Shield } from 'lucide-react';
-import { VerificationStatus } from '@newcondo/db';
+import { VerificationStatus } from '@/types/enums';
 
 interface TenantInfoCardProps {
   tenant: {

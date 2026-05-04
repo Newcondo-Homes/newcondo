@@ -1,8 +1,53 @@
 // Core API Response Types
-import type { User } from '@newcondo/db'
-import { PropertyType } from '@newcondo/db';
 // types/api.ts
 
+export interface User {
+  id: string;
+  name?: string | null;
+  email: string;
+  phone?: string | null;
+  role: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
+  image?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  // add other fields your UI actually needs
+
+  // Verification fields
+  verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  verifiedAt?: string | null;        // DateTime becomes string in API responses
+  verifiedBy?: string | null;
+  verificationRejectionReason?: string | null;
+
+  // Profile fields
+  dateOfBirth?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+
+  // Premium
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
+
+  // Agent fields
+  isAvailableForMarking?: boolean;
+  agentServiceAreas?: string[];
+  agentReliabilityScore?: number | null;
+  totalMarkingJobs?: number;
+  completedMarkingJobs?: number;
+}
+
+// ADD a standalone PropertyType enum instead:
+export enum PropertyType {
+  APARTMENT = 'APARTMENT',
+  HOUSE = 'HOUSE',
+  DUPLEX = 'DUPLEX',
+  ROOM = 'ROOM',
+  SHARED_APARTMENT = 'SHARED_APARTMENT',
+  OFFICE = 'OFFICE',
+  SHOP = 'SHOP',
+  WAREHOUSE = 'WAREHOUSE',
+}
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
@@ -87,7 +132,7 @@ export interface WithdrawalStatusResponse extends WithdrawalResponse {
 }
 
 export interface BankAccountResponse {
-  id: string;
+  id?: string;
   accountNumber: string;
   accountName: string;
   bankName: string;
@@ -107,8 +152,7 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// User Types
-export type { User }
+
 //   id: string;
 //   email: string;
 //   phone?: string;
@@ -493,7 +537,7 @@ export type OTPType = 'EMAIL_VERIFICATION' | 'LOGIN' | 'PASSWORD_RESET'
 //   WAREHOUSE = 'WAREHOUSE'
 // }
 
-export { PropertyType }
+
 
 export enum PropertyStructure {
   SINGLE_UNIT = 'SINGLE_UNIT',

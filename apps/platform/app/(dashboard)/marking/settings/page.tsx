@@ -2,8 +2,6 @@ import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { getServerSession } from '@newcondo/auth';
-import { prisma } from '@newcondo/db';
-import AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
 import MarkingServiceTerms from '@/components/marking/MarkingServiceTerms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
 import { Skeleton } from '@newcondo/ui';

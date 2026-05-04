@@ -4,11 +4,11 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { UploadCloud, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
-import { Card, CardContent } from '@newcondo/ui/components/card';
+import { Card } from '@newcondo/ui/components/card';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@newcondo/ui/lib/utils';
-import { DocumentType, DocumentStatus } from '@newcondo/db';
+import { DocumentType, DocumentStatus } from '@/types/enums';
 
 interface DocumentFile extends File {
   preview?: string;
@@ -66,32 +66,27 @@ export function DocumentUploader({
   existingDocuments = []
 }: DocumentUploaderProps) {
   const [files, setFiles] = useState<DocumentFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
+  // const [isUploading, setIsUploading] = useState(false);
 
-  const uploadFile = async (file: DocumentFile) => {
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('documentType', documentType);
-      if (propertyId) {
-        formData.append('propertyId', propertyId);
-      }
-
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      throw error;
+  const uploadFile = useCallback(async (file: DocumentFile) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('documentType', documentType);
+    if (propertyId) {
+      formData.append('propertyId', propertyId);
     }
-  };
+
+    const response = await fetch('/api/documents/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+
+    return response.json();
+  }, [documentType, propertyId]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file =>
@@ -105,9 +100,10 @@ export function DocumentUploader({
     setFiles(prev => [...prev, ...newFiles].slice(0, maxFiles));
 
     // Start upload for each file
-    newFiles.forEach(async (file, index) => {
+    newFiles.forEach(async (file) => {
       try {
-        setIsUploading(true);
+
+        // setIsUploading(true);
 
         // Simulate progress
         const progressInterval = setInterval(() => {
@@ -137,11 +133,9 @@ export function DocumentUploader({
         ));
 
         onUploadError(error instanceof Error ? error.message : 'Upload failed');
-      } finally {
-        setIsUploading(false);
       }
     });
-  }, [documentType, propertyId, maxFiles, onUploadComplete, onUploadError]);
+  }, [documentType, propertyId, maxFiles, onUploadComplete, onUploadError, uploadFile]);
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,

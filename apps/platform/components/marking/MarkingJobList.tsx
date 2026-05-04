@@ -1,6 +1,6 @@
 // apps/platform/components/marking/MarkingJobList.tsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MarkingJobCard } from './MarkingJobCard';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
@@ -63,20 +63,12 @@ export function MarkingJobList({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
 
-  useEffect(() => {
-    fetchJobs();
-  }, [viewType]);
-
-  useEffect(() => {
-    filterJobs();
-  }, [jobs, searchQuery, statusFilter, paymentFilter]);
-
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const endpoint = viewType === 'owner' 
+      const endpoint = viewType === 'owner'
         ? '/api/marking/my-jobs'
         : '/api/marking/available-jobs';
 
@@ -93,12 +85,11 @@ export function MarkingJobList({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [viewType]);
 
-  const filterJobs = () => {
+  const filterJobs = useCallback(() => {
     let filtered = [...jobs];
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -109,22 +100,28 @@ export function MarkingJobList({
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter((job) => job.status === statusFilter);
     }
 
-    // Payment filter
     if (paymentFilter !== 'all') {
       filtered = filtered.filter((job) => job.paymentStatus === paymentFilter);
     }
 
     setFilteredJobs(filtered);
-  };
+  }, [jobs, searchQuery, statusFilter, paymentFilter]);
 
   const handleRefresh = () => {
     fetchJobs();
   };
+
+  useEffect(() => {
+    fetchJobs();
+  }, [viewType, fetchJobs]);
+
+  useEffect(() => {
+    filterJobs();
+  }, [jobs, searchQuery, statusFilter, paymentFilter, filterJobs]);
 
   if (isLoading) {
     return (
@@ -228,8 +225,8 @@ export function MarkingJobList({
             {searchQuery || statusFilter !== 'all' || paymentFilter !== 'all'
               ? 'No marking jobs match your filters'
               : viewType === 'owner'
-              ? 'You haven\'t requested any marking jobs yet'
-              : 'No marking jobs available in your area'}
+                ? 'You haven\'t requested any marking jobs yet'
+                : 'No marking jobs available in your area'}
           </p>
         </div>
       )}
@@ -277,7 +274,7 @@ export function MarkingJobList({
 //   const [urgencyFilter, setUrgencyFilter] = useState("all");
 
 //   const filteredJobs = jobs.filter((job) => {
-//     const matchesSearch = 
+//     const matchesSearch =
 //       job.property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
 //       job.property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
 //       job.property.city.toLowerCase().includes(searchQuery.toLowerCase());

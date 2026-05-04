@@ -32,6 +32,7 @@ export interface UpdatePropertyPayload extends Partial<CreatePropertyPayload> {
 }
 
 export interface PropertyFilters {
+  status?: PropertyStatus
   city?: string
   state?: string
   propertyType?: PropertyType
@@ -39,6 +40,7 @@ export interface PropertyFilters {
   maxPrice?: number
   bedrooms?: number
   bathrooms?: number
+  amenities?: string[]
   features?: string[]
   isAvailable?: boolean
   ownerId?: string

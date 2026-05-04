@@ -12,8 +12,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Progress } from '@newcondo/ui/components/progress';
 import { toast } from '@newcondo/ui/';
 import { cn } from '@newcondo/ui/lib/utils';
+import Image from 'next/image';
 
 type DocumentStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+
+interface UploadedFile {
+  name: string;
+  url: string;
+  size: number;
+}
 
 interface OwnershipDocument {
   id: string;
@@ -45,7 +52,7 @@ export function OwnershipProofUpload({
 }: OwnershipProofUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [previewDocument, setPreviewDocument] = useState<OwnershipDocument | null>(null);
+  // const [previewDocument, setPreviewDocument] = useState<OwnershipDocument | null>(null);
 
   const getStatusColor = (status: DocumentStatus) => {
     switch (status) {
@@ -77,7 +84,7 @@ export function OwnershipProofUpload({
     return `${mb.toFixed(2)} MB`;
   };
 
-  const handleUploadComplete = async (res: any) => {
+  const handleUploadComplete = async (res: UploadedFile[]) => {
     try {
       setIsUploading(true);
 
@@ -102,7 +109,7 @@ export function OwnershipProofUpload({
       toast.success('Document uploaded successfully', {
         description: 'Your ownership proof has been submitted for verification.'
       });
-    } catch (error) {
+    } catch {
       toast.error('Upload failed', {
         description: 'There was an error uploading your document. Please try again.',
       });
@@ -125,7 +132,7 @@ export function OwnershipProofUpload({
       toast.success('Document removed', {
         description: 'The document has been successfully removed.'
       });
-    } catch (error) {
+    } catch {
       toast.error('Removal failde', {
         description: 'There was an error removing the document. Please try again.',
       });
@@ -188,7 +195,6 @@ export function OwnershipProofUpload({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setPreviewDocument(document)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -205,9 +211,11 @@ export function OwnershipProofUpload({
                             title="Document Preview"
                           />
                         ) : (
-                          <img
+                          <Image
                             src={document.fileUrl}
                             alt="Document"
+                            width={800}
+                            height={600}
                             className="max-w-full h-auto max-h-[60vh] object-contain"
                           />
                         )}

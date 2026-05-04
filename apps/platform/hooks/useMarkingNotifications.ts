@@ -1,4 +1,5 @@
 // apps/platform/hooks/useMarkingNotifications.ts
+'use client'
 
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from './useAuth';

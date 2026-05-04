@@ -1,4 +1,6 @@
 // apps/platform/hooks/useMarkingHistory.ts
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
 import {
   getMarkingHistory,

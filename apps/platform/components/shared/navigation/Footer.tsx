@@ -112,7 +112,7 @@ const Footer: React.FC = () => {
               <span className="text-xl font-bold">Newcondo</span>
             </Link>
             <p className="text-gray-400 mb-6 max-w-sm">
-              Nigeria's leading property rental platform. Find your perfect home or list your property with ease and confidence.
+              Nigeria&apos;s leading property rental platform. Find your perfect home or list your property with ease and confidence.
             </p>
             <div className="flex space-x-4 mb-8">
               {socialLinks.map((link) => (

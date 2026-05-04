@@ -1,10 +1,13 @@
+'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
 import * as propertyApi from '@/lib/api/properties';
 import * as searchApi from '@/lib/api/search';
 import * as favoritesApi from '@/lib/api/favorites';
-import type { Property, PropertyFilters, PropertySearchParams } from '@/types/api';
+import type { Property, PropertySearchParams } from '@/types/api';
+import type { PropertyFilters } from '@/lib/api/properties';
 
 
 

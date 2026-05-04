@@ -3,7 +3,6 @@
 import { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getServerSession } from '@newcondo/auth';
-import { prisma } from '@newcondo/db';
 import { CompleteMarkingJobClient } from '@/components/marking/CompleteMarkingJobClient';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { Card } from '@newcondo/ui';

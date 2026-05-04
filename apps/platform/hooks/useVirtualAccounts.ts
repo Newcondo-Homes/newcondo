@@ -1,4 +1,6 @@
 // apps/platform/hooks/useVirtualAccounts.ts
+'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { virtualAccountsApi } from '@/lib/api/virtualAccounts';
 import { toast } from 'sonner';

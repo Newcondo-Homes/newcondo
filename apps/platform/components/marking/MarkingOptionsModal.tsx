@@ -32,7 +32,7 @@ interface MarkingOption {
 interface MarkingOptionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  propertyId: string;
+  propertyId?: string;
   onSelectOption: (optionId: string) => void;
   userRole: 'OWNER' | 'AGENT' | 'RENTER';
   isPremium?: boolean;
@@ -42,7 +42,7 @@ interface MarkingOptionsModalProps {
 export const MarkingOptionsModal: React.FC<MarkingOptionsModalProps> = ({
   isOpen,
   onClose,
-  propertyId,
+  propertyId: _propertyId,
   onSelectOption,
   userRole,
   isPremium = false,
@@ -208,7 +208,7 @@ export const MarkingOptionsModal: React.FC<MarkingOptionsModalProps> = ({
           <Alert className="bg-green-50 border-green-200">
             <AlertCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-900">
-              You'll be guided through the process step by step. Your location will be automatically pinpointed, and you'll draw a boundary mask over your property on the satellite map.
+              You&apos;ll be guided through the process step by step. Your location will be automatically pinpointed, and you&apos;ll draw a boundary mask over your property on the satellite map.
             </AlertDescription>
           </Alert>
         )}

@@ -38,7 +38,7 @@ export function ReferralProgress() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Congratulations! You've reached all referral milestones.
+            Congratulations! You&apos;ve reached all referral milestones.
           </p>
         </CardContent>
       </Card>

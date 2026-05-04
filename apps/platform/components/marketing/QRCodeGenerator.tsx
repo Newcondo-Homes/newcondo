@@ -6,6 +6,7 @@ import { Button } from '@newcondo/ui/components/button';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { toast } from '@newcondo/ui';
 import { QrCode, Download, ExternalLink, Info } from 'lucide-react';
+import Image from 'next/image';
 
 interface QRCodeGeneratorProps {
   propertyId: string;
@@ -14,7 +15,6 @@ interface QRCodeGeneratorProps {
 }
 
 export function QRCodeGenerator({
-  propertyId,
   shareableLink,
   propertyTitle,
 }: QRCodeGeneratorProps) {
@@ -31,7 +31,7 @@ export function QRCodeGenerator({
       const response = await fetch(qrUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      
+
       const a = document.createElement('a');
       a.href = url;
       a.download = `${propertyTitle.replace(/\s+/g, '-').toLowerCase()}-qr.png`;
@@ -40,12 +40,12 @@ export function QRCodeGenerator({
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast.success('QR Code downloaded',{
+      toast.success('QR Code downloaded', {
         description: 'QR code saved successfully',
       });
     } catch (error) {
       console.error('Download error:', error);
-      toast.error('Download failded',{
+      toast.error('Download failded', {
         description: 'Failed to download QR code',
       });
     }
@@ -86,9 +86,11 @@ export function QRCodeGenerator({
 
         <div className="flex justify-center">
           <div className="bg-white p-4 rounded-lg border shadow-sm">
-            <img
+            <Image
               src={getQRCodeUrl(300)}
               alt={`QR code for ${propertyTitle}`}
+              width={300}
+              height={300}
               className="w-[300px] h-[300px]"
             />
           </div>

@@ -1,7 +1,6 @@
 // apps/platform/components/rentals/RentalHistoryTable.tsx
 'use client';
 
-import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@newcondo/ui/components/badge';
@@ -13,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@newcondo/ui/components/dropdown-menu';
-import { RentalStatus } from '@newcondo/db';
+import { RentalStatus } from '@/types/enums';
 
 interface Rental {
   id: string;

@@ -1,9 +1,9 @@
 // apps/platform/app/(auth)/register/page.tsx
 import { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-// import { headers } from 'next/headers'
 import { auth } from '@newcondo/auth'
 import RegisterForm from '@/components/auth/RegisterForm'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
   title: 'Create Account | NewCondo',
@@ -40,12 +40,12 @@ export default async function RegisterPage() {
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Already have an account?{' '}
-            <a
+            <Link
               href="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Sign in here
-            </a>
+            </Link>
           </p>
         </div>
       </div>

@@ -1,4 +1,6 @@
 // apps/platform/hooks/useMarkingQueue.ts
+'use client'
+
 import { useState, useCallback, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';

@@ -1,4 +1,5 @@
 // apps/platform/hooks/useMarkingTimer.ts
+'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 

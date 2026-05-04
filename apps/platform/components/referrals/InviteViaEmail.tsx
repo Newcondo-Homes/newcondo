@@ -53,7 +53,7 @@ export function InviteViaEmail() {
                 />
               </FormControl>
               <FormDescription>
-                Enter your friend's email address
+                Enter your friend&apos;s email address
               </FormDescription>
               <FormMessage />
             </FormItem>

@@ -1,7 +1,7 @@
 import { generateReactHelpers } from "@uploadthing/react";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
-import { auth } from "@newcondo/auth";
+import { auth } from "@newcondo/auth/middleware";
 
 const f = createUploadthing();
 

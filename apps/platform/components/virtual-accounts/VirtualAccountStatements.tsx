@@ -1,11 +1,11 @@
 // apps/platform/components/virtual-accounts/VirtualAccountStatements.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -14,13 +14,11 @@ import {
 } from '@newcondo/ui/components/select';
 import { Calendar } from '@newcondo/ui/components/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@newcondo/ui/components/popover';
-import { 
+import {
   Download,
   Calendar as CalendarIcon,
-  Filter,
   FileText,
   AlertCircle,
-  ChevronDown,
   RefreshCw
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -67,9 +65,9 @@ interface VirtualAccountStatementsProps {
   propertyId?: string;
 }
 
-export default function VirtualAccountStatements({ 
-  accountId, 
-  propertyId 
+export default function VirtualAccountStatements({
+  accountId,
+  propertyId
 }: VirtualAccountStatementsProps) {
   const { user } = useAuth();
   const [statements, setStatements] = useState<VirtualAccountStatement[]>([]);
@@ -87,17 +85,13 @@ export default function VirtualAccountStatements({
   const [selectedType, setSelectedType] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    fetchStatements();
-  }, [accountId, propertyId, user?.id]);
-
-  const fetchStatements = async () => {
+  const fetchStatements = useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const queryParams = new URLSearchParams({
         userId: user.id,
         ...(accountId && { accountId }),
@@ -105,14 +99,14 @@ export default function VirtualAccountStatements({
       });
 
       const response = await fetch(`/api/virtual-accounts/statements?${queryParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch statements');
       }
-      
+
       const data = await response.json();
       setStatements(data.statements || []);
-      
+
       if (data.statements?.length > 0) {
         setSelectedStatement(data.statements[0]);
       }
@@ -121,15 +115,19 @@ export default function VirtualAccountStatements({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, accountId, propertyId]); // ← former useEffect deps move here
+
+  useEffect(() => {
+    fetchStatements();
+  }, [fetchStatements]); // ← only fetchStatements here
 
   const generateStatement = async () => {
     if (!user?.id || !dateRange.from || !dateRange.to) return;
-    
+
     try {
       setIsGenerating(true);
       setError(null);
-      
+
       const response = await fetch('/api/virtual-accounts/statements/generate', {
         method: 'POST',
         headers: {
@@ -143,11 +141,11 @@ export default function VirtualAccountStatements({
           endDate: dateRange.to.toISOString()
         })
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to generate statement');
       }
-      
+
       const newStatement = await response.json();
       setStatements(prev => [newStatement.statement, ...prev]);
       setSelectedStatement(newStatement.statement);
@@ -161,11 +159,11 @@ export default function VirtualAccountStatements({
   const downloadStatement = async (statementId: string, format: 'PDF' | 'CSV') => {
     try {
       const response = await fetch(`/api/virtual-accounts/statements/${statementId}/download?format=${format.toLowerCase()}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to download statement');
       }
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -193,7 +191,7 @@ export default function VirtualAccountStatements({
       PENDING: 'secondary',
       FAILED: 'destructive'
     } as const;
-    
+
     return (
       <Badge variant={variants[status as keyof typeof variants] || 'secondary'} className="text-xs">
         {status}
@@ -236,9 +234,9 @@ export default function VirtualAccountStatements({
               <p className="text-sm text-red-500">{error}</p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchStatements}
             className="mt-3"
           >
@@ -327,8 +325,8 @@ export default function VirtualAccountStatements({
             {/* Generate Button */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Actions</label>
-              <Button 
-                onClick={generateStatement} 
+              <Button
+                onClick={generateStatement}
                 disabled={isGenerating || !dateRange.from || !dateRange.to}
                 className="w-full"
               >
@@ -355,11 +353,10 @@ export default function VirtualAccountStatements({
               {statements.map((statement) => (
                 <div
                   key={statement.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                    selectedStatement?.id === statement.id 
-                      ? 'border-blue-500 bg-blue-50' 
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedStatement?.id === statement.id
+                      ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                    }`}
                   onClick={() => setSelectedStatement(statement)}
                 >
                   <div className="flex items-center justify-between">
@@ -467,9 +464,8 @@ export default function VirtualAccountStatements({
                       <div className="flex items-center justify-between">
                         <p className="font-medium">{transaction.description}</p>
                         <div className="text-right">
-                          <p className={`font-medium ${
-                            transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                          }`}>
+                          <p className={`font-medium ${transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
+                            }`}>
                             {transaction.type === 'CREDIT' ? '+' : '-'}
                             {formatCurrency(parseFloat(transaction.amount), transaction.currency)}
                           </p>

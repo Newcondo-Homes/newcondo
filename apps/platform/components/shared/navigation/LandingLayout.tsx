@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
 import { useInView } from 'react-intersection-observer'
 import { Heart, MapPin, Bed, Bath, Square, Share2, Eye } from 'lucide-react'
 import { Button } from '@newcondo/ui'
@@ -88,7 +87,7 @@ const PropertyCard: React.FC<{
           text: `Check out this property: ${property.title}`,
           url: `${window.location.origin}/properties/${property.id}`,
         })
-      } catch (error) {
+      } catch {
         // Fallback to clipboard
         navigator.clipboard.writeText(`${window.location.origin}/properties/${property.id}`)
       }
@@ -266,7 +265,6 @@ const LandingLayout: React.FC = () => {
   const [filters, setFilters] = useState<SearchFilters>({})
   
   const searchParams = useSearchParams()
-  const router = useRouter()
 
   // Intersection observer for infinite scroll
   const { ref: loadMoreRef, inView } = useInView({
@@ -376,9 +374,11 @@ const LandingLayout: React.FC = () => {
     const initialFilters: SearchFilters = {}
     searchParams.forEach((value, key) => {
       if (['minPrice', 'maxPrice', 'bedrooms', 'bathrooms'].includes(key)) {
-        initialFilters[key as keyof SearchFilters] = parseInt(value) as any
+        const numericKey = key as 'minPrice' | 'maxPrice' | 'bedrooms' | 'bathrooms';
+        initialFilters[numericKey] = parseInt(value)
       } else {
-        initialFilters[key as keyof SearchFilters] = value as any
+        const stringKey = key as 'query' | 'city' | 'state' | 'propertyType';
+        initialFilters[stringKey] = value 
       }
     })
 
@@ -461,7 +461,7 @@ const LandingLayout: React.FC = () => {
             {!hasMore && properties.length > 0 && (
               <div className="text-center mt-12 py-8 border-t border-gray-200">
                 <p className="text-gray-500">
-                  You've reached the end of our property listings
+                  You&apos;ve reached the end of our property listings
                 </p>
               </div>
             )}

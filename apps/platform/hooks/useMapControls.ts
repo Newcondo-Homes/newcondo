@@ -1,4 +1,6 @@
 // apps/platform/hooks/useMapControls.ts
+'use client'
+
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useGeolocation } from './useGeolocation';
 

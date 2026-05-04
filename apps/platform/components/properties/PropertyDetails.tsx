@@ -20,7 +20,6 @@ import {
   Pencil
 } from 'lucide-react';
 import Image from 'next/image';
-import type { Decimal } from '@newcondo/db';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
@@ -86,7 +85,7 @@ interface PropertyForDisplay {
   title: string;
   description: string;
   structure: string;
-  price?: number | Decimal | null;
+  price?: number | null;
   currency: string;
   address: string;
   city: string;

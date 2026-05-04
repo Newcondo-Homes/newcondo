@@ -84,11 +84,11 @@ export const PropertyTypeSelector: React.FC<PropertyTypeSelectorProps> = ({
   className
 }) => {
   const residentialTypes = Object.entries(propertyTypes).filter(
-    ([_, config]) => config.category === 'residential'
+    ([_key, config]) => config.category === 'residential'
   );
   
   const commercialTypes = Object.entries(propertyTypes).filter(
-    ([_, config]) => config.category === 'commercial'
+    ([_key, config]) => config.category === 'commercial'
   );
 
   const renderPropertyTypeCard = (type: PropertyType, config: typeof propertyTypes[PropertyType]) => {
@@ -148,7 +148,7 @@ export const PropertyTypeSelector: React.FC<PropertyTypeSelectorProps> = ({
           Property Type *
         </Label>
         <p className="text-sm text-gray-600 mb-4">
-          Select the type of property you're listing
+          Select the type of property you&apos;re listing
         </p>
       </div>
 

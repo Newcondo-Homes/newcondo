@@ -1,5 +1,7 @@
 // apps/platform/hooks/useVirtualAccountStatements.ts
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+'use client'
+
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -23,7 +25,7 @@ export interface StatementTransaction {
     propertyTitle?: string;
     tenantName?: string;
     paymentId?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   createdAt: string;
 }
@@ -66,7 +68,6 @@ export interface StatementResponse {
 
 export const useVirtualAccountStatements = (propertyId?: string) => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
 
   const [filters, setFilters] = useState<StatementFilters>({
     type: 'ALL',
@@ -133,8 +134,8 @@ export const useVirtualAccountStatements = (propertyId?: string) => {
       document.body.removeChild(link);
       toast.success('Statement downloaded successfully');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to generate statement');
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to generate statement');
     },
   });
 
@@ -153,8 +154,8 @@ export const useVirtualAccountStatements = (propertyId?: string) => {
     onSuccess: () => {
       toast.success('Statement sent to your email');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Failed to send statement');
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to generate statement');
     },
   });
 
@@ -295,6 +296,7 @@ export const useVirtualAccountStatements = (propertyId?: string) => {
   return {
     // Data
     statements: statementData?.data ?? [],
+    transactions: statementData?.data?.[0]?.transactions ?? [],
     pagination: statementData?.pagination,
 
     // Loading states

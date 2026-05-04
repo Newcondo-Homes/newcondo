@@ -36,7 +36,8 @@ export default function MarkingQueueStatus({
   onRefresh,
 }: MarkingQueueStatusProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-
+  // TODO: JOB id is defined but never used
+  console.log(jobId)
   useEffect(() => {
     if (!currentAgentExpiry) return;
 
@@ -90,7 +91,7 @@ export default function MarkingQueueStatus({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Your Position</span>
-              <Badge variant={getQueueStatusColor() as any}>
+              <Badge variant={getQueueStatusColor()}>
                 #{queuePosition} of {totalInQueue}
               </Badge>
             </div>
@@ -124,9 +125,9 @@ export default function MarkingQueueStatus({
             <TrendingUp className="h-4 w-4 text-green-600" />
             <AlertDescription>
               <div className="space-y-1">
-                <p className="font-medium text-green-800">You're next!</p>
+                <p className="font-medium text-green-800">You&apos;re next!</p>
                 <p className="text-sm text-green-700">
-                  Your 3-hour time slot will begin when the current agent's time expires or they complete the job.
+                  Your 3-hour time slot will begin when the current agent&apos;s time expires or they complete the job.
                 </p>
                 {currentAgentExpiry && (
                   <p className="text-xs text-green-600 mt-2">

@@ -1,3 +1,5 @@
+'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLegalStore } from '@/store/legalStore';
 import { legalApi } from '@/lib/api/legal';

@@ -1,4 +1,6 @@
 // apps/platform/hooks/usePropertyManagement.ts
+'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getPropertyManagementDashboard,
@@ -8,7 +10,7 @@ import {
   updatePropertyBoundary
 } from '@/lib/api/propertyManagement';
 import { toast } from '@newcondo/ui';
-import { PropertyStatus } from '@newcondo/db';
+import { PropertyStatus } from '@/types/enums';
 import type { PropertyManagementFilters } from '@/lib/api/propertyManagement';
 
 

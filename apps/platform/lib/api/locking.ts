@@ -1,5 +1,13 @@
 import client from './client';
 
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+}
+
 export interface PropertyLock {
   propertyId: string;
   unitId?: string;
@@ -48,9 +56,10 @@ export async function acquirePropertyLock(
       unitId,
     });
     return response.data as LockResponse;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to acquire property lock'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }
@@ -64,9 +73,10 @@ export async function releasePropertyLock(
   try {
     const response = await client.post('/api/locking/release', data);
     return response.data as { success: boolean; message?: string };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to release property lock'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }
@@ -83,9 +93,10 @@ export async function extendPropertyLock(
       data
     );
     return response.data as LockResponse;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to extend property lock'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }
@@ -105,9 +116,10 @@ export async function checkLockStatus(
       `/api/locking/status?${params.toString()}`
     );
     return response.data as LockStatusResponse;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to check lock status'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }
@@ -127,9 +139,10 @@ export async function forceReleaseLock(
       reason,
     });
     return response.data as { success: boolean; message?: string };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to force release lock'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }
@@ -143,9 +156,10 @@ export async function getUserActiveLocks(): Promise<PropertyLock[]> {
       '/api/locking/user-locks'
     );
     return response.data as PropertyLock[];
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to fetch user locks'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }
@@ -163,9 +177,10 @@ export async function cleanupExpiredLocks(): Promise<{
       success: boolean;
       cleanedCount: number;
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to cleanup expired locks'
+      apiError.response?.data?.message || 'Failed to ...'
     );
   }
 }

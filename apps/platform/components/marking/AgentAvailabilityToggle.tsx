@@ -145,9 +145,9 @@ export default function AgentAvailabilityToggle({
         <div className="pt-4 border-t space-y-2">
           <h4 className="text-sm font-medium">How It Works</h4>
           <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-            <li>When available, you'll receive notifications for jobs in your service areas</li>
+            <li>When available, you&apos;ll receive notifications for jobs in your service areas</li>
             <li>Jobs are assigned on a first-come, first-served basis</li>
-            <li>You'll have a 3-hour window to complete each assigned job</li>
+            <li>You&apos;ll have a 3-hour window to complete each assigned job</li>
             <li>Earn 25% of the marking fee (₦5,000) per completed job</li>
           </ul>
         </div>

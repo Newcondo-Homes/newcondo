@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Users, CheckCircle, TrendingUp, Wallet, Clock } from 'lucide-react';
+import { Users, CheckCircle, TrendingUp, Wallet } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useReferralStats } from '@/hooks/useReferrals';
 import { Skeleton } from '@newcondo/ui/components/skeleton';

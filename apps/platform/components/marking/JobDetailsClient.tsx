@@ -26,6 +26,7 @@ import {
 import { MarkingTimerCountdown } from './MarkingTimerCountdown';
 import { markingApi } from '@/lib/api/marking';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 // Shape returned by prisma in the page — includes all relations
 interface JobProperty {
@@ -55,7 +56,7 @@ interface JobUser {
 }
 
 interface JobAgent extends JobUser {
-  agentReliabilityScore: any;
+  agentReliabilityScore: number | null;
   completedMarkingJobs: number;
   totalMarkingJobs: number;
 }
@@ -70,7 +71,7 @@ interface MarkingJobFull {
   accessInstructions: string | null;
   preferredTime: Date | null;
   urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-  markingFee: any; // Prisma Decimal
+  markingFee: number | string; // Prisma Decimal
   paymentStatus: string;
   status: string;
   assignedAt: Date | null;
@@ -89,7 +90,7 @@ interface MarkingJobFull {
 
 interface JobPayment {
   id: string;
-  amount: any;
+  amount: number | string;
   status: string;
   paymentType: string;
   createdAt: Date;
@@ -152,7 +153,7 @@ const URGENCY_CONFIG: Record<string, string> = {
 export function JobDetailsClient({
   job,
   payment,
-  currentUserId,
+  currentUserId: _currentUserId,
   userRole,
 }: JobDetailsClientProps) {
   const router = useRouter();
@@ -234,10 +235,11 @@ export function JobDetailsClient({
           </CardHeader>
           <CardContent className="space-y-3">
             {job.property.images[0] && (
-              <img
+              <Image
                 src={job.property.images[0].url}
                 alt={job.property.title}
-                className="w-full h-40 object-cover rounded-md border"
+                fill
+                className="object-cover rounded-md border"
               />
             )}
             <div>
@@ -356,10 +358,11 @@ export function JobDetailsClient({
             <CardContent className="space-y-3 text-sm">
               <div className="flex items-center gap-3">
                 {job.assignedAgent.image ? (
-                  <img
+                  <Image
                     src={job.assignedAgent.image}
                     alt={job.assignedAgent.name ?? 'Agent'}
-                    className="h-10 w-10 rounded-full object-cover border"
+                    fill
+                    className="rounded-full object-cover border"
                   />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
@@ -425,11 +428,12 @@ export function JobDetailsClient({
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                   {job.completionImages.map((url, i) => (
-                    <img
+                    <Image
                       key={i}
                       src={url}
                       alt={`Completion photo ${i + 1}`}
-                      className="w-full h-28 object-cover rounded-md border"
+                      fill
+                      className="object-cover rounded-md border"
                     />
                   ))}
                 </div>

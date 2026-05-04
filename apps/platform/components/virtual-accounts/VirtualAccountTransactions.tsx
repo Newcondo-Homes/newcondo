@@ -32,7 +32,7 @@ interface VirtualAccountTransaction {
 }
 
 interface VirtualAccountTransactionsProps {
-  accountId: string;
+  accountId?: string;
   transactions?: VirtualAccountTransaction[];
   isLoading?: boolean;
   onExport?: (filters: TransactionFilters) => void;
@@ -49,7 +49,6 @@ interface TransactionFilters {
 }
 
 const VirtualAccountTransactions: React.FC<VirtualAccountTransactionsProps> = ({
-  accountId,
   transactions = [],
   isLoading = false,
   onExport,
@@ -63,12 +62,12 @@ const VirtualAccountTransactions: React.FC<VirtualAccountTransactionsProps> = ({
     dateFrom: '',
     dateTo: ''
   });
-  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
+  const [sortBy] = useState<'date' | 'amount'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Filter and sort transactions
   const filteredTransactions = useMemo(() => {
-    let filtered = transactions.filter(transaction => {
+    const filtered = transactions.filter(transaction => {
       const matchesSearch = !filters.searchTerm || 
         transaction.description.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         transaction.reference.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
@@ -298,7 +297,7 @@ const VirtualAccountTransactions: React.FC<VirtualAccountTransactionsProps> = ({
 
             <Select
               value={filters.type}
-              onValueChange={(value) => setFilters(prev => ({ ...prev, type: value as any }))}
+              onValueChange={(value) => setFilters(prev => ({ ...prev, type: value as 'CREDIT' | 'DEBIT' | 'ALL' }))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Transaction Type" />

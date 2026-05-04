@@ -5,7 +5,6 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { 
   MapPin, 
-  Clock, 
   User, 
   Phone, 
   Calendar,
@@ -23,6 +22,7 @@ import {
 } from '@newcondo/ui/components/dropdown-menu';
 import { formatDate, formatTimeRemaining } from '@/lib/utils/format';
 import { MarkingStatusBadge } from './MarkingStatusBadge';
+import Image from 'next/image';
 
 interface MarkingJobCardProps {
   job: {
@@ -157,10 +157,11 @@ export function MarkingJobCard({
         {/* Property Image */}
         {job.propertyImages && job.propertyImages.length > 0 && (
           <div className="relative h-40 w-full rounded-md overflow-hidden bg-muted">
-            <img
+            <Image
               src={job.propertyImages[0]}
               alt={job.propertyTitle}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
             />
           </div>
         )}
@@ -248,10 +249,11 @@ export function MarkingJobCard({
         {isOwner && job.assignedAgent && (
           <div className="flex items-center gap-3 p-3 border rounded-md">
             {job.assignedAgent.image ? (
-              <img
+              <Image
                 src={job.assignedAgent.image}
                 alt={job.assignedAgent.name}
-                className="h-10 w-10 rounded-full object-cover"
+                fill
+                className="rounded-full object-cover"
               />
             ) : (
               <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">

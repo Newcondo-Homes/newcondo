@@ -5,13 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Input } from '@newcondo/ui/components/input';
 import { Label } from '@newcondo/ui/components/label';
-import { Badge } from '@newcondo/ui/components/badge';
 import { Separator } from '@newcondo/ui/components/separator';
-import { AlertCircle, CheckCircle2, Clock, DollarSign, FileText, Search } from 'lucide-react';
+import { AlertCircle, CheckCircle2, DollarSign, FileText, Search } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
 import { useReconcileAccount } from '@/hooks/useVirtualAccounts';
-import { useVirtualAccountStatements, StatementTransaction } from '@/hooks/useVirtualAccountStatements';
-import { VirtualAccount, ReconciliationReport } from '@/types/virtualAccount';
+import { useVirtualAccountStatements } from '@/hooks/useVirtualAccountStatements';
+import { VirtualAccount, ReconciliationReport, VirtualAccountTransaction } from '@/types/virtualAccount';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 
@@ -35,9 +34,11 @@ export function AccountReconciliation({
   const reconcileMutation = useReconcileAccount();
   const {
     statements,
+    transactions,
     isStatementsLoading: statementsLoading,
     setDateRange,
   } = useVirtualAccountStatements(account.id);
+
 
   useEffect(() => {
     if (account.id) {
@@ -297,7 +298,7 @@ export function AccountReconciliation({
       )}
 
       {/* Recent Transactions for Review */}
-      {statements && statements.length > 0 && (
+      {transactions.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Recent Transactions</CardTitle>
@@ -307,7 +308,7 @@ export function AccountReconciliation({
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {statements.slice(0, 10).map((transaction: StatementTransaction, index: number) => (
+              {transactions.slice(0, 10).map((transaction: VirtualAccountTransaction, index: number) => (
                 <div key={index} className="flex items-center justify-between py-2 px-3 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className={`p-1 rounded-full ${transaction.type === 'CREDIT' ? 'bg-green-100' : 'bg-red-100'

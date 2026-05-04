@@ -3,17 +3,36 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, MapPin, Filter, SortAsc } from "lucide-react";
+import { Search, MapPin, Filter} from "lucide-react";
 import { Input } from "@newcondo/ui/components/input";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent } from "@newcondo/ui/components/card";
 import { Badge } from "@newcondo/ui/components/badge";
-import { Separator } from "@newcondo/ui/components/separator";
 import { PropertyFilters } from "./property-filters";
 import { useDebounce } from "@/hooks/use-debounce";
 
+interface PriceRange {
+  min?: number;
+  max?: number;
+}
+
+interface FilterState {
+  priceRange: PriceRange;
+  propertyType: string;
+  bedrooms: string;
+  bathrooms: string;
+  features: string[];
+  availableFrom: string;
+}
+
+interface SearchFilters extends FilterState {
+  query: string;
+  location: string;
+  sort: string;
+}
+
 interface PropertySearchProps {
-  onFiltersChange?: (filters: any) => void;
+  onFiltersChange?: (filters: SearchFilters) => void;
   showMapView?: boolean;
 }
 
@@ -29,7 +48,7 @@ export function PropertySearch({ onFiltersChange, showMapView = false }: Propert
   const debouncedLocation = useDebounce(location, 300);
 
 
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<FilterState>({
     priceRange: {
       min: searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined,
       max: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
@@ -68,7 +87,7 @@ export function PropertySearch({ onFiltersChange, showMapView = false }: Propert
     onFiltersChange?.(searchFilters);
   }, [debouncedSearch, debouncedLocation, sortBy, filters, onFiltersChange, router]);
 
-  const handleFiltersChange = (newFilters: any) => {
+  const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters);
   };
 

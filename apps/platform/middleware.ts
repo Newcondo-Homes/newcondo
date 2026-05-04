@@ -1,8 +1,6 @@
 // apps/platform/middleware.ts
 import { NextResponse } from "next/server";
-// import type { NextRequest } from "next/server";
-import { Role } from "@newcondo/db";
-import { auth } from "@newcondo/auth";
+import { auth } from "@newcondo/auth/middleware";
 import {
   DEFAULT_LOGIN_REDIRECT,
   apiAuthPrefix,
@@ -14,11 +12,29 @@ import {
   ownerRoutes,
 } from "@/lib/routes";
 
+
+type Role = "ADMIN" | "AGENT" | "OWNER" | "RENTER";
+type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
+
+// Extended user type for middleware
+interface MiddlewareUser {
+  id?: string;
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+  role?: Role;
+  verificationStatus?: VerificationStatus;
+}
+
 export default auth((req) => {
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
   const isLoggedIn = !!req.auth;
-  const userRole = req.auth?.user?.role;
+
+  // Cast user to our extended type
+  const user = req.auth?.user as MiddlewareUser | undefined;
+  const userRole = user?.role;
+  const verificationStatus = user?.verificationStatus;
 
   // Check if it's an API auth route (allow all auth API routes)
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix);
@@ -88,6 +104,7 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/unauthorized", nextUrl));
     }
 
+    //TODO: update protected and non-protected routes
     // Check if user is verified for certain protected routes
     const requiresVerification = [
       "/properties/create",
@@ -102,7 +119,7 @@ export default auth((req) => {
 
     if (
       requiresVerificationRoute &&
-      req.auth?.user?.verificationStatus !== "VERIFIED"
+      verificationStatus !== "VERIFIED"
     ) {
       return NextResponse.redirect(new URL("/profile/verification", nextUrl));
     }
@@ -133,7 +150,7 @@ export default auth((req) => {
 
   // Handle virtual accounts - only for verified users
   if (pathname.startsWith("/virtual-accounts")) {
-    if (req.auth?.user?.verificationStatus !== "VERIFIED") {
+    if (verificationStatus !== "VERIFIED") {
       return NextResponse.redirect(new URL("/profile/verification", nextUrl));
     }
   }

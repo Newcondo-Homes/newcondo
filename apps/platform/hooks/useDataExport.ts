@@ -1,4 +1,6 @@
 // apps/platform/hooks/useDataExport.ts
+'use client'
+
 import { useState } from 'react';
 import { toast } from '@newcondo/ui';
 

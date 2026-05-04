@@ -1,7 +1,9 @@
+'use client'
+
 import { useCallback, useEffect, useMemo } from 'react';
 import { useSearchStore } from '@/store/searchStore';
 import { useDebounce } from '@/hooks/useDebounce';
-import { PropertyType, PropertyStatus } from '@newcondo/db';
+import { PropertyType, PropertyStatus } from '@/types/enums';
 
 // Search filters interface
 export interface PropertySearchFilters {

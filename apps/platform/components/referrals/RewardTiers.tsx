@@ -35,7 +35,7 @@ export function RewardTiers() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {REWARD_TIERS.map((tier, index) => {
+          {REWARD_TIERS.map((tier) => {
             const isCurrentTier = currentTier?.name === tier.name;
             const isPassed = currentTier && tier.minReferrals < currentTier.minReferrals;
             const isNext = nextTier?.name === tier.name;

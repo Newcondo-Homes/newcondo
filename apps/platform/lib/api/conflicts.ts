@@ -9,6 +9,11 @@ import type {
   PropertyConflictStats
 } from '@/types/conflicts'
 
+interface BoundaryCoordinates {
+  type: 'Polygon' | 'MultiPolygon';
+  coordinates: number[][][] | number[][][][];
+}
+
 /**
  * Check for booking conflicts before payment
  */
@@ -140,7 +145,7 @@ export const resolveConflict = async (
  */
 export const checkBoundaryConflicts = async (
   propertyId: string,
-  boundaryCoordinates: any
+  boundaryCoordinates: BoundaryCoordinates
 ): Promise<{
   hasDuplicates: boolean;
   potentialDuplicates: Array<{
@@ -308,7 +313,7 @@ export const getConflictRecommendations = async (
   }
 };
 
-export default {
+const conflictsApi = {
   checkBookingConflicts,
   checkPropertyAvailability,
   detectSimultaneousPayments,
@@ -323,3 +328,5 @@ export default {
   bulkCheckConflicts,
   getConflictRecommendations,
 };
+
+export default conflictsApi;

@@ -20,7 +20,8 @@ const completionSchema = z.object({
       lat: z.number(),
       lng: z.number(),
     })).min(3, "At least 3 points required for boundary"),
-    area: z.number().optional(),
+    area: z.number(),
+    timestamp: z.string(),
   }),
   photos: z.array(z.object({
     url: z.string(),
@@ -32,21 +33,21 @@ const completionSchema = z.object({
 type CompletionFormData = z.infer<typeof completionSchema>;
 
 interface CompletionFormProps {
-  jobId: string;
+  jobId?: string;
   propertyTitle: string;
   onSubmit: (data: CompletionFormData) => Promise<void>;
   isSubmitting?: boolean;
 }
 
 export function CompletionForm({
-  jobId,
+  // jobId,
   propertyTitle,
   onSubmit,
   isSubmitting = false,
 }: CompletionFormProps) {
   const [step, setStep] = useState<"boundary" | "photos" | "notes">("boundary");
-  const [boundaryData, setBoundaryData] = useState<any>(null);
-  const [photos, setPhotos] = useState<any[]>([]);
+  const [boundaryData, setBoundaryData] = useState<CompletionFormData["boundaryData"] | null>(null);
+  const [photos, setPhotos] = useState<CompletionFormData["photos"]>([]);
 
   const {
     register,
@@ -57,12 +58,11 @@ export function CompletionForm({
   });
 
   const handleFormSubmit = async (data: CompletionFormData) => {
-    const completeData = {
-      ...data,
-      boundaryData,
+    await onSubmit({
+      completionNotes: data.completionNotes,
+      boundaryData: boundaryData!,
       photos,
-    };
-    await onSubmit(completeData);
+    });
   };
 
   const isStepComplete = (stepName: string) => {
@@ -81,13 +81,12 @@ export function CompletionForm({
               <div key={stepName} className="flex items-center flex-1">
                 <div className="flex flex-col items-center flex-1">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                      step === stepName
-                        ? "border-primary bg-primary text-white"
-                        : isStepComplete(stepName)
+                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${step === stepName
+                      ? "border-primary bg-primary text-white"
+                      : isStepComplete(stepName)
                         ? "border-green-500 bg-green-500 text-white"
                         : "border-gray-300 bg-white text-gray-400"
-                    }`}
+                      }`}
                   >
                     {isStepComplete(stepName) ? (
                       <CheckCircle className="h-5 w-5" />
@@ -101,9 +100,8 @@ export function CompletionForm({
                 </div>
                 {index < 2 && (
                   <div
-                    className={`h-0.5 flex-1 ${
-                      isStepComplete(stepName) ? "bg-green-500" : "bg-gray-300"
-                    }`}
+                    className={`h-0.5 flex-1 ${isStepComplete(stepName) ? "bg-green-500" : "bg-gray-300"
+                      }`}
                   />
                 )}
               </div>
@@ -132,12 +130,12 @@ export function CompletionForm({
             </CardHeader>
             <CardContent>
               <BoundaryUpload
-                jobId={jobId}
+                // jobId={jobId?}
                 onBoundaryComplete={(data) => {
                   setBoundaryData(data);
                   setStep("photos");
                 }}
-                initialData={boundaryData}
+                initialData={boundaryData ?? undefined}
               />
             </CardContent>
           </Card>

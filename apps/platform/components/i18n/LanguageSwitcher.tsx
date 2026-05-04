@@ -2,7 +2,7 @@
 
 import { useTransition } from 'react';
 // import { useLocale } from 'next-intl';
-import { useLocale } from '@newcondo/i18n';
+import { useLocale } from '@newcondo/i18n/hooks/useLocale';
 import { useRouter, usePathname } from 'next/navigation';
 import { locales, localeNames, type Locale } from '@newcondo/i18n';
 import {

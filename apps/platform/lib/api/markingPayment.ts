@@ -14,7 +14,7 @@ export interface InitiateMarkingPaymentData {
   amount: number;
   paymentMethod: 'card' | 'bank_transfer' | 'virtual_account';
   callbackUrl?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, string>;
 }
 
 export interface InitiateMarkingPaymentResponse {
@@ -283,12 +283,12 @@ export async function getMarkingVirtualAccount(
  * Webhook handler for payment status updates
  * This should be called by the payment service webhook
  */
-export async function handlePaymentWebhook(
-  webhookData: any
-): Promise<{ success: boolean; message: string }> {
-  const response = await client.post('/api/payments/marking/webhook', webhookData);
-  return response.data as { success: boolean; message: string }
-}
+// export async function handlePaymentWebhook(
+//   webhookData: any
+// ): Promise<{ success: boolean; message: string }> {
+//   const response = await client.post('/api/payments/marking/webhook', webhookData);
+//   return response.data as { success: boolean; message: string }
+// }
 
 /**
  * Get payment receipt

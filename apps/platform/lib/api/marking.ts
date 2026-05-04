@@ -360,6 +360,13 @@ export const markingApi = {
         return response.data as { ticketId: string }
     },
 
+    //Generate shareable marking link for known person
+    async  generateShareableLink(
+    jobId: string
+    ): Promise<{ shareableLink: string; expiresAt: string }> {
+    const response = await apiClient.post(`/api/marking-jobs/${jobId}/generate-link`);
+    return response.data as { shareableLink: string; expiresAt: string };
+    },
     // Get marking job statistics
     async getStats(userId?: string): Promise<{
         totalJobs: number

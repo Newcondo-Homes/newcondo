@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MapPin, Shield, Star, TrendingUp } from 'lucide-react'
+import Link from 'next/link'
 
 const stats = [
   { label: 'Verified Listings', value: '12,000+', icon: Shield },
@@ -95,18 +96,18 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-3">
-            <a
+            <Link
               href="/register"
               className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all hover:bg-emerald-400 hover:shadow-emerald-400/30 hover:-translate-y-0.5"
             >
               Get Started Free
-            </a>
-            <a
+            </Link>
+            <Link
               href="#properties"
               className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/20 hover:-translate-y-0.5"
             >
               Browse Properties
-            </a>
+            </Link>
           </div>
 
           {/* Slide dots */}

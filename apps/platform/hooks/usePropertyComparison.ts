@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback } from 'react';
 import { useComparisonStore } from '@/store/comparisonStore';
 import type { PropertyForComparison } from '@/store/comparisonStore';

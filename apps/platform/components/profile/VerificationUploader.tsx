@@ -41,7 +41,7 @@ import { Input } from "@newcondo/ui/";
 import { Label } from "@newcondo/ui/";
 import { Textarea } from "@newcondo/ui/";
 import { useVerification } from "@/hooks/useVerification";
-import { DocumentType, DocumentSide, DocumentStatus } from "@newcondo/db";
+import { DocumentType, DocumentSide, DocumentStatus } from "@/types/enums";
 import {
  verificationSubmissionSchema,
  documentUploadSchema,

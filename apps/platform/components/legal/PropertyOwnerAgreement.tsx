@@ -283,7 +283,7 @@ export const PropertyOwnerAgreement: React.FC<PropertyOwnerAgreementProps> = ({
               </li>
               <li>Agents must maintain a minimum 3.5-star rating</li>
               <li>
-                You can rate the agent's work after confirmation (1-5 stars)
+                You can rate the agent&apos;s work after confirmation (1-5 stars)
               </li>
               <li>
                 Poor quality markings can be reported to platform

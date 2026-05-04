@@ -3,10 +3,9 @@
 import React from 'react';
 import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import { Badge } from '@newcondo/ui/components/badge';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Button } from '@newcondo/ui/components/button';
-import { DocumentType, DocumentStatus, VerificationStatus } from '@newcondo/db';
+import { DocumentType, DocumentStatus, VerificationStatus } from '@/types/enums';
 
 interface DocumentVerificationStatusProps {
   userVerificationStatus: VerificationStatus;
@@ -47,19 +46,19 @@ const REQUIRED_DOCUMENTS: DocumentType[] = [
   'UNDERTAKING_DOCUMENT'
 ];
 
-const STATUS_ICONS = {
-  PENDING: Clock,
-  APPROVED: CheckCircle,
-  REJECTED: XCircle,
-  EXPIRED: AlertTriangle
-};
+// const STATUS_ICONS = {
+//   PENDING: Clock,
+//   APPROVED: CheckCircle,
+//   REJECTED: XCircle,
+//   EXPIRED: AlertTriangle
+// };
 
-const STATUS_COLORS = {
-  PENDING: 'text-yellow-600 bg-yellow-100',
-  APPROVED: 'text-green-600 bg-green-100',
-  REJECTED: 'text-red-600 bg-red-100',
-  EXPIRED: 'text-gray-600 bg-gray-100'
-};
+// const STATUS_COLORS = {
+//   PENDING: 'text-yellow-600 bg-yellow-100',
+//   APPROVED: 'text-green-600 bg-green-100',
+//   REJECTED: 'text-red-600 bg-red-100',
+//   EXPIRED: 'text-gray-600 bg-gray-100'
+// };
 
 const VERIFICATION_STATUS_CONFIG = {
   PENDING: {
@@ -100,7 +99,7 @@ export function DocumentVerificationStatus({
   const approvedDocuments = submittedDocuments.filter(doc =>
     doc.status === 'APPROVED'
   );
-  
+
   const progress = requiredDocuments.length > 0
     ? (approvedDocuments.length / requiredDocuments.length) * 100
     : 0;
@@ -125,7 +124,7 @@ export function DocumentVerificationStatus({
           <span>Document Verification Status</span>
         </CardTitle>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Overall Status */}
         <div className={`p-4 rounded-lg border ${verificationConfig.color}`}>

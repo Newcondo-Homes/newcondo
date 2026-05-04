@@ -10,9 +10,10 @@ import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { CreditCard, Wallet, AlertCircle, Shield, Info } from 'lucide-react';
 import { Separator } from '@newcondo/ui/components/separator';
 import { CompensationBreakdown } from './CompensationBreakdown';
+import Link from 'next/link';
 
 interface MarkingPaymentFormProps {
-  jobId: string;
+  jobId?: string;
   markingFee: number;
   currency?: string;
   onPaymentInitiate: (method: PaymentMethod) => Promise<void>;
@@ -22,7 +23,7 @@ interface MarkingPaymentFormProps {
 type PaymentMethod = 'CARD' | 'BANK_TRANSFER' | 'VIRTUAL_ACCOUNT';
 
 export default function MarkingPaymentForm({
-  jobId,
+  jobId: _jobId,
   markingFee,
   currency = 'NGN',
   onPaymentInitiate,
@@ -191,9 +192,9 @@ export default function MarkingPaymentForm({
               </label>
               <p className="text-sm text-muted-foreground">
                 I understand the payment structure and verification process for the property marking service.{' '}
-                <a href="/terms/marking-service" className="text-primary hover:underline">
+                <Link href="/terms/marking-service" className="text-primary hover:underline">
                   Read full terms
-                </a>
+                </Link>
               </p>
             </div>
           </div>

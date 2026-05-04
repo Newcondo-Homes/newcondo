@@ -1,4 +1,6 @@
 // apps/platform/hooks/useFlutterwave.ts
+'use client'
+
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@newcondo/ui';

@@ -12,9 +12,9 @@ interface MarkingServiceTermsProps {
   showAlert?: boolean;
 }
 
-export function MarkingServiceTerms({ 
+export function MarkingServiceTerms({
   variant = "full",
-  showAlert = true 
+  showAlert = true
 }: MarkingServiceTermsProps) {
   if (variant === "summary") {
     return (
@@ -27,7 +27,7 @@ export function MarkingServiceTerms({
             </AlertDescription>
           </Alert>
         )}
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Key Terms Summary</CardTitle>
@@ -39,21 +39,21 @@ export function MarkingServiceTerms({
                 Standard marking fee: ₦20,000 per property. Payment is non-refundable once an agent is assigned.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-1">Verification Period</h4>
               <p className="text-muted-foreground">
                 You have 2-3 days to verify the marking after completion. Failure to verify will result in automatic approval.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-1">Your Responsibilities</h4>
               <p className="text-muted-foreground">
                 Provide accurate property information, ensure property access, and verify ownership documentation.
               </p>
             </div>
-            
+
             <div>
               <h4 className="font-semibold mb-1">Liability</h4>
               <p className="text-muted-foreground">
@@ -91,12 +91,12 @@ export function MarkingServiceTerms({
               <section>
                 <h3 className="font-semibold text-base mb-2">1. Introduction and Acceptance</h3>
                 <p className="text-muted-foreground mb-2">
-                  These Terms and Conditions ("Terms") govern the use of NewCondo's Property Marking Service ("Service"). 
-                  By requesting, providing, or participating in the Property Marking Service, you ("User," "Property Owner," 
-                  "Agent," or "Marker") agree to be legally bound by these Terms.
+                  These Terms and Conditions (&quot;Terms&quot;) govern the use of NewCondo&apos;s Property Marking Service (&quot;Service&quot;).
+                  By requesting, providing, or participating in the Property Marking Service, you (&quot;User,&quot; &quot;Property Owner,&quot;
+                  &quot;Agent,&quot; or &quot;Marker&quot;) agree to be legally bound by these Terms.
                 </p>
                 <p className="text-muted-foreground">
-                  NewCondo Property Platform Limited ("NewCondo," "we," "us," or "our") operates as a technology platform 
+                  NewCondo Property Platform Limited (&quot;NewCondo,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;) operates as a technology platform
                   connecting property owners with verified agents and markers for property boundary verification services.
                 </p>
               </section>
@@ -129,7 +129,7 @@ export function MarkingServiceTerms({
                       <li>Must be at least 18 years of age</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">3.2 Property Markers (Agents/Premium Renters)</h4>
                     <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
@@ -155,17 +155,17 @@ export function MarkingServiceTerms({
                       <li><strong>Shared Link Marking:</strong> Free (for designated individuals)</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">4.2 Payment Processing</h4>
                     <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
-                      <li>All payments are processed through Flutterwave's secure payment gateway</li>
+                      <li>All payments are processed through Flutterwave&apos;s secure payment gateway</li>
                       <li>Payments must be completed before marking job assignment</li>
                       <li>A confirmation hold period applies to protect both parties</li>
                       <li>Payment receipts are issued automatically upon successful transaction</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">4.3 Commission Structure</h4>
                     <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
@@ -191,7 +191,7 @@ export function MarkingServiceTerms({
                       <li>Failure to complete within the time window results in queue advancement</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">5.2 Verification Period</h4>
                     <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
@@ -201,7 +201,7 @@ export function MarkingServiceTerms({
                       <li>Automatic approval occurs if no action is taken within the timeframe</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">5.3 Re-marking Requests</h4>
                     <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
@@ -259,7 +259,7 @@ export function MarkingServiceTerms({
                       <li>Guarantee specific marking quality or timing outcomes</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">8.2 User Indemnification</h4>
                     <p className="text-muted-foreground">
@@ -273,11 +273,11 @@ export function MarkingServiceTerms({
                       <li>Violations of these Terms or applicable laws</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">8.3 Limitation of Liability</h4>
                     <p className="text-muted-foreground">
-                      NewCondo's total liability for any claims arising from the Service shall not exceed 
+                      NewCondo&apos;s total liability for any claims arising from the Service shall not exceed
                       the amount of fees paid by the user for the specific service in question.
                     </p>
                   </div>
@@ -297,7 +297,7 @@ export function MarkingServiceTerms({
                       <li>Property access issues caused by property owner</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">9.2 Refundable Circumstances</h4>
                     <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
@@ -349,14 +349,14 @@ export function MarkingServiceTerms({
                       <li>Users must first attempt resolution through NewCondo support</li>
                       <li>Disputes are reviewed within 5-7 business days</li>
                       <li>Evidence must be provided for all dispute claims</li>
-                      <li>NewCondo's decision in disputes is binding unless otherwise specified</li>
+                      <li>NewCondo&apos;s decision in disputes is binding unless otherwise specified</li>
                     </ul>
                   </div>
-                  
+
                   <div>
                     <h4 className="font-medium mb-1">12.2 Legal Jurisdiction</h4>
                     <p className="text-muted-foreground">
-                      These Terms are governed by the laws of the Federal Republic of Nigeria. 
+                      These Terms are governed by the laws of the Federal Republic of Nigeria.
                       Any legal disputes shall be subject to the exclusive jurisdiction of Nigerian courts.
                     </p>
                   </div>
@@ -383,8 +383,8 @@ export function MarkingServiceTerms({
               <section>
                 <h3 className="font-semibold text-base mb-2">14. Modifications to Terms</h3>
                 <p className="text-muted-foreground">
-                  NewCondo may modify these Terms at any time. Users will be notified of significant changes 
-                  via email or platform notification. Continued use of the Service after modifications constitutes 
+                  NewCondo may modify these Terms at any time. Users will be notified of significant changes
+                  via email or platform notification. Continued use of the Service after modifications constitutes
                   acceptance of the updated Terms. Material changes take effect 30 days after notification.
                 </p>
               </section>
@@ -407,8 +407,8 @@ export function MarkingServiceTerms({
               <section className="border-t pt-4 mt-6">
                 <h3 className="font-semibold text-base mb-2">Acknowledgment</h3>
                 <p className="text-muted-foreground">
-                  By using the Property Marking Service, you acknowledge that you have read, understood, 
-                  and agree to be bound by these Terms and Conditions. You confirm that you have the legal 
+                  By using the Property Marking Service, you acknowledge that you have read, understood,
+                  and agree to be bound by these Terms and Conditions. You confirm that you have the legal
                   authority to enter into this agreement and that all information provided is accurate and truthful.
                 </p>
               </section>

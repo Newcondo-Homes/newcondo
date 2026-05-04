@@ -11,7 +11,7 @@ import { formatDate } from '@/lib/utils/format';
 
 interface VerificationStatusProps {
   status: string;
-  verifiedAt?: Date | null;
+  verifiedAt?: string | null;
   rejectionReason?: string | null;
 }
 

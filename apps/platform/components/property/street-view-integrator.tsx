@@ -8,11 +8,9 @@ import {
   Eye, 
   EyeOff, 
   RotateCcw, 
-  Move, 
   ZoomIn, 
   ZoomOut,
   Navigation,
-  Camera,
   MapPin,
   ArrowLeft,
   ArrowRight,
@@ -38,7 +36,6 @@ export default function StreetViewIntegrator({
   className,
   height = 400,
   showControls = true,
-  enableDragging = true
 }: StreetViewIntegratorProps) {
   const [isStreetViewAvailable, setIsStreetViewAvailable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,8 +47,6 @@ export default function StreetViewIntegrator({
   
   const streetViewRef = useRef<HTMLDivElement>(null);
   const panoramaRef = useRef<google.maps.StreetViewPanorama | null>(null);
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
 
   // Initialize Street View
   useEffect(() => {
@@ -127,7 +122,7 @@ export default function StreetViewIntegrator({
           }
           setIsLoading(false);
         });
-      } catch (err) {
+      } catch {
         setError('Failed to initialize Street View');
         setIsLoading(false);
       }
@@ -228,7 +223,7 @@ export default function StreetViewIntegrator({
               Street View is not available at this exact location. This might be because:
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>The location is not near a public road</li>
-                <li>Street View imagery hasn't been captured here</li>
+                <li>Street View imagery hasn&apos;t been captured here</li>
                 <li>The area has restricted access</li>
               </ul>
               Try adjusting the property location marker to a nearby road.
@@ -302,7 +297,7 @@ export default function StreetViewIntegrator({
             >
               <div className="text-center">
                 <Eye className="h-12 w-12 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600">Click "Show" to view Street View</p>
+                <p className="text-gray-600">Click &ldquo;Show&ldquo; to view Street View</p>
                 <p className="text-sm text-gray-500 mt-1">
                   Use Street View to verify property location and surroundings
                 </p>
@@ -431,7 +426,7 @@ export default function StreetViewIntegrator({
             <div className="bg-blue-50 rounded-lg p-3">
               <h4 className="text-sm font-medium text-blue-900 mb-2">Tips</h4>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Use Street View to verify the property's street-facing appearance</li>
+                <li>• Use Street View to verify the property&apos;s street-facing appearance</li>
                 <li>• Look for distinguishing features like gates, colors, or architectural details</li>
                 <li>• Check if the property boundary matches what you see in Street View</li>
                 <li>• Move along the street to get different angles of the property</li>

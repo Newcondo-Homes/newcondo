@@ -1,10 +1,12 @@
+'use client'
+
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 // import { useUploadThing } from '@uploadthing/react';
 import { useUploadThing } from '@/lib/uploadthing';
 import { documentsApi } from '@/lib/api/documents';
 import { useLegalStore } from '@/store/legalStore';
-import type { DocumentType, DocumentSide } from '@newcondo/db';
+import type { DocumentType, DocumentSide } from '@/types/enums';
 import { toast } from '@newcondo/ui';
 
 interface UseDocumentUploadOptions {

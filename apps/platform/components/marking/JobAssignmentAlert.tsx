@@ -14,7 +14,6 @@ import {
   CheckCircle,
   AlertCircle 
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 interface JobAssignmentAlertProps {
   job: {
@@ -113,7 +112,7 @@ export function JobAssignmentAlert({
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-green-600" />
                 <span className="text-sm font-medium text-green-700">
-                  You'll Earn
+                  You&apos;ll Earn
                 </span>
               </div>
               <span className="text-xl font-bold text-green-700">

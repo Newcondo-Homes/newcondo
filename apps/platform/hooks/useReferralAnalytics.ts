@@ -1,4 +1,5 @@
 // apps/platform/hooks/useReferralAnalytics.ts
+'use client'
 
 import { useQuery } from '@tanstack/react-query';
 import * as analyticsApi from '@/lib/api/referralAnalytics';

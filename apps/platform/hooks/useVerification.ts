@@ -1,7 +1,9 @@
 // apps/platform/hooks/useVerification.ts
+'use client'
+
 import { useEffect, useState } from "react";
 import { useVerificationStore } from "../store/verificationStore";
-import { DocumentType, DocumentStatus, VerificationStatus } from "@newcondo/db";
+import { DocumentType, DocumentStatus, VerificationStatus } from "@/types/enums";
 import { VerificationDocument } from "../types/verification";
 
 export interface VerificationHookReturn {

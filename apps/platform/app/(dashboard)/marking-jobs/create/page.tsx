@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, redirect } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { markingJobsApi } from "@/lib/api/markingJobs";
-import { propertiesApi } from "@/lib/api/properties";
+import { markingApi } from "@/lib/api/marking";
+import { propertyApi } from "@/lib/api/properties";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Input } from "@newcondo/ui/components/input";
@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@newcondo/ui/components/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Separator } from "@newcondo/ui/components/separator";
+import { useSession } from '@newcondo/auth/client';
 import {
   ArrowLeft,
   AlertCircle,
@@ -28,7 +29,7 @@ import {
   Building,
   Share2,
 } from "lucide-react";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import { Calendar } from "@newcondo/ui/components/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@newcondo/ui/components/popover";
 import { format } from "date-fns";
@@ -56,6 +57,11 @@ const MARKING_FEES = {
 };
 
 export default function CreateMarkingJobPage() {
+  const { data: session } = useSession();
+
+  if (!session) {
+    redirect('/login');
+  }
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyIdParam = searchParams.get("propertyId");
@@ -92,8 +98,8 @@ export default function CreateMarkingJobPage() {
   const fetchProperties = async () => {
     try {
       setIsLoadingProperties(true);
-      const response = await propertiesApi.getMyProperties({ status: "PENDING" });
-      setProperties(response.data.filter((p: any) => !p.boundaryVerified));
+      const response = await propertyApi.getUserProperties(session.user.id, { isAvailable: false });
+      setProperties(response.properties.filter((p: any) => !p.boundaryVerified));
     } catch (err: any) {
       setError(err.message || "Failed to fetch properties");
     } finally {
@@ -109,35 +115,40 @@ export default function CreateMarkingJobPage() {
       setIsSubmitting(true);
       setError(null);
 
-      let response;
-
       if (data.markingType === "KNOWN_PERSON") {
-        // Generate shareable link
-        response = await markingJobsApi.createShareableLink({
+        // First create the job, then generate the shareable link
+        const jobResponse = await markingApi.createJob({
           propertyId: data.propertyId,
+          markingType: "self_assign",
           contactPersonName: data.contactPersonName,
           contactPersonPhone: data.contactPersonPhone,
           accessInstructions: data.accessInstructions,
-          email: data.shareableEmail,
-        });
-        setShareableLink(response.data.shareableLink);
-      } else {
-        // Create marking job
-        response = await markingJobsApi.createJob({
-          propertyId: data.propertyId,
-          markingType: data.markingType,
-          contactPersonName: data.contactPersonName,
-          contactPersonPhone: data.contactPersonPhone,
-          accessInstructions: data.accessInstructions,
-          preferredTime: data.preferredTime,
           urgencyLevel: data.urgencyLevel,
         });
 
-        // Redirect to payment or job details
+        const linkResponse = await markingApi.generateShareableLink(
+          jobResponse.job.id
+        );
+        setShareableLink(linkResponse.shareableLink);
+
+      } else {
+        // Create marking job for all other types
+        const jobResponse = await markingApi.createJob({
+          propertyId: data.propertyId,
+          markingType: data.markingType === "NEWCONDO" || data.markingType === "AGENT_QUEUE"
+            ? "newcondo_agent"
+            : "self_assign",
+          contactPersonName: data.contactPersonName,
+          contactPersonPhone: data.contactPersonPhone,
+          accessInstructions: data.accessInstructions,
+          preferredTime: data.preferredTime?.toISOString(),
+          urgencyLevel: data.urgencyLevel,
+        });
+
         if (markingFee > 0) {
-          router.push(`/payments/marking/${response.data.id}`);
+          router.push(`/payments/marking/${jobResponse.job.id}`);
         } else {
-          router.push(`/marking-jobs/${response.data.id}`);
+          router.push(`/marking-jobs/${jobResponse.job.id}`);
         }
       }
     } catch (err: any) {

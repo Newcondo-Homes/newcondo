@@ -1,4 +1,6 @@
 // apps/platform/hooks/useEarnings.ts
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
 import { getEarnings, getEarningsBreakdown } from '@/lib/api/earnings';
 

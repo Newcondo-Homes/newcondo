@@ -22,7 +22,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
-import { DocumentType, DocumentStatus } from "@newcondo/db";
+import { DocumentType, DocumentStatus } from "@/types/enums";
 
 export function VerificationMain() {
   const { user } = useAuth();

@@ -3,7 +3,14 @@ const { PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin')
 
 const nextConfig: NextConfig = {
   /* config options here */
-  transpilePackages: ['@newcondo/db'],
+    serverExternalPackages: [
+    '@prisma/client',
+    '@newcondo/db',
+    '@newcondo/auth',
+    'next-auth',
+  ],
+  transpilePackages: ['@newcondo/ui', '@newcondo/i18n'],
+  
   env: {
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL
@@ -16,6 +23,18 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.plugins = [...config.plugins, new PrismaPlugin()]
+    }
+
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        'fs/promises': false,
+        module: false,
+        child_process: false,
+        net: false,
+        tls: false,
+      };
     }
     
     return config

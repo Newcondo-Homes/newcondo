@@ -1,4 +1,6 @@
 // apps/platform/hooks/usePropertyDetails.ts
+'use client'
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPropertyDetails } from '@/lib/api/propertyManagement';
 import { useEffect } from 'react';

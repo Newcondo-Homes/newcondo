@@ -1,4 +1,6 @@
 // apps/platform/hooks/useViewTracking.ts
+'use client'
+
 import { useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { trackPropertyView, trackPropertyEngagement } from '@/lib/api/propertyAnalytics';

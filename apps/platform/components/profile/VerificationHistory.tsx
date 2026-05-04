@@ -8,7 +8,7 @@ import {
   Upload,
   Calendar
 } from 'lucide-react';
-import { DocumentStatus } from '@newcondo/db';
+import { DocumentStatus } from '@/types/enums';
 import { formatDate } from '@/lib/utils/format';
 
 interface VerificationHistoryProps {

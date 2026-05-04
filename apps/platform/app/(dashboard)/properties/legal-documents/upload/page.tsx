@@ -30,7 +30,7 @@ import type { OurFileRouter } from '@/lib/uploadthing';
 import { useAuthStore } from '@/store/authStore';
 import { usePropertyStore } from '@/store/propertyStore';
 import api from '@/lib/api/client';
-import { DocumentType as PrismaDocumentType } from '@newcondo/db';
+import { DocumentType as PrismaDocumentType } from '@/types/enums';
 
 function getFileIcon(mimeType: string, className = 'h-5 w-5'): React.ReactNode {
   if (mimeType.startsWith('image/')) {

@@ -1,4 +1,6 @@
 // apps/platform/hooks/useFilters.ts
+'use client'
+
 import { useState, useCallback, useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 

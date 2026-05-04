@@ -261,7 +261,7 @@ export function NotificationBell({
                 <Bell className="h-12 w-12 text-gray-300 mb-3" />
                 <p className="text-gray-500 font-medium">No notifications</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  You're all caught up!
+                  You&apos;re all caught up!
                 </p>
               </div>
             ) : (

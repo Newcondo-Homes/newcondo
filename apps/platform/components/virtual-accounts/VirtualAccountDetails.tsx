@@ -8,7 +8,7 @@ import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { formatCurrency, formatDate } from '@/lib/utils/format';
 import { cn } from '@newcondo/ui';
-import { Copy, Check, Eye, FileText, Home, AlertCircle } from 'lucide-react';
+import { Copy, Check, Eye, FileText, Home } from 'lucide-react';
 
 interface VirtualAccount {
   id: string;

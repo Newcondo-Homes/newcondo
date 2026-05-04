@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react'
 import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow } from '@react-google-maps/api'
 import { Card } from '@newcondo/ui/components/card'
-import { AlertCircle, MapPin, Navigation } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 
 interface JobLocation {
@@ -45,7 +45,7 @@ export default function AgentLocationMap({
 
   const [selectedJob, setSelectedJob] = useState<JobLocation | null>(null)
   const [filteredJobs, setFilteredJobs] = useState<JobLocation[]>([])
-  const [mapCenter, setMapCenter] = useState({ lat: agentLat, lng: agentLng })
+  const [mapCenter] = useState({ lat: agentLat, lng: agentLng })
 
   useEffect(() => {
     // Filter jobs within max proximity

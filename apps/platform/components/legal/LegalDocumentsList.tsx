@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Badge } from '@newcondo/ui/components/badge'
 import { Button } from '@newcondo/ui/components/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@newcondo/ui/components/dropdown-menu'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@newcondo/ui/components/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs'
@@ -24,6 +23,7 @@ import {
   RefreshCw,
   Trash2
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react';
 
 interface Document {
   id: string
@@ -62,7 +62,7 @@ interface LegalDocumentsListProps {
   isLoading?: boolean
 }
 
-const DOCUMENT_TYPE_LABELS: Record<string, { label: string; icon: any; category: string }> = {
+const DOCUMENT_TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; category: string }> = {
   'NIN': { label: 'National ID Number', icon: User, category: 'identity' },
   'BVN': { label: 'Bank Verification Number', icon: User, category: 'identity' },
   'PASSPORT': { label: 'International Passport', icon: User, category: 'identity' },

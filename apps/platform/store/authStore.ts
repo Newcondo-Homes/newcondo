@@ -1,7 +1,8 @@
 // apps/platform/store/authStore.ts
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User, Role, VerificationStatus } from '@newcondo/db'
+import type {  Role } from '@newcondo/db'
+import type { User } from '@/types/api'
 
 interface AuthState {
   user: Partial<User> | null

@@ -25,7 +25,7 @@ import {
 import { UploadButton } from "@uploadthing/react";
 import type { OurFileRouter } from '@/lib/uploadthing';
 import { toast } from '@newcondo/ui/';
-import { DocumentType, DocumentStatus } from '@newcondo/db';
+import { DocumentType, DocumentStatus } from '@/types/enums';
 
 interface Document {
   id: string;

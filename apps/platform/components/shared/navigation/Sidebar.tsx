@@ -2,7 +2,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Role, VerificationStatus } from '@newcondo/db';
+import { Role, VerificationStatus } from '@/types/enums';
 import { cn } from '@newcondo/ui/';
 import { Button } from '@newcondo/ui/';
 import { Badge } from '@newcondo/ui/';

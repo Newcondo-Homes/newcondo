@@ -310,13 +310,13 @@ export const CompensationBreakdown: React.FC<CompensationBreakdownProps> = ({
                 <p className="font-medium mb-2">Important Information:</p>
                 <ul className="space-y-1 text-xs">
                   <li>
-                    • You have 2-3 days to confirm the marking after it's completed
+                    • You have 2-3 days to confirm the marking after it&apos;s completed
                   </li>
                   <li>
                     • Payment is held until you confirm the marking is correct
                   </li>
                   <li>
-                    • If you don't confirm, a new marking job must be created and paid for
+                    • If you don&apos;t confirm, a new marking job must be created and paid for
                   </li>
                 </ul>
               </div>

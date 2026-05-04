@@ -1,4 +1,5 @@
 // apps/platform/hooks/useShareReferral.ts
+'use client'
 
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';

@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProperties, propertyKeys } from '@/hooks/useProperties';
 import { propertyApi } from '@/lib/api/properties';
 import type { PropertyResponse } from '@/lib/api/properties';
-import { PropertyStatus, PropertyStructure } from '@newcondo/db';
+import { PropertyStatus, PropertyStructure } from '@/types/enums';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-800',

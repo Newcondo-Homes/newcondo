@@ -1,6 +1,6 @@
 // apps/platform/lib/validations/verification.ts
 import { z } from 'zod';
-import { DocumentType, DocumentSide } from '@newcondo/db';
+import { DocumentType, DocumentSide } from '@/types/enums';
 
 export const documentUploadSchema = z.object({
   documentType: z.nativeEnum(DocumentType),

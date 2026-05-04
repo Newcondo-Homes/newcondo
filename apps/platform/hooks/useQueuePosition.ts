@@ -1,4 +1,5 @@
 // File: apps/platform/hooks/useQueuePosition.ts
+'use client'
 
 import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from './useAuth';

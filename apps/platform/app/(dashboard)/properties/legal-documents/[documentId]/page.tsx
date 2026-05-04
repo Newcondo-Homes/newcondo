@@ -23,7 +23,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@newcondo/ui/components/textarea';
 import { Label } from '@newcondo/ui/components/label';
 import { toast } from '@newcondo/ui/';
-import { DocumentStatus, DocumentType, DocumentSide } from '@newcondo/db';
+import { DocumentStatus, DocumentType, DocumentSide } from '@/types/enums';
 
 interface DocumentData {
   id: string;

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { X, FileText, AlertTriangle, Check } from 'lucide-react'
+import { FileText, AlertTriangle, Check } from 'lucide-react'
 import { Button } from '@newcondo/ui/components/button'
 import { Checkbox } from '@newcondo/ui/components/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog'
@@ -25,7 +25,7 @@ interface LegalAgreementModalProps {
   isOpen: boolean
   onClose: () => void
   documents: LegalDocument[]
-  userType: 'OWNER' | 'AGENT' | 'RENTER'
+  userType?: 'OWNER' | 'AGENT' | 'RENTER'
   onAccept: (acceptedDocuments: string[]) => Promise<void>
   isLoading?: boolean
 }
@@ -34,7 +34,7 @@ export default function LegalAgreementModal({
   isOpen,
   onClose,
   documents,
-  userType,
+  // userType,
   onAccept,
   isLoading = false
 }: LegalAgreementModalProps) {

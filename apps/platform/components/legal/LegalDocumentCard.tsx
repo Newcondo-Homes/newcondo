@@ -18,7 +18,7 @@ import { Card, CardContent, CardHeader } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@newcondo/ui/components/tooltip';
-import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
+import { DocumentType, DocumentStatus, DocumentSide } from '@/types/enums';
 
 interface LegalDocumentCardProps {
   document: {

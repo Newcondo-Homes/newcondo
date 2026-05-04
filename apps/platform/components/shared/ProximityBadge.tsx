@@ -276,7 +276,6 @@ export function ProximityListItem({
   onClick?: () => void;
   className?: string;
 }) {
-  const proximity = distance < 5 ? "near" : distance < 15 ? "moderate" : "far";
 
   return (
     <button

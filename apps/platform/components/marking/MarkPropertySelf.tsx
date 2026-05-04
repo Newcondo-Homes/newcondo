@@ -7,10 +7,11 @@ import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
-import { AlertCircle, MapPin, AlertTriangle, CheckCircle2, Copy } from 'lucide-react';
+import { AlertCircle, MapPin, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useUpload } from '@/hooks/useUpload';
 import { useMarkProperty } from '@/hooks/useProperties';
 import { toast } from '@newcondo/ui';
+import Image from 'next/image';
 
 interface MarkPropertySelfProps {
   propertyId: string;
@@ -24,7 +25,7 @@ interface MarkPropertySelfProps {
 interface BoundaryData {
   coordinates: google.maps.LatLng[];
   center: { lat: number; lng: number };
-  polygon: google.maps.Polygon | null;
+  polygon: google.maps.Polygon | google.maps.Rectangle | null;
   area: number;
   images: string[];
 }
@@ -32,7 +33,7 @@ interface BoundaryData {
 interface DrawingState {
   isDrawing: boolean;
   coordinates: google.maps.LatLng[];
-  polygon: google.maps.Polygon | null;
+  polygon: google.maps.Polygon | google.maps.Rectangle | null;
 }
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
@@ -168,7 +169,7 @@ export function MarkPropertySelf({
         setDrawing({
           isDrawing: true,
           coordinates: coords,
-          polygon: rectangle as any,
+          polygon: rectangle,
         });
 
         setBoundaryArea(area);
@@ -421,11 +422,12 @@ export function MarkPropertySelf({
           {markingImages.length > 0 && (
             <div className="grid grid-cols-3 gap-2">
               {markingImages.map((url, idx) => (
-                <div key={idx} className="relative group">
-                  <img
+                <div key={idx} className="relative w-full h-24">
+                  <Image
                     src={url}
                     alt={`Marking ${idx + 1}`}
-                    className="w-full h-24 object-cover rounded border"
+                    fill
+                    className="object-cover rounded border"
                   />
                   <button
                     onClick={() => handleRemoveImage(idx)}

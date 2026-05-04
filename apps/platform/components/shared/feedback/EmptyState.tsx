@@ -6,7 +6,6 @@ import {
   Home, 
   MapPin, 
   Heart,
-  FileX,
   AlertCircle,
   RefreshCw
 } from "lucide-react"
@@ -115,7 +114,7 @@ export function PropertySearchIntro() {
           <Search className="h-8 w-8 text-primary mx-auto mb-3" />
           <h3 className="font-medium mb-2">Smart Search</h3>
           <p className="text-muted-foreground">
-            Advanced filters to find exactly what you're looking for
+            Advanced filters to find exactly what you&apos;re looking for
           </p>
         </div>
         <div className="p-6 rounded-lg border">

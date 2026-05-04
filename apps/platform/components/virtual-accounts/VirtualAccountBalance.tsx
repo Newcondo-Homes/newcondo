@@ -1,15 +1,15 @@
 // apps/platform/components/virtual-accounts/VirtualAccountBalance.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Eye, 
-  EyeOff, 
-  CreditCard, 
-  TrendingUp, 
+import {
+  Eye,
+  EyeOff,
+  CreditCard,
+  TrendingUp,
   Wallet,
   RefreshCw,
   AlertCircle
@@ -41,8 +41,8 @@ interface VirtualAccountBalanceProps {
   variant?: 'default' | 'compact' | 'detailed';
 }
 
-export default function VirtualAccountBalance({ 
-  propertyId, 
+export default function VirtualAccountBalance({
+  propertyId,
   showPropertyDetails = false,
   variant = 'default'
 }: VirtualAccountBalanceProps) {
@@ -53,28 +53,25 @@ export default function VirtualAccountBalance({
   const [showBalance, setShowBalance] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchVirtualAccounts();
-  }, [propertyId, user?.id]);
 
-  const fetchVirtualAccounts = async () => {
+  const fetchVirtualAccounts = useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const queryParams = new URLSearchParams({
         userId: user.id,
         ...(propertyId && { propertyId })
       });
 
       const response = await fetch(`/api/virtual-accounts?${queryParams}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch virtual accounts');
       }
-      
+
       const data = await response.json();
       setAccounts(data.accounts || []);
     } catch (err) {
@@ -82,7 +79,12 @@ export default function VirtualAccountBalance({
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id, propertyId]); // useCallback dependencies
+
+  useEffect(() => {
+    fetchVirtualAccounts();
+  }, [fetchVirtualAccounts]);
+
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -137,9 +139,9 @@ export default function VirtualAccountBalance({
               <p className="text-sm text-red-500">{error}</p>
             </div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchVirtualAccounts}
             className="mt-3"
           >
@@ -271,7 +273,7 @@ export default function VirtualAccountBalance({
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent>
               <div className="space-y-4">
                 {/* Balance */}
@@ -317,7 +319,7 @@ export default function VirtualAccountBalance({
                         </div>
                       </div>
                     </div>
-                    
+
                     {account.lastTransactionDate && (
                       <div className="mt-3 pt-3 border-t">
                         <p className="text-xs text-gray-500">

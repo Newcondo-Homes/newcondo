@@ -2,12 +2,12 @@
 
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import { Button } from '@newcondo/ui/components/button';
 import { Label } from '@newcondo/ui/components/label';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Camera, Upload, X, CheckCircle2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { useUploadThing } from '@/lib/uploadthing';
+import Image from 'next/image';
 
 interface UploadedImage {
   id: string;
@@ -17,7 +17,7 @@ interface UploadedImage {
   category?: ImageCategory;
 }
 
-type ImageCategory = 
+type ImageCategory =
   | 'EXTERIOR_FRONT'
   | 'EXTERIOR_BACK'
   | 'EXTERIOR_SIDE'
@@ -29,7 +29,7 @@ type ImageCategory =
   | 'OTHER';
 
 interface MarkingImageUploaderProps {
-  jobId: string;
+  jobId?: string;
   maxImages?: number;
   onImagesUploaded: (images: UploadedImage[]) => void;
   existingImages?: UploadedImage[];
@@ -37,7 +37,7 @@ interface MarkingImageUploaderProps {
 }
 
 export default function MarkingImageUploader({
-  jobId,
+  jobId: _jobId,
   maxImages = 20,
   onImagesUploaded,
   existingImages = [],
@@ -54,7 +54,7 @@ export default function MarkingImageUploader({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const { startUpload, isUploading } = useUploadThing('propertyImages', {
+  const { startUpload, isUploading: _isUploading } = useUploadThing('propertyImages', {
     onClientUploadComplete: (res) => {
       const newImages: UploadedImage[] = res.map((file) => ({
         id: file.key,
@@ -62,7 +62,7 @@ export default function MarkingImageUploader({
         name: file.name,
         size: file.size,
       }));
-      
+
       const allImages = [...uploadedImages, ...newImages];
       setUploadedImages(allImages);
       onImagesUploaded(allImages);
@@ -86,7 +86,7 @@ export default function MarkingImageUploader({
 
       // Validation
       const newErrors: string[] = [];
-      
+
       if (uploadedImages.length + files.length > maxImages) {
         newErrors.push(`Maximum ${maxImages} images allowed`);
       }
@@ -249,14 +249,15 @@ export default function MarkingImageUploader({
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {uploadedImages.map((image) => (
                 <div key={image.id} className="relative group">
-                  <div className="aspect-square rounded-lg overflow-hidden border bg-muted">
-                    <img
+                  <div className="relative aspect-square rounded-lg overflow-hidden border bg-muted">
+                    <Image
                       src={image.url}
                       alt={image.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
-                  
+
                   {/* Remove Button */}
                   <button
                     type="button"
@@ -308,11 +309,10 @@ export default function MarkingImageUploader({
               return (
                 <div
                   key={category}
-                  className={`flex items-center gap-2 p-2 rounded-lg border ${
-                    hasImage
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-muted'
-                  }`}
+                  className={`flex items-center gap-2 p-2 rounded-lg border ${hasImage
+                    ? 'bg-green-50 border-green-200'
+                    : 'bg-muted'
+                    }`}
                 >
                   {hasImage ? (
                     <CheckCircle2 className="h-4 w-4 text-green-600" />

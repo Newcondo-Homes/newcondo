@@ -226,7 +226,7 @@ export function MarkingStatusBadge({
       {status === 'EXPIRED' && (
         <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
           <p className="text-sm font-medium text-red-900">
-            This marking job has expired. You'll need to create a new marking request and pay the fee again.
+            This marking job has expired. You&apos;ll need to create a new marking request and pay the fee again.
           </p>
         </div>
       )}

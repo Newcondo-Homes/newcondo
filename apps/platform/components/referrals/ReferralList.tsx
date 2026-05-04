@@ -26,7 +26,7 @@ export function ReferralList() {
   const { referrals, totalPages, isLoading } = useReferrals({
     page,
     pageSize: 10,
-    status: status as any,
+    status: status as "PENDING" | "QUALIFIED" | "REWARDED" | "EXPIRED" | "CANCELLED" | undefined,
     sortBy,
     sortOrder: 'desc',
   });
@@ -64,7 +64,7 @@ export function ReferralList() {
               </SelectContent>
             </Select>
 
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <Select value={sortBy} onValueChange={(v: string) => setSortBy(v as 'createdAt' | 'qualifiedAt' | 'reward')}>
               <SelectTrigger className="w-[130px]">
                 <SelectValue />
               </SelectTrigger>

@@ -1,6 +1,18 @@
 // apps/platform/lib/api/geolocation.ts
 import client from './client';
 
+interface ApiErrorWithStatus {
+  response?: {
+    status?: number;
+  };
+}
+
+interface AddressComponent {
+  longName: string;
+  shortName: string;
+  types: string[];
+}
+
 // Types for geolocation API
 export interface GeolocationCoordinates {
   lat: number;
@@ -208,8 +220,9 @@ export const geolocationApi = {
     try {
       const response = await client.get(`/api/geolocation/fingerprints/${propertyId}`);
       return response.data as PropertyFingerprint | null;
-    } catch (error: any) {
-      if (error.response?.status === 404) {
+    } catch (error: unknown) {
+      const apiError = error as ApiErrorWithStatus;
+      if (apiError.response?.status === 404) {
         return null;
       }
       throw error;
@@ -271,27 +284,27 @@ export const geolocationApi = {
     coordinates: GeolocationCoordinates;
     formattedAddress: string;
     placeId?: string;
-    addressComponents?: any[];
+    addressComponents?: AddressComponent[];
   }> => {
     const response = await client.post('/api/geolocation/geocode', { address });
     return response.data as {
       coordinates: GeolocationCoordinates;
       formattedAddress: string;
       placeId?: string;
-      addressComponents?: any[];
+      addressComponents?: AddressComponent[];
     };
   },
 
   // Reverse geocode coordinates to address
   reverseGeocode: async (coordinates: GeolocationCoordinates): Promise<{
     formattedAddress: string;
-    addressComponents: any[];
+    addressComponents: AddressComponent[];
     placeId?: string;
   }> => {
     const response = await client.post('/api/geolocation/reverse-geocode', coordinates);
     return response.data as {
       formattedAddress: string;
-      addressComponents: any[];
+      addressComponents: AddressComponent[];
       placeId?: string;
     };
   },

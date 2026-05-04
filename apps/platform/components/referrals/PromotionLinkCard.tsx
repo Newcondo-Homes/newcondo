@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 interface PromotionLinkCardProps {
-  propertyId: string;
+  propertyId?: string;
   propertyTitle: string;
   promotionLink: string;
   stats: {
@@ -31,7 +31,6 @@ interface PromotionLinkCardProps {
 }
 
 export function PromotionLinkCard({
-  propertyId,
   propertyTitle,
   promotionLink,
   stats,

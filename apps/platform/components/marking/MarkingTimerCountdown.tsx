@@ -97,18 +97,18 @@ export function MarkingTimerCountdown({
     }
   };
 
-  const getProgressColor = () => {
-    switch (urgencyLevel) {
-      case "expired":
-        return "bg-destructive";
-      case "critical":
-        return "bg-red-500";
-      case "warning":
-        return "bg-amber-500";
-      default:
-        return "bg-green-500";
-    }
-  };
+  // const getProgressColor = () => {
+  //   switch (urgencyLevel) {
+  //     case "expired":
+  //       return "bg-destructive";
+  //     case "critical":
+  //       return "bg-red-500";
+  //     case "warning":
+  //       return "bg-amber-500";
+  //     default:
+  //       return "bg-green-500";
+  //   }
+  // };
 
   const getBadgeVariant = () => {
     switch (urgencyLevel) {

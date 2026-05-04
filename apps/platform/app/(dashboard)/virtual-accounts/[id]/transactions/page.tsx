@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
+import { TransactionsClient } from './_components/TransactionsClient';
 import VirtualAccountTransactions from '@/components/virtual-accounts/VirtualAccountTransactions';
 import { VirtualAccountDetails } from '@/components/virtual-accounts/VirtualAccountDetails';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
@@ -44,11 +45,64 @@ async function getVirtualAccount(id: string) {
   }
 }
 
+async function getTransactions(
+  accountId: string,
+  filters: {
+    page: number;
+    limit: number;
+    type?: string;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }
+) {
+  try {
+    const params = new URLSearchParams(
+      Object.entries(filters)
+        .filter(([, v]) => v !== undefined && v !== '')
+        .map(([k, v]) => [k, String(v)])
+    );
+
+    const response = await fetch(
+      `${process.env.API_BASE_URL}/virtual-accounts/${accountId}/transactions?${params}`,
+      {
+        headers: { 'Content-Type': 'application/json' },
+        next: { revalidate: 30 },
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Failed to fetch transactions:', response.status);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.transactions ?? [];
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
+    return [];
+  }
+}
+
+
 export default async function VirtualAccountTransactionsPage({
   params,
   searchParams,
 }: PageProps) {
-  const virtualAccount = await getVirtualAccount(params.id);
+
+  const transactionFilters = {
+    page: parseInt(searchParams.page || '1'),
+    limit: parseInt(searchParams.limit || '20'),
+    type: searchParams.type,
+    status: searchParams.status,
+    startDate: searchParams.startDate,
+    endDate: searchParams.endDate,
+  };
+
+  const [virtualAccount, transactions] = await Promise.all([
+    getVirtualAccount(params.id),
+    getTransactions(params.id, transactionFilters),
+  ]);
 
   if (!virtualAccount) {
     notFound();
@@ -61,14 +115,6 @@ export default async function VirtualAccountTransactionsPage({
     { label: 'Transactions' },
   ];
 
-  const transactionFilters = {
-    page: parseInt(searchParams.page || '1'),
-    limit: parseInt(searchParams.limit || '20'),
-    type: searchParams.type,
-    status: searchParams.status,
-    startDate: searchParams.startDate,
-    endDate: searchParams.endDate,
-  };
 
   return (
     <div className="space-y-6">
@@ -98,8 +144,9 @@ export default async function VirtualAccountTransactionsPage({
             </div>
 
             <Suspense fallback={<LoadingSpinner />}>
-              <VirtualAccountTransactions
+              <TransactionsClient
                 accountId={params.id}
+                transactions={transactions}
               />
             </Suspense>
           </div>

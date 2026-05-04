@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/component
 import { Skeleton } from "@newcondo/ui/components/skeleton";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import api  from "@/lib/api/client";
+import api from "@/lib/api/client";
 
 interface MarkingStatsData {
   totalJobs: number;
@@ -80,11 +80,15 @@ export default function MarkingStats() {
       try {
         setLoading(true);
         const response = await api.get(`/marking/agents/${user.id}/statistics`);
-        setStats(response.data as MarkingStatsData );
+        setStats(response.data as MarkingStatsData);
         setError(null);
-      } catch (err: any) {
+      } catch (err) {
         console.error("Error fetching marking stats:", err);
-        setError(err.response?.data?.message || "Failed to load statistics");
+        const errorMessage = err instanceof Error
+          ? err.message
+          : (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+          ?? "Failed to load statistics";
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -133,7 +137,7 @@ export default function MarkingStats() {
           trend={stats.trend.jobs}
           trendLabel="last month"
         />
-        
+
         <StatCard
           title="Completed Jobs"
           value={stats.completedJobs}
@@ -141,13 +145,13 @@ export default function MarkingStats() {
           trend={stats.trend.completionRate}
           trendLabel="last month"
         />
-        
+
         <StatCard
           title="Active Jobs"
           value={stats.activeJobs}
           subtitle="Currently in progress"
         />
-        
+
         <StatCard
           title="Cancelled Jobs"
           value={stats.cancelledJobs}
@@ -161,20 +165,20 @@ export default function MarkingStats() {
           trend={stats.trend.earnings}
           trendLabel="last month"
         />
-        
+
         <StatCard
           title="Pending Earnings"
           value={`₦${stats.pendingEarnings.toLocaleString()}`}
           subtitle="Awaiting release"
         />
-        
+
         {/* Performance Metrics */}
         <StatCard
           title="Avg. Completion Time"
           value={`${stats.averageCompletionTime.toFixed(1)}h`}
           subtitle="Per job"
         />
-        
+
         <StatCard
           title="Reliability Score"
           value={stats.reliabilityScore.toFixed(2)}
@@ -195,14 +199,14 @@ export default function MarkingStats() {
               </div>
               <div className="text-sm text-gray-600 mt-1">Completion Rate</div>
             </div>
-            
+
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-3xl font-bold text-blue-600">
                 {stats.averageCompletionTime.toFixed(1)}h
               </div>
               <div className="text-sm text-gray-600 mt-1">Avg. Time to Complete</div>
             </div>
-            
+
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="text-3xl font-bold text-purple-600">
                 ₦{(stats.totalEarnings / Math.max(stats.completedJobs, 1)).toLocaleString(undefined, { maximumFractionDigits: 0 })}

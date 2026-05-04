@@ -1,4 +1,6 @@
 // apps/platform/hooks/usePayments.ts
+'use client'
+
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@newcondo/ui';

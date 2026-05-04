@@ -1,4 +1,6 @@
 // apps/platform/hooks/useGeolocation.ts
+'use client'
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { geolocationApi, type GeolocationCoordinates } from '@/lib/api/geolocation';
 

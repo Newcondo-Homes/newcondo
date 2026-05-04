@@ -1,4 +1,6 @@
 // apps/platform/hooks/useCommissions.ts
+'use client'
+
 import { useQuery } from '@tanstack/react-query';
 import { getCommissions, getCommissionSummary } from '@/lib/api/commissions';
 import type { GetCommissionsResponse, CommissionFilters, GetCommissionSummaryResponse } from "@/types/commission"

@@ -32,7 +32,6 @@ interface PropertyPromotionCardProps {
 }
 
 export function PropertyPromotionCard({
-  propertyId,
   propertyTitle,
   isPromoted,
   promotionType,

@@ -1,6 +1,6 @@
 // apps/platform/app/(dashboard)/layout.tsx
 import { redirect } from 'next/navigation';
-import { auth } from '@newcondo/auth/';
+import { auth } from '@newcondo/auth';
 import DashboardLayout from '@/components/shared/layouts/DashboardLayout';
 
 interface DashboardLayoutProps {

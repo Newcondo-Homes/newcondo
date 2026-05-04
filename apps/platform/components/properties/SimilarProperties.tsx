@@ -8,7 +8,7 @@ import { Card, CardContent } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { propertyApi } from '@/lib/api/properties';
-import type { PropertyType } from '@newcondo/db';
+import type { PropertyType } from '@/types/enums';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

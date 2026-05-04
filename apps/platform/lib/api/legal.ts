@@ -17,7 +17,6 @@ import type {
   UpdateLegalDocumentPayload,
   LegalDocumentResponse,
   BulkLegalDocumentResponse,
-  DocumentVerificationRequest,
   DocumentSigningRequest,
   LegalDocumentFilter,
   LegalTemplateRequest

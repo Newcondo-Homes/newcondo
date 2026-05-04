@@ -1,4 +1,5 @@
 // apps/platform/hooks/useReferrals.ts
+'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useReferralStore } from '@/store/referralStore';

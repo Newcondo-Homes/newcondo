@@ -32,10 +32,10 @@ export default function AvailableJobsList({
     if (user?.isAvailableForMarking) {
       fetchAvailableJobs(userLocation, maxDistance);
     }
-  }, [user?.isAvailableForMarking, userLocation, maxDistance]);
+  }, [user?.isAvailableForMarking, userLocation, maxDistance, fetchAvailableJobs]);
 
   useEffect(() => {
-    let sorted = [...availableJobs];
+    const sorted = [...availableJobs];
 
     if (sortBy === 'distance' && userLocation) {
       sorted.sort(
@@ -104,7 +104,7 @@ export default function AvailableJobsList({
           <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
           <div>
             <p className="font-medium text-red-900">Error Loading Jobs</p>
-            <p className="text-sm text-red-800">{error.message}</p>
+            <p className="text-sm text-red-800">{error}</p>
             <Button
               variant="outline"
               size="sm"

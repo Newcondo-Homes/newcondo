@@ -59,7 +59,7 @@ export default function MarkingHistoryList({
   userId,
   role,
 }: MarkingHistoryListProps) {
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [_selectedJob, setSelectedJob] = useState<string | null>(null);
 
   const { data: jobs, isLoading } = useQuery<MarkingJob[]>({
     queryKey: ["marking-jobs", userId, role],
@@ -243,6 +243,8 @@ export default function MarkingHistoryList({
                     </span>
                   </TableCell>
                   <TableCell>
+                    //TODO: see how when the button is pressed, it is routed to jobs page
+                    {/* router.push(`/marking/my-jobs/${job.id}`) */}
                     <Button
                       variant="ghost"
                       size="sm"

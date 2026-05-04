@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@newcondo/ui/components/select';
-import { useAnalyticsOverview, usePerformanceMetrics, useTimeSeriesData } from '@/hooks/useReferralAnalytics';
+import { usePerformanceMetrics, useTimeSeriesData } from '@/hooks/useReferralAnalytics';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { TrendingUp, TrendingDown, Users, DollarSign, Target } from 'lucide-react';
 import {
@@ -130,7 +130,7 @@ export function ReferralAnalytics() {
           <div className="flex items-center justify-between">
             <CardTitle>Performance Over Time</CardTitle>
             <div className="flex gap-2">
-              <Select value={metric} onValueChange={(v: any) => setMetric(v)}>
+              <Select value={metric} onValueChange={(v: string) => setMetric(v as 'referrals' | 'conversions' | 'earnings')}>
                 <SelectTrigger className="w-[150px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -141,7 +141,7 @@ export function ReferralAnalytics() {
                 </SelectContent>
               </Select>
 
-              <Select value={period} onValueChange={(v: any) => setPeriod(v)}>
+              <Select value={period} onValueChange={(v: string) => setPeriod(v as 'day' | 'week' | 'month' | 'year')}>
                 <SelectTrigger className="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>

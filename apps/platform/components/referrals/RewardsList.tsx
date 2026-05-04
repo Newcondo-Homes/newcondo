@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Card, CardContent } from '@newcondo/ui/components/card';
 import { useRewards } from '@/hooks/useRewards';
 import { RewardCard } from './RewardCard';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
@@ -19,6 +19,9 @@ import {
 import { useReferralStore } from '@/store/referralStore';
 import { Reward } from '@/types/reward';
 
+type RewardStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+type RewardType = 'SERVICE_CREDIT' | 'CASH_REWARD' | 'RENT_CREDIT' | 'COMMISSION_CREDIT' | 'SUBSCRIPTION_DISCOUNT' | 'MAINTENANCE_VOUCHER';
+
 export function RewardsList() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | undefined>();
@@ -27,8 +30,8 @@ export function RewardsList() {
   const { rewards, totalPages, isLoading } = useRewards({
     page,
     pageSize: 9,
-    status: status as any,
-    rewardType: rewardType as any,
+    status: status as RewardStatus | undefined,
+    rewardType: rewardType as RewardType | undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
   });

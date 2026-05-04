@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@newcondo/ui';

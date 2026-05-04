@@ -1,4 +1,6 @@
 // apps/platform/hooks/useVirtualAccountBalance.ts
+'use client'
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { toast } from 'sonner';
