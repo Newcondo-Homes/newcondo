@@ -7,9 +7,8 @@ import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
 import { Skeleton } from "@newcondo/ui/components/skeleton";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
-import { Clock, MapPin, User, Phone, AlertCircle, CheckCircle, XCircle } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { formatDistanceToNow, format } from "date-fns";
+import { Clock, MapPin, User, Phone, AlertCircle } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface QueueJob {
   id: string;
@@ -32,7 +31,7 @@ interface QueueJob {
 
 export default function MyQueuePage() {
   const router = useRouter();
-  const { user } = useAuth();
+  // const { user } = useAuth();
   const [queueJobs, setQueueJobs] = useState<QueueJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,7 +158,7 @@ export default function MyQueuePage() {
             <Clock className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Active Jobs</h3>
             <p className="text-muted-foreground text-center mb-4">
-              You don't have any jobs in your queue. Check available jobs to get started.
+              You don&apos;t have any jobs in your queue. Check available jobs to get started.
             </p>
             <Button onClick={() => router.push("/marking/available-jobs")}>
               Browse Available Jobs

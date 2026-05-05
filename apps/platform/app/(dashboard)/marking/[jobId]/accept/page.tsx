@@ -1,21 +1,19 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { toast } from '@newcondo/ui/';
-import { 
-  AlertCircle, 
-  CheckCircle, 
-  Clock, 
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
   FileText,
   Shield,
-  Info
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
 
@@ -35,7 +33,6 @@ interface JobSummary {
 export default function AcceptJobPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
   const jobId = params.jobId as string;
 
   const [job, setJob] = useState<JobSummary | null>(null);
@@ -45,34 +42,29 @@ export default function AcceptJobPage() {
   const [understandingAccepted, setUnderstandingAccepted] = useState(false);
   const [availabilityConfirmed, setAvailabilityConfirmed] = useState(false);
 
-  useEffect(() => {
-    fetchJobSummary();
-  }, [jobId]);
 
-  const fetchJobSummary = async () => {
+
+  const fetchJobSummary = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/marking/jobs/${jobId}/summary`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch job summary');
-      }
+
+      if (!response.ok) throw new Error('Failed to fetch job summary');
 
       const data = await response.json();
       setJob(data.job);
-    } catch (err) {
-      toast.error('Error',{
-        description: 'Failed to load job information',
-      });
+    } catch {
+      toast.error('Error', { description: 'Failed to load job information' });
       router.push('/marking/available-jobs');
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, router]);
+
 
   const handleAcceptJob = async () => {
     if (!termsAccepted || !understandingAccepted || !availabilityConfirmed) {
-      toast.error('Incomplete',{
+      toast.error('Incomplete', {
         description: 'Please accept all terms and confirmations',
       });
       return;
@@ -91,21 +83,26 @@ export default function AcceptJobPage() {
         throw new Error(error.error || 'Failed to accept job');
       }
 
-      const data = await response.json();
+      await response.json();
 
-      toast.success('Success!',{
+      toast.success('Success!', {
         description: 'Job accepted successfully. You have 3 hours to complete it.',
       });
 
       router.push(`/marking/${jobId}/details`);
     } catch (err) {
-      toast.error('Error',{
+      toast.error('Error', {
         description: err instanceof Error ? err.message : 'Failed to accept job',
       });
     } finally {
       setAccepting(false);
     }
   };
+
+  useEffect(() => {
+    fetchJobSummary();
+  }, [fetchJobSummary]);
+
 
   if (loading) {
     return (
@@ -123,9 +120,9 @@ export default function AcceptJobPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>Job not found or no longer available</AlertDescription>
         </Alert>
-        <Button 
-          onClick={() => router.push('/marking/available-jobs')} 
-          variant="outline" 
+        <Button
+          onClick={() => router.push('/marking/available-jobs')}
+          variant="outline"
           className="mt-4"
         >
           View Available Jobs
@@ -180,8 +177,8 @@ export default function AcceptJobPage() {
       <Alert className="mb-6 border-yellow-500 bg-yellow-50">
         <Clock className="h-4 w-4 text-yellow-600" />
         <AlertDescription className="text-yellow-800">
-          <strong>3-Hour Time Window:</strong> Once you accept this job, you'll have exactly 3 hours to complete the marking. 
-          If you don't complete it within this timeframe, the job will be automatically reassigned to the next agent in queue.
+          <strong>3-Hour Time Window:</strong> Once you accept this job, you&apos;ll have exactly 3 hours to complete the marking.
+          If you don&apos;t complete it within this timeframe, the job will be automatically reassigned to the next agent in queue.
         </AlertDescription>
       </Alert>
 
@@ -203,7 +200,7 @@ export default function AcceptJobPage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex gap-2">
                 <span className="text-primary">•</span>
-                <span>Contact the property owner's representative using the provided contact information</span>
+                <span>Contact the property owner`&apos;s representative using the provided contact information</span>
               </li>
               <li className="flex gap-2">
                 <span className="text-primary">•</span>
@@ -242,7 +239,7 @@ export default function AcceptJobPage() {
               </li>
               <li className="flex gap-2">
                 <span className="text-primary">•</span>
-                <span>If the owner doesn't verify within the timeframe, partial compensation will be provided</span>
+                <span>If the owner doesn&apos;t verify within the timeframe, partial compensation will be provided</span>
               </li>
             </ul>
           </div>
@@ -250,8 +247,8 @@ export default function AcceptJobPage() {
           {/* Checkboxes */}
           <div className="space-y-4 pt-4 border-t">
             <div className="flex items-start space-x-3">
-              <Checkbox 
-                id="terms" 
+              <Checkbox
+                id="terms"
                 checked={termsAccepted}
                 onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
               />
@@ -264,8 +261,8 @@ export default function AcceptJobPage() {
             </div>
 
             <div className="flex items-start space-x-3">
-              <Checkbox 
-                id="understanding" 
+              <Checkbox
+                id="understanding"
                 checked={understandingAccepted}
                 onCheckedChange={(checked) => setUnderstandingAccepted(checked as boolean)}
               />
@@ -278,8 +275,8 @@ export default function AcceptJobPage() {
             </div>
 
             <div className="flex items-start space-x-3">
-              <Checkbox 
-                id="availability" 
+              <Checkbox
+                id="availability"
                 checked={availabilityConfirmed}
                 onCheckedChange={(checked) => setAvailabilityConfirmed(checked as boolean)}
               />
@@ -298,7 +295,7 @@ export default function AcceptJobPage() {
       <Alert className="mb-6">
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          <strong>Legal Protection:</strong> By accepting this job, you agree to Newcondo's Property Marking Service Terms. 
+          <strong>Legal Protection:</strong> By accepting this job, you agree to Newcondo&apos;s Property Marking Service Terms.
           Newcondo is not liable for any incidents that occur during property visits. You are responsible for your own safety and insurance.
         </AlertDescription>
       </Alert>

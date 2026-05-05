@@ -11,18 +11,19 @@ import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { Progress } from '@newcondo/ui/components/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkingJobs } from '@/hooks/useMarkingJobs';
-import { 
-  MapPin, 
-  Clock, 
-  AlertCircle, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  MapPin,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
   Timer,
   Phone,
   Info
 } from 'lucide-react';
 import { formatCurrency, formatDate, formatTimeRemaining } from '@/lib/utils/format';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
+import Image from 'next/image';
 
 interface MyMarkingJob {
   id: string;
@@ -90,23 +91,23 @@ export default function MyMarkingJobsPage() {
 
   const calculateTimeProgress = (assignedAt?: string, timeSlotExpiry?: string) => {
     if (!assignedAt || !timeSlotExpiry) return 0;
-    
+
     const start = new Date(assignedAt).getTime();
     const end = new Date(timeSlotExpiry).getTime();
     const now = Date.now();
-    
+
     const total = end - start;
     const elapsed = now - start;
-    
+
     return Math.min(Math.max((elapsed / total) * 100, 0), 100);
   };
 
   const getTimeRemainingColor = (timeSlotExpiry?: string) => {
     if (!timeSlotExpiry) return 'default';
-    
+
     const remaining = new Date(timeSlotExpiry).getTime() - Date.now();
     const hours = remaining / (1000 * 60 * 60);
-    
+
     if (hours < 1) return 'destructive';
     if (hours < 2) return 'warning';
     return 'default';
@@ -114,16 +115,16 @@ export default function MyMarkingJobsPage() {
 
   const filterJobs = (status: string) => {
     if (!myJobs) return [];
-    
+
     switch (status) {
       case 'active':
-        return myJobs.filter(job => 
+        return myJobs.filter(job =>
           ['QUEUED', 'ASSIGNED', 'IN_PROGRESS'].includes(job.status)
         );
       case 'completed':
         return myJobs.filter(job => job.status === 'COMPLETED');
       case 'cancelled':
-        return myJobs.filter(job => 
+        return myJobs.filter(job =>
           ['CANCELLED', 'EXPIRED'].includes(job.status)
         );
       default:
@@ -134,12 +135,13 @@ export default function MyMarkingJobsPage() {
   const renderJobCard = (job: MyMarkingJob) => (
     <Card key={job.id} className="overflow-hidden">
       <div className="relative h-48">
-        <img
+        <Image
           src={job.property.images[0]?.url || '/images/placeholders/property.jpg'}
           alt={job.property.title}
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
         />
-        <Badge 
+        <Badge
           variant={getStatusColor(job.status)}
           className="absolute top-2 right-2 flex items-center gap-1"
         >
@@ -169,8 +171,8 @@ export default function MyMarkingJobsPage() {
                 {formatTimeRemaining(new Date(job.timeSlotExpiry))}
               </Badge>
             </div>
-            <Progress 
-              value={calculateTimeProgress(job.assignedAt, job.timeSlotExpiry)} 
+            <Progress
+              value={calculateTimeProgress(job.assignedAt, job.timeSlotExpiry)}
               className="h-2"
             />
           </div>
@@ -182,7 +184,7 @@ export default function MyMarkingJobsPage() {
             <Info className="h-4 w-4" />
             <AlertTitle>Queue Position</AlertTitle>
             <AlertDescription>
-              You are #{job.queuePosition} in the queue. You'll be notified when it's your turn.
+              You are #{job.queuePosition} in the queue. You&apos;ll be notified when it&apos;s your turn.
             </AlertDescription>
           </Alert>
         )}
@@ -203,7 +205,7 @@ export default function MyMarkingJobsPage() {
 
           <div className="flex items-center gap-2 text-sm">
             <Phone className="h-4 w-4 text-muted-foreground" />
-            <a 
+            <a
               href={`tel:${job.contactPersonPhone}`}
               className="text-primary hover:underline"
             >
@@ -232,7 +234,7 @@ export default function MyMarkingJobsPage() {
             View Details
           </Link>
         </Button>
-        
+
         {job.status === 'ASSIGNED' && (
           <Button
             className="flex-1"
@@ -330,7 +332,7 @@ export default function MyMarkingJobsPage() {
                 <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Active Jobs</h3>
                 <p className="text-muted-foreground text-center mb-4">
-                  You don't have any active marking jobs at the moment.
+                  You don&apos;t have any active marking jobs at the moment.
                 </p>
                 <Button asChild>
                   <Link href="/marking/available-jobs">

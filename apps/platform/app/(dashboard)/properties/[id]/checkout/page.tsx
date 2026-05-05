@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
+import Image from 'next/image';
 import { getServerSession } from '@newcondo/auth';
 import { prisma } from '@newcondo/db';
 import CheckoutForm from '@/components/payments/CheckoutForm';
@@ -19,6 +19,8 @@ interface CheckoutPageProps {
 }
 
 async function getPropertyData(propertyId: string, unitId?: string) {
+
+  //TODO: make sure to put this prisma database call to the appropriate express server
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
     include: {
@@ -41,25 +43,24 @@ async function getPropertyData(propertyId: string, unitId?: string) {
         where: { isPrimary: true },
         take: 1,
       },
-      // FIX 3: Always include units with their images so targetUnit.images exists
       units: unitId
         ? {
-          where: { id: unitId },
-          include: {
-            images: {
-              where: { isPrimary: true },
-              take: 1,
+            where: { id: unitId },
+            include: {
+              images: {
+                where: { isPrimary: true },
+                take: 1,
+              },
             },
-          },
-        }
+          }
         : {
-          include: {
-            images: {
-              where: { isPrimary: true },
-              take: 1,
+            include: {
+              images: {
+                where: { isPrimary: true },
+                take: 1,
+              },
             },
           },
-        },
     },
   });
 
@@ -67,17 +68,15 @@ async function getPropertyData(propertyId: string, unitId?: string) {
     return null;
   }
 
-  // Get the specific unit if unitId is provided
   const unit = unitId ? property.units?.[0] : null;
 
-  // Check for active payment locks
   const locks = await prisma.paymentAttemptLog.findMany({
     where: {
       propertyId,
       unitId: unitId || null,
       status: 'LOCKED',
       createdAt: {
-        gte: new Date(Date.now() - 15 * 60 * 1000), // Last 15 minutes
+        gte: new Date(Date.now() - 15 * 60 * 1000),
       },
     },
     orderBy: {
@@ -104,16 +103,13 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const { property, unit, locks } = data;
 
-  // Determine if this is a multi-unit property
   const isMultiUnit = property.structure === 'MULTI_FAMILY';
   const targetUnit = unit || null;
 
-  // Check availability
   const isAvailable = isMultiUnit
     ? targetUnit?.isAvailable && targetUnit.status === 'AVAILABLE'
     : property.isAvailable && property.status === 'PUBLISHED';
 
-  // Check if property/unit is payment locked
   const isLocked = isMultiUnit
     ? targetUnit?.isPaymentLocked
     : property.isPaymentLocked;
@@ -122,13 +118,10 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     ? targetUnit?.paymentLockExpiry
     : property.paymentLockExpiry;
 
-  // Check if lock is expired
   const isLockExpired = lockExpiry ? new Date(lockExpiry) < new Date() : true;
 
-  // Determine final availability
   const canProceed = isAvailable && (!isLocked || isLockExpired);
 
-  // Get pricing
   const price = isMultiUnit ? targetUnit?.price : property.price;
   const currency = isMultiUnit ? targetUnit?.currency : property.currency;
 
@@ -146,10 +139,12 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     );
   }
 
-
   const hasActiveLock = locks.length > 0;
   const activeLockExpiry = hasActiveLock && lockExpiry ? new Date(lockExpiry) : undefined;
 
+  const imageUrl = isMultiUnit
+    ? targetUnit?.images[0]?.url
+    : property.images[0]?.url;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -174,11 +169,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
             {/* Conflict Warning */}
             {!canProceed && (
               <ConflictWarning
-                type={
-                  !isAvailable
-                    ? 'ALREADY_RENTED'
-                    : 'PAYMENT_IN_PROGRESS'
-                }
+                type={!isAvailable ? 'ALREADY_RENTED' : 'PAYMENT_IN_PROGRESS'}
                 severity={!isAvailable ? 'error' : 'warning'}
                 details={
                   lockExpiry
@@ -200,17 +191,16 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start gap-4">
-                  {(isMultiUnit && targetUnit?.images[0]?.url) ||
-                    property.images[0]?.url ? (
-                    <img
-                      src={
-                        (isMultiUnit ? targetUnit?.images[0]?.url : property.images[0]?.url) ||
-                        '/images/placeholders/property.jpg'
-                      }
-                      alt={property.title}
-                      className="w-32 h-24 object-cover rounded-md"
-                    />
-                  ) : null}
+                  {imageUrl && (
+                    <div className="relative w-32 h-24 flex-shrink-0">
+                      <Image
+                        src={imageUrl}
+                        alt={property.title}
+                        fill
+                        className="object-cover rounded-md"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">
                       {property.address}, {property.city}, {property.state}
@@ -304,11 +294,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
                 </div>
                 {property.owner.verificationStatus === 'VERIFIED' && (
                   <div className="flex items-center gap-2 text-green-600">
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"

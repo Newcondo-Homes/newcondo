@@ -1,7 +1,7 @@
 // apps/platform/app/(dashboard)/marking/page.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
@@ -25,6 +25,20 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
 import { formatDistanceToNow } from 'date-fns';
+
+interface RecentJob {
+  id: string;
+  status: string;
+  markingFee: number;
+  createdAt: string;
+  property: {
+    title: string;
+    address: string;
+    city: string;
+  };
+  timeSlotExpiry?: string;
+  queuePosition?: number;
+}
 
 export default function MarkingDashboardPage() {
   const router = useRouter();
@@ -62,7 +76,7 @@ export default function MarkingDashboardPage() {
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          You don't have access to marking jobs. Only agents and premium users can access this feature.
+          You don&apos;t have access to marking jobs. Only agents and premium users can access this feature.
         </AlertDescription>
       </Alert>
     );
@@ -250,7 +264,7 @@ export default function MarkingDashboardPage() {
             <CardContent>
               {stats?.recentJobs && stats.recentJobs.length > 0 ? (
                 <div className="space-y-4">
-                  {stats.recentJobs.map((job: any) => (
+                  {stats.recentJobs.map((job: RecentJob) => (
                     <div
                       key={job.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
@@ -311,12 +325,12 @@ export default function MarkingDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Upcoming Jobs</CardTitle>
-              <CardDescription>Jobs you're scheduled to complete</CardDescription>
+              <CardDescription>Jobs you&apos;re scheduled to complete</CardDescription>
             </CardHeader>
             <CardContent>
               {upcomingJobs && upcomingJobs.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingJobs.map((job: any) => (
+                  {upcomingJobs.map((job: RecentJob) => (
                     <div
                       key={job.id}
                       className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent cursor-pointer"
@@ -330,7 +344,10 @@ export default function MarkingDashboardPage() {
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
                           <span>
-                            Complete by: {formatDistanceToNow(new Date(job.timeSlotExpiry), { addSuffix: true })}
+                            Complete by:{' '}
+                            {job.timeSlotExpiry
+                              ? formatDistanceToNow(new Date(job.timeSlotExpiry), { addSuffix: true })
+                              : 'N/A'}
                           </span>
                         </div>
                       </div>

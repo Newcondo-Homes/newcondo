@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueueStore } from "@/store/queueStore";
-import { useAuth } from "@/hooks/useAuth";
+// fix line 32: removed unused `user` — drop useAuth import entirely
 import { queueApi } from "@/lib/api/queue";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Switch } from "@newcondo/ui/components/switch";
-import { Label } from "@newcondo/ui/components/label";
+// fix line 12: removed unused `Label` import
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import {
@@ -24,12 +24,17 @@ import {
   Pause,
 } from "lucide-react";
 import { formatDistanceToNow, differenceInMinutes, format } from "date-fns";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import { Progress } from "@newcondo/ui/components/progress";
+
+// Typed interface for queue items used in calculateTimeSlotProgress
+interface TimeSlottedItem {
+  timeSlotStart?: Date;
+  timeSlotEnd?: Date;
+}
 
 export default function AgentQueueDashboardPage() {
   const router = useRouter();
-  const { user } = useAuth();
   const {
     myQueueItems,
     activeJobs,
@@ -50,19 +55,13 @@ export default function AgentQueueDashboardPage() {
 
   const [activeTab, setActiveTab] = useState("active");
 
-  useEffect(() => {
-    fetchQueueData();
-    
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchQueueData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchQueueData = async () => {
+  // fix lines 74, 85, 94, 103: replaced all `any` catch blocks with typed error narrowing
+  // fix line 59: wrapped in useCallback so it's stable for the dep array
+  const fetchQueueData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [queueResponse, statsResponse] = await Promise.all([
         queueApi.getMyQueue(),
         queueApi.getMyStats(),
@@ -71,49 +70,57 @@ export default function AgentQueueDashboardPage() {
       setMyQueueItems(queueResponse.data.queueItems);
       setActiveJobs(queueResponse.data.activeJobs);
       setStats(statsResponse.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch queue data");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch queue data";
+      setError(message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [setLoading, setError, setMyQueueItems, setActiveJobs, setStats]);
+
+  // fix line 59: fetchQueueData now stable via useCallback so it's safe in the dep array
+  useEffect(() => {
+    fetchQueueData();
+
+    // Poll for updates every 30 seconds
+    const interval = setInterval(fetchQueueData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchQueueData]);
 
   const handleToggleAvailability = async () => {
     try {
       await queueApi.toggleAvailability(!agentLocation.isAvailable);
       toggleAvailability();
-    } catch (err: any) {
-      setError(err.message || "Failed to update availability");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update availability";
+      setError(message);
     }
   };
 
-  const handleJoinQueue = async (jobId: string) => {
-    try {
-      await queueApi.joinQueue(jobId);
-      await fetchQueueData();
-    } catch (err: any) {
-      setError(err.message || "Failed to join queue");
-    }
-  };
+  // fix line 90: handleJoinQueue was defined but never called in JSX — removed
+  // If you need it again, add a "Join Queue" button and restore:
+  // const handleJoinQueue = async (jobId: string) => { ... }
 
   const handleLeaveQueue = async (queueItemId: string) => {
     try {
       await queueApi.leaveQueue(queueItemId);
       await fetchQueueData();
-    } catch (err: any) {
-      setError(err.message || "Failed to leave queue");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to leave queue";
+      setError(message);
     }
   };
 
-  const calculateTimeSlotProgress = (item: any) => {
+  // fix line 108: typed parameter with TimeSlottedItem instead of `any`
+  const calculateTimeSlotProgress = (item: TimeSlottedItem) => {
     if (!item.timeSlotStart || !item.timeSlotEnd) return 0;
-    
+
     const now = new Date();
-    const start = new Date(item.timeSlotStart);
-    const end = new Date(item.timeSlotEnd);
+    const start = item.timeSlotStart;
+    const end = item.timeSlotEnd;
     const total = differenceInMinutes(end, start);
     const elapsed = differenceInMinutes(now, start);
-    
+
     return Math.min(100, Math.max(0, (elapsed / total) * 100));
   };
 

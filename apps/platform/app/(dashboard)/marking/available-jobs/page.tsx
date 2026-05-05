@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
@@ -9,7 +10,7 @@ import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useMarkingJobs } from '@/hooks/useMarkingJobs';
 import { toast } from '@newcondo/ui/';
-import { MapPin, Clock, DollarSign, AlertCircle, Filter } from 'lucide-react';
+import { MapPin, Clock, AlertCircle, Filter } from 'lucide-react'; // fix line 12: removed unused DollarSign
 import { 
   Select, 
   SelectContent, 
@@ -17,8 +18,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@newcondo/ui/components/select';
-import { formatCurrency, formatDate, formatTimeRemaining } from '@/lib/utils/format';
-import type { MarkingJob} from "@/types/markingJob"
+import { formatCurrency, formatDate } from '@/lib/utils/format'; // fix line 20: removed unused formatTimeRemaining
+import type { MarkingJob } from "@/types/markingJob";
 
 
 export default function AvailableMarkingJobsPage() {
@@ -37,7 +38,7 @@ export default function AvailableMarkingJobsPage() {
 
     // Check if user is eligible for marking jobs
     if (user.role !== 'AGENT' && !user.isPremium) {
-      toast.error('Access Denied',{
+      toast.error('Access Denied', {
         description: 'Only agents and premium users can access marking jobs.',
       });
       router.push('/dashboard');
@@ -65,12 +66,12 @@ export default function AvailableMarkingJobsPage() {
   const handleAcceptJob = async (jobId: string) => {
     try {
       await acceptJob(jobId);
-      toast.success('Job Accepted',{
+      toast.success('Job Accepted', {
         description: 'You have been added to the queue. Complete the job within your time slot.',
       });
       router.push(`/marking/my-jobs/${jobId}`);
     } catch (error) {
-      toast.error('Error',{
+      toast.error('Error', {
         description: error instanceof Error ? error.message : 'Failed to accept job',
       });
     }
@@ -185,15 +186,17 @@ export default function AvailableMarkingJobsPage() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredJobs.map((job) => (
             <Card key={job.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              {/* fix line 189: <img> → <Image /> */}
               <div className="relative h-48">
-                <img
+                <Image
                   src={job.property.images[0]?.url || '/images/placeholders/property.jpg'}
                   alt={job.property.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
-                <Badge 
+                <Badge
                   variant={getUrgencyColor(job.urgencyLevel)}
-                  className="absolute top-2 right-2"
+                  className="absolute top-2 right-2 z-10"
                 >
                   {job.urgencyLevel}
                 </Badge>
@@ -252,332 +255,3 @@ export default function AvailableMarkingJobsPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-// // apps/platform/app/(dashboard)/marking/available-jobs/page.tsx
-// 'use client';
-
-// import { useEffect, useState } from 'react';
-// import { useRouter } from 'next/navigation';
-// import Link from 'next/link';
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/ui/card';
-// import { Button } from '@newcondo/ui/components/ui/button';
-// import { Badge } from '@newcondo/ui/components/ui/badge';
-// import { Input } from '@newcondo/ui/components/ui/input';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/ui/select';
-// import { Alert, AlertDescription } from '@newcondo/ui/components/ui/alert';
-// import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
-// import { useAuth } from '@/hooks/useAuth';
-// import { useMarkingJobs } from '@/hooks/useMarkingJobs';
-// import { 
-//   MapPin, 
-//   Calendar, 
-//   DollarSign, 
-//   Clock,
-//   AlertCircle,
-//   Search,
-//   Filter,
-//   TrendingUp,
-//   Users
-// } from 'lucide-react';
-// import { formatCurrency } from '@/lib/utils/format';
-// import { formatDistanceToNow, format } from 'date-fns';
-
-// export default function AvailableJobsPage() {
-//   const router = useRouter();
-//   const { user, isLoading: authLoading } = useAuth();
-//   const { 
-//     availableJobs, 
-//     isLoading,
-//     error,
-//     fetchAvailableJobs,
-//     filters,
-//     setFilters 
-//   } = useMarkingJobs();
-
-//   const [searchTerm, setSearchTerm] = useState('');
-//   const [sortBy, setSortBy] = useState<'date' | 'fee' | 'distance'>('date');
-//   const [filterUrgency, setFilterUrgency] = useState<string>('all');
-
-//   useEffect(() => {
-//     if (!authLoading && user) {
-//       if (user.role !== 'AGENT' && !user.isPremium) {
-//         router.push('/dashboard');
-//         return;
-//       }
-//       fetchAvailableJobs({ sortBy, urgency: filterUrgency });
-//     }
-//   }, [user, authLoading, router, sortBy, filterUrgency, fetchAvailableJobs]);
-
-//   const handleAcceptJob = (jobId: string) => {
-//     router.push(`/marking/${jobId}/accept`);
-//   };
-
-//   const filteredJobs = availableJobs?.filter((job: any) => {
-//     const searchLower = searchTerm.toLowerCase();
-//     return (
-//       job.property.title.toLowerCase().includes(searchLower) ||
-//       job.property.address.toLowerCase().includes(searchLower) ||
-//       job.property.city.toLowerCase().includes(searchLower) ||
-//       job.property.state.toLowerCase().includes(searchLower)
-//     );
-//   });
-
-//   if (authLoading || isLoading) {
-//     return (
-//       <div className="flex items-center justify-center min-h-screen">
-//         <LoadingSpinner size="lg" />
-//       </div>
-//     );
-//   }
-
-//   if (!user || (user.role !== 'AGENT' && !user.isPremium)) {
-//     return (
-//       <Alert variant="destructive">
-//         <AlertCircle className="h-4 w-4" />
-//         <AlertDescription>
-//           You don't have access to marking jobs. Only agents and premium users can access this feature.
-//         </AlertDescription>
-//       </Alert>
-//     );
-//   }
-
-//   if (error) {
-//     return (
-//       <Alert variant="destructive">
-//         <AlertCircle className="h-4 w-4" />
-//         <AlertDescription>{error}</AlertDescription>
-//       </Alert>
-//     );
-//   }
-
-//   return (
-//     <div className="container mx-auto px-4 py-8 max-w-7xl">
-//       {/* Header */}
-//       <div className="mb-6">
-//         <h1 className="text-3xl font-bold mb-2">Available Marking Jobs</h1>
-//         <p className="text-muted-foreground">
-//           Browse and accept property marking jobs in your service areas
-//         </p>
-//       </div>
-
-//       {/* Filters */}
-//       <Card className="mb-6">
-//         <CardContent className="pt-6">
-//           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-//             {/* Search */}
-//             <div className="md:col-span-2">
-//               <div className="relative">
-//                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-//                 <Input
-//                   placeholder="Search by location, address..."
-//                   value={searchTerm}
-//                   onChange={(e) => setSearchTerm(e.target.value)}
-//                   className="pl-10"
-//                 />
-//               </div>
-//             </div>
-
-//             {/* Sort By */}
-//             <div>
-//               <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-//                 <SelectTrigger>
-//                   <SelectValue placeholder="Sort by" />
-//                 </SelectTrigger>
-//                 <SelectContent>
-//                   <SelectItem value="date">Most Recent</SelectItem>
-//                   <SelectItem value="fee">Highest Fee</SelectItem>
-//                   <SelectItem value="distance">Nearest</SelectItem>
-//                 </SelectContent>
-//               </Select>
-//             </div>
-
-//             {/* Filter by Urgency */}
-//             <div>
-//               <Select value={filterUrgency} onValueChange={setFilterUrgency}>
-//                 <SelectTrigger>
-//                   <SelectValue placeholder="All Urgencies" />
-//                 </SelectTrigger>
-//                 <SelectContent>
-//                   <SelectItem value="all">All Urgencies</SelectItem>
-//                   <SelectItem value="LOW">Low</SelectItem>
-//                   <SelectItem value="NORMAL">Normal</SelectItem>
-//                   <SelectItem value="HIGH">High</SelectItem>
-//                   <SelectItem value="URGENT">Urgent</SelectItem>
-//                 </SelectContent>
-//               </Select>
-//             </div>
-//           </div>
-//         </CardContent>
-//       </Card>
-
-//       {/* Results Count */}
-//       {filteredJobs && (
-//         <div className="mb-4 flex items-center justify-between">
-//           <p className="text-sm text-muted-foreground">
-//             {filteredJobs.length} {filteredJobs.length === 1 ? 'job' : 'jobs'} available
-//           </p>
-//           {!user.isAvailableForMarking && (
-//             <Alert className="border-yellow-500 w-auto inline-flex items-center gap-2 py-2 px-4">
-//               <AlertCircle className="h-4 w-4 text-yellow-600" />
-//               <AlertDescription className="text-sm m-0">
-//                 Set yourself as available to accept jobs
-//               </AlertDescription>
-//             </Alert>
-//           )}
-//         </div>
-//       )}
-
-//       {/* Jobs Grid */}
-//       {filteredJobs && filteredJobs.length > 0 ? (
-//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-//           {filteredJobs.map((job: any) => (
-//             <Card key={job.id} className="hover:shadow-lg transition-shadow">
-//               <CardHeader>
-//                 <div className="flex items-start justify-between">
-//                   <div className="flex-1">
-//                     <CardTitle className="mb-2">{job.property.title}</CardTitle>
-//                     <CardDescription className="flex items-start gap-2">
-//                       <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-//                       <span>
-//                         {job.property.address}, {job.property.city}, {job.property.state}
-//                       </span>
-//                     </CardDescription>
-//                   </div>
-//                   <Badge variant={
-//                     job.urgencyLevel === 'URGENT' ? 'destructive' :
-//                     job.urgencyLevel === 'HIGH' ? 'default' :
-//                     'secondary'
-//                   }>
-//                     {job.urgencyLevel}
-//                   </Badge>
-//                 </div>
-//               </CardHeader>
-//               <CardContent className="space-y-4">
-//                 {/* Job Details */}
-//                 <div className="grid grid-cols-2 gap-4 text-sm">
-//                   <div className="flex items-center gap-2">
-//                     <DollarSign className="h-4 w-4 text-muted-foreground" />
-//                     <div>
-//                       <p className="text-muted-foreground text-xs">Your Earnings</p>
-//                       <p className="font-semibold">{formatCurrency(job.markingFee * 0.25)}</p>
-//                     </div>
-//                   </div>
-//                   <div className="flex items-center gap-2">
-//                     <Users className="h-4 w-4 text-muted-foreground" />
-//                     <div>
-//                       <p className="text-muted-foreground text-xs">Queue Position</p>
-//                       <p className="font-semibold">
-//                         {job.queuePosition ? `#${job.queuePosition}` : 'Available'}
-//                       </p>
-//                     </div>
-//                   </div>
-//                   <div className="flex items-center gap-2">
-//                     <Calendar className="h-4 w-4 text-muted-foreground" />
-//                     <div>
-//                       <p className="text-muted-foreground text-xs">Posted</p>
-//                       <p className="font-medium">
-//                         {formatDistanceToNow(new Date(job.createdAt), { addSuffix: true })}
-//                       </p>
-//                     </div>
-//                   </div>
-//                   <div className="flex items-center gap-2">
-//                     <Clock className="h-4 w-4 text-muted-foreground" />
-//                     <div>
-//                       <p className="text-muted-foreground text-xs">Complete By</p>
-//                       <p className="font-medium">
-//                         {format(new Date(job.maxCompletionTime), 'MMM dd, HH:mm')}
-//                       </p>
-//                     </div>
-//                   </div>
-//                 </div>
-
-//                 {/* Preferred Time */}
-//                 {job.preferredTime && (
-//                   <div className="p-3 bg-accent rounded-lg">
-//                     <p className="text-xs text-muted-foreground mb-1">Preferred Visit Time</p>
-//                     <p className="text-sm font-medium">
-//                       {format(new Date(job.preferredTime), 'PPP p')}
-//                     </p>
-//                   </div>
-//                 )}
-
-//                 {/* Access Instructions Preview */}
-//                 {job.accessInstructions && (
-//                   <div className="p-3 bg-accent rounded-lg">
-//                     <p className="text-xs text-muted-foreground mb-1">Access Instructions</p>
-//                     <p className="text-sm line-clamp-2">{job.accessInstructions}</p>
-//                   </div>
-//                 )}
-
-//                 {/* Actions */}
-//                 <div className="flex gap-3 pt-2">
-//                   <Button
-//                     variant="outline"
-//                     className="flex-1"
-//                     onClick={() => router.push(`/marking/${job.id}/details`)}
-//                   >
-//                     View Details
-//                   </Button>
-//                   <Button
-//                     className="flex-1"
-//                     onClick={() => handleAcceptJob(job.id)}
-//                     disabled={!user.isAvailableForMarking}
-//                   >
-//                     Accept Job
-//                   </Button>
-//                 </div>
-//               </CardContent>
-//             </Card>
-//           ))}
-//         </div>
-//       ) : (
-//         <Card>
-//           <CardContent className="py-16 text-center">
-//             <MapPin className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-//             <h3 className="text-lg font-semibold mb-2">No Available Jobs</h3>
-//             <p className="text-muted-foreground mb-4">
-//               {searchTerm 
-//                 ? "No jobs match your search criteria. Try adjusting your filters."
-//                 : "There are currently no marking jobs available in your service areas."}
-//             </p>
-//             {searchTerm && (
-//               <Button variant="outline" onClick={() => setSearchTerm('')}>
-//                 Clear Search
-//               </Button>
-//             )}
-//           </CardContent>
-//         </Card>
-//       )}
-
-//       {/* Service Areas Info */}
-//       {user.agentServiceAreas && user.agentServiceAreas.length > 0 && (
-//         <Card className="mt-6">
-//           <CardHeader>
-//             <CardTitle className="text-sm">Your Service Areas</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <div className="flex flex-wrap gap-2">
-//               {user.agentServiceAreas.map((area: string, index: number) => (
-//                 <Badge key={index} variant="secondary">
-//                   {area}
-//                 </Badge>
-//               ))}
-//             </div>
-//             <Button variant="link" asChild className="mt-2 px-0">
-//               <Link href="/profile/settings">
-//                 Update service areas
-//               </Link>
-//             </Button>
-//           </CardContent>
-//         </Card>
-//       )}
-//     </div>
-//   );
-// }

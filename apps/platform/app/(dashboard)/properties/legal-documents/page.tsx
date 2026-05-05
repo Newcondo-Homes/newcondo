@@ -9,7 +9,6 @@ import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { Progress } from '@newcondo/ui/components/progress';
-import { Separator } from '@newcondo/ui/components/separator';
 import { 
   FileText, 
   Upload, 

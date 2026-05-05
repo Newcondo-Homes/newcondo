@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { queueApi } from "@/lib/api/queue";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+// fix lines 8: removed unused CardDescription, CardHeader, CardTitle
+import { Card, CardContent } from "@newcondo/ui/components/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Input } from "@newcondo/ui/components/input";
@@ -18,7 +20,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
 
 interface AvailableJob {
@@ -40,6 +42,21 @@ interface AvailableJob {
   createdAt: Date;
 }
 
+// fix line 53: replaced `any[]` with a typed interface
+interface AssignedJob {
+  id: string;
+  status: string;
+  markingFee: number;
+  assignedAt: Date;
+  timeSlotExpiry?: Date;
+  property: {
+    title: string;
+    address: string;
+    city: string;
+    images: Array<{ url: string }>;
+  };
+}
+
 const urgencyColors = {
   LOW: "text-gray-600",
   NORMAL: "text-blue-600",
@@ -50,7 +67,7 @@ const urgencyColors = {
 export default function AgentMarkingJobsListPage() {
   const router = useRouter();
   const [availableJobs, setAvailableJobs] = useState<AvailableJob[]>([]);
-  const [myJobs, setMyJobs] = useState<any[]>([]);
+  const [myJobs, setMyJobs] = useState<AssignedJob[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -58,11 +75,8 @@ export default function AgentMarkingJobsListPage() {
   const [sortBy, setSortBy] = useState("distance");
   const [activeTab, setActiveTab] = useState("available");
 
-  useEffect(() => {
-    fetchJobs();
-  }, [urgencyFilter, sortBy]);
-
-  const fetchJobs = async () => {
+  // fix lines 77 & 88: replaced `any` with typed error narrowing
+  const fetchJobs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -74,19 +88,26 @@ export default function AgentMarkingJobsListPage() {
 
       setAvailableJobs(availableResponse.data);
       setMyJobs(myJobsResponse.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch jobs");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch jobs";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [urgencyFilter, sortBy]);
+
+  // fix line 63: fetchJobs now stable via useCallback so it's safe in the dep array
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handleJoinQueue = async (jobId: string) => {
     try {
       await queueApi.joinQueue(jobId);
       await fetchJobs();
-    } catch (err: any) {
-      setError(err.message || "Failed to join queue");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to join queue";
+      setError(message);
     }
   };
 
@@ -192,13 +213,16 @@ export default function AgentMarkingJobsListPage() {
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
-                      {/* Property Image */}
+                      {/* fix line 197: <img> → <Image /> */}
                       {job.property.images[0] && (
-                        <img
-                          src={job.property.images[0].url}
-                          alt={job.property.title}
-                          className="w-32 h-32 object-cover rounded-lg"
-                        />
+                        <div className="relative w-32 h-32 flex-shrink-0">
+                          <Image
+                            src={job.property.images[0].url}
+                            alt={job.property.title}
+                            fill
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
                       )}
 
                       {/* Job Details */}
@@ -289,12 +313,16 @@ export default function AgentMarkingJobsListPage() {
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
+                      {/* fix line 293: <img> → <Image /> */}
                       {job.property?.images[0] && (
-                        <img
-                          src={job.property.images[0].url}
-                          alt={job.property.title}
-                          className="w-32 h-32 object-cover rounded-lg"
-                        />
+                        <div className="relative w-32 h-32 flex-shrink-0">
+                          <Image
+                            src={job.property.images[0].url}
+                            alt={job.property.title}
+                            fill
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
                       )}
 
                       <div className="flex-1">

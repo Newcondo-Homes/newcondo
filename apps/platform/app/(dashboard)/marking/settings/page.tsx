@@ -6,7 +6,7 @@ import MarkingServiceTerms from '@/components/marking/MarkingServiceTerms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
 import { Skeleton } from '@newcondo/ui';
 import { Separator } from '@newcondo/ui';
-import { useAuth } from '@/hooks/useAuth';
+
 export const metadata: Metadata = {
   title: 'Marking Service Settings | Newcondo',
   description: 'Configure your property marking service preferences',
@@ -16,9 +16,10 @@ export default async function MarkingSettingsPage() {
 
   const session = await getServerSession();
 
-  const { user } = useAuth();
 
   if (!session?.user?.id) redirect('/login');
+
+  const user = session.user;
 
   if (!user) redirect('/login');
 
@@ -69,7 +70,7 @@ export default async function MarkingSettingsPage() {
         <CardHeader>
           <CardTitle>Service Areas</CardTitle>
           <CardDescription>
-            Manage the locations where you're available to mark properties
+            Manage the locations where you&apos;re available to mark properties
           </CardDescription>
         </CardHeader>
         <CardContent>

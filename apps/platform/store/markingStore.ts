@@ -42,6 +42,14 @@ export interface MarkingJobData {
 
 export interface MarkingJob {
   id: string;
+  property?: {
+    title: string;
+    address: string;
+    city: string;
+  };
+  assignedAgent?: {
+    name: string | null;
+  };
   propertyId: string;
   requestedBy: string;
   assignedAgentId?: string;
@@ -58,7 +66,7 @@ export interface MarkingJob {
   timeSlotExpiry?: string;
   completionNotes?: string;
   completionImages?: string[];
-  boundaryData?: any;
+  boundaryData?: Record<string, unknown>;
   queuePosition?: number;
   maxCompletionTime?: string;
   createdAt: string;

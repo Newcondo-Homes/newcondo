@@ -1,12 +1,10 @@
 // apps/platform/app/(dashboard)/payments/success/page.tsx
-import { Suspense } from 'react'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import { CheckCircle, Download, Home, Receipt, Clock } from 'lucide-react'
 import { Button } from '@newcondo/ui'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
 import { Badge } from '@newcondo/ui'
-import {PaymentReceipt} from '@/components/payments/PaymentReceipt'
 
 export const metadata: Metadata = {
   title: 'Payment Successful | NewCondo',
@@ -23,7 +21,7 @@ interface PageProps {
 }
 
 export default function PaymentSuccessPage({ searchParams }: PageProps) {
-  const { paymentId, amount, propertyId, transactionId } = searchParams
+  const { paymentId, amount, transactionId } = searchParams
 
   // Format amount for display
   const formattedAmount = amount ? 
@@ -107,7 +105,7 @@ export default function PaymentSuccessPage({ searchParams }: PageProps) {
             <ul className="list-disc list-inside text-sm mt-2 space-y-1">
               <li>Your funds are held securely</li>
               <li>The landlord will confirm the rental arrangement</li>
-              <li>You'll receive a confirmation notification once complete</li>
+              <li>You&apos;ll receive a confirmation notification once complete</li>
               <li>If no issues arise, funds will be released automatically</li>
             </ul>
             {paymentId && (

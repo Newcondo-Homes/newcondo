@@ -7,8 +7,8 @@ import { ArrowLeft, Printer, Share2 } from 'lucide-react'
 import { Button } from '@newcondo/ui'
 import { prisma } from '@newcondo/db';
 import { getServerSession } from '@newcondo/auth';
-import {PaymentReceipt} from '@/components/payments/PaymentReceipt'
-import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner'
+import { PaymentReceipt } from '@/components/payments/PaymentReceipt'
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 
 interface PageProps {
   params: {
@@ -77,7 +77,7 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
           text: `Payment receipt for transaction ${paymentId}`,
           url: window.location.href
         })
-      } catch (err) {
+      } catch {
         // Fallback to copying URL
         navigator.clipboard.writeText(window.location.href)
       }
@@ -118,9 +118,9 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
     },
     landlord: payment.rental?.property.owner
       ? {
-          name: payment.rental.property.owner.name ?? 'Property Owner',
-          email: payment.rental.property.owner.email,
-        }
+        name: payment.rental.property.owner.name ?? 'Property Owner',
+        email: payment.rental.property.owner.email,
+      }
       : undefined,
     tenant: {
       name: payment.user.name ?? 'Tenant',
@@ -128,12 +128,12 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
     },
     rental: payment.rental
       ? {
-          startDate: payment.rental.startDate.toISOString(),
-          endDate: payment.rental.endDate?.toISOString(),
-          monthlyRent: typeof payment.rental.monthlyRent === 'object'
-            ? payment.rental.monthlyRent.toNumber()
-            : Number(payment.rental.monthlyRent),
-        }
+        startDate: payment.rental.startDate.toISOString(),
+        endDate: payment.rental.endDate?.toISOString(),
+        monthlyRent: typeof payment.rental.monthlyRent === 'object'
+          ? payment.rental.monthlyRent.toNumber()
+          : Number(payment.rental.monthlyRent),
+      }
       : undefined,
   } satisfies Parameters<typeof PaymentReceipt>[0]['paymentData'];
 
@@ -159,19 +159,19 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handlePrint}
               className="print:hidden"
             >
               <Printer className="h-4 w-4 mr-2" />
               Print
             </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm" 
+
+            <Button
+              variant="outline"
+              size="sm"
               onClick={handleShare}
               className="print:hidden"
             >
@@ -182,14 +182,14 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
         </div>
 
         {/* Receipt Content */}
-        <Suspense 
+        <Suspense
           fallback={
             <div className="flex items-center justify-center py-12">
               <LoadingSpinner size="lg" />
             </div>
           }
         >
-          <PaymentReceipt 
+          <PaymentReceipt
             paymentData={paymentData}
             onPrint={() => window.print()}
           />

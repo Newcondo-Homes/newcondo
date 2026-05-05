@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { ArrowLeft, Save, MapPin, Upload, X, Plus, Trash2, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, Plus, Trash2, Eye } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
 import { Textarea } from '@newcondo/ui/components/textarea';
@@ -18,11 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/component
 import { Separator } from '@newcondo/ui/components/separator';
 import { useAuth } from '@/hooks/useAuth';
 import { useProperty } from '@/hooks/useProperties';
-//TODO: check to use filerouter here
 import { useUploadThing } from '@/lib/uploadthing';
-import { useUpload } from '@/hooks/useUpload';
 import { propertyApi } from '@/lib/api/properties';
 import { PropertyType, PropertyStatus, PropertyStructure } from '@/types/enums';
+import Image from 'next/image';
 
 const propertyFormSchema = z.object({
     title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
@@ -85,6 +84,7 @@ interface PropertyUnit {
     }>;
 }
 
+
 const commonFeatures = [
     'Parking', 'Generator', 'Security', 'Water Supply', 'Electricity',
     'Internet', 'Air Conditioning', 'Furnished', 'Swimming Pool', 'Gym',
@@ -104,11 +104,8 @@ export default function EditListingPage() {
     const params = useParams();
     const propertyId = params.id as string;
     const { user } = useAuth();
-    const { data: propertyData, isLoading: propertyLoading } = useProperty(propertyId);;
+    const { data: propertyData, isLoading: propertyLoading } = useProperty(propertyId);
     const { startUpload, isUploading } = useUploadThing('propertyImages');
-
-    const [property, setProperty] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
 
     const [saving, setSaving] = useState(false);
     const [images, setImages] = useState<PropertyImage[]>([]);
@@ -139,16 +136,21 @@ export default function EditListingPage() {
 
     const watchStructure = form.watch('structure');
 
+    // Stable refs to avoid stale closure issues without adding form/router to deps
+    const formRef = useRef(form);
+    const routerRef = useRef(router);
+    formRef.current = form;
+    routerRef.current = router;
+
     useEffect(() => {
         if (!propertyData) return;
 
-        // Redirect if user doesn't own this property
         if (propertyData.ownerId !== user?.id) {
-            router.push('/dashboard/properties/my-listings');
+            routerRef.current.push('/dashboard/properties/my-listings');
             return;
         }
 
-        form.reset({
+        formRef.current.reset({
             title: propertyData.title,
             description: propertyData.description,
             price: propertyData.price ? Number(propertyData.price) : undefined,
@@ -178,13 +180,8 @@ export default function EditListingPage() {
             order: img.order ?? i,
         })));
 
-        setUnits(
-            ((propertyData as any).units ?? []).map((u: PropertyUnit) => u)
-        );
+        setUnits((propertyData.units ?? []).map((u) => ({ ...u, images: [] }) as PropertyUnit));
     }, [propertyData, user?.id]);
-
-
-
 
     const handleImageUpload = async (files: FileList) => {
         const fileArray = Array.from(files);
@@ -291,11 +288,11 @@ export default function EditListingPage() {
                     </Button>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">Edit Property</h1>
-                        <p className="text-sm text-gray-600">{property?.title}</p>
+                        <p className="text-sm text-gray-600">{propertyData?.title}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    {property?.boundaryVerified ? (
+                    {propertyData?.boundaryVerified ? (
                         <Badge className="bg-green-100 text-green-800">Boundary Verified</Badge>
                     ) : (
                         <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
@@ -637,11 +634,12 @@ export default function EditListingPage() {
                                     {images.length > 0 && (
                                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                             {images.map((image, index) => (
-                                                <div key={image.id} className="relative group">
-                                                    <img
+                                                <div key={image.id} className="relative group h-32">
+                                                    <Image
                                                         src={image.url}
                                                         alt={image.altText || `Property image ${index + 1}`}
-                                                        className="w-full h-32 object-cover rounded-lg"
+                                                        fill
+                                                        className="object-cover rounded-lg"
                                                     />
                                                     {image.isPrimary && (
                                                         <Badge className="absolute top-2 left-2 bg-green-600 text-white">
@@ -760,7 +758,6 @@ export default function EditListingPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Add/Edit Unit Modal */}
                         {(showAddUnit || editingUnit) && (
                             <Card>
                                 <CardHeader>
@@ -781,8 +778,6 @@ export default function EditListingPage() {
                                                     {...unitForm.register('unitNumber')}
                                                     placeholder="e.g., A1, Flat 2, Unit 101"
                                                 />
-                        // ... (all your existing code above remains unchanged)
-
                                                 {unitForm.formState.errors.unitNumber && (
                                                     <p className="text-sm text-red-600">{unitForm.formState.errors.unitNumber.message}</p>
                                                 )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams, redirect } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,14 +15,12 @@ import { Textarea } from "@newcondo/ui/components/textarea";
 import { RadioGroup, RadioGroupItem } from "@newcondo/ui/components/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
-import { Separator } from "@newcondo/ui/components/separator";
 import { useSession } from '@newcondo/auth/client';
 import {
   ArrowLeft,
   AlertCircle,
   MapPin,
   User,
-  Phone,
   Clock,
   CheckCircle,
   Users,
@@ -34,6 +32,7 @@ import { Calendar } from "@newcondo/ui/components/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@newcondo/ui/components/popover";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 // Validation schema
 const markingJobSchema = z.object({
@@ -56,17 +55,36 @@ const MARKING_FEES = {
   AGENT_QUEUE: 20000,
 };
 
+interface Property {
+  id: string;
+  title: string;
+  address: string;
+  city: string;
+  state: string;
+  boundaryVerified: boolean;
+  images?: { url: string }[];
+}
+
+interface JobResponse {
+  job: { id: string };
+}
+
+interface LinkResponse {
+  shareableLink: string;
+}
+
 export default function CreateMarkingJobPage() {
   const { data: session } = useSession();
 
   if (!session) {
     redirect('/login');
   }
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const propertyIdParam = searchParams.get("propertyId");
 
-  const [properties, setProperties] = useState<any[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [isLoadingProperties, setIsLoadingProperties] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,21 +109,21 @@ export default function CreateMarkingJobPage() {
   const selectedPropertyId = watch("propertyId");
   const preferredTime = watch("preferredTime");
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  const fetchProperties = async () => {
+  const fetchProperties = useCallback(async () => {
     try {
       setIsLoadingProperties(true);
       const response = await propertyApi.getUserProperties(session.user.id, { isAvailable: false });
-      setProperties(response.properties.filter((p: any) => !p.boundaryVerified));
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch properties");
+      setProperties(response.properties.filter((p: Property) => !p.boundaryVerified));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to fetch properties");
     } finally {
       setIsLoadingProperties(false);
     }
-  };
+  }, [session.user.id]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [fetchProperties]);
 
   const selectedProperty = properties.find((p) => p.id === selectedPropertyId);
   const markingFee = MARKING_FEES[markingType];
@@ -116,8 +134,7 @@ export default function CreateMarkingJobPage() {
       setError(null);
 
       if (data.markingType === "KNOWN_PERSON") {
-        // First create the job, then generate the shareable link
-        const jobResponse = await markingApi.createJob({
+        const jobResponse: JobResponse = await markingApi.createJob({
           propertyId: data.propertyId,
           markingType: "self_assign",
           contactPersonName: data.contactPersonName,
@@ -126,14 +143,13 @@ export default function CreateMarkingJobPage() {
           urgencyLevel: data.urgencyLevel,
         });
 
-        const linkResponse = await markingApi.generateShareableLink(
+        const linkResponse: LinkResponse = await markingApi.generateShareableLink(
           jobResponse.job.id
         );
         setShareableLink(linkResponse.shareableLink);
 
       } else {
-        // Create marking job for all other types
-        const jobResponse = await markingApi.createJob({
+        const jobResponse: JobResponse = await markingApi.createJob({
           propertyId: data.propertyId,
           markingType: data.markingType === "NEWCONDO" || data.markingType === "AGENT_QUEUE"
             ? "newcondo_agent"
@@ -151,8 +167,8 @@ export default function CreateMarkingJobPage() {
           router.push(`/marking-jobs/${jobResponse.job.id}`);
         }
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to create marking job");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create marking job");
     } finally {
       setIsSubmitting(false);
     }
@@ -252,7 +268,7 @@ export default function CreateMarkingJobPage() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  You don't have any properties that need marking. Please create a property listing first.
+                  You don&apos;t have any properties that need marking. Please create a property listing first.
                 </AlertDescription>
               </Alert>
             ) : (
@@ -277,11 +293,14 @@ export default function CreateMarkingJobPage() {
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-start gap-4">
                       {selectedProperty.images?.[0] && (
-                        <img
-                          src={selectedProperty.images[0].url}
-                          alt={selectedProperty.title}
-                          className="w-24 h-24 object-cover rounded-lg"
-                        />
+                        <div className="relative w-24 h-24 flex-shrink-0">
+                          <Image
+                            src={selectedProperty.images[0].url}
+                            alt={selectedProperty.title}
+                            fill
+                            className="object-cover rounded-lg"
+                          />
+                        </div>
                       )}
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{selectedProperty.title}</h3>
@@ -307,8 +326,7 @@ export default function CreateMarkingJobPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <RadioGroup value={markingType} onValueChange={(value) => setValue("markingType", value as any)}>
-              {/* Mark by Self */}
+            <RadioGroup value={markingType} onValueChange={(value) => setValue("markingType", value as MarkingJobFormData["markingType"])}>
               <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <RadioGroupItem value="SELF" id="self" className="mt-1" />
                 <Label htmlFor="self" className="flex-1 cursor-pointer">
@@ -323,7 +341,6 @@ export default function CreateMarkingJobPage() {
                 </Label>
               </div>
 
-              {/* Send to Known Person */}
               <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <RadioGroupItem value="KNOWN_PERSON" id="known" className="mt-1" />
                 <Label htmlFor="known" className="flex-1 cursor-pointer">
@@ -338,7 +355,6 @@ export default function CreateMarkingJobPage() {
                 </Label>
               </div>
 
-              {/* Newcondo Admin */}
               <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <RadioGroupItem value="NEWCONDO" id="newcondo" className="mt-1" />
                 <Label htmlFor="newcondo" className="flex-1 cursor-pointer">
@@ -353,7 +369,6 @@ export default function CreateMarkingJobPage() {
                 </Label>
               </div>
 
-              {/* Agent Queue */}
               <div className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                 <RadioGroupItem value="AGENT_QUEUE" id="queue" className="mt-1" />
                 <Label htmlFor="queue" className="flex-1 cursor-pointer">
@@ -468,7 +483,7 @@ export default function CreateMarkingJobPage() {
                 <Label htmlFor="urgencyLevel">Urgency Level</Label>
                 <Select
                   value={watch("urgencyLevel")}
-                  onValueChange={(value) => setValue("urgencyLevel", value as any)}
+                  onValueChange={(value) => setValue("urgencyLevel", value as MarkingJobFormData["urgencyLevel"])}
                 >
                   <SelectTrigger>
                     <SelectValue />

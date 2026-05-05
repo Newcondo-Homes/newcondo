@@ -12,6 +12,7 @@ interface PageProps {
 }
 
 async function getRentalDetails(rentalId: string, userId: string) {
+  //TODO: send this prisma database call to the express backend
   const rental = await prisma.rental.findUnique({
     where: { id: rentalId },
     include: {
@@ -116,7 +117,7 @@ export default async function ConfirmationPage({ params }: PageProps) {
   );
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata() {
   return {
     title: 'Confirm Property | Newcondo',
     description: 'Confirm your property rental within 24 hours',

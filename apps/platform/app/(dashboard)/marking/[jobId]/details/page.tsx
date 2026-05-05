@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
@@ -10,12 +10,12 @@ import { Separator } from '@newcondo/ui/components/separator';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { toast } from '@newcondo/ui/';
-import { 
-  Clock, 
-  MapPin, 
-  User, 
-  Phone, 
-  Calendar, 
+import {
+  Clock,
+  MapPin,
+  User,
+  Phone,
+  Calendar,
   AlertCircle,
   CheckCircle,
   Info,
@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface MarkingJobDetails {
   id: string;
@@ -68,32 +69,30 @@ export default function JobDetailsPage() {
   const [job, setJob] = useState<MarkingJobDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [accepting, setAccepting] = useState(false);
 
-  useEffect(() => {
-    fetchJobDetails();
-  }, [jobId]);
 
-  const fetchJobDetails = async () => {
+
+  const fetchJobDetails = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/marking/jobs/${jobId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch job details');
-      }
+
+      if (!response.ok) throw new Error('Failed to fetch job details');
 
       const data = await response.json();
       setJob(data.job);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      toast.error('Error',{
-        description: 'Failed to load job details',
-      });
+      toast.error('Error', { description: 'Failed to load job details' });
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId]);
+
+
+  useEffect(() => {
+    fetchJobDetails();
+  }, [fetchJobDetails]);
 
   const handleAcceptJob = () => {
     router.push(`/marking/${jobId}/accept`);
@@ -123,22 +122,22 @@ export default function JobDetailsPage() {
 
   const calculateTimeRemaining = (expiry: string | null) => {
     if (!expiry) return null;
-    
+
     const now = new Date();
     const expiryDate = new Date(expiry);
     const diff = expiryDate.getTime() - now.getTime();
-    
+
     if (diff <= 0) return 'Expired';
-    
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
+
     return `${hours}h ${minutes}m remaining`;
   };
 
   const openInMaps = () => {
     if (!job?.property.gpsCoordinates) {
-      toast.error('Location unavailable',{
+      toast.error('Location unavailable', {
         description: 'GPS coordinates not available for this property',
       });
       return;
@@ -148,8 +147,8 @@ export default function JobDetailsPage() {
       const coords = JSON.parse(job.property.gpsCoordinates);
       const url = `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
       window.open(url, '_blank');
-    } catch (err) {
-      toast.error('Error',{
+    } catch {
+      toast.error('Error', {
         description: 'Failed to open maps',
       });
     }
@@ -177,9 +176,9 @@ export default function JobDetailsPage() {
             {error || 'Job not found'}
           </AlertDescription>
         </Alert>
-        <Button 
-          onClick={() => router.back()} 
-          variant="outline" 
+        <Button
+          onClick={() => router.back()}
+          variant="outline"
           className="mt-4"
         >
           Go Back
@@ -248,10 +247,11 @@ export default function JobDetailsPage() {
             <CardContent className="space-y-4">
               {job.property.images.length > 0 && (
                 <div className="aspect-video relative rounded-lg overflow-hidden">
-                  <img
+                  <Image
                     src={job.property.images.find(img => img.isPrimary)?.url || job.property.images[0].url}
                     alt={job.property.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}
@@ -268,7 +268,7 @@ export default function JobDetailsPage() {
               </div>
 
               {job.property.gpsCoordinates && (
-                <Button 
+                <Button
                   onClick={openInMaps}
                   variant="outline"
                   className="w-full"
@@ -308,7 +308,7 @@ export default function JobDetailsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Phone Number</p>
-                  <a 
+                  <a
                     href={`tel:${job.contactPersonPhone}`}
                     className="font-medium text-primary hover:underline"
                   >
@@ -408,17 +408,17 @@ export default function JobDetailsPage() {
           {canAcceptJob && (
             <Card>
               <CardContent className="pt-6">
-                <Button 
+                <Button
                   onClick={handleAcceptJob}
                   className="w-full"
                   size="lg"
-                  disabled={accepting}
+                  disabled={false}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
-                  {accepting ? 'Processing...' : 'Accept This Job'}
+                  {'Accept This Job'}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-3">
-                  You'll have 3 hours to complete after accepting
+                  You&apos;ll have 3 hours to complete after accepting
                 </p>
               </CardContent>
             </Card>
@@ -427,7 +427,7 @@ export default function JobDetailsPage() {
           {isAssignedToCurrentUser && job.status === 'ASSIGNED' && (
             <Card>
               <CardContent className="pt-6">
-                <Button 
+                <Button
                   onClick={() => router.push(`/marking/${jobId}/complete`)}
                   className="w-full"
                   size="lg"
@@ -453,7 +453,7 @@ export default function JobDetailsPage() {
                 {job.requestingUser.phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
-                    <a 
+                    <a
                       href={`tel:${job.requestingUser.phone}`}
                       className="text-primary hover:underline"
                     >

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
 import { Button } from '@newcondo/ui'
@@ -39,17 +39,13 @@ export default function PropertyMarkingDashboard() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('my-requests')
 
-  useEffect(() => {
-    fetchMarkingJobs()
-  }, [activeTab])
-
-  const fetchMarkingJobs = async () => {
+  const fetchMarkingJobs = useCallback(async () => {
     try {
       setLoading(true)
-      const endpoint = activeTab === 'my-requests' 
+      const endpoint = activeTab === 'my-requests'
         ? '/api/marking/my-requests'
         : '/api/marking/available-jobs'
-      
+
       const response = await fetch(endpoint)
       if (response.ok) {
         const data = await response.json()
@@ -60,7 +56,11 @@ export default function PropertyMarkingDashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
+
+  useEffect(() => {
+    fetchMarkingJobs()
+  }, [fetchMarkingJobs])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -118,7 +118,7 @@ export default function PropertyMarkingDashboard() {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div className="flex items-center gap-2">
@@ -127,7 +127,7 @@ export default function PropertyMarkingDashboard() {
               Contact: {job.contactPersonName} ({job.contactPersonPhone})
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <DollarSign className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium">
@@ -183,10 +183,10 @@ export default function PropertyMarkingDashboard() {
               View Details
             </Button>
           </Link>
-          
+
           {activeTab === 'available-jobs' && job.status === 'QUEUED' && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={() => acceptJob(job.id)}
               className="bg-green-600 hover:bg-green-700"
             >
@@ -301,7 +301,3 @@ export default function PropertyMarkingDashboard() {
     </div>
   )
 }
-
-
-
-

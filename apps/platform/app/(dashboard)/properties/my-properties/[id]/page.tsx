@@ -8,7 +8,7 @@ type Props = {
   params: { id: string };
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: `Property Details | NewCondo`,
     description: "View and manage property details",

@@ -6,7 +6,6 @@ import MarkingQueueStatus from '@/components/marking/MarkingQueueStatus';
 import { MarkingJobCard } from '@/components/marking/MarkingJobCard';
 import AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
 import { MarkingTimerCountdown } from '@/components/marking/MarkingTimerCountdown';
-import { Button } from '@newcondo/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
 import { Loader2, MapPin, Clock, CheckCircle } from 'lucide-react';
 
@@ -77,21 +76,6 @@ export default function MarkingQueuePage() {
       console.error('Error fetching availability:', error);
     }
   };
-
-  const handleAcceptJob = async (jobId: string) => {
-    try {
-      const response = await fetch(`/api/marking/jobs/${jobId}/accept`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) throw new Error('Failed to accept job');
-
-      await fetchMarkingJobs();
-    } catch (error) {
-      console.error('Error accepting job:', error);
-    }
-  };
-
 
 
   if (isLoading) {
@@ -212,7 +196,7 @@ export default function MarkingQueuePage() {
               <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium">No Queued Jobs</p>
               <p className="text-muted-foreground">
-                Available marking jobs will appear here when you're set as available
+                Available marking jobs will appear here when you&apos;re set as available
               </p>
             </div>
           ) : (
@@ -257,6 +241,7 @@ export default function MarkingQueuePage() {
             <div className="space-y-4">
               {completedJobs.map((job) => (
                 <MarkingJobCard
+                  key={job.id}
                   job={{
                     ...job,
                     propertyTitle: job.property.title,

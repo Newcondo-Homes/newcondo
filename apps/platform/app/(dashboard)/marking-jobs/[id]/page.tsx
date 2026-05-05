@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMarkingStore } from "@/store/markingStore";
 import { markingApi } from "@/lib/api/marking";
@@ -11,16 +11,13 @@ import { Separator } from "@newcondo/ui/components/separator";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import {
   Clock,
-  MapPin,
   Phone,
   User,
-  Calendar,
   AlertCircle,
   CheckCircle,
   XCircle,
   ArrowLeft,
   Eye,
-  Download,
 } from "lucide-react";
 import { format, differenceInHours } from "date-fns";
 import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
@@ -33,7 +30,7 @@ import {
   DialogTitle,
 } from "@newcondo/ui/components/dialog";
 import type { MarkingJobResponse } from "@/lib/api/marking";
-
+import Image from "next/image";
 
 const statusConfig: Record<
   string,
@@ -63,23 +60,23 @@ export default function MarkingJobDetailPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  useEffect(() => {
-    fetchJobDetails();
-  }, [jobId]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       setIsLoadingJobDetails(true);
       setError(null);
       const response = await markingApi.getJobById(jobId);
-      setSelectedJob(response as any);
-    } catch (err: any) {
+      setSelectedJob(response as unknown as Parameters<typeof setSelectedJob>[0]);
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to fetch job details";
       setError(message);
     } finally {
       setIsLoadingJobDetails(false);
     }
-  };
+  }, [jobId, setIsLoadingJobDetails, setError, setSelectedJob]);
+
+  useEffect(() => {
+    fetchJobDetails();
+  }, [fetchJobDetails]);
 
   const handleCancelJob = async () => {
     try {
@@ -87,7 +84,7 @@ export default function MarkingJobDetailPage() {
       await markingApi.cancelJob(jobId, "Cancelled by property owner");
       await fetchJobDetails();
       setCancelDialogOpen(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to cancel job";
       setError(message);
     } finally {
@@ -118,7 +115,6 @@ export default function MarkingJobDetailPage() {
     );
   }
 
-  // Cast to the richer API shape; MarkingJob in the store is the base model
   const job = selectedJob as unknown as MarkingJobResponse;
 
   const config = statusConfig[job.status] ?? statusConfig.QUEUED;
@@ -198,11 +194,14 @@ export default function MarkingJobDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {job.property?.images?.[0] && (
-                <img
-                  src={job.property.images[0].url}
-                  alt={job.property.title}
-                  className="w-full h-64 object-cover rounded-lg"
-                />
+                <div className="relative w-full h-64">
+                  <Image
+                    src={job.property.images[0].url}
+                    alt={job.property.title}
+                    fill
+                    className="object-cover rounded-lg"
+                  />
+                </div>
               )}
 
               <div className="grid grid-cols-2 gap-4">
@@ -263,11 +262,12 @@ export default function MarkingJobDetailPage() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   {completionImages.map((image: string, index: number) => (
-                    <div key={index} className="relative group">
-                      <img
+                    <div key={index} className="relative group aspect-video">
+                      <Image
                         src={image}
                         alt={`Completion ${index + 1}`}
-                        className="w-full h-48 object-cover rounded-lg"
+                        fill
+                        className="object-cover rounded-lg"
                       />
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                         <Button
@@ -372,7 +372,9 @@ export default function MarkingJobDetailPage() {
             <CardContent className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Marking Fee</p>
-                <p className="text-2xl font-bold">₦{job.markingFee.toLocaleString()}</p>
+                <p className="text-2xl font-bold">
+                  ₦{Number(job.markingFee).toLocaleString()}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Payment Status</p>

@@ -1,18 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Edit, Eye, Trash2, MapPin, Clock, DollarSign } from 'lucide-react';
+import { Plus, Edit, Eye, Trash2, MapPin, Clock } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
-import { useAuth } from '@/hooks/useAuth';
 import { useProperties, propertyKeys } from '@/hooks/useProperties';
 import { propertyApi } from '@/lib/api/properties';
 import type { PropertyResponse } from '@/lib/api/properties';
-import { PropertyStatus, PropertyStructure } from '@/types/enums';
+import { PropertyStructure } from '@/types/enums';
+import Image from 'next/image';
 
 const statusColors: Record<string, string> = {
   DRAFT: 'bg-gray-100 text-gray-800',
@@ -22,54 +22,15 @@ const statusColors: Record<string, string> = {
   UNAVAILABLE: 'bg-red-100 text-red-800',
 };
 
-interface Property {
-  id: string;
-  title: string;
-  description: string;
-  price?: number;
-  currency: string;
-  address: string;
-  city: string;
-  state: string;
-  propertyType: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  area?: string;
-  status: PropertyStatus;
-  structure: PropertyStructure;
-  totalUnits?: number;
-  availableUnits?: number;
-  isAvailable: boolean;
-  boundaryVerified: boolean;
-  images: Array<{
-    id: string;
-    url: string;
-    isPrimary: boolean;
-  }>;
-  units?: Array<{
-    id: string;
-    unitNumber: string;
-    price: number;
-    bedrooms?: number;
-    bathrooms?: number;
-    isAvailable: boolean;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-}
-
-
 export default function MyListingsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { data, isLoading: loading, } = useProperties();
+  const { data, isLoading: loading } = useProperties();
   const [selectedTab, setSelectedTab] = useState('all');
 
   const properties: PropertyResponse[] = data?.properties ?? [];
 
-  // const userProperties = properties?.filter(p => p.ownerId === user?.id) || [];
-const { mutateAsync: deleteProperty } = useMutation({
+  const { mutateAsync: deleteProperty } = useMutation({
     mutationFn: (id: string) => propertyApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: propertyKeys.lists() });
@@ -166,7 +127,7 @@ const { mutateAsync: deleteProperty } = useMutation({
             {properties.length} {properties.length === 1 ? 'property' : 'properties'} listed
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => router.push('/dashboard/properties/create')}
           className="flex items-center gap-2"
         >
@@ -203,7 +164,7 @@ const { mutateAsync: deleteProperty } = useMutation({
                   {selectedTab === 'all' ? 'No properties listed yet' : `No ${selectedTab} properties`}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  {selectedTab === 'all' 
+                  {selectedTab === 'all'
                     ? 'Start by creating your first property listing'
                     : `You don't have any ${selectedTab} properties at the moment`
                   }
@@ -220,11 +181,12 @@ const { mutateAsync: deleteProperty } = useMutation({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProperties.map((property: PropertyResponse) => (
                 <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="relative">
-                    <img
+                  <div className="relative h-48">
+                    <Image
                       src={getPrimaryImage(property.images)}
                       alt={property.title}
-                      className="w-full h-48 object-cover"
+                      fill
+                      className="object-cover"
                     />
                     <div className="absolute top-3 left-3 flex gap-2">
                       <Badge className={statusColors[property.status]}>
@@ -256,7 +218,7 @@ const { mutateAsync: deleteProperty } = useMutation({
                       <p className="text-sm text-gray-600 line-clamp-2">
                         {property.description}
                       </p>
-                      
+
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-600">
                           {getPropertySummary(property)}
@@ -283,7 +245,7 @@ const { mutateAsync: deleteProperty } = useMutation({
                             <span>
                               From{' '}
                               {formatPrice(
-                                Math.min(...property.units.map(u => u.price)), 
+                                Math.min(...property.units.map(u => u.price)),
                                 property.currency
                               )} per month
                             </span>

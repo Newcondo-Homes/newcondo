@@ -15,12 +15,10 @@ import {
   Clock, 
   X,
   Eye,
-  Download,
   Upload,
   FileText,
   Scale,
   UserCheck,
-  Calendar,
   ExternalLink
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';

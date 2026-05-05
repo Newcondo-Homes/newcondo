@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useSession } from '@newcondo/auth/client';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
@@ -12,10 +12,11 @@ import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group'
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Separator } from '@newcondo/ui/components/separator';
-import { MapPin, User, Phone, Calendar, Clock, AlertCircle, CheckCircle, Link as LinkIcon, Building2, Share2 } from 'lucide-react';
+import { MapPin, AlertCircle, CheckCircle, Link as LinkIcon, Building2, Share2 } from 'lucide-react';
 import { toast } from '@newcondo/ui';
 
 type MarkingOption = 'SELF' | 'NEWCONDO' | 'KNOWN_PERSON' | 'ASSIGN_AGENT';
+type UrgencyLevel = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
 
 interface Property {
   id: string;
@@ -37,13 +38,12 @@ interface MarkingJobRequest {
   contactPersonPhone: string;
   accessInstructions?: string;
   preferredTime?: string;
-  urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  urgencyLevel: UrgencyLevel;
 }
 
 export default function PropertyMarkingPage() {
   const params = useParams();
   const router = useRouter();
-  const { data: session } = useSession();
   const propertyId = params.id as string;
 
   const [property, setProperty] = useState<Property | null>(null);
@@ -56,34 +56,33 @@ export default function PropertyMarkingPage() {
     contactPersonName: '',
     contactPersonPhone: '',
     accessInstructions: '',
-    urgencyLevel: 'NORMAL'
+    urgencyLevel: 'NORMAL',
   });
 
-  useEffect(() => {
-    fetchProperty();
-  }, [propertyId]);
-
-  const fetchProperty = async () => {
+  const fetchProperty = useCallback(async () => {
     try {
       const res = await fetch(`/api/properties/${propertyId}`);
       if (!res.ok) throw new Error('Failed to fetch property');
-      const data = await res.json();
+      const data = await res.json() as Property;
       setProperty(data);
-      
-      // Pre-fill contact details with owner info
-      setFormData(prev => ({
+
+      setFormData((prev) => ({
         ...prev,
         contactPersonName: data.owner.name || '',
-        contactPersonPhone: data.owner.phone || ''
+        contactPersonPhone: data.owner.phone || '',
       }));
-    } catch (error) {
-      toast.error('Error',{
+    } catch {
+      toast.error('Error', {
         description: 'Failed to load property details',
       });
     } finally {
       setLoading(false);
     }
-  };
+  }, [propertyId]);
+
+  useEffect(() => {
+    fetchProperty();
+  }, [fetchProperty]);
 
   const handleGenerateShareableLink = async () => {
     try {
@@ -94,19 +93,19 @@ export default function PropertyMarkingPage() {
           propertyId,
           contactPersonName: formData.contactPersonName,
           contactPersonPhone: formData.contactPersonPhone,
-          accessInstructions: formData.accessInstructions
-        })
+          accessInstructions: formData.accessInstructions,
+        }),
       });
 
       if (!res.ok) throw new Error('Failed to generate link');
-      const data = await res.json();
-      
+      const data = await res.json() as { shareableLink: string };
+
       setShareableLink(data.shareableLink);
-      toast.success('Link Generated',{
+      toast.success('Link Generated', {
         description: 'Share this link with your chosen marker',
       });
-    } catch (error) {
-      toast.error('Error',{
+    } catch {
+      toast.error('Error', {
         description: 'Failed to generate shareable link',
       });
     }
@@ -115,17 +114,17 @@ export default function PropertyMarkingPage() {
   const handleCopyLink = () => {
     if (shareableLink) {
       navigator.clipboard.writeText(shareableLink);
-      toast.success('Link Copied',{
-        description: 'Shareable link copied to clipboard'
+      toast.success('Link Copied', {
+        description: 'Shareable link copied to clipboard',
       });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (markingOption === 'KNOWN_PERSON' && !shareableLink) {
-      toast('Generate Link First',{
+      toast('Generate Link First', {
         description: 'Please generate a shareable link before proceeding',
       });
       return;
@@ -140,32 +139,31 @@ export default function PropertyMarkingPage() {
         body: JSON.stringify({
           propertyId,
           ...formData,
-          markingOption
-        })
+          markingOption,
+        }),
       });
 
       if (!res.ok) {
-        const error = await res.json();
+        const error = await res.json() as { message?: string };
         throw new Error(error.message || 'Failed to create marking job');
       }
 
-      const data = await res.json();
+      const data = await res.json() as { jobId: string };
 
-      // Redirect based on marking option
       if (markingOption === 'SELF') {
         router.push(`/dashboard/properties/${propertyId}/mark/complete`);
       } else if (markingOption === 'KNOWN_PERSON') {
-        toast.success('Link Generated',{
-          description: 'Share the link with your chosen marker'
+        toast.success('Link Generated', {
+          description: 'Share the link with your chosen marker',
         });
         router.push(`/dashboard/properties/${propertyId}/marking-status`);
       } else {
-        // Redirect to payment for NEWCONDO or ASSIGN_AGENT
         router.push(`/dashboard/payments/marking/${data.jobId}`);
       }
-    } catch (error: any) {
-      toast.error('Error',{
-        description: error.message || 'Failed to create marking job',
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to create marking job';
+      toast.error('Error', {
+        description: message,
       });
     } finally {
       setSubmitting(false);
@@ -189,11 +187,11 @@ export default function PropertyMarkingPage() {
     );
   }
 
-  const markingFees = {
+  const markingFees: Record<MarkingOption, number> = {
     SELF: 0,
     NEWCONDO: 25000,
     KNOWN_PERSON: 0,
-    ASSIGN_AGENT: 20000
+    ASSIGN_AGENT: 20000,
   };
 
   return (
@@ -216,11 +214,14 @@ export default function PropertyMarkingPage() {
         <CardContent>
           <div className="flex gap-4">
             {property.images[0] && (
-              <img
-                src={property.images[0].url}
-                alt={property.title}
-                className="w-24 h-24 object-cover rounded-lg"
-              />
+              <div className="relative w-24 h-24 flex-shrink-0">
+                <Image
+                  src={property.images[0].url}
+                  alt={property.title}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+              </div>
             )}
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{property.title}</h3>
@@ -247,7 +248,7 @@ export default function PropertyMarkingPage() {
               value={markingOption}
               onValueChange={(value) => {
                 setMarkingOption(value as MarkingOption);
-                setFormData(prev => ({ ...prev, markingOption: value as MarkingOption }));
+                setFormData((prev) => ({ ...prev, markingOption: value as MarkingOption }));
               }}
               className="space-y-4"
             >
@@ -258,7 +259,7 @@ export default function PropertyMarkingPage() {
                   <Label htmlFor="self" className="cursor-pointer">
                     <div className="font-semibold">Mark it Myself</div>
                     <div className="text-sm text-muted-foreground">
-                      I'll mark the property boundary myself using the interactive map
+                      I&apos;ll mark the property boundary myself using the interactive map
                     </div>
                     <Badge variant="secondary" className="mt-2">FREE</Badge>
                   </Label>
@@ -329,7 +330,9 @@ export default function PropertyMarkingPage() {
                   id="contactName"
                   placeholder="Full name"
                   value={formData.contactPersonName}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contactPersonName: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, contactPersonName: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -340,7 +343,9 @@ export default function PropertyMarkingPage() {
                   type="tel"
                   placeholder="+234 XXX XXX XXXX"
                   value={formData.contactPersonPhone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contactPersonPhone: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, contactPersonPhone: e.target.value }))
+                  }
                   required
                 />
               </div>
@@ -352,7 +357,9 @@ export default function PropertyMarkingPage() {
                 id="instructions"
                 placeholder="E.g., Use the back gate, ask for security, etc."
                 value={formData.accessInstructions}
-                onChange={(e) => setFormData(prev => ({ ...prev, accessInstructions: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, accessInstructions: e.target.value }))
+                }
                 rows={3}
               />
             </div>
@@ -364,7 +371,12 @@ export default function PropertyMarkingPage() {
                   id="urgency"
                   className="w-full p-2 border rounded-md"
                   value={formData.urgencyLevel}
-                  onChange={(e) => setFormData(prev => ({ ...prev, urgencyLevel: e.target.value as any }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      urgencyLevel: e.target.value as UrgencyLevel,
+                    }))
+                  }
                 >
                   <option value="LOW">Low - Within 1 week</option>
                   <option value="NORMAL">Normal - Within 3 days</option>
@@ -409,7 +421,8 @@ export default function PropertyMarkingPage() {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Share this link with the person who will mark your property. The link is secure and expires after use.
+                      Share this link with the person who will mark your property. The link is
+                      secure and expires after use.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -442,7 +455,8 @@ export default function PropertyMarkingPage() {
               <Alert className="mt-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs">
-                  Agent receives ₦5,000 (25%) as compensation. Payment is held until marking is verified.
+                  Agent receives ₦5,000 (25%) as compensation. Payment is held until marking is
+                  verified.
                 </AlertDescription>
               </Alert>
             )}
@@ -460,12 +474,12 @@ export default function PropertyMarkingPage() {
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="flex-1"
-          >
-            {submitting ? 'Processing...' : markingOption === 'SELF' ? 'Start Marking' : 'Proceed to Payment'}
+          <Button type="submit" disabled={submitting} className="flex-1">
+            {submitting
+              ? 'Processing...'
+              : markingOption === 'SELF'
+                ? 'Start Marking'
+                : 'Proceed to Payment'}
           </Button>
         </div>
       </form>

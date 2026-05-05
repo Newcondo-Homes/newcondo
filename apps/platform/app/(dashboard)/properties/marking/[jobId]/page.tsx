@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useState, useEffect, useCallback } from 'react'
+import { useParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui'
 import { Button } from '@newcondo/ui'
 import { Badge } from '@newcondo/ui'
 import { Separator } from '@newcondo/ui'
@@ -13,28 +13,27 @@ import {
     MapPin,
     User,
     Phone,
-    Clock,
-    DollarSign,
     AlertCircle,
-    CheckCircle2,
-    Upload,
     Camera,
-    MessageSquare,
-    Calendar,
     ArrowLeft,
     Navigation,
-    FileText
 } from 'lucide-react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { GoogleMap, useLoadScript, Marker } from '@react-google-maps/api'
+import Image from 'next/image'
+
+interface PropertyCoordinates {
+    lat: number
+    lng: number
+}
 
 interface MarkingJobDetail {
     id: string
     propertyId: string
     propertyTitle: string
     propertyAddress: string
-    propertyCoordinates?: { lat: number; lng: number }
+    propertyCoordinates?: PropertyCoordinates
     contactPersonName: string
     contactPersonPhone: string
     accessInstructions?: string
@@ -54,10 +53,15 @@ interface MarkingJobDetail {
     completedAt?: string
     completionNotes?: string
     completionImages: string[]
-    boundaryData?: any
+    boundaryData?: Record<string, unknown>
     timeSlotExpiry?: string
     createdAt: string
     updatedAt: string
+}
+
+interface StatusUpdatePayload {
+    status: string
+    completionNotes?: string
 }
 
 const mapContainerStyle = {
@@ -67,7 +71,6 @@ const mapContainerStyle = {
 
 export default function MarkingJobDetails() {
     const params = useParams()
-    const router = useRouter()
     const { user } = useAuth()
     const jobId = params.jobId as string
 
@@ -82,11 +85,7 @@ export default function MarkingJobDetails() {
         libraries: ['places']
     })
 
-    useEffect(() => {
-        fetchJobDetails()
-    }, [jobId])
-
-    const fetchJobDetails = async () => {
+    const fetchJobDetails = useCallback(async () => {
         try {
             setLoading(true)
             const response = await fetch(`/api/marking/jobs/${jobId}`)
@@ -100,9 +99,13 @@ export default function MarkingJobDetails() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [jobId])
 
-    const updateJobStatus = async (newStatus: string, additionalData?: any) => {
+    useEffect(() => {
+        fetchJobDetails()
+    }, [fetchJobDetails])
+
+    const updateJobStatus = async (newStatus: string, additionalData?: StatusUpdatePayload) => {
         try {
             setUpdating(true)
             const response = await fetch(`/api/marking/jobs/${jobId}/status`, {
@@ -131,7 +134,7 @@ export default function MarkingJobDetails() {
     }
 
     const handleCompleteJob = () => {
-        updateJobStatus('COMPLETED', { completionNotes })
+        updateJobStatus('COMPLETED', { status: 'COMPLETED', completionNotes })
     }
 
     const handleCancelJob = () => {
@@ -188,7 +191,6 @@ export default function MarkingJobDetails() {
     }
 
     const isAssignedAgent = job?.assignedAgentId === user?.id
-    const isRequester = job?.requestedBy === user?.id
     const canManageJob = isAssignedAgent || user?.role === 'ADMIN'
 
     if (loading) {
@@ -209,7 +211,7 @@ export default function MarkingJobDetails() {
                 <div className="text-center py-12">
                     <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Job Not Found</h2>
-                    <p className="text-gray-600">The marking job you're looking for doesn't exist.</p>
+                    <p className="text-gray-600">The marking job you&apos;re looking for doesn&apos;t exist.</p>
                     <Link href="/dashboard/properties/marking">
                         <Button className="mt-4">Back to Dashboard</Button>
                     </Link>
@@ -331,7 +333,7 @@ export default function MarkingJobDetails() {
                     </Card>
 
                     {/* Job Progress */}
-                    {job.status === 'IN_PROGRESS' || job.status === 'COMPLETED' ? (
+                    {(job.status === 'IN_PROGRESS' || job.status === 'COMPLETED') && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
@@ -380,13 +382,18 @@ export default function MarkingJobDetails() {
                                         <h4 className="font-medium text-sm text-gray-700 mb-2">Completion Photos</h4>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                                             {job.completionImages.map((imageUrl, index) => (
-                                                <img
+                                                <div
                                                     key={index}
-                                                    src={imageUrl}
-                                                    alt={`Completion photo ${index + 1}`}
-                                                    className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90"
+                                                    className="relative w-full h-32 cursor-pointer hover:opacity-90"
                                                     onClick={() => window.open(imageUrl, '_blank')}
-                                                />
+                                                >
+                                                    <Image
+                                                        src={imageUrl}
+                                                        alt={`Completion photo ${index + 1}`}
+                                                        fill
+                                                        className="object-cover rounded-lg"
+                                                    />
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -400,7 +407,7 @@ export default function MarkingJobDetails() {
                                 )}
                             </CardContent>
                         </Card>
-                    ) : null}
+                    )}
                 </div>
 
                 {/* Sidebar */}

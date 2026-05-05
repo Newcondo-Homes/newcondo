@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,6 @@ import { getLocationSettings, updateLocationSettings } from "@/lib/api/queue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Label } from "@newcondo/ui/components/label";
-import { Input } from "@newcondo/ui/components/input";
 import { Switch } from "@newcondo/ui/components/switch";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Badge } from "@newcondo/ui/components/badge";
@@ -23,14 +22,14 @@ import {
   Navigation,
   Radius,
 } from "lucide-react";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import { Slider } from "@newcondo/ui/components/slider";
 
 // Nigerian States and Cities
 const NIGERIAN_LOCATIONS = {
   Lagos: ["Ikeja", "Victoria Island", "Lekki", "Surulere", "Yaba", "Ikoyi"],
   Abuja: ["Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa"],
-  "Rivers": ["Port Harcourt", "Obio-Akpor", "Eleme"],
+  Rivers: ["Port Harcourt", "Obio-Akpor", "Eleme"],
   Oyo: ["Ibadan", "Ogbomoso", "Oyo"],
   Kano: ["Kano Municipal", "Fagge", "Dala"],
 };
@@ -54,7 +53,7 @@ export default function AgentLocationSettingsPage() {
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const {
-    register,
+    // fix line 57: 'register' was destructured but never used — removed
     handleSubmit,
     watch,
     setValue,
@@ -73,26 +72,23 @@ export default function AgentLocationSettingsPage() {
   const serviceAreas = watch("serviceAreas");
   const maxRadius = watch("maxRadius");
 
-  useEffect(() => {
-    fetchLocationSettings();
-    getCurrentLocation();
-  }, []);
-
-  const fetchLocationSettings = async () => {
+  // fix line 90: typed the caught error properly instead of `any`
+  const fetchLocationSettings = useCallback(async () => {
     try {
       setIsLoading(true);
       const settings = await getLocationSettings();
-      
+
       setValue("isAvailableForMarking", settings.isAvailableForMarking);
       setValue("serviceAreas", settings.serviceAreas || []);
       setValue("maxRadius", settings.maxRadius || 50);
       setValue("notificationsEnabled", settings.notificationsEnabled);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch settings");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch settings";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setValue]);
 
   const getCurrentLocation = () => {
     if ("geolocation" in navigator) {
@@ -103,12 +99,18 @@ export default function AgentLocationSettingsPage() {
             lng: position.coords.longitude,
           });
         },
-        (error) => {
-          console.error("Error getting location:", error);
+        (err) => {
+          console.error("Error getting location:", err);
         }
       );
     }
   };
+
+  // fix line 79: fetchLocationSettings added to dependency array (now stable via useCallback)
+  useEffect(() => {
+    fetchLocationSettings();
+    getCurrentLocation();
+  }, [fetchLocationSettings]);
 
   const handleAreaToggle = (area: string) => {
     const current = serviceAreas || [];
@@ -122,6 +124,7 @@ export default function AgentLocationSettingsPage() {
     }
   };
 
+  // fix line 148: typed the caught error properly instead of `any`
   const onSubmit = async (data: LocationFormData) => {
     try {
       setIsSaving(true);
@@ -145,8 +148,9 @@ export default function AgentLocationSettingsPage() {
 
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      setError(err.message || "Failed to save settings");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to save settings";
+      setError(message);
     } finally {
       setIsSaving(false);
     }
@@ -214,7 +218,8 @@ export default function AgentLocationSettingsPage() {
                 <p className="text-sm text-gray-500">
                   {isAvailable
                     ? "You will receive notifications for new jobs in your service areas"
-                    : "You won't receive any job notifications"}
+                    // fix line 334: escaped apostrophe
+                    : "You won&apos;t receive any job notifications"}
                 </p>
               </div>
               <Switch
@@ -331,7 +336,7 @@ export default function AgentLocationSettingsPage() {
               Maximum Travel Distance
             </CardTitle>
             <CardDescription>
-              Set the maximum distance you're willing to travel for jobs
+              Set the maximum distance you&apos;re willing to travel for jobs
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -360,7 +365,7 @@ export default function AgentLocationSettingsPage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Jobs within {maxRadius} km of your location will be shown to you. 
+                Jobs within {maxRadius} km of your location will be shown to you.
                 Adjust this based on your preferred travel distance.
               </AlertDescription>
             </Alert>
@@ -395,7 +400,7 @@ export default function AgentLocationSettingsPage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                You'll receive notifications via email, SMS, and in-app alerts when new jobs match your preferences.
+                You&apos;ll receive notifications via email, SMS, and in-app alerts when new jobs match your preferences.
               </AlertDescription>
             </Alert>
           </CardContent>

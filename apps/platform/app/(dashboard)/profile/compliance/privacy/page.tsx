@@ -6,8 +6,6 @@ import { prisma } from "@newcondo/db";
 import { notFound } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui";
 import { DocumentTemplateViewer } from "@/components/legal/DocumentTemplateViewer";
-import LegalAgreementModal  from "@/components/legal/LegalAgreementModal";
-import { ComplianceStatus } from "@/components/legal/ComplianceStatus";
 import { Shield, Lock, Eye, UserCheck } from "lucide-react";
 import { PrivacyPageClient } from "@/components/legal/PrivacyPageClient";
 

@@ -6,19 +6,16 @@ import MarkingQueueStatus from '@/components/marking/MarkingQueueStatus';
 import { MarkingJobCard } from '@/components/marking/MarkingJobCard';
 import AgentAvailabilityToggle from '@/components/marking/AgentAvailabilityToggle';
 import { MarkingTimerCountdown } from '@/components/marking/MarkingTimerCountdown';
-import { Button } from '@newcondo/ui';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
 import { Loader2, MapPin, Clock, CheckCircle } from 'lucide-react';
 
 interface MarkingJob {
   id: string;
   propertyId: string;
-  // FIX: flat fields instead of nested property object
   propertyTitle: string;
   propertyAddress: string;
   propertyImages?: string[];
   status: 'QUEUED' | 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'EXPIRED';
-  // FIX: paymentStatus was missing — required by MarkingJobCard
   paymentStatus: 'PENDING' | 'SUCCESS' | 'HELD' | 'RELEASED';
   queuePosition?: number;
   timeSlotExpiry?: string;
@@ -125,8 +122,7 @@ export default function MarkingQueuePage() {
               userId={user.id}
               initialAvailability={isAvailable}
               serviceAreas={
-                // agentServiceAreas comes from the user object if your session includes it
-                (user as any).agentServiceAreas ?? []
+                user.agentServiceAreas ?? []
               }
             />
           )}
@@ -221,7 +217,7 @@ export default function MarkingQueuePage() {
               <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-lg font-medium">No Queued Jobs</p>
               <p className="text-muted-foreground">
-                Available marking jobs will appear here when you're set as available
+                Available marking jobs will appear here when you&apos;re set as available
               </p>
             </div>
           ) : (

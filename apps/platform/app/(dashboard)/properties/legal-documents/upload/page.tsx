@@ -1,24 +1,18 @@
-// apps/platform/app/(dashboard)/properties/legal-documents/upload/page.tsx
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
 import { Label } from '@newcondo/ui/components/label';
-import { Textarea } from '@newcondo/ui/components/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
-import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
 import {
   Upload,
   FileText,
   X,
-  CheckCircle,
-  AlertCircle,
   Image as ImageIcon,
   Shield,
   Info,
@@ -27,10 +21,10 @@ import {
 import { toast } from 'sonner';
 import { UploadButton } from '@uploadthing/react';
 import type { OurFileRouter } from '@/lib/uploadthing';
-import { useAuthStore } from '@/store/authStore';
 import { usePropertyStore } from '@/store/propertyStore';
 import api from '@/lib/api/client';
 import { DocumentType as PrismaDocumentType } from '@/types/enums';
+import { useSession } from '@newcondo/auth/client';
 
 function getFileIcon(mimeType: string, className = 'h-5 w-5'): React.ReactNode {
   if (mimeType.startsWith('image/')) {
@@ -39,12 +33,10 @@ function getFileIcon(mimeType: string, className = 'h-5 w-5'): React.ReactNode {
   return <FileText className={className} />;
 }
 
-
 interface DocumentTypeConfig {
   key: PrismaDocumentType;
   name: string;
   description: string;
-  // FIX: instructions was used in JSX but never declared — add it as optional
   instructions?: string[];
   required: boolean;
   acceptedFormats: string[];
@@ -62,28 +54,7 @@ interface UploadedFile {
   type: string;
 }
 
-interface DocumentType {
-  key: PrismaDocumentType;
-  name: string;
-  description: string;
-  required: boolean;
-  acceptedFormats: string[];
-  maxSizeBytes: number;
-  requiresUpload: boolean;
-  requiresNumber: boolean;
-  hasExpiry: boolean;
-  adminVerificationRequired: boolean;
-}
-
-interface UploadedFile {
-  url: string;
-  name: string;
-  size: number;
-  type: string;
-}
-
-
-const DOCUMENT_TYPES: DocumentType[] = [
+const DOCUMENT_TYPES: DocumentTypeConfig[] = [
   {
     key: PrismaDocumentType.NIN,
     name: 'National Identification Number (NIN)',
@@ -158,8 +129,8 @@ const DOCUMENT_TYPES: DocumentType[] = [
   },
   {
     key: PrismaDocumentType.DRIVERS_LICENSE,
-    name: 'Driver\'s License',
-    description: 'Your Driver\'s License for identity verification.',
+    name: "Driver's License",
+    description: "Your Driver's License for identity verification.",
     required: false,
     acceptedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
     maxSizeBytes: 5 * 1024 * 1024,
@@ -170,8 +141,8 @@ const DOCUMENT_TYPES: DocumentType[] = [
   },
   {
     key: PrismaDocumentType.VOTERS_CARD,
-    name: 'Voter\'s Card',
-    description: 'Your Permanent Voter\'s Card (PVC) for identity verification.',
+    name: "Voter's Card",
+    description: "Your Permanent Voter's Card (PVC) for identity verification.",
     required: false,
     acceptedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
     maxSizeBytes: 5 * 1024 * 1024,
@@ -211,8 +182,9 @@ export default function UploadLegalDocumentPage() {
   const searchParams = useSearchParams();
   const propertyId = searchParams.get('propertyId');
 
-  //TODO: you may use the useAuth hook to get the user here
-  const user = useAuthStore(state => state.user);
+  const { data: session } = useSession();
+
+  const user = session?.user;
   const { properties, fetchProperties } = usePropertyStore();
   const selectedProperty = properties?.find((p) => p.id === propertyId) ?? null;
 
@@ -222,17 +194,21 @@ export default function UploadLegalDocumentPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  useEffect(() => {
+  // ✅ Wrap in useCallback and include all dependencies
+  const loadProperties = useCallback(() => {
     if (propertyId && !properties?.length) {
       fetchProperties?.();
     }
-  }, [propertyId]);
+  }, [propertyId, properties?.length, fetchProperties]);
+
+  useEffect(() => {
+    loadProperties();
+  }, [loadProperties]);
 
   const handleDocumentTypeChange = (value: string) => {
     const docType = DOCUMENT_TYPES.find(d => d.key === value);
     if (docType) {
       setSelectedDocType(docType);
-      // Reset form on type change
       setDocumentNumber('');
       setUploadedFile(null);
     }
@@ -252,7 +228,8 @@ export default function UploadLegalDocumentPage() {
     }
   };
 
-  const handleUploadError = (error: any) => {
+  // ✅ Replace any with Error type
+  const handleUploadError = (error: Error) => {
     setIsUploading(false);
     console.error('Upload Error:', error);
     toast.error('File upload failed. Please try again.');
@@ -290,7 +267,6 @@ export default function UploadLegalDocumentPage() {
       await api.post('/properties/legal/documents', payload);
       toast.success('Document submitted for verification!');
       router.push(`/dashboard/profile/verification`);
-
     } catch (err: unknown) {
       console.error('Submission error:', err);
       const message = err instanceof Error ? err.message : 'Failed to submit document. Please try again.';
@@ -342,7 +318,6 @@ export default function UploadLegalDocumentPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {DOCUMENT_TYPES.filter(doc => {
-                    // Filter based on user type and context (property upload)
                     if (doc.key === PrismaDocumentType.OWNERSHIP_DOCUMENT) {
                       return userCanUploadOwnership;
                     }
@@ -369,11 +344,13 @@ export default function UploadLegalDocumentPage() {
                   <AlertTitle>{selectedDocType.name}</AlertTitle>
                   <AlertDescription>
                     <p>{selectedDocType.description}</p>
-                    <ul className="list-disc list-inside mt-2 text-sm text-gray-600">
-                      {selectedDocType.instructions?.map((instruction, index) => (
-                        <li key={index}>{instruction}</li>
-                      ))}
-                    </ul>
+                    {selectedDocType.instructions && selectedDocType.instructions.length > 0 && (
+                      <ul className="list-disc list-inside mt-2 text-sm text-gray-600">
+                        {selectedDocType.instructions.map((instruction, index) => (
+                          <li key={index}>{instruction}</li>
+                        ))}
+                      </ul>
+                    )}
                   </AlertDescription>
                 </Alert>
 
@@ -459,7 +436,7 @@ export default function UploadLegalDocumentPage() {
             <Button
               type="submit"
               className="w-full"
-              disabled={!selectedDocType  || isUploading || (isUploadRequired && !uploadedFile) || (isNumberRequired && !documentNumber)}
+              disabled={!selectedDocType || isUploading || (isUploadRequired && !uploadedFile) || (isNumberRequired && !documentNumber)}
             >
               Submit for Verification
             </Button>

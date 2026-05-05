@@ -179,7 +179,7 @@ export default function CreatePropertyPage() {
 
       resetForm();
       router.push("/dashboard/properties/my-listings");
-    } catch (error) {
+    } catch {
       toast.error("Error", {
         description: "Failed to submit property. Please try again.",
       });
@@ -221,7 +221,7 @@ export default function CreatePropertyPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Image className="w-5 h-5" />
+                {/* <Image className="w-5 h-5" /> */}
                 Upload Property Images
               </CardTitle>
             </CardHeader>
@@ -303,7 +303,7 @@ export default function CreatePropertyPage() {
 
 // Additional components for image upload and review
 function PropertyImageUpload() {
-  const { formData, updateFormData } = usePropertyListingStore();
+  const { formData } = usePropertyListingStore();
 
   // Implementation for image upload component
   return (

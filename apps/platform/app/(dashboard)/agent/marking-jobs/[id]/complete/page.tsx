@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { queueApi } from "@/lib/api/queue";
@@ -32,12 +33,21 @@ const completionSchema = z.object({
 
 type CompletionFormData = z.infer<typeof completionSchema>;
 
+// fix line 40: typed job instead of `any`
+interface JobDetails {
+  property: {
+    title: string;
+    address: string;
+    city: string;
+  };
+}
+
 export default function AgentJobCompletePage() {
   const params = useParams();
   const router = useRouter();
   const jobId = params.id as string;
 
-  const [job, setJob] = useState<any>(null);
+  const [job, setJob] = useState<JobDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
@@ -60,26 +70,29 @@ export default function AgentJobCompletePage() {
 
   const completionNotes = watch("completionNotes");
 
-  useEffect(() => {
-    fetchJobDetails();
-  }, [jobId]);
-
-  useEffect(() => {
-    setValue("completionImages", uploadedImages);
-  }, [uploadedImages, setValue]);
-
-  const fetchJobDetails = async () => {
+  // fix line 77: replaced `any` with typed error narrowing
+  const fetchJobDetails = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await queueApi.getJobDetails(jobId);
       setJob(response.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch job details");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch job details";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [jobId]);
+
+  // fix line 65: fetchJobDetails now stable via useCallback so it's safe in the dep array
+  useEffect(() => {
+    fetchJobDetails();
+  }, [fetchJobDetails]);
+
+  useEffect(() => {
+    setValue("completionImages", uploadedImages);
+  }, [uploadedImages, setValue]);
 
   const handleImageUpload = (urls: string[]) => {
     setUploadedImages((prev) => [...prev, ...urls]);
@@ -89,6 +102,7 @@ export default function AgentJobCompletePage() {
     setUploadedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // fix line 104: replaced `any` with typed error narrowing
   const onSubmit = async (data: CompletionFormData) => {
     try {
       setIsSubmitting(true);
@@ -101,8 +115,9 @@ export default function AgentJobCompletePage() {
       });
 
       router.push(`/agent/marking-jobs/${jobId}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to complete job");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to complete job";
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -180,15 +195,17 @@ export default function AgentJobCompletePage() {
       </div>
 
       {/* Property Info */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>{job.property.title}</CardTitle>
-          <CardDescription className="flex items-center gap-1">
-            <MapPin className="h-4 w-4" />
-            {job.property.address}, {job.property.city}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {job && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>{job.property.title}</CardTitle>
+            <CardDescription className="flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
+              {job.property.address}, {job.property.city}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Step 1: Upload Photos */}
@@ -210,8 +227,8 @@ export default function AgentJobCompletePage() {
                     const urls = res.map((file) => file.url);
                     handleImageUpload(urls);
                   }}
-                  onUploadError={(error: Error) => {
-                    setError(error.message);
+                  onUploadError={(uploadError: Error) => {
+                    setError(uploadError.message);
                   }}
                 />
                 <p className="text-sm text-gray-600 mt-2">
@@ -219,16 +236,19 @@ export default function AgentJobCompletePage() {
                 </p>
               </div>
 
-              {/* Uploaded Images */}
+              {/* fix line 227: <img> → <Image /> */}
               {uploadedImages.length > 0 && (
                 <div className="grid grid-cols-3 gap-4">
                   {uploadedImages.map((url, index) => (
                     <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Upload ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
+                      <div className="relative w-full h-32">
+                        <Image
+                          src={url}
+                          alt={`Upload ${index + 1}`}
+                          fill
+                          className="object-cover rounded-lg"
+                        />
+                      </div>
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}

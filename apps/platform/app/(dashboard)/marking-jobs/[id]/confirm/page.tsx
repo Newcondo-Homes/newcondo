@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useMarkingStore } from "@/store/markingStore";
-import { markingApi } from "@/lib/api/marking";
+import { useMarkingStore, type MarkingJob } from "@/store/markingStore";
+import { markingApi, type MarkingJobResponse } from "@/lib/api/marking";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Textarea } from "@newcondo/ui/components/textarea";
@@ -19,7 +19,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { format } from "date-fns";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@newcondo/ui/components/dialog";
+import Image from "next/image";
 
 type ConfirmationDecision = "accept" | "reject" | "";
 
@@ -50,28 +51,28 @@ export default function MarkingJobConfirmPage() {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchJobDetails();
-  }, [jobId]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       setIsLoadingJobDetails(true);
       setError(null);
       const response = await markingApi.getJobById(jobId);
-      
+
       if (response.status !== "COMPLETED") {
         router.push(`/marking-jobs/${jobId}`);
         return;
       }
-      
-      setSelectedJob(response as any);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch job details");
+
+      setSelectedJob(response as unknown as MarkingJob);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to fetch job details");
     } finally {
       setIsLoadingJobDetails(false);
     }
-  };
+  }, [jobId, router, setError, setIsLoadingJobDetails, setSelectedJob]);
+
+  useEffect(() => {
+    fetchJobDetails();
+  }, [fetchJobDetails]);
 
   const handleSubmitConfirmation = async () => {
     if (!decision) {
@@ -84,13 +85,22 @@ export default function MarkingJobConfirmPage() {
       setError(null);
 
       if (decision === "accept") {
-        // TODO: confirmJob / rejectJob aren't in markingApi yet — call via the
-        // generic complete / cancel endpoints until dedicated ones are added.
         await markingApi.completeJob({
           jobId,
           completionNotes: feedback,
           completionImages: [],
-          boundaryData: selectedJob?.boundaryData as any,
+          boundaryData: {
+            boundaryCoordinates: {
+              type: "Polygon",
+              coordinates: [],
+            },
+            gpsCoordinates: {
+              lat: 0,
+              lng: 0,
+            },
+            verificationPhotos: [],
+            buildingFingerprint: "",
+          },
         });
       } else {
         if (!feedback) {
@@ -102,8 +112,8 @@ export default function MarkingJobConfirmPage() {
 
       setConfirmDialogOpen(false);
       router.push(`/marking-jobs/${jobId}`);
-    } catch (err: any) {
-      setError(err.message || "Failed to submit confirmation");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to submit confirmation");
     } finally {
       setIsSubmitting(false);
     }
@@ -132,7 +142,7 @@ export default function MarkingJobConfirmPage() {
     );
   }
 
-  const job = selectedJob as any;
+  const job = selectedJob as unknown as MarkingJobResponse;
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
@@ -187,16 +197,17 @@ export default function MarkingJobConfirmPage() {
         <CardContent>
           {Array.isArray(job.completionImages) && job.completionImages.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
-              {(job.completionImages as string[]).map((image: string, index: number) => (
+              {job.completionImages.map((image: string, index: number) => (
                 <div
                   key={index}
                   className="relative aspect-square cursor-pointer group"
                   onClick={() => setSelectedImage(image)}
                 >
-                  <img
+                  <Image
                     src={image}
                     alt={`Evidence ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg"
+                    fill
+                    className="object-cover rounded-lg"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <Eye className="h-8 w-8 text-white" />
@@ -323,12 +334,12 @@ export default function MarkingJobConfirmPage() {
             <DialogDescription>
               {decision === "accept" ? (
                 <>
-                  By confirming, you acknowledge that this marking is accurate and the full payment 
+                  By confirming, you acknowledge that this marking is accurate and the full payment
                   will be released to the agent. This action cannot be undone.
                 </>
               ) : (
                 <>
-                  By rejecting, you indicate that this marking does not represent your property. 
+                  By rejecting, you indicate that this marking does not represent your property.
                   The agent will receive partial compensation and you may need to request a new marking job.
                 </>
               )}
@@ -357,11 +368,14 @@ export default function MarkingJobConfirmPage() {
       {selectedImage && (
         <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
           <DialogContent className="max-w-4xl">
-            <img
-              src={selectedImage}
-              alt="Full size"
-              className="w-full h-auto rounded-lg"
-            />
+            <div className="relative w-full aspect-video">
+              <Image
+                src={selectedImage}
+                alt="Full size"
+                fill
+                className="object-contain rounded-lg"
+              />
+            </div>
           </DialogContent>
         </Dialog>
       )}

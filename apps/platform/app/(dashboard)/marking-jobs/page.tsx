@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useMarkingStore, type MarkingJob } from "@/store/markingStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +33,6 @@ const urgencyConfig: Record<MarkingJob["urgencyLevel"], { label: string; color: 
 
 type UrgencyFilter = MarkingJob["urgencyLevel"] | "all";
 
-
 export default function MarkingJobsPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -50,11 +49,7 @@ export default function MarkingJobsPage() {
   const [activeTab, setActiveTab] = useState<string>("all");
   const [urgencyFilter, setUrgencyFilter] = useState<UrgencyFilter>("all");
 
-  useEffect(() => {
-    fetchMarkingJobs();
-  }, []);
-
-  const fetchMarkingJobs = async () => {
+  const fetchMarkingJobs = useCallback(async () => {
     if (!user?.id) return;
     try {
       setIsLoadingJobs(true);
@@ -66,7 +61,11 @@ export default function MarkingJobsPage() {
     } finally {
       setIsLoadingJobs(false);
     }
-  };
+  }, [user?.id, setIsLoadingJobs, setError, setMarkingJobs]);
+
+  useEffect(() => {
+    fetchMarkingJobs();
+  }, [fetchMarkingJobs]);
 
   // Apply urgency filter first, then tab filter
   const filteredJobs = markingJobs
@@ -134,9 +133,7 @@ export default function MarkingJobsPage() {
       <div className="flex items-center gap-4 mb-6">
         <Select
           value={urgencyFilter}
-          onValueChange={(value) =>
-            setUrgencyFilter(value as UrgencyFilter)
-          }
+          onValueChange={(value) => setUrgencyFilter(value as UrgencyFilter)}
         >
           <SelectTrigger className="w-[180px]">
             <Filter className="mr-2 h-4 w-4" />
@@ -170,7 +167,7 @@ export default function MarkingJobsPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="mt-6">
-          {isLoadingJobs  ? (
+          {isLoadingJobs ? (
             <div className="flex justify-center items-center py-12">
               <LoadingSpinner />
             </div>
@@ -207,9 +204,7 @@ export default function MarkingJobsPage() {
                         <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
-                            <span>
-                              Job #{job.id.slice(-6).toUpperCase()}
-                            </span>
+                            <span>Job #{job.id.slice(-6).toUpperCase()}</span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="h-4 w-4" />
@@ -228,11 +223,10 @@ export default function MarkingJobsPage() {
                             <span className="text-gray-500">Fee:</span>
                             <p className="font-medium">₦{job.markingFee.toLocaleString()}</p>
                           </div>
-                          {job.assignedAgentId  && (
+                          {job.assignedAgentId && (
                             <div>
                               <span className="text-gray-500">Assigned Agent:</span>
                               <p className="font-medium text-purple-600">Yes</p>
-                              {/* <p className="font-medium">{job.assignedAgent.name}</p> */}
                             </div>
                           )}
                           {job.queuePosition && (
@@ -243,7 +237,6 @@ export default function MarkingJobsPage() {
                           )}
                         </div>
                       </div>
-
                     </div>
                   </CardContent>
                 </Card>

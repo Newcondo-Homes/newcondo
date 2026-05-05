@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@newcondo/ui";
 import { Button } from "@newcondo/ui";
+import { useSession } from "@newcondo/auth/client";
 import { Badge } from "@newcondo/ui";
 import { Alert, AlertDescription } from "@newcondo/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui";
@@ -14,11 +15,9 @@ import { AgentPermissionForm } from "@/components/legal/AgentPermissionForm";
 import { UndertakingForm } from "@/components/legal/UndertakingForm";
 import { LegalDocumentsList } from "@/components/legal/LegalDocumentsList";
 import { ComplianceStatus } from "@/components/legal/ComplianceStatus";
-import { useAuth } from "@/hooks/useAuth";
 import { useProperty } from "@/hooks/useProperties";
 import {
   ArrowLeft,
-  FileCheck,
   AlertTriangle,
   CheckCircle,
   Clock,
@@ -29,13 +28,13 @@ import {
 
 interface LegalDocument {
   id: string;
-  documentType: string;       // ← was `type` — wrong field name
+  documentType: string;
   fileName?: string;
   fileUrl?: string;
   fileSizeBytes?: number;
   status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED";
   verificationNotes?: string;
-  isRequired: boolean;        // ← was missing
+  isRequired: boolean;
   createdAt: string;
   updatedAt: string;
   documentSide?: "FRONT" | "BACK" | "SINGLE";
@@ -53,11 +52,17 @@ interface PropertyLegal {
   lastUpdated: string;
 }
 
+
 export default function PropertyLegalPage() {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
   const propertyId = params.id as string;
+
+  const { data: session } = useSession();
+
+  const user = session?.user
+
+  if (!user) router.push('/dashboard');
 
   const { data: property, isLoading: propertyLoading } = useProperty(propertyId);
 
@@ -69,7 +74,6 @@ export default function PropertyLegalPage() {
     const fetchLegalData = async () => {
       setIsLoading(true);
       try {
-        // Mock legal data — replace with real API call
         const mockLegalData: PropertyLegal = {
           id: "legal_" + propertyId,
           propertyId,
@@ -78,7 +82,7 @@ export default function PropertyLegalPage() {
           documents: [
             {
               id: "doc1",
-              documentType: "OWNERSHIP_DOCUMENT",  // ← correct field name
+              documentType: "OWNERSHIP_DOCUMENT",
               fileName: "property_deed.pdf",
               fileUrl: "/documents/property_deed.pdf",
               status: "APPROVED",
@@ -109,9 +113,6 @@ export default function PropertyLegalPage() {
 
     if (propertyId) fetchLegalData();
   }, [propertyId]);
-
-
-
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -164,7 +165,7 @@ export default function PropertyLegalPage() {
     );
   }
 
-  // Derive user role for components that need it
+
   const userRole: "OWNER" | "AGENT" | "RENTER" =
     user?.role === "AGENT" ? "AGENT" :
       user?.role === "OWNER" ? "OWNER" : "RENTER";
@@ -210,9 +211,7 @@ export default function PropertyLegalPage() {
         <CardContent>
           <ComplianceStatus
             userRole={userRole}
-            userVerificationStatus={
-              (user as any)?.verificationStatus ?? "PENDING"
-            }
+            userVerificationStatus={user?.verificationStatus ?? "PENDING"}
             documents={legalData.documents.map((d) => ({
               id: d.id,
               documentType: d.documentType,
@@ -261,15 +260,18 @@ export default function PropertyLegalPage() {
                         <span className="text-xl">{getStatusIcon(doc.status)}</span>
                         <div>
                           <p className="font-semibold">{doc.documentType.replace(/_/g, " ")}</p>
-                          <p className="text-sm text-muted-foreground">Status: <span className={getStatusColor(doc.status)}>{doc.status}</span></p>
+                          <p className="text-sm text-muted-foreground">
+                            Status: <span className={getStatusColor(doc.status)}>{doc.status}</span>
+                          </p>
                           {doc.verificationNotes && (
                             <p className="text-xs text-red-500 mt-1">Notes: {doc.verificationNotes}</p>
                           )}
                         </div>
                       </div>
                       <div>
-                        {/* Optional: Add a button to view the document */}
-                        <Button variant="ghost" size="sm" onClick={() => window.open(doc.fileUrl, "_blank")}>View</Button>
+                        <Button variant="ghost" size="sm" onClick={() => window.open(doc.fileUrl, "_blank")}>
+                          View
+                        </Button>
                       </div>
                     </div>
                   ))
@@ -389,9 +391,8 @@ export default function PropertyLegalPage() {
                         state: property.state,
                       },
                     ]}
-                    onSubmit={async (_data) => {
-                      //TODO: 
-                      // handle consent form submission
+                    onSubmit={async () => {
+                      // TODO: handle consent form submission
                     }}
                   />
                 )}
@@ -399,9 +400,8 @@ export default function PropertyLegalPage() {
                 {user?.userType === "AGENT" && (
                   <AgentPermissionForm
                     propertyId={propertyId}
-                    onSubmit={(_data) => {
-                      // TODO:
-                      // handle permission form submission
+                    onSubmit={() => {
+                      // TODO: handle permission form submission
                     }}
                   />
                 )}

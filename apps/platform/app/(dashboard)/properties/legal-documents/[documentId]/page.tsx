@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
@@ -9,7 +9,6 @@ import { Separator } from '@newcondo/ui/components/separator';
 import {
   FileText,
   Download,
-  Edit,
   Trash2,
   AlertCircle,
   CheckCircle,
@@ -20,7 +19,6 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog';
-import { Textarea } from '@newcondo/ui/components/textarea';
 import { Label } from '@newcondo/ui/components/label';
 import { toast } from '@newcondo/ui/';
 import { DocumentStatus, DocumentType, DocumentSide } from '@/types/enums';
@@ -59,11 +57,7 @@ export default function LegalDocumentDetailsPage() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [reuploadDialogOpen, setReuploadDialogOpen] = useState(false);
 
-  useEffect(() => {
-    fetchDocument();
-  }, [documentId]);
-
-  const fetchDocument = async () => {
+  const fetchDocument = useCallback(async () => {
     try {
       const response = await fetch(`/api/legal-documents/${documentId}`, {
         headers: {
@@ -77,13 +71,17 @@ export default function LegalDocumentDetailsPage() {
 
       const data = await response.json();
       setDocData(data.document);
-    } catch (error) {
-      console.error('Error fetching document:', error);
+    } catch (err: unknown) {
+      console.error('Error fetching document:', err);
       setError('Failed to load document details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [documentId]);
+
+  useEffect(() => {
+    fetchDocument();
+  }, [fetchDocument]);
 
   const handleDelete = async () => {
     setDeleteLoading(true);
@@ -104,9 +102,9 @@ export default function LegalDocumentDetailsPage() {
       });
 
       router.push('/dashboard/properties/legal-documents');
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      toast.error("Error",{
+    } catch (err: unknown) {
+      console.error('Error deleting document:', err);
+      toast.error("Error", {
         description: "Failed to delete document. Please try again.",
       });
     } finally {
@@ -130,9 +128,9 @@ export default function LegalDocumentDetailsPage() {
       a.click();
       window.URL.revokeObjectURL(url);
       window.document.body.removeChild(a);
-    } catch (error) {
-      console.error('Error downloading document:', error);
-      toast.error("Download Failed",{
+    } catch (err: unknown) {
+      console.error('Error downloading document:', err);
+      toast.error("Download Failed", {
         description: "Failed to download document. Please try again.",
       });
     }
@@ -244,7 +242,6 @@ export default function LegalDocumentDetailsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Document Number */}
               {docData.documentNumber && (
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">
@@ -254,7 +251,6 @@ export default function LegalDocumentDetailsPage() {
                 </div>
               )}
 
-              {/* File Information */}
               {docData.fileName && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -274,7 +270,6 @@ export default function LegalDocumentDetailsPage() {
                 </div>
               )}
 
-              {/* Document Side & Page */}
               <div className="grid grid-cols-2 gap-4">
                 {docData.documentSide && (
                   <div>
@@ -294,7 +289,6 @@ export default function LegalDocumentDetailsPage() {
                 )}
               </div>
 
-              {/* Timestamps */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">
@@ -310,7 +304,6 @@ export default function LegalDocumentDetailsPage() {
                 </div>
               </div>
 
-              {/* Expiration */}
               {docData.expiresAt && (
                 <div>
                   <Label className="text-sm font-medium text-muted-foreground">
@@ -322,7 +315,6 @@ export default function LegalDocumentDetailsPage() {
             </CardContent>
           </Card>
 
-          {/* Verification Notes */}
           {docData.verificationNotes && (
             <Card>
               <CardHeader>
@@ -339,7 +331,6 @@ export default function LegalDocumentDetailsPage() {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Actions Card */}
           <Card>
             <CardHeader>
               <CardTitle>Actions</CardTitle>
@@ -390,7 +381,6 @@ export default function LegalDocumentDetailsPage() {
             </CardContent>
           </Card>
 
-          {/* Status Info */}
           <Card>
             <CardHeader>
               <CardTitle>Document Status</CardTitle>

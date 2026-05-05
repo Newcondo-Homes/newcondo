@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@newcondo/ui/components/button";
@@ -66,11 +66,7 @@ export default function VerifyMarkingPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMarkingJob();
-  }, [propertyId]);
-
-  const fetchMarkingJob = async () => {
+  const fetchMarkingJob = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(
@@ -83,15 +79,19 @@ export default function VerifyMarkingPage() {
 
       const data = await response.json();
       setJob(data.job);
-    } catch (error) {
-      toast.error("Error",{
+    } catch {
+      toast.error("Error", {
         description: "Failed to load marking job details",
       });
       router.push(`/properties/my-listings`);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [propertyId, router]);
+
+  useEffect(() => {
+    fetchMarkingJob();
+  }, [fetchMarkingJob]);
 
   const handleConfirmMarking = async () => {
     if (!job) return;
@@ -107,13 +107,13 @@ export default function VerifyMarkingPage() {
         throw new Error("Failed to confirm marking");
       }
 
-      toast.success("Success",{
+      toast.success("Success", {
         description: "Property marking confirmed successfully",
       });
 
       router.push(`/properties/my-listings/${propertyId}`);
-    } catch (error) {
-      toast.error("Error",{
+    } catch {
+      toast.error("Error", {
         description: "Failed to confirm marking",
       });
     } finally {
@@ -123,7 +123,7 @@ export default function VerifyMarkingPage() {
 
   const handleRejectMarking = async () => {
     if (!job || !rejectionReason.trim()) {
-      toast.error("Error",{
+      toast.error("Error", {
         description: "Please provide a reason for rejection",
       });
       return;
@@ -141,13 +141,13 @@ export default function VerifyMarkingPage() {
         throw new Error("Failed to reject marking");
       }
 
-      toast.error("Marking Rejected",{
+      toast.error("Marking Rejected", {
         description: "The agent has been notified. A new marking job will be created.",
       });
 
       router.push(`/properties/my-listings/${propertyId}`);
-    } catch (error) {
-      toast.error("Error",{
+    } catch {
+      toast.error("Error", {
         description: "Failed to reject marking",
       });
     } finally {
@@ -226,7 +226,7 @@ export default function VerifyMarkingPage() {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             The confirmation deadline has passed. The agent has received partial
-            payment. You'll need to create a new marking job if you want to remark
+            payment. You&apos;ll need to create a new marking job if you want to remark
             this property.
           </AlertDescription>
         </Alert>
@@ -380,7 +380,6 @@ export default function VerifyMarkingPage() {
 
                 <Separator />
 
-                {/* Map placeholder - integrate with Google Maps */}
                 <div className="w-full h-[400px] bg-muted rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <Map className="h-12 w-12 mx-auto mb-2 text-muted-foreground" />
@@ -442,9 +441,7 @@ export default function VerifyMarkingPage() {
               </Button>
 
               <Button
-                onClick={() => {
-                  // Show rejection form
-                }}
+                onClick={() => { }}
                 disabled={isSubmitting}
                 variant="destructive"
                 className="w-full"

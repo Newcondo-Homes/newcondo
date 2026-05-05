@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Badge } from "@newcondo/ui/components/badge";
@@ -9,7 +9,8 @@ import { Skeleton } from "@newcondo/ui/components/skeleton";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Input } from "@newcondo/ui/components/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@newcondo/ui/components/select";
-import { Calendar, MapPin, DollarSign, CheckCircle, XCircle, Clock, Search, Filter } from "lucide-react";
+// fix line 12: removed unused Filter
+import { Calendar, MapPin, DollarSign, CheckCircle, XCircle, Clock, Search } from "lucide-react";
 import { format } from "date-fns";
 
 interface HistoricalJob {
@@ -55,15 +56,7 @@ export default function MarkingHistoryPage() {
     averageCompletionTime: 0,
   });
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  useEffect(() => {
-    applyFilters();
-  }, [jobs, filters]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     try {
       const response = await fetch("/api/marking/history", {
         headers: {
@@ -82,9 +75,11 @@ export default function MarkingHistoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const applyFilters = () => {
+  // fix line 64: applyFilters wrapped in useCallback with its dependencies so it's
+  // stable and safe to include in the useEffect dep array
+  const applyFilters = useCallback(() => {
     let filtered = [...jobs];
 
     // Status filter
@@ -126,7 +121,15 @@ export default function MarkingHistoryPage() {
     }
 
     setFilteredJobs(filtered);
-  };
+  }, [jobs, filters]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -376,33 +379,3 @@ export default function MarkingHistoryPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-// import { Suspense } from "react";
-// import { Metadata } from "next";
-// import CommissionsLoading from "../../agent/commissions/loading";
-// import MarkingServiceHistory from "@/components/marking/MarkingServiceHistory";
-
-// export const metadata: Metadata = {
-//   title: "Marking Service History | NewCondo",
-//   description: "View your property marking service history and status",
-// };
-
-// export default function MarkingHistoryPage() {
-//   return (
-//     <div className="container mx-auto p-6">
-//       <Suspense fallback={<CommissionsLoading />}>
-//         <MarkingServiceHistory />
-//       </Suspense>
-//     </div>
-//   );
-// }

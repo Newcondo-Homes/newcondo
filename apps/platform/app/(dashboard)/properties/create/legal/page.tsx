@@ -257,7 +257,7 @@ export default function PropertyCreateLegalPage() {
                     It handles its own file upload internally. We listen via onSubmit. */}
                 <ConsentDocumentForm
                   properties={[]}          // pass real properties array if available
-                  onSubmit={async (data) => {
+                  onSubmit={async () => {
                     // data includes the form fields; treat submission as consent provided
                     setUploadedDocs((prev) => ({
                       ...prev,
@@ -285,7 +285,7 @@ export default function PropertyCreateLegalPage() {
                     It handles document upload internally via UploadDropzone. */}
                 <AgentPermissionForm
                   propertyId=""            // pass real propertyId if available
-                  onSubmit={(data) => {
+                  onSubmit={() => {
                     setUploadedDocs((prev) => ({
                       ...prev,
                       agentPermissionSubmitted: true,

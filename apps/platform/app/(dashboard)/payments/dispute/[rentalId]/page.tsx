@@ -14,6 +14,7 @@ interface PageProps {
 }
 
 async function getRentalForDispute(rentalId: string, userId: string) {
+  //TODO: send this to the proper express backend
   const rental = await prisma.rental.findUnique({
     where: { id: rentalId },
     include: {
@@ -163,7 +164,7 @@ export default async function DisputePage({ params }: PageProps) {
   );
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata() {
   return {
     title: 'Submit Dispute | Newcondo',
     description: 'Submit a dispute for your rental payment',

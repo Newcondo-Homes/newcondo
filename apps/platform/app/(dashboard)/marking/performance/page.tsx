@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Progress } from '@newcondo/ui/components/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { 
   TrendingUp, 
@@ -18,7 +17,6 @@ import {
   Award,
   Target,
   Calendar,
-  DollarSign,
   Star
 } from 'lucide-react';
 

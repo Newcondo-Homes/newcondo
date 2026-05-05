@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 import { queueApi } from "@/lib/api/queue";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
@@ -12,7 +13,6 @@ import {
   MapPin,
   Phone,
   User,
-  Clock,
   AlertCircle,
   Navigation,
   ArrowLeft,
@@ -20,45 +20,73 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
-import {LoadingSpinner} from "@/components/shared/feedback/LoadingSpinner";
+import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 import { Progress } from "@newcondo/ui/components/progress";
+
+interface PropertyImage {
+  url: string;
+}
+
+interface JobDetails {
+  status: string;
+  markingFee: number;
+  urgencyLevel: string;
+  contactPersonName: string;
+  contactPersonPhone: string;
+  accessInstructions?: string;
+  preferredTime?: string;
+  timeSlotStart?: string;
+  timeSlotEnd?: string;
+  maxCompletionTime?: string;
+  assignedAt?: string;
+  createdAt: string;
+  property: {
+    title: string;
+    address: string;
+    city: string;
+    state: string;
+    images: PropertyImage[];
+  };
+}
 
 export default function AgentJobDetailPage() {
   const params = useParams();
   const router = useRouter();
   const jobId = params.id as string;
 
-  const [job, setJob] = useState<any>(null);
+  const [job, setJob] = useState<JobDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchJobDetails();
-    
-    // Poll for updates
-    const interval = setInterval(fetchJobDetails, 30000);
-    return () => clearInterval(interval);
-  }, [jobId]);
-
-  const fetchJobDetails = async () => {
+  const fetchJobDetails = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await queueApi.getJobDetails(jobId);
       setJob(response.data);
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch job details");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to fetch job details";
+      setError(message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [jobId]);
+
+  useEffect(() => {
+    fetchJobDetails();
+
+    // Poll for updates
+    const interval = setInterval(fetchJobDetails, 30000);
+    return () => clearInterval(interval);
+  }, [fetchJobDetails]);
 
   const handleStartJob = async () => {
     try {
       await queueApi.startJob(jobId);
       router.push(`/agent/marking-jobs/${jobId}/complete`);
-    } catch (err: any) {
-      setError(err.message || "Failed to start job");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to start job";
+      setError(message);
     }
   };
 
@@ -166,16 +194,18 @@ export default function AgentJobDetailPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Property Images */}
+              {/* fix lines 172 & 173: typed image param, replaced <img> with <Image /> */}
               {job.property.images && job.property.images.length > 0 && (
                 <div className="grid grid-cols-2 gap-3">
-                  {job.property.images.slice(0, 4).map((image: any, index: number) => (
-                    <img
-                      key={index}
-                      src={image.url}
-                      alt={`Property ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg"
-                    />
+                  {job.property.images.slice(0, 4).map((image: PropertyImage, index: number) => (
+                    <div key={index} className="relative w-full h-48">
+                      <Image
+                        src={image.url}
+                        alt={`Property ${index + 1}`}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    </div>
                   ))}
                 </div>
               )}
@@ -265,7 +295,7 @@ export default function AgentJobDetailPage() {
               <Alert className="mt-4">
                 <ImageIcon className="h-4 w-4" />
                 <AlertDescription>
-                  Take at least 5 clear photos showing different angles of the property. 
+                  Take at least 5 clear photos showing different angles of the property.
                   This helps the property owner verify the marking.
                 </AlertDescription>
               </Alert>

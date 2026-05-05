@@ -114,7 +114,7 @@ export default async function CompleteMarkingJobPage({ params }: PageProps) {
               <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
               <h2 className="mt-4 text-xl font-semibold">Job Not Found</h2>
               <p className="mt-2 text-muted-foreground">
-                The marking job you're looking for doesn't exist.
+                The marking job you&apos;re looking for doesn&apos;t exist.
               </p>
             </>
           )}

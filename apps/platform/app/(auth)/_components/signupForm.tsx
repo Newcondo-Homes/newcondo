@@ -8,9 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui"
 import { Input } from "@newcondo/ui"
 import { Label } from "@newcondo/ui"
 import { useRouter } from "next/navigation";
-// import { signIn } from "@newcondo/auth"
 import { signIn } from "@newcondo/auth/client"
 import { Loader } from "lucide-react";
+import Link from "next/link";
 
 export function SignUpForm({
   className,
@@ -151,9 +151,9 @@ export function SignUpForm({
               </div>
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="/login" className="underline underline-offset-4">
+                <Link href="/login" className="underline underline-offset-4">
                   Login here
-                </a>
+                </Link>
               </div>
             </div>
           </form>

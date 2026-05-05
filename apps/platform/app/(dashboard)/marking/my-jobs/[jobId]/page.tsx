@@ -22,6 +22,9 @@ interface PageProps {
 
 async function getMarkingJob(jobId: string, userId: string) {
   try {
+
+    //TODO: Remember to remove this prisma call from here and wrap it behing
+    // and express server endpoint so that the database connection is utilized properly
     const job = await prisma.propertyMarkingJob.findUnique({
       where: { id: jobId },
       include: {
@@ -130,7 +133,7 @@ export default async function MarkingJobDetailsPage({ params }: PageProps) {
           <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
           <h2 className="mt-4 text-xl font-semibold">Job Not Found</h2>
           <p className="mt-2 text-muted-foreground">
-            The marking job you're looking for doesn't exist or you don't have
+            The marking job you&apos;re looking for doesn&apos;t exist or you don&apos;t have
             permission to view it.
           </p>
         </Card>
@@ -156,14 +159,20 @@ export default async function MarkingJobDetailsPage({ params }: PageProps) {
       />
 
       <JobDetailsClient
-        job={job}
-        payment={payment}
-        currentUserId={session.user.id}
-        userRole={{
-          isRequester,
-          isAssignedAgent,
-          isPropertyOwner,
+        job={{
+          ...job,
+          markingFee: job.markingFee.toNumber(),
+          assignedAgent: job.assignedAgent ? {
+            ...job.assignedAgent,
+            agentReliabilityScore: job.assignedAgent.agentReliabilityScore?.toNumber() ?? null,
+          } : null,
         }}
+        payment={payment ? {
+          ...payment,
+          amount: payment.amount.toNumber(),
+        } : null}
+        currentUserId={session.user.id}
+        userRole={{ isRequester, isAssignedAgent, isPropertyOwner }}
       />
     </div>
   );
