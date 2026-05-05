@@ -7,16 +7,19 @@ import { Progress } from '@newcondo/ui/components/progress'
 import { Button } from '@/components/ui/button'
 import { AlertCircle, CheckCircle2, Clock, FileText, Shield, Upload, User, Building } from 'lucide-react'
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
+import { type LucideIcon } from 'lucide-react'
+
+type DocumentStatus = 'pending' | 'uploaded' | 'approved' | 'rejected'
 
 interface DocumentRequirement {
   type: string
   label: string
   required: boolean
-  status: 'pending' | 'uploaded' | 'approved' | 'rejected'
+  status: DocumentStatus
   rejectionReason?: string
   uploadedAt?: string
   approvedAt?: string
-  icon: any
+  icon: LucideIcon
 }
 
 interface ComplianceStatusProps {
@@ -42,7 +45,6 @@ export function ComplianceStatus({
 }: ComplianceStatusProps) {
   const [showDetails, setShowDetails] = useState(false)
 
-  // Define required documents based on user role
   const getRequiredDocuments = (role: string): DocumentRequirement[] => {
     const baseRequirements: DocumentRequirement[] = [
       {
@@ -106,13 +108,12 @@ export function ComplianceStatus({
 
   const requirements = getRequiredDocuments(userRole)
 
-  // Update requirement status based on uploaded documents
   const updatedRequirements = requirements.map(req => {
     const uploadedDoc = documents.find(doc => doc.documentType === req.type)
     if (uploadedDoc) {
       return {
         ...req,
-        status: uploadedDoc.status.toLowerCase() as any,
+        status: uploadedDoc.status.toLowerCase() as DocumentStatus,
         rejectionReason: uploadedDoc.verificationNotes,
         uploadedAt: uploadedDoc.createdAt,
         approvedAt: uploadedDoc.status === 'APPROVED' ? uploadedDoc.createdAt : undefined
@@ -121,21 +122,11 @@ export function ComplianceStatus({
     return req
   })
 
-  // Calculate compliance progress
   const totalRequired = updatedRequirements.filter(req => req.required).length
   const completedRequired = updatedRequirements.filter(
     req => req.required && (req.status === 'approved' || req.status === 'uploaded')
   ).length
   const progressPercentage = totalRequired > 0 ? (completedRequired / totalRequired) * 100 : 0
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-500'
-      case 'uploaded': case 'pending': return 'bg-yellow-500'
-      case 'rejected': return 'bg-red-500'
-      default: return 'bg-gray-300'
-    }
-  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -194,7 +185,6 @@ export function ComplianceStatus({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* User Verification Alert */}
         {userVerificationStatus !== 'VERIFIED' && (
           <Alert>
             <AlertCircle className="h-4 w-4" />
@@ -207,7 +197,6 @@ export function ComplianceStatus({
           </Alert>
         )}
 
-        {/* Quick Status Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {updatedRequirements.slice(0, 4).map((req) => (
             <div key={req.type} className="flex flex-col items-center p-3 border rounded-lg">
@@ -223,7 +212,6 @@ export function ComplianceStatus({
           ))}
         </div>
 
-        {/* Detailed Requirements (Expandable) */}
         {showDetails && (
           <div className="space-y-3 pt-4 border-t">
             {updatedRequirements.map((req) => (
@@ -263,7 +251,6 @@ export function ComplianceStatus({
           </div>
         )}
 
-        {/* Action Buttons */}
         <div className="flex gap-2 pt-4 border-t">
           <Button 
             variant="outline" 
@@ -277,7 +264,6 @@ export function ComplianceStatus({
           </Button>
         </div>
 
-        {/* Compliance Tips */}
         {progressPercentage < 100 && (
           <Alert>
             <FileText className="h-4 w-4" />

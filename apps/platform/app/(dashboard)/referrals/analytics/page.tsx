@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
             <div className="flex items-start gap-3 p-3 rounded-lg bg-muted">
               <span className="text-2xl">🎯</span>
               <div>
-                <p className="font-medium text-sm">You're 2 referrals away from the next milestone</p>
+                <p className="font-medium text-sm">You&apos;re 2 referrals away from the next milestone</p>
                 <p className="text-xs text-muted-foreground">
                   Earn ₦10,000 bonus when you reach 10 qualified referrals
                 </p>

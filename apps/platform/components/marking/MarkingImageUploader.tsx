@@ -37,7 +37,7 @@ interface MarkingImageUploaderProps {
 }
 
 export default function MarkingImageUploader({
-  jobId: _jobId,
+  // jobId,
   maxImages = 20,
   onImagesUploaded,
   existingImages = [],
@@ -54,7 +54,7 @@ export default function MarkingImageUploader({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errors, setErrors] = useState<string[]>([]);
 
-  const { startUpload, isUploading: _isUploading } = useUploadThing('propertyImages', {
+  const { startUpload } = useUploadThing('propertyImages', {
     onClientUploadComplete: (res) => {
       const newImages: UploadedImage[] = res.map((file) => ({
         id: file.key,

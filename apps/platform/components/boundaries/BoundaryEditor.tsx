@@ -11,7 +11,7 @@ import { toast } from '@newcondo/ui/';
 
 
 interface BoundaryEditorProps {
-  propertyId: string;
+  propertyId?: string;
   initialCoordinates?: { lat: number; lng: number }[];
   gpsCoordinates: { lat: number; lng: number };
   onSave: (coordinates: { lat: number; lng: number }[]) => Promise<void>;
@@ -24,7 +24,6 @@ const mapContainerStyle = {
 };
 
 export function BoundaryEditor({
-  propertyId,
   initialCoordinates = [],
   gpsCoordinates,
   onSave,

@@ -38,7 +38,8 @@ export default function LeaderboardPage() {
           </p>
         </div>
 
-        <Select value={period} onValueChange={(v: any) => setPeriod(v)}>
+        {/* fix line 41: replaced `any` with the period union type */}
+        <Select value={period} onValueChange={(v: 'week' | 'month' | 'year' | 'all') => setPeriod(v)}>
           <SelectTrigger className="w-[150px]">
             <SelectValue />
           </SelectTrigger>

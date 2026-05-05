@@ -36,7 +36,8 @@ export default function ReferralTermsPage() {
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">1. Program Overview</h2>
           <p className="text-muted-foreground leading-relaxed">
-            The NewCondo Referral Program ("Program") allows existing users to
+            {/* fix lines 39: escaped double quotes around "Program" */}
+            The NewCondo Referral Program (&quot;Program&quot;) allows existing users to
             refer new users to the platform and earn rewards when those
             referrals complete qualifying actions. By participating in this
             Program, you agree to these terms and conditions.
@@ -74,7 +75,8 @@ export default function ReferralTermsPage() {
           <h2 className="text-2xl font-semibold">3. Referral Qualification</h2>
           <div className="space-y-3">
             <p className="text-muted-foreground leading-relaxed">
-              A referral is considered "qualified" when the referred user:
+              {/* fix line 77: escaped double quotes around "qualified" */}
+              A referral is considered &quot;qualified&quot; when the referred user:
             </p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground ml-4">
               <li>Signs up using your unique referral code or link</li>
@@ -265,7 +267,7 @@ export default function ReferralTermsPage() {
             For questions about the Referral Program or to dispute a referral
             attribution, contact our support team at support@newcondo.ng.
             Disputes must be submitted within 30 days of the qualifying event.
-            NewCondo's decision on disputes is final.
+            NewCondo&apos;s decision on disputes is final.
           </p>
         </section>
 

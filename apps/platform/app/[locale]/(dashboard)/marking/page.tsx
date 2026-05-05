@@ -1,12 +1,12 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-import { getServerSession } from '@newcondo/auth';
+// import { getServerSession } from '@newcondo/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui';
 import { Button } from '@newcondo/ui';
 import { Badge } from '@newcondo/ui';
 import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
 import { DateDisplay } from '@/components/i18n/DateDisplay';
-import { MapPin, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export async function generateMetadata({
   params: { locale },
@@ -26,7 +26,8 @@ export default async function MarkingPage({
 }: {
   params: { locale: string };
 }) {
-  const session = await getServerSession();
+  // const session = await getServerSession();
+  // TODO: should all the pages be checked for a session inside a component that requires a logged in user?
   const t = await getTranslations({ locale, namespace: 'marking' });
 
   // Mock data - replace with actual API calls
@@ -171,7 +172,7 @@ export default async function MarkingPage({
   );
 }
 
-function StatusBadge({ status, locale }: { status: string; locale: string }) {
+function StatusBadge({ status }: { status: string; locale: string }) {
   const t = useTranslations('marking');
   
   const statusConfig = {

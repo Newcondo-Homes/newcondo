@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Separator } from '@newcondo/ui/components/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+// fix line 9: removed unused Tabs, TabsContent, TabsList, TabsTrigger
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
@@ -16,7 +16,7 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  CheckCircle,
+  // fix line 19: removed unused CheckCircle
   Building,
   User,
   CreditCard,
@@ -65,7 +65,8 @@ interface RecentTransaction {
 export default function VirtualAccountDetailsPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { user } = useAuth();
+  // fix line 68: removed unused `user` destructure — keep useAuth if needed elsewhere
+  useAuth();
   const [virtualAccount, setVirtualAccount] = useState<VirtualAccount | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<RecentTransaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,15 +74,11 @@ export default function VirtualAccountDetailsPage() {
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
 
-  useEffect(() => {
-    fetchVirtualAccountDetails();
-  }, [id]);
-
-  const fetchVirtualAccountDetails = async () => {
+  // fix line 78: wrapped in useCallback so it's stable for the dep array
+  const fetchVirtualAccountDetails = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Fetch virtual account details
       const accountResponse = await fetch(`/api/virtual-accounts/${id}`,
         { credentials: 'include' }
       );
@@ -93,7 +90,6 @@ export default function VirtualAccountDetailsPage() {
       const accountData = await accountResponse.json();
       setVirtualAccount(accountData.data);
 
-      // Fetch recent transactions
       const transactionsResponse = await fetch(`/api/virtual-accounts/${id}/transactions?limit=5`,
         { credentials: 'include' });
 
@@ -107,7 +103,11 @@ export default function VirtualAccountDetailsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchVirtualAccountDetails();
+  }, [fetchVirtualAccountDetails]);
 
   const handleCopyAccountNumber = async () => {
     if (virtualAccount) {
@@ -355,8 +355,7 @@ export default function VirtualAccountDetailsPage() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-medium ${transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'
-                          }`}>
+                        <p className={`font-medium ${transaction.type === 'CREDIT' ? 'text-green-600' : 'text-red-600'}`}>
                           {transaction.type === 'CREDIT' ? '+' : '-'}
                           {formatCurrency(transaction.amount, transaction.currency)}
                         </p>

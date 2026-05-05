@@ -29,7 +29,7 @@ export default function RegisterPage({
       </div>
 
 
-      // TODO: see if you'll pass locale to RegisterForm for internationalization
+      {/*  TODO: see if you'll pass locale to RegisterForm for internationalization */}
       {/* <RegisterForm locale={locale} /> */}
       <RegisterForm />
 

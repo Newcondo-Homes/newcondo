@@ -31,14 +31,14 @@ const createMarkingJobSchema = z.object({
 type CreateMarkingJobFormData = z.infer<typeof createMarkingJobSchema>;
 
 interface CreateMarkingJobFormProps {
-  propertyId: string;
+  propertyId?: string;
   propertyTitle: string;
   onSubmit: (data: CreateMarkingJobFormData) => Promise<void>;
   isSubmitting?: boolean;
 }
 
 export function CreateMarkingJobForm({
-  propertyId: _propertyId,
+  // propertyId,
   propertyTitle,
   onSubmit,
   isSubmitting = false,

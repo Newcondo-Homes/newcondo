@@ -28,7 +28,7 @@ export default function LoginPage({
         <LoginContent keyPrefix="login.subtitle" className="text-muted-foreground" />
       </div>
 
-      // TODO: see if you'll pass locale to loginform for internationalization
+      {/* TODO: see if you'll pass locale to loginform for internationalization */}
       {/* <LoginForm locale={locale} /> */}
       <LoginForm  />
 

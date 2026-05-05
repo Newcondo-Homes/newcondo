@@ -101,7 +101,7 @@ export default function VirtualAccountsPage() {
       setTimeout(() => {
         setCopiedAccount(null);
       }, 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy account number');
     }
   };

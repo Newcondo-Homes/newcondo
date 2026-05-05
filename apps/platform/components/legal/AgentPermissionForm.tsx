@@ -11,7 +11,7 @@ import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Textarea } from '@newcondo/ui/components/textarea';
 import { Input } from '@newcondo/ui/components/input';
-import { Label } from '@newcondo/ui/components/label';
+// ✅ Removed unused Label import
 import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { AlertCircle, CheckCircle2, Upload, X, FileText, User, Phone, Mail } from 'lucide-react';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
@@ -67,6 +67,13 @@ const DURATION_OPTIONS = [
   { value: 'indefinite', label: 'Indefinite (until revoked)' }
 ];
 
+// ✅ Typed upload response
+interface UploadedFileResponse {
+  name: string;
+  url: string;
+  size: number;
+}
+
 export function AgentPermissionForm({
   propertyId,
   onSubmit,
@@ -94,11 +101,11 @@ export function AgentPermissionForm({
     }
   });
 
-  const handleUploadComplete = async (res: any) => {
+  // ✅ Replaced any with typed UploadedFileResponse[]
+  const handleUploadComplete = async (res: UploadedFileResponse[]) => {
     try {
       setIsUploading(true);
 
-      // Create document record via API
       const response = await fetch('/api/documents/consent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -120,8 +127,8 @@ export function AgentPermissionForm({
       toast.success('Document uploaded successfully', {
         description: 'Your consent document has been uploaded and is ready for submission.',
       });
-    } catch (error) {
-
+    } catch {
+      // ✅ Removed unused error variable
       toast.error('Upload failed', {
         description: 'There was an error uploading your document. Please try again.',
       });
@@ -146,11 +153,11 @@ export function AgentPermissionForm({
       toast.success('Document removed', {
         description: 'The consent document has been removed.',
       });
-    } catch (error) {
+    } catch {
+      // ✅ Removed unused error variable
       toast.error('Removal failed', {
         description: 'There was an error removing the document. Please try again.',
       });
-
     }
   };
 
@@ -182,7 +189,8 @@ export function AgentPermissionForm({
       toast.success('Permission form submitted', {
         description: 'Your agent permission form has been submitted for verification.'
       });
-    } catch (error) {
+    } catch {
+      // ✅ Removed unused error variable
       toast.error('Submission failed', {
         description: 'There was an error submitting your form. Please try again.',
       });
@@ -419,7 +427,8 @@ export function AgentPermissionForm({
                 <AlertDescription>
                   You must upload a signed consent document from the property owner
                   authorizing you to act as their agent. This document should include
-                  the owner's signature and contact information.
+                  the owner&apos;s signature and contact information.
+                  {/* ✅ Fixed apostrophe */}
                 </AlertDescription>
               </Alert>
 

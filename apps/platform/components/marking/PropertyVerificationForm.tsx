@@ -34,8 +34,19 @@ const verificationSchema = z.object({
 
 type VerificationFormData = z.infer<typeof verificationSchema>;
 
+interface BoundaryCoordinate {
+  lat: number;
+  lng: number;
+}
+
+interface BoundaryData {
+  coordinates?: BoundaryCoordinate[];
+  area?: number;
+  [key: string]: unknown;
+}
+
 interface PropertyVerificationFormProps {
-  markingJobId: string;
+  markingJobId?: string;
   propertyDetails: {
     title: string;
     address: string;
@@ -46,14 +57,13 @@ interface PropertyVerificationFormProps {
     markedAt: string;
     completionImages: string[];
     completionNotes?: string;
-    boundaryData?: any;
+    boundaryData?: BoundaryData;
   };
   onVerify: (data: { isApproved: boolean; notes?: string; reason?: string }) => Promise<void>;
   onCancel?: () => void;
 }
 
 export function PropertyVerificationForm({
-  markingJobId,
   propertyDetails,
   markingDetails,
   onVerify,
@@ -267,7 +277,7 @@ export function PropertyVerificationForm({
                             <div>
                               <p className="font-medium">No, this is not my property</p>
                               <p className="text-sm text-muted-foreground">
-                                The marked property is incorrect or doesn't match
+                                The marked property is incorrect or doesn&apos;t match
                               </p>
                             </div>
                           </label>

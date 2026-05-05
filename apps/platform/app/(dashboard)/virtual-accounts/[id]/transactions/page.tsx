@@ -3,7 +3,6 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { TransactionsClient } from './_components/TransactionsClient';
-import VirtualAccountTransactions from '@/components/virtual-accounts/VirtualAccountTransactions';
 import { VirtualAccountDetails } from '@/components/virtual-accounts/VirtualAccountDetails';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
@@ -170,7 +169,7 @@ export async function generateMetadata({ params }: { params: { id: string } }) {
       title: `${virtualAccount.accountName} - Transactions | NewCondo`,
       description: `View transaction history for virtual account ${virtualAccount.accountName}`,
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Virtual Account Transactions | NewCondo',
     };

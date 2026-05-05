@@ -14,6 +14,15 @@ export const metadata: Metadata = {
   description: 'View your property marking service earnings and transactions',
 };
 
+// this type was gotten from apps\platform\components\marking\MarkingStatusBadge.tsx
+type MarkingJobStatus =
+  | 'QUEUED'
+  | 'ASSIGNED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'EXPIRED';
+
 export default function MarkingTransactionsPage() {
   return (
     <div className="container max-w-6xl py-8 space-y-8">
@@ -92,13 +101,13 @@ export default function MarkingTransactionsPage() {
 }
 
 // Placeholder components
-function SummaryCard({ 
-  title, 
-  amount, 
-  count, 
-  percentage, 
-  variant 
-}: { 
+function SummaryCard({
+  title,
+  amount,
+  count,
+  percentage,
+  variant,
+}: {
   title: string;
   amount?: string;
   count?: number;
@@ -121,9 +130,19 @@ function SummaryCard({
   );
 }
 
+// fix line 126: typed MarkingTransaction instead of `any[]`
+interface MarkingTransaction {
+  id: string;
+  propertyTitle: string;
+  status: string;
+  createdAt: string;
+  amount: number;
+  isReleased: boolean;
+}
+
 function MarkingTransactionsList() {
   // This will be replaced with actual data fetching
-  const transactions: any[] = [];
+  const transactions: MarkingTransaction[] = [];
 
   if (transactions.length === 0) {
     return (
@@ -145,13 +164,14 @@ function MarkingTransactionsList() {
   );
 }
 
-function TransactionItem({ transaction }: { transaction: any }) {
+// fix line 148: typed with MarkingTransaction instead of `any`
+function TransactionItem({ transaction }: { transaction: MarkingTransaction }) {
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors">
       <div className="flex-1 space-y-1">
         <div className="flex items-center gap-2">
           <p className="font-medium">{transaction.propertyTitle}</p>
-          <MarkingStatusBadge status={transaction.status} />
+          <MarkingStatusBadge status={transaction.status as MarkingJobStatus} />
         </div>
         <p className="text-sm text-muted-foreground">
           {new Date(transaction.createdAt).toLocaleDateString('en-NG', {

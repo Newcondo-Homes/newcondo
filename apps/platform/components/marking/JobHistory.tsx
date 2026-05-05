@@ -23,7 +23,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import api  from "@/lib/api/client";
+import api from "@/lib/api/client";
 import { format } from "date-fns";
 
 interface JobHistoryItem {
@@ -36,7 +36,7 @@ interface JobHistoryItem {
   agentEarnings: number;
   assignedAt: string;
   completedAt?: string;
-  timeTaken?: number; // in hours
+  timeTaken?: number;
   photoCount?: number;
   ownerRating?: number;
   ownerFeedback?: string;
@@ -47,6 +47,15 @@ interface JobHistoryFilters {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
 }
 
 const statusColors = {
@@ -69,7 +78,6 @@ export default function JobHistory() {
   const [filteredJobs, setFilteredJobs] = useState<JobHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedJob, setSelectedJob] = useState<string | null>(null);
   const [filters, setFilters] = useState<JobHistoryFilters>({});
 
   useEffect(() => {
@@ -79,13 +87,14 @@ export default function JobHistory() {
       try {
         setLoading(true);
         const response = await api.get(`/marking/agents/${user.id}/history`);
-        const data = response.data as JobHistoryItem[]
+        const data = response.data as JobHistoryItem[];
         setJobs(data);
         setFilteredJobs(data);
         setError(null);
-      } catch (err: any) {
-        console.error("Error fetching job history:", err);
-        setError(err.response?.data?.message || "Failed to load job history");
+      } catch (err) {
+        const apiErr = err as ApiError;
+        console.error("Error fetching job history:", apiErr);
+        setError(apiErr.response?.data?.message ?? "Failed to load job history");
       } finally {
         setLoading(false);
       }
@@ -97,12 +106,10 @@ export default function JobHistory() {
   useEffect(() => {
     let filtered = [...jobs];
 
-    // Apply status filter
     if (filters.status && filters.status !== "all") {
       filtered = filtered.filter((job) => job.status === filters.status);
     }
 
-    // Apply search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(
@@ -112,7 +119,6 @@ export default function JobHistory() {
       );
     }
 
-    // Apply date filters
     if (filters.dateFrom) {
       filtered = filtered.filter(
         (job) => new Date(job.assignedAt) >= new Date(filters.dateFrom!)
@@ -127,9 +133,7 @@ export default function JobHistory() {
     setFilteredJobs(filtered);
   }, [filters, jobs]);
 
-  const handleViewDetails = async (jobId: string) => {
-    setSelectedJob(jobId);
-    // Navigate to job details or open modal
+  const handleViewDetails = (jobId: string) => {
     window.location.href = `/dashboard/marking/jobs/${jobId}`;
   };
 
@@ -176,7 +180,6 @@ export default function JobHistory() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -187,7 +190,6 @@ export default function JobHistory() {
               />
             </div>
 
-            {/* Status Filter */}
             <Select
               value={filters.status || "all"}
               onValueChange={(value) => setFilters({ ...filters, status: value })}
@@ -204,7 +206,6 @@ export default function JobHistory() {
               </SelectContent>
             </Select>
 
-            {/* Date From */}
             <Input
               type="date"
               placeholder="From date"
@@ -212,7 +213,6 @@ export default function JobHistory() {
               onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value })}
             />
 
-            {/* Date To */}
             <Input
               type="date"
               placeholder="To date"
@@ -273,7 +273,6 @@ export default function JobHistory() {
             <Card key={job.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  {/* Job Info */}
                   <div className="flex-1 space-y-2">
                     <div className="flex items-start justify-between">
                       <div>
@@ -327,14 +326,13 @@ export default function JobHistory() {
                         </div>
                         {job.ownerFeedback && (
                           <span className="text-sm text-gray-600 italic">
-                            {`${job.ownerFeedback}`}
+                            {job.ownerFeedback}
                           </span>
                         )}
                       </div>
                     )}
                   </div>
 
-                  {/* Earnings & Actions */}
                   <div className="flex md:flex-col items-center md:items-end gap-4">
                     <div className="text-right">
                       <div className="flex items-center gap-1 text-lg font-bold text-green-600">
@@ -366,8 +364,6 @@ export default function JobHistory() {
           ))
         )}
       </div>
-
-      {/* Pagination could be added here if needed */}
     </div>
   );
 }

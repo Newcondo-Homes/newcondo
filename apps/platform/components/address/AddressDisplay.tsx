@@ -124,7 +124,7 @@ export function AddressDisplay({
 }
 
 // Utility function to parse address from different formats
-export function parseAddress(address: any): HierarchicalAddress | string {
+export function parseAddress(address: unknown): HierarchicalAddress | string {
   if (typeof address === "string") {
     return address;
   }

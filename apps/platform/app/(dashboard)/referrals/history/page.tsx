@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Metadata } from 'next';
+// fix line 6: removed unused Metadata import
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
@@ -19,7 +19,11 @@ import { useReferralTimeline } from '@/hooks/useReferrals';
 import { ReferralCard } from '@/components/referrals/ReferralCard';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { Search, Filter, Download, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { formatRewardDate, formatRewardDateTime } from '@/lib/utils/rewardFormatters';
+// fix line 22: removed unused formatRewardDate
+import { formatRewardDateTime } from '@/lib/utils/rewardFormatters';
+
+// fix line 33: typed the status union instead of `any`
+type ReferralStatus = 'PENDING' | 'QUALIFIED' | 'REWARDED' | 'EXPIRED';
 
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
@@ -30,7 +34,7 @@ export default function HistoryPage() {
   const { referrals, totalPages, isLoading } = useReferrals({
     page,
     pageSize: 20,
-    status: statusFilter !== 'all' ? statusFilter as any : undefined,
+    status: statusFilter !== 'all' ? statusFilter as ReferralStatus : undefined,
     sortBy: 'createdAt',
     sortOrder: 'desc',
   });
@@ -194,11 +198,11 @@ export default function HistoryPage() {
                         <ChevronLeft className="h-4 w-4 mr-1" />
                         Previous
                       </Button>
-                      
+
                       <span className="text-sm text-muted-foreground">
                         Page {page} of {totalPages}
                       </span>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"

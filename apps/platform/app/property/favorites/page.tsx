@@ -20,10 +20,16 @@ interface FavoritesPageProps {
   }
 }
 
-export default async function FavoritesPage({ searchParams }: FavoritesPageProps) {
-  // Check authentication
-  const session = await getServerSession()
+interface FavoriteItem {
+  id: string
+  userId: string
+  propertyId: string
+  createdAt: Date
+  property: PropertyResponse
+}
 
+export default async function FavoritesPage({ searchParams }: FavoritesPageProps) {
+  const session = await getServerSession()
   const user = session?.user
   if (!user) {
     redirect('/login?callbackUrl=/properties/favorites')
@@ -49,8 +55,9 @@ export default async function FavoritesPage({ searchParams }: FavoritesPageProps
               <h1 className="text-3xl font-bold text-gray-900">
                 Favorite Properties
               </h1>
+              {/* ✅ Fixed apostrophe */}
               <p className="text-gray-600 mt-2">
-                Properties you've saved for later viewing
+                Properties you&apos;ve saved for later viewing
               </p>
             </div>
 
@@ -78,7 +85,6 @@ export default async function FavoritesPage({ searchParams }: FavoritesPageProps
   )
 }
 
-// Favorites sort select component
 function FavoritesSortSelect({ defaultValue }: { defaultValue?: string }) {
   return (
     <form method="GET" className="inline">
@@ -101,10 +107,9 @@ function FavoritesSortSelect({ defaultValue }: { defaultValue?: string }) {
   )
 }
 
-// Favorite properties component
 async function FavoriteProperties({
   userId,
-  sortBy
+  sortBy,
 }: {
   userId: string
   sortBy: string
@@ -125,7 +130,6 @@ async function FavoriteProperties({
 
   return (
     <div>
-      {/* Results Count */}
       <div className="mb-6">
         <p className="text-gray-600">
           <span className="font-semibold text-gray-900">
@@ -134,7 +138,6 @@ async function FavoriteProperties({
         </p>
       </div>
 
-      {/* Properties Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
         {favorites.map((favorite) => (
           <div key={favorite.id} className="relative">
@@ -143,8 +146,6 @@ async function FavoriteProperties({
               showComparison={false}
               className="h-full"
             />
-
-            {/* Favorite Date Badge */}
             <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
               Saved {new Date(favorite.createdAt).toLocaleDateString()}
             </div>
@@ -152,7 +153,6 @@ async function FavoriteProperties({
         ))}
       </div>
 
-      {/* Bulk Actions */}
       <div className="mt-8 pt-6 border-t border-gray-200">
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -163,7 +163,6 @@ async function FavoriteProperties({
               Remove Selected
             </button>
           </div>
-
           <div className="flex items-center gap-2">
             <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
               Compare Selected
@@ -178,8 +177,8 @@ async function FavoriteProperties({
   )
 }
 
-
-function makeMockProperty(overrides: {
+// ✅ Typed mock property builder — no any
+interface MockPropertyOverrides {
   id: string
   title: string
   price: number
@@ -191,14 +190,16 @@ function makeMockProperty(overrides: {
   propertyType: string
   features: string[]
   imageUrl: string
-}): PropertyResponse {
+}
+
+function makeMockProperty(overrides: MockPropertyOverrides): PropertyResponse {
   const now = new Date().toISOString()
   return {
     id: overrides.id,
     title: overrides.title,
     description: '',
-    structure: 'SINGLE_UNIT' as any,
-    price: overrides.price as any,
+    structure: 'SINGLE_UNIT' as PropertyResponse['structure'],
+    price: overrides.price as unknown as PropertyResponse['price'] ,
     currency: 'NGN',
     address: overrides.address,
     city: overrides.city,
@@ -214,7 +215,7 @@ function makeMockProperty(overrides: {
     totalUnits: null,
     availableUnits: null,
     buildingFeatures: [],
-    propertyType: overrides.propertyType as any,
+    propertyType: overrides.propertyType as PropertyResponse['propertyType'],
     bedrooms: overrides.bedrooms,
     bathrooms: overrides.bathrooms,
     area: null,
@@ -222,8 +223,8 @@ function makeMockProperty(overrides: {
     ownerId: 'mock-owner',
     agentId: null,
     isOwnerListing: true,
-    status: 'PUBLISHED' as any,
-    adminApprovalStatus: 'APPROVED' as any,
+    status: 'PUBLISHED' as PropertyResponse['status'],
+    adminApprovalStatus: 'APPROVED' as PropertyResponse['adminApprovalStatus'],
     rejectionReason: null,
     approvedAt: null,
     approvedBy: null,
@@ -234,18 +235,17 @@ function makeMockProperty(overrides: {
     shareableLink: null,
     viewCount: 0,
     favoriteCount: 0,
-    createdAt: now as any,
-    updatedAt: now as any,
+    createdAt: now as unknown as PropertyResponse['createdAt'],
+    updatedAt: now as unknown as PropertyResponse['updatedAt'],
     images: [{ id: `${overrides.id}-img`, url: overrides.imageUrl, altText: null, isPrimary: true, order: 0 }],
     owner: { id: 'mock-owner', name: null, email: 'owner@example.com', phone: null, verificationStatus: 'VERIFIED' },
   }
 }
 
-// Mock function - replace with actual API call
-async function getFavoriteProperties(userId: string, sortBy: string) {
+async function getFavoriteProperties(userId: string, sortBy: string): Promise<FavoriteItem[]> {
   await new Promise(resolve => setTimeout(resolve, 300))
- 
-  const mockFavorites = [
+
+  const mockFavorites: FavoriteItem[] = [
     {
       id: 'fav1',
       userId,
@@ -304,7 +304,7 @@ async function getFavoriteProperties(userId: string, sortBy: string) {
       }),
     },
   ]
- 
+
   const sorted = [...mockFavorites]
   switch (sortBy) {
     case 'oldest':
@@ -318,6 +318,6 @@ async function getFavoriteProperties(userId: string, sortBy: string) {
     default:
       sorted.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }
- 
+
   return sorted
 }

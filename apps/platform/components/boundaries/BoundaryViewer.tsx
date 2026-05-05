@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { MapPin, CheckCircle, Edit } from 'lucide-react';
 
 interface BoundaryViewerProps {
-  propertyId: string;
+  propertyId?: string;
   boundaryCoordinates?: {
     lat: number;
     lng: number;
@@ -30,7 +30,6 @@ const mapContainerStyle = {
 };
 
 export function BoundaryViewer({
-  propertyId,
   boundaryCoordinates,
   gpsCoordinates,
   boundaryVerified,

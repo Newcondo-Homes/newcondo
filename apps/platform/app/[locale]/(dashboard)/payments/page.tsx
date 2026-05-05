@@ -1,11 +1,10 @@
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-import { getServerSession } from '@newcondo/auth';
+// import { getServerSession } from '@newcondo/auth';
 import { PaymentHistory } from '@/components/payments/PaymentHistory';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui';
 import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
-import { Wallet, ArrowUpRight, ArrowDownRight, Clock } from 'lucide-react';
+import { Wallet, ArrowUpRight, Clock } from 'lucide-react';
 
 export async function generateMetadata({
   params: { locale },
@@ -25,7 +24,8 @@ export default async function PaymentsPage({
 }: {
   params: { locale: string };
 }) {
-  const session = await getServerSession();
+  // TODO: should all the pages be checked for a session inside a component that requires a logged in user?
+  // const session = await getServerSession();
   const t = await getTranslations({ locale, namespace: 'payments' });
 
   // Mock data - replace with actual API calls

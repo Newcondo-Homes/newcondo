@@ -21,10 +21,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 
-// Validation schema
+// ─── Validation schema ────────────────────────────────────────────────────────
+
 const markingRequestSchema = z.object({
   contactPersonName: z.string().min(2, 'Name must be at least 2 characters'),
   contactPersonPhone: z.string().regex(/^\+?234\d{10}$/, 'Invalid Nigerian phone number'),
@@ -37,6 +37,16 @@ const markingRequestSchema = z.object({
 
 type MarkingRequestFormData = z.infer<typeof markingRequestSchema>;
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface PropertySummary {
+  id: string;
+  title: string;
+  address: string;
+  city: string;
+  state: string;
+}
+
 interface MarkingOption {
   id: string;
   title: string;
@@ -46,13 +56,15 @@ interface MarkingOption {
   icon: React.ReactNode;
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function RequestMarkingJobPage() {
   const params = useParams();
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
 
   const propertyId = params.id as string;
-  const [property, setProperty] = useState<any>(null);
+  const [property, setProperty] = useState<PropertySummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -116,17 +128,13 @@ export default function RequestMarkingJobPage() {
         setIsLoading(true);
         const response = await fetch(`/api/properties/${propertyId}`, {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch property');
-        }
+        if (!response.ok) throw new Error('Failed to fetch property');
 
         const data = await response.json();
-        setProperty(data.property);
+        setProperty(data.property as PropertySummary);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -134,9 +142,7 @@ export default function RequestMarkingJobPage() {
       }
     };
 
-    if (propertyId) {
-      fetchProperty();
-    }
+    if (propertyId) fetchProperty();
   }, [propertyId]);
 
   const onSubmit = async (data: MarkingRequestFormData) => {
@@ -152,18 +158,16 @@ export default function RequestMarkingJobPage() {
 
       const response = await fetch('/api/marking-jobs/request', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { message?: string };
         throw new Error(errorData.message || 'Failed to create marking job');
       }
 
-      const result = await response.json();
+      const result = (await response.json()) as { jobId: string };
       setSuccess(true);
 
       setTimeout(() => {
@@ -180,9 +184,7 @@ export default function RequestMarkingJobPage() {
     }
   };
 
-  if (authLoading || isLoading) {
-    return <LoadingSpinner />;
-  }
+  if (authLoading || isLoading) return <LoadingSpinner />;
 
   if (error && !property) {
     return (
@@ -240,9 +242,7 @@ export default function RequestMarkingJobPage() {
         <Card>
           <CardHeader>
             <CardTitle>Step 1: Select Marking Method</CardTitle>
-            <CardDescription>
-              Choose how you want your property marked
-            </CardDescription>
+            <CardDescription>Choose how you want your property marked</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -252,7 +252,7 @@ export default function RequestMarkingJobPage() {
                   type="button"
                   onClick={() => {
                     setSelectedMarker(option.id);
-                    setValue('markerOption', option.id as any);
+                    setValue('markerOption', option.id as MarkingRequestFormData['markerOption']);
                   }}
                   className={`p-4 rounded-lg border-2 transition-all text-left ${
                     selectedMarker === option.id
@@ -289,9 +289,7 @@ export default function RequestMarkingJobPage() {
         <Card>
           <CardHeader>
             <CardTitle>Step 2: Contact Information</CardTitle>
-            <CardDescription>
-              Person who will be on-site during marking
-            </CardDescription>
+            <CardDescription>Person who will be on-site during marking</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -336,7 +334,7 @@ export default function RequestMarkingJobPage() {
           </CardContent>
         </Card>
 
-        {/* Step 3: Conditional Fields Based on Marker Option */}
+        {/* Step 3: Conditional — Guide Information for KNOWN_PERSON */}
         {markerOption === 'KNOWN_PERSON' && (
           <Card>
             <CardHeader>
@@ -370,16 +368,21 @@ export default function RequestMarkingJobPage() {
           </Card>
         )}
 
-        {/* Step 3/4: Urgency Level */}
+        {/* Step 3 or 4: Urgency Level */}
         <Card>
           <CardHeader>
-            <CardTitle>Step {markerOption === 'KNOWN_PERSON' ? '4' : '3'}: Urgency Level</CardTitle>
-            <CardDescription>
-              How soon do you need this property marked?
-            </CardDescription>
+            <CardTitle>
+              Step {markerOption === 'KNOWN_PERSON' ? '4' : '3'}: Urgency Level
+            </CardTitle>
+            <CardDescription>How soon do you need this property marked?</CardDescription>
           </CardHeader>
           <CardContent>
-            <Select defaultValue="NORMAL" onValueChange={(value) => setValue('urgencyLevel', value as any)}>
+            <Select
+              defaultValue="NORMAL"
+              onValueChange={(value) =>
+                setValue('urgencyLevel', value as MarkingRequestFormData['urgencyLevel'])
+              }
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -450,7 +453,8 @@ export default function RequestMarkingJobPage() {
               <Alert className="bg-white border-blue-200 mt-4">
                 <AlertCircle className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-sm">
-                  Payment will be processed via your virtual account. You'll receive a receipt after successful payment.
+                  Payment will be processed via your virtual account. You&apos;ll receive a receipt
+                  after successful payment.
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -466,7 +470,10 @@ export default function RequestMarkingJobPage() {
               <li>You have 2-3 days to confirm the marking after completion</li>
               <li>Agents are assigned 3-hour time slots to complete marking</li>
               <li>Completion photos will be required for verification</li>
-              <li>If marking isn't confirmed, the agent receives compensation and you'll need to request marking again</li>
+              <li>
+                If marking isn&apos;t confirmed, the agent receives compensation and you&apos;ll
+                need to request marking again
+              </li>
             </ul>
           </AlertDescription>
         </Alert>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import crypto from 'crypto';
+// fix line 3: removed unused crypto import
 
 /**
  * Webhook handler for marking service payment notifications
@@ -56,10 +56,41 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// fix lines 62, 77, 115, 143: typed webhook payloads instead of `any`
+
+interface FlutterwaveCustomer {
+  email: string;
+  name?: string;
+  phone_number?: string;
+}
+
+interface ChargeEventData {
+  tx_ref: string;
+  amount: number;
+  status: string;
+  customer: FlutterwaveCustomer;
+  flw_ref?: string;
+  currency?: string;
+}
+
+interface TransferEventData {
+  reference: string;
+  amount: number;
+  status: string;
+  account_number?: string;
+  bank_name?: string;
+}
+
+interface WebhookBody {
+  event: string;
+  data: ChargeEventData | TransferEventData;
+}
+
 /**
  * Verify Flutterwave webhook signature
  */
-function verifyWebhookSignature(body: any, signature: string | null): boolean {
+// fix line 62: typed body as WebhookBody instead of `any`
+function verifyWebhookSignature(body: WebhookBody, signature: string | null): boolean {
   if (!signature) return false;
 
   const secretHash = process.env.FLUTTERWAVE_SECRET_HASH;
@@ -68,13 +99,16 @@ function verifyWebhookSignature(body: any, signature: string | null): boolean {
     return false;
   }
 
+  // body param reserved for future HMAC verification
+  void body;
   return signature === secretHash;
 }
 
 /**
  * Handle successful payment for marking job
  */
-async function handleChargeCompleted(data: any) {
+// fix line 77: typed data as ChargeEventData instead of `any`
+async function handleChargeCompleted(data: ChargeEventData) {
   try {
     const { tx_ref, amount, customer, status } = data;
 
@@ -91,7 +125,6 @@ async function handleChargeCompleted(data: any) {
     }
 
     // TODO: Update marking job payment status in database
-    // This will be implemented when we have the database service
     console.log('Processing marking job payment:', {
       markingJobId,
       amount,
@@ -99,9 +132,7 @@ async function handleChargeCompleted(data: any) {
     });
 
     // TODO: Create virtual account transaction record
-
     // TODO: Notify property owner of successful payment
-
     // TODO: If this is agent assignment, broadcast to nearby agents
   } catch (error) {
     console.error('Error handling charge completed:', error);
@@ -112,7 +143,8 @@ async function handleChargeCompleted(data: any) {
 /**
  * Handle agent compensation transfer
  */
-async function handleTransferCompleted(data: any) {
+// fix line 115: typed data as TransferEventData instead of `any`
+async function handleTransferCompleted(data: TransferEventData) {
   try {
     const { reference, amount, status } = data;
 
@@ -122,9 +154,7 @@ async function handleTransferCompleted(data: any) {
     }
 
     // TODO: Update agent virtual account balance
-
     // TODO: Update marking job compensation status
-
     // TODO: Notify agent of payment received
 
     console.log('Agent compensation transferred:', {
@@ -140,7 +170,8 @@ async function handleTransferCompleted(data: any) {
 /**
  * Handle failed payment
  */
-async function handleChargeFailed(data: any) {
+// fix line 143: typed data as ChargeEventData instead of `any`
+async function handleChargeFailed(data: ChargeEventData) {
   try {
     const { tx_ref, customer } = data;
 
@@ -151,7 +182,6 @@ async function handleChargeFailed(data: any) {
     }
 
     // TODO: Update marking job status to failed
-
     // TODO: Notify property owner of payment failure
 
     console.log('Marking job payment failed:', {

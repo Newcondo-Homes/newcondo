@@ -8,7 +8,6 @@ import { PropertyMap } from '@/components/properties/PropertyMap'
 import { PropertyActions } from '@/components/properties/PropertyActions'
 import { SimilarProperties } from '@/components/properties/SimilarProperties'
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs'
-import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 
 interface PropertyPageProps {
   params: {
@@ -44,7 +43,7 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
         })) || [],
       },
     }
-  } catch (error) {
+  } catch {
     return {
       title: 'Property | NewCondo',
       description: 'View property details',

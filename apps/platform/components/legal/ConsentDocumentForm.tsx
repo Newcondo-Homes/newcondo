@@ -15,6 +15,7 @@ import { Checkbox } from '@newcondo/ui/components/checkbox'
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 import { Badge } from '@newcondo/ui/components/badge'
 import { Progress } from '@newcondo/ui/components/progress'
+import Image from 'next/image'
 
 const consentDocumentSchema = z.object({
   propertyId: z.string().min(1, 'Property is required'),
@@ -93,26 +94,23 @@ export default function ConsentDocumentForm({
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
-      // Validate file type and size
       if (!file.type.includes('pdf') && !file.type.includes('image')) {
         alert('Please upload a PDF or image file')
         return
       }
 
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         alert('File size must be less than 5MB')
         return
       }
 
       setUploadedFile(file)
-      
-      // Create preview for images
+
       if (file.type.includes('image')) {
         const url = URL.createObjectURL(file)
         setPreviewUrl(url)
       }
 
-      // Simulate upload progress
       let progress = 0
       const interval = setInterval(() => {
         progress += 10
@@ -132,16 +130,6 @@ export default function ConsentDocumentForm({
 
   const handleFormSubmit = async (data: ConsentDocumentData) => {
     await onSubmit({ ...data, file: uploadedFile || undefined })
-  }
-
-  const getDocumentTypeLabel = (type: string) => {
-    const labels = {
-      'CONSENT_TO_MANAGE': 'Consent to Manage Property',
-      'CONSENT_TO_MARKET': 'Consent to Market Property',
-      'CONSENT_TO_RENT': 'Consent to Rent Property',
-      'GENERAL_CONSENT': 'General Consent Agreement'
-    }
-    return labels[type as keyof typeof labels]
   }
 
   return (
@@ -243,8 +231,8 @@ export default function ConsentDocumentForm({
                         <SelectItem value="NIN">National ID Number (NIN)</SelectItem>
                         <SelectItem value="BVN">Bank Verification Number (BVN)</SelectItem>
                         <SelectItem value="PASSPORT">International Passport</SelectItem>
-                        <SelectItem value="VOTERS_CARD">Voter's Card</SelectItem>
-                        <SelectItem value="DRIVERS_LICENSE">Driver's License</SelectItem>
+                        <SelectItem value="VOTERS_CARD">Voter&apos;s Card</SelectItem>
+                        <SelectItem value="DRIVERS_LICENSE">Driver&apos;s License</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -276,7 +264,7 @@ export default function ConsentDocumentForm({
                   <FormItem>
                     <FormLabel>Agent Name *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Agent's full name" />
+                      <Input {...field} placeholder="Agent&apos;s full name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -379,8 +367,8 @@ export default function ConsentDocumentForm({
                 <FormItem>
                   <FormLabel>Special Conditions</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      {...field} 
+                    <Textarea
+                      {...field}
                       placeholder="Any special conditions or restrictions..."
                       rows={3}
                     />
@@ -393,7 +381,7 @@ export default function ConsentDocumentForm({
             {/* Document Upload */}
             <div className="space-y-3">
               <FormLabel>Signed Consent Document</FormLabel>
-              
+
               {!uploadedFile ? (
                 <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                   <Upload className="mx-auto h-12 w-12 text-muted-foreground/50" />
@@ -434,7 +422,7 @@ export default function ConsentDocumentForm({
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   {uploadProgress < 100 ? (
                     <Progress value={uploadProgress} className="w-full" />
                   ) : (
@@ -445,11 +433,12 @@ export default function ConsentDocumentForm({
                   )}
 
                   {previewUrl && (
-                    <div className="mt-3">
-                      <img 
-                        src={previewUrl} 
-                        alt="Document preview" 
-                        className="max-w-xs max-h-40 object-contain border rounded"
+                    <div className="mt-3 relative w-full max-w-xs h-40">
+                      <Image
+                        src={previewUrl}
+                        alt="Document preview"
+                        fill
+                        className="object-contain border rounded"
                       />
                     </div>
                   )}
@@ -489,7 +478,7 @@ export default function ConsentDocumentForm({
                       Consent Acknowledgment *
                     </FormLabel>
                     <div className="text-sm text-muted-foreground">
-                      I acknowledge that I have read and understood the terms of this consent 
+                      I acknowledge that I have read and understood the terms of this consent
                       document and hereby grant the specified permissions to the named agent.
                     </div>
                     <FormMessage />
@@ -502,15 +491,15 @@ export default function ConsentDocumentForm({
             <Alert>
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                This consent document will be legally binding. Please ensure all information 
+                This consent document will be legally binding. Please ensure all information
                 is accurate and complete before submitting.
               </AlertDescription>
             </Alert>
 
             {/* Submit Button */}
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={isLoading}
             >
               {isLoading ? 'Submitting...' : 'Submit Consent Document'}

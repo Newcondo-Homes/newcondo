@@ -6,7 +6,7 @@ import { RewardTiers } from '@/components/referrals/RewardTiers';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { useRewardsSummary } from '@/hooks/useRewards';
 import { formatCurrency } from '@/lib/utils/referralHelpers';
-import { Wallet, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Wallet, Clock, CheckCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'My Rewards | NewCondo',

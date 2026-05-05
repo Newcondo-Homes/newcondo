@@ -23,7 +23,7 @@ interface MarkingPaymentFormProps {
 type PaymentMethod = 'CARD' | 'BANK_TRANSFER' | 'VIRTUAL_ACCOUNT';
 
 export default function MarkingPaymentForm({
-  jobId: _jobId,
+  // jobId,
   markingFee,
   currency = 'NGN',
   onPaymentInitiate,

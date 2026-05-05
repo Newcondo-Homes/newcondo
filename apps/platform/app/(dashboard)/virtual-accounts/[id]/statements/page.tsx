@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
@@ -8,29 +8,26 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Separator } from '@newcondo/ui/components/separator';
-import { useAuth } from '@/hooks/useAuth';
+// fix line 11: removed unused useAuth import
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import {
   ArrowLeft,
   Download,
   FileText,
-  Calendar,
+  // fix line 17: removed unused Calendar
   TrendingUp,
   TrendingDown,
   AlertCircle,
   Filter,
-  Eye,
+  // fix line 22: removed unused Eye
   List
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from 'date-fns';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@newcondo/ui/components/table';
 
-// TODO: remember to implement virtualAccount webhooks and websockets 
-// for instant notifications.
-// look at the newcondo prompts folder for virtual accounts
 interface Statement {
   id: string;
-  month: string; // YYYY-MM format
+  month: string;
   year: number;
   openingBalance: number;
   closingBalance: number;
@@ -77,22 +74,7 @@ export default function VirtualAccountStatementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
 
-  useEffect(() => {
-    fetchAccountInfo();
-    fetchStatements();
-  }, [id]);
-
-  useEffect(() => {
-    if (selectedPeriod && statements.length > 0) {
-      const statement = statements.find(s => s.month === selectedPeriod);
-      if (statement) {
-        setSelectedStatement(statement);
-        fetchTransactionsForPeriod(selectedPeriod);
-      }
-    }
-  }, [selectedPeriod, statements]);
-
-  const fetchAccountInfo = async () => {
+  const fetchAccountInfo = useCallback(async () => {
     try {
       const response = await fetch(`/api/virtual-accounts/${id}`, {
         credentials: 'include',
@@ -114,9 +96,36 @@ export default function VirtualAccountStatementsPage() {
     } catch (err) {
       console.error('Error fetching account info:', err);
     }
-  };
+  }, [id]);
 
-  const fetchStatements = async () => {
+  // fix line 93: wrapped in useCallback so it's stable for the dep array
+  const fetchTransactionsForPeriod = useCallback(async (period: string) => {
+    try {
+      setLoadingTransactions(true);
+      const [year, month] = period.split('-');
+      const startDate = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+      const endDate = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+
+      const response = await fetch(
+        `/api/virtual-accounts/${id}/transactions?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
+        { credentials: 'include' }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+
+      const data = await response.json();
+      setTransactions(data.data);
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+      setTransactions([]);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  }, [id]);
+
+  const fetchStatements = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/virtual-accounts/${id}/statements`, {
@@ -137,7 +146,6 @@ export default function VirtualAccountStatementsPage() {
         if (currentStatement) {
           setSelectedPeriod(currentMonth);
         } else {
-          // Select most recent statement
           const sortedStatements = data.data.sort((a: Statement, b: Statement) =>
             new Date(b.month + '-01').getTime() - new Date(a.month + '-01').getTime()
           );
@@ -149,35 +157,24 @@ export default function VirtualAccountStatementsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, selectedPeriod]);
 
-  const fetchTransactionsForPeriod = async (period: string) => {
-    try {
-      setLoadingTransactions(true);
-      const [year, month] = period.split('-');
-      const startDate = startOfMonth(new Date(parseInt(year), parseInt(month) - 1));
-      const endDate = endOfMonth(new Date(parseInt(year), parseInt(month) - 1));
+  // fix line 83: both fetchAccountInfo and fetchStatements now stable via useCallback
+  useEffect(() => {
+    fetchAccountInfo();
+    fetchStatements();
+  }, [fetchAccountInfo, fetchStatements]);
 
-      const response = await fetch(
-        `/api/virtual-accounts/${id}/transactions?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`,
-        {
-          credentials: 'include'
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+  // fix line 93: fetchTransactionsForPeriod now stable via useCallback
+  useEffect(() => {
+    if (selectedPeriod && statements.length > 0) {
+      const statement = statements.find(s => s.month === selectedPeriod);
+      if (statement) {
+        setSelectedStatement(statement);
+        fetchTransactionsForPeriod(selectedPeriod);
       }
-
-      const data = await response.json();
-      setTransactions(data.data);
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
-      setTransactions([]);
-    } finally {
-      setLoadingTransactions(false);
     }
-  };
+  }, [selectedPeriod, statements, fetchTransactionsForPeriod]);
 
   const generateStatement = async (period: string) => {
     try {
@@ -191,7 +188,6 @@ export default function VirtualAccountStatementsPage() {
         throw new Error('Failed to generate statement');
       }
 
-      // Refresh statements
       fetchStatements();
     } catch (err) {
       console.error('Error generating statement:', err);
@@ -200,7 +196,8 @@ export default function VirtualAccountStatementsPage() {
 
   const downloadStatement = async (statement: Statement) => {
     try {
-      const response = await fetch(`/api/virtual-accounts/${id}/statements/${statement.month}/download`,
+      const response = await fetch(
+        `/api/virtual-accounts/${id}/statements/${statement.month}/download`,
         { credentials: 'include' }
       );
 
@@ -235,7 +232,6 @@ export default function VirtualAccountStatementsPage() {
     return format(new Date(parseInt(year), parseInt(month) - 1), 'MMMM yyyy');
   };
 
-  // Generate available periods (last 12 months)
   const getAvailablePeriods = () => {
     const periods = [];
     const currentDate = new Date();
@@ -246,7 +242,7 @@ export default function VirtualAccountStatementsPage() {
       periods.push({
         value: period,
         label: format(date, 'MMMM yyyy'),
-        hasStatement: statements.some(s => s.month === period)
+        hasStatement: statements.some(s => s.month === period),
       });
     }
 

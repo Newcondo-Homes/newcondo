@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   getAgentReferrals,
   getAgentReferralStats,
@@ -28,20 +28,50 @@ import {
 import { format } from "date-fns";
 import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
 
+// ✅ Typed interfaces replacing any
+interface ReferralProperty {
+  id: string;
+  propertyId: string;
+  propertyTitle?: string;
+  status: string;
+  views?: number;
+  clicks?: number;
+  commission?: number;
+  createdAt?: string;
+}
+
+interface ActivityItem {
+  id?: string;
+  type: string;
+  propertyTitle?: string;
+  timestamp?: string;
+}
+
+interface EarningItem {
+  id?: string;
+  propertyTitle?: string;
+  amount?: number;
+  status: string;
+  createdAt?: string;
+}
+
+interface EarningsResponse {
+  earnings: EarningItem[];
+  pendingTotal?: number;
+  paidTotal?: number;
+}
+
 export default function AgentReferralTracking() {
   const [stats, setStats] = useState<ReferralDashboard | null>(null);
   const [referrals, setReferrals] = useState<ReferralPerformanceResponse | null>(null);
   const [activity, setActivity] = useState<ReferralAnalytics | null>(null);
-  const [earnings, setEarnings] = useState<any>(null);
+  // ✅ Replaced any with EarningsResponse
+  const [earnings, setEarnings] = useState<EarningsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
 
-  useEffect(() => {
-    fetchAllData();
-  }, []);
-
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -56,13 +86,19 @@ export default function AgentReferralTracking() {
       setStats(statsRes);
       setReferrals(referralsRes);
       setActivity(activityRes);
-      setEarnings(earningsRes);
-    } catch (err: any) {
-      setError(err.message || "Failed to load referral data");
+      // ✅ Replaced any cast with unknown round-trip
+      setEarnings(earningsRes as unknown as EarningsResponse);
+    } catch (err: unknown) {
+      // ✅ Replaced any with unknown
+      setError(err instanceof Error ? err.message : "Failed to load referral data");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchAllData();
+  }, [fetchAllData]);
 
   if (isLoading) {
     return (
@@ -171,7 +207,8 @@ export default function AgentReferralTracking() {
               </CardContent>
             </Card>
           ) : (
-            referrals.properties.map((referral: any) => (
+            // ✅ ReferralProperty replaces any
+            (referrals.properties as unknown as ReferralProperty[]).map((referral) => (
               <Card key={referral.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
@@ -238,7 +275,8 @@ export default function AgentReferralTracking() {
                 <CardDescription>Latest interactions with your referral links</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {activity.clicksOverTime.map((item: any, index: number) => (
+                {/* ✅ ActivityItem replaces any */}
+                {(activity.clicksOverTime as unknown as ActivityItem[]).map((item, index) => (
                   <div key={item.id ?? index}>
                     <div className="flex items-center justify-between py-2">
                       <div className="flex items-center gap-3">
@@ -280,7 +318,6 @@ export default function AgentReferralTracking() {
             </Card>
           ) : (
             <>
-              {/* Earnings Summary */}
               <div className="grid grid-cols-2 gap-4">
                 <Card>
                   <CardHeader className="pb-3">
@@ -300,13 +337,13 @@ export default function AgentReferralTracking() {
                 </Card>
               </div>
 
-              {/* Earnings List */}
               <Card>
                 <CardHeader>
                   <CardTitle>Earnings History</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {earnings.earnings.map((earning: any, index: number) => (
+                  {/* ✅ EarningItem replaces any */}
+                  {earnings.earnings.map((earning, index) => (
                     <div key={earning.id ?? index}>
                       <div className="flex items-center justify-between py-2">
                         <div>

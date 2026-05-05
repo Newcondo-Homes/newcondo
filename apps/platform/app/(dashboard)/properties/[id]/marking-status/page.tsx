@@ -2,26 +2,26 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { Separator } from '@newcondo/ui/components/separator';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
-import { 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
-  MapPin, 
-  User, 
-  Phone, 
+import {
+  Clock,
+  CheckCircle,
+  MapPin,
+  User,
+  Phone,
   Calendar,
   AlertTriangle,
   ArrowLeft,
   ExternalLink,
   Image as ImageIcon,
-  MapPinned
+  MapPinned,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -63,24 +63,18 @@ export default function MarkingStatusPage() {
   const params = useParams();
   const router = useRouter();
   const propertyId = params.id as string;
-  
+
   const [markingJob, setMarkingJob] = useState<MarkingJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMarkingStatus();
-  }, [propertyId]);
-
-  const fetchMarkingStatus = async () => {
+  const fetchMarkingStatus = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/property-marking/status/${propertyId}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch marking status');
-      }
-      
+
+      if (!response.ok) throw new Error('Failed to fetch marking status');
+
       const data = await response.json();
       setMarkingJob(data.markingJob);
     } catch (err) {
@@ -88,46 +82,52 @@ export default function MarkingStatusPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [propertyId]);
+
+  useEffect(() => {
+    fetchMarkingStatus();
+  }, [fetchMarkingStatus]);
 
   const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive' | 'outline', label: string }> = {
+    const statusConfig: Record<
+      string,
+      { variant: 'default' | 'secondary' | 'destructive' | 'outline'; label: string }
+    > = {
       QUEUED: { variant: 'secondary', label: 'In Queue' },
       ASSIGNED: { variant: 'default', label: 'Assigned' },
       IN_PROGRESS: { variant: 'default', label: 'In Progress' },
       COMPLETED: { variant: 'outline', label: 'Completed' },
       CANCELLED: { variant: 'destructive', label: 'Cancelled' },
-      EXPIRED: { variant: 'destructive', label: 'Expired' }
+      EXPIRED: { variant: 'destructive', label: 'Expired' },
     };
 
-    const config = statusConfig[status] || statusConfig.QUEUED;
+    const config = statusConfig[status] ?? statusConfig['QUEUED'];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const getUrgencyBadge = (urgency: string) => {
-    const urgencyConfig: Record<string, { variant: 'default' | 'secondary' | 'destructive', label: string }> = {
+    const urgencyConfig: Record<
+      string,
+      { variant: 'default' | 'secondary' | 'destructive'; label: string }
+    > = {
       LOW: { variant: 'secondary', label: 'Low Priority' },
       NORMAL: { variant: 'default', label: 'Normal' },
       HIGH: { variant: 'default', label: 'High Priority' },
-      URGENT: { variant: 'destructive', label: 'Urgent' }
+      URGENT: { variant: 'destructive', label: 'Urgent' },
     };
 
-    const config = urgencyConfig[urgency] || urgencyConfig.NORMAL;
+    const config = urgencyConfig[urgency] ?? urgencyConfig['NORMAL'];
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
   const calculateTimeRemaining = (expiryTime?: string) => {
     if (!expiryTime) return null;
-    
-    const now = new Date();
-    const expiry = new Date(expiryTime);
-    const diff = expiry.getTime() - now.getTime();
-    
+
+    const diff = new Date(expiryTime).getTime() - Date.now();
     if (diff <= 0) return 'Expired';
-    
+
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
     return `${hours}h ${minutes}m remaining`;
   };
 
@@ -135,7 +135,7 @@ export default function MarkingStatusPage() {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
         </div>
       </div>
     );
@@ -150,11 +150,7 @@ export default function MarkingStatusPage() {
             {error || 'No marking job found for this property'}
           </AlertDescription>
         </Alert>
-        <Button 
-          onClick={() => router.back()} 
-          variant="outline" 
-          className="mt-4"
-        >
+        <Button onClick={() => router.back()} variant="outline" className="mt-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Go Back
         </Button>
@@ -166,15 +162,11 @@ export default function MarkingStatusPage() {
     <div className="container mx-auto py-8 px-4 max-w-5xl">
       {/* Header */}
       <div className="mb-6">
-        <Button 
-          onClick={() => router.back()} 
-          variant="ghost" 
-          className="mb-4"
-        >
+        <Button onClick={() => router.back()} variant="ghost" className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Property
         </Button>
-        
+
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">Property Marking Status</h1>
@@ -260,9 +252,7 @@ export default function MarkingStatusPage() {
               <User className="h-5 w-5" />
               Contact Person
             </CardTitle>
-            <CardDescription>
-              Person to contact for property access
-            </CardDescription>
+            <CardDescription>Person to contact for property access</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -308,9 +298,7 @@ export default function MarkingStatusPage() {
                 <User className="h-5 w-5" />
                 Assigned Agent
               </CardTitle>
-              <CardDescription>
-                Agent handling your marking job
-              </CardDescription>
+              <CardDescription>Agent handling your marking job</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -376,7 +364,7 @@ export default function MarkingStatusPage() {
                 <p className="font-medium">{format(new Date(markingJob.completedAt), 'PPp')}</p>
               </div>
             )}
-            
+
             {markingJob.completionNotes && (
               <>
                 <Separator />
@@ -397,11 +385,16 @@ export default function MarkingStatusPage() {
                   </p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     {markingJob.completionImages.map((image, index) => (
-                      <div key={index} className="relative aspect-video rounded-lg overflow-hidden border">
-                        <img 
-                          src={image} 
+                      <div
+                        key={index}
+                        className="relative aspect-video rounded-lg overflow-hidden border"
+                      >
+                        <Image
+                          src={image}
                           alt={`Marking image ${index + 1}`}
-                          className="object-cover w-full h-full"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 50vw, 33vw"
                         />
                       </div>
                     ))}
@@ -411,16 +404,18 @@ export default function MarkingStatusPage() {
             )}
 
             <Separator />
-            
+
             <div className="flex gap-4">
-              <Button 
-                onClick={() => router.push(`/properties/my-listings/${propertyId}/verify-marking`)}
+              <Button
+                onClick={() =>
+                  router.push(`/properties/my-listings/${propertyId}/verify-marking`)
+                }
                 className="flex-1"
               >
                 <MapPinned className="mr-2 h-4 w-4" />
                 Verify Marking
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => router.push(`/properties/${propertyId}`)}
               >
@@ -463,7 +458,9 @@ export default function MarkingStatusPage() {
                   <div className="rounded-full bg-primary p-2">
                     <CheckCircle className="h-4 w-4 text-primary-foreground" />
                   </div>
-                  {markingJob.completedAt && <div className="w-px h-full bg-border mt-2" />}
+                  {markingJob.completedAt && (
+                    <div className="w-px h-full bg-border mt-2" />
+                  )}
                 </div>
                 <div className="pb-8">
                   <p className="font-medium">Agent Assigned</p>

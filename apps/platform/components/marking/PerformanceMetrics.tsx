@@ -15,7 +15,16 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import  api  from "@/lib/api/client";
+import api from "@/lib/api/client";
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
 
 interface PerformanceMetrics {
   // Time-based metrics
@@ -23,30 +32,30 @@ interface PerformanceMetrics {
   averageCompletionTime: number; // hours
   fastestCompletion: number; // hours
   slowestCompletion: number; // hours
-  
+
   // Quality metrics
   reliabilityScore: number; // 0-5
   qualityScore: number; // 0-100
   customerSatisfaction: number; // 0-5
-  
+
   // Efficiency metrics
   jobsCompletedOnTime: number;
   jobsCompletedLate: number;
   jobsCancelled: number;
   averagePhotosPerJob: number;
-  
+
   // Consistency metrics
   consistencyScore: number; // 0-100
   streakDays: number;
   longestStreak: number;
-  
+
   // Ranking
   ranking: {
     position: number;
     total: number;
     percentile: number;
   };
-  
+
   // Monthly breakdown
   monthlyMetrics: {
     month: string;
@@ -112,9 +121,10 @@ export default function PerformanceMetrics() {
         const response = await api.get(`/marking/agents/${user.id}/performance`);
         setMetrics(response.data as PerformanceMetrics);
         setError(null);
-      } catch (err: any) {
-        console.error("Error fetching performance metrics:", err);
-        setError(err.response?.data?.message || "Failed to load metrics");
+      } catch (err) {
+        const apiErr = err as ApiError;
+        console.error("Error fetching performance metrics:", apiErr);
+        setError(apiErr.response?.data?.message ?? "Failed to load metrics");
       } finally {
         setLoading(false);
       }
@@ -181,7 +191,7 @@ export default function PerformanceMetrics() {
               color="yellow"
               trend={metrics.reliabilityScore >= 4 ? "up" : "neutral"}
             />
-            
+
             <MetricCard
               icon={<Target className="h-5 w-5" />}
               title="Quality Score"
@@ -189,7 +199,7 @@ export default function PerformanceMetrics() {
               subtitle="Overall quality"
               color="green"
             />
-            
+
             <MetricCard
               icon={<CheckCircle2 className="h-5 w-5" />}
               title="On-Time Completion"
@@ -197,7 +207,7 @@ export default function PerformanceMetrics() {
               subtitle={`${metrics.jobsCompletedOnTime} jobs`}
               color="blue"
             />
-            
+
             <MetricCard
               icon={<TrendingUp className="h-5 w-5" />}
               title="Current Streak"
@@ -252,7 +262,7 @@ export default function PerformanceMetrics() {
               subtitle="Time to accept job"
               color="blue"
             />
-            
+
             <MetricCard
               icon={<Clock className="h-5 w-5" />}
               title="Avg. Completion Time"
@@ -260,7 +270,7 @@ export default function PerformanceMetrics() {
               subtitle="Time to complete"
               color="green"
             />
-            
+
             <MetricCard
               icon={<CheckCircle2 className="h-5 w-5" />}
               title="Fastest Completion"
@@ -268,7 +278,7 @@ export default function PerformanceMetrics() {
               subtitle="Personal best"
               color="purple"
             />
-            
+
             <MetricCard
               icon={<AlertCircle className="h-5 w-5" />}
               title="Slowest Completion"
@@ -322,14 +332,14 @@ export default function PerformanceMetrics() {
               subtitle="Average rating"
               color="yellow"
             />
-            
+
             <MetricCard
               icon={<Target className="h-5 w-5" />}
               title="Quality Score"
               value={`${metrics.qualityScore}%`}
               color="green"
             />
-            
+
             <MetricCard
               icon={<CheckCircle2 className="h-5 w-5" />}
               title="Avg. Photos per Job"

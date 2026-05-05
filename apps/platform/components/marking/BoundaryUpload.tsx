@@ -42,7 +42,11 @@ export function BoundaryUpload({
   // const [map, setMap] = useState<google.maps.Map | null>(null);
   const [isDrawing, setIsDrawing] = useState(true);
 
-  const onLoad = useCallback((map: google.maps.Map) => {
+  // const onLoad = useCallback((map: google.maps.Map) => {
+  //   // setMap(map);
+  // }, []);
+  
+  const onLoad = useCallback(() => {
     // setMap(map);
   }, []);
 

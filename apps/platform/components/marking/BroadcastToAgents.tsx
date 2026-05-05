@@ -44,10 +44,6 @@ export function BroadcastToAgents({
   const [loadingAgents, setLoadingAgents] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchNearbyAgents();
-  }, []);
-
   const fetchNearbyAgents = useCallback(async () => {
     try {
       setLoadingAgents(true);

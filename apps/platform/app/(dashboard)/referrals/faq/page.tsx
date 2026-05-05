@@ -188,7 +188,7 @@ export default function ReferralFAQPage() {
         <div className="flex items-start gap-4">
           <MessageCircle className="h-6 w-6 text-primary shrink-0 mt-1" />
           <div className="space-y-2">
-            <h3 className="font-semibold">Can't find what you're looking for?</h3>
+            <h3 className="font-semibold">Can&apos;t find what you&apos;re looking for?</h3>
             <p className="text-sm text-muted-foreground">
               Our support team is here to help! Contact us at{" "}
               <a

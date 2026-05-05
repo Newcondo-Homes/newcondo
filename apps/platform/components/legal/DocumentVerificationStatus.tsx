@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, FileText, Shield } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Progress } from '@newcondo/ui/components/progress';
 import { Button } from '@newcondo/ui/components/button';

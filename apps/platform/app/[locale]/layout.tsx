@@ -68,7 +68,7 @@ export default async function LocaleLayout({
   params: { locale: string };
 }) {
   // Validate locale
-  if (!locales.includes(locale as any)) {
+  if (!locales.includes(locale as (typeof locales)[number])) {
     notFound();
   }
 
@@ -76,7 +76,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   // Check if RTL
-  const isRTL = rtlLocales.includes(locale as any);
+  const isRTL = rtlLocales.includes(locale as (typeof rtlLocales)[number]);
 
   return (
     <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'} suppressHydrationWarning>

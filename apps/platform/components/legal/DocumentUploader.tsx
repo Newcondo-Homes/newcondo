@@ -135,7 +135,7 @@ export function DocumentUploader({
         onUploadError(error instanceof Error ? error.message : 'Upload failed');
       }
     });
-  }, [documentType, propertyId, maxFiles, onUploadComplete, onUploadError, uploadFile]);
+  }, [maxFiles, onUploadComplete, onUploadError, uploadFile]);
 
   const { getRootProps, getInputProps, isDragActive, fileRejections } = useDropzone({
     onDrop,

@@ -1,7 +1,6 @@
 // apps/platform/app/r/[code]/page.tsx
 
 import { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
@@ -28,7 +27,7 @@ async function getReferralData(code: string) {
     }
 
     return await response.json();
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -83,7 +82,7 @@ export default async function ReferralLandingPage({ params }: Props) {
           <div className="text-center space-y-4">
             <Badge className="mb-2">Exclusive Invitation</Badge>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              You've Been Invited to NewCondo!
+              You&apos;ve Been Invited to NewCondo!
             </h1>
             <p className="text-xl text-muted-foreground">
               Join {referrer.name} and discover seamless property management

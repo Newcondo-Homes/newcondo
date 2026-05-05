@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getAgentReferrals, getReferralActivity } from "@/lib/api/agentReferrals";
+import { useEffect, useState, useCallback } from "react";
+import { getAgentReferrals } from "@/lib/api/agentReferrals";
 import type {
   ReferralPerformanceItem,
   ReferralPerformanceResponse,
@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { LoadingSpinner } from "@/components/shared/feedback/LoadingSpinner";
+import Image from "next/image";
 
 export default function SubAgentManagement() {
   const [referrals, setReferrals] = useState<ReferralPerformanceResponse | null>(null);
@@ -42,22 +43,24 @@ export default function SubAgentManagement() {
   const [activeTab, setActiveTab] = useState("properties");
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  // ✅ Wrapped in useCallback to be safe if added to useEffect deps later
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
       const referralsRes = await getAgentReferrals({ limit: 50 });
       setReferrals(referralsRes);
-    } catch (err: any) {
-      setError(err.message || "Failed to load sub-agent data");
+    } catch (err: unknown) {
+      // ✅ Replaced any with unknown
+      setError(err instanceof Error ? err.message : "Failed to load sub-agent data");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const handleCopyLink = async (link: string, code: string) => {
     try {
@@ -114,8 +117,9 @@ export default function SubAgentManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Sub-Agent Management</h1>
+          {/* ✅ Fixed apostrophe */}
           <p className="text-gray-600 mt-1">
-            Manage properties you're promoting and track your referral links
+            Manage properties you&apos;re promoting and track your referral links
           </p>
         </div>
         <Button variant="outline" onClick={fetchData}>
@@ -251,13 +255,16 @@ function ReferralPropertyCard({
     <Card className={!referral.isActive ? "opacity-60" : ""}>
       <CardContent className="p-6">
         <div className="flex items-start gap-4">
-          {/* Property Image */}
+          {/* ✅ Replaced <img> with Next.js <Image /> */}
           {referral.property.image ? (
-            <img
-              src={referral.property.image}
-              alt={referral.property.title}
-              className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-            />
+            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              <Image
+                src={referral.property.image}
+                alt={referral.property.title}
+                fill
+                className="object-cover"
+              />
+            </div>
           ) : (
             <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
               <ExternalLink className="h-8 w-8 text-gray-400" />

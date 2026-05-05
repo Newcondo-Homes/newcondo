@@ -12,9 +12,32 @@ interface TransactionFilters {
   searchTerm?: string;
 }
 
+// the type below was gotten from this code apps\platform\components\virtual-accounts\VirtualAccountTransactions.tsx
+interface Transaction {
+  id: string;
+  accountId: string;
+  type: 'CREDIT' | 'DEBIT';
+  amount: number;
+  currency: string;
+  description: string;
+  reference: string;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
+  category: 'RENT_PAYMENT' | 'DEPOSIT' | 'COMMISSION' | 'REFUND' | 'MARKING_FEE' | 'WITHDRAWAL' | 'OTHER';
+  metadata?: {
+    propertyId?: string;
+    propertyTitle?: string;
+    tenantName?: string;
+    agentName?: string;
+    markingJobId?: string;
+  };
+  balanceAfter: number;
+  createdAt: string;
+  processedAt?: string;
+}
+
 interface TransactionsClientProps {
   accountId: string;
-  transactions: any[];
+  transactions: Transaction[];
 }
 
 export function TransactionsClient({ accountId, transactions }: TransactionsClientProps) {
@@ -37,7 +60,6 @@ export function TransactionsClient({ accountId, transactions }: TransactionsClie
 
       if (!response.ok) throw new Error('Export failed');
 
-      // Trigger file download
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -55,7 +77,6 @@ export function TransactionsClient({ accountId, transactions }: TransactionsClie
   };
 
   const handleRefresh = () => {
-    // Trigger a page refresh to re-fetch server data
     window.location.reload();
   };
 

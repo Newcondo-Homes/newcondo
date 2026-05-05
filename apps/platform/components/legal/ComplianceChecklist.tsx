@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CheckCircle2, Circle, AlertTriangle, FileText, Users, Shield, ScrollText } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
@@ -41,8 +41,8 @@ export default function ComplianceChecklist({
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Define compliance requirements based on user type and context
-  const getComplianceRequirements = (): ComplianceItem[] => {
+  // ✅ Wrapped in useCallback with all dependencies
+  const getComplianceRequirements = useCallback((): ComplianceItem[] => {
     const baseItems: ComplianceItem[] = [
       {
         id: 'terms-conditions',
@@ -64,7 +64,6 @@ export default function ComplianceChecklist({
       }
     ];
 
-    // Owner-specific requirements
     if (userType === 'LANDLORD' || userType === 'PROPERTY_MANAGER') {
       baseItems.push(
         {
@@ -90,7 +89,6 @@ export default function ComplianceChecklist({
         }
       );
 
-      // Additional requirements for property managers
       if (userType === 'PROPERTY_MANAGER') {
         baseItems.push({
           id: 'business-registration',
@@ -105,7 +103,6 @@ export default function ComplianceChecklist({
       }
     }
 
-    // Agent-specific requirements
     if (isAgent || userType === 'AGENT') {
       baseItems.push(
         {
@@ -132,29 +129,29 @@ export default function ComplianceChecklist({
     }
 
     return baseItems;
-  };
+  }, [userType, isAgent, propertyId]);
 
-  // Fetch compliance status from API
-  const fetchComplianceStatus = async () => {
+  // ✅ Wrapped in useCallback with getComplianceRequirements as dependency
+  const fetchComplianceStatus = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/legal/compliance-status?userType=${userType}&propertyId=${propertyId || ''}`);
-      
+      const response = await fetch(
+        `/api/legal/compliance-status?userType=${userType}&propertyId=${propertyId || ''}`
+      );
+
       if (response.ok) {
         const data = await response.json();
         const requirements = getComplianceRequirements();
-        
-        // Update compliance items with actual status from API
+
         const updatedItems = requirements.map(item => ({
           ...item,
           completed: data.completedItems?.includes(item.id) || false,
           status: data.itemStatuses?.[item.id] || 'pending',
           rejectionReason: data.rejectionReasons?.[item.id]
         }));
-        
+
         setComplianceItems(updatedItems);
       } else {
-        // Fallback to default requirements
         setComplianceItems(getComplianceRequirements());
       }
     } catch (error) {
@@ -163,13 +160,12 @@ export default function ComplianceChecklist({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userType, propertyId, getComplianceRequirements]);
 
   useEffect(() => {
     fetchComplianceStatus();
-  }, [userType, propertyId]);
+  }, [fetchComplianceStatus]); // ✅ dependency satisfied
 
-  // Calculate progress
   const requiredItems = complianceItems.filter(item => item.required);
   const completedRequired = requiredItems.filter(item => item.completed);
   const progress = requiredItems.length > 0 ? (completedRequired.length / requiredItems.length) * 100 : 0;
@@ -179,41 +175,25 @@ export default function ComplianceChecklist({
       onItemClick(item);
       return;
     }
-
     if (item.actionUrl) {
       router.push(item.actionUrl);
     }
   };
 
   const getStatusIcon = (status: string, completed: boolean) => {
-    if (completed) {
-      return <CheckCircle2 className="h-5 w-5 text-green-600" />;
-    }
-    
+    if (completed) return <CheckCircle2 className="h-5 w-5 text-green-600" />;
     switch (status) {
-      case 'rejected':
-        return <AlertTriangle className="h-5 w-5 text-red-600" />;
-      case 'pending':
-        return <Circle className="h-5 w-5 text-gray-400" />;
-      default:
-        return <Circle className="h-5 w-5 text-gray-400" />;
+      case 'rejected': return <AlertTriangle className="h-5 w-5 text-red-600" />;
+      default: return <Circle className="h-5 w-5 text-gray-400" />;
     }
   };
 
   const getStatusBadge = (status: string, completed: boolean) => {
-    if (completed) {
-      return <Badge variant="default" className="ml-auto">Completed</Badge>;
-    }
-    
+    if (completed) return <Badge variant="default" className="ml-auto">Completed</Badge>;
     switch (status) {
-      case 'rejected':
-        return <Badge variant="destructive" className="ml-auto">Rejected</Badge>;
-      case 'pending':
-        return <Badge variant="secondary" className="ml-auto">Pending</Badge>;
-      case 'not_required':
-        return <Badge variant="outline" className="ml-auto">Not Required</Badge>;
-      default:
-        return <Badge variant="secondary" className="ml-auto">Pending</Badge>;
+      case 'rejected': return <Badge variant="destructive" className="ml-auto">Rejected</Badge>;
+      case 'not_required': return <Badge variant="outline" className="ml-auto">Not Required</Badge>;
+      default: return <Badge variant="secondary" className="ml-auto">Pending</Badge>;
     }
   };
 
@@ -245,8 +225,7 @@ export default function ComplianceChecklist({
         <CardDescription>
           Complete all required legal documents to proceed
         </CardDescription>
-        
-        {/* Progress Bar */}
+
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span>Progress</span>
@@ -255,7 +234,7 @@ export default function ComplianceChecklist({
           <Progress value={progress} className="h-2" />
         </div>
       </CardHeader>
-      
+
       <CardContent>
         <div className="space-y-1">
           {complianceItems.map((item, index) => (
@@ -269,11 +248,11 @@ export default function ComplianceChecklist({
                 <div className="flex-shrink-0">
                   {getStatusIcon(item.status, item.completed)}
                 </div>
-                
+
                 <div className="flex-shrink-0">
                   <item.icon className="h-4 w-4 text-gray-600" />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-gray-900 truncate">
@@ -286,27 +265,26 @@ export default function ComplianceChecklist({
                   <p className="text-xs text-gray-600 truncate">
                     {item.description}
                   </p>
-                  
+
                   {item.status === 'rejected' && item.rejectionReason && (
                     <p className="text-xs text-red-600 mt-1">
                       Reason: {item.rejectionReason}
                     </p>
                   )}
                 </div>
-                
+
                 <div className="flex-shrink-0">
                   {getStatusBadge(item.status, item.completed)}
                 </div>
               </div>
-              
+
               {index < complianceItems.length - 1 && (
                 <Separator className="my-1" />
               )}
             </div>
           ))}
         </div>
-        
-        {/* Summary */}
+
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center justify-between text-sm">
             <span className="font-medium">
@@ -319,7 +297,7 @@ export default function ComplianceChecklist({
               </Badge>
             )}
           </div>
-          
+
           {progress < 100 && (
             <p className="text-xs text-gray-600 mt-2">
               Complete all required items to proceed with property listing

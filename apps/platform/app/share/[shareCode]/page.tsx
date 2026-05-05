@@ -10,18 +10,42 @@ interface SharePageProps {
   };
 }
 
-async function getSharedProperty(shareCode: string) {
+// ✅ Typed interfaces replacing any
+interface PropertyImage {
+  url: string;
+  isPrimary: boolean;
+  altText?: string | null;
+}
+
+interface SharedProperty {
+  title: string;
+  description: string;
+  address: string;
+  city: string;
+  state: string;
+  price: number | string;
+  currency?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: string;
+  features?: string[];
+  propertyType: string;
+  isAvailable: boolean;
+  isOwnerListing: boolean;
+  images?: PropertyImage[];
+  owner?: {
+    name?: string | null;
+  };
+}
+
+async function getSharedProperty(shareCode: string): Promise<SharedProperty | null> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/properties/share/${shareCode}`,
-      {
-        cache: 'no-store',
-      }
+      { cache: 'no-store' }
     );
 
-    if (!res.ok) {
-      return null;
-    }
+    if (!res.ok) return null;
 
     return res.json();
   } catch (error) {
@@ -37,9 +61,10 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
     notFound();
   }
 
-  const primaryImage = property.images?.find((img: any) => img.isPrimary)?.url || 
-                       property.images?.[0]?.url || 
-                       '/images/placeholders/property.jpg';
+  const primaryImage =
+    property.images?.find((img) => img.isPrimary)?.url ||
+    property.images?.[0]?.url ||
+    '/images/placeholders/property.jpg';
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
@@ -82,7 +107,8 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {property.images?.slice(1, 5).map((image: any, idx: number) => (
+            {/* ✅ PropertyImage replaces any */}
+            {property.images?.slice(1, 5).map((image: PropertyImage, idx: number) => (
               <div key={idx} className="relative h-44 md:h-[290px] rounded-lg overflow-hidden">
                 <Image
                   src={image.url}
@@ -99,7 +125,6 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Info */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Title & Location */}
             <div>
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {property.title}
@@ -112,7 +137,6 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
               </div>
             </div>
 
-            {/* Property Features */}
             <div className="flex items-center gap-6 text-gray-700">
               {property.bedrooms && (
                 <div className="flex items-center gap-2">
@@ -134,7 +158,6 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
               )}
             </div>
 
-            {/* Description */}
             <div>
               <h2 className="text-xl font-semibold mb-3">Description</h2>
               <p className="text-gray-700 whitespace-pre-line">
@@ -142,10 +165,9 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
               </p>
             </div>
 
-            {/* Features/Amenities */}
             {property.features && property.features.length > 0 && (
               <div>
-                <h2 className="text-xl font-semibold mb-3">Features & Amenities</h2>
+                <h2 className="text-xl font-semibold mb-3">Features &amp; Amenities</h2>
                 <div className="grid grid-cols-2 gap-3">
                   {property.features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-center gap-2">
@@ -157,7 +179,6 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
               </div>
             )}
 
-            {/* Property Type & Status */}
             <div className="border-t pt-6">
               <dl className="grid grid-cols-2 gap-4">
                 <div>
@@ -170,8 +191,8 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
                   <dt className="text-sm text-gray-500">Availability</dt>
                   <dd className="mt-1">
                     <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      property.isAvailable 
-                        ? 'bg-green-100 text-green-800' 
+                      property.isAvailable
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
                     }`}>
                       {property.isAvailable ? 'Available' : 'Not Available'}
@@ -224,7 +245,6 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
                 </button>
               </div>
 
-              {/* Owner Info */}
               <div className="mt-6 pt-6 border-t">
                 <div className="text-sm text-gray-600">
                   <p className="font-medium text-gray-900 mb-1">Listed by</p>

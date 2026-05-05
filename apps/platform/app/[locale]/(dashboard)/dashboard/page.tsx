@@ -1,4 +1,3 @@
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import { getServerSession } from '@newcondo/auth';
 import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
@@ -167,12 +166,11 @@ function StatCard({
   icon,
   title,
   value,
-  locale,
 }: {
   icon: React.ReactNode;
   title: string;
   value: React.ReactNode;
-  locale: string;
+  locale?: string;
 }) {
   return (
     <Card>

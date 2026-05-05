@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
-import { Progress } from '@newcondo/ui/components/progress';
 import {
   AlertCircle,
   Clock,
@@ -21,7 +21,7 @@ import {
   Share2,
   FileText,
 } from 'lucide-react';
-import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner';
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { useAuth } from '@/hooks/useAuth';
 
 interface QueueAgent {
@@ -75,7 +75,7 @@ export default function QueueStatusPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
 
   const propertyId = params.id as string;
   const jobId = searchParams.get('jobId');
@@ -94,14 +94,10 @@ export default function QueueStatusPage() {
 
       const response = await fetch(`/api/marking-jobs/${jobId}/status`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch job status');
-      }
+      if (!response.ok) throw new Error('Failed to fetch job status');
 
       const data = await response.json();
       setJob(data.job);
@@ -121,25 +117,20 @@ export default function QueueStatusPage() {
     fetchJobStatus();
   }, [fetchJobStatus]);
 
-  // Auto-refresh every 10 seconds if job is still queued or assigned
+  // Auto-refresh every 10 seconds while queued or assigned
   useEffect(() => {
     if (!autoRefresh || !job) return;
-
-    const interval = setInterval(() => {
-      fetchJobStatus();
-    }, 10000);
-
+    const interval = setInterval(fetchJobStatus, 10000);
     return () => clearInterval(interval);
   }, [autoRefresh, job, fetchJobStatus]);
 
-  // Calculate time remaining
+  // Countdown timer
   useEffect(() => {
     if (!job?.timeSlotExpiry) return;
 
     const updateCountdown = () => {
       const expiry = new Date(job.timeSlotExpiry!).getTime();
-      const now = new Date().getTime();
-      const diff = expiry - now;
+      const diff = expiry - Date.now();
 
       if (diff <= 0) {
         setTimeRemaining('Time expired');
@@ -149,7 +140,6 @@ export default function QueueStatusPage() {
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
       setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
     };
 
@@ -160,41 +150,28 @@ export default function QueueStatusPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
-      case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800';
-      case 'ASSIGNED':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'QUEUED':
-        return 'bg-gray-100 text-gray-800';
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
-      case 'EXPIRED':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'COMPLETED': return 'bg-green-100 text-green-800';
+      case 'IN_PROGRESS': return 'bg-blue-100 text-blue-800';
+      case 'ASSIGNED': return 'bg-yellow-100 text-yellow-800';
+      case 'QUEUED': return 'bg-gray-100 text-gray-800';
+      case 'CANCELLED': return 'bg-red-100 text-red-800';
+      case 'EXPIRED': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case 'LOW':
-        return 'bg-gray-100 text-gray-800';
-      case 'NORMAL':
-        return 'bg-blue-100 text-blue-800';
-      case 'HIGH':
-        return 'bg-orange-100 text-orange-800';
-      case 'URGENT':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+      case 'LOW': return 'bg-gray-100 text-gray-800';
+      case 'NORMAL': return 'bg-blue-100 text-blue-800';
+      case 'HIGH': return 'bg-orange-100 text-orange-800';
+      case 'URGENT': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const handleShareMarkingLink = async () => {
     if (!job) return;
-
     const link = `${window.location.origin}/marking/${job.id}/shared`;
     setShareLink(link);
 
@@ -221,19 +198,16 @@ export default function QueueStatusPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NG', {
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString('en-NG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
 
-  if (authLoading || isLoading) {
-    return <LoadingSpinner />;
-  }
+  if (authLoading || isLoading) return <LoadingSpinner />;
 
   if (error || !job) {
     return (
@@ -247,7 +221,9 @@ export default function QueueStatusPage() {
   const isAssigned = job.status === 'ASSIGNED' || job.status === 'IN_PROGRESS';
   const isCompleted = job.status === 'COMPLETED';
   const isQueued = job.status === 'QUEUED';
-  const assignedAgent = job.queue?.find((a) => a.status === 'ASSIGNED' || a.status === 'COMPLETED');
+  const assignedAgent = job.queue?.find(
+    (a) => a.status === 'ASSIGNED' || a.status === 'COMPLETED'
+  );
 
   return (
     <div className="space-y-6">
@@ -260,17 +236,15 @@ export default function QueueStatusPage() {
           <h1 className="text-3xl font-bold tracking-tight mt-4">Marking Job Status</h1>
           <p className="text-gray-600 mt-2">Job ID: {job.id.slice(0, 12).toUpperCase()}...</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchJobStatus}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={fetchJobStatus}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Main Status Card */}
@@ -306,7 +280,7 @@ export default function QueueStatusPage() {
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
-                <div className="w-0.5 h-12 bg-gray-200 my-1"></div>
+                <div className="w-0.5 h-12 bg-gray-200 my-1" />
               </div>
               <div>
                 <p className="font-semibold text-sm">Job Created</p>
@@ -314,58 +288,54 @@ export default function QueueStatusPage() {
               </div>
             </div>
 
-            {/* Payment Status */}
+            {/* Payment */}
             <div className="flex gap-4">
               <div className="flex flex-col items-center">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    job.paymentStatus === 'SUCCESS' ? 'bg-green-100' : 'bg-gray-100'
-                  }`}
-                >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  job.paymentStatus === 'SUCCESS' ? 'bg-green-100' : 'bg-gray-100'
+                }`}>
                   {job.paymentStatus === 'SUCCESS' ? (
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   ) : (
                     <Clock className="w-5 h-5 text-gray-600" />
                   )}
                 </div>
-                <div className="w-0.5 h-12 bg-gray-200 my-1"></div>
+                <div className="w-0.5 h-12 bg-gray-200 my-1" />
               </div>
               <div>
                 <p className="font-semibold text-sm">Payment {job.paymentStatus}</p>
-                <p className="text-xs text-gray-600">
-                  ₦{job.markingFee.toLocaleString()}
-                </p>
+                <p className="text-xs text-gray-600">₦{job.markingFee.toLocaleString()}</p>
               </div>
             </div>
 
-            {/* Queue/Assignment */}
+            {/* Queued */}
             {isQueued && (
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
                     <Loader className="w-5 h-5 text-yellow-600 animate-spin" />
                   </div>
-                  <div className="w-0.5 h-12 bg-gray-200 my-1"></div>
+                  <div className="w-0.5 h-12 bg-gray-200 my-1" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">
-                    Waiting in Queue - Position #{job.queuePosition}
+                    Waiting in Queue — Position #{job.queuePosition}
                   </p>
                   <p className="text-xs text-gray-600 mt-1">
-                    Agents are being notified. Average wait time: 2-4 hours
+                    Agents are being notified. Average wait time: 2–4 hours
                   </p>
                 </div>
               </div>
             )}
 
-            {/* Assignment */}
+            {/* Assigned */}
             {isAssigned && assignedAgent && (
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                     <User className="w-5 h-5 text-blue-600" />
                   </div>
-                  <div className="w-0.5 h-12 bg-gray-200 my-1"></div>
+                  <div className="w-0.5 h-12 bg-gray-200 my-1" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">Agent Assigned</p>
@@ -378,7 +348,7 @@ export default function QueueStatusPage() {
               </div>
             )}
 
-            {/* Completion */}
+            {/* Completed */}
             {isCompleted && (
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
@@ -403,7 +373,9 @@ export default function QueueStatusPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-sm">Time Slot Expires In</p>
-                  <p className="text-xs text-gray-600 mt-1">Agent has this window to complete marking</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Agent has this window to complete marking
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-yellow-600">{timeRemaining}</p>
@@ -436,45 +408,39 @@ export default function QueueStatusPage() {
         <Card>
           <CardHeader>
             <CardTitle>Queue Overview</CardTitle>
-            <CardDescription>
-              Agents waiting to mark this property
-            </CardDescription>
+            <CardDescription>Agents waiting to mark this property</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-2">
-              {job.queue.map((agent, idx) => (
-                <div
-                  key={agent.id}
-                  className={`p-3 rounded-lg border ${
-                    agent.position === job.queuePosition
-                      ? 'border-blue-200 bg-blue-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 font-semibold text-sm">
-                        {agent.position}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{agent.serviceName}</p>
-                        <p className="text-xs text-gray-600">{agent.serviceAreas.join(', ')}</p>
-                      </div>
+            {job.queue.map((agent) => (
+              <div
+                key={agent.id}
+                className={`p-3 rounded-lg border ${
+                  agent.position === job.queuePosition
+                    ? 'border-blue-200 bg-blue-50'
+                    : 'border-gray-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 font-semibold text-sm">
+                      {agent.position}
                     </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1">
-                        <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          ⭐ {agent.reliabilityScore}
-                        </span>
-                        <span className="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">
-                          {agent.completedJobs} jobs
-                        </span>
-                      </div>
+                    <div>
+                      <p className="font-medium text-sm">{agent.serviceName}</p>
+                      <p className="text-xs text-gray-600">{agent.serviceAreas.join(', ')}</p>
                     </div>
                   </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                      ⭐ {agent.reliabilityScore}
+                    </span>
+                    <span className="text-xs bg-blue-100 px-2 py-1 rounded text-blue-700">
+                      {agent.completedJobs} jobs
+                    </span>
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -493,13 +459,11 @@ export default function QueueStatusPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-600 flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  Contact
+                  <Phone className="w-4 h-4" /> Contact
                 </p>
                 <p className="font-semibold mt-1">{job.assignedAgentPhone}</p>
               </div>
             </div>
-
             <div>
               <p className="text-sm text-gray-600 mb-2">Access Information</p>
               <div className="bg-gray-50 p-3 rounded border border-gray-200">
@@ -521,20 +485,22 @@ export default function QueueStatusPage() {
         <Card>
           <CardHeader>
             <CardTitle>Completion Photos</CardTitle>
-            <CardDescription>
-              Photos captured by the agent during marking
-            </CardDescription>
+            <CardDescription>Photos captured by the agent during marking</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {job.completionImages.map((image, idx) => (
-                <div key={idx} className="relative group">
-                  <img
-                    src={image}
-                    alt={`Marking photo ${idx + 1}`}
-                    className="w-full h-24 object-cover rounded border border-gray-200 cursor-pointer hover:opacity-75"
-                  />
-                  <p className="text-xs text-gray-600 mt-1 text-center">Photo {idx + 1}</p>
+              {job.completionImages.map((image, index) => (
+                <div key={index} className="relative group">
+                  <div className="relative h-24 w-full">
+                    <Image
+                      src={image}
+                      alt={`Marking photo ${index + 1}`}
+                      fill
+                      className="object-cover rounded border border-gray-200 cursor-pointer hover:opacity-75"
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1 text-center">Photo {index + 1}</p>
                 </div>
               ))}
             </div>
@@ -570,7 +536,9 @@ export default function QueueStatusPage() {
 
         {shareLink && (
           <div className="bg-gray-50 p-3 rounded border border-gray-200">
-            <p className="text-xs text-gray-600 mb-2">Share this link with someone to mark for you:</p>
+            <p className="text-xs text-gray-600 mb-2">
+              Share this link with someone to mark for you:
+            </p>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -585,7 +553,10 @@ export default function QueueStatusPage() {
           </div>
         )}
 
-        <Button variant="outline" onClick={() => router.push(`/properties/${propertyId}/marking`)}>
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/properties/${propertyId}/marking`)}
+        >
           Back to Marking Jobs
         </Button>
       </div>

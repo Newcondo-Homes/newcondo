@@ -1,10 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
-// import { useLocale } from 'next-intl';
-import { useLocale } from '@newcondo/i18n';
-
-import { rtlLocales } from '@/i18n';
+import { useLocale } from '@newcondo/i18n/hooks/useLocale';
 import { cn } from '@/lib/utils';
 
 interface RTLWrapperProps {
@@ -13,24 +10,21 @@ interface RTLWrapperProps {
 }
 
 export function RTLWrapper({ children, className }: RTLWrapperProps) {
-  const locale = useLocale();
-  const isRTL = rtlLocales.includes(locale as any);
+  // ✅ Destructure from LocaleContext — isRTL is already computed in the hook
+  const { isRTL } = useLocale();
 
   return (
     <div
       dir={isRTL ? 'rtl' : 'ltr'}
-      className={cn(
-        isRTL && 'rtl-layout',
-        className
-      )}
+      className={cn(isRTL && 'rtl-layout', className)}
     >
       {children}
     </div>
   );
 }
 
-// Hook to check if current locale is RTL
 export function useIsRTL(): boolean {
-  const locale = useLocale();
-  return rtlLocales.includes(locale as any);
+  // ✅ isRTL is already a boolean on LocaleContext — no need to recompute
+  const { isRTL } = useLocale();
+  return isRTL;
 }

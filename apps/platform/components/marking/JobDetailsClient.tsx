@@ -106,7 +106,7 @@ interface UserRole {
 interface JobDetailsClientProps {
   job: MarkingJobFull;
   payment: JobPayment | null;
-  currentUserId: string;
+  currentUserId?: string;
   userRole: UserRole;
 }
 
@@ -153,7 +153,7 @@ const URGENCY_CONFIG: Record<string, string> = {
 export function JobDetailsClient({
   job,
   payment,
-  currentUserId: _currentUserId,
+  // currentUserId,
   userRole,
 }: JobDetailsClientProps) {
   const router = useRouter();

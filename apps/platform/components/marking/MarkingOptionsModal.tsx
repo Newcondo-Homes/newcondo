@@ -42,7 +42,7 @@ interface MarkingOptionsModalProps {
 export const MarkingOptionsModal: React.FC<MarkingOptionsModalProps> = ({
   isOpen,
   onClose,
-  propertyId: _propertyId,
+  // propertyId,
   onSelectOption,
   userRole,
   isPremium = false,

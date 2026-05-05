@@ -234,7 +234,7 @@ const nigerianAddresses: Record<string, Record<string, string[]>> = {
   Edo: {
     'Ikpoba-Okha': ['Benin City', 'Ugbowo', 'Uselu'],
   },
-  Akwa Ibom: {
+  'Akwa Ibom': {
     'Uyo': ['Uyo', 'Itam', 'Use Offot', 'Nwaniba'],
   },
   'Cross River': {

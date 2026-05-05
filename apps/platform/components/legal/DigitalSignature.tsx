@@ -2,15 +2,13 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@newcondo/ui/components/dialog';
 import { Input } from '@newcondo/ui/components/input';
 import { Label } from '@newcondo/ui/components/label';
-// import { Separator } from '@newcondo/ui/components/separator';
-// import { Badge } from '@newcondo/ui/components/badge';
-// import { Textarea } from '@newcondo/ui/components/textarea';
-import { PenTool, RotateCcw, Check, X, Download, Upload, Smartphone } from 'lucide-react';
+import { PenTool, RotateCcw, Check, Upload, Smartphone } from 'lucide-react';
 import { toast } from '@newcondo/ui/';
+import Image from 'next/image';
 
 interface DigitalSignatureProps {
   documentTitle: string;
@@ -20,12 +18,11 @@ interface DigitalSignatureProps {
   onSignatureComplete: (signatureData: SignatureData) => void;
   onCancel?: () => void;
   isOpen: boolean;
-  className?: string;
   signatureType?: 'canvas' | 'text' | 'upload';
 }
 
 interface SignatureData {
-  signature: string; // Base64 encoded signature image or text
+  signature: string;
   signerName: string;
   signerEmail: string;
   timestamp: string;
@@ -42,7 +39,6 @@ export default function DigitalSignature({
   onSignatureComplete,
   onCancel,
   isOpen,
-  className = '',
   signatureType = 'canvas'
 }: DigitalSignatureProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,18 +49,14 @@ export default function DigitalSignature({
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Initialize canvas
   useEffect(() => {
     if (currentSignatureType === 'canvas' && canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
-      
+
       if (ctx) {
-        // Set canvas background to white
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Set drawing properties
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.strokeStyle = '#000000';
@@ -73,15 +65,14 @@ export default function DigitalSignature({
     }
   }, [currentSignatureType, isOpen]);
 
-  // Canvas drawing functions
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return;
-    
+
     setIsDrawing(true);
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    
+
     let x, y;
     if ('touches' in e) {
       x = e.touches[0].clientX - rect.left;
@@ -90,7 +81,7 @@ export default function DigitalSignature({
       x = e.clientX - rect.left;
       y = e.clientY - rect.top;
     }
-    
+
     if (ctx) {
       ctx.beginPath();
       ctx.moveTo(x, y);
@@ -99,11 +90,11 @@ export default function DigitalSignature({
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !canvasRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    
+
     let x, y;
     if ('touches' in e) {
       x = e.touches[0].clientX - rect.left;
@@ -112,7 +103,7 @@ export default function DigitalSignature({
       x = e.clientX - rect.left;
       y = e.clientY - rect.top;
     }
-    
+
     if (ctx) {
       ctx.lineTo(x, y);
       ctx.stroke();
@@ -125,10 +116,10 @@ export default function DigitalSignature({
 
   const clearCanvas = () => {
     if (!canvasRef.current) return;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    
+
     if (ctx) {
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -137,43 +128,42 @@ export default function DigitalSignature({
 
   const isCanvasEmpty = (): boolean => {
     if (!canvasRef.current) return true;
-    
+
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    
+
     if (!ctx) return true;
-    
+
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
-    
-    // Check if all pixels are white (255, 255, 255, 255)
+
     for (let i = 0; i < data.length; i += 4) {
       if (data[i] !== 255 || data[i + 1] !== 255 || data[i + 2] !== 255) {
         return false;
       }
     }
-    
+
     return true;
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       toast.error('Invalid file type', {
         description: 'Please upload an image file.',
       });
       return;
     }
-    
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      toast.error( 'File too large',{
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large', {
         description: 'Please upload an image smaller than 5MB.',
       });
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = (event) => {
       setUploadedSignature(event.target?.result as string);
@@ -214,17 +204,16 @@ export default function DigitalSignature({
       });
       return;
     }
-    
+
     setIsConfirmDialogOpen(true);
   };
 
   const confirmSignature = async () => {
     try {
       setLoading(true);
-      
-      // Get device information
+
       const deviceInfo = navigator.userAgent;
-      
+
       const signatureData: SignatureData = {
         signature: getSignatureData(),
         signerName,
@@ -233,17 +222,16 @@ export default function DigitalSignature({
         signatureType: currentSignatureType,
         deviceInfo
       };
-      
-      // Simulate API call delay
+
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       onSignatureComplete(signatureData);
-      
-      toast.success('Document Signed',{
+
+      toast.success('Document Signed', {
         description: 'Your digital signature has been successfully recorded.',
       });
-      
-    } catch (error) {
+
+    } catch {
       toast.error('Signature Failed', {
         description: 'There was an error processing your signature. Please try again.',
       });
@@ -266,7 +254,7 @@ export default function DigitalSignature({
               Please sign the document: {documentTitle}
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6">
             {/* Document Preview */}
             {documentContent && (
@@ -283,7 +271,7 @@ export default function DigitalSignature({
                 </CardContent>
               </Card>
             )}
-            
+
             {/* Signer Information */}
             <Card>
               <CardHeader>
@@ -302,7 +290,7 @@ export default function DigitalSignature({
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Signature Type Selection */}
             <div className="space-y-4">
               <Label className="text-base font-semibold">Signature Method</Label>
@@ -335,7 +323,7 @@ export default function DigitalSignature({
                 </Button>
               </div>
             </div>
-            
+
             {/* Signature Input */}
             <Card>
               <CardContent className="pt-6">
@@ -374,7 +362,7 @@ export default function DigitalSignature({
                     </div>
                   </div>
                 )}
-                
+
                 {currentSignatureType === 'text' && (
                   <div className="space-y-4">
                     <Label htmlFor="signature-text">Type Your Full Name</Label>
@@ -393,7 +381,7 @@ export default function DigitalSignature({
                     )}
                   </div>
                 )}
-                
+
                 {currentSignatureType === 'upload' && (
                   <div className="space-y-4">
                     <Label htmlFor="signature-upload">Upload Signature Image</Label>
@@ -407,11 +395,14 @@ export default function DigitalSignature({
                     {uploadedSignature && (
                       <div className="p-4 border rounded bg-gray-50">
                         <Label className="text-sm text-gray-600">Preview:</Label>
-                        <img
-                          src={uploadedSignature}
-                          alt="Uploaded signature"
-                          className="max-h-32 mt-2 border rounded"
-                        />
+                        <div className="relative w-full max-w-xs h-32 mt-2">
+                          <Image
+                            src={uploadedSignature}
+                            alt="Uploaded signature"
+                            fill
+                            className="object-contain border rounded"
+                          />
+                        </div>
                       </div>
                     )}
                     <p className="text-xs text-gray-500">
@@ -421,21 +412,21 @@ export default function DigitalSignature({
                 )}
               </CardContent>
             </Card>
-            
+
             {/* Legal Notice */}
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Legal Notice:</strong> By signing this document electronically, you agree that your electronic signature 
+                <strong>Legal Notice:</strong> By signing this document electronically, you agree that your electronic signature
                 is the legal equivalent of your manual signature and that you are legally bound by the terms of this document.
               </p>
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={onCancel}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSign}
               disabled={!validateSignature()}
               className="flex items-center gap-2"
@@ -446,7 +437,7 @@ export default function DigitalSignature({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Confirmation Dialog */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
         <DialogContent>
@@ -456,33 +447,33 @@ export default function DigitalSignature({
               Are you sure you want to sign this document? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="p-4 border rounded bg-gray-50">
               <Label className="text-sm font-medium">Document:</Label>
               <p className="text-sm">{documentTitle}</p>
             </div>
-            
+
             <div className="p-4 border rounded bg-gray-50">
               <Label className="text-sm font-medium">Signer:</Label>
               <p className="text-sm">{signerName} ({signerEmail})</p>
             </div>
-            
+
             <div className="p-4 border rounded bg-gray-50">
               <Label className="text-sm font-medium">Timestamp:</Label>
               <p className="text-sm">{new Date().toLocaleString()}</p>
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsConfirmDialogOpen(false)}
               disabled={loading}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={confirmSignature}
               disabled={loading}
               className="flex items-center gap-2"

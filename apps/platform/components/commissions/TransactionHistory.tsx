@@ -1,7 +1,6 @@
 // apps/platform/components/commissions/TransactionHistory.tsx
 'use client';
 
-import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/shared/DataTable';
 import { Badge } from '@newcondo/ui/components/badge';

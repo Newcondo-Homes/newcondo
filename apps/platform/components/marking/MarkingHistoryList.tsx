@@ -23,7 +23,6 @@ import {
   TableRow,
 } from "@newcondo/ui/components/table";
 import { Skeleton } from "@newcondo/ui/components/skeleton";
-// import { toast } from '@newcondo/ui'
 
 interface MarkingJob {
   id: string;
@@ -59,7 +58,9 @@ export default function MarkingHistoryList({
   userId,
   role,
 }: MarkingHistoryListProps) {
-  const [_selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  // just to make sure selectedJob is used
+  console.log(selectedJob)
 
   const { data: jobs, isLoading } = useQuery<MarkingJob[]>({
     queryKey: ["marking-jobs", userId, role],
@@ -243,7 +244,7 @@ export default function MarkingHistoryList({
                     </span>
                   </TableCell>
                   <TableCell>
-                    //TODO: see how when the button is pressed, it is routed to jobs page
+                    {/* TODO: see how when the button is pressed, it is routed to jobs page */}
                     {/* router.push(`/marking/my-jobs/${job.id}`) */}
                     <Button
                       variant="ghost"

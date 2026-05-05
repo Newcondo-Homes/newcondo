@@ -3,15 +3,15 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import { Button } from '@/components/ui/button';
+import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { AlertCircle, Clock, CheckCircle, XCircle, MapPin, Phone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useProperties } from '@/hooks/useProperties';
-import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner';
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 
 interface MarkingJob {
   id: string;
@@ -51,14 +51,13 @@ interface Property {
 export default function MarkingJobManagementPage() {
   const params = useParams();
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
 
   const propertyId = params.id as string;
   const [markingJobs, setMarkingJobs] = useState<MarkingJob[]>([]);
   const [property, setProperty] = useState<Property | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedJob, setSelectedJob] = useState<MarkingJob | null>(null);
 
   useEffect(() => {
     const fetchMarkingJobs = async () => {
@@ -318,7 +317,11 @@ export default function MarkingJobManagementPage() {
                   {/* Action Buttons */}
                   <div className="flex gap-2 pt-2">
                     <Button
-                      onClick={() => router.push(`/properties/${propertyId}/marking/queue-status?jobId=${job.id}`)}
+                      onClick={() =>
+                        router.push(
+                          `/properties/${propertyId}/marking/queue-status?jobId=${job.id}`
+                        )
+                      }
                       variant="outline"
                       size="sm"
                     >
@@ -375,15 +378,20 @@ export default function MarkingJobManagementPage() {
 
                   {job.completionImages && job.completionImages.length > 0 && (
                     <div>
-                      <p className="text-sm text-gray-600 mb-2">Completion Photos ({job.completionImages.length})</p>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Completion Photos ({job.completionImages.length})
+                      </p>
                       <div className="grid grid-cols-3 gap-2">
                         {job.completionImages.map((image, idx) => (
-                          <img
-                            key={idx}
-                            src={image}
-                            alt={`Completion ${idx + 1}`}
-                            className="w-full h-24 object-cover rounded border border-gray-200"
-                          />
+                          <div key={idx} className="relative h-24 w-full">
+                            <Image
+                              src={image}
+                              alt={`Completion ${idx + 1}`}
+                              fill
+                              className="object-cover rounded border border-gray-200"
+                              sizes="(max-width: 768px) 33vw, 20vw"
+                            />
+                          </div>
                         ))}
                       </div>
                     </div>
