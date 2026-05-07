@@ -1,6 +1,6 @@
 // apps/platform/lib/validations/marking.ts
 import { z } from 'zod';
-import { coordinateSchema, boundaryPointSchema } from './boundary';
+import { boundaryPointSchema } from './boundary';
 
 // Phone number validation for Nigeria
 const nigerianPhoneSchema = z.string()

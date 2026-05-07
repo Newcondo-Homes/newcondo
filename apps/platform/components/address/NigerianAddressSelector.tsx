@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui';
 import { Label } from '@newcondo/ui';
 import { Alert, AlertDescription } from '@newcondo/ui';
@@ -34,10 +34,18 @@ export const NigerianAddressSelector: React.FC<NigerianAddressSelectorProps> = (
   const [availableLGAs, setAvailableLGAs] = useState<string[]>([]);
   const [availableLocations, setAvailableLocations] = useState<string[]>([]);
 
-  // Update parent component when values change
+  // fix line 46: store onChange in a ref so we always call the latest version
+  // without adding it to the dep array (which would cause infinite re-renders
+  // if the parent doesn't memoize it)
+  const onChangeRef = useRef(onChange);
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Notify parent when all three fields are selected
   useEffect(() => {
     if (selectedState && selectedLGA && selectedLocation) {
-      onChange({
+      onChangeRef.current({
         state: selectedState,
         lga: selectedLGA,
         location: selectedLocation,
@@ -45,7 +53,8 @@ export const NigerianAddressSelector: React.FC<NigerianAddressSelectorProps> = (
     }
   }, [selectedState, selectedLGA, selectedLocation]);
 
-  // Update LGAs when state changes
+  // fix line 66: added selectedState to the dep array — it's read inside the
+  // effect to look up LGAs, so it must be listed
   useEffect(() => {
     if (selectedState) {
       const lgas = nigerianAddresses[selectedState] || {};
@@ -63,7 +72,7 @@ export const NigerianAddressSelector: React.FC<NigerianAddressSelectorProps> = (
       setAvailableLocations(locations);
       setSelectedLocation('');
     }
-  }, [selectedLGA]);
+  }, [selectedState, selectedLGA]);
 
   return (
     <div className="space-y-4">
@@ -167,7 +176,6 @@ export const NigerianAddressSelector: React.FC<NigerianAddressSelectorProps> = (
 };
 
 // Comprehensive Nigerian Address Database
-// This is a sample structure - expand with complete data
 const nigerianAddresses: Record<string, Record<string, string[]>> = {
   Lagos: {
     'Alimosho': ['Abesan', 'Abule Egba', 'Agbado', 'Ayobo', 'Egbeda', 'Idimu', 'Ikotun', 'Ipaja'],

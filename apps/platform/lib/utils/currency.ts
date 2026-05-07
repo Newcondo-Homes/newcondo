@@ -189,8 +189,8 @@ export function parseCurrency(
  */
 export function convertCurrency(
   amount: number,
-  fromCurrency: string,
-  toCurrency: string
+  // fromCurrency: string,
+  // toCurrency: string
 ): Promise<number> {
   // TODO: Integrate with exchange rate API
   // For now, return the same amount as a placeholder

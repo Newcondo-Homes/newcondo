@@ -1,11 +1,3 @@
-/**
- * apps/platform/components/marking/ProximityAgentList.tsx
- * 
- * Displays a list of available agents/renters within reasonable proximity
- * to the property location. Shows agent details, reliability scores, and
- * allows property owner to assign marking jobs.
- */
-
 'use client';
 
 import { useState } from 'react';
@@ -26,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@newcondo/ui/components/dialog';
+import Image from 'next/image';
 
 interface Agent {
   id: string;
@@ -33,12 +26,12 @@ interface Agent {
   phone: string;
   email: string;
   image?: string;
-  reliabilityScore: number; // 0-5
+  reliabilityScore: number;
   totalMarkingJobs: number;
   completedMarkingJobs: number;
   serviceAreas: string[];
-  distance: number; // in km
-  estimatedArrivalTime: number; // in minutes
+  distance: number;
+  estimatedArrivalTime: number;
   isAvailable: boolean;
   queuePosition?: number;
 }
@@ -125,7 +118,6 @@ export function ProximityAgentList({
     );
   }
 
-  // Sort agents by distance
   const sortedAgents = [...agents].sort((a, b) => a.distance - b.distance);
 
   return (
@@ -140,7 +132,8 @@ export function ProximityAgentList({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {sortedAgents.map((agent, index) => (
+            {/* ✅ Removed unused index */}
+            {sortedAgents.map((agent) => (
               <div
                 key={agent.id}
                 className="flex items-start justify-between rounded-lg border p-4 hover:bg-gray-50"
@@ -149,11 +142,15 @@ export function ProximityAgentList({
                   {/* Agent Avatar */}
                   <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
                     {agent.image ? (
-                      <img
-                        src={agent.image}
-                        alt={agent.name}
-                        className="h-full w-full rounded-full object-cover"
-                      />
+                      // ✅ Replaced <img> with Next.js <Image />
+                      <div className="relative h-12 w-12 flex-shrink-0">
+                        <Image
+                          src={agent.image}
+                          alt={agent.name}
+                          fill
+                          className="rounded-full object-cover"
+                        />
+                      </div>
                     ) : (
                       <span className="text-sm font-semibold text-blue-600">
                         {agent.name.charAt(0).toUpperCase()}
@@ -180,7 +177,6 @@ export function ProximityAgentList({
                       )}
                     </div>
 
-                    {/* Rating and Stats */}
                     <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">
                         <Star
@@ -209,7 +205,6 @@ export function ProximityAgentList({
                       </div>
                     </div>
 
-                    {/* Service Areas */}
                     <div className="mt-2 flex flex-wrap gap-1">
                       {agent.serviceAreas.slice(0, 3).map((area) => (
                         <span
@@ -228,7 +223,6 @@ export function ProximityAgentList({
                   </div>
                 </div>
 
-                {/* Action Button */}
                 <Button
                   onClick={() => {
                     setSelectedAgent(agent);
@@ -286,9 +280,10 @@ export function ProximityAgentList({
               </div>
 
               <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
+                {/* ✅ Fixed apostrophe */}
                 <p className="text-sm text-blue-900">
                   The agent will have a 3-hour window to mark your property.
-                  Upon completion, you'll have 2-3 days to verify the marking.
+                  Upon completion, you&apos;ll have 2-3 days to verify the marking.
                 </p>
               </div>
             </div>

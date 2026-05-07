@@ -3,10 +3,12 @@
  * Handles exporting data to various formats (CSV, XLSX, JSON, PDF)
  */
 
+import { UnknownKeysParam } from "zod";
+
 export interface ExportColumn {
   key: string;
   label: string;
-  formatter?: (value: any) => string;
+  formatter?: (value: unknown) => string;
 }
 
 export interface ExportOptions {
@@ -20,7 +22,7 @@ export interface ExportOptions {
 /**
  * Export data to CSV format
  */
-export function exportToCSV<T extends Record<string, any>>(
+export function exportToCSV<T extends Record<string, unknown>>(
   data: T[],
   options: ExportOptions
 ): string {
@@ -52,7 +54,7 @@ export function exportToCSV<T extends Record<string, any>>(
 /**
  * Export data to JSON format
  */
-export function exportToJSON<T extends Record<string, any>>(
+export function exportToJSON<T extends Record<string, unknown>>(
   data: T[],
   options: ExportOptions
 ): string {
@@ -78,12 +80,12 @@ export function exportToJSON<T extends Record<string, any>>(
 /**
  * Prepare data for XLSX export (returns structured data)
  */
-export function prepareForXLSX<T extends Record<string, any>>(
+export function prepareForXLSX<T extends Record<string, unknown>>(
   data: T[],
   options: ExportOptions
 ): {
   headers: string[];
-  rows: any[][];
+  rows: unknown[][];
 } {
   if (data.length === 0) {
     return { headers: [], rows: [] };
@@ -154,7 +156,7 @@ function escapeCSV(value: string): string {
 /**
  * Format value for export
  */
-function formatValue(value: any): string {
+function formatValue(value: unknown): string {
   if (value === null || value === undefined) {
     return '';
   }
@@ -173,7 +175,7 @@ function formatValue(value: any): string {
 /**
  * Generate columns from data object
  */
-function generateColumnsFromData<T extends Record<string, any>>(
+function generateColumnsFromData<T extends Record<string, unknown>>(
   data: T
 ): ExportColumn[] {
   return Object.keys(data).map(key => ({
@@ -196,10 +198,10 @@ function formatColumnLabel(key: string): string {
  * Export properties data
  */
 export function exportPropertiesData(
-  properties: any[],
+  properties: Record<string, unknown>[],
   format: 'csv' | 'xlsx' | 'json',
   includeUnits: boolean = false
-): string | { headers: string[]; rows: any[][] } {
+): string | { headers: string[]; rows: unknown[][] } {
   const columns: ExportColumn[] = [
     { key: 'id', label: 'Property ID' },
     { key: 'title', label: 'Title' },
@@ -245,9 +247,9 @@ export function exportPropertiesData(
  * Export commission earnings data
  */
 export function exportCommissionData(
-  earnings: any[],
+  earnings: Record<string, unknown>[],
   format: 'csv' | 'xlsx' | 'json'
-): string | { headers: string[]; rows: any[][] } {
+): string | { headers: string[]; rows: unknown[][] } {
   const columns: ExportColumn[] = [
     { key: 'id', label: 'Transaction ID' },
     { key: 'propertyTitle', label: 'Property' },
@@ -278,21 +280,21 @@ export function exportCommissionData(
 /**
  * Helper: Format currency
  */
-function formatCurrency(value: any): string {
+function formatCurrency(value: unknown): string {
   if (value === null || value === undefined) return '';
   const num = typeof value === 'string' ? parseFloat(value) : value;
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency: 'NGN',
-  }).format(num);
+  }).format(num as number);
 }
 
 /**
  * Helper: Format date
  */
-function formatDate(value: any): string {
+function formatDate(value: unknown): string {
   if (!value) return '';
-  const date = value instanceof Date ? value : new Date(value);
+  const date = value instanceof Date ? value : new Date(value as Date);
   return date.toLocaleDateString('en-NG', {
     year: 'numeric',
     month: 'short',

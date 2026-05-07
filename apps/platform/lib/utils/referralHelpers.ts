@@ -6,7 +6,7 @@ import { ReferralType, ReferralStatus } from '@/types/referral';
 /**
  * Generate a unique referral code
  */
-export function generateReferralCode(userId: string): string {
+export function generateReferralCode(): string {
   const prefix = REFERRAL_CONFIG.CODE_PREFIX;
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();

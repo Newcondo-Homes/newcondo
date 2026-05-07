@@ -112,7 +112,7 @@ export function RejectionForm({
                   <p className="font-semibold text-red-900">Before Rejecting</p>
                   <ul className="list-disc list-inside space-y-1 text-red-800">
                     <li>The agent will not receive the remaining payment</li>
-                    <li>You'll need to request a new marking job</li>
+                    <li>You&apos;ll need to request a new marking job</li>
                     <li>Additional fees may apply for the new marking</li>
                     <li>Please provide detailed reasons for rejection</li>
                   </ul>
@@ -126,7 +126,7 @@ export function RejectionForm({
             <Label>Reason for Rejection *</Label>
             <RadioGroup
               value={selectedReason}
-              onValueChange={(value) => setValue("reason", value as any)}
+              onValueChange={(value) => setValue("reason", value as RejectionFormData["reason"])}
             >
               {rejectionReasons.map((reason) => (
                 <div key={reason.value} className="flex items-start space-x-3 space-y-0">

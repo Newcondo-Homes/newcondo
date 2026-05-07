@@ -164,7 +164,7 @@ export function calculatePolygonOverlap(
 export function validatePropertyBoundary(
   boundary: PropertyBoundary,
   propertyType: PropertyType,
-  structure: PropertyStructure
+  // structure: PropertyStructure
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
   

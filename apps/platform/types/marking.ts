@@ -220,6 +220,27 @@ export interface ServiceArea {
   radiusKm?: number;  // Optional radius override
 }
 
+export interface Job {
+    id: string;
+    property?: {
+      title: string;
+      address: string;
+      city: string;
+    };
+    propertyId: string;
+    address: string;
+    city: string;
+    state: string;
+    markingFee: number | string;
+    urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+    contactPersonName: string;
+    queuePosition?: number;
+    distanceFromAgent?: number;
+    preferredTime?: string;
+    maxCompletionTime?: string;
+    timeSlotExpiry?: string;
+};
+
 // Payment statuses (matches Prisma enum)
 export type PaymentStatus = 
   | 'PENDING'

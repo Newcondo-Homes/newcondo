@@ -1,7 +1,7 @@
 // apps/platform/lib/utils/payment.ts
 // Payment utility functions for Flutterwave integration
 
-import { formatCurrency, roundToCurrency, splitAmount } from './currency';
+import { formatCurrency, roundToCurrency } from './currency';
 
 // Payment status types
 export type PaymentStatus = 
@@ -351,9 +351,9 @@ export function generatePaymentMetadata(data: {
  * @param secret - Webhook secret
  */
 export function verifyWebhookSignature(
-  payload: string,
-  signature: string,
-  secret: string
+  // payload: string,
+  // signature: string,
+  // secret: string
 ): boolean {
   // This would typically use crypto.createHmac in Node.js
   // For client-side, we'll return true and let backend handle verification

@@ -204,7 +204,7 @@ export function extractDomain(url: string): string | null {
   try {
     const urlObj = new URL(url);
     return urlObj.hostname;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

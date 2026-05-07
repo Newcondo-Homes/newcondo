@@ -5,16 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/component
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
-import { 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Clock,
+  CheckCircle,
+  AlertTriangle,
   TrendingUp,
   MapPin,
   DollarSign
 } from "lucide-react";
 import { QueuePosition } from "./QueuePosition";
-import AvailableJobsList  from "./AvailableJobsList";
+import AvailableJobsList from "./AvailableJobsList";
+import { type Job } from '@/types/marking';
+
 
 interface QueueDashboardProps {
   agentStats: {
@@ -25,8 +27,8 @@ interface QueueDashboardProps {
     reliabilityScore: number;
     queuePosition?: number;
   };
-  activeJob?: any;
-  availableJobs: any[];
+  activeJob?: Job;
+  availableJobs: Job[];
   onAcceptJob: (jobId: string) => void;
   onViewJob: (jobId: string) => void;
 }
@@ -114,12 +116,12 @@ export function QueueDashboard({
           <CardContent>
             <div className="space-y-4">
               <div>
-                <p className="font-semibold text-lg">{activeJob.property.title}</p>
+                <p className="font-semibold text-lg">{activeJob.property?.title}</p>
                 <p className="text-sm text-muted-foreground">
-                  {activeJob.property.address}, {activeJob.property.city}
+                  {activeJob.property?.address}, {activeJob.property?.city}
                 </p>
               </div>
-              
+
               <QueuePosition
                 position={1}
                 totalInQueue={1}
@@ -127,8 +129,8 @@ export function QueueDashboard({
                 status="ASSIGNED"
               />
 
-              <Button 
-                className="w-full" 
+              <Button
+                className="w-full"
                 onClick={() => onViewJob(activeJob.id)}
               >
                 Continue Marking

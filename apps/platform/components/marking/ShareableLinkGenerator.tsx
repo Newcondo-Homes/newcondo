@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@newcondo/ui';
 import {
   Copy,
@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 interface ShareableLinkGeneratorProps {
-  propertyId: string;
+  propertyId?: string;
   propertyTitle: string;
   contactPersonName: string;
   onGenerateLink: () => Promise<string>;
@@ -24,7 +24,7 @@ interface GeneratedLink {
 }
 
 export const ShareableLinkGenerator: React.FC<ShareableLinkGeneratorProps> = ({
-  propertyId,
+  // propertyId,
   propertyTitle,
   contactPersonName,
   onGenerateLink,
@@ -116,7 +116,7 @@ export const ShareableLinkGenerator: React.FC<ShareableLinkGeneratorProps> = ({
                 Send to Someone You Know
               </p>
               <p className="text-sm text-green-800">
-                This link allows them to mark your property remotely. They'll need
+                This link allows them to mark your property remotely. They&apos;ll need
                 access to the property location.
               </p>
             </div>
@@ -287,7 +287,7 @@ export const ShareableLinkGenerator: React.FC<ShareableLinkGeneratorProps> = ({
             <li className="flex gap-3">
               <span className="font-semibold text-gray-900">4.</span>
               <span>
-                You'll receive a notification and have 2-3 days to confirm the
+                You&apos;ll receive a notification and have 2-3 days to confirm the
                 marking
               </span>
             </li>

@@ -1,7 +1,7 @@
 // apps/platform/components/marking/QueuePositionTracker.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@newcondo/ui/components/button';
 import { Badge } from '@newcondo/ui/components/badge';
 import {
@@ -45,7 +45,7 @@ export default function QueuePositionTracker({
   const [timeRemaining, setTimeRemaining] = useState<string>('');
 
   // Fetch queue position
-  const fetchQueuePosition = async () => {
+  const fetchQueuePosition = useCallback(async () => {
     try {
       const response = await fetch(`/api/marking/queue/${jobId}`);
       if (!response.ok) throw new Error('Failed to fetch queue position');
@@ -57,13 +57,14 @@ export default function QueuePositionTracker({
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId]); // jobId is the only external value it depends on
+
 
   useEffect(() => {
     fetchQueuePosition();
     const interval = setInterval(fetchQueuePosition, updateInterval);
     return () => clearInterval(interval);
-  }, [jobId, updateInterval]);
+  }, [fetchQueuePosition, updateInterval]);
 
   // Calculate time remaining
   useEffect(() => {

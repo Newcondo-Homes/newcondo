@@ -197,7 +197,7 @@ export function getTimeUntilDeadline(maxCompletionTime: Date): {
  * Format deadline status for display
  */
 export function formatDeadlineStatus(maxCompletionTime: Date): string {
-  const { days, hours, isUrgent } = getTimeUntilDeadline(maxCompletionTime);
+  const { days, hours} = getTimeUntilDeadline(maxCompletionTime);
   
   if (days === 0 && hours === 0) {
     return 'Overdue';

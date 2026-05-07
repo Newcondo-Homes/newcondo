@@ -20,7 +20,7 @@ export const ourFileRouter = {
       acl: "private"
     }
   })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       // This code runs on your server before upload
       const session = await auth();
 
@@ -62,7 +62,7 @@ export const ourFileRouter = {
       acl: "private"
     }
   })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       const session = await auth();
 
       if (!session?.user?.id) {
@@ -100,7 +100,7 @@ export const ourFileRouter = {
       acl: "private"
     }
   })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       const session = await auth();
 
       if (!session?.user?.id) {
@@ -133,7 +133,7 @@ export const ourFileRouter = {
       acl: "public-read" // Property images can be public
     }
   })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       const session = await auth();
 
       if (!session?.user?.id) {
@@ -172,7 +172,7 @@ export const ourFileRouter = {
       acl: "private"
     }
   })
-    .middleware(async ({ req }) => {
+    .middleware(async () => {
       const session = await auth();
 
       if (!session?.user?.id) {

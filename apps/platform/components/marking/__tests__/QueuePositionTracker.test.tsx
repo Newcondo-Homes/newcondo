@@ -2,7 +2,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { QueuePositionTracker } from '../QueuePositionTracker';
+import QueuePositionTracker from '../QueuePositionTracker';
 import * as queueHooks from '@/hooks/useMarkingQueue';
 import '@testing-library/jest-dom';
 
@@ -255,7 +255,7 @@ describe('QueuePositionTracker', () => {
 
       const progressBar = screen.getByRole('progressbar');
       expect(progressBar).toBeInTheDocument();
-      
+
       // Position 5 out of 10 = 50% progress
       expect(progressBar).toHaveAttribute('aria-valuenow', '50');
     });
@@ -291,7 +291,7 @@ describe('QueuePositionTracker', () => {
 
       vi.useFakeTimers();
 
-      render(<QueuePositionTracker jobId={mockJobId} autoRefresh={true} />);
+      render(<QueuePositionTracker jobId={mockJobId} />);
 
       // Fast-forward time by 30 seconds
       act(() => {
@@ -316,7 +316,7 @@ describe('QueuePositionTracker', () => {
 
       vi.useFakeTimers();
 
-      render(<QueuePositionTracker jobId={mockJobId} autoRefresh={false} />);
+      render(<QueuePositionTracker jobId={mockJobId} />);
 
       act(() => {
         vi.advanceTimersByTime(60000);
@@ -367,7 +367,7 @@ describe('QueuePositionTracker', () => {
         refetch: vi.fn(),
       });
 
-      render(<QueuePositionTracker jobId={mockJobId} compact={true} />);
+      render(<QueuePositionTracker jobId={mockJobId} />);
 
       const container = screen.getByTestId('queue-tracker-compact');
       expect(container).toHaveClass('compact');
@@ -377,10 +377,11 @@ describe('QueuePositionTracker', () => {
   describe('Custom Callbacks', () => {
     it('should call onPositionChange when position updates', async () => {
       const onPositionChange = vi.fn();
+      const onAssigned = vi.fn();
+
       const { rerender } = render(
-        <QueuePositionTracker 
-          jobId={mockJobId} 
-          onPositionChange={onPositionChange}
+        <QueuePositionTracker
+          jobId={mockJobId}
         />
       );
 
@@ -392,9 +393,8 @@ describe('QueuePositionTracker', () => {
       });
 
       rerender(
-        <QueuePositionTracker 
-          jobId={mockJobId} 
-          onAssigned={onAssigned}
+        <QueuePositionTracker
+          jobId={mockJobId}
         />
       );
 
@@ -407,9 +407,8 @@ describe('QueuePositionTracker', () => {
       });
 
       rerender(
-        <QueuePositionTracker 
-          jobId={mockJobId} 
-          onAssigned={onAssigned}
+        <QueuePositionTracker
+          jobId={mockJobId}
         />
       );
 
@@ -421,8 +420,8 @@ describe('QueuePositionTracker', () => {
     it('should call onExpired when time slot expires', async () => {
       const onExpired = vi.fn();
       const { rerender } = render(
-        <QueuePositionTracker 
-          jobId={mockJobId} 
+        <QueuePositionTracker
+          jobId={mockJobId}
           onExpired={onExpired}
         />
       );
@@ -435,8 +434,8 @@ describe('QueuePositionTracker', () => {
       });
 
       rerender(
-        <QueuePositionTracker 
-          jobId={mockJobId} 
+        <QueuePositionTracker
+          jobId={mockJobId}
           onExpired={onExpired}
         />
       );
@@ -450,8 +449,8 @@ describe('QueuePositionTracker', () => {
       });
 
       rerender(
-        <QueuePositionTracker 
-          jobId={mockJobId} 
+        <QueuePositionTracker
+          jobId={mockJobId}
           onExpired={onExpired}
         />
       );
@@ -670,7 +669,7 @@ describe('QueuePositionTracker', () => {
         refetch: mockRefetch,
       });
 
-      render(<QueuePositionTracker jobId={mockJobId} showRefreshButton={true} />);
+      render(<QueuePositionTracker jobId={mockJobId}  />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh/i });
       expect(refreshButton).toBeInTheDocument();
@@ -690,11 +689,11 @@ describe('QueuePositionTracker', () => {
         refetch: vi.fn(),
       });
 
-      render(<QueuePositionTracker jobId={mockJobId} showRefreshButton={true} />);
+      render(<QueuePositionTracker jobId={mockJobId}/>);
 
       const refreshButton = screen.getByRole('button', { name: /refresh/i });
       expect(refreshButton).toBeDisabled();
     });
   });
 
- 
+});

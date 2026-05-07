@@ -4,14 +4,11 @@
  */
 
 import {
-  QueuePosition,
   MarkingJobQueueStatus,
-  ProximityResult,
   QueueMetrics,
 } from "@/types/queue";
 
 const AVERAGE_MARKING_TIME_MINUTES = 45;
-const AVERAGE_TRAVEL_TIME_MULTIPLIER = 1.5;
 
 /**
  * Calculate queue position for a newly queued job

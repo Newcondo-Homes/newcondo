@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type  { DocumentType, DocumentStatus, Role, UserType } from '@newcondo/db';
+// import type  { DocumentType, DocumentStatus, Role, UserType } from '@newcondo/db';
 
 const RoleEnum = z.enum(['OWNER', 'AGENT', 'RENTER', 'ADMIN']);
 const UserTypeEnum = z.enum(['LANDLORD', 'PROPERTY_MANAGER', 'AGENT', 'RENTER', 'ADMIN']);
@@ -8,7 +8,7 @@ const DocumentTypeEnum = z.enum([
   'SELFIE', 'OWNERSHIP_DOCUMENT', 'CONSENT_DOCUMENT', 'UNDERTAKING_DOCUMENT',
   'BUSINESS_REGISTRATION', 'TAX_CERTIFICATE', 'UTILITY_BILL', 'BANK_STATEMENT', 'OTHER'
 ]);
-const DocumentStatusEnum = z.enum(['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED']);
+// const DocumentStatusEnum = z.enum(['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED']);
 
 // Terms and conditions acceptance validation
 export const termsAcceptanceSchema = z.object({

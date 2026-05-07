@@ -1,5 +1,19 @@
 import { PaymentFormData } from './paymentValidation';
 
+interface FlutterwaveResponse {
+  status: string;
+  transaction_id?: string;
+  tx_ref: string;
+  [key: string]: unknown;
+}
+
+interface PaymentResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}
+
+
 // Flutterwave configuration
 export const FLUTTERWAVE_CONFIG = {
   publicKey: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY!,
@@ -137,8 +151,8 @@ function getPaymentOptions(method: string): string {
 // Initialize Flutterwave payment
 export function initializeFlutterwavePayment(
   payload: FlutterwavePaymentPayload,
-  onSuccess: (data: any) => void,
-  onError: (error: any) => void,
+  onSuccess: (data: FlutterwaveResponse) => void,
+  onError: (error: FlutterwaveResponse) => void,
   onClose: () => void
 ) {
   if (typeof window === 'undefined') {
@@ -176,7 +190,7 @@ export function initializeFlutterwavePayment(
 export async function verifyPayment(
   transactionId: string,
   txRef: string
-): Promise<{ success: boolean; data?: any; error?: string }> {
+): Promise<PaymentResult> {
   try {
     const response = await fetch('/api/payments/verify', {
       method: 'POST',
@@ -202,7 +216,7 @@ export async function verifyPayment(
       success: true,
       data: data.data,
     };
-  } catch (error) {
+  } catch  {
     return {
       success: false,
       error: 'Network error during payment verification',
@@ -264,7 +278,7 @@ export function getPaymentMethodIcon(method: string): string {
 export async function retryPayment(
   originalTxRef: string,
   payload: FlutterwavePaymentPayload
-): Promise<{ success: boolean; data?: any; error?: string }> {
+): Promise<PaymentResult> {
   try {
     // Generate new transaction reference for retry
     const newTxRef = generateTransactionRef('RETRY');
@@ -299,7 +313,7 @@ export async function retryPayment(
       success: true,
       data: data.data,
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: 'Network error during payment retry',
@@ -308,16 +322,30 @@ export async function retryPayment(
 }
 
 // Handle webhook verification
-export function verifyWebhookSignature(
+export async function verifyWebhookSignature(
   payload: string,
   signature: string,
   secret: string
-): boolean {
-  const crypto = require('crypto');
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
+): Promise<boolean>  {
+  const encoder = new TextEncoder();
+  
+  const key = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const signatureBuffer = await crypto.subtle.sign(
+    'HMAC',
+    key,
+    encoder.encode(payload)
+  );
+
+  const expectedSignature = Array.from(new Uint8Array(signatureBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 
   return signature === expectedSignature;
 }

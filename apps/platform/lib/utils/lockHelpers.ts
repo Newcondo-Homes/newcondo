@@ -1,4 +1,4 @@
-import { AcquireLockInput, ReleaseLockInput, CheckLockInput, ExtendLockInput } from "../validations/locking";
+import { AcquireLockInput, ReleaseLockInput} from "../validations/locking";
 
 /**
  * Default lock duration in milliseconds (5 minutes)

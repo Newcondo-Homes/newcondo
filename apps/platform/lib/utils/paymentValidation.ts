@@ -207,7 +207,7 @@ export function validatePhoneNumber(phone: string): {
 export function isPaymentMethodAvailable(
   method: string,
   amount: number,
-  currency: string = 'NGN'
+  // currency: string = 'NGN'
 ): boolean {
   const methodLimits = {
     card: { min: 100, max: 10000000 },
@@ -226,7 +226,7 @@ export function isPaymentMethodAvailable(
 export function calculatePaymentFee(
   amount: number,
   method: string,
-  currency: string = 'NGN'
+  // currency: string = 'NGN'
 ): number {
   const feeRates = {
     card: 0.015, // 1.5%
@@ -251,6 +251,6 @@ export function getTotalAmount(
   method: string,
   currency: string = 'NGN'
 ): number {
-  const fee = calculatePaymentFee(amount, method, currency);
+  const fee = calculatePaymentFee(amount, method);
   return amount + fee;
 }

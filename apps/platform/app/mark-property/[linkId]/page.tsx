@@ -1,6 +1,6 @@
+// apps/platform/app/mark-property/[linkId]/page.tsx
 import { Metadata } from 'next';
 import { Suspense } from 'react';
-// fix line 3: removed unused notFound import
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
 import { Skeleton } from '@newcondo/ui';
 import { Alert, AlertDescription } from '@newcondo/ui';
@@ -14,8 +14,8 @@ interface PageProps {
   };
 }
 
-// fix line 17: params is received but only linkId is needed — destructure directly
-export async function generateMetadata(_props: PageProps): Promise<Metadata> {
+// generateMetadata doesn't need params — static metadata is sufficient here
+export async function generateMetadata(): Promise<Metadata> {
   return {
     title: 'Mark Property | Newcondo',
     description: 'Mark property boundaries for Newcondo listing',
@@ -36,18 +36,18 @@ export default function MarkPropertyPublicPage({ params }: PageProps) {
             </div>
           </div>
           <h1 className="text-4xl font-bold tracking-tight">Mark Property</h1>
-          {/* fix line 39: escaped apostrophe in You've */}
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            You&apos;ve been invited to mark a property on Newcondo. Follow the instructions below to complete the marking process.
+            You&apos;ve been invited to mark a property on Newcondo. Follow the instructions
+            below to complete the marking process.
           </p>
         </div>
 
         {/* Important Notice */}
         <Alert>
           <AlertCircle className="h-4 w-4" />
-          {/* fix line 47: escaped apostrophe in you're */}
           <AlertDescription>
-            This is a one-time link. Please complete the marking process in one session. Make sure you&apos;re at the property location before starting.
+            This is a one-time link. Please complete the marking process in one session. Make
+            sure you&apos;re at the property location before starting.
           </AlertDescription>
         </Alert>
 
@@ -78,9 +78,11 @@ export default function MarkPropertyPublicPage({ params }: PageProps) {
   );
 }
 
-// fix line 79: prefixed unused linkId with _ to satisfy the linter
-// (will be used once the shareable link fetch is implemented)
-async function PropertyDetailsCard({ linkId: _linkId }: { linkId: string }) {
+// PropertyDetailsCard receives linkId for future API use but renders placeholder data for now
+async function PropertyDetailsCard({ linkId }: { linkId: string }) {
+  // TODO: fetch property details by linkId from the API
+  void linkId;
+
   return (
     <Card>
       <CardHeader>
@@ -127,16 +129,14 @@ async function MarkingInterface({ linkId }: { linkId: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <MarkPropertySelf
-          propertyId={linkId}
-          propertyAddress=""
-        />
+        <MarkPropertySelf propertyId={linkId} propertyAddress="" />
       </CardContent>
     </Card>
   );
 }
 
-// Loading skeletons
+// ─── Loading skeletons ────────────────────────────────────────────────────────
+
 function PropertyDetailsSkeleton() {
   return (
     <Card>

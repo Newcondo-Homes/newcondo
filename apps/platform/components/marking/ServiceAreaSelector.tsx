@@ -198,7 +198,7 @@ export function ServiceAreaSelector({
 
           {Object.keys(filteredLocations).length === 0 && (
             <div className="p-8 text-center text-muted-foreground">
-              No locations found matching "{searchQuery}"
+              {`No locations found matching "${searchQuery}"`}
             </div>
           )}
         </div>

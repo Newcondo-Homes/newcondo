@@ -6,7 +6,7 @@ import { Clock, AlertCircle } from 'lucide-react';
 
 interface TimeSlotTimerProps {
   timeSlotExpiry: Date | string;
-  jobId: string;
+  jobId?: string;
   onExpiry?: () => void;
   onWarning?: (minutesRemaining: number) => void;
   compactMode?: boolean;
@@ -14,7 +14,7 @@ interface TimeSlotTimerProps {
 
 export function TimeSlotTimer({
   timeSlotExpiry,
-  jobId,
+  // jobId,
   onExpiry,
   onWarning,
   compactMode = false,

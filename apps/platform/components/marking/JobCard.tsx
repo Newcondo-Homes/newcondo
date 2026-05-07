@@ -11,24 +11,14 @@ import {
   ChevronRight,
   Loader2,
   Zap,
+  Eye,
 } from 'lucide-react';
+import type { Job } from '@/types/marking';
 
 interface JobCardProps {
-  job: {
-    id: string;
-    propertyId: string;
-    address: string;
-    city: string;
-    state: string;
-    markingFee: number | string;
-    urgencyLevel: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
-    contactPersonName: string;
-    queuePosition?: number;
-    distanceFromAgent?: number;
-    preferredTime?: string;
-    maxCompletionTime?: string;
-  };
+  job: Job;
   onAccept: () => void;
+  onViewDetails?: () => void;
   isAccepting?: boolean;
   userLocation?: { lat: number; lng: number };
 }
@@ -36,6 +26,7 @@ interface JobCardProps {
 export default function JobCard({
   job,
   onAccept,
+  onViewDetails,
   isAccepting = false,
   userLocation,
 }: JobCardProps) {
@@ -58,15 +49,16 @@ export default function JobCard({
     },
   };
 
-  const agentCompensation = (
-    Number(job.markingFee) * 0.25
-  ).toLocaleString('en-NG', {
-    style: 'currency',
-    currency: 'NGN',
-    minimumFractionDigits: 0,
-  });
+  const agentCompensation = (Number(job.markingFee) * 0.25).toLocaleString(
+    'en-NG',
+    {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 0,
+    }
+  );
 
-  const urgency = urgencyConfig[job.urgencyLevel];
+  const urgency = urgencyConfig[job.urgencyLevel ?? 'NORMAL'];
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4 hover:shadow-md transition-shadow">
@@ -143,25 +135,38 @@ export default function JobCard({
           </div>
         </div>
 
-        {/* Action Button */}
-        <Button
-          onClick={onAccept}
-          disabled={isAccepting}
-          size="sm"
-          className="flex-shrink-0 whitespace-nowrap"
-        >
-          {isAccepting ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Accepting...
-            </>
-          ) : (
-            <>
-              Accept Job
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </>
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2 flex-shrink-0">
+          {onViewDetails && (
+            <Button
+              onClick={onViewDetails}
+              size="sm"
+              variant="outline"
+              className="whitespace-nowrap"
+            >
+              <Eye className="h-4 w-4 mr-1" />
+              Details
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={onAccept}
+            disabled={isAccepting}
+            size="sm"
+            className="whitespace-nowrap"
+          >
+            {isAccepting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Accepting...
+              </>
+            ) : (
+              <>
+                Accept Job
+                <ChevronRight className="h-4 w-4 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

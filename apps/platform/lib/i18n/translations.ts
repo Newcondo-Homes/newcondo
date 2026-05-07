@@ -11,7 +11,7 @@ export {
 // Keep getOptions locally since it's not exported from the package yet
 import type { InitOptions } from 'i18next';
 import {
-  SUPPORTED_LOCALES, DEFAULT_LOCALE, NAMESPACES,
+  SUPPORTED_LOCALES, DEFAULT_LOCALE,
   languageMetadata,
   pluralRules,
   type Language,

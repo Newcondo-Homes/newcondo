@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { CreditCard, Lock, AlertCircle } from 'lucide-react';
 import { PaymentLockStatus } from './PaymentLockStatus';
 import { ConflictWarning } from './ConflictWarning';
+import Link from 'next/link';
 
 interface CheckoutFormProps {
   propertyId: string;
@@ -272,13 +273,13 @@ export default function CheckoutForm({
       {/* Terms */}
       <p className="text-xs text-gray-600 text-center">
         By proceeding, you agree to our{' '}
-        <a href="/terms" className="text-blue-600 hover:underline">
+        <Link href="/terms" className="text-blue-600 hover:underline">
           Terms of Service
-        </a>{' '}
+        </Link>{' '}'
         and{' '}
-        <a href="/privacy" className="text-blue-600 hover:underline">
+        <Link href="/privacy" className="text-blue-600 hover:underline">
           Privacy Policy
-        </a>
+        </Link>
       </p>
     </div>
   );

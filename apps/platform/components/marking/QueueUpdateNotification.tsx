@@ -1,7 +1,7 @@
 // apps/platform/components/marking/QueueUpdateNotification.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
@@ -50,7 +50,7 @@ export function QueueUpdateNotification({
   queuePosition,
   markingFee,
   previousPosition,
-  jobId,
+  // jobId,
   propertyLocation,
   agentName,
   onDismiss,
@@ -64,6 +64,14 @@ export function QueueUpdateNotification({
   const [isClosing, setIsClosing] = useState(false);
 
   // Auto-close notification
+  const handleDismiss = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      onDismiss?.();
+    }, 300);
+  }, [onDismiss]);
+
   useEffect(() => {
     if (!autoClose || !isVisible) return;
 
@@ -72,15 +80,7 @@ export function QueueUpdateNotification({
     }, autoCloseDuration);
 
     return () => clearTimeout(timer);
-  }, [autoClose, autoCloseDuration, isVisible]);
-
-  const handleDismiss = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsVisible(false);
-      onDismiss?.();
-    }, 300);
-  };
+  }, [autoClose, autoCloseDuration, isVisible, handleDismiss]);
 
   if (!isVisible) return null;
 

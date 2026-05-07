@@ -75,7 +75,7 @@ export function getRewardStatusDisplay(status: RewardStatus): {
 export function formatRewardDescription(
   type: RewardType,
   amount: number,
-  referralType?: string
+  // referralType?: string
 ): string {
   const typeInfo = getRewardTypeDisplay(type);
   const formattedAmount = formatRewardAmount(amount);

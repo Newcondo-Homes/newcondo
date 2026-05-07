@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Clock, X } from 'lucide-react';
 import { format, differenceInMinutes, differenceInSeconds } from 'date-fns';
 
@@ -23,7 +23,7 @@ export function TimeSlotExpiryWarning({
   agentName,
   propertyAddress,
   warningThresholdMinutes = 30,
-  onDismiss,
+  // onDismiss,
   onEscalate,
   severity: initialSeverity,
 }: TimeSlotExpiryWarningProps) {
@@ -32,7 +32,10 @@ export function TimeSlotExpiryWarning({
   const [severity, setSeverity] = useState<'info' | 'warning' | 'critical'>(initialSeverity || 'info');
   const [isDismissed, setIsDismissed] = useState(false);
 
-  const expiryDate = typeof timeSlotExpiry === 'string' ? new Date(timeSlotExpiry) : timeSlotExpiry;
+  const expiryDate = useMemo(
+    () => typeof timeSlotExpiry === 'string' ? new Date(timeSlotExpiry) : timeSlotExpiry,
+    [timeSlotExpiry]
+  );
 
   useEffect(() => {
     const updateTimer = () => {
@@ -207,13 +210,12 @@ export function TimeSlotExpiryWarning({
       {/* Progress Bar */}
       <div className={`mt-3 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden`}>
         <div
-          className={`h-full transition-all duration-1000 ${
-            severity === 'critical'
+          className={`h-full transition-all duration-1000 ${severity === 'critical'
               ? 'bg-red-600 dark:bg-red-500'
               : severity === 'warning'
-              ? 'bg-yellow-600 dark:bg-yellow-500'
-              : 'bg-blue-600 dark:bg-blue-500'
-          }`}
+                ? 'bg-yellow-600 dark:bg-yellow-500'
+                : 'bg-blue-600 dark:bg-blue-500'
+            }`}
           style={{
             width: isExpired ? '0%' : '100%',
           }}

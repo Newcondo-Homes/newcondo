@@ -200,7 +200,7 @@ export function estimateTravelTime(distanceKm: number): {
  */
 export function getCityStateCoordinates(
   city: string,
-  state: string
+  // state: string
 ): Coordinates | null {
   // Major Nigerian cities approximate coordinates
   const cityCoordinates: Record<string, Coordinates> = {
