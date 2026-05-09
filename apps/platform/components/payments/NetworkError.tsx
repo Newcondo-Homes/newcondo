@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 import { Button } from '@newcondo/ui';
 
 interface NetworkErrorProps {
@@ -22,19 +22,11 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isRetrying, setIsRetrying] = useState(false);
   const [autoRetryCountdown, setAutoRetryCountdown] = useState(0);
-  const [connectionHistory, setConnectionHistory] = useState<Array<{ status: 'online' | 'offline', timestamp: Date }>>([]);
 
   // Monitor network status
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      setConnectionHistory(prev => [...prev, { status: 'online', timestamp: new Date() }]);
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      setConnectionHistory(prev => [...prev, { status: 'offline', timestamp: new Date() }]);
-    };
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -44,6 +36,29 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // fix line 71: wrap handleRetry in useCallback so it's stable and safe
+  // to include in the auto-retry useEffect dependency array
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true);
+    setAutoRetryCountdown(0);
+
+    try {
+      await fetch('/api/health', {
+        method: 'HEAD',
+        cache: 'no-cache',
+      });
+
+      onRetry?.();
+    } catch (error) {
+      console.error('Retry failed:', error);
+      if (autoRetry) {
+        setAutoRetryCountdown(retryDelay);
+      }
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [onRetry, autoRetry, retryDelay]);
 
   // Auto retry countdown
   useEffect(() => {
@@ -68,46 +83,7 @@ const NetworkError: React.FC<NetworkErrorProps> = ({
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [autoRetry, isOnline, autoRetryCountdown, retryDelay]);
-
-  const handleRetry = async () => {
-    setIsRetrying(true);
-    setAutoRetryCountdown(0);
-
-    try {
-      // Test network connectivity
-      await fetch('/api/health', {
-        method: 'HEAD',
-        cache: 'no-cache'
-      });
-
-      if (onRetry) {
-        onRetry();
-      }
-    } catch (error) {
-      console.error('Retry failed:', error);
-      // Reset countdown if auto retry is enabled
-      if (autoRetry) {
-        setAutoRetryCountdown(retryDelay);
-      }
-    } finally {
-      setIsRetrying(false);
-    }
-  };
-
-  // const getConnectionQuality = () => {
-  //   // @ts-ignore - experimental API
-  //   if ('connection' in navigator && navigator.connection) {
-  //     // @ts-ignore
-  //     const connection = navigator.connection;
-  //     return {
-  //       effectiveType: connection.effectiveType,
-  //       downlink: connection.downlink,
-  //       rtt: connection.rtt
-  //     };
-  //   }
-  //   return null;
-  // };
+  }, [autoRetry, isOnline, autoRetryCountdown, retryDelay, handleRetry]);
 
   const getConnectionQuality = () => {
     if ('connection' in navigator) {

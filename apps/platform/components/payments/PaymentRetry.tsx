@@ -18,6 +18,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { Payment } from '@/types/payment';
+import Link from 'next/link';
 
 interface PaymentRetryProps {
   payment: Payment;
@@ -49,7 +50,7 @@ export default function PaymentRetry({
   const [retryAttempts, setRetryAttempts] = useState<RetryAttempt[]>([]);
   const [countdown, setCountdown] = useState(0);
   const [canRetry, setCanRetry] = useState(true);
-  const [lastRetryTime, setLastRetryTime] = useState<Date | null>(null);
+  // const [lastRetryTime, setLastRetryTime] = useState<Date | null>(null);
 
   // Countdown timer for retry delay
   useEffect(() => {
@@ -73,15 +74,15 @@ export default function PaymentRetry({
     }).format(amount);
   };
 
-  const getPaymentStatusColor = (status: string) => {
-    const colors = {
-      SUCCESS: 'text-green-600',
-      FAILED: 'text-red-600',
-      PENDING: 'text-yellow-600',
-      CANCELLED: 'text-gray-600'
-    };
-    return colors[status as keyof typeof colors] || 'text-gray-600';
-  };
+  // const getPaymentStatusColor = (status: string) => {
+  //   const colors = {
+  //     SUCCESS: 'text-green-600',
+  //     FAILED: 'text-red-600',
+  //     PENDING: 'text-yellow-600',
+  //     CANCELLED: 'text-gray-600'
+  //   };
+  //   return colors[status as keyof typeof colors] || 'text-gray-600';
+  // };
 
   const getPaymentStatusIcon = (status: string) => {
     const icons = {
@@ -173,7 +174,7 @@ export default function PaymentRetry({
       onFailure?.(errorMessage);
     } finally {
       setIsRetrying(false);
-      setLastRetryTime(new Date());
+      // setLastRetryTime(new Date());
     }
   };
 
@@ -318,7 +319,7 @@ export default function PaymentRetry({
 
         {currentAttempt >= maxRetries && (
           <Button variant="outline" asChild>
-            <a href="/payments/methods">Try Different Method</a>
+            <Link href="/payments/methods">Try Different Method</Link>
           </Button>
         )}
       </CardFooter>

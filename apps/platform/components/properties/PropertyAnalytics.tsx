@@ -14,9 +14,9 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-import { Eye, Heart, MessageSquare, TrendingUp, Calendar } from 'lucide-react';
+import { Eye,  MessageSquare, TrendingUp, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@newcondo/ui/components/tabs';
 import { propertyApi } from '@/lib/api/properties';
 
 interface PropertyAnalyticsProps {

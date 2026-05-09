@@ -6,6 +6,7 @@ import { Button } from '@newcondo/ui/components/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
 import { Input } from '@newcondo/ui/components/input';
 import { toast } from '@newcondo/ui/';
+import Image from 'next/image';
 
 interface PropertyShareProps {
   propertyId: string;
@@ -43,11 +44,11 @@ const PropertyShare: React.FC<PropertyShareProps> = ({
     try {
       await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
-      toast.success("Link copied!",{
+      toast.success("Link copied!", {
         description: "Property link has been copied to clipboard",
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error("Failed to copy", {
         description: "Please copy the link manually",
       });
@@ -144,23 +145,26 @@ const PropertyShare: React.FC<PropertyShareProps> = ({
       <DialogTrigger asChild>
         <div style={{ display: 'none' }} />
       </DialogTrigger>
-      
+
       <TriggerButton />
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Share Property</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Property Preview */}
           <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
             {propertyImage && (
-              <img
-                src={propertyImage}
-                alt={propertyTitle}
-                className="w-12 h-12 rounded-lg object-cover"
-              />
+              <div className="relative w-12 h-12 shrink-0">
+                <Image
+                  src={propertyImage}
+                  alt={propertyTitle}
+                  fill
+                  className="rounded-lg object-cover"
+                />
+              </div>
             )}
             <div className="flex-1">
               <h4 className="font-medium text-sm line-clamp-1">{propertyTitle}</h4>

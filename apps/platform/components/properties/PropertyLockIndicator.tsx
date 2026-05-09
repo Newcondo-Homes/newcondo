@@ -16,6 +16,8 @@ interface PropertyLockIndicatorProps {
   className?: string;
 }
 
+const LOCK_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
+
 export function PropertyLockIndicator({
   isLocked,
   lockExpiresAt,
@@ -28,7 +30,6 @@ export function PropertyLockIndicator({
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [progress, setProgress] = useState<number>(100);
 
-  const LOCK_DURATION = 15 * 60 * 1000; // 15 minutes in milliseconds
 
   useEffect(() => {
     if (!isLocked || !lockExpiresAt) {
@@ -191,9 +192,9 @@ export function PropertyLockIndicator({
 
 // Hook for managing lock state
 export function usePropertyLock(propertyId: string, unitId?: string) {
-  const [isLocked, setIsLocked] = useState(false);
-  const [lockExpiresAt, setLockExpiresAt] = useState<Date | null>(null);
-  const [lockedBy, setLockedBy] = useState<string | null>(null);
+  const [isLocked] = useState(false);
+  const [lockExpiresAt] = useState<Date | null>(null);
+  const [lockedBy] = useState<string | null>(null);
 
   // This would typically fetch from your backend
   useEffect(() => {

@@ -2,16 +2,10 @@
 
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import i18n , { initI18n, getI18n } from '@newcondo/i18n';
+import {  getI18n } from '@newcondo/i18n';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { getOptions, languages, fallbackLng } from './translations';
-
-export { 
-  useTranslation, 
-  useLocale, 
-  useCurrency 
-} from '@newcondo/i18n';
 
 const runsOnServerSide = typeof window === 'undefined';
 

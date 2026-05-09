@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import Image from "next/image";
 import { Button } from "@newcondo/ui/components/button";
 import {
   Form,
@@ -23,7 +24,7 @@ import {
 } from "@newcondo/ui/components/select";
 import { Textarea } from "@newcondo/ui/components/textarea";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
-import { Upload, X, AlertCircle, Loader2 } from "lucide-react";
+import { X, AlertCircle, Loader2 } from "lucide-react";
 import { UploadButton } from "@uploadthing/react";
 import type { OurFileRouter } from "@/lib/uploadthing";
 
@@ -108,10 +109,7 @@ export function DisputeForm({
   };
 
   const disputeReasons = [
-    {
-      value: "PROPERTY_NOT_AS_DESCRIBED",
-      label: "Property not as described",
-    },
+    { value: "PROPERTY_NOT_AS_DESCRIBED", label: "Property not as described" },
     { value: "PROPERTY_UNAVAILABLE", label: "Property is unavailable" },
     { value: "SAFETY_CONCERNS", label: "Safety concerns" },
     { value: "FRAUDULENT_LISTING", label: "Suspected fraudulent listing" },
@@ -125,7 +123,7 @@ export function DisputeForm({
       <div>
         <h3 className="text-lg font-semibold">Request Refund</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          Please provide details about why you're requesting a refund. This will
+          Please provide details about why you&apos;re requesting a refund. This will
           be reviewed by our team.
         </p>
       </div>
@@ -194,16 +192,20 @@ export function DisputeForm({
             <FormDescription className="mb-3">
               Upload photos or documents that support your dispute
             </FormDescription>
-            
+
+            {/* fix line 202: <img> → <Image /> */}
             {uploadedFiles.length > 0 && (
               <div className="grid grid-cols-2 gap-4 mb-4">
                 {uploadedFiles.map((url, index) => (
                   <div key={index} className="relative group">
-                    <img
-                      src={url}
-                      alt={`Evidence ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
+                    <div className="relative w-full h-32">
+                      <Image
+                        src={url}
+                        alt={`Evidence ${index + 1}`}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                    </div>
                     <button
                       type="button"
                       onClick={() => removeFile(url)}
@@ -224,8 +226,8 @@ export function DisputeForm({
                   setUploadedFiles((prev) => [...prev, ...urls]);
                 }
               }}
-              onUploadError={(error: Error) => {
-                setError(`Upload failed: ${error.message}`);
+              onUploadError={(uploadError: Error) => {
+                setError(`Upload failed: ${uploadError.message}`);
               }}
               appearance={{
                 button:

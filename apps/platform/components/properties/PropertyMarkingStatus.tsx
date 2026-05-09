@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newc
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@newcondo/ui/components/dialog";
 import { CheckCircle2, Clock, XCircle, AlertCircle, MapPin, User, Phone, Calendar, ImageIcon } from "lucide-react";
 import { format } from "date-fns";
+import Image from 'next/image';
 
 type MarkingJobStatus = "QUEUED" | "ASSIGNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "EXPIRED";
 type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "REFUNDED" | "HELD" | "RELEASED";
@@ -34,7 +35,7 @@ interface PropertyMarkingStatusProps {
     queuePosition?: number;
     markingFee: number;
   };
-  propertyId: string | undefined;
+  propertyId?: string | undefined;
   onConfirmMarking?: () => void;
   onRejectMarking?: () => void;
   onCancelJob?: () => void;
@@ -42,7 +43,7 @@ interface PropertyMarkingStatusProps {
 
 export function PropertyMarkingStatus({
   markingJob,
-  propertyId,
+  // propertyId,
   onConfirmMarking,
   onRejectMarking,
   onCancelJob,
@@ -268,10 +269,11 @@ export function PropertyMarkingStatus({
                           setShowImagesDialog(true);
                         }}
                       >
-                        <img
+                        <Image
                           src={image}
                           alt={`Completion image ${index + 1}`}
-                          className="object-cover w-full h-full"
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     ))}
@@ -330,10 +332,11 @@ export function PropertyMarkingStatus({
                 className="relative aspect-video rounded-lg overflow-hidden bg-muted cursor-pointer"
                 onClick={() => setSelectedImage(image)}
               >
-                <img
+                <Image
                   src={image}
                   alt={`Property image ${index + 1}`}
-                  className="object-cover w-full h-full"
+                  fill
+                  className="object-cover"
                 />
               </div>
             ))}
@@ -346,11 +349,14 @@ export function PropertyMarkingStatus({
               >
                 <XCircle className="h-8 w-8" />
               </button>
-              <img
-                src={selectedImage}
-                alt="Full size"
-                className="max-w-full max-h-full object-contain"
-              />
+              <div className="relative w-full h-full">
+                <Image
+                  src={selectedImage}
+                  alt="Full size"
+                  fill
+                  className="object-contain"
+                />
+              </div>
             </div>
           )}
         </DialogContent>

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -64,7 +63,6 @@ export function ContactPersonForm({
   isLoading = false,
   defaultValues,
 }: ContactPersonFormProps) {
-  const [date, setDate] = useState<Date | undefined>(defaultValues?.preferredDate);
 
   const form = useForm<ContactPersonFormData>({
     resolver: zodResolver(contactPersonSchema),

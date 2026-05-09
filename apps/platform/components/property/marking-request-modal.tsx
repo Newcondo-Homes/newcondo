@@ -135,7 +135,7 @@ export default function MarkingRequestModal({
               <li>• Property boundaries will be marked on satellite map</li>
               <li>• Photos will be taken for verification</li>
               <li>• Property will be added to our database</li>
-              <li>• You'll receive confirmation once complete</li>
+              <li>• You&apos;ll receive confirmation once complete</li>
             </ul>
           </div>
 

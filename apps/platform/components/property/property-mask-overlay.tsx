@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useState } from 'react'
 import { GoogleMap, Polygon, Marker, InfoWindow } from '@react-google-maps/api'
 import { cn } from '@/lib/utils'
 import { Badge } from '@newcondo/ui'
@@ -39,7 +39,7 @@ const PropertyMaskOverlay: React.FC<PropertyMaskOverlayProps> = ({
   onMapClick,
   className,
 }) => {
-  const mapRef = useRef<google.maps.Map | null>(null)
+  // const mapRef = useRef<google.maps.Map | null>(null)
   const [selectedMask, setSelectedMask] = useState<PropertyMask | null>(null)
   const [hoveredMask, setHoveredMask] = useState<PropertyMask | null>(null)
   const [mapType, setMapType] = useState<'satellite' | 'roadmap'>('satellite')

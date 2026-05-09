@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import Image from 'next/image';
 import { Upload, X, Image as ImageIcon, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent } from '@newcondo/ui/components/card';
@@ -30,6 +31,17 @@ interface ImageUploaderProps {
   className?: string;
 }
 
+// Moved outside component — pure function, no closure over state
+const validateFile = (file: File, acceptedTypes: string[], maxSizeInMB: number): string | null => {
+  if (!acceptedTypes.includes(file.type)) {
+    return 'Invalid file type. Please upload JPEG, PNG, or WebP images.';
+  }
+  if (file.size > maxSizeInMB * 1024 * 1024) {
+    return `File size must be less than ${maxSizeInMB}MB.`;
+  }
+  return null;
+};
+
 export function ImageUploader({
   images,
   onImagesChange,
@@ -50,20 +62,6 @@ export function ImageUploader({
     },
   });
 
-  const validateFile = (file: File): string | null => {
-    if (!acceptedTypes.includes(file.type)) {
-      return 'Invalid file type. Please upload JPEG, PNG, or WebP images.';
-    }
-
-    if (file.size > maxSizeInMB * 1024 * 1024) {
-      return `File size must be less than ${maxSizeInMB}MB.`;
-    }
-
-    return null;
-  };
-
-
-
   const handleFileUpload = useCallback(async (files: FileList) => {
     if (images.length + files.length > maxImages) {
       toast.error("Too many images", {
@@ -74,7 +72,7 @@ export function ImageUploader({
 
     const validFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
-      const error = validateFile(files[i]);
+      const error = validateFile(files[i], acceptedTypes, maxSizeInMB);
       if (error) {
         toast.error('Upload failed', { description: error });
       } else {
@@ -103,19 +101,18 @@ export function ImageUploader({
       toast.success('Images uploaded', {
         description: `Successfully uploaded ${newImages.length} image(s).`,
       });
-    } catch (error) {
+    } catch {
       toast.error("Upload failed", {
         description: "Failed to upload images. Please try again.",
       });
     } finally {
       setUploading(false);
     }
-  }, [images, maxImages, onImagesChange, startUpload]);
+  }, [images, maxImages, maxSizeInMB, acceptedTypes, onImagesChange, startUpload]);
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setDragActive(false);
-
     const files = e.dataTransfer.files;
     if (files.length > 0) {
       handleFileUpload(files);
@@ -132,7 +129,6 @@ export function ImageUploader({
 
   const removeImage = (imageId: string) => {
     const updatedImages = images.filter(img => img.id !== imageId);
-    // Reassign primary if the removed image was primary
     if (updatedImages.length > 0 && !updatedImages.some(img => img.isPrimary)) {
       updatedImages[0].isPrimary = true;
     }
@@ -151,20 +147,6 @@ export function ImageUploader({
     const updatedImages = images.map(img =>
       img.id === imageId ? { ...img, altText } : img
     );
-    onImagesChange(updatedImages);
-  };
-
-  const reorderImages = (dragIndex: number, hoverIndex: number) => {
-    const updatedImages = [...images];
-    const draggedImage = updatedImages[dragIndex];
-    updatedImages.splice(dragIndex, 1);
-    updatedImages.splice(hoverIndex, 0, draggedImage);
-
-    // Update order values
-    updatedImages.forEach((img, index) => {
-      img.order = index;
-    });
-
     onImagesChange(updatedImages);
   };
 
@@ -237,10 +219,11 @@ export function ImageUploader({
             <Card key={image.id} className="overflow-hidden">
               <CardContent className="p-0">
                 <div className="relative aspect-square">
-                  <img
+                  <Image
                     src={image.url}
                     alt={image.altText || `Property image ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
 
                   {/* Primary badge */}

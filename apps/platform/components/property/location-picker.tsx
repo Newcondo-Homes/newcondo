@@ -66,33 +66,19 @@ export default function LocationPicker({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<LocationData | null>(initialLocation || null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
   const [showInfoWindow, setShowInfoWindow] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const isSearching = false;
   const searchInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
-
-  // Initialize autocomplete
-  useEffect(() => {
-    if (isLoaded && searchInputRef.current && !autocompleteRef.current) {
-      autocompleteRef.current = new google.maps.places.Autocomplete(searchInputRef.current, {
-        componentRestrictions: { country: 'ng' }, // Restrict to Nigeria
-        fields: ['place_id', 'geometry', 'name', 'formatted_address', 'address_components'],
-        types: ['establishment', 'geocode']
-      });
-
-      autocompleteRef.current.addListener('place_changed', handlePlaceSelect);
-    }
-  }, [isLoaded]);
 
   const handlePlaceSelect = useCallback(() => {
     if (!autocompleteRef.current) return;
 
     const place = autocompleteRef.current.getPlace();
-    
+
     if (!place.geometry?.location) {
       setError('Please select a valid location');
       return;
@@ -102,13 +88,35 @@ export default function LocationPicker({
     setSelectedLocation(location);
     setShowInfoWindow(true);
     setError(null);
-    
+
     // Center map on selected location
     if (map) {
       map.panTo(place.geometry.location);
       map.setZoom(18); // Zoom in for detailed view
     }
   }, [map]);
+
+  useEffect(() => {
+    if (isLoaded && searchInputRef.current && !autocompleteRef.current) {
+      autocompleteRef.current = new google.maps.places.Autocomplete(searchInputRef.current, {
+        componentRestrictions: { country: 'ng' },
+        fields: ['place_id', 'geometry', 'name', 'formatted_address', 'address_components'],
+        types: ['establishment', 'geocode']
+      });
+    }
+  }, [isLoaded]);
+
+  useEffect(() => {
+    if (!autocompleteRef.current) return;
+
+    const listener = autocompleteRef.current.addListener('place_changed', handlePlaceSelect);
+
+    return () => {
+      google.maps.event.removeListener(listener);
+    };
+  }, [handlePlaceSelect]);
+
+
 
   const extractLocationData = (place: google.maps.places.PlaceResult): LocationData => {
     const location: LocationData = {
@@ -178,9 +186,9 @@ export default function LocationPicker({
       (position) => {
         const { latitude, longitude } = position.coords;
         const location = { lat: latitude, lng: longitude };
-        
+
         setCurrentLocation(location);
-        
+
         // Center map on current location
         if (map) {
           map.panTo(location);
@@ -382,7 +390,7 @@ export default function LocationPicker({
         <div className="text-sm text-gray-600 space-y-1">
           <p>• Search for your property address or click on the map to select a location</p>
           <p>• Use satellite view to get a better view of the property</p>
-          <p>• Click "Confirm Location" to proceed with boundary marking</p>
+          <p>• Click &quot;Confirm Location&quot; to proceed with boundary marking</p>
         </div>
       </CardContent>
     </Card>

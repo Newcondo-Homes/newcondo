@@ -15,8 +15,22 @@ import {
 import { DocumentStatus } from '@/types/enums';
 import { formatDate } from '@/lib/utils/format';
 
+// ✅ Typed interface replacing any[]
+interface VerificationDocument {
+  id: string;
+  documentType: string;
+  documentSide?: string;
+  documentNumber?: string;
+  fileName?: string;
+  fileUrl?: string;
+  status: DocumentStatus;
+  verificationNotes?: string;
+  createdAt: string;
+  expiresAt?: string;
+}
+
 interface VerificationDocumentsProps {
-  documents: any[];
+  documents: VerificationDocument[];
   onResubmit: (documentId: string) => void;
 }
 
@@ -89,7 +103,6 @@ export function VerificationDocuments({ documents, onResubmit }: VerificationDoc
               
               <CardContent>
                 <div className="space-y-4">
-                  {/* Document Details */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-gray-400" />
@@ -122,7 +135,6 @@ export function VerificationDocuments({ documents, onResubmit }: VerificationDoc
                     )}
                   </div>
 
-                  {/* Verification Notes */}
                   {document.verificationNotes && (
                     <Alert variant={document.status === DocumentStatus.REJECTED ? 'destructive' : 'default'}>
                       <AlertTriangle className="h-4 w-4" />
@@ -132,7 +144,6 @@ export function VerificationDocuments({ documents, onResubmit }: VerificationDoc
                     </Alert>
                   )}
 
-                  {/* Actions */}
                   <div className="flex gap-2">
                     {document.fileUrl && (
                       <Button variant="outline" size="sm" asChild>

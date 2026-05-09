@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Clock, Lock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import {  Clock, Lock, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@newcondo/ui/';
 

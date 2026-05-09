@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/alert';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
 import { Badge } from '@newcondo/ui/components/badge';
-import { 
-  AlertTriangle, 
-  Eye, 
-  MapPin, 
-  Calendar, 
-  User, 
+import {
+  AlertTriangle,
+  Eye,
+  MapPin,
+  Calendar,
+  User,
   ExternalLink,
   Clock,
   Flag,
@@ -19,6 +19,7 @@ import {
   XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface DuplicateProperty {
   id: string;
@@ -129,7 +130,7 @@ export default function DuplicateAlert({
 
   const highSimilarityDuplicates = duplicates.filter(d => d.similarity >= 80);
   const mediumSimilarityDuplicates = duplicates.filter(d => d.similarity >= 60 && d.similarity < 80);
-  const lowSimilarityDuplicates = duplicates.filter(d => d.similarity < 60);
+  // const lowSimilarityDuplicates = duplicates.filter(d => d.similarity < 60);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -141,8 +142,8 @@ export default function DuplicateAlert({
             Potential Duplicate Properties Found
           </AlertTitle>
           <AlertDescription className="text-red-700 mt-2">
-            We found {highSimilarityDuplicates.length} property(s) with high similarity to your listing. 
-            These properties may be duplicates or very similar to what you're trying to list.
+            We found {highSimilarityDuplicates.length} property(s) with high similarity to your listing.
+            These properties may be duplicates or very similar to what you&apos;re trying to list.
           </AlertDescription>
         </Alert>
       )}
@@ -192,7 +193,7 @@ export default function DuplicateAlert({
                 </div>
               </div>
             </CardHeader>
-            
+
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Property Info */}
@@ -203,7 +204,7 @@ export default function DuplicateAlert({
                     </p>
                     <p className="text-sm text-gray-600">per month</p>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4 text-gray-500" />
@@ -230,15 +231,18 @@ export default function DuplicateAlert({
                 {/* Property Image */}
                 <div className="relative">
                   {duplicate.images.length > 0 && (
-                    <img
-                      src={duplicate.images[0]}
-                      alt={duplicate.title}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                  )}
-                  {duplicate.images.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-                      +{duplicate.images.length - 1} more
+                    <div className="relative w-full h-32">
+                      <Image
+                        src={duplicate.images[0]}
+                        alt={duplicate.title}
+                        fill
+                        className="object-cover rounded-lg"
+                      />
+                      {duplicate.images.length > 1 && (
+                        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          +{duplicate.images.length - 1} more
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -255,7 +259,7 @@ export default function DuplicateAlert({
                   <Eye className="h-4 w-4" />
                   View Details
                 </Button>
-                
+
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
@@ -294,18 +298,20 @@ export default function DuplicateAlert({
                             </div>
                           </div>
                         </div>
-                        
+
                         {selectedDuplicate.images.length > 0 && (
                           <div>
                             <h4 className="font-semibold mb-2">Property Images</h4>
                             <div className="grid grid-cols-3 gap-2">
                               {selectedDuplicate.images.slice(0, 6).map((image, index) => (
-                                <img
-                                  key={index}
-                                  src={image}
-                                  alt={`Property ${index + 1}`}
-                                  className="w-full h-24 object-cover rounded"
-                                />
+                                <div key={index} className="relative w-full h-24">
+                                  <Image
+                                    src={image}
+                                    alt={`Property ${index + 1}`}
+                                    fill
+                                    className="object-cover rounded"
+                                  />
+                                </div>
                               ))}
                             </div>
                           </div>
@@ -343,7 +349,7 @@ export default function DuplicateAlert({
             Request Manual Verification
           </Button>
         )}
-        
+
         {onProceedAnyway && canProceed && (
           <Button
             variant="secondary"
@@ -361,7 +367,7 @@ export default function DuplicateAlert({
         <Alert className="border-yellow-200 bg-yellow-50">
           <AlertTriangle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-700">
-            <strong>Important:</strong> Listing duplicate properties is against our terms of service. 
+            <strong>Important:</strong> Listing duplicate properties is against our terms of service.
             If you believe this is not a duplicate, please contact our support team for assistance.
           </AlertDescription>
         </Alert>

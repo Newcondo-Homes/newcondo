@@ -6,7 +6,7 @@ import type {
   VirtualAccountStatement,
   VirtualAccountTransaction,
   WithdrawalSettings,
-  VirtualAccountQueryParams,
+  // VirtualAccountQueryParams,
   TransactionListParams,
   UpdateWithdrawalSettingsParams,
   PaginatedTransactionsResponse,
@@ -269,14 +269,20 @@ export const updateWithdrawalSettings = async (
 };
 
 export const virtualAccountsApi = {
-  getVirtualAccounts: (params?: VirtualAccountQueryParams) => fetchAllVirtualAccounts(),
+  //TODO: see if you can pass in params for getVirtualAccounts like below
+  // getVirtualAccounts: (params?: VirtualAccountQueryParams) => fetchAllVirtualAccounts(),
+  getVirtualAccounts: () => fetchAllVirtualAccounts(),
   getVirtualAccount: (accountId: string) => fetchVirtualAccountById(accountId),
-  getUserVirtualAccounts: (userId: string) => fetchAllVirtualAccounts(), // filter client-side or add endpoint
+  getUserVirtualAccounts: () => fetchAllVirtualAccounts(), // filter client-side or add endpoint
+  //TODO: see if you need to pass user string for fetching virtual accounts
+  // getUserVirtualAccounts: (userId: string) => fetchAllVirtualAccounts(), // filter client-side or add endpoint
   getPropertyVirtualAccount: (propertyId: string) => fetchPropertyVirtualAccount(propertyId),
   createVirtualAccount: (data: CreateVirtualAccountRequest) => createVirtualAccount(data),
   activateVirtualAccount: (accountId: string) => reactivateVirtualAccount(accountId),
   deactivateVirtualAccount: (accountId: string) => deactivateVirtualAccount(accountId),
   updateVirtualAccountName: (accountId: string, name: string) => updateVirtualAccount(accountId, { accountName: name }),
   deleteVirtualAccount: (accountId: string) => deactivateVirtualAccount(accountId), // no delete endpoint exists yet
-  reconcileAccount: (data: any) => Promise.reject(new Error('Reconcile not yet implemented')),
+  //TODO: see if you may need to pass data in to reconcileAccount like the below
+  // reconcileAccount: (data: any) => Promise.reject(new Error('Reconcile not yet implemented')),
+  reconcileAccount: () => Promise.reject(new Error('Reconcile not yet implemented')),
 };

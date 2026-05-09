@@ -346,7 +346,7 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
                       <div className="space-y-1 leading-none">
                         <FormLabel>I am the property owner</FormLabel>
                         <FormDescription>
-                          Uncheck if you're listing as an agent
+                          Uncheck if you&apos;re listing as an agent
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -516,7 +516,7 @@ export function PropertyForm({ propertyId, initialData, onSuccess }: PropertyFor
                           />
                         </FormControl>
                         <FormDescription>
-                          You'll add individual unit details after property creation
+                          You&apos;ll add individual unit details after property creation
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

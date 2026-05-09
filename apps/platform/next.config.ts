@@ -3,7 +3,12 @@ const { PrismaPlugin } = require('@prisma/nextjs-monorepo-workaround-plugin')
 
 const nextConfig: NextConfig = {
   /* config options here */
-    serverExternalPackages: [
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'your-bucket.s3.amazonaws.com' },
+    ],
+  },
+  serverExternalPackages: [
     '@prisma/client',
     '@newcondo/db',
     '@newcondo/auth',

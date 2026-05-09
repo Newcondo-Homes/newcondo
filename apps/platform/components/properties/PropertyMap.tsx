@@ -2,12 +2,14 @@
 // apps/platform/components/properties/PropertyMap.tsx
 
 import { useJsApiLoader, GoogleMap, Polygon, Marker } from '@react-google-maps/api';
-import { AlertTriangle, MapPin } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface PropertyMapProps {
   property: {
     gpsCoordinates?: string | null;
-    boundaryCoordinates?: any;
+    boundaryCoordinates?: {
+      coordinates?: number[][][];
+    } | null;
     boundaryVerified?: boolean;
     title: string;
     address: string;
@@ -45,7 +47,7 @@ export function PropertyMap({
       const raw = property.boundaryCoordinates;
       if (!raw) return null;
       const ring: number[][] = raw?.coordinates?.[0] ?? [];
-      return ring.map(([lng, lat]: number[]) => ({ lat, lng }));
+      return ring.map(([lng, lat]) => ({ lat, lng }));
     } catch {
       return null;
     }

@@ -1,8 +1,6 @@
 'use client'
 
-import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui'
-import { Button } from '@newcondo/ui'
 import { RadioGroup, RadioGroupItem } from '@newcondo/ui'
 import { Label } from '@newcondo/ui'
 import { Badge } from '@newcondo/ui'
@@ -66,19 +64,21 @@ export default function PaymentMethods({
   currency = 'NGN',
   className,
 }: PaymentMethodsProps) {
-  const [hoveredMethod, setHoveredMethod] = useState<string | null>(null)
+  // fix line 69: removed unused hoveredMethod state — hover styling is handled
+  // entirely by CSS (hover:border-gray-300 hover:bg-gray-50) so the state
+  // variable was never actually read anywhere in the JSX
 
   const calculateTotal = (method: PaymentMethod) => {
     if (!method.processingFee) return amount
     return amount + (amount * method.processingFee) / 100
   }
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: currency,
       minimumFractionDigits: 2,
-    }).format(amount)
+    }).format(value)
   }
 
   return (
@@ -95,8 +95,7 @@ export default function PaymentMethods({
             {PAYMENT_METHODS.map((method) => {
               const total = calculateTotal(method)
               const isSelected = selectedMethod === method.id
-              const isHovered = hoveredMethod === method.id
-              
+
               return (
                 <div
                   key={method.id}
@@ -108,8 +107,6 @@ export default function PaymentMethods({
                       'border-gray-100 bg-gray-50 cursor-not-allowed opacity-50': method.isDisabled,
                     }
                   )}
-                  onMouseEnter={() => !method.isDisabled && setHoveredMethod(method.id)}
-                  onMouseLeave={() => setHoveredMethod(null)}
                   onClick={() => !method.isDisabled && onMethodSelect(method.id)}
                 >
                   {method.isRecommended && (
@@ -120,14 +117,14 @@ export default function PaymentMethods({
                       Recommended
                     </Badge>
                   )}
-                  
+
                   <RadioGroupItem
                     value={method.id}
                     id={method.id}
                     disabled={method.isDisabled}
                     className="data-[state=checked]:border-primary data-[state=checked]:text-primary"
                   />
-                  
+
                   <div className="flex-1 flex items-start justify-between">
                     <div className="flex items-start gap-3">
                       <div className={cn(
@@ -139,7 +136,7 @@ export default function PaymentMethods({
                       )}>
                         {method.icon}
                       </div>
-                      
+
                       <div className="flex-1">
                         <Label
                           htmlFor={method.id}
@@ -150,7 +147,7 @@ export default function PaymentMethods({
                         <p className="text-sm text-muted-foreground mt-1">
                           {method.description}
                         </p>
-                        
+
                         {method.processingFee && method.processingFee > 0 && (
                           <div className="mt-2">
                             <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded-full">
@@ -160,7 +157,7 @@ export default function PaymentMethods({
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="text-lg font-semibold">
                         {formatCurrency(total)}
@@ -177,7 +174,7 @@ export default function PaymentMethods({
             })}
           </div>
         </RadioGroup>
-        
+
         <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <div className="flex items-start gap-3">
             <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
@@ -192,7 +189,7 @@ export default function PaymentMethods({
             </div>
           </div>
         </div>
-        
+
         {selectedMethod && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center gap-2">

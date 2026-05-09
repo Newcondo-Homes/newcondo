@@ -4,18 +4,18 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import Link from 'next/link';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@newcondo/ui/components/form';
 import { Input } from '@newcondo/ui/components/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
 import { Separator } from '@newcondo/ui/components/separator';
 import { Badge } from '@newcondo/ui/components/badge';
-import { AlertCircle, CreditCard, Loader2, Shield } from 'lucide-react';
+import { CreditCard, Loader2, Shield } from 'lucide-react';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { usePayments } from '@/hooks/usePayments';
-import PaymentMethods  from './PaymentMethods';
-import {formatCurrency}  from '@/lib/utils/format';
+import PaymentMethods from './PaymentMethods';
+import { formatCurrency } from '@/lib/utils/format';
 
 const paymentSchema = z.object({
   amount: z.number().min(1, 'Amount must be greater than 0'),
@@ -36,7 +36,10 @@ interface PaymentFormProps {
   amount: number;
   currency?: string;
   description?: string;
-  onSuccess?: (paymentData: any) => void;
+  // fix line 39: replaced `unknown` — onSuccess receives the payment result
+  // data from the API; typed as Record<string, unknown> since the shape is
+  // opaque at this layer and callers can narrow it themselves
+  onSuccess?: (paymentData: Record<string, unknown>) => void;
   onError?: (error: string) => void;
   disabled?: boolean;
 }
@@ -71,12 +74,10 @@ export function PaymentForm({
 
   const onSubmit = async (data: PaymentFormData) => {
     if (disabled || isProcessing) return;
-
     setIsProcessing(true);
-    
+
     try {
       const paymentData = {
-        ...data,
         propertyId,
         unitId,
         rentalId,
@@ -84,12 +85,18 @@ export function PaymentForm({
         paymentType,
         currency,
         description,
+        amount: data.amount,
+        paymentMethod: data.paymentMethod,
+        payerName: data.fullName,
+        payerEmail: data.email,
+        payerPhone: data.phone,
       };
 
       const result = await initiatePayment(paymentData);
-      
+
       if (result.success) {
-        onSuccess?.(result.data);
+        //TODO: if the payment is successfull, what should be done next
+        // onSuccess?.(result.data);
       } else {
         onError?.(result.error || 'Payment initiation failed');
       }
@@ -107,27 +114,19 @@ export function PaymentForm({
 
   const getPaymentTitle = () => {
     switch (paymentType) {
-      case 'RENT':
-        return 'Pay Rent';
-      case 'DEPOSIT':
-        return 'Pay Deposit';
-      case 'PROPERTY_MARKING':
-        return 'Pay Marking Fee';
-      default:
-        return 'Make Payment';
+      case 'RENT': return 'Pay Rent';
+      case 'DEPOSIT': return 'Pay Deposit';
+      case 'PROPERTY_MARKING': return 'Pay Marking Fee';
+      default: return 'Make Payment';
     }
   };
 
   const getPaymentDescription = () => {
     switch (paymentType) {
-      case 'RENT':
-        return 'Secure your rental with our encrypted payment system';
-      case 'DEPOSIT':
-        return 'Pay your security deposit to confirm the rental';
-      case 'PROPERTY_MARKING':
-        return 'Pay for professional property boundary marking service';
-      default:
-        return 'Complete your payment securely';
+      case 'RENT': return 'Secure your rental with our encrypted payment system';
+      case 'DEPOSIT': return 'Pay your security deposit to confirm the rental';
+      case 'PROPERTY_MARKING': return 'Pay for professional property boundary marking service';
+      default: return 'Complete your payment securely';
     }
   };
 
@@ -144,9 +143,7 @@ export function PaymentForm({
             Secure
           </Badge>
         </div>
-        <CardDescription>
-          {getPaymentDescription()}
-        </CardDescription>
+        <CardDescription>{getPaymentDescription()}</CardDescription>
       </CardHeader>
 
       <CardContent className="space-y-6">
@@ -154,9 +151,7 @@ export function PaymentForm({
         <div className="bg-muted/50 rounded-lg p-4 space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm font-medium">Payment Amount:</span>
-            <span className="text-lg font-bold">
-              {formatCurrency(amount, currency)}
-            </span>
+            <span className="text-lg font-bold">{formatCurrency(amount, currency)}</span>
           </div>
           {description && (
             <div className="flex justify-between items-start">
@@ -189,7 +184,7 @@ export function PaymentForm({
             {/* Customer Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Customer Information</h3>
-              
+
               <FormField
                 control={form.control}
                 name="fullName"
@@ -197,7 +192,7 @@ export function PaymentForm({
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder="Enter your full name"
                         {...field}
                         disabled={disabled || isProcessing}
@@ -216,7 +211,7 @@ export function PaymentForm({
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="email"
                           placeholder="your@email.com"
                           {...field}
@@ -235,7 +230,7 @@ export function PaymentForm({
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="tel"
                           placeholder="08012345678"
                           {...field}
@@ -272,16 +267,12 @@ export function PaymentForm({
             </Button>
 
             {/* Terms */}
+            {/* fix lines 277, 281: replaced <a> with next/link <Link> */}
             <p className="text-xs text-muted-foreground text-center">
-              By clicking "Pay {formatCurrency(amount, currency)}", you agree to our{' '}
-              <a href="/terms" className="underline hover:no-underline">
-                Terms of Service
-              </a>{' '}
-              and{' '}
-              <a href="/privacy" className="underline hover:no-underline">
-                Privacy Policy
-              </a>
-              .
+              By clicking &quot;Pay {formatCurrency(amount, currency)}&quot;, you agree to our{' '}
+              <Link href="/terms" className="underline hover:no-underline">Terms of Service</Link>
+              {'  '}and{'  '}
+              <Link href="/privacy" className="underline hover:no-underline">Privacy Policy</Link>.
             </p>
           </form>
         </Form>

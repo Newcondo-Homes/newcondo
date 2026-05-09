@@ -20,7 +20,7 @@ import {
   Zap, 
   Eye,
   Heart,
-  Share2,
+  // Share2,
   ChevronLeft,
   ChevronRight,
   Home,
@@ -136,7 +136,7 @@ export function PropertyComparison({
     }));
   };
 
-  const PropertyCard = ({ property, index }: { property: Property; index: number }) => {
+  const PropertyCard = ({ property }: { property: Property; index: number }) => {
     const currentImageIndex = currentImageIndices[property.id] || 0;
     const primaryImage = property.images.find(img => img.isPrimary) || property.images[0];
     const displayImage = property.images[currentImageIndex] || primaryImage;

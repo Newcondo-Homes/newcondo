@@ -9,7 +9,7 @@ interface QueuePositionProps {
   position: number;
   totalInQueue: number;
   estimatedWaitTime?: number; // in minutes
-  propertyId: string;
+  propertyId?: string;
   className?: string;
 }
 
@@ -17,7 +17,7 @@ export const QueuePosition: React.FC<QueuePositionProps> = ({
   position,
   totalInQueue,
   estimatedWaitTime,
-  propertyId,
+  // propertyId,
   className = '',
 }) => {
   const isNext = position === 1;
@@ -39,7 +39,7 @@ export const QueuePosition: React.FC<QueuePositionProps> = ({
       <Alert className={`bg-green-50 border-green-200 ${className}`}>
         <TrendingUp className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-green-800">
-          <span className="font-medium">You're up!</span> Proceed with your payment now.
+          <span className="font-medium">You&apos;re up!</span> Proceed with your payment now.
         </AlertDescription>
       </Alert>
     );
@@ -98,7 +98,7 @@ export const QueuePosition: React.FC<QueuePositionProps> = ({
         <Alert className="bg-blue-50 border-blue-200">
           <AlertTriangle className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-xs text-blue-800">
-            Stay on this page. You'll be notified when it's your turn to complete the payment.
+            Stay on this page. You&apos;ll be notified when it&apos;s your turn to complete the payment.
           </AlertDescription>
         </Alert>
       </CardContent>
@@ -119,7 +119,7 @@ export const QueueSummary: React.FC<QueueSummaryProps> = ({
   queueData,
   currentUserId,
 }) => {
-  const userPosition = queueData.find(item => item.userId === currentUserId);
+  // const userPosition = queueData.find(item => item.userId === currentUserId);
   
   return (
     <div className="space-y-3">

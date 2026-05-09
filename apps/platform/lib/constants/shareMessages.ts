@@ -1,6 +1,6 @@
 // apps/platform/lib/constants/shareMessages.ts
 
-import { REFERRAL_CONFIG } from './referralConfig';
+// import { REFERRAL_CONFIG } from './referralConfig';
 
 export interface ShareMessage {
   template: string;

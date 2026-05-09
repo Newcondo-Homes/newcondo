@@ -25,7 +25,7 @@ export function SearchBox() {
     if (newFilters.bathrooms?.min) params.set('minBaths', String(newFilters.bathrooms.min));
 
     router.push(`/properties?${params.toString()}`);
-  }, []);
+  }, [router]);
 
   return (
     <PropertySearch

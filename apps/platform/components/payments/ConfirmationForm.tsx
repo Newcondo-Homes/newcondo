@@ -1,9 +1,9 @@
 "use client";
+// apps/platform/components/payments/ConfirmationForm.tsx
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Resolver } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@newcondo/ui/components/button";
 import { Textarea } from "@newcondo/ui/components/textarea";
@@ -25,8 +25,11 @@ const confirmationSchema = z.object({
 
 type ConfirmationFormData = z.infer<typeof confirmationSchema>;
 
+// Explicit union type for propertyCondition to avoid `as any` casts
+type PropertyCondition = "as_described" | "minor_issues" | "major_issues";
+
 interface ConfirmationFormProps {
-  paymentId: string;
+  paymentId?: string;
   propertyTitle: string;
   amount: number;
   currency: string;
@@ -36,7 +39,6 @@ interface ConfirmationFormProps {
 }
 
 export function ConfirmationForm({
-  paymentId,
   propertyTitle,
   amount,
   currency,
@@ -48,14 +50,16 @@ export function ConfirmationForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // Fix 1: removed the extra `any` and unused transform generics
+  // useForm<TFieldValues> is sufficient — no second/third generic needed here
   const {
     register,
     handleSubmit,
     watch,
     setValue,
     formState: { errors },
-  } = useForm<ConfirmationFormData, any, ConfirmationFormData>({
-    resolver: zodResolver(confirmationSchema) as Resolver<ConfirmationFormData>,
+  } = useForm<ConfirmationFormData>({
+    resolver: zodResolver(confirmationSchema),
     defaultValues: {
       confirmationType: "confirm",
       refundRequested: false,
@@ -69,9 +73,7 @@ export function ConfirmationForm({
     try {
       setIsSubmitting(true);
       setSubmitError(null);
-      
       await onSubmit(data);
-      
       setSubmitSuccess(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to submit confirmation");
@@ -100,7 +102,8 @@ export function ConfirmationForm({
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Property Verification</h3>
         <p className="text-sm text-muted-foreground">
-          Confirm that you&apos;ve inspected <strong>{propertyTitle}</strong> and everything is as described.
+          Confirm that you&apos;ve inspected <strong>{propertyTitle}</strong> and everything is as
+          described.
         </p>
         <p className="text-sm text-muted-foreground">
           Amount: <strong>{currency} {amount.toLocaleString()}</strong>
@@ -118,7 +121,9 @@ export function ConfirmationForm({
         <Label>What would you like to do?</Label>
         <RadioGroup
           value={confirmationType}
-          onValueChange={(value) => setValue("confirmationType", value as "confirm" | "dispute")}
+          onValueChange={(value) =>
+            setValue("confirmationType", value as "confirm" | "dispute")
+          }
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="confirm" id="confirm" />
@@ -138,9 +143,12 @@ export function ConfirmationForm({
       {!isDispute ? (
         <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
           <Label>Property Condition</Label>
+          {/* Fix 2: cast to PropertyCondition union instead of any */}
           <RadioGroup
             value={watch("propertyCondition")}
-            onValueChange={(value) => setValue("propertyCondition", value as any)}
+            onValueChange={(value) =>
+              setValue("propertyCondition", value as PropertyCondition)
+            }
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="as_described" id="as_described" />
@@ -205,7 +213,8 @@ export function ConfirmationForm({
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Filing a dispute will hold the payment and initiate a review process. Please provide detailed information.
+              Filing a dispute will hold the payment and initiate a review process. Please provide
+              detailed information.
             </AlertDescription>
           </Alert>
 

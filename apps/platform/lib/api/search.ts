@@ -16,7 +16,7 @@ export interface SearchResult {
 export async function searchProperties(
   params: PropertySearchParams
 ): Promise<SearchResult> {
-  const { query, type, category, city, state, minPrice, maxPrice, bedrooms, bathrooms, page, limit, sortBy, sortOrder } = params
+  const {  type, city, state, minPrice, maxPrice, bedrooms, bathrooms, page, limit, sortBy, sortOrder } = params
 
   const result = await propertyApi.getAll({
     city,

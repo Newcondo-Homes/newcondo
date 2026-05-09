@@ -9,7 +9,7 @@ import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Slider } from '@newcondo/ui/components/slider';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@newcondo/ui/components/collapsible';
+import { Collapsible, CollapsibleContent } from '@newcondo/ui/components/collapsible';
 import { ChevronDown, ChevronUp, Filter, X, MapPin } from 'lucide-react';
 
 export interface PropertyFiltersState {

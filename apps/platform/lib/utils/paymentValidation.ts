@@ -249,7 +249,7 @@ export function calculatePaymentFee(
 export function getTotalAmount(
   amount: number,
   method: string,
-  currency: string = 'NGN'
+  // currency: string = 'NGN'
 ): number {
   const fee = calculatePaymentFee(amount, method);
   return amount + fee;

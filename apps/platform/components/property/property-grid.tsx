@@ -1,9 +1,9 @@
 // apps/platform/src/components/property/property-grid.tsx
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { PropertyCard } from './property-card';
-import { PropertyFilters } from './property-filters';
+import { PropertyFilters as PropertyFiltersComponent } from './property-filters';
 import { PropertySearch } from './property-search';
 import { useProperties } from '@/hooks/useProperties';
 import { usePropertyListingStore } from '@/store/propertyListingStore';
@@ -11,12 +11,13 @@ import { Button } from '@newcondo/ui/';
 import { Skeleton } from '@newcondo/ui/';
 import { Alert, AlertDescription } from '@newcondo/ui/';
 import { AlertCircle, MapPin, Grid, List } from 'lucide-react';
-import { PropertyWithDetails as Property } from '@/types/property';
-import { PropertyFilters as PropertySearchFilters } from '@/lib/api/properties';
+import { PropertyFilters, PropertyResponse } from '@/lib/api/properties';
+import { PropertyType } from '@/types/enums';
+type Property = PropertyResponse;
 
 interface PropertyGridProps {
   searchQuery?: string;
-  filters?: PropertySearchFilters;
+  filters?: PropertyFilters;
   showFilters?: boolean;
   gridView?: boolean;
   onPropertyClick?: (property: Property) => void;
@@ -25,7 +26,7 @@ interface PropertyGridProps {
 
 export function PropertyGrid({
   searchQuery = '',
-  filters,
+  // filters,
   showFilters = true,
   gridView = true,
   onPropertyClick,
@@ -51,11 +52,15 @@ export function PropertyGrid({
   const [searchTerm, setSearchTerm] = useState(searchQuery);
 
   const { data, isLoading: loading, error: queryError } = useProperties({
-    ...localFilters,
+    minPrice: localFilters.priceRange.min,
+    maxPrice: localFilters.priceRange.max,
+    propertyType: localFilters.propertyType as PropertyType | undefined,
+    bedrooms: localFilters.bedrooms ? Number(localFilters.bedrooms) : undefined,
+    bathrooms: localFilters.bathrooms ? Number(localFilters.bathrooms) : undefined,
+    features: localFilters.features,
     page: currentPage,
     limit: 12,
-    query: searchTerm,
-  } as any);
+  } satisfies PropertyFilters);
 
   const properties = data?.properties ?? [];
   const totalCount = data?.pagination?.total ?? 0;
@@ -63,6 +68,15 @@ export function PropertyGrid({
   const error = queryError ? (queryError as Error).message : null;
 
   const { duplicateProperties } = usePropertyListingStore();
+
+  const toPropertyWithDetails = (p: PropertyResponse): Property => ({
+    ...p,
+    images: p.images.map(img => ({
+      ...img,
+      propertyId: p.id,
+      createdAt: new Date(),
+    })),
+  });
 
   // Handle search input change
   const handleSearchChange = (query: string) => {
@@ -77,9 +91,9 @@ export function PropertyGrid({
   };
 
   // Handle search submit
-  const handleSearchSubmit = () => {
-    setCurrentPage(1);
-  };
+  // const handleSearchSubmit = () => {
+  //   setCurrentPage(1);
+  // };
 
   // Load more properties
   const loadMoreProperties = () => {
@@ -88,9 +102,9 @@ export function PropertyGrid({
   };
 
   // Toggle view mode
-  const toggleViewMode = () => {
-    setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
-  };
+  // const toggleViewMode = () => {
+  //   setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
+  // };
 
   // Check if property is a duplicate
   const isDuplicate = (propertyId: string) => {
@@ -185,7 +199,7 @@ export function PropertyGrid({
         </div>
 
         {showFilters && (
-          <PropertyFilters
+          <PropertyFiltersComponent
             filters={localFilters}
             onFiltersChange={handleFilterChange}
           />
@@ -200,7 +214,7 @@ export function PropertyGrid({
           </span>
           {searchTerm && (
             <span>
-              Search results for "{searchTerm}"
+              Search results for &quot;{searchTerm}&quot;
             </span>
           )}
         </div>
@@ -226,12 +240,12 @@ export function PropertyGrid({
           ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
           : 'grid-cols-1'
           }`}>
-          {(properties as Property[]).map((property: Property) => (
+          {properties.map((property) => (
             <PropertyCard
               key={property.id}
-              property={property}
+              property={property as unknown as import('@/types/property').PropertyWithDetails}
               viewMode={viewMode}
-              onClick={() => onPropertyClick?.(property)}
+              onClick={() => onPropertyClick?.(toPropertyWithDetails(property))}
               isDuplicate={isDuplicate(property.id)}
               showBoundaryStatus={true}
             />

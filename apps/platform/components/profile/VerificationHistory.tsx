@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/';
 import { Badge } from '@newcondo/ui/';
 import { 
@@ -11,8 +10,17 @@ import {
 import { DocumentStatus } from '@/types/enums';
 import { formatDate } from '@/lib/utils/format';
 
+// ✅ Typed interface replacing any[]
+interface VerificationDocument {
+  id: string;
+  documentType: string;
+  documentSide?: string;
+  status: DocumentStatus;
+  createdAt: string;
+}
+
 interface VerificationHistoryProps {
-  documents: any[];
+  documents: VerificationDocument[];
 }
 
 export function VerificationHistory({ documents }: VerificationHistoryProps) {
@@ -46,7 +54,6 @@ export function VerificationHistory({ documents }: VerificationHistoryProps) {
     return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Sort documents by creation date (newest first)
   const sortedDocuments = [...(documents || [])].sort((a, b) => 
     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );

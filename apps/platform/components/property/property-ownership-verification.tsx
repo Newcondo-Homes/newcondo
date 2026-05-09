@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
-import { Label } from '@newcondo/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
+// import { Label } from '@newcondo/ui/components/label';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
 import { Textarea } from '@newcondo/ui/components/textarea';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
-import { Separator } from '@newcondo/ui/components/separator';
+// import { Separator } from '@newcondo/ui/components/separator';
 import { Progress } from '@newcondo/ui/components/progress';
 import {
   FileText,
-  Upload,
+  // Upload,
   Check,
   X,
   AlertTriangle,
@@ -84,7 +84,7 @@ const REQUIRED_DOCUMENTS = [
 ];
 
 export default function PropertyOwnershipVerification({
-  propertyId,
+  // propertyId,
   onVerificationComplete,
   onDocumentUpload,
   userDocuments,
@@ -93,7 +93,7 @@ export default function PropertyOwnershipVerification({
 }: PropertyOwnershipVerificationProps) {
   const [ninNumber, setNinNumber] = useState('');
   const [uploadingDocument, setUploadingDocument] = useState<DocumentType | null>(null);
-  const [verificationStep, setVerificationStep] = useState(1);
+  // const [verificationStep, setVerificationStep] = useState(1);
 
   const getDocumentStatus = (docType: DocumentType) => {
     return userDocuments.find(doc => doc.documentType === docType);
@@ -134,8 +134,8 @@ export default function PropertyOwnershipVerification({
         description: 'Your NIN has been submitted for verification'
       });
 
-      setVerificationStep(2);
-    } catch (error) {
+      // setVerificationStep(2);
+    } catch{
       toast.error('Submission Failed', {
         description: 'Failed to submit NIN. Please try again.',
       });
@@ -159,7 +159,7 @@ export default function PropertyOwnershipVerification({
       });
 
       setUploadingDocument(null);
-    } catch (error) {
+    } catch {
       toast.error('Upload Failed', {
         description: 'Failed to upload document. Please try again.',
       });
@@ -328,7 +328,7 @@ export default function PropertyOwnershipVerification({
         <Info className="h-4 w-4" />
         <AlertDescription>
           <strong>Note:</strong> All documents will be reviewed by our verification team within 24-48 hours.
-          You'll receive an email notification once the verification is complete.
+          You&apos;ll receive an email notification once the verification is complete.
         </AlertDescription>
       </Alert>
 

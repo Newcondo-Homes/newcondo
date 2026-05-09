@@ -9,6 +9,7 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { propertyApi } from '@/lib/api/properties';
 import type { PropertyType } from '@/types/enums';
+import Image from 'next/image';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,10 +108,11 @@ export function SimilarProperties({
               {/* Image */}
               <div className="relative h-44 overflow-hidden bg-gray-100">
                 {primaryImage ? (
-                  <img
+                  <Image
                     src={primaryImage}
                     alt={property.title}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <div className="flex h-full items-center justify-center text-gray-300">

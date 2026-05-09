@@ -307,7 +307,7 @@ export const propertyApi = {
 export async function searchProperties(
   params: PropertyFilters & { q?: string; retryAttempt?: number; page?: number }
 ) {
-  const { q, retryAttempt, ...filters } = params;
+  const { ...filters } = params;
   const result = await propertyApi.getAll(filters);
   return {
     data: result.properties,

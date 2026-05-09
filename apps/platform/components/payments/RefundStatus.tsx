@@ -28,7 +28,7 @@ interface RefundDetails {
   transactionId?: string;
 }
 
-export function RefundStatus({ rentalId, paymentId }: RefundStatusProps) {
+export function RefundStatus({ paymentId }: RefundStatusProps) {
   const [showDetails, setShowDetails] = useState(false);
 
   const { data: refund, isLoading, error } = useQuery({
@@ -69,7 +69,14 @@ export function RefundStatus({ rentalId, paymentId }: RefundStatusProps) {
     );
   }
 
-  const getStatusConfig = (status: RefundDetails['status']) => {
+  const getStatusConfig = (status: RefundDetails['status']): {
+  icon: typeof Clock;
+  color: string;
+  bgColor: string;
+  badge: 'default' | 'secondary' | 'destructive' | 'outline';
+  title: string;
+  description: string;
+} => {
     switch (status) {
       case 'PENDING':
         return {
@@ -118,7 +125,7 @@ export function RefundStatus({ rentalId, paymentId }: RefundStatusProps) {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Refund Status</span>
-          <Badge variant={config.badge as any}>{refund.status}</Badge>
+          <Badge variant={config.badge}>{refund.status}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

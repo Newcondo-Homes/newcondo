@@ -7,17 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/";
 import { Badge } from "@newcondo/ui/";
 import { Button } from "@newcondo/ui/";
 import { Avatar, AvatarFallback, AvatarImage } from "@newcondo/ui/";
-import { Separator } from "@newcondo/ui/";
+// import { Separator } from "@newcondo/ui/";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/";
-import { 
-  MapPin, 
-  Bed, 
-  Bath, 
-  Square, 
-  User as UserIcon, 
-  Phone, 
-  Mail,
-  Calendar,
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  // User as UserIcon, 
+  // Phone, 
+  // Mail,
+  // Calendar,
   Heart,
   Share2,
   MessageSquare,
@@ -35,14 +35,15 @@ import {
   TreePine,
   Dumbbell,
   ShoppingCart,
-  School,
-  Hospital,
-  Bus,
+  // School,
+  // Hospital,
+  // Bus,
   Star,
   MapIcon,
   Eye,
-  Users
+  // Users
 } from "lucide-react";
+import Image from 'next/image';
 import { GoogleMap, useJsApiLoader, Polygon, Marker } from "@react-google-maps/api";
 import { formatCurrency } from "@/lib/utils/format";
 import { PropertyStatus, PropertyType, PropertyStructure } from "@newcondo/db";
@@ -107,7 +108,9 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
   const getBoundaryCoordinates = () => {
     if (!property.boundaryCoordinates) return null;
     try {
-      const boundary = property.boundaryCoordinates as any;
+      const boundary = property.boundaryCoordinates as {
+        coordinates?: number[][][];
+      };
       return boundary.coordinates?.[0]?.map((coord: number[]) => ({
         lat: coord[1],
         lng: coord[0]
@@ -196,12 +199,13 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
         {/* Image Gallery */}
         <div className="lg:w-2/3">
           <div className="relative">
-            <div className="aspect-video rounded-lg overflow-hidden bg-gray-100">
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-gray-100">
               {primaryImage ? (
-                <img
+                <Image
                   src={property.images[currentImageIndex]?.url || primaryImage.url}
                   alt={property.images[currentImageIndex]?.altText || property.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -209,7 +213,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                 </div>
               )}
             </div>
-            
+
             {/* Image Navigation */}
             {property.images.length > 1 && (
               <div className="flex mt-4 space-x-2 overflow-x-auto pb-2">
@@ -217,14 +221,14 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                   <button
                     key={image.id}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 ${
-                      index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
-                    }`}
+                    className={`relative flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 ${index === currentImageIndex ? 'border-blue-500' : 'border-gray-200'
+                      }`}
                   >
-                    <img
+                    <Image
                       src={image.url}
                       alt={image.altText || `Property image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </button>
                 ))}
@@ -374,7 +378,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                     </p>
                   </div>
                 </div>
-                
+
                 {property.agent && (
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-10 h-10">
@@ -473,7 +477,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                 <div>
                   <p className="text-sm text-gray-600">Available From</p>
                   <p className="font-medium">
-                    {property.availableFrom 
+                    {property.availableFrom
                       ? new Date(property.availableFrom).toLocaleDateString()
                       : 'Immediately'
                     }
@@ -508,7 +512,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                     <p className="font-medium">{property.state}</p>
                   </div>
                 </div>
-                
+
                 {isLoaded && coordinates && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -533,7 +537,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                       }}
                     >
                       <Marker position={coordinates} />
-                      
+
                       {/* Property Boundary */}
                       {boundaryCoords && (
                         <Polygon
@@ -621,7 +625,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                               <p className="text-sm text-gray-500">/month</p>
                             </div>
                           </div>
-                          
+
                           <div className="grid grid-cols-3 gap-4 text-sm">
                             {unit.bedrooms && (
                               <div className="flex items-center space-x-1">
@@ -642,7 +646,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                               </div>
                             )}
                           </div>
-                          
+
                           {unit.features.length > 0 && (
                             <div className="mt-3">
                               <p className="text-sm text-gray-600 mb-1">Features:</p>
@@ -655,7 +659,7 @@ const PropertyDetails: React.FC<PropertyDetailsProps> = ({
                               </div>
                             </div>
                           )}
-                          
+
                           <div className="mt-3 flex space-x-2">
                             <Button
                               size="sm"

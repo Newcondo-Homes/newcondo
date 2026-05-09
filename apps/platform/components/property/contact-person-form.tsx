@@ -1,6 +1,5 @@
 'use client'
 
-import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -13,7 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@newcondo/ui/components/checkbox'
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert'
 import { Badge } from '@newcondo/ui/components/badge'
-import { User, Phone, Clock, MapPin, FileText, AlertCircle } from 'lucide-react'
+import { 
+  User, 
+  // Phone, 
+  // Clock, 
+  MapPin, 
+  // FileText, 
+  AlertCircle 
+} from 'lucide-react'
 
 const contactPersonSchema = z.object({
   contactPersonName: z.string().min(2, 'Name must be at least 2 characters'),
@@ -42,7 +48,7 @@ export default function ContactPersonForm({
   onBack,
   isSubmitting = false
 }: ContactPersonFormProps) {
-  const [selectedDate, setSelectedDate] = useState<string>('')
+  // const [selectedDate, setSelectedDate] = useState<string>('')
   
   const {
     register,

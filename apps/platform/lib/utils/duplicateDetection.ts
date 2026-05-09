@@ -1,6 +1,6 @@
 // apps/platform/lib/utils/duplicateDetection.ts
 
-import { PropertyStructure, PropertyType } from '@newcondo/db';
+import { PropertyType } from '@newcondo/db';
 
 export interface PropertyBoundary {
   coordinates: Array<{ lat: number; lng: number }>;

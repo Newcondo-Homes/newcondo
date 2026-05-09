@@ -139,9 +139,12 @@ export async function hasTranslations(lng: string, ns: string = 'common'): Promi
 /**
  * Get available namespaces for a language
  */
-export function getAvailableNamespaces(lng: string = fallbackLng): string[] {
-  // This would need to be dynamically generated based on available files
-  // For now, return common namespaces
+//TODO: 
+// This would need to be dynamically generated based on available files
+// For now, return common namespaces. see function signature below.
+// export function getAvailableNamespaces(lng: string = fallbackLng): string[] {
+
+export function getAvailableNamespaces(): string[] {
   return [
     'common',
     'auth',

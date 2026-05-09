@@ -34,6 +34,48 @@ interface BoundaryToolsProps {
 
 type DrawingMode = 'none' | 'rectangle' | 'polygon' | 'move';
 
+// Move all four functions outside the component at module level
+
+const calculatePolygonArea = (boundary: BoundaryPoint[]): number => {
+  if (boundary.length < 3) return 0;
+
+  let area = 0;
+  const earthRadius = 6371000;
+
+  for (let i = 0; i < boundary.length; i++) {
+    const j = (i + 1) % boundary.length;
+    const xi = boundary[i].lng * Math.PI / 180;
+    const yi = boundary[i].lat * Math.PI / 180;
+    const xj = boundary[j].lng * Math.PI / 180;
+    const yj = boundary[j].lat * Math.PI / 180;
+    area += xi * Math.sin(yj) - xj * Math.sin(yi);
+  }
+
+  area = Math.abs(area) * earthRadius * earthRadius / 2;
+  return area;
+};
+
+const isPointInPolygon = (point: BoundaryPoint, polygon: BoundaryPoint[]): boolean => {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    if (((polygon[i].lat > point.lat) !== (polygon[j].lat > point.lat)) &&
+      (point.lng < (polygon[j].lng - polygon[i].lng) * (point.lat - polygon[i].lat) / (polygon[j].lat - polygon[i].lat) + polygon[i].lng)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+};
+
+const checkBoundaryOverlap = (boundary1: BoundaryPoint[], boundary2: BoundaryPoint[]): boolean => {
+  for (const point of boundary1) {
+    if (isPointInPolygon(point, boundary2)) return true;
+  }
+  for (const point of boundary2) {
+    if (isPointInPolygon(point, boundary1)) return true;
+  }
+  return false;
+};
+
 export default function BoundaryTools({
   mapRef,
   onBoundaryComplete,
@@ -53,6 +95,47 @@ export default function BoundaryTools({
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const currentOverlayRef = useRef<google.maps.Polygon | google.maps.Rectangle | null>(null);
   const existingOverlaysRef = useRef<google.maps.Polygon[]>([]);
+
+
+  const validateBoundary = useCallback((boundary: BoundaryPoint[]) => {
+    setIsValidating(true);
+    setError(null);
+
+    // Basic validation
+    if (boundary.length < 3) {
+      setError('Boundary must have at least 3 points');
+      setIsValidating(false);
+      return;
+    }
+
+    // Check for minimum area (e.g., at least 10 square meters)
+    const area = calculatePolygonArea(boundary);
+    if (area < 10) {
+      setError('Property boundary is too small. Minimum area is 10 square meters.');
+      setIsValidating(false);
+      return;
+    }
+
+    // Check for maximum area (e.g., no more than 10,000 square meters for residential)
+    if (area > 10000) {
+      setError('Property boundary is too large. Maximum area is 10,000 square meters.');
+      setIsValidating(false);
+      return;
+    }
+
+    // Check for overlaps with existing boundaries
+    const hasOverlap = existingBoundaries.some(existing =>
+      checkBoundaryOverlap(boundary, existing)
+    );
+
+    if (hasOverlap) {
+      setError('This property boundary overlaps with an existing property. Please adjust your boundary or contact support if you believe this is an error.');
+      setIsValidating(false);
+      return;
+    }
+
+    setIsValidating(false);
+  }, [existingBoundaries]);
 
   // Initialize drawing manager
   useEffect(() => {
@@ -140,7 +223,7 @@ export default function BoundaryTools({
         drawingManagerRef.current.setMap(null);
       }
     };
-  }, [mapRef]);
+  }, [mapRef, validateBoundary]);
 
   // Display existing boundaries
   useEffect(() => {
@@ -181,82 +264,6 @@ export default function BoundaryTools({
     }
   }, [mapType, mapRef]);
 
-  const validateBoundary = useCallback((boundary: BoundaryPoint[]) => {
-    setIsValidating(true);
-    setError(null);
-
-    // Basic validation
-    if (boundary.length < 3) {
-      setError('Boundary must have at least 3 points');
-      setIsValidating(false);
-      return;
-    }
-
-    // Check for minimum area (e.g., at least 10 square meters)
-    const area = calculatePolygonArea(boundary);
-    if (area < 10) {
-      setError('Property boundary is too small. Minimum area is 10 square meters.');
-      setIsValidating(false);
-      return;
-    }
-
-    // Check for maximum area (e.g., no more than 10,000 square meters for residential)
-    if (area > 10000) {
-      setError('Property boundary is too large. Maximum area is 10,000 square meters.');
-      setIsValidating(false);
-      return;
-    }
-
-    // Check for overlaps with existing boundaries
-    const hasOverlap = existingBoundaries.some(existing =>
-      checkBoundaryOverlap(boundary, existing)
-    );
-
-    if (hasOverlap) {
-      setError('This property boundary overlaps with an existing property. Please adjust your boundary or contact support if you believe this is an error.');
-      setIsValidating(false);
-      return;
-    }
-
-    setIsValidating(false);
-  }, [existingBoundaries]);
-
-  const calculatePolygonArea = (boundary: BoundaryPoint[]): number => {
-    if (boundary.length < 3) return 0;
-
-    let area = 0;
-    const earthRadius = 6371000; // Earth's radius in meters
-
-    for (let i = 0; i < boundary.length; i++) {
-      const j = (i + 1) % boundary.length;
-      const xi = boundary[i].lng * Math.PI / 180;
-      const yi = boundary[i].lat * Math.PI / 180;
-      const xj = boundary[j].lng * Math.PI / 180;
-      const yj = boundary[j].lat * Math.PI / 180;
-
-      area += xi * Math.sin(yj) - xj * Math.sin(yi);
-    }
-
-    area = Math.abs(area) * earthRadius * earthRadius / 2;
-    return area;
-  };
-
-  const checkBoundaryOverlap = (boundary1: BoundaryPoint[], boundary2: BoundaryPoint[]): boolean => {
-    // Simple point-in-polygon check for overlap detection
-    for (const point of boundary1) {
-      if (isPointInPolygon(point, boundary2)) {
-        return true;
-      }
-    }
-
-    for (const point of boundary2) {
-      if (isPointInPolygon(point, boundary1)) {
-        return true;
-      }
-    }
-
-    return false;
-  };
 
   const isPointInPolygon = (point: BoundaryPoint, polygon: BoundaryPoint[]): boolean => {
     let inside = false;

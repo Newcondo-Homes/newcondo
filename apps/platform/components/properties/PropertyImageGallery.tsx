@@ -2,6 +2,7 @@
 // apps/platform/components/properties/PropertyImageGallery.tsx
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react';
 
 interface PropertyImage {
@@ -44,10 +45,11 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
       <div className="space-y-3">
         {/* Primary image */}
         <div className="group relative h-72 overflow-hidden rounded-xl bg-gray-100 sm:h-96">
-          <img
+          <Image
             src={sorted[activeIndex].url}
             alt={sorted[activeIndex].altText ?? title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
 
           {/* Zoom button */}
@@ -89,16 +91,17 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
               <button
                 key={img.id}
                 onClick={() => setActiveIndex(i)}
-                className={`h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition ${
+                className={`relative h-16 w-24 shrink-0 overflow-hidden rounded-lg border-2 transition ${
                   i === activeIndex
                     ? 'border-violet-500'
                     : 'border-transparent opacity-60 hover:opacity-100'
                 }`}
               >
-                <img
+                <Image
                   src={img.url}
                   alt={img.altText ?? `Image ${i + 1}`}
-                  className="h-full w-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </button>
             ))}
@@ -126,12 +129,17 @@ export function PropertyImageGallery({ images, title }: PropertyImageGalleryProp
             <ChevronLeft className="h-6 w-6" />
           </button>
 
-          <img
-            src={sorted[activeIndex].url}
-            alt={sorted[activeIndex].altText ?? title}
-            className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain"
+          <div
+            className="relative h-[90vh] w-[90vw]"
             onClick={(e) => e.stopPropagation()}
-          />
+          >
+            <Image
+              src={sorted[activeIndex].url}
+              alt={sorted[activeIndex].altText ?? title}
+              fill
+              className="object-contain rounded-lg"
+            />
+          </div>
 
           <button
             onClick={(e) => { e.stopPropagation(); next(); }}

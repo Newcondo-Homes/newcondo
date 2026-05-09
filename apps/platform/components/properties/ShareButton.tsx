@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, Copy, Check } from "lucide-react";
+import { Share2, Check } from "lucide-react";
 import { Button } from "@newcondo/ui/components/button";
 import {
   Tooltip,
@@ -36,7 +36,7 @@ export function ShareButton({
 }: ShareButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // const [copied, setCopied] = useState(false);
 
   const handleQuickShare = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -71,7 +71,7 @@ export function ShareButton({
         const link = await onGenerateLink();
         return link;
       } catch (error) {
-        toast.error("Failed to generate link",{
+        toast.error("Failed to generate link", {
           description: "Please try again later.",
         });
         throw error;
@@ -84,24 +84,6 @@ export function ShareButton({
     return `${window.location.origin}/properties/${propertyId}`;
   };
 
-  const handleCopyLink = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    try {
-      const link = await generateShareLink();
-      await navigator.clipboard.writeText(link);
-      setCopied(true);
-      toast.success("Link copied!", {
-        description: "Share this link with anyone.",
-      });
-      setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      toast.error("Failed to copy link",{
-        description: "Please try again.",
-      });
-    }
-  };
 
   // Icon-only variant
   if (variant === "icon" || size === "icon") {
@@ -117,11 +99,7 @@ export function ShareButton({
                 disabled={isGenerating}
                 className={cn("h-9 w-9", className)}
               >
-                {copied ? (
-                  <Check className="h-4 w-4 text-green-600" />
-                ) : (
-                  <Share2 className="h-4 w-4" />
-                )}
+                <Share2 className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -152,17 +130,8 @@ export function ShareButton({
         disabled={isGenerating}
         className={cn("gap-2", className)}
       >
-        {copied ? (
-          <>
-            <Check className="h-4 w-4" />
-            {showLabel && <span>Copied!</span>}
-          </>
-        ) : (
-          <>
-            <Share2 className="h-4 w-4" />
-            {showLabel && <span>Share</span>}
-          </>
-        )}
+        <Share2 className="h-4 w-4" />
+        {showLabel && <span>Share</span>}
       </Button>
 
       <ShareModal

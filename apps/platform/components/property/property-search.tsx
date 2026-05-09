@@ -36,7 +36,7 @@ interface PropertySearchProps {
   showMapView?: boolean;
 }
 
-export function PropertySearch({ onFiltersChange, showMapView = false }: PropertySearchProps) {
+export function PropertySearch({ onFiltersChange}: PropertySearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");

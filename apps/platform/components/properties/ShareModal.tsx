@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  ExternalLink,
+  // ExternalLink,
 } from "lucide-react";
 import { toast } from "@newcondo/ui/";
 import { cn } from "@newcondo/ui";
@@ -47,13 +47,7 @@ export function ShareModal({
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      initializeLink();
-    }
-  }, [isOpen, shareableLink]);
-
-  const initializeLink = async () => {
+  const initializeLink = useCallback(async () => {
     if (shareableLink) {
       setLink(shareableLink);
       return;
@@ -64,7 +58,7 @@ export function ShareModal({
       try {
         const generatedLink = await onGenerateLink();
         setLink(generatedLink);
-      } catch (error) {
+      } catch {
         setLink(`${window.location.origin}/properties/${propertyId}`);
         toast.success("Using default link", {
           description: "Could not generate custom share link.",
@@ -75,18 +69,24 @@ export function ShareModal({
     } else {
       setLink(`${window.location.origin}/properties/${propertyId}`);
     }
-  };
+  }, [shareableLink, onGenerateLink, propertyId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      initializeLink();
+    }
+  }, [isOpen, initializeLink]); // replace shareableLink with initializeLink
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
-      toast.success("Link copied!",{
+      toast.success("Link copied!", {
         description: "You can now share this link anywhere.",
       });
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      toast.error("Failed to copy",{
+    } catch {
+      toast.error("Failed to copy", {
         description: "Please copy the link manually.",
       });
     }

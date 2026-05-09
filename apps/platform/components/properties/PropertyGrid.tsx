@@ -204,7 +204,7 @@ export default function PropertyGrid({
       {!hasNextPage && allProperties.length > 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500">
-            You've seen all {allProperties.length} available properties
+            You&apos;ve seen all {allProperties.length} available properties
           </p>
         </div>
       )}

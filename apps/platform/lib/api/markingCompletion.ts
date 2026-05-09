@@ -10,13 +10,13 @@ import type {
   BoundaryData
 } from '@/types/marking';
 
-interface ApiError {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-}
+// interface ApiError {
+//   response?: {
+//     data?: {
+//       message?: string;
+//     };
+//   };
+// }
 
 /**
  * Mark a job as in progress (agent starts working)

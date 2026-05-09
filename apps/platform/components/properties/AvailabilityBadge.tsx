@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@newcondo/ui/components/badge";
-import { Clock, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import {  Lock, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@newcondo/ui/";
 
 interface AvailabilityBadgeProps {

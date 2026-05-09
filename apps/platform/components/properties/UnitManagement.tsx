@@ -30,11 +30,11 @@ interface PropertyUnit {
 }
 
 interface UnitManagementProps {
-  propertyId: string;
+  propertyId?: string;
   propertyTitle: string;
   units: PropertyUnit[];
   totalUnits: number;
-  availableUnits: number;
+  availableUnits?: number;
   onAddUnit: () => void;
   onEditUnit: (unitId: string) => void;
   onDeleteUnit: (unitId: string) => void;
@@ -42,11 +42,11 @@ interface UnitManagementProps {
 }
 
 export function UnitManagement({
-  propertyId,
+  // propertyId,
   propertyTitle,
   units,
   totalUnits,
-  availableUnits,
+  // availableUnits,
   onAddUnit,
   onEditUnit,
   onDeleteUnit,

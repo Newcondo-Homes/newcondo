@@ -13,7 +13,7 @@ import {
 import { Button } from '@newcondo/ui/';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/';
 import { Alert, AlertDescription } from '@newcondo/ui/';
-import { Badge } from '@newcondo/ui/';
+// import { Badge } from '@newcondo/ui/';
 import { Loader2, MapPin, AlertTriangle, CheckCircle } from 'lucide-react';
 import { usePropertyListingStore, PropertyBoundary } from '../../store/propertyListingStore';
 
@@ -21,7 +21,7 @@ const libraries: ("drawing" | "geometry" | "places")[] = ["drawing", "geometry",
 
 interface BoundaryMarkingMapProps {
   onBoundarySelected: (coordinates: google.maps.LatLngLiteral[]) => void;
-  onLocationConfirmed: (location: google.maps.LatLngLiteral) => void;
+  onLocationConfirmed?: (location: google.maps.LatLngLiteral) => void;
   initialLocation?: google.maps.LatLngLiteral;
   existingBoundaries?: PropertyBoundary[];
   className?: string;
@@ -68,9 +68,36 @@ const drawingManagerOptions: google.maps.drawing.DrawingManagerOptions = {
   },
 };
 
+const getBoundingBox = (coords: google.maps.LatLngLiteral[]) => {
+  const lats = coords.map(c => c.lat);
+  const lngs = coords.map(c => c.lng);
+  
+  return {
+    minLat: Math.min(...lats),
+    maxLat: Math.max(...lats),
+    minLng: Math.min(...lngs),
+    maxLng: Math.max(...lngs),
+  };
+};
+
+const isPolygonOverlapping = (
+  coords1: google.maps.LatLngLiteral[],
+  coords2: google.maps.LatLngLiteral[]
+): boolean => {
+  const bbox1 = getBoundingBox(coords1);
+  const bbox2 = getBoundingBox(coords2);
+
+  return !(
+    bbox1.maxLat < bbox2.minLat ||
+    bbox1.minLat > bbox2.maxLat ||
+    bbox1.maxLng < bbox2.minLng ||
+    bbox1.minLng > bbox2.maxLng
+  );
+};
+
 export function BoundaryMarkingMap({
   onBoundarySelected,
-  onLocationConfirmed,
+  // onLocationConfirmed,
   initialLocation,
   existingBoundaries = [],
   className = '',
@@ -201,36 +228,6 @@ export function BoundaryMarkingMap({
     },
     [currentPolygon, drawingManager, existingBoundaries, checkForDuplicates]
   );
-
-  // Check if two polygons overlap
-  const isPolygonOverlapping = (
-    coords1: google.maps.LatLngLiteral[],
-    coords2: google.maps.LatLngLiteral[]
-  ): boolean => {
-    // Simple bounding box check for now
-    const bbox1 = getBoundingBox(coords1);
-    const bbox2 = getBoundingBox(coords2);
-
-    return !(
-      bbox1.maxLat < bbox2.minLat ||
-      bbox1.minLat > bbox2.maxLat ||
-      bbox1.maxLng < bbox2.minLng ||
-      bbox1.minLng > bbox2.maxLng
-    );
-  };
-
-  // Get bounding box of coordinates
-  const getBoundingBox = (coords: google.maps.LatLngLiteral[]) => {
-    const lats = coords.map(c => c.lat);
-    const lngs = coords.map(c => c.lng);
-    
-    return {
-      minLat: Math.min(...lats),
-      maxLat: Math.max(...lats),
-      minLng: Math.min(...lngs),
-      maxLng: Math.max(...lngs),
-    };
-  };
 
   // Handle boundary confirmation
   const handleConfirmBoundary = () => {
@@ -477,7 +474,7 @@ export function BoundaryMarkingMap({
                 <AlertDescription>
                   <strong>Similar Properties Found</strong><br />
                   {duplicateProperties.length} similar {duplicateProperties.length === 1 ? 'property' : 'properties'} found in this area. 
-                  Please ensure you're marking the correct property boundaries.
+                  Please ensure you&apos;re marking the correct property boundaries.
                 </AlertDescription>
               </Alert>
             )}

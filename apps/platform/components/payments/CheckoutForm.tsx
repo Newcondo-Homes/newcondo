@@ -275,7 +275,7 @@ export default function CheckoutForm({
         By proceeding, you agree to our{' '}
         <Link href="/terms" className="text-blue-600 hover:underline">
           Terms of Service
-        </Link>{' '}'
+        </Link>{' '}
         and{' '}
         <Link href="/privacy" className="text-blue-600 hover:underline">
           Privacy Policy

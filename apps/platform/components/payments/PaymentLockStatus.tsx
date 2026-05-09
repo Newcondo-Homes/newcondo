@@ -15,7 +15,7 @@ interface PaymentLockStatusProps {
 export const PaymentLockStatus: React.FC<PaymentLockStatusProps> = ({
   isLocked,
   lockExpiry,
-  lockedBy,
+  // lockedBy,
   isCurrentUser = false,
   className = '',
 }) => {
@@ -95,7 +95,7 @@ export const PaymentLockStatus: React.FC<PaymentLockStatusProps> = ({
             </Badge>
           </div>
           <p className="text-xs text-red-600">
-            Another user is completing a payment. This property will become available if they don't complete the transaction.
+            Another user is completing a payment. This property will become available if they don&apos;t complete the transaction.
           </p>
         </div>
       </AlertDescription>

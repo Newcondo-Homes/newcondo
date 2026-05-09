@@ -1,4 +1,4 @@
-import { DocumentType, DocumentStatus, DocumentSide } from '@newcondo/db';
+import { DocumentType } from '@newcondo/db';
 
 export const DOCUMENT_TYPE_CONFIG = {
   // Identity Documents

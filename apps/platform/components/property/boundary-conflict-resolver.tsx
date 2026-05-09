@@ -43,7 +43,7 @@ export const BoundaryConflictResolver = ({
   conflicts,
   propertyId,
   onConflictResolved,
-  onAllConflictsResolved,
+  // onAllConflictsResolved,
 }: BoundaryConflictResolverProps) => {
   const [isResolving, setIsResolving] = useState(false);
   const [selectedConflict, setSelectedConflict] = useState<string | null>(null);
@@ -89,7 +89,8 @@ export const BoundaryConflictResolver = ({
   };
 
   const handleContactOwner = async (conflict: BoundaryConflict) => {
-    // This would typically open a messaging interface or contact form
+    //TODO: This would typically open a messaging interface or contact form
+    console.log(conflict)
     toast.info('Contact feature coming soon. Please use the dispute resolution for now.');
   };
 
@@ -133,7 +134,7 @@ export const BoundaryConflictResolver = ({
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-lg">
-                      Conflict with "{conflict.conflictingProperty.title}"
+                      Conflict with &quot;{conflict.conflictingProperty.title}&quot;
                     </CardTitle>
                     <div className="flex items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center gap-1">

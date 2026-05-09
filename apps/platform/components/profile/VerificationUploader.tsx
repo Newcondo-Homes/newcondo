@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   Upload,
   X,
-  Image as ImageIcon,
+  // Image as ImageIcon,
   FileText,
   Camera,
   CheckCircle,
@@ -22,14 +22,14 @@ import {
 import { Badge } from "@newcondo/ui/";
 import { Alert, AlertDescription } from "@newcondo/ui/";
 import { Progress } from "@newcondo/ui/";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@newcondo/ui/";
+// import {
+//   Form,
+//   FormControl,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from "@newcondo/ui/";
 import {
   Select,
   SelectContent,
@@ -43,22 +43,18 @@ import { Textarea } from "@newcondo/ui/";
 import { useVerification } from "@/hooks/useVerification";
 import { DocumentType, DocumentSide, DocumentStatus } from "@/types/enums";
 import {
- verificationSubmissionSchema,
- documentUploadSchema,
- type DocumentUpload,
-  type  VerificationSubmission,
+  //  verificationSubmissionSchema,
+  documentUploadSchema,
+  //  type DocumentUpload,
+  // type  VerificationSubmission,
 } from "@/lib/validations/verification";
 import { cn } from "@/lib/utils";
-import { Separator } from "@newcondo/ui/";
 
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from 'zod';
 
 import { useUploadThing } from "@/lib/uploadthing";
-// import { verificationSchema, type VerificationFormData } from "@/lib/validations/verification";
+import Image from "next/image";
 
 const currentDocumentFormSchema = documentUploadSchema.partial().and(
   z.object({
@@ -178,11 +174,11 @@ export default function VerificationUploader({
     isLoading,
     uploadDocument,
     submitDocumentNumber,
-    submitVerification,
+    // submitVerification,
     refreshDocuments,
   } = useVerification();
 
-  const router = useRouter();
+  // const router = useRouter();
   const [selectedDocumentType, setSelectedDocumentType] = useState<
     DocumentType | ""
   >("");
@@ -195,113 +191,52 @@ export default function VerificationUploader({
   const [showSelfieUpload, setShowSelfieUpload] = useState(false);
   const [notes, setNotes] = useState("");
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [uploadedFiles, setUploadedFiles] = useState<
-    Array<{
-      documentType: DocumentType;
-      documentSide?: DocumentSide;
-      url: string;
-      name: string;
-      size: number;
-      key: string;
-    }>
-  >([]); // NEW
+  // const [uploadedFiles, setUploadedFiles] = useState<
+  //   Array<{
+  //     documentType: DocumentType;
+  //     documentSide?: DocumentSide;
+  //     url: string;
+  //     name: string;
+  //     size: number;
+  //     key: string;
+  //   }>
+  // >([]); // NEW
 
-  // UploadThing hooks // NEW
+  // UploadThing hooks
   const { startUpload: startDocumentUpload, isUploading: isDocumentUploading } =
     useUploadThing(
-      // NEW
-      "verificationDocuments", // NEW
+      "verificationDocuments",
       {
-        // NEW
         onClientUploadComplete: (files) => {
-          // NEW
-          console.log("Document upload completed:", files); // NEW
-          if (files && files.length > 0) {
-            // NEW
-            const file = files[0]; // NEW
-            setUploadedFiles((prev) => [
-              ...prev,
-              {
-                // NEW
-                documentType: form.watch("documentType"), // NEW
-                documentSide: form.watch("documentSide"), // NEW
-                url: file.url, // NEW
-                name: file.name, // NEW
-                size: file.size, // NEW
-                key: file.key, // NEW
-              },
-            ]); // NEW
-          } // NEW
-          toast.success("Document uploaded successfully!"); // NEW
-        }, // NEW
+          console.log("Document upload completed:", files);
+          toast.success("Document uploaded successfully!");
+        },
         onUploadError: (error) => {
-          // NEW
-          console.error("Document upload error:", error); // NEW
-          toast.error(`Upload failed: ${error.message}`); // NEW
-        }, // NEW
-      } // NEW
-    ); // NEW
+          console.error("Document upload error:", error);
+          toast.error(`Upload failed: ${error.message}`);
+        },
+      }
+    );
 
-  const { startUpload: startSelfieUpload, isUploading: isSelfieUploading } =
+  const { } =
     useUploadThing(
-      // NEW
-      "selfieUpload", // NEW
+      "selfieUpload",
       {
-        // NEW
         onClientUploadComplete: (files) => {
-          // NEW
           console.log("Selfie upload completed:", files); // NEW
-          if (files && files.length > 0) {
-            // NEW
-            const file = files[0]; // NEW
-            setUploadedFiles((prev) => [
-              ...prev,
-              {
-                // NEW
-                documentType: DocumentType.SELFIE, // NEW
-                documentSide: DocumentSide.SINGLE, // NEW
-                url: file.url, // NEW
-                name: file.name, // NEW
-                size: file.size, // NEW
-                key: file.key, // NEW
-              },
-            ]); // NEW
-          } // NEW
           toast.success("Selfie uploaded successfully!"); // NEW
-        }, // NEW
+        },
         onUploadError: (error) => {
-          // NEW
-          console.error("Selfie upload error:", error); // NEW
-          toast.error(`Upload failed: ${error.message}`); // NEW
-        }, // NEW
-      } // NEW
-    ); // NEW
+          console.error("Selfie upload error:", error);
+          toast.error(`Upload failed: ${error.message}`);
+        },
+      }
+    );
 
-  // const form = useForm<VerificationFormData>({
-  //   resolver: zodResolver(verificationSchema),
-  //   defaultValues: {
-  //     documentType: DocumentType.NIN,
-  //     documentSide: DocumentSide.SINGLE,
-  //     documentNumber: "",
-  //   },
-  // });
 
-   const form = useForm<CurrentDocumentFormData>({
-    resolver: zodResolver(currentDocumentFormSchema),
-    defaultValues: {
-      documentType: undefined, // Start with no selection
-      documentSide: DocumentSide.SINGLE, // Default to single
-      documentNumber: "",
-    },
-  });
-
-  // const selectedDocumentType = form.watch("documentType");
-  const selectedDocument = DOCUMENT_TYPES.find(
-    (doc) => doc.value === selectedDocumentType
-  );
-  const requiresUpload = selectedDocument?.needsFile || false;
+  // const requiresUpload = selectedDocument?.needsFile || false;
   const selectedDocumentConfig = DOCUMENT_TYPES.find(
     (doc) => doc.value === selectedDocumentType
   );
@@ -479,170 +414,29 @@ export default function VerificationUploader({
     }
   };
 
-  // const handleSelfieUpload = async () => {
-  //   if (uploadFiles.length === 0) {
-  //     alert("Please select a selfie to upload");
-  //     return;
-  //   }
-
-  //   const fileData = uploadFiles[0];
-  //   try {
-  //     setUploadFiles((prev) => {
-  //       const newFiles = [...prev];
-  //       newFiles[0] = { ...newFiles[0], status: "uploading" };
-  //       return newFiles;
-  //     });
-
-  //     // await uploadDocument(formData);
-  //     await uploadDocument(fileData.file, DocumentType.SELFIE);
-
-  //     setUploadFiles((prev) => {
-  //       const newFiles = [...prev];
-  //       newFiles[0] = { ...newFiles[0], status: "success", progress: 100 };
-  //       return newFiles;
-  //     });
-
-  //     setShowSelfieUpload(false);
-  //     setUploadFiles([]);
-  //     setNotes("");
-
-  //     await refreshDocuments();
-  //     onUploadComplete?.();
-  //   } catch (error) {
-  //     setUploadFiles((prev) => {
-  //       const newFiles = [...prev];
-  //       newFiles[0] = {
-  //         ...newFiles[0],
-  //         status: "error",
-  //         error: error instanceof Error ? error.message : "Upload failed",
-  //       };
-  //       return newFiles;
-  //     });
-  //   }
-  // };
-
   const handleDocumentUpload = async (files: FileList | null) => {
-    // NEW
-    if (!files || files.length === 0) return; // NEW
-    const file = files[0]; // NEW
-    // Validate file type // NEW
+
+    if (!files || files.length === 0) return;
+    const file = files[0];
+
     const allowedTypes = [
       "image/jpeg",
       "image/png",
       "image/jpg",
       "application/pdf",
-    ]; // NEW
+    ];
     if (!allowedTypes.includes(file.type)) {
-      // NEW
       toast.error("Please upload a valid image (JPEG, PNG) or PDF file"); // NEW
-      return; // NEW
-    } // NEW
-    // Validate file size (max 8MB) // NEW
-    const maxSize = 8 * 1024 * 1024; // 8MB // NEW
+      return;
+    }
+    // Validate file size (max 8MB) 
+    const maxSize = 8 * 1024 * 1024; // 8MB 
     if (file.size > maxSize) {
-      // NEW
-      toast.error("File size must be less than 8MB"); // NEW
-      return; // NEW
-    } // NEW
-    await startDocumentUpload([file]); // NEW
-  }; // NEW
-
-  const handleSelfieUpload = async (files: FileList | null) => {
-    // NEW
-    if (!files || files.length === 0) return; // NEW
-    const file = files[0]; // NEW
-    // Validate file type (only images for selfies) // NEW
-    const allowedTypes = ["image/jpeg", "image/png", "image/jpg"]; // NEW
-    if (!allowedTypes.includes(file.type)) {
-      // NEW
-      toast.error("Please upload a valid image (JPEG, PNG) for your selfie"); // NEW
-      return; // NEW
-    } // NEW
-    // Validate file size (max 4MB for selfies) // NEW
-    const maxSize = 4 * 1024 * 1024; // 4MB // NEW
-    if (file.size > maxSize) {
-      // NEW
-      toast.error("Selfie file size must be less than 4MB"); // NEW
-      return; // NEW
-    } // NEW
-    await startSelfieUpload([file]); // NEW
-  }; // NEW
-
-  const removeUploadedFile = (index: number) => {
-    // NEW
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index)); // NEW
-  }; // NEW
-
-  // const onSubmit = async (data: VerificationFormData) => {
-  //   try {
-  //     setIsSubmitting(true);
-
-  //     // Find uploaded files for this document
-  //     const documentFiles = uploadedFiles.filter(
-  //       (file) =>
-  //         file.documentType === data.documentType &&
-  //         file.documentSide === data.documentSide
-  //     ); // MODIFIED
-
-  //     // For documents that require upload, ensure files are uploaded
-  //     if (requiresUpload && documentFiles.length === 0) {
-  //       toast.error("Please upload the required document files");
-  //       return;
-  //     } // NEW
-
-  //     // For ID-only documents, ensure document number is provided
-  //     if (!requiresUpload && !data.documentNumber?.trim()) {
-  //       toast.error("Please provide the document number");
-  //       return;
-  //     } // NEW
-
-  //     // Find selfie file
-  //     const selfieFile = uploadedFiles.find(
-  //       (file) => file.documentType === DocumentType.SELFIE
-  //     ); // NEW
-  //     if (!selfieFile) {
-  //       // NEW
-  //       toast.error("Please upload a selfie for identity verification"); // NEW
-  //       return; // NEW
-  //     } // NEW
-
-  //     // Prepare verification data
-  //     const verificationData = {
-  //       // MODIFIED
-  //       documentType: data.documentType, // MODIFIED
-  //       documentSide: data.documentSide, // MODIFIED
-  //       documentNumber: data.documentNumber, // MODIFIED
-  //       fileUrl: documentFiles[0]?.url, // MODIFIED
-  //       fileName: documentFiles[0]?.name, // MODIFIED
-  //       fileSizeBytes: documentFiles[0]?.size, // NEW
-  //       mimeType: documentFiles[0]?.name.endsWith(".pdf")
-  //         ? "application/pdf"
-  //         : "image/jpeg", // NEW
-  //       selfieUrl: selfieFile.url, // NEW
-  //       selfieFileName: selfieFile.name, // NEW
-  //       selfieFileSize: selfieFile.size, // NEW
-  //     }; // MODIFIED
-
-  //     await submitVerification(verificationData); // MODIFIED
-
-  //     toast.success("Verification documents submitted successfully!");
-  //     router.push("/dashboard/profile");
-  //   } catch (error) {
-  //     console.error("Verification submission error:", error);
-  //     toast.error("Failed to submit verification documents");
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  const formatFileSize = (bytes: number) => {
-    // NEW
-    if (bytes === 0) return "0 Bytes"; // NEW
-    const k = 1024; // NEW
-    const sizes = ["Bytes", "KB", "MB", "GB"]; // NEW
-    const i = Math.floor(Math.log(bytes) / Math.log(k)); // NEW
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]; // NEW
-  }; // NEW
+      toast.error("File size must be less than 8MB");
+      return;
+    }
+    await startDocumentUpload([file]);
+  };
 
   const getStatusBadge = (status: DocumentStatus) => {
     switch (status) {
@@ -872,11 +666,14 @@ export default function VerificationUploader({
                     >
                       <div className="flex-shrink-0">
                         {fileData.file.type.startsWith("image/") ? (
-                          <img
-                            src={fileData.preview}
-                            alt="Preview"
-                            className="h-16 w-16 object-cover rounded"
-                          />
+                          <div className="relative h-16 w-16 flex-shrink-0">
+                            <Image
+                              src={fileData.preview}
+                              alt="Preview"
+                              fill
+                              className="object-cover rounded"
+                            />
+                          </div>
                         ) : (
                           <div className="h-16 w-16 bg-gray-100 rounded flex items-center justify-center">
                             <FileText className="h-8 w-8 text-gray-400" />
@@ -1041,11 +838,14 @@ export default function VerificationUploader({
                       key={index}
                       className="flex items-center gap-3 p-3 border rounded-lg"
                     >
-                      <img
-                        src={fileData.preview}
-                        alt="Selfie preview"
-                        className="h-16 w-16 object-cover rounded"
-                      />
+                      <div className="relative h-16 w-16 flex-shrink-0">
+                        <Image
+                          src={fileData.preview}
+                          alt="Selfie preview"
+                          fill
+                          className="object-cover rounded"
+                        />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">
                           {fileData.file.name}
@@ -1089,7 +889,7 @@ export default function VerificationUploader({
                 </div>
               )}
 
-               <div className="space-y-2">
+              <div className="space-y-2">
                 <Label htmlFor="selfie-notes">
                   Additional Notes (Optional)
                 </Label>

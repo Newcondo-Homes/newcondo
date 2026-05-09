@@ -16,12 +16,10 @@ import {
   User,
   Calendar,
   CreditCard,
-  Receipt,
   Share2,
   Copy,
-  Mail,
   Home,
-  FileText
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -67,6 +65,10 @@ interface PaymentReceiptProps {
   className?: string
 }
 
+// fix line 78: PaymentWithRental may carry flutterwaveRef from the API even if
+// the shared type doesn't declare it yet — intersect to avoid `any`
+type PaymentWithRef = PaymentWithRental & { flutterwaveRef?: string }
+
 const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
   ({ payment, isOpen, onClose, paymentData: paymentDataProp, onDownload, onPrint, onShare, className }, ref) => {
     const [copied, setCopied] = useState(false)
@@ -75,7 +77,7 @@ const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
     const data = paymentDataProp ?? (payment ? {
       id: payment.id,
       transactionId: payment.transactionId ?? payment.id,
-      flutterwaveRef: (payment as any).flutterwaveRef ?? '',
+      flutterwaveRef: (payment as PaymentWithRef).flutterwaveRef ?? '',
       amount: payment.amount,
       processingFee: undefined,
       total: payment.amount,
@@ -347,7 +349,7 @@ const PaymentReceipt = forwardRef<HTMLDivElement, PaymentReceiptProps>(
 
             {data.description && (
               <p className="text-sm text-center italic text-muted-foreground pt-4">
-                "{data.description}"
+                &quot;{data.description}&quot;
               </p>
             )}
           </CardContent>

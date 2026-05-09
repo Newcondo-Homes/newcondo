@@ -1,9 +1,9 @@
 import React from 'react';
-import { 
-  AlertTriangle, 
-  XCircle, 
-  Info, 
-  Calendar,
+import {
+  AlertTriangle,
+  XCircle,
+  Info,
+  // Calendar,
   Clock,
   Users,
   Lock
@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from '@newcondo/ui/components/dialog';
 
-export type ConflictType = 
+export type ConflictType =
   | 'PAYMENT_IN_PROGRESS'
   | 'ALREADY_RENTED'
   | 'DUPLICATE_PROPERTY'
@@ -29,18 +29,22 @@ export type ConflictType =
   | 'QUEUE_FULL'
   | 'TIME_SLOT_EXPIRED';
 
+// fix line 42: replaced `[key: string]: any` with a typed union of all
+// possible extra fields so the index signature no longer needs `any`
+interface ConflictDetails {
+  lockedUntil?: Date;
+  rentedUntil?: Date;
+  conflictingPropertyId?: string;
+  queuePosition?: number;
+  estimatedWaitTime?: number;
+  [key: string]: Date | string | number | boolean | null | undefined;
+}
+
 interface ConflictWarningProps {
   type: ConflictType;
   severity?: 'warning' | 'error' | 'info';
   propertyId?: string;
-  details?: {
-    lockedUntil?: Date;
-    rentedUntil?: Date;
-    conflictingPropertyId?: string;
-    queuePosition?: number;
-    estimatedWaitTime?: number;
-    [key: string]: any;
-  };
+  details?: ConflictDetails;
   onDismiss?: () => void;
   onAction?: () => void;
   className?: string;
@@ -60,13 +64,13 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
         return {
           icon: Lock,
           title: 'Payment in Progress',
-          description: details?.lockedUntil 
+          description: details?.lockedUntil
             ? `Another user is completing a payment for this property. It will become available at ${new Date(details.lockedUntil).toLocaleTimeString()} if the transaction isn't completed.`
             : 'Another user is currently completing a payment for this property.',
           action: details?.queuePosition ? 'Join Queue' : null,
           color: 'orange',
         };
-      
+
       case 'ALREADY_RENTED':
         return {
           icon: XCircle,
@@ -77,7 +81,7 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
           action: 'Browse Similar',
           color: 'red',
         };
-      
+
       case 'DUPLICATE_PROPERTY':
         return {
           icon: AlertTriangle,
@@ -86,7 +90,7 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
           action: 'View Original',
           color: 'yellow',
         };
-      
+
       case 'BOUNDARY_DISPUTE':
         return {
           icon: AlertTriangle,
@@ -95,16 +99,16 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
           action: null,
           color: 'red',
         };
-      
+
       case 'PENDING_CONFIRMATION':
         return {
           icon: Clock,
           title: 'Awaiting Tenant Confirmation',
-          description: 'A previous tenant has 7 days to confirm occupancy. This property will become available if they don\'t confirm.',
+          description: "A previous tenant has 7 days to confirm occupancy. This property will become available if they don't confirm.",
           action: details?.queuePosition ? 'Join Waitlist' : null,
           color: 'blue',
         };
-      
+
       case 'QUEUE_FULL':
         return {
           icon: Users,
@@ -113,7 +117,7 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
           action: 'Browse Similar',
           color: 'orange',
         };
-      
+
       case 'TIME_SLOT_EXPIRED':
         return {
           icon: Clock,
@@ -122,7 +126,7 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
           action: 'Rejoin Queue',
           color: 'red',
         };
-      
+
       default:
         return {
           icon: Info,
@@ -155,7 +159,7 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
       <AlertTitle className="font-semibold mb-1">{config.title}</AlertTitle>
       <AlertDescription>
         <p className="mb-3">{config.description}</p>
-        
+
         {details?.queuePosition && (
           <div className="flex items-center gap-2 mb-3 text-sm">
             <Badge variant="secondary">
@@ -171,8 +175,8 @@ export const ConflictWarning: React.FC<ConflictWarningProps> = ({
 
         <div className="flex gap-2 mt-3">
           {config.action && onAction && (
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               onClick={onAction}
               variant={severity === 'error' ? 'destructive' : 'default'}
             >
@@ -194,7 +198,8 @@ interface ConflictDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: ConflictType;
-  details?: any;
+  // fix line 197: replaced `any` with ConflictDetails
+  details?: ConflictDetails;
   onConfirm?: () => void;
   onCancel?: () => void;
 }
@@ -216,7 +221,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
           confirmText: 'Join Queue',
           cancelText: 'Cancel',
         };
-      
+
       case 'TIME_SLOT_EXPIRED':
         return {
           title: 'Payment Time Expired',
@@ -224,7 +229,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
           confirmText: 'Rejoin Queue',
           cancelText: 'Go Back',
         };
-      
+
       case 'DUPLICATE_PROPERTY':
         return {
           title: 'Duplicate Property Detected',
@@ -232,7 +237,7 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
           confirmText: 'Continue Anyway',
           cancelText: 'Cancel',
         };
-      
+
       default:
         return {
           title: 'Conflict Detected',
@@ -262,14 +267,14 @@ export const ConflictDialog: React.FC<ConflictDialogProps> = ({
                 <Badge>#{details.queuePosition}</Badge>
               </div>
             )}
-            
+
             {details.estimatedWaitTime && (
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-600">Estimated Wait</span>
                 <span className="text-sm font-medium">{details.estimatedWaitTime} minutes</span>
               </div>
             )}
-            
+
             {details.lockedUntil && (
               <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <span className="text-sm text-gray-600">Available After</span>

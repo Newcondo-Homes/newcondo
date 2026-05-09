@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import {
   Heart,
-  Share2,
+  // Share2,
   MessageCircle,
   CreditCard,
   CheckCircle2,
@@ -46,7 +46,7 @@ interface PropertyActionsProps {
 
 export function PropertyActions({ property, selectedUnit }: PropertyActionsProps) {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const {  isAuthenticated } = useAuth();
   const [isFavourited, setIsFavourited] = useState(false);
   const [copied, setCopied] = useState(false);
 

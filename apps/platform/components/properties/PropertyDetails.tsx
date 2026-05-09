@@ -13,9 +13,9 @@ import {
   Heart,
   Share2,
   CheckSquare,
-  Building2,
-  Shield,
-  Zap,
+  // Building2,
+  // Shield,
+  // Zap,
   LayoutGrid,
   Pencil
 } from 'lucide-react';
@@ -25,7 +25,7 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Separator } from '@newcondo/ui/components/separator';
 import { cn } from '@newcondo/ui/lib/utils';
-import { PropertyGallery } from './PropertyGallery';
+// import { PropertyGallery } from './PropertyGallery';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyBoundaryMap from './PropertyBoundaryMap';
 import PropertyShare from './PropertyShare';
@@ -78,6 +78,11 @@ interface PropertyUnitShape {
   updatedAt?: Date | null;
 }
 
+type BoundaryCoordinates = 
+  | { coordinates: [number, number][][] }
+  | { lat?: number; lng?: number; latitude?: number; longitude?: number }[]
+  | Record<string, { lat: number; lng: number }>;
+
 // A display-ready property type that accepts both the strict
 // PropertyWithDetails and the leaner API PropertyResponse.
 interface PropertyForDisplay {
@@ -92,7 +97,7 @@ interface PropertyForDisplay {
   state: string;
   country: string;
   gpsCoordinates?: string | null;       // Prisma: null, types: undefined — both accepted
-  boundaryCoordinates?: any;
+  boundaryCoordinates?: BoundaryCoordinates | null;
   boundaryVerified: boolean;
   boundaryMarkedBy?: string | null;
   boundaryMarkedAt?: Date | null;
@@ -151,8 +156,8 @@ interface PropertyDetailsProps {
   canEdit?: boolean;
 }
 
-export default function PropertyDetails({ property, className, currentUser, canEdit = false, }: PropertyDetailsProps) {
-  const [showShareModal, setShowShareModal] = useState(false);
+export default function PropertyDetails({ property, className, canEdit = false, }: PropertyDetailsProps) {
+  // const [showShareModal, setShowShareModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'amenities' | 'location'>('overview');
 
   const {
@@ -183,7 +188,7 @@ export default function PropertyDetails({ property, className, currentUser, canE
   };
 
   const getFeatureIcon = (feature: string) => {
-    const iconMap: Record<string, any> = {
+    const iconMap: Record<string, string> = {
       'parking': '🅿️',
       'generator': '⚡',
       'security': '🔐',
@@ -342,7 +347,7 @@ export default function PropertyDetails({ property, className, currentUser, canE
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowShareModal(true)}
+              onClick={() =>{} }
               className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
             >
               <Share2 className="h-4 w-4" />
@@ -407,7 +412,7 @@ export default function PropertyDetails({ property, className, currentUser, canE
               <PropertyBoundaryMap
                 propertyId={property.id}
                 gpsCoordinates={property.gpsCoordinates as string | undefined}
-                boundaryCoordinates={property.boundaryCoordinates}
+                boundaryCoordinates={property.boundaryCoordinates ?? undefined}
                 boundaryVerified={property.boundaryVerified}
                 boundaryImages={property.boundaryImages}
               />

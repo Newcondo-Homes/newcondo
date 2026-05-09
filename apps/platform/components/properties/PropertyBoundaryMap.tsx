@@ -9,10 +9,23 @@ import { Card, CardContent } from '@newcondo/ui/components/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@newcondo/ui/components/dialog';
 import { cn } from '@newcondo/ui/';
 
+interface GeoJsonBoundary {
+  coordinates: [number, number][][];
+}
+
+interface LatLngCoord {
+  lat?: number;
+  lng?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+type BoundaryCoordinates = LatLngCoord[] | GeoJsonBoundary | Record<string, Coordinates>;
+
 interface PropertyBoundaryMapProps {
   propertyId: string;
   gpsCoordinates?: string; // JSON string: {"lat": 6.5244, "lng": 3.3792}
-  boundaryCoordinates?: any; // Polygon coordinates for property boundaries
+  boundaryCoordinates?: BoundaryCoordinates | null; // Polygon coordinates for property boundaries
   boundaryVerified?: boolean;
   boundaryMarkedBy?: string;
   boundaryMarkedAt?: Date | string;
@@ -27,10 +40,6 @@ interface PropertyBoundaryMapProps {
 interface Coordinates {
   lat: number;
   lng: number;
-}
-
-interface BoundaryPoint extends Coordinates {
-  id: string;
 }
 
 const libraries: ("places" | "geometry" | "drawing")[] = ["places", "geometry"];
@@ -49,12 +58,10 @@ const PropertyBoundaryMap: React.FC<PropertyBoundaryMapProps> = ({
   showBoundaryInfo = true,
   interactive = true
 }) => {
-  const [map, setMap] = useState<google.maps.Map | null>(null);
+  // const [map, setMap] = useState<google.maps.Map | null>(null);
   const [center, setCenter] = useState<Coordinates>({ lat: 6.5244, lng: 3.3792 }); // Default to Lagos
   const [boundaryPath, setBoundaryPath] = useState<Coordinates[]>([]);
   const [showInfoWindow, setShowInfoWindow] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
@@ -82,24 +89,24 @@ const PropertyBoundaryMap: React.FC<PropertyBoundaryMapProps> = ({
     if (boundaryCoordinates) {
       try {
         let coords: Coordinates[] = [];
-        
+
         if (Array.isArray(boundaryCoordinates)) {
           // Handle array of coordinate objects
-          coords = boundaryCoordinates.map((coord: any) => ({
-            lat: coord.lat || coord.latitude,
-            lng: coord.lng || coord.longitude
+          coords = (boundaryCoordinates as LatLngCoord[]).map((coord) => ({
+            lat: coord.lat ?? coord.latitude ?? 0,
+            lng: coord.lng ?? coord.longitude ?? 0,
           }));
-        } else if (boundaryCoordinates.coordinates) {
+        } else if ((boundaryCoordinates as GeoJsonBoundary).coordinates) {
           // Handle GeoJSON-like structure
-          coords = boundaryCoordinates.coordinates[0].map((coord: [number, number]) => ({
+          coords = (boundaryCoordinates as GeoJsonBoundary).coordinates[0].map((coord: [number, number]) => ({
             lat: coord[1], // GeoJSON uses [lng, lat]
             lng: coord[0]
           }));
         } else {
           // Handle other formats
-          coords = Object.values(boundaryCoordinates) as Coordinates[];
+          coords = Object.values(boundaryCoordinates as Record<string, Coordinates>);
         }
-        
+
         setBoundaryPath(coords.filter(coord => coord.lat && coord.lng));
       } catch (error) {
         console.error('Invalid boundary coordinates format:', error);
@@ -109,8 +116,8 @@ const PropertyBoundaryMap: React.FC<PropertyBoundaryMapProps> = ({
 
   // Map load callback
   const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
-    
+    // setMap(map);
+
     // Fit map to show property and boundary if available
     if (boundaryPath.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
@@ -121,7 +128,7 @@ const PropertyBoundaryMap: React.FC<PropertyBoundaryMapProps> = ({
 
   // Map unmount callback
   const onUnmount = useCallback(() => {
-    setMap(null);
+    // setMap(null);
   }, []);
 
   // Polygon options
@@ -339,14 +346,14 @@ const PropertyBoundaryMap: React.FC<PropertyBoundaryMapProps> = ({
                 )}
               </Badge>
             </div>
-            
+
             {boundaryMarkedAt && (
               <span className="text-xs text-gray-600">
                 Marked {formatBoundaryDate(boundaryMarkedAt)}
               </span>
             )}
           </div>
-          
+
           {!boundaryVerified && (
             <div className="mt-2 flex items-start gap-2">
               <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
@@ -357,7 +364,7 @@ const PropertyBoundaryMap: React.FC<PropertyBoundaryMapProps> = ({
           )}
         </div>
       )}
-      
+
       <CardContent className="p-0">
         <MapComponent />
       </CardContent>

@@ -1,11 +1,12 @@
 "use client";
+// apps/platform/components/properties/MyPropertiesContent.tsx
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Filter, Grid, List } from "lucide-react";
+import { Plus, Search, Grid, List } from "lucide-react";
 import { Button } from "@newcondo/ui/components/button";
 import { Input } from "@newcondo/ui/components/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/components/card";
+import { Card, CardContent } from "@newcondo/ui/components/card";
 import {
   Select,
   SelectContent,
@@ -19,38 +20,47 @@ import PropertyStatsCards from "./PropertyStatsCards";
 import { useProperties } from "@/hooks/useProperties";
 import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
-import { Property } from "@/types/api";
+import type { PropertyCardData } from "./PropertyCard";
+import type { PropertyFilters } from "@/lib/api/properties";
 
 type ViewMode = "grid" | "list";
-type FilterStatus = "all" | "published" | "draft" | "rented" | "pending";
+
+// Status values must match the PropertyStatus enum (uppercase)
+type FilterStatus = "all" | "PUBLISHED" | "DRAFT" | "RENTED" | "PENDING";
+
+// sortBy must match PropertyFilters.sortBy union
+type SortOption = "price" | "createdAt" | "updatedAt" | "viewCount";
+type SortOrder = "asc" | "desc";
 
 export default function MyPropertiesContent() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  // Store as "field-order" string, parse before passing to hook
   const [sortBy, setSortBy] = useState<string>("createdAt-desc");
 
   const debouncedSearch = useDebounce(searchQuery, 500);
 
-  // The exact shape depends on what propertyApi.getProperties() returns. 
-  // If your API returns { properties: [...], stats: {...} } then data?.properties and data?.stats work. 
-  // If it returns the array directly, then just data ?? [].
+  // Parse sortBy string into typed fields
+  const [sortField, sortOrder] = sortBy.split("-") as [SortOption, SortOrder];
 
+  const filters: PropertyFilters = {
+    ...(debouncedSearch ? { search: debouncedSearch } as any : {}),
+    ...(filterStatus !== "all" ? { status: filterStatus as any } : {}),
+    sortBy: sortField,
+    sortOrder,
+  };
 
-  const { data, isLoading, error, refetch } = useProperties({
-    search: debouncedSearch,
-    status: filterStatus === "all" ? undefined : filterStatus,
-    sortBy,
-  });
+  const { data, isLoading, error } = useProperties(filters);
 
-  const properties = data?.properties ?? data ?? [];
-  const stats = data?.stats ?? null;
+  // data is PropertyListResponse — always access via .properties
+  const properties = data?.properties ?? [];
 
   useEffect(() => {
     if (error) {
       toast.error("Failed to load properties", {
-        description: error.message,
+        description: (error as Error).message,
       });
     }
   }, [error]);
@@ -62,6 +72,39 @@ export default function MyPropertiesContent() {
   const handlePropertyClick = (propertyId: string) => {
     router.push(`/dashboard/properties/my-properties/${propertyId}`);
   };
+
+  // Map PropertyResponse to PropertyCardData (the minimal shape PropertyCard needs)
+  const toCardData = (p: (typeof properties)[number]): PropertyCardData => ({
+    id: p.id,
+    title: p.title,
+    description: p.description,
+    price: p.price as PropertyCardData["price"],
+    currency: p.currency,
+    address: p.address,
+    city: p.city,
+    state: p.state,
+    propertyType: p.propertyType as string,
+    structure: p.structure as string,
+    bedrooms: p.bedrooms ?? null,
+    bathrooms: p.bathrooms ?? null,
+    area: p.area ?? null,
+    features: p.features ?? [],
+    images: (p.images ?? []).map((img) => ({
+      id: img.id,
+      url: img.url,
+      altText: img.altText ?? null,
+      isPrimary: img.isPrimary,
+      order: img.order,
+    })),
+    totalUnits: p.totalUnits ?? null,
+    availableUnits: p.availableUnits ?? null,
+    isAvailable: p.isAvailable,
+    isPaymentLocked: p.isPaymentLocked ?? null,
+    status: p.status as string,
+    availableFrom: p.availableFrom ? new Date(p.availableFrom as unknown as string) : null,
+    viewCount: p.viewCount,
+    favoriteCount: p.favoriteCount,
+  });
 
   return (
     <div className="space-y-6">
@@ -79,12 +122,12 @@ export default function MyPropertiesContent() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
-      <PropertyStatsCards stats={stats} isLoading={isLoading} />
+      {/* Stats Cards — no stats field on PropertyListResponse, pass null */}
+      <PropertyStatsCards stats={undefined} isLoading={isLoading} />
 
       {/* Filters and Search */}
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-        {/* Status Filters */}
+        {/* Status Filters — values are uppercase to match PropertyStatus enum */}
         <Tabs
           value={filterStatus}
           onValueChange={(value) => setFilterStatus(value as FilterStatus)}
@@ -92,10 +135,10 @@ export default function MyPropertiesContent() {
         >
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="published">Published</TabsTrigger>
-            <TabsTrigger value="draft">Draft</TabsTrigger>
-            <TabsTrigger value="rented">Rented</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="PUBLISHED">Published</TabsTrigger>
+            <TabsTrigger value="DRAFT">Draft</TabsTrigger>
+            <TabsTrigger value="RENTED">Rented</TabsTrigger>
+            <TabsTrigger value="PENDING">Pending</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -122,7 +165,7 @@ export default function MyPropertiesContent() {
               <SelectItem value="price-desc">Price: High to Low</SelectItem>
               <SelectItem value="price-asc">Price: Low to High</SelectItem>
               <SelectItem value="viewCount-desc">Most Viewed</SelectItem>
-              <SelectItem value="title-asc">Title: A-Z</SelectItem>
+              <SelectItem value="updatedAt-asc">Title: A-Z</SelectItem>
             </SelectContent>
           </Select>
 
@@ -160,7 +203,7 @@ export default function MyPropertiesContent() {
             </Card>
           ))}
         </div>
-      ) : properties && properties.length > 0 ? (
+      ) : properties.length > 0 ? (
         <div
           className={
             viewMode === "grid"
@@ -168,13 +211,11 @@ export default function MyPropertiesContent() {
               : "space-y-4"
           }
         >
-          {properties.map((property: Property) => (
+          {properties.map((property) => (
             <PropertyCard
               key={property.id}
-              property={property}
-              // viewMode={viewMode}
+              property={toCardData(property)}
               onClick={() => handlePropertyClick(property.id)}
-              // onRefetch={refetch}
             />
           ))}
         </div>

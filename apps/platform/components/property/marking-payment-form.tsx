@@ -1,31 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
-import { Input } from '@newcondo/ui/components/input';
+// import { Input } from '@newcondo/ui/components/input';
 import { Label } from '@newcondo/ui/components/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
-import { Textarea } from '@newcondo/ui/components/textarea';
-import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
 import { Separator } from '@newcondo/ui/components/separator';
 import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
-import { 
-  CreditCard, 
-  DollarSign, 
-  Clock, 
-  MapPin, 
-  Shield,
+import {
+  CreditCard,
+  DollarSign,
+  Clock,
+  MapPin,
+  // Shield,
   Info,
   CheckCircle,
-  Calendar,
-  User,
+  // Calendar,
+  // User,
   Phone,
-  AlertTriangle
+  // AlertTriangle
 } from 'lucide-react';
 import { toast } from '@newcondo/ui/';
-import { UrgencyLevel, PaymentStatus } from '@/types/enums';
+import { UrgencyLevel } from '@/types/enums';
+import Link from 'next/link';
 
 interface ContactPerson {
   name: string;
@@ -44,12 +42,24 @@ interface MarkingPaymentDetails {
   agentCount: number;
 }
 
+interface MarkingPaymentData {
+  propertyId: string;
+  contactPerson: ContactPerson;
+  urgencyLevel: UrgencyLevel;
+  paymentMethod: string;
+  amount: number;
+  currency: string;
+  markingFee: number;
+  paymentType: string;
+  description: string;
+}
+
 interface MarkingPaymentFormProps {
   propertyId: string;
   propertyAddress: string;
   contactPerson: ContactPerson;
   paymentDetails: MarkingPaymentDetails;
-  onPaymentSubmit: (paymentData: any) => void;
+  onPaymentSubmit: (paymentData: MarkingPaymentData) => void; // replace (paymentData: any)
   isLoading?: boolean;
   className?: string;
 }
@@ -136,7 +146,7 @@ export default function MarkingPaymentForm({
 
   const handlePaymentSubmit = async () => {
     if (!agreeToTerms) {
-      toast('Terms and Conditions',{
+      toast('Terms and Conditions', {
         description: 'Please agree to the terms and conditions to proceed',
       });
       return;
@@ -157,8 +167,8 @@ export default function MarkingPaymentForm({
     try {
       await onPaymentSubmit(paymentData);
       setPaymentStep(2);
-    } catch (error) {
-      toast.error('Payment Failed',{
+    } catch {
+      toast.error('Payment Failed', {
         description: 'Failed to process payment. Please try again.',
       });
     }
@@ -189,7 +199,7 @@ export default function MarkingPaymentForm({
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
                 <p className="text-sm text-green-800">
-                  You'll receive a confirmation email shortly with your booking details and agent assignment.
+                  You&apos;ll receive a confirmation email shortly with your booking details and agent assignment.
                 </p>
               </div>
             </div>
@@ -253,20 +263,19 @@ export default function MarkingPaymentForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup 
-            value={selectedUrgency} 
+          <RadioGroup
+            value={selectedUrgency}
             onValueChange={handleUrgencyChange}
             className="space-y-3"
           >
             {URGENCY_LEVELS.map((level) => {
               const Icon = level.icon;
               const isSelected = selectedUrgency === level.value;
-              
+
               return (
                 <div key={level.value} className="space-y-2">
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                    isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
                     <RadioGroupItem value={level.value} id={level.value} />
                     <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
                     <div className="flex-1">
@@ -307,20 +316,19 @@ export default function MarkingPaymentForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup 
-            value={selectedPaymentMethod} 
+          <RadioGroup
+            value={selectedPaymentMethod}
             onValueChange={setSelectedPaymentMethod}
             className="space-y-3"
           >
             {PAYMENT_METHODS.map((method) => {
               const Icon = method.icon;
               const isSelected = selectedPaymentMethod === method.value;
-              
+
               return (
                 <div key={method.value} className="space-y-2">
-                  <div className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
-                    isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+                  <div className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}>
                     <RadioGroupItem value={method.value} id={method.value} />
                     <Icon className={`w-5 h-5 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
                     <div className="flex-1">
@@ -379,7 +387,7 @@ export default function MarkingPaymentForm({
                 className="mt-1"
               />
               <Label htmlFor="terms" className="text-sm cursor-pointer">
-                I agree to the <a href="/terms" className="text-blue-600 hover:underline">terms and conditions</a> and understand that:
+                I agree to the <Link href="/terms" className="text-blue-600 hover:underline">terms and conditions</Link> and understand that:
                 <ul className="mt-2 space-y-1 text-gray-600">
                   <li>• Payment is non-refundable once agent is assigned</li>
                   <li>• Property access must be provided at scheduled time</li>
@@ -394,7 +402,7 @@ export default function MarkingPaymentForm({
 
       {/* Submit Button */}
       <div className="flex justify-end space-x-4">
-        <Button 
+        <Button
           onClick={handlePaymentSubmit}
           disabled={!agreeToTerms || isLoading}
           className="bg-blue-600 hover:bg-blue-700"
@@ -408,9 +416,9 @@ export default function MarkingPaymentForm({
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Service Information:</strong> Our certified agents will arrive at your property 
-          to professionally mark the boundaries using GPS technology and create a verified property mask. 
-          You'll receive photos and coordinates upon completion.
+          <strong>Service Information:</strong> Our certified agents will arrive at your property
+          to professionally mark the boundaries using GPS technology and create a verified property mask.
+          You&apos;ll receive photos and coordinates upon completion.
         </AlertDescription>
       </Alert>
     </div>

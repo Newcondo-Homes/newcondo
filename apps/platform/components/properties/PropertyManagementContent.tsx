@@ -23,7 +23,7 @@ import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { propertyApi } from '@/lib/api/properties';
-
+import Image from 'next/image';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface PropertyManagementContentProps {
@@ -165,11 +165,12 @@ export default function PropertyManagementContent({
       {/* Property hero card */}
       <Card className="overflow-hidden">
         {primaryImage && (
-          <div className="h-52 w-full overflow-hidden sm:h-64">
-            <img
+          <div className="relative h-52 w-full overflow-hidden sm:h-64">
+            <Image
               src={primaryImage}
               alt={property.title}
-              className="h-full w-full object-cover"
+              fill
+              className="object-cover"
             />
           </div>
         )}

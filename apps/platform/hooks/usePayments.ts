@@ -1,11 +1,11 @@
 // apps/platform/hooks/usePayments.ts
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@newcondo/ui';
 import { paymentsApi } from '@/lib/api/payments';
-import { useAuthStore } from '@/store/authStore';
+// import { useAuthStore } from '@/store/authStore';
 import type {
   Payment,
   PaymentCreateRequest,
@@ -13,11 +13,11 @@ import type {
   PaymentRefundRequest,
   PaymentRetryRequest
 } from '@/types/payment';
-import type { PaginatedResponse } from '@/types/api';
+// import type { PaginatedResponse } from '@/types/api';
 
 export const usePayments = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
+  // const { user } = useAuthStore();
 
   // Create payment mutation
   const createPaymentMutation = useMutation({

@@ -64,7 +64,7 @@ class VerificationAPI {
     documentType: DocumentType,
     documentSide?: string
   ): Promise<UploadResponse> {
-    const formData = new FormData();
+    // const formData = new FormData();
     // formData.append('file', file);
     const additionalData: Record<string, unknown> = {
       documentType: documentType,

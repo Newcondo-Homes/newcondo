@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback } from 'react'
 import { Button } from '@newcondo/ui'
 import { 
   Edit3, 
   Square, 
   Move, 
-  RotateCw, 
+  // RotateCw, 
   Trash2, 
   Save, 
   Undo, 
@@ -14,7 +14,7 @@ import {
   ZoomIn, 
   ZoomOut,
   MousePointer,
-  Hand,
+  // Hand,
   RefreshCw,
   AlertTriangle,
   Check,
@@ -51,7 +51,7 @@ interface BoundaryEditingToolsProps {
 type EditingMode = 'select' | 'draw' | 'move' | 'edit'
 
 const BoundaryEditingTools: React.FC<BoundaryEditingToolsProps> = ({
-  isDrawing,
+  // isDrawing,
   currentBoundary,
   onDrawingToggle,
   onBoundaryUpdate,
@@ -102,11 +102,11 @@ const BoundaryEditingTools: React.FC<BoundaryEditingToolsProps> = ({
   }
 
   // Handle point selection
-  const handlePointClick = (pointId: string) => {
-    if (editingMode === 'edit') {
-      setSelectedPoint(pointId)
-    }
-  }
+  // const handlePointClick = (pointId: string) => {
+  //   if (editingMode === 'edit') {
+  //     setSelectedPoint(pointId)
+  //   }
+  // }
 
   // Handle point deletion
   const handleDeletePoint = (pointId: string) => {
@@ -165,17 +165,17 @@ const BoundaryEditingTools: React.FC<BoundaryEditingToolsProps> = ({
   }
 
   // Get tool button styling
-  const getToolButtonStyle = (mode: EditingMode, isActive: boolean) => {
-    return cn(
-      'p-2 rounded-lg transition-colors',
-      isActive
-        ? 'bg-blue-500 text-white shadow-md'
-        : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
-    )
-  }
+  // const getToolButtonStyle = (mode: EditingMode, isActive: boolean) => {
+  //   return cn(
+  //     'p-2 rounded-lg transition-colors',
+  //     isActive
+  //       ? 'bg-blue-500 text-white shadow-md'
+  //       : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm'
+  //   )
+  // }
 
   const boundaryArea = calculateArea()
-  const boundaryPerimeter = currentBoundary.length
+  // const boundaryPerimeter = currentBoundary.length
 
   return (
     <div className={cn('space-y-4', className)}>

@@ -18,23 +18,25 @@ import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { toast } from '@newcondo/ui';
 import { Save, X } from 'lucide-react';
 
+interface PropertyEditData {
+  id: string;
+  title: string;
+  description: string;
+  propertyType: string;
+  price: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: string;
+  features: string[];
+  address: string;
+  city: string;
+  state: string;
+  structure: 'SINGLE_UNIT' | 'MULTI_FAMILY';
+}
+
 interface PropertyEditFormProps {
-  property: {
-    id: string;
-    title: string;
-    description: string;
-    propertyType: string;
-    price: number;
-    bedrooms?: number;
-    bathrooms?: number;
-    area?: string;
-    features: string[];
-    address: string;
-    city: string;
-    state: string;
-    structure: 'SINGLE_UNIT' | 'MULTI_FAMILY';
-  };
-  onSave: (data: any) => Promise<void>;
+  property: PropertyEditData;
+  onSave: (data: PropertyEditData) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -83,7 +85,7 @@ export function PropertyEditForm({
   const [formData, setFormData] = useState(property);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | number | boolean | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 

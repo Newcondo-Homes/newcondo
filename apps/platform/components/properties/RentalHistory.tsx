@@ -10,9 +10,9 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  ChevronRight,
+  // ChevronRight,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
+import { Card, CardContent } from '@newcondo/ui/components/card';
 import { Badge } from '@newcondo/ui/components/badge';
 import { apiClient } from '@/lib/api/client';
 

@@ -9,16 +9,16 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { cn } from '@newcondo/ui/lib/utils';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyShare from './PropertyShare';
-import type { PropertyResponse } from '@/lib/api/properties';
+// import type { PropertyResponse } from '@/lib/api/properties';
 import { usePropertyStore } from '@/store/propertyStore';
 
-function toNumber(val: unknown): number {
-  if (val == null) return 0;
-  if (typeof val === 'number') return val;
-  if (typeof val === 'string') return parseFloat(val) || 0;
-  if (typeof val === 'object' && 'toNumber' in (val as any)) return (val as any).toNumber();
-  return Number(val) || 0;
-}
+// function toNumber(val: unknown): number {
+//   if (val == null) return 0;
+//   if (typeof val === 'number') return val;
+//   if (typeof val === 'string') return parseFloat(val) || 0;
+//   if (typeof val === 'object' && 'toNumber' in (val as any)) return (val as any).toNumber();
+//   return Number(val) || 0;
+// }
 
 export interface PropertyCardData {
   id: string;

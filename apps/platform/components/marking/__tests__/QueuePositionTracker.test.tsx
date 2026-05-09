@@ -11,6 +11,9 @@ vi.mock('@/hooks/useMarkingQueue', () => ({
   useMarkingQueue: vi.fn(),
 }));
 
+// Typed alias — avoids `as any` on every call site
+const mockUseMarkingQueue = queueHooks.useMarkingQueue as ReturnType<typeof vi.fn>;
+
 describe('QueuePositionTracker', () => {
   const mockJobId = 'job-123';
   const defaultQueueData = {
@@ -32,7 +35,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Loading State', () => {
     it('should render loading spinner when data is loading', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: null,
         isLoading: true,
         error: null,
@@ -49,7 +52,7 @@ describe('QueuePositionTracker', () => {
   describe('Error State', () => {
     it('should display error message when fetch fails', () => {
       const errorMessage = 'Failed to fetch queue data';
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: null,
         isLoading: false,
         error: new Error(errorMessage),
@@ -64,7 +67,7 @@ describe('QueuePositionTracker', () => {
 
     it('should call refetch when retry button is clicked', async () => {
       const mockRefetch = vi.fn();
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: null,
         isLoading: false,
         error: new Error('Network error'),
@@ -84,7 +87,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Queue Position Display', () => {
     it('should display current queue position', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -98,7 +101,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should display total queue count', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -111,7 +114,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should display position #1 differently', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, position: 1 },
         isLoading: false,
         error: null,
@@ -126,7 +129,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Estimated Wait Time', () => {
     it('should display estimated wait time', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -140,7 +143,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should display minutes when less than 1 hour', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           estimatedWaitTime: {
@@ -163,7 +166,7 @@ describe('QueuePositionTracker', () => {
   describe('Assigned Status', () => {
     it('should display assigned status with time slot', () => {
       const remainingTime = 7200000; // 2 hours in milliseconds
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -183,7 +186,7 @@ describe('QueuePositionTracker', () => {
 
     it('should show urgency when time is running low', () => {
       const remainingTime = 1800000; // 30 minutes
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -205,7 +208,7 @@ describe('QueuePositionTracker', () => {
 
   describe('In Progress Status', () => {
     it('should display in progress status', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'IN_PROGRESS',
@@ -224,7 +227,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Expired Status', () => {
     it('should display expired warning', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'EXPIRED',
@@ -244,7 +247,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Progress Bar', () => {
     it('should render progress bar for queued jobs', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -261,7 +264,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should show 100% progress when assigned', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -282,7 +285,7 @@ describe('QueuePositionTracker', () => {
   describe('Auto-refresh', () => {
     it('should auto-refresh queue data periodically', async () => {
       const mockRefetch = vi.fn();
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -307,7 +310,7 @@ describe('QueuePositionTracker', () => {
 
     it('should not auto-refresh when disabled', async () => {
       const mockRefetch = vi.fn();
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -330,7 +333,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA labels', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -344,7 +347,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should announce status changes to screen readers', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -360,7 +363,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Compact Mode', () => {
     it('should render in compact mode when specified', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
@@ -376,41 +379,30 @@ describe('QueuePositionTracker', () => {
 
   describe('Custom Callbacks', () => {
     it('should call onPositionChange when position updates', async () => {
-      const onPositionChange = vi.fn();
       const onAssigned = vi.fn();
 
       const { rerender } = render(
-        <QueuePositionTracker
-          jobId={mockJobId}
-        />
+        <QueuePositionTracker jobId={mockJobId} />
       );
 
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
         refetch: vi.fn(),
       });
 
-      rerender(
-        <QueuePositionTracker
-          jobId={mockJobId}
-        />
-      );
+      rerender(<QueuePositionTracker jobId={mockJobId} />);
 
       // Update to assigned status
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, status: 'ASSIGNED', position: null },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
       });
 
-      rerender(
-        <QueuePositionTracker
-          jobId={mockJobId}
-        />
-      );
+      rerender(<QueuePositionTracker jobId={mockJobId} />);
 
       await waitFor(() => {
         expect(onAssigned).toHaveBeenCalledTimes(1);
@@ -420,40 +412,27 @@ describe('QueuePositionTracker', () => {
     it('should call onExpired when time slot expires', async () => {
       const onExpired = vi.fn();
       const { rerender } = render(
-        <QueuePositionTracker
-          jobId={mockJobId}
-          onExpired={onExpired}
-        />
+        <QueuePositionTracker jobId={mockJobId} onExpired={onExpired} />
       );
 
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, status: 'ASSIGNED' },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
       });
 
-      rerender(
-        <QueuePositionTracker
-          jobId={mockJobId}
-          onExpired={onExpired}
-        />
-      );
+      rerender(<QueuePositionTracker jobId={mockJobId} onExpired={onExpired} />);
 
       // Update to expired status
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, status: 'EXPIRED', isExpired: true },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
       });
 
-      rerender(
-        <QueuePositionTracker
-          jobId={mockJobId}
-          onExpired={onExpired}
-        />
-      );
+      rerender(<QueuePositionTracker jobId={mockJobId} onExpired={onExpired} />);
 
       await waitFor(() => {
         expect(onExpired).toHaveBeenCalledTimes(1);
@@ -463,7 +442,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Edge Cases', () => {
     it('should handle missing queue data gracefully', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: null,
         isLoading: false,
         error: null,
@@ -476,7 +455,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should handle zero position', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, position: 0 },
         isLoading: false,
         error: null,
@@ -489,7 +468,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should handle negative remaining time', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -506,7 +485,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should handle very large wait times', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           estimatedWaitTime: {
@@ -528,7 +507,7 @@ describe('QueuePositionTracker', () => {
 
   describe('Visual Indicators', () => {
     it('should show green indicator when position is good', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, position: 1 },
         isLoading: false,
         error: null,
@@ -542,7 +521,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should show yellow indicator when position is moderate', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, position: 5 },
         isLoading: false,
         error: null,
@@ -556,7 +535,7 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should show red indicator when position is poor', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: { ...defaultQueueData, position: 15 },
         isLoading: false,
         error: null,
@@ -573,7 +552,7 @@ describe('QueuePositionTracker', () => {
   describe('Time Formatting', () => {
     it('should format time correctly for seconds', () => {
       const remainingTime = 45000; // 45 seconds
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -591,7 +570,7 @@ describe('QueuePositionTracker', () => {
 
     it('should format time correctly for minutes and seconds', () => {
       const remainingTime = 125000; // 2 minutes 5 seconds
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -609,7 +588,7 @@ describe('QueuePositionTracker', () => {
 
     it('should format time correctly for hours and minutes', () => {
       const remainingTime = 5400000; // 1 hour 30 minutes
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -629,7 +608,7 @@ describe('QueuePositionTracker', () => {
   describe('Real-time Updates', () => {
     it('should update countdown timer in real-time', async () => {
       const remainingTime = 60000; // 1 minute
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: {
           ...defaultQueueData,
           status: 'ASSIGNED',
@@ -662,14 +641,14 @@ describe('QueuePositionTracker', () => {
   describe('Interactive Elements', () => {
     it('should have clickable refresh button', () => {
       const mockRefetch = vi.fn();
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: false,
         error: null,
         refetch: mockRefetch,
       });
 
-      render(<QueuePositionTracker jobId={mockJobId}  />);
+      render(<QueuePositionTracker jobId={mockJobId} />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh/i });
       expect(refreshButton).toBeInTheDocument();
@@ -682,18 +661,17 @@ describe('QueuePositionTracker', () => {
     });
 
     it('should disable refresh button while loading', () => {
-      (queueHooks.useMarkingQueue as any).mockReturnValue({
+      mockUseMarkingQueue.mockReturnValue({
         queueData: defaultQueueData,
         isLoading: true,
         error: null,
         refetch: vi.fn(),
       });
 
-      render(<QueuePositionTracker jobId={mockJobId}/>);
+      render(<QueuePositionTracker jobId={mockJobId} />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh/i });
       expect(refreshButton).toBeDisabled();
     });
   });
-
 });

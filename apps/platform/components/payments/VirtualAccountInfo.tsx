@@ -66,7 +66,7 @@ export default function VirtualAccountInfo({
       
       // Clear the copied state after 2 seconds
       setTimeout(() => setCopiedField(null), 2000)
-    } catch (error) {
+    } catch {
       toast.error("Copy Failed",{
         description: "Unable to copy to clipboard",
       })

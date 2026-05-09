@@ -1,11 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/';
-import VerificationUploader  from '@/components/profile/VerificationUploader';
+import VerificationUploader from '@/components/profile/VerificationUploader';
 import { Badge } from '@newcondo/ui/';
-import { Button } from '@newcondo/ui/';
 import { 
   FileText, 
   Camera, 
-  CreditCard, 
   User, 
   Building,
   CheckCircle,
@@ -15,8 +13,15 @@ import {
 } from 'lucide-react';
 import { DocumentType, DocumentStatus } from '@/types/enums';
 
+// ✅ Typed interface replacing any[]
+interface VerificationDocument {
+  id: string;
+  documentType: DocumentType;
+  status: DocumentStatus;
+}
+
 interface VerificationOverviewProps {
-  documents: any[];
+  documents: VerificationDocument[];
   stats: {
     total: number;
     completed: number;
@@ -26,7 +31,7 @@ interface VerificationOverviewProps {
   overallStatus: string;
 }
 
-export function VerificationOverview({ documents, stats, overallStatus }: VerificationOverviewProps) {
+export function VerificationOverview({ documents, stats }: VerificationOverviewProps) {
   const requiredDocuments = [
     {
       type: DocumentType.NIN,
@@ -58,7 +63,7 @@ export function VerificationOverview({ documents, stats, overallStatus }: Verifi
     }
   ];
 
-  const getDocumentStatus = (docType: DocumentType) => {
+  const getDocumentStatus = (docType: DocumentType): DocumentStatus | null => {
     const doc = documents?.find(d => d.documentType === docType);
     return doc?.status || null;
   };
@@ -104,7 +109,7 @@ export function VerificationOverview({ documents, stats, overallStatus }: Verifi
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -116,7 +121,7 @@ export function VerificationOverview({ documents, stats, overallStatus }: Verifi
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -128,7 +133,7 @@ export function VerificationOverview({ documents, stats, overallStatus }: Verifi
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -152,7 +157,7 @@ export function VerificationOverview({ documents, stats, overallStatus }: Verifi
             {requiredDocuments.map((doc) => {
               const status = getDocumentStatus(doc.type);
               const Icon = doc.icon;
-              
+
               return (
                 <div key={doc.type} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
@@ -162,7 +167,7 @@ export function VerificationOverview({ documents, stats, overallStatus }: Verifi
                       <p className="text-sm text-gray-600">{doc.description}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {getStatusIcon(status)}
                     {getStatusBadge(status)}

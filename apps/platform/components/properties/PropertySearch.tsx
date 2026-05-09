@@ -1,19 +1,19 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { Search, MapPin, Filter, X, Loader2, Bed, Bath, DollarSign, Home, Maximize, CheckSquare, Building2, Zap } from 'lucide-react';
+import { Search, MapPin, Filter, X, Loader2, Bed, Bath, DollarSign, Home, CheckSquare, Building2, Zap } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent } from '@newcondo/ui/components/card';
 import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@newcondo/ui/components/popover';
 import { Label } from '@newcondo/ui/components/label';
-import { Slider } from '@newcondo/ui/components/slider';
+// import { Slider } from '@newcondo/ui/components/slider';
 import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
 import { Separator } from '@newcondo/ui/components/separator';
 import { useDebounce } from '@/hooks/useDebounce';
-import { cn } from '@newcondo/ui/lib/utils';
+// import { cn } from '@newcondo/ui/lib/utils';
 import { formatNumber } from '@/lib/utils';
 
 export interface SearchFilters {
@@ -504,26 +504,26 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
     setLocalFilters(filters);
   }, [filters]);
 
-  const handlePriceRangeChange = useCallback((value: [number, number]) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      priceRange: { min: value[0], max: value[1] }
-    }));
-  }, []);
+  // const handlePriceRangeChange = useCallback((value: [number, number]) => {
+  //   setLocalFilters(prev => ({
+  //     ...prev,
+  //     priceRange: { min: value[0], max: value[1] }
+  //   }));
+  // }, []);
 
-  const handleBedroomsChange = useCallback((value: [number, number]) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      bedrooms: { min: value[0], max: value[1] }
-    }));
-  }, []);
+  // const handleBedroomsChange = useCallback((value: [number, number]) => {
+  //   setLocalFilters(prev => ({
+  //     ...prev,
+  //     bedrooms: { min: value[0], max: value[1] }
+  //   }));
+  // }, []);
 
-  const handleBathroomsChange = useCallback((value: [number, number]) => {
-    setLocalFilters(prev => ({
-      ...prev,
-      bathrooms: { min: value[0], max: value[1] }
-    }));
-  }, []);
+  // const handleBathroomsChange = useCallback((value: [number, number]) => {
+  //   setLocalFilters(prev => ({
+  //     ...prev,
+  //     bathrooms: { min: value[0], max: value[1] }
+  //   }));
+  // }, []);
 
   const handlePropertyTypeChange = useCallback((type: string, isChecked: boolean) => {
     setLocalFilters(prev => {

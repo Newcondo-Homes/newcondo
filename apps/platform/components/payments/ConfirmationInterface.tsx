@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { CheckCircle, AlertTriangle, Clock, MapPin, User, Phone } from 'lucide-react';
+import { CheckCircle, AlertTriangle,  MapPin,  Phone } from 'lucide-react';
 import { Button } from '@newcondo/ui/';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/';
 import { Checkbox } from '@newcondo/ui/';
@@ -72,7 +72,7 @@ const CHECKLIST_LABELS: Record<keyof VerificationChecklist, string> = {
   documentationComplete: 'All required documentation has been provided',
 };
 
-export function ConfirmationInterface({ rental, timeRemaining, isExpired }: Props) {
+export function ConfirmationInterface({ rental,  isExpired }: Props) {
   const router = useRouter();
   const [checklist, setChecklist] = useState<VerificationChecklist>(DEFAULT_CHECKLIST);
   const [notes, setNotes] = useState('');

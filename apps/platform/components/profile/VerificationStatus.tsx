@@ -1,5 +1,5 @@
 import { Alert, AlertDescription } from '@newcondo/ui/';
-import { Badge } from '@newcondo/ui/';
+// import { Badge } from '@newcondo/ui/';
 import { 
   CheckCircle, 
   XCircle, 

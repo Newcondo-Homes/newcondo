@@ -252,7 +252,7 @@ export async function shareShareableLink(
       url: url,
     });
     return true;
-  } catch (error) {
+  } catch {
     // User cancelled or error occurred
     return false;
   }

@@ -1,9 +1,8 @@
 'use client';
 // apps/platform/components/properties/BoundaryManagement.tsx
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, DrawingManager, Polygon, OverlayView } from '@react-google-maps/api';
-import type { Polygon as PolygonInstance } from '@react-google-maps/api';
 import { useQuery } from '@tanstack/react-query';
 import {
     CheckCircle2,
@@ -70,7 +69,10 @@ export default function BoundaryManagement({ propertyId }: BoundaryManagementPro
     // Parse existing boundary coordinates from the property
     const existingBoundary: LatLng[] | null = (() => {
         try {
-            const raw = property?.boundaryCoordinates as any;
+            const raw = property?.boundaryCoordinates as {
+                coordinates?: number[][][];
+            } | null;
+            
             if (!raw) return null;
             // GeoJSON Polygon: coordinates[0] is outer ring [[lng, lat], ...]
             const ring: number[][] = raw?.coordinates?.[0] ?? [];
@@ -234,7 +236,7 @@ export default function BoundaryManagement({ propertyId }: BoundaryManagementPro
                 <p>
                     Switch to <strong>Satellite</strong> view and use <strong>Draw Boundary</strong> to outline your
                     property on the map. The saved boundary prevents duplicate listings and verifies your
-                    property's geolocation.
+                    property&apos;s geolocation.
                 </p>
             </div>
 

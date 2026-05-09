@@ -7,6 +7,10 @@ import { boundaryService, BoundaryCoordinates } from '@/lib/api/boundary';
 import { PropertyBoundaryData } from '@/types/boundary';
 import { toast } from 'sonner';
 
+interface BoundaryConflict {
+  message: string;
+}
+
 interface UseBoundaryMarkingProps {
   propertyId?: string;
   onBoundaryMarked?: (boundaryData: PropertyBoundaryData) => void;
@@ -125,6 +129,39 @@ export const useBoundaryMarking = ({
     }
   }, []);
 
+  const validateBoundary = useCallback(async (coordinates: BoundaryCoordinates[]) => {
+    if (!coordinates || coordinates.length < 3) {
+      toast.error('Please draw a valid boundary with at least 3 points');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+
+      const validation = await boundaryService.validateBoundary({
+        coordinates, // now correctly BoundaryCoordinates[]
+      });
+
+      if (!validation.isValid) {
+        setConflicts(validation.errors ?? []);
+        onConflictDetected?.(validation.errors ?? []);
+        toast.error('Boundary conflicts detected. Please resolve before proceeding.');
+      } else {
+        toast.success('Boundary validated successfully');
+      }
+
+      if (validation.warnings.length > 0) {
+        toast.warning(validation.warnings[0]);
+      }
+    } catch (error) {
+      console.error('Error validating boundary:', error);
+      toast.error('Unable to validate boundary. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [propertyId, onConflictDetected]);
+
+
   // Start boundary marking mode
   const startMarking = useCallback(() => {
     if (!mapRef.current) return;
@@ -173,40 +210,10 @@ export const useBoundaryMarking = ({
       // Validate boundary
       validateBoundary(coordinates);
     });
-  }, []);
+  }, [validateBoundary]);
 
   // Validate boundary for conflicts and size
-  const validateBoundary = useCallback(async (coordinates: BoundaryCoordinates[]) => {
-    if (!coordinates || coordinates.length < 3) {
-      toast.error('Please draw a valid boundary with at least 3 points');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-
-      const validation = await boundaryService.validateBoundary({
-        coordinates, // now correctly BoundaryCoordinates[]
-      });
-
-      if (!validation.isValid) {
-        setConflicts(validation.errors ?? []);
-        onConflictDetected?.(validation.errors ?? []);
-        toast.error('Boundary conflicts detected. Please resolve before proceeding.');
-      } else {
-        toast.success('Boundary validated successfully');
-      }
-
-      if (validation.warnings.length > 0) {
-        toast.warning(validation.warnings[0]);
-      }
-    } catch (error) {
-      console.error('Error validating boundary:', error);
-      toast.error('Unable to validate boundary. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [propertyId, onConflictDetected]);
+  
 
   // Save boundary
   const saveBoundary = useCallback(async () => {
@@ -287,7 +294,7 @@ export const useBoundaryMarking = ({
 
   const checkOverlaps = useCallback(async (
     coordinates: google.maps.LatLngLiteral[],
-    propertyId?: string
+    // propertyId?: string
   ) => {
     try {
       const result = await boundaryService.checkForDuplicates({

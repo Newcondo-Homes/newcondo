@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@newcondo/ui/components/table';
-import { Badge } from '@newcondo/ui/components/badge';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
@@ -15,7 +14,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
+  DropdownMenuTrigger,
 } from '@newcondo/ui/components/dropdown-menu';
 import {
   CalendarIcon,
@@ -26,7 +25,7 @@ import {
   Receipt,
   RefreshCw,
   Search,
-  X
+  X,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePayments, usePaymentReceipt, usePaymentHistory } from '@/hooks/usePayments';
@@ -48,48 +47,36 @@ export function PaymentHistory({
   userId,
   limit,
   showFilters = true,
-  showExport = true
+  showExport = true,
 }: PaymentHistoryProps) {
   const [payments, setPayments] = useState<PaymentWithRental[]>([]);
   const { downloadReceipt } = usePaymentReceipt();
   const [filteredPayments, setFilteredPayments] = useState<PaymentWithRental[]>([]);
   const [selectedPayment, setSelectedPayment] = useState<PaymentWithRental | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
-  // const [isLoading, setIsLoading] = useState(true);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  // const [dateRange, setDateRange] = useState<{
-  //   from?: Date;
-  //   to?: Date;
-  // }>({});
   const [dateRange, setDateRange] = useState<DateRange>({ from: undefined, to: undefined });
-  // const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [showFiltersPanel, setShowFiltersPanel] = useState(false);
 
   const { retryPayment } = usePayments();
+  const { data: historyData, isLoading, refetch: loadPaymentHistory } = usePaymentHistory({ limit });
 
-  const { data: historyData, isLoading, refetch: loadPaymentHistory } = usePaymentHistory({  limit });
-
+  // fix line 78: loadPaymentHistory from react-query's refetch is stable,
+  // but ESLint can't know that — satisfying the rule by listing it.
+  // userId is also listed since a change should trigger a re-fetch.
   useEffect(() => {
     loadPaymentHistory();
-  }, [userId]);
+  }, [userId, loadPaymentHistory]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [payments, searchQuery, statusFilter, typeFilter, dateRange]);
-
-  useEffect(() => {
-    if (historyData) setPayments(historyData.data ?? []);
-  }, [historyData]);
-
-
-  const applyFilters = () => {
+  // fix line 82: applyFilters wrapped in useCallback with all its deps so
+  // the useEffect dep array can list it without causing infinite loops
+  const applyFilters = useCallback(() => {
     let filtered = [...payments];
 
-    // Search filter
     if (searchQuery) {
       filtered = filtered.filter(payment =>
         payment.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -98,17 +85,14 @@ export function PaymentHistory({
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(payment => payment.status === statusFilter);
     }
 
-    // Type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter(payment => payment.paymentType === typeFilter);
     }
 
-    // Date range filter
     if (dateRange.from || dateRange.to) {
       filtered = filtered.filter(payment => {
         const paymentDate = new Date(payment.createdAt);
@@ -119,7 +103,15 @@ export function PaymentHistory({
     }
 
     setFilteredPayments(filtered);
-  };
+  }, [payments, searchQuery, statusFilter, typeFilter, dateRange]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  useEffect(() => {
+    if (historyData) setPayments(historyData.data ?? []);
+  }, [historyData]);
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -155,7 +147,7 @@ export function PaymentHistory({
   const handleRetryPayment = async (paymentId: string) => {
     try {
       await retryPayment({ paymentId, data: {} as PaymentRetryRequest });
-      await loadPaymentHistory(); // Refresh the list
+      await loadPaymentHistory();
     } catch (error) {
       console.error('Failed to retry payment:', error);
     }
@@ -174,7 +166,7 @@ export function PaymentHistory({
 
     const csv = [
       Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
+      ...csvData.map(row => Object.values(row).join(',')),
     ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -240,7 +232,6 @@ export function PaymentHistory({
 
           {showFilters && (
             <div className="space-y-4">
-              {/* Search and Filter Toggle */}
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -255,16 +246,13 @@ export function PaymentHistory({
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFiltersPanel(!showFiltersPanel)}
-                  className={cn(
-                    showFiltersPanel && "bg-muted"
-                  )}
+                  className={cn(showFiltersPanel && 'bg-muted')}
                 >
                   <Filter className="h-4 w-4 mr-1" />
                   Filters
                 </Button>
               </div>
 
-              {/* Expanded Filters */}
               {showFiltersPanel && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg bg-muted/50">
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -299,12 +287,12 @@ export function PaymentHistory({
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dateRange.from ? (
                           dateRange.to ? (
-                            `${format(dateRange.from, "MMM d")} - ${format(dateRange.to, "MMM d")}`
+                            `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}`
                           ) : (
-                            format(dateRange.from, "MMM d, yyyy")
+                            format(dateRange.from, 'MMM d, yyyy')
                           )
                         ) : (
-                          "Date Range"
+                          'Date Range'
                         )}
                       </Button>
                     </PopoverTrigger>
@@ -343,8 +331,7 @@ export function PaymentHistory({
               <p className="mt-2 text-sm text-muted-foreground">
                 {payments.length === 0
                   ? "You haven't made any payments yet."
-                  : "No payments match your current filters."
-                }
+                  : 'No payments match your current filters.'}
               </p>
             </div>
           ) : (
@@ -459,7 +446,6 @@ export function PaymentHistory({
         </CardContent>
       </Card>
 
-      {/* Receipt Modal */}
       {showReceipt && selectedPayment && (
         <PaymentReceipt
           payment={selectedPayment}

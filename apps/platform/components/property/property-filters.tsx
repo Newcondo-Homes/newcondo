@@ -11,19 +11,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@newcondo/ui/";
 import { Calendar } from "@newcondo/ui/";
 import { Popover, PopoverContent, PopoverTrigger } from "@newcondo/ui/";
-import { CalendarIcon, Home, Bed, Bath, Wifi, Car, Zap, Shield, Wind } from "lucide-react";
+import { CalendarIcon, Home, Wifi, Car, Zap, Shield, Wind } from "lucide-react";
 import { format } from "date-fns";
 
+interface PropertyFilterValues {
+  priceRange: { min?: number; max?: number };
+  propertyType: string;
+  bedrooms: string;
+  bathrooms: string;
+  features: string[];
+  availableFrom: string;
+}
+
 interface PropertyFiltersProps {
-  filters: {
-    priceRange: { min?: number; max?: number };
-    propertyType: string;
-    bedrooms: string;
-    bathrooms: string;
-    features: string[];
-    availableFrom: string;
-  };
-  onFiltersChange: (filters: any) => void;
+  filters: PropertyFilterValues;
+  onFiltersChange: (filters: PropertyFilterValues) => void;
 }
 
 const PROPERTY_TYPES = [
@@ -74,7 +76,7 @@ export function PropertyFilters({ filters, onFiltersChange }: PropertyFiltersPro
     filters.availableFrom ? new Date(filters.availableFrom) : undefined
   );
 
-  const updateFilters = (updates: Partial<typeof filters>) => {
+  const updateFilters = (updates: Partial<PropertyFilterValues>) => {
     const newFilters = { ...filters, ...updates };
     onFiltersChange(newFilters);
   };
@@ -93,7 +95,7 @@ export function PropertyFilters({ filters, onFiltersChange }: PropertyFiltersPro
     const newFeatures = filters.features.includes(feature)
       ? filters.features.filter(f => f !== feature)
       : [...filters.features, feature];
-    
+
     updateFilters({ features: newFeatures });
   };
 
