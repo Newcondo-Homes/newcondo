@@ -4,10 +4,11 @@ import Link from 'next/link';
 import LoginForm  from '@/components/auth/LoginForm';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'auth' });
 
   return {
@@ -16,11 +17,14 @@ export async function generateMetadata({
   };
 }
 
-export default function LoginPage({
-  params: { locale },
+export default async function LoginPage({
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+
+  const { locale } = await params;
+
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">

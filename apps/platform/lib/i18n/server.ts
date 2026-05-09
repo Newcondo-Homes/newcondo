@@ -2,7 +2,7 @@ import { createInstance } from 'i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { initReactI18next } from 'react-i18next/initReactI18next';
 import { getOptions, fallbackLng, languages } from './translations';
-
+import type { Namespace } from 'i18next';
 /**
  * Server-side i18n initialization
  * Creates a new instance for each request to avoid state sharing
@@ -47,7 +47,7 @@ export async function getServerTranslation(
   return {
     t: i18nextInstance.getFixedT(
       validLng,
-      (Array.isArray(ns) ? ns[0] : ns) as any ?? null,
+      (Array.isArray(ns) ? ns[0] : ns) as Namespace ?? null,
       options.keyPrefix
     ),
     i18n: i18nextInstance,
@@ -62,7 +62,7 @@ export async function translateServer(
   key: string,
   lng: string = fallbackLng,
   ns: string = 'common',
-  options?: any
+  options?: Record<string, unknown>
 ) {
   const { t } = await getServerTranslation(lng, ns);
   return t(key, options);
@@ -113,7 +113,7 @@ export async function getMultipleNamespaceTranslations(
   lng: string = fallbackLng,
   namespaces: string[] = ['common']
 ) {
-  const translations: Record<string, any> = {};
+  const translations: Record<string, Record<string, unknown>> = {};
 
   await Promise.all(
     namespaces.map(async (ns) => {

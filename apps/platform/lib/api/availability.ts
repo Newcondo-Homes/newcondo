@@ -258,10 +258,12 @@ export async function getAvailabilityHistory(
     const response = await client.get<{ history: HistoryEntry[] }>(
       `/api/availability/history?${params.toString()}`
     );
-    return response.data?.history ?? []
-  } catch (error: any) {
+    return response.data?.history ?? [];
+  } catch (error: unknown) {
+    // fix line 262: replaced catch (error: any) with typed ApiError pattern
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to fetch availability history'
+      apiError.response?.data?.message || 'Failed to fetch availability history'
     );
   }
 }
@@ -277,9 +279,11 @@ export async function getUpcomingAvailability(
       `/api/availability/upcoming?days=${days}`
     );
     return response.data?.properties as AvailabilityStatus[];
-  } catch (error: any) {
+  } catch (error: unknown) {
+    // fix line 280: replaced catch (error: any) with typed ApiError pattern
+    const apiError = error as ApiError;
     throw new Error(
-      error.response?.data?.message || 'Failed to fetch upcoming availability'
+      apiError.response?.data?.message || 'Failed to fetch upcoming availability'
     );
   }
 }

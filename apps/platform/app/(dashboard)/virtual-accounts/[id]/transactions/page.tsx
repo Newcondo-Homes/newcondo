@@ -8,17 +8,17 @@ import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     page?: string;
     limit?: string;
     type?: string;
     status?: string;
     startDate?: string;
     endDate?: string;
-  };
+  }>;
 }
 
 async function getVirtualAccount(id: string) {
@@ -27,7 +27,7 @@ async function getVirtualAccount(id: string) {
       headers: {
         'Content-Type': 'application/json',
       },
-      next: { revalidate: 60 }, // Revalidate every minute
+      next: { revalidate: 60 },
     });
 
     if (!response.ok) {
@@ -83,24 +83,25 @@ async function getTransactions(
   }
 }
 
-
 export default async function VirtualAccountTransactionsPage({
   params,
   searchParams,
 }: PageProps) {
+  const { id } = await params;
+  const { page, limit, type, status, startDate, endDate } = await searchParams;
 
   const transactionFilters = {
-    page: parseInt(searchParams.page || '1'),
-    limit: parseInt(searchParams.limit || '20'),
-    type: searchParams.type,
-    status: searchParams.status,
-    startDate: searchParams.startDate,
-    endDate: searchParams.endDate,
+    page: parseInt(page || '1'),
+    limit: parseInt(limit || '20'),
+    type,
+    status,
+    startDate,
+    endDate,
   };
 
   const [virtualAccount, transactions] = await Promise.all([
-    getVirtualAccount(params.id),
-    getTransactions(params.id, transactionFilters),
+    getVirtualAccount(id),
+    getTransactions(id, transactionFilters),
   ]);
 
   if (!virtualAccount) {
@@ -110,10 +111,9 @@ export default async function VirtualAccountTransactionsPage({
   const breadcrumbItems = [
     { label: 'Dashboard', href: '/dashboard' },
     { label: 'Virtual Accounts', href: '/virtual-accounts' },
-    { label: virtualAccount.accountName, href: `/virtual-accounts/${params.id}` },
+    { label: virtualAccount.accountName, href: `/virtual-accounts/${id}` },
     { label: 'Transactions' },
   ];
-
 
   return (
     <div className="space-y-6">
@@ -144,7 +144,7 @@ export default async function VirtualAccountTransactionsPage({
 
             <Suspense fallback={<LoadingSpinner />}>
               <TransactionsClient
-                accountId={params.id}
+                accountId={id}
                 transactions={transactions}
               />
             </Suspense>
@@ -155,9 +155,10 @@ export default async function VirtualAccountTransactionsPage({
   );
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }) {
+export async function generateMetadata({ params }: PageProps) {
   try {
-    const virtualAccount = await getVirtualAccount(params.id);
+    const { id } = await params;
+    const virtualAccount = await getVirtualAccount(id);
 
     if (!virtualAccount) {
       return {

@@ -13,7 +13,7 @@ import { Download, FileText, Sheet } from 'lucide-react';
 import { toast } from '@newcondo/ui';
 
 interface ExportButtonProps {
-  data: any[];
+  data: Record<string, unknown>[];
   filename: string;
   disabled?: boolean;
 }

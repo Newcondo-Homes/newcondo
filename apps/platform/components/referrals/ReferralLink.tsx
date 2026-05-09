@@ -3,6 +3,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Copy, Check, Share2, QrCode } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Card, CardContent } from '@newcondo/ui/components/card';
@@ -65,11 +66,7 @@ export function ReferralLink() {
             Your Referral Link
           </label>
           <div className="flex gap-2">
-            <Input
-              value={url}
-              readOnly
-              className="font-mono text-sm"
-            />
+            <Input value={url} readOnly className="font-mono text-sm" />
             <Button
               variant="outline"
               size="icon"
@@ -83,11 +80,7 @@ export function ReferralLink() {
               )}
             </Button>
             {canShareNatively && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleShare}
-              >
+              <Button variant="outline" size="icon" onClick={handleShare}>
                 <Share2 className="h-4 w-4" />
               </Button>
             )}
@@ -103,9 +96,11 @@ export function ReferralLink() {
 
         {showQR && (
           <div className="flex justify-center p-4 bg-white rounded-lg">
-            <img
+            <Image
               src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`}
               alt="QR Code"
+              width={192}
+              height={192}
               className="w-48 h-48"
             />
           </div>

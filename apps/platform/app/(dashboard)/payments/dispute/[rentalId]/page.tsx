@@ -8,9 +8,9 @@ import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     rentalId: string;
-  };
+  }>;
 }
 
 async function getRentalForDispute(rentalId: string, userId: string) {
@@ -73,13 +73,15 @@ async function getRentalForDispute(rentalId: string, userId: string) {
 }
 
 export default async function DisputePage({ params }: PageProps) {
+  const { rentalId } = await params;
+
   const session = await getServerSession();
 
   if (!session?.user?.id) {
     notFound();
   }
 
-  const result = await getRentalForDispute(params.rentalId, session.user.id);
+  const result = await getRentalForDispute(rentalId, session.user.id);
 
   if (!result) {
     notFound();
@@ -90,9 +92,9 @@ export default async function DisputePage({ params }: PageProps) {
   // Redirect if cannot dispute
   if (!canDispute) {
     if (reason === 'already_confirmed') {
-      redirect(`/dashboard/payments/confirmation/${params.rentalId}?error=already_confirmed`);
+      redirect(`/dashboard/payments/confirmation/${rentalId}?error=already_confirmed`);
     } else if (reason === 'period_expired') {
-      redirect(`/dashboard/payments/confirmation/${params.rentalId}?error=expired`);
+      redirect(`/dashboard/payments/confirmation/${rentalId}?error=expired`);
     } else if (reason === 'no_payment') {
       redirect(`/dashboard/payments/history?error=no_payment`);
     }

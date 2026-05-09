@@ -168,7 +168,7 @@ export const MAX_MARKING_COMPLETION_DAYS = 3;
 export const AGENT_TIME_SLOT_HOURS = 3;
 
 // Export all constants as default for easy importing
-export default {
+const propertyManagementConstants = {
   PROPERTY_PROMOTION_TYPES,
   PROMOTION_TYPE_LABELS,
   PROMOTION_TYPE_DESCRIPTIONS,
@@ -191,3 +191,5 @@ export default {
   MAX_MARKING_COMPLETION_DAYS,
   AGENT_TIME_SLOT_HOURS,
 };
+
+export default propertyManagementConstants;

@@ -42,48 +42,35 @@ import { Label } from "@newcondo/ui/";
 import { Textarea } from "@newcondo/ui/";
 import { useVerification } from "@/hooks/useVerification";
 import { DocumentType, DocumentSide, DocumentStatus } from "@/types/enums";
-import {
+// import {
   //  verificationSubmissionSchema,
-  documentUploadSchema,
+  // documentUploadSchema,
   //  type DocumentUpload,
   // type  VerificationSubmission,
-} from "@/lib/validations/verification";
+// } from "@/lib/validations/verification";
 import { cn } from "@/lib/utils";
 
 import { toast } from "sonner";
-import { z } from 'zod';
+// import { z } from 'zod';
 
 import { useUploadThing } from "@/lib/uploadthing";
 import Image from "next/image";
 
-const currentDocumentFormSchema = documentUploadSchema.partial().and(
-  z.object({
-    documentType: z.nativeEnum(DocumentType, {
-      required_error: "Please select a document type.",
-    }),
-  })
-);
+// const currentDocumentFormSchema = documentUploadSchema.partial().and(
+//   z.object({
+//     documentType: z.nativeEnum(DocumentType, {
+//       required_error: "Please select a document type.",
+//     }),
+//   })
+// );
 
-type CurrentDocumentFormData = z.infer<typeof currentDocumentFormSchema>;
+// type CurrentDocumentFormData = z.infer<typeof currentDocumentFormSchema>;
 
 interface VerificationUploaderProps {
   className?: string;
   onUploadComplete?: () => void;
 }
 
-// interface VerificationUploaderProps {
-//   userId: string;
-//   existingDocuments?: Array<{
-//     id: string;
-//     documentType: DocumentType;
-//     documentSide?: DocumentSide;
-//     documentNumber?: string;
-//     fileUrl?: string;
-//     fileName?: string;
-//     status: DocumentStatus;
-//     verificationNotes?: string;
-//   }>;
-// }
 
 interface UploadFile {
   file: File;

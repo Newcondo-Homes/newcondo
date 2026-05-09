@@ -84,11 +84,11 @@ export const PropertyTypeSelector: React.FC<PropertyTypeSelectorProps> = ({
   className
 }) => {
   const residentialTypes = Object.entries(propertyTypes).filter(
-    ([_key, config]) => config.category === 'residential'
+    ([, config]) => config.category === 'residential'
   );
   
   const commercialTypes = Object.entries(propertyTypes).filter(
-    ([_key, config]) => config.category === 'commercial'
+    ([, config]) => config.category === 'commercial'
   );
 
   const renderPropertyTypeCard = (type: PropertyType, config: typeof propertyTypes[PropertyType]) => {

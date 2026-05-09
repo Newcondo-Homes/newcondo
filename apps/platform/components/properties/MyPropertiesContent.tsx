@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import PropertyCard from "./PropertyCard";
 import PropertyStatsCards from "./PropertyStatsCards";
 import { useProperties } from "@/hooks/useProperties";
-import { useDebounce } from "@/hooks/useDebounce";
+// import { useDebounce } from "@/hooks/useDebounce";
 import { toast } from "sonner";
 import type { PropertyCardData } from "./PropertyCard";
 import type { PropertyFilters } from "@/lib/api/properties";
@@ -40,14 +40,14 @@ export default function MyPropertiesContent() {
   // Store as "field-order" string, parse before passing to hook
   const [sortBy, setSortBy] = useState<string>("createdAt-desc");
 
-  const debouncedSearch = useDebounce(searchQuery, 500);
+  // const debouncedSearch = useDebounce(searchQuery, 500);
 
   // Parse sortBy string into typed fields
   const [sortField, sortOrder] = sortBy.split("-") as [SortOption, SortOrder];
 
   const filters: PropertyFilters = {
-    ...(debouncedSearch ? { search: debouncedSearch } as any : {}),
-    ...(filterStatus !== "all" ? { status: filterStatus as any } : {}),
+    // PropertyFilters.status expects PropertyStatus enum values (uppercase strings)
+    ...(filterStatus !== "all" ? { status: filterStatus as PropertyFilters["status"] } : {}),
     sortBy: sortField,
     sortOrder,
   };

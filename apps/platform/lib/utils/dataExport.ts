@@ -63,7 +63,7 @@ export function exportToJSON<T extends Record<string, unknown>>(
   if (columns) {
     // Export only specified columns
     const filtered = data.map(item => {
-      const obj: Record<string, any> = {};
+      const obj: Record<string, unknown> = {};
       columns.forEach(col => {
         obj[col.key] = col.formatter 
           ? col.formatter(item[col.key]) 

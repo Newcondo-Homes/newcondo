@@ -218,7 +218,7 @@ export const isPropertyRentable = (status: PropertyStatus): boolean => {
 };
 
 // Export all constants
-export default {
+const propertyStatusConstants = {
   PROPERTY_STATUS,
   PROPERTY_STATUS_LABELS,
   PROPERTY_STATUS_DESCRIPTIONS,
@@ -244,3 +244,5 @@ export default {
   canPublishProperty,
   isPropertyRentable,
 };
+
+export default propertyStatusConstants;

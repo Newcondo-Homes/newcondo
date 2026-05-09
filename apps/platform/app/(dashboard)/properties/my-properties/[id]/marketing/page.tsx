@@ -5,7 +5,7 @@ import PropertyDetailsLoading from "../loading";
 import PropertyMarketing from "@/components/properties/PropertyMarketing";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const metadata: Metadata = {
@@ -13,15 +13,17 @@ export const metadata: Metadata = {
   description: "Manage property promotion, sharing, and marketing tools",
 };
 
-export default function PropertyMarketingPage({ params }: Props) {
-  if (!params.id) {
+export default async function PropertyMarketingPage({ params }: Props) {
+  const { id } = await params
+
+  if (!id) {
     notFound();
   }
 
   return (
     <div className="container mx-auto p-6">
       <Suspense fallback={<PropertyDetailsLoading />}>
-        <PropertyMarketing propertyId={params.id} />
+        <PropertyMarketing propertyId={id} />
       </Suspense>
     </div>
   );

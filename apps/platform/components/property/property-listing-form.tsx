@@ -152,7 +152,7 @@ interface PropertyListingFormProps {
 }
 
 type Step = "basic" | "location" | "features" | "images" | "preview";
-const steps: Step[] = ["basic", "location", "features", "images", "preview"];
+// const steps: Step[] = ["basic", "location", "features", "images", "preview"];
 
 
 export function PropertyListingForm({
@@ -311,7 +311,7 @@ export function PropertyListingForm({
     const steps: Step[] = ["basic", "location", "features", "images", "preview"];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1] as any);
+      setCurrentStep(steps[currentIndex - 1]);
     }
   };
 
@@ -355,7 +355,7 @@ export function PropertyListingForm({
               ? "bg-primary text-primary-foreground"
               : "text-muted-foreground hover:text-foreground"
               }`}
-            onClick={() => setCurrentStep(step.key as any)}
+            onClick={() => setCurrentStep(step.key as Step)}
           >
             <step.icon className="w-4 h-4" />
             <span className="text-sm font-medium">{step.label}</span>

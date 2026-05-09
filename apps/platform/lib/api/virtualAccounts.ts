@@ -16,7 +16,7 @@ import type {
   GetVirtualAccountsResponse,
   PaginatedResponse,
 } from '@/types/virtualAccount';
-
+import type { AxiosError } from 'axios';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Account Endpointss
@@ -51,8 +51,9 @@ export const fetchPropertyVirtualAccount = async (
       `/virtual-accounts/property/${propertyId}`
     );
     return response.data!;
-  } catch (error: any) {
-    if (error.response?.status === 404) return null;
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.status === 404) return null;
     throw error;
   }
 };

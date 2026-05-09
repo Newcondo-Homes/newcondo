@@ -1,28 +1,24 @@
 'use client';
+// apps/platform/components/property/property-ownership-verification.tsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
-// import { Label } from '@newcondo/ui/components/label';
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@newcondo/ui/components/select';
-import { Textarea } from '@newcondo/ui/components/textarea';
 import { Badge } from '@newcondo/ui/components/badge';
 import { Alert, AlertDescription } from '@newcondo/ui/components/alert';
-// import { Separator } from '@newcondo/ui/components/separator';
 import { Progress } from '@newcondo/ui/components/progress';
 import {
   FileText,
-  // Upload,
   Check,
   X,
   AlertTriangle,
   Camera,
   Shield,
   Clock,
-  Info
+  Info,
 } from 'lucide-react';
-import { UploadButton } from "@uploadthing/react";
+import { UploadButton } from '@uploadthing/react';
 import type { OurFileRouter } from '@/lib/uploadthing';
 import { toast } from '@newcondo/ui/';
 import { DocumentType, DocumentStatus } from '@/types/enums';
@@ -55,7 +51,7 @@ const REQUIRED_DOCUMENTS = [
     description: 'Your 11-digit NIN for identity verification',
     format: 'ID Number',
     required: true,
-    icon: FileText
+    icon: FileText,
   },
   {
     type: DocumentType.OWNERSHIP_DOCUMENT,
@@ -63,7 +59,7 @@ const REQUIRED_DOCUMENTS = [
     description: 'Certificate of Occupancy, Deed of Assignment, or Purchase Agreement',
     format: 'PDF/Image',
     required: true,
-    icon: FileText
+    icon: FileText,
   },
   {
     type: DocumentType.UTILITY_BILL,
@@ -71,7 +67,7 @@ const REQUIRED_DOCUMENTS = [
     description: 'Recent electricity, water, or waste bill for the property',
     format: 'PDF/Image',
     required: true,
-    icon: FileText
+    icon: FileText,
   },
   {
     type: DocumentType.SELFIE,
@@ -79,40 +75,48 @@ const REQUIRED_DOCUMENTS = [
     description: 'Clear photo of yourself holding your ID document',
     format: 'Image',
     required: true,
-    icon: Camera
-  }
+    icon: Camera,
+  },
 ];
 
 export default function PropertyOwnershipVerification({
-  // propertyId,
   onVerificationComplete,
   onDocumentUpload,
   userDocuments,
   isLoading = false,
-  className = ''
+  className = '',
 }: PropertyOwnershipVerificationProps) {
   const [ninNumber, setNinNumber] = useState('');
   const [uploadingDocument, setUploadingDocument] = useState<DocumentType | null>(null);
-  // const [verificationStep, setVerificationStep] = useState(1);
 
-  const getDocumentStatus = (docType: DocumentType) => {
-    return userDocuments.find(doc => doc.documentType === docType);
-  };
+  const getDocumentStatus = (docType: DocumentType) =>
+    userDocuments.find((doc) => doc.documentType === docType);
 
   const getVerificationProgress = () => {
-    const completedDocs = REQUIRED_DOCUMENTS.filter(doc => {
+    const completed = REQUIRED_DOCUMENTS.filter((doc) => {
       const userDoc = getDocumentStatus(doc.type);
-      return userDoc && (userDoc.status === DocumentStatus.APPROVED || userDoc.documentNumber || userDoc.fileUrl);
+      return (
+        userDoc &&
+        (userDoc.status === DocumentStatus.APPROVED ||
+          userDoc.documentNumber ||
+          userDoc.fileUrl)
+      );
     });
-    return (completedDocs.length / REQUIRED_DOCUMENTS.length) * 100;
+    return (completed.length / REQUIRED_DOCUMENTS.length) * 100;
   };
 
-  const isVerificationComplete = () => {
-    return REQUIRED_DOCUMENTS.every(doc => {
-      const userDoc = getDocumentStatus(doc.type);
-      return userDoc && (userDoc.status === DocumentStatus.APPROVED || userDoc.documentNumber || userDoc.fileUrl);
+  // Wrapped in useCallback so it can be listed as a stable dependency
+  const isVerificationComplete = useCallback(() => {
+    return REQUIRED_DOCUMENTS.every((doc) => {
+      const userDoc = userDocuments.find((d) => d.documentType === doc.type);
+      return (
+        userDoc &&
+        (userDoc.status === DocumentStatus.APPROVED ||
+          userDoc.documentNumber ||
+          userDoc.fileUrl)
+      );
     });
-  };
+  }, [userDocuments]);
 
   const handleNinSubmit = async () => {
     if (!ninNumber || ninNumber.length !== 11) {
@@ -127,22 +131,24 @@ export default function PropertyOwnershipVerification({
         documentType: DocumentType.NIN,
         documentNumber: ninNumber,
         status: DocumentStatus.PENDING,
-        isRequired: true
+        isRequired: true,
       });
 
       toast('NIN Submitted', {
-        description: 'Your NIN has been submitted for verification'
+        description: 'Your NIN has been submitted for verification',
       });
-
-      // setVerificationStep(2);
-    } catch{
+    } catch {
       toast.error('Submission Failed', {
         description: 'Failed to submit NIN. Please try again.',
       });
     }
   };
 
-  const handleFileUpload = async (docType: DocumentType, url: string, fileName: string) => {
+  const handleFileUpload = async (
+    docType: DocumentType,
+    url: string,
+    fileName: string
+  ) => {
     try {
       setUploadingDocument(docType);
 
@@ -151,11 +157,11 @@ export default function PropertyOwnershipVerification({
         fileName,
         fileUrl: url,
         status: DocumentStatus.PENDING,
-        isRequired: true
+        isRequired: true,
       });
 
       toast.success('Document Uploaded', {
-        description: `${REQUIRED_DOCUMENTS.find(d => d.type === docType)?.name} uploaded successfully`
+        description: `${REQUIRED_DOCUMENTS.find((d) => d.type === docType)?.name} uploaded successfully`,
       });
 
       setUploadingDocument(null);
@@ -170,23 +176,36 @@ export default function PropertyOwnershipVerification({
   const renderDocumentStatus = (docType: DocumentType) => {
     const userDoc = getDocumentStatus(docType);
 
-    if (!userDoc) {
-      return <Badge variant="secondary">Not Submitted</Badge>;
-    }
+    if (!userDoc) return <Badge variant="secondary">Not Submitted</Badge>;
 
     switch (userDoc.status) {
       case DocumentStatus.APPROVED:
-        return <Badge variant="default" className="bg-green-100 text-green-800"><Check className="w-3 h-3 mr-1" />Approved</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            <Check className="w-3 h-3 mr-1" />
+            Approved
+          </Badge>
+        );
       case DocumentStatus.PENDING:
-        return <Badge variant="secondary"><Clock className="w-3 h-3 mr-1" />Pending Review</Badge>;
+        return (
+          <Badge variant="secondary">
+            <Clock className="w-3 h-3 mr-1" />
+            Pending Review
+          </Badge>
+        );
       case DocumentStatus.REJECTED:
-        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Rejected</Badge>;
+        return (
+          <Badge variant="destructive">
+            <X className="w-3 h-3 mr-1" />
+            Rejected
+          </Badge>
+        );
       default:
         return <Badge variant="secondary">Not Submitted</Badge>;
     }
   };
 
-  const renderDocumentItem = (doc: typeof REQUIRED_DOCUMENTS[0]) => {
+  const renderDocumentItem = (doc: (typeof REQUIRED_DOCUMENTS)[0]) => {
     const userDoc = getDocumentStatus(doc.type);
     const Icon = doc.icon;
     const isUploading = uploadingDocument === doc.type;
@@ -204,9 +223,7 @@ export default function PropertyOwnershipVerification({
               <p className="text-xs text-gray-400 mt-1">Format: {doc.format}</p>
             </div>
           </div>
-          <div className="flex-shrink-0">
-            {renderDocumentStatus(doc.type)}
-          </div>
+          <div className="flex-shrink-0">{renderDocumentStatus(doc.type)}</div>
         </div>
 
         {userDoc?.status === DocumentStatus.REJECTED && userDoc.verificationNotes && (
@@ -225,7 +242,9 @@ export default function PropertyOwnershipVerification({
                 <Input
                   placeholder="Enter your 11-digit NIN"
                   value={ninNumber}
-                  onChange={(e) => setNinNumber(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                  onChange={(e) =>
+                    setNinNumber(e.target.value.replace(/\D/g, '').slice(0, 11))
+                  }
                   maxLength={11}
                   className="flex-1"
                 />
@@ -246,17 +265,16 @@ export default function PropertyOwnershipVerification({
                   }
                 }}
                 onUploadError={(error) => {
-                  toast.error('Upload Error', {
-                    description: error.message,
-                  });
+                  toast.error('Upload Error', { description: error.message });
                 }}
                 appearance={{
-                  button: 'w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50',
-                  allowedContent: 'text-xs text-gray-500 mt-1'
+                  button:
+                    'w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:opacity-50',
+                  allowedContent: 'text-xs text-gray-500 mt-1',
                 }}
                 content={{
                   button: isUploading ? 'Uploading...' : 'Upload Document',
-                  allowedContent: 'Max file size: 10MB. Supported: PDF, JPG, PNG'
+                  allowedContent: 'Max file size: 10MB. Supported: PDF, JPG, PNG',
                 }}
               />
             )}
@@ -281,11 +299,12 @@ export default function PropertyOwnershipVerification({
     );
   };
 
+  // isVerificationComplete is now stable (useCallback) so it's safe in the dep array
   useEffect(() => {
     if (isVerificationComplete()) {
       onVerificationComplete(true);
     }
-  }, [userDocuments, onVerificationComplete]);
+  }, [isVerificationComplete, onVerificationComplete]);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -303,7 +322,9 @@ export default function PropertyOwnershipVerification({
             </div>
             <div className="text-right">
               <div className="text-sm text-gray-500">Progress</div>
-              <div className="text-2xl font-bold text-blue-600">{Math.round(getVerificationProgress())}%</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {Math.round(getVerificationProgress())}%
+              </div>
             </div>
           </div>
           <Progress value={getVerificationProgress()} className="mt-2" />
@@ -318,17 +339,15 @@ export default function PropertyOwnershipVerification({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {REQUIRED_DOCUMENTS.map(renderDocumentItem)}
-          </div>
+          <div className="space-y-4">{REQUIRED_DOCUMENTS.map(renderDocumentItem)}</div>
         </CardContent>
       </Card>
 
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Note:</strong> All documents will be reviewed by our verification team within 24-48 hours.
-          You&apos;ll receive an email notification once the verification is complete.
+          <strong>Note:</strong> All documents will be reviewed by our verification team within
+          24-48 hours. You&apos;ll receive an email notification once the verification is complete.
         </AlertDescription>
       </Alert>
 
@@ -336,7 +355,8 @@ export default function PropertyOwnershipVerification({
         <Alert className="bg-green-50 border-green-200">
           <Check className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
-            <strong>Verification Complete!</strong> You can now proceed with the property marking service.
+            <strong>Verification Complete!</strong> You can now proceed with the property marking
+            service.
           </AlertDescription>
         </Alert>
       )}

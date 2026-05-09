@@ -5,6 +5,11 @@
 /**
  * Base URL for share links (should be set via env variable)
  */
+
+type WindowWithGtag = Window & {
+  gtag?: (event: string, action: string, params: Record<string, string>) => void;
+};
+
 const getBaseUrl = (): string => {
   if (typeof window !== 'undefined') {
     return window.location.origin;
@@ -21,16 +26,16 @@ export function generatePropertyShareLink(
   referralCode?: string
 ): string {
   const baseUrl = getBaseUrl();
-  const path = unitId 
+  const path = unitId
     ? `/properties/${propertyId}/units/${unitId}`
     : `/properties/${propertyId}`;
-  
+
   const params = new URLSearchParams();
   if (referralCode) {
     params.set('ref', referralCode);
   }
   params.set('shared', 'true');
-  
+
   const queryString = params.toString();
   return `${baseUrl}${path}${queryString ? `?${queryString}` : ''}`;
 }
@@ -62,7 +67,7 @@ export function parseShareLink(url: string): ShareLinkParams {
     const urlObj = new URL(url);
     const params = new URLSearchParams(urlObj.search);
     const pathParts = urlObj.pathname.split('/').filter(Boolean);
-    
+
     return {
       propertyId: pathParts[1],
       unitId: pathParts[3],
@@ -91,14 +96,14 @@ export function generateSocialShareUrls(
   shareLink: string,
   price?: string
 ): SocialShareUrls {
-  const message = price 
+  const message = price
     ? `Check out this property: ${propertyTitle} - ${price}\n${shareLink}`
     : `Check out this property: ${propertyTitle}\n${shareLink}`;
-  
+
   const encodedMessage = encodeURIComponent(message);
   const encodedLink = encodeURIComponent(shareLink);
   const encodedTitle = encodeURIComponent(propertyTitle);
-  
+
   return {
     whatsapp: `https://wa.me/?text=${encodedMessage}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedLink}`,
@@ -216,11 +221,11 @@ export function generateShareLinkWithUTM(
 ): string {
   const baseLink = generatePropertyShareLink(propertyId, unitId);
   const url = new URL(baseLink);
-  
+
   url.searchParams.set('utm_source', source);
   url.searchParams.set('utm_medium', medium);
   url.searchParams.set('utm_campaign', campaign);
-  
+
   return url.toString();
 }
 
@@ -232,7 +237,7 @@ export function generateShareLinkWithUTM(
 // apps/platform/lib/utils/shareHelpers.ts
 
 import { SHARE_MESSAGES, SHARE_CHANNEL_CONFIG, formatShareMessage } from '../constants/shareMessages';
-import { REFERRAL_CONFIG } from '../constants/referralConfig';
+// import { REFERRAL_CONFIG } from '../constants/referralConfig';
 
 export interface ShareData {
   code: string;
@@ -265,12 +270,12 @@ export function getShareMessage(
   }
 
   const channelMessages = SHARE_MESSAGES[channel] as ChannelWithRoles;
-  
+
   if (channel === 'email') {
     const roleKey = data.referrerRole.toLowerCase() as 'owner' | 'agent' | 'renter';
     const emailConfig = channelMessages[roleKey] || channelMessages.default;
-    
-    const config = emailConfig as { subject: string; template: string}
+
+    const config = emailConfig as { subject: string; template: string }
     return {
       subject: config.subject,
       template: formatShareMessage(config.template, data)
@@ -279,9 +284,11 @@ export function getShareMessage(
 
   // For other channels, pick role-specific message if available
   const roleKey = data.referrerRole.toLowerCase();
-  const message = (channelMessages as any)[roleKey] || (channelMessages as any).default;
-  
-  return formatShareMessage(message, data);
+
+  const typedChannel = channelMessages as ChannelWithRoles;
+  const message = typedChannel[roleKey as keyof ChannelWithRoles] ?? typedChannel.default;
+
+  return formatShareMessage(message as string, data);
 }
 
 /**
@@ -294,7 +301,7 @@ export function buildShareUrl(
   subject?: string
 ): string {
   const channelConfig = SHARE_CHANNEL_CONFIG.find(c => c.id === channel);
-  
+
   if (!channelConfig) {
     return referralLink;
   }
@@ -363,7 +370,7 @@ export function openShareDialog(
   subject?: string
 ): void {
   const shareUrl = buildShareUrl(channel, url, message, subject);
-  
+
   // For copy, just return the URL
   if (channel === 'copy') {
     copyToClipboard(url);
@@ -381,7 +388,7 @@ export function openShareDialog(
   const height = 400;
   const left = (window.screen.width - width) / 2;
   const top = (window.screen.height - height) / 2;
-  
+
   window.open(
     shareUrl,
     '_blank',
@@ -402,17 +409,17 @@ export function getAvailableChannels(): typeof SHARE_CHANNEL_CONFIG {
 export function formatPhoneForWhatsApp(phone: string): string {
   // Remove all non-digit characters
   let cleaned = phone.replace(/\D/g, '');
-  
+
   // If starts with 0, replace with 234
   if (cleaned.startsWith('0')) {
     cleaned = '234' + cleaned.substring(1);
   }
-  
+
   // If doesn't start with 234, add it
   if (!cleaned.startsWith('234')) {
     cleaned = '234' + cleaned;
   }
-  
+
   return cleaned;
 }
 
@@ -427,13 +434,16 @@ export async function generateQRCode(text: string): Promise<string> {
   return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
 }
 
+
 /**
  * Track share event (for analytics)
  */
 export function trackShare(channel: string, referralCode: string): void {
-  // Implement analytics tracking here
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', 'share', {
+  if (typeof window === 'undefined') return;
+
+  const gtag = (window as WindowWithGtag).gtag;
+  if (gtag) {
+    gtag('event', 'share', {
       method: channel,
       content_type: 'referral',
       item_id: referralCode,
@@ -450,8 +460,8 @@ export function validateMessageLength(channel: string, message: string): {
   currentLength: number;
 } {
   const channelConfig = SHARE_MESSAGES[channel as keyof typeof SHARE_MESSAGES];
-  const maxLength = (channelConfig as any)?.maxLength || 1000;
-  
+  const maxLength = (channelConfig as ChannelWithRoles)?.maxLength || 1000;
+
   return {
     isValid: message.length <= maxLength,
     maxLength,

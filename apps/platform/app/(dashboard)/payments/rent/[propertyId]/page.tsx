@@ -2,20 +2,20 @@
 import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import {PaymentForm} from '@/components/payments/PaymentForm'
+import { PaymentForm } from '@/components/payments/PaymentForm'
 import VirtualAccountInfo from '@/components/payments/VirtualAccountInfo'
-import {LoadingSpinner} from '@/components/shared/feedback/LoadingSpinner'
+import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui'
 import { CalendarDays, MapPin, Building2 } from 'lucide-react'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     propertyId: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     unitId?: string
     rentalId?: string
-  }
+  }>
 }
 
 export const metadata: Metadata = {
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
 }
 
 export default async function RentPaymentPage({ params, searchParams }: PageProps) {
-  const { propertyId } = params
-  const { unitId, rentalId } = searchParams
+  const { propertyId } = await params
+  const { unitId, rentalId } = await searchParams
 
   // This would typically fetch data from your API
   // For now, we'll simulate the data structure
   // TODO: check the account-number and account-name in this propertyData
-  // and see if you need to change it accordingly. you can put values in constants 
+  // and see if you need to change it accordingly. you can put values in constants
   // and use them here to promote one single source of truth
   const propertyData = {
     id: propertyId,
@@ -40,7 +40,7 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
     currency: 'NGN',
     landlord: {
       name: 'John Doe',
-      phone: '+234 801 234 5678'
+      phone: '+234 801 234 5678',
     },
     virtualAccount: {
       id: 'va-' + propertyId,
@@ -53,7 +53,7 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
       flutterwaveAccountId: undefined,
       property: undefined,
       createdAt: new Date().toISOString(),
-    }
+    },
   }
 
   if (!propertyData) {
@@ -89,7 +89,7 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
                     {propertyData.address}
                   </div>
                 </div>
-                
+
                 <div className="pt-2 border-t">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Monthly Rent</span>
@@ -117,7 +117,7 @@ export default async function RentPaymentPage({ params, searchParams }: PageProp
 
           {/* Payment Form */}
           <div className="lg:col-span-2">
-            <Suspense 
+            <Suspense
               fallback={
                 <Card>
                   <CardHeader>

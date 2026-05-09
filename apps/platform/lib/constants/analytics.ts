@@ -251,7 +251,7 @@ export const CHART_COLOR_PALETTE = [
 ];
 
 // Export all constants
-export default {
+const analyticsConstants = {
   CHART_TYPES,
   METRIC_TYPES,
   METRIC_LABELS,
@@ -277,3 +277,5 @@ export default {
   determinePerformanceIndicator,
   CHART_COLOR_PALETTE,
 };
+
+export default analyticsConstants;

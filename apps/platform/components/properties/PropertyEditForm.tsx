@@ -17,12 +17,13 @@ import {
 import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { toast } from '@newcondo/ui';
 import { Save, X } from 'lucide-react';
+import { PropertyType } from '@newcondo/db';
 
 interface PropertyEditData {
   id: string;
   title: string;
   description: string;
-  propertyType: string;
+  propertyType: PropertyType;
   price: number;
   bedrooms?: number;
   bathrooms?: number;
@@ -40,7 +41,7 @@ interface PropertyEditFormProps {
   onCancel: () => void;
 }
 
-const propertyTypes = [
+const propertyTypes: PropertyType[] = [
   'APARTMENT',
   'HOUSE',
   'DUPLEX',
@@ -82,10 +83,13 @@ export function PropertyEditForm({
   onSave,
   onCancel,
 }: PropertyEditFormProps) {
-  const [formData, setFormData] = useState(property);
+  const [formData, setFormData] = useState<PropertyEditData>(property);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleChange = (field: string, value: string | number | boolean | string[]) => {
+  const handleChange = <K extends keyof PropertyEditData>(
+    field: K,
+    value: PropertyEditData[K]
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -100,16 +104,15 @@ export function PropertyEditForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       setIsSaving(true);
       await onSave(formData);
-      toast.success("Property updated", {
+      toast.success('Property updated', {
         description: 'Your property has been updated successfully',
       });
     } catch (error) {
       console.error('Save error:', error);
-      toast.error("Save failed",{
+      toast.error('Save failed', {
         description: 'Failed to update property',
       });
     } finally {
@@ -154,7 +157,9 @@ export function PropertyEditForm({
                 <Label htmlFor="propertyType">Property Type *</Label>
                 <Select
                   value={formData.propertyType}
-                  onValueChange={(value) => handleChange('propertyType', value)}
+                  onValueChange={(value) =>
+                    handleChange('propertyType', value as PropertyType)
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -196,7 +201,7 @@ export function PropertyEditForm({
                     id="bedrooms"
                     type="number"
                     min="0"
-                    value={formData.bedrooms || ''}
+                    value={formData.bedrooms ?? ''}
                     onChange={(e) =>
                       handleChange('bedrooms', parseInt(e.target.value))
                     }
@@ -209,7 +214,7 @@ export function PropertyEditForm({
                     id="bathrooms"
                     type="number"
                     min="0"
-                    value={formData.bathrooms || ''}
+                    value={formData.bathrooms ?? ''}
                     onChange={(e) =>
                       handleChange('bathrooms', parseInt(e.target.value))
                     }
@@ -220,7 +225,7 @@ export function PropertyEditForm({
                   <Label htmlFor="area">Area (sqm)</Label>
                   <Input
                     id="area"
-                    value={formData.area || ''}
+                    value={formData.area ?? ''}
                     onChange={(e) => handleChange('area', e.target.value)}
                   />
                 </div>

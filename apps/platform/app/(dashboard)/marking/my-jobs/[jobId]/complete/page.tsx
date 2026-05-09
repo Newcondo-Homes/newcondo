@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 };
 
 interface PageProps {
-  params: {
+  params: Promise<{
     jobId: string;
-  };
+  }>;
 }
 
 async function getMarkingJobForCompletion(jobId: string, userId: string): Promise<{
@@ -57,6 +57,7 @@ async function getMarkingJobForCompletion(jobId: string, userId: string): Promis
 }
 
 export default async function CompleteMarkingJobPage({ params }: PageProps) {
+  const { jobId } = await params
   const session = await getServerSession();
 
   if (!session?.user?.id) {
@@ -64,7 +65,7 @@ export default async function CompleteMarkingJobPage({ params }: PageProps) {
   }
 
   const { job, error } = await getMarkingJobForCompletion(
-    params.jobId,
+    jobId,
     session.user.id
   );
 
@@ -75,7 +76,7 @@ export default async function CompleteMarkingJobPage({ params }: PageProps) {
           items={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'My Marking Jobs', href: '/marking/my-jobs' },
-            { label: `Job #${params.jobId.slice(0, 8)}`, href: `/marking/my-jobs/${params.jobId}` },
+            { label: `Job #${jobId.slice(0, 8)}`, href: `/marking/my-jobs/${jobId}` },
             { label: 'Complete', href: '#' },
           ]}
         />

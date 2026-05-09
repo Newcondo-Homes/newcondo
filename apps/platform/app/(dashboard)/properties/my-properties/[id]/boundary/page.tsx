@@ -5,7 +5,7 @@ import PropertyDetailsLoading from "../loading";
 import BoundaryManagement from "@/components/properties/BoundaryManagement";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const metadata: Metadata = {
@@ -13,15 +13,17 @@ export const metadata: Metadata = {
   description: "View and update property boundary markers and masks",
 };
 
-export default function BoundaryManagementPage({ params }: Props) {
-  if (!params.id) {
+export default async function BoundaryManagementPage({ params }: Props) {
+  const { id } = await params
+
+  if (!id) {
     notFound();
   }
 
   return (
     <div className="container mx-auto p-6">
       <Suspense fallback={<PropertyDetailsLoading />}>
-        <BoundaryManagement propertyId={params.id} />
+        <BoundaryManagement propertyId={id} />
       </Suspense>
     </div>
   );

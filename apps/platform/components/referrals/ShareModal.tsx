@@ -3,6 +3,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,7 @@ export function ShareModal() {
   const { isShareModalOpen, toggleShareModal } = useReferralStore();
   const { link, code } = useReferralLink();
   const { shareViaChannel, isSharing } = useShareReferral();
-  
+
   const [activeTab, setActiveTab] = useState('social');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -158,9 +159,11 @@ export function ShareModal() {
             <div className="border-t pt-4">
               <Label className="mb-3 block">QR Code</Label>
               <div className="flex justify-center p-4 bg-white rounded-lg border">
-                <img
+                <Image
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(link?.url || '')}`}
                   alt="QR Code"
+                  width={192}
+                  height={192}
                   className="w-48 h-48"
                 />
               </div>

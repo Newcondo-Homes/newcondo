@@ -10,16 +10,15 @@ import { Alert, AlertDescription, AlertTitle } from '@newcondo/ui/components/ale
 import { AlertTriangle } from 'lucide-react';
 
 interface CheckoutPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
-  searchParams: {
+  }>;
+  searchParams: Promise<{
     unitId?: string;
-  };
+  }>;
 }
 
 async function getPropertyData(propertyId: string, unitId?: string) {
-
   //TODO: make sure to put this prisma database call to the appropriate express server
   const property = await prisma.property.findUnique({
     where: { id: propertyId },
@@ -89,13 +88,16 @@ async function getPropertyData(propertyId: string, unitId?: string) {
 }
 
 export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
+  const { id } = await params;
+  const { unitId } = await searchParams;
+
   const session = await getServerSession();
 
   if (!session?.user) {
-    redirect('/login?callbackUrl=/properties/' + params.id + '/checkout');
+    redirect('/login?callbackUrl=/properties/' + id + '/checkout');
   }
 
-  const data = await getPropertyData(params.id, searchParams.unitId);
+  const data = await getPropertyData(id, unitId);
 
   if (!data) {
     notFound();

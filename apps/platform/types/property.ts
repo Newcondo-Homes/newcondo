@@ -2,6 +2,33 @@
 
 import { PropertyType, PropertyStatus, PropertyStructure, UnitStatus, AdminApprovalStatus } from '@newcondo/db';
 
+export interface PropertySearchResult {
+  id: string;
+  title: string;
+  address: string;
+  city: string;
+  state: string;
+  price?: number;
+  currency: string;
+  propertyType: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: string;
+  features: string[];
+  isAvailable: boolean;
+  gpsCoordinates?: {
+    lat: number;
+    lng: number;
+  };
+  images: Array<{
+    url: string;
+    isPrimary: boolean;
+  }>;
+  viewCount: number;
+  favoriteCount: number;
+  createdAt: Date;
+}
+
 // Base property interface matching Prisma schema
 export interface Property {
   id: string;

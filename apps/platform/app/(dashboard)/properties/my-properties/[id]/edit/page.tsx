@@ -10,7 +10,7 @@ import { Card, CardContent } from '@newcondo/ui/components/card';
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 type PropertyFormData = {
@@ -112,10 +112,11 @@ function EditPropertyContent({ propertyId }: { propertyId: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function EditPropertyPage({ params }: Props) {
+export default async function EditPropertyPage({ params }: Props) {
+  const { id } = await params
   return (
     <div className="container mx-auto p-6">
-      <EditPropertyContent propertyId={params.id} />
+      <EditPropertyContent propertyId={id} />
     </div>
   );
 }

@@ -15,6 +15,21 @@ export interface UploadResponse {
   mimeType: string;
 }
 
+interface VerificationRequirements {
+  requiredDocuments: string[];
+  optionalDocuments: string[];
+  instructions?: Record<string, string>;
+}
+
+interface VerificationHistoryEntry {
+  id: string;
+  status: string;
+  documentType: string;
+  createdAt: string;
+  updatedAt: string;
+  notes?: string;
+}
+
 export interface VerificationResponse {
   success: boolean;
   message: string;
@@ -168,10 +183,11 @@ class VerificationAPI {
     return response.data;
   }
 
+
   // Get verification requirements
-  async getRequirements(): Promise<any> {
+  async getRequirements(): Promise<VerificationRequirements> {
     const response = await apiClient.get("/auth/verification/requirements");
-    return response.data;
+    return response.data as VerificationRequirements;
   }
 
   // Check document verification status
@@ -186,8 +202,8 @@ class VerificationAPI {
   }
 
   // Get verification history
-  async getVerificationHistory(): Promise<any[]> {
-    const response = await apiClient.get<any[]>("/auth/verification/history");
+  async getVerificationHistory(): Promise<VerificationHistoryEntry[]> {
+    const response = await apiClient.get<VerificationHistoryEntry[]>("/auth/verification/history");
     if (!response.data) {
       throw new Error("Verification history data not found.");
     }

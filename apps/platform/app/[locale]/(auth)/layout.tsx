@@ -2,13 +2,15 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left side - Branding */}

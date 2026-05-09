@@ -2,20 +2,20 @@
 import { Suspense } from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { getProperty } from '@/lib/api/properties';
-import { getServerSession } from '@newcondo/auth'
-import PropertyDetails from '@/components/properties/PropertyDetails'
+import { getServerSession } from '@newcondo/auth';
+import PropertyDetails from '@/components/properties/PropertyDetails';
 import { Card, CardContent } from '@newcondo/ui/';
 import { Skeleton } from '@newcondo/ui/';
 
 interface PropertyDetailsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 async function PropertyDetailsContent({ propertyId }: { propertyId: string }) {
   const session = await getServerSession();
-  const user = session?.user ?? null;;
+  const user = session?.user ?? null;
 
   if (!session?.user) {
     redirect('/login');
@@ -60,10 +60,12 @@ function PropertyDetailsLoading() {
   );
 }
 
-export default function PropertyDetailsPage({ params }: PropertyDetailsPageProps) {
+export default async function PropertyDetailsPage({ params }: PropertyDetailsPageProps) {
+  const { id } = await params;
+
   return (
     <Suspense fallback={<PropertyDetailsLoading />}>
-      <PropertyDetailsContent propertyId={params.id} />
+      <PropertyDetailsContent propertyId={id} />
     </Suspense>
   );
 }

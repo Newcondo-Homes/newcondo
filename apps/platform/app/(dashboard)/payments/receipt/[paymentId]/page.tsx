@@ -3,17 +3,18 @@ import { Suspense } from 'react'
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Printer, Share2 } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@newcondo/ui'
 import { prisma } from '@newcondo/db';
 import { getServerSession } from '@newcondo/auth';
 import { PaymentReceipt } from '@/components/payments/PaymentReceipt'
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner'
+import { ReceiptActions } from '@/components/payments/ReceiptActions'
 
 interface PageProps {
-  params: {
+  params: Promise<{
     paymentId: string
-  }
+  }>
 }
 
 export const metadata: Metadata = {
@@ -54,38 +55,14 @@ async function getPayment(paymentId: string, userId: string) {
   return payment;
 }
 
-
 export default async function PaymentReceiptPage({ params }: PageProps) {
-  const { paymentId } = params
+  const { paymentId } = await params
 
   const session = await getServerSession();
   if (!session?.user?.id) notFound();
 
   const payment = await getPayment(paymentId, session.user.id);
   if (!payment) notFound();
-
-
-  const handlePrint = () => {
-    window.print()
-  }
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Payment Receipt',
-          text: `Payment receipt for transaction ${paymentId}`,
-          url: window.location.href
-        })
-      } catch {
-        // Fallback to copying URL
-        navigator.clipboard.writeText(window.location.href)
-      }
-    } else {
-      // Fallback to copying URL
-      navigator.clipboard.writeText(window.location.href)
-    }
-  }
 
   // Shape data into the flat paymentData format the component accepts
   const paymentData = {
@@ -118,9 +95,9 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
     },
     landlord: payment.rental?.property.owner
       ? {
-        name: payment.rental.property.owner.name ?? 'Property Owner',
-        email: payment.rental.property.owner.email,
-      }
+          name: payment.rental.property.owner.name ?? 'Property Owner',
+          email: payment.rental.property.owner.email,
+        }
       : undefined,
     tenant: {
       name: payment.user.name ?? 'Tenant',
@@ -128,12 +105,12 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
     },
     rental: payment.rental
       ? {
-        startDate: payment.rental.startDate.toISOString(),
-        endDate: payment.rental.endDate?.toISOString(),
-        monthlyRent: typeof payment.rental.monthlyRent === 'object'
-          ? payment.rental.monthlyRent.toNumber()
-          : Number(payment.rental.monthlyRent),
-      }
+          startDate: payment.rental.startDate.toISOString(),
+          endDate: payment.rental.endDate?.toISOString(),
+          monthlyRent: typeof payment.rental.monthlyRent === 'object'
+            ? payment.rental.monthlyRent.toNumber()
+            : Number(payment.rental.monthlyRent),
+        }
       : undefined,
   } satisfies Parameters<typeof PaymentReceipt>[0]['paymentData'];
 
@@ -157,28 +134,8 @@ export default async function PaymentReceiptPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              className="print:hidden"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              className="print:hidden"
-            >
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
-          </div>
+          {/* Print / Share — client component */}
+          <ReceiptActions paymentId={paymentId} />
         </div>
 
         {/* Receipt Content */}

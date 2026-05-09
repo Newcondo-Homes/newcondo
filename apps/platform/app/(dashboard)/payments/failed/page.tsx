@@ -13,18 +13,18 @@ export const metadata: Metadata = {
 }
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     paymentId?: string
     amount?: string
     propertyId?: string
     transactionId?: string
     error?: string
     reason?: string
-  }
+  }>
 }
 
-export default function PaymentFailedPage({ searchParams }: PageProps) {
-  const { paymentId, amount, propertyId, transactionId, error, reason } = searchParams
+export default async function PaymentFailedPage({ searchParams }: PageProps) {
+  const { paymentId, amount, propertyId, transactionId, error, reason } = await searchParams
 
   const formattedAmount = amount ?
     `₦${parseInt(amount).toLocaleString()}` :

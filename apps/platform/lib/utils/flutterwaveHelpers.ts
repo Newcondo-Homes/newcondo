@@ -1,5 +1,9 @@
 import { PaymentFormData } from './paymentValidation';
 
+type FlutterwaveWindow = Window & {
+  FlutterwaveCheckout?: (config: Record<string, unknown>) => void;
+};
+
 interface FlutterwaveResponse {
   status: string;
   transaction_id?: string;
@@ -17,8 +21,8 @@ interface PaymentResult {
 // Flutterwave configuration
 export const FLUTTERWAVE_CONFIG = {
   publicKey: process.env.NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY!,
-  apiUrl: process.env.NODE_ENV === 'production' 
-    ? 'https://api.flutterwave.com/v3' 
+  apiUrl: process.env.NODE_ENV === 'production'
+    ? 'https://api.flutterwave.com/v3'
     : 'https://ravesandboxapi.flutterwave.com/v3',
   redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payments/callback`,
   currencies: ['NGN', 'USD', 'GHS', 'KES', 'UGX'],
@@ -109,7 +113,7 @@ export function createPaymentPayload(
   }
 ): FlutterwavePaymentPayload {
   const txRef = generateTransactionRef();
-  
+
   return {
     tx_ref: txRef,
     amount: formData.amount,
@@ -144,7 +148,7 @@ function getPaymentOptions(method: string): string {
     ussd: 'ussd',
     mobile_money: 'mobilemoney',
   };
-  
+
   return methodMap[method as keyof typeof methodMap] || 'card';
 }
 
@@ -159,13 +163,13 @@ export function initializeFlutterwavePayment(
     throw new Error('Flutterwave can only be initialized in the browser');
   }
 
-  // @ts-ignore - FlutterwaveCheckout is loaded from CDN
-  if (!window.FlutterwaveCheckout) {
+  const flwWindow = window as FlutterwaveWindow;
+
+  if (!flwWindow.FlutterwaveCheckout) {
     throw new Error('Flutterwave checkout script not loaded');
   }
 
-  // @ts-ignore
-  window.FlutterwaveCheckout({
+  flwWindow.FlutterwaveCheckout({
     public_key: FLUTTERWAVE_CONFIG.publicKey,
     tx_ref: payload.tx_ref,
     amount: payload.amount,
@@ -175,7 +179,7 @@ export function initializeFlutterwavePayment(
     customer: payload.customer,
     customizations: payload.customizations,
     meta: payload.meta,
-    callback: (response: any) => {
+    callback: (response: FlutterwaveResponse) => {
       if (response.status === 'successful') {
         onSuccess(response);
       } else {
@@ -216,7 +220,7 @@ export async function verifyPayment(
       success: true,
       data: data.data,
     };
-  } catch  {
+  } catch {
     return {
       success: false,
       error: 'Network error during payment verification',
@@ -235,7 +239,7 @@ export function formatCurrency(amount: number, currency: string = 'NGN'): string
   };
 
   const config = currencyMap[currency as keyof typeof currencyMap];
-  
+
   if (config) {
     return new Intl.NumberFormat(config.locale, {
       style: 'currency',
@@ -326,9 +330,9 @@ export async function verifyWebhookSignature(
   payload: string,
   signature: string,
   secret: string
-): Promise<boolean>  {
+): Promise<boolean> {
   const encoder = new TextEncoder();
-  
+
   const key = await crypto.subtle.importKey(
     'raw',
     encoder.encode(secret),
@@ -353,11 +357,11 @@ export async function verifyWebhookSignature(
 // Extract payment method from Flutterwave response
 export function extractPaymentMethod(flwResponse: FlutterwaveVerifyResponse): string {
   const paymentType = flwResponse.data.payment_type.toLowerCase();
-  
+
   if (paymentType.includes('card')) return 'card';
   if (paymentType.includes('account') || paymentType.includes('bank')) return 'bank_transfer';
   if (paymentType.includes('ussd')) return 'ussd';
   if (paymentType.includes('mobile')) return 'mobile_money';
-  
+
   return 'unknown';
 }

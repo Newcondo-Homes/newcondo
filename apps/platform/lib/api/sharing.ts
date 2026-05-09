@@ -1,4 +1,16 @@
 import client from './client';
+import type { AxiosError } from 'axios';
+
+// ✅ Typed axios error shape
+interface ApiErrorResponse {
+  message?: string;
+}
+
+// ✅ Helper to extract error message
+function getErrorMessage(error: unknown, fallback: string): string {
+  const axiosError = error as AxiosError<ApiErrorResponse>;
+  return axiosError.response?.data?.message ?? fallback;
+}
 
 export interface ShareableLink {
   id: string;
@@ -54,10 +66,9 @@ export async function createShareableLink(
       data
     );
     return response.data as ShareableLink;
-  } catch (error: any) {
+  } catch (error: unknown) {
     throw new Error(
-      error.response?.data?.message || 'Failed to create shareable link'
-    );
+      getErrorMessage(error, 'Failed to create shareable link'));
   }
 }
 
@@ -76,13 +87,10 @@ export async function getShareableLink(
       `/api/sharing/link?${params.toString()}`
     );
     return response.data as ShareableLink | null;
-  } catch (error: any) {
-    if (error.response?.status === 404) {
-      return null;
-    }
-    throw new Error(
-      error.response?.data?.message || 'Failed to get shareable link'
-    );
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    if (axiosError.response?.status === 404) return null;
+    throw new Error(getErrorMessage(error, 'Failed to get shareable link'));
   }
 }
 
@@ -101,10 +109,8 @@ export async function getPropertyByShortCode(shortCode: string): Promise<{
       unitId?: string;
       isAvailable: boolean;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to resolve share link'
-    );
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to resolve share link'));
   }
 }
 
@@ -124,7 +130,7 @@ export async function trackShareLinkView(
       metadata,
     });
     return response.data as { success: boolean };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Don't throw error for tracking failures
     console.error('Failed to track share link view:', error);
     return { success: false };
@@ -144,10 +150,8 @@ export async function deactivateShareLink(linkId: string): Promise<{
       success: boolean;
       message?: string;
     };
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to deactivate share link'
-    );
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to deactivate share link'));
   }
 }
 
@@ -167,10 +171,8 @@ export async function regenerateShareLink(
       }
     );
     return response.data as ShareableLink;
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to regenerate share link'
-    );
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to deactivate share link'));
   }
 }
 
@@ -191,10 +193,8 @@ export async function getShareLinkStats(
       `/api/sharing/${linkId}/stats?${params.toString()}`
     );
     return response.data as ShareLinkStats;
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to get share link stats'
-    );
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to deactivate share link'));
   }
 }
 
@@ -207,10 +207,8 @@ export async function getUserShareLinks(): Promise<ShareableLink[]> {
       '/api/sharing/user-links'
     );
     return response.data?.links as ShareableLink[];
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to fetch user share links'
-    );
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to deactivate share link'));
   }
 }
 
@@ -226,10 +224,8 @@ export async function bulkCreateShareLinks(
       { properties }
     );
     return response.data?.links as ShareableLink[];
-  } catch (error: any) {
-    throw new Error(
-      error.response?.data?.message || 'Failed to bulk create share links'
-    );
+  } catch (error: unknown) {
+    throw new Error(getErrorMessage(error, 'Failed to deactivate share link'));
   }
 }
 
@@ -247,7 +243,7 @@ export async function copyShareLink(
     await client.post(`/api/sharing/${shortCode}/copy`);
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Failed to copy share link:', error);
     return { success: false };
   }

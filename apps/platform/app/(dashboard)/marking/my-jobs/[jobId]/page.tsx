@@ -9,22 +9,24 @@ import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { Card } from '@newcondo/ui';
 import { AlertCircle } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Marking Job Details | Newcondo',
-  description: 'View marking job details and progress',
-};
-
 interface PageProps {
-  params: {
+  params: Promise<{
     jobId: string;
+  }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { jobId } = await params;
+  return {
+    title: `Marking Job ${jobId.slice(0, 8)} | Newcondo`,
+    description: 'View marking job details and progress',
   };
 }
 
 async function getMarkingJob(jobId: string, userId: string) {
   try {
-
-    //TODO: Remember to remove this prisma call from here and wrap it behing
-    // and express server endpoint so that the database connection is utilized properly
+    //TODO: Remember to remove this prisma call from here and wrap it behind
+    // an express server endpoint so that the database connection is utilized properly
     const job = await prisma.propertyMarkingJob.findUnique({
       where: { id: jobId },
       include: {
@@ -110,13 +112,15 @@ async function getRelatedPayment(jobId: string) {
 }
 
 export default async function MarkingJobDetailsPage({ params }: PageProps) {
+  const { jobId } = await params;
+
   const session = await getServerSession();
 
   if (!session?.user?.id) {
     redirect('/login');
   }
 
-  const job = await getMarkingJob(params.jobId, session.user.id);
+  const job = await getMarkingJob(jobId, session.user.id);
 
   if (!job) {
     return (
@@ -141,7 +145,7 @@ export default async function MarkingJobDetailsPage({ params }: PageProps) {
     );
   }
 
-  const payment = await getRelatedPayment(params.jobId);
+  const payment = await getRelatedPayment(jobId);
 
   // Determine user's role in this job
   const isRequester = job.requestedBy === session.user.id;
@@ -154,7 +158,7 @@ export default async function MarkingJobDetailsPage({ params }: PageProps) {
         items={[
           { label: 'Dashboard', href: '/dashboard' },
           { label: 'My Marking Jobs', href: '/marking/my-jobs' },
-          { label: `Job #${job.id.slice(0, 8)}`, href: '#' },
+          { label: `Job #${jobId.slice(0, 8)}`, href: '#' },
         ]}
       />
 
@@ -162,15 +166,22 @@ export default async function MarkingJobDetailsPage({ params }: PageProps) {
         job={{
           ...job,
           markingFee: job.markingFee.toNumber(),
-          assignedAgent: job.assignedAgent ? {
-            ...job.assignedAgent,
-            agentReliabilityScore: job.assignedAgent.agentReliabilityScore?.toNumber() ?? null,
-          } : null,
+          assignedAgent: job.assignedAgent
+            ? {
+                ...job.assignedAgent,
+                agentReliabilityScore:
+                  job.assignedAgent.agentReliabilityScore?.toNumber() ?? null,
+              }
+            : null,
         }}
-        payment={payment ? {
-          ...payment,
-          amount: payment.amount.toNumber(),
-        } : null}
+        payment={
+          payment
+            ? {
+                ...payment,
+                amount: payment.amount.toNumber(),
+              }
+            : null
+        }
         currentUserId={session.user.id}
         userRole={{ isRequester, isAssignedAgent, isPropertyOwner }}
       />

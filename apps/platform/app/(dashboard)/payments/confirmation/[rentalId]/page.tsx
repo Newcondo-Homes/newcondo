@@ -6,9 +6,9 @@ import { ConfirmationInterface } from '@/components/payments/ConfirmationInterfa
 import { ConfirmationSkeleton } from '@/components/payments/ConfirmationSkeleton';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     rentalId: string;
-  };
+  }>;
 }
 
 async function getRentalDetails(rentalId: string, userId: string) {
@@ -82,13 +82,15 @@ async function getRentalDetails(rentalId: string, userId: string) {
 }
 
 export default async function ConfirmationPage({ params }: PageProps) {
+  const { rentalId } = await params;
+
   const session = await getServerSession();
 
   if (!session?.user?.id) {
     notFound();
   }
 
-  const rental = await getRentalDetails(params.rentalId, session.user.id);
+  const rental = await getRentalDetails(rentalId, session.user.id);
 
   if (!rental) {
     notFound();

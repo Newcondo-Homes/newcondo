@@ -24,7 +24,7 @@ async function fetchWithAuth<T>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
-    credentials: 'include', // Include cookies for auth
+    credentials: 'include',
   });
 
   if (!response.ok) {
@@ -219,11 +219,11 @@ export async function getReferralByCode(code: string): Promise<{
   };
 }> {
   const response = await fetch(`${API_BASE_URL}/api/referrals/public/${code}`);
-  
+
   if (!response.ok) {
     throw new Error('Invalid referral code');
   }
-  
+
   return response.json();
 }
 
@@ -235,7 +235,8 @@ export async function getReferralTimeline(): Promise<Array<{
   type: 'referral_sent' | 'referral_joined' | 'referral_qualified' | 'reward_earned';
   message: string;
   createdAt: string;
-  metadata?: Record<string, any>;
+  // fix line 238: replaced `any` with `unknown` — callers can narrow as needed
+  metadata?: Record<string, unknown>;
 }>> {
   return fetchWithAuth('/api/referrals/timeline');
 }

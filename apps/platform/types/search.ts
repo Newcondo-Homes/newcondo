@@ -1,5 +1,45 @@
 // apps/platform/types/search.ts
 
+export interface SearchOptions {
+  sortBy?: SortOption;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+// Update SearchFilters to match what searchHelpers.ts expects
+export interface SearchFilters {
+  city?: string;
+  state?: string;
+  propertyType?: string[];
+  structure?: string[];
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  bedrooms?: number[];
+  bathrooms?: number[];
+  features?: string[];
+  availableFrom?: Date;
+  isAvailableNow?: boolean;
+  radius?: number;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  // Keep existing fields
+  propertyTypes?: string[];
+  location?: {
+    city?: string;
+    state?: string;
+    coordinates?: {
+      lat: number;
+      lng: number;
+      radius?: number;
+    };
+  };
+}
+
 export interface SearchParams {
   query?: string;
   city?: string;
@@ -14,26 +54,6 @@ export interface SearchParams {
   limit?: number;
   sortBy?: SortOption;
   sortOrder?: 'asc' | 'desc';
-}
-
-export interface SearchFilters {
-  priceRange: {
-    min: number;
-    max: number;
-  };
-  propertyTypes: string[];
-  bedrooms: number[];
-  bathrooms: number[];
-  features: string[];
-  location: {
-    city?: string;
-    state?: string;
-    coordinates?: {
-      lat: number;
-      lng: number;
-      radius?: number; // in kilometers
-    };
-  };
 }
 
 export interface SearchResults {

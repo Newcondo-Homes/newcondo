@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, Check } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { Button } from "@newcondo/ui/components/button";
 import {
   Tooltip,

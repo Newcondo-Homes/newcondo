@@ -265,16 +265,16 @@ export default function BoundaryTools({
   }, [mapType, mapRef]);
 
 
-  const isPointInPolygon = (point: BoundaryPoint, polygon: BoundaryPoint[]): boolean => {
-    let inside = false;
-    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-      if (((polygon[i].lat > point.lat) !== (polygon[j].lat > point.lat)) &&
-        (point.lng < (polygon[j].lng - polygon[i].lng) * (point.lat - polygon[i].lat) / (polygon[j].lat - polygon[i].lat) + polygon[i].lng)) {
-        inside = !inside;
-      }
-    }
-    return inside;
-  };
+  // const isPointInPolygon = (point: BoundaryPoint, polygon: BoundaryPoint[]): boolean => {
+  //   let inside = false;
+  //   for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+  //     if (((polygon[i].lat > point.lat) !== (polygon[j].lat > point.lat)) &&
+  //       (point.lng < (polygon[j].lng - polygon[i].lng) * (point.lat - polygon[i].lat) / (polygon[j].lat - polygon[i].lat) + polygon[i].lng)) {
+  //       inside = !inside;
+  //     }
+  //   }
+  //   return inside;
+  // };
 
   const handleDrawingModeChange = (mode: DrawingMode) => {
     if (!drawingManagerRef.current) return;

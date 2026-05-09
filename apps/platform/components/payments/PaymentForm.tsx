@@ -53,7 +53,7 @@ export function PaymentForm({
   amount,
   currency = 'NGN',
   description,
-  onSuccess,
+  // onSuccess,
   onError,
   disabled = false,
 }: PaymentFormProps) {

@@ -5,7 +5,7 @@ import PropertyDetailsLoading from "./loading";
 import PropertyManagementContent from "@/components/properties/PropertyManagementContent";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,15 +15,17 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function PropertyDetailsPage({ params }: Props) {
-  if (!params.id) {
+export default async function PropertyDetailsPage({ params }: Props) {
+  const { id } = await params;
+
+  if (!id) {
     notFound();
   }
 
   return (
     <div className="container mx-auto p-6">
       <Suspense fallback={<PropertyDetailsLoading />}>
-        <PropertyManagementContent propertyId={params.id} />
+        <PropertyManagementContent propertyId={id} />
       </Suspense>
     </div>
   );

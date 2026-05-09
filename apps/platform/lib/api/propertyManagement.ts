@@ -10,18 +10,38 @@ import type {
 } from '@/types/propertyManagement';
 
 export interface PropertyManagementFilters {
-  status?: PropertyStatus | PropertyStatus[];  // was: PropertyStatus only
-  structure?: 'SINGLE_UNIT' | 'MULTI_FAMILY'| ('SINGLE_UNIT' | 'MULTI_FAMILY')[];
+  status?: PropertyStatus | PropertyStatus[];
+  structure?: 'SINGLE_UNIT' | 'MULTI_FAMILY' | ('SINGLE_UNIT' | 'MULTI_FAMILY')[];
   isAvailable?: boolean;
   searchQuery?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
-  minPrice?: number;           // add — hook uses these
-  maxPrice?: number;           // add
-  city?: string;               // add
-  state?: string;              // add
+  minPrice?: number;
+  maxPrice?: number;
+  city?: string;
+  state?: string;
+}
+
+// fix line 103: typed boundary coordinates instead of `any`
+export interface BoundaryCoordinate {
+  lat: number;
+  lng: number;
+}
+
+// fix lines 139, 144: typed unit data payloads instead of `any`
+export interface UnitData {
+  unitNumber?: string;
+  floor?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  area?: number;
+  price?: number;
+  isAvailable?: boolean;
+  features?: string[];
+  description?: string;
+  images?: { url: string; altText?: string; isPrimary?: boolean }[];
 }
 
 // Get property management dashboard data
@@ -58,7 +78,7 @@ export const getMyProperties = async (filters?: PropertyManagementFilters): Prom
 
 // Get single property details
 export const getPropertyDetails = async (
-  propertyId: string, 
+  propertyId: string,
   options?: { basicOnly?: boolean }
 ): Promise<PropertyDetailsResponse> => {
   const params = options?.basicOnly ? '?basicOnly=true' : '';
@@ -68,7 +88,7 @@ export const getPropertyDetails = async (
 
 // Update property
 export const updateProperty = async (
-  propertyId: string, 
+  propertyId: string,
   data: Partial<import('@/types/propertyManagement').PropertyUpdatePayload>
 ): Promise<ApiResponse<import('@/types/propertyManagement').ManagedProperty>> => {
   const response = await apiClient.patch(`/properties/${propertyId}`, data);
@@ -77,7 +97,7 @@ export const updateProperty = async (
 
 // Update property status
 export const updatePropertyStatus = async (
-  propertyId: string, 
+  propertyId: string,
   status: PropertyStatus
 ): Promise<ApiResponse<import('@/types/propertyManagement').ManagedProperty>> => {
   const response = await apiClient.patch(`/properties/${propertyId}/status`, { status });
@@ -100,7 +120,7 @@ export const deleteProperty = async (propertyId: string) => {
 export const updatePropertyBoundary = async (
   propertyId: string,
   boundaryData: {
-    boundaryCoordinates: any;
+    boundaryCoordinates: BoundaryCoordinate[];  // fix line 103
     boundaryImages?: string[];
     buildingFingerprint?: string;
   }
@@ -136,12 +156,12 @@ export const getPropertyUnits = async (
   return response.data as PropertyUnitsResponse;
 };
 
-export const createUnit = async (propertyId: string, unitData: any) => {
+export const createUnit = async (propertyId: string, unitData: UnitData) => {  // fix line 139
   const response = await apiClient.post(`/properties/${propertyId}/units`, unitData);
   return response.data;
 };
 
-export const updateUnit = async (propertyId: string, unitId: string, data: any) => {
+export const updateUnit = async (propertyId: string, unitId: string, data: Partial<UnitData>) => {  // fix line 144
   const response = await apiClient.patch(`/properties/${propertyId}/units/${unitId}`, data);
   return response.data;
 };

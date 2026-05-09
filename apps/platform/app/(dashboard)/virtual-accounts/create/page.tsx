@@ -8,10 +8,10 @@ import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs';
 import { auth } from '@newcondo/auth';
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     propertyId?: string;
     returnUrl?: string;
-  };
+  }>;
 }
 
 async function getUserProperties(userId: string) {
@@ -49,7 +49,7 @@ async function checkExistingVirtualAccount(propertyId?: string) {
       const result = await response.json();
       return result.virtualAccount || null;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error checking existing virtual account:', error);
@@ -58,6 +58,8 @@ async function checkExistingVirtualAccount(propertyId?: string) {
 }
 
 export default async function CreateVirtualAccountPage({ searchParams }: PageProps) {
+  const { propertyId, returnUrl } = await searchParams;
+
   const session = await auth();
 
   if (!session?.user) {
@@ -77,10 +79,10 @@ export default async function CreateVirtualAccountPage({ searchParams }: PagePro
 
   // Get user properties for dropdown
   const propertiesData = await getUserProperties(session.user.id);
-  
+
   // Check if there's already a virtual account for the selected property
-  const existingVirtualAccount = searchParams.propertyId 
-    ? await checkExistingVirtualAccount(searchParams.propertyId)
+  const existingVirtualAccount = propertyId
+    ? await checkExistingVirtualAccount(propertyId)
     : null;
 
   // If virtual account already exists for this property, redirect to it
@@ -130,12 +132,12 @@ export default async function CreateVirtualAccountPage({ searchParams }: PagePro
             </div>
 
             <Suspense fallback={<LoadingSpinner />}>
-              <VirtualAccountCreationForm 
+              <VirtualAccountCreationForm
                 userId={session.user.id}
                 userRole={session.user.role}
                 properties={propertiesData.properties || []}
-                preSelectedPropertyId={searchParams.propertyId}
-                returnUrl={searchParams.returnUrl}
+                preSelectedPropertyId={propertyId}
+                returnUrl={returnUrl}
               />
             </Suspense>
           </div>

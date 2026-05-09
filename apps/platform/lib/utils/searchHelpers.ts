@@ -7,7 +7,7 @@ import { PropertySearchResult } from '@/types/property'
 /**
  * Debounce function to limit API calls during search
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

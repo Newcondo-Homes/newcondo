@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@newcondo/ui/components/dropdown-menu';
-import { Download, FileText, Sheet, Image } from 'lucide-react';
+import { Download, FileText, Sheet, Image as ImageIcon } from 'lucide-react';
 import { toast } from '@newcondo/ui/';
 
 
@@ -94,7 +94,7 @@ export function AnalyticsExport({
           Export as PDF
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => handleExport('png')}>
-          <Image className="h-4 w-4 mr-2" />
+          <ImageIcon className="h-4 w-4 mr-2" />
           Export as PNG
         </DropdownMenuItem>
       </DropdownMenuContent>

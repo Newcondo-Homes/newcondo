@@ -5,7 +5,7 @@ import PropertyDetailsLoading from "../loading";
 import RentalHistory from "@/components/properties/RentalHistory";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const metadata: Metadata = {
@@ -13,15 +13,17 @@ export const metadata: Metadata = {
   description: "View rental history and tenant information for your property",
 };
 
-export default function RentalHistoryPage({ params }: Props) {
-  if (!params.id) {
+export default async function RentalHistoryPage({ params }: Props) {
+  const { id } = await params;
+
+  if (!id) {
     notFound();
   }
 
   return (
     <div className="container mx-auto p-6">
       <Suspense fallback={<PropertyDetailsLoading />}>
-        <RentalHistory propertyId={params.id} />
+        <RentalHistory propertyId={id} />
       </Suspense>
     </div>
   );

@@ -13,9 +13,6 @@ import {
   Heart,
   Share2,
   CheckSquare,
-  // Building2,
-  // Shield,
-  // Zap,
   LayoutGrid,
   Pencil
 } from 'lucide-react';
@@ -25,12 +22,9 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@newcondo/ui/components/card';
 import { Separator } from '@newcondo/ui/components/separator';
 import { cn } from '@newcondo/ui/lib/utils';
-// import { PropertyGallery } from './PropertyGallery';
 import PropertyAvailabilityBadge from './PropertyAvailabilityBadge';
 import PropertyBoundaryMap from './PropertyBoundaryMap';
 import PropertyShare from './PropertyShare';
-// import { Property } from '@/types/api';
-// import type { PropertyWithDetails } from '@/types/property';
 import { usePropertyStore } from '@/store/propertyStore';
 
 interface PropertyImageShape {
@@ -39,16 +33,10 @@ interface PropertyImageShape {
   altText?: string | null;
   isPrimary: boolean;
   order: number;
-  propertyId?: string | null;  // optional — not always selected
-  createdAt?: Date | null;     // optional — not always selected
+  propertyId?: string | null;
+  createdAt?: Date | null;
 }
- 
-// ─── Fix 1 (continued): Loosened owner/agent shape ───────────────────────────
-//
-// PropertyResponse.owner comes back with `phone` from the API,
-// but PropertyWithDetails.owner doesn't declare it.
-// We also add `phone` as optional here so the contact section can use it.
- 
+
 interface PersonShape {
   id: string;
   name?: string | null;
@@ -56,7 +44,7 @@ interface PersonShape {
   phone?: string | null;
   verificationStatus?: string | null;
 }
- 
+
 interface PropertyUnitShape {
   id: string;
   unitNumber: string;
@@ -78,26 +66,34 @@ interface PropertyUnitShape {
   updatedAt?: Date | null;
 }
 
-type BoundaryCoordinates = 
-  | { coordinates: [number, number][][] }
-  | { lat?: number; lng?: number; latitude?: number; longitude?: number }[]
-  | Record<string, { lat: number; lng: number }>;
+// Prisma's Json fields come back as JsonValue — import it directly so
+// PropertyResponse is always assignable without any manual union juggling.
+import type { JsonValue } from '@newcondo/db';
+type BoundaryCoordinates = JsonValue;
 
-// A display-ready property type that accepts both the strict
-// PropertyWithDetails and the leaner API PropertyResponse.
+// Accepts both number and Prisma Decimal (which has a toNumber() method)
+type DecimalLike = number | { toNumber(): number } | null | undefined;
+
+function toNumber(value: DecimalLike): number | null | undefined {
+  if (value == null) return value;
+  if (typeof value === 'number') return value;
+  return value.toNumber();
+}
+
 interface PropertyForDisplay {
   id: string;
   title: string;
   description: string;
   structure: string;
-  price?: number | null;
+  // Accept Decimal from Prisma or plain number
+  price?: DecimalLike;
   currency: string;
   address: string;
   city: string;
   state: string;
   country: string;
-  gpsCoordinates?: string | null;       // Prisma: null, types: undefined — both accepted
-  boundaryCoordinates?: BoundaryCoordinates | null;
+  gpsCoordinates?: string | null;
+  boundaryCoordinates?: BoundaryCoordinates;
   boundaryVerified: boolean;
   boundaryMarkedBy?: string | null;
   boundaryMarkedAt?: Date | null;
@@ -128,7 +124,6 @@ interface PropertyForDisplay {
   favoriteCount: number;
   createdAt: Date;
   updatedAt: Date;
-  // Relations
   images: PropertyImageShape[];
   owner?: PersonShape | null;
   agent?: PersonShape | null;
@@ -152,12 +147,11 @@ interface CurrentUser {
 interface PropertyDetailsProps {
   property: PropertyForDisplay;
   className?: string;
-  currentUser?: CurrentUser | null;  
+  currentUser?: CurrentUser | null;
   canEdit?: boolean;
 }
 
-export default function PropertyDetails({ property, className, canEdit = false, }: PropertyDetailsProps) {
-  // const [showShareModal, setShowShareModal] = useState(false);
+export default function PropertyDetails({ property, className, canEdit = false }: PropertyDetailsProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'amenities' | 'location'>('overview');
 
   const {
@@ -170,20 +164,23 @@ export default function PropertyDetails({ property, className, canEdit = false, 
   const isFavorited = favorites.includes(property.id);
   const isInComparison = selectedForComparison.includes(property.id);
 
-  const formatPrice = (price: number, currency: string = 'NGN') => {
+  // Normalise price once — works whether it's a Prisma Decimal or plain number
+  const price = toNumber(property.price);
+
+  const formatPrice = (value: number, currency: string = 'NGN') => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
+      maximumFractionDigits: 0,
+    }).format(value);
   };
 
   const formatDate = (date: string | Date) => {
     return new Intl.DateTimeFormat('en-NG', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     }).format(new Date(date));
   };
 
@@ -200,9 +197,8 @@ export default function PropertyDetails({ property, className, canEdit = false, 
       'furnished': '🛋️',
       'air conditioning': '❄️',
       'wifi': '📶',
-      'laundry': '👕'
+      'laundry': '👕',
     };
-
     return iconMap[feature.toLowerCase()] || '✨';
   };
 
@@ -217,14 +213,12 @@ export default function PropertyDetails({ property, className, canEdit = false, 
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'amenities', label: 'Amenities' },
-    { id: 'location', label: 'Location' }
+    { id: 'location', label: 'Location' },
   ] as const;
 
   return (
     <div className={cn("space-y-6", className)}>
       {/* Property Image Gallery */}
-      {/* <PropertyGallery images={property.images} /> */}
-
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {property.images?.map((image, index) => (
           <div key={image.id} className="relative aspect-video">
@@ -247,7 +241,6 @@ export default function PropertyDetails({ property, className, canEdit = false, 
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                 {property.title}
               </h1>
-              {/* Edit button — only visible to owners/agents with edit rights */}
               {canEdit && (
                 <Button
                   variant="outline"
@@ -312,10 +305,10 @@ export default function PropertyDetails({ property, className, canEdit = false, 
         {/* Price and Actions */}
         <div className="lg:text-right">
           <div className="mb-4">
-            {property.price ? (
+            {price != null ? (
               <div>
                 <div className="text-2xl lg:text-3xl font-bold text-gray-900">
-                  {formatPrice(Number(property.price), property.currency)}
+                  {formatPrice(price, property.currency)}
                 </div>
                 <div className="text-gray-600">per month</div>
               </div>
@@ -347,7 +340,7 @@ export default function PropertyDetails({ property, className, canEdit = false, 
             <Button
               variant="outline"
               size="sm"
-              onClick={() =>{} }
+              onClick={() => {}}
               className="rounded-full p-2 text-gray-500 hover:bg-gray-100"
             >
               <Share2 className="h-4 w-4" />
@@ -358,7 +351,7 @@ export default function PropertyDetails({ property, className, canEdit = false, 
 
       <Separator />
 
-      {/* Tabs for Property Information */}
+      {/* Tabs */}
       <div className="w-full">
         <div className="flex items-center gap-4 overflow-x-auto border-b">
           {tabs.map((tab) => (
@@ -377,7 +370,6 @@ export default function PropertyDetails({ property, className, canEdit = false, 
           ))}
         </div>
 
-        {/* Tab Content */}
         <div className="py-6">
           {activeTab === 'overview' && (
             <div className="prose max-w-none text-gray-700">
@@ -412,7 +404,7 @@ export default function PropertyDetails({ property, className, canEdit = false, 
               <PropertyBoundaryMap
                 propertyId={property.id}
                 gpsCoordinates={property.gpsCoordinates as string | undefined}
-                boundaryCoordinates={property.boundaryCoordinates ?? undefined}
+                boundaryCoordinates={property.boundaryCoordinates as Parameters<typeof PropertyBoundaryMap>[0]['boundaryCoordinates']}
                 boundaryVerified={property.boundaryVerified}
                 boundaryImages={property.boundaryImages}
               />
@@ -457,12 +449,8 @@ export default function PropertyDetails({ property, className, canEdit = false, 
             </div>
           </div>
           <div className="mt-6 flex flex-col sm:flex-row gap-2">
-            <Button className="w-full sm:w-auto">
-              Send Message
-            </Button>
-            <Button variant="outline" className="w-full sm:w-auto">
-              Call Agent
-            </Button>
+            <Button className="w-full sm:w-auto">Send Message</Button>
+            <Button variant="outline" className="w-full sm:w-auto">Call Agent</Button>
           </div>
         </CardContent>
       </Card>
@@ -471,9 +459,9 @@ export default function PropertyDetails({ property, className, canEdit = false, 
       <PropertyShare
         propertyId={property.id}
         propertyTitle={property.title}
-        propertyPrice={property.price ? `₦${Number(property.price).toLocaleString()}/month` : 'Contact for price'}
+        propertyPrice={price != null ? `₦${price.toLocaleString()}/month` : 'Contact for price'}
         propertyImage={property.images?.find(img => img.isPrimary)?.url ?? property.images?.[0]?.url}
       />
     </div>
-  )
+  );
 }

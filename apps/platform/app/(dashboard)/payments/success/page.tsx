@@ -12,20 +12,20 @@ export const metadata: Metadata = {
 }
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     paymentId?: string
     amount?: string
     propertyId?: string
     transactionId?: string
-  }
+  }>
 }
 
-export default function PaymentSuccessPage({ searchParams }: PageProps) {
-  const { paymentId, amount, transactionId } = searchParams
+export default async function PaymentSuccessPage({ searchParams }: PageProps) {
+  const { paymentId, amount, transactionId } = await searchParams
 
   // Format amount for display
-  const formattedAmount = amount ? 
-    `₦${parseInt(amount).toLocaleString()}` : 
+  const formattedAmount = amount ?
+    `₦${parseInt(amount).toLocaleString()}` :
     '₦0'
 
   return (
@@ -38,7 +38,7 @@ export default function PaymentSuccessPage({ searchParams }: PageProps) {
               <CheckCircle className="h-12 w-12 text-green-600" />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-green-900">Payment Successful!</h1>
             <p className="text-lg text-muted-foreground">
@@ -65,7 +65,7 @@ export default function PaymentSuccessPage({ searchParams }: PageProps) {
                 <span className="font-mono text-sm">{transactionId}</span>
               </div>
             )}
-            
+
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Amount Paid</span>
               <span className="text-lg font-bold">{formattedAmount}</span>
@@ -130,14 +130,14 @@ export default function PaymentSuccessPage({ searchParams }: PageProps) {
               </Link>
             </Button>
           )}
-          
+
           <Button variant="outline" asChild className="flex-1">
             <Link href="/dashboard/payments">
               <Receipt className="h-4 w-4 mr-2" />
               View All Payments
             </Link>
           </Button>
-          
+
           <Button variant="outline" asChild className="flex-1">
             <Link href="/dashboard">
               <Home className="h-4 w-4 mr-2" />

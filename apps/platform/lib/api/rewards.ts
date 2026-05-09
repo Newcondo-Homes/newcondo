@@ -228,7 +228,8 @@ export async function getRewardTransactions(): Promise<Array<{
   amount: number;
   description: string;
   createdAt: string;
-  metadata?: Record<string, any>;
+  // fix line 231: replaced `any` with `unknown` — callers can narrow as needed
+  metadata?: Record<string, unknown>;
 }>> {
   return fetchWithAuth('/api/rewards/transactions');
 }

@@ -5,7 +5,7 @@ import PropertyDetailsLoading from "../loading";
 import PropertyAnalytics from "@/components/properties/PropertyAnalytics";
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const metadata: Metadata = {
@@ -13,15 +13,16 @@ export const metadata: Metadata = {
   description: "View detailed analytics and performance metrics for your property",
 };
 
-export default function PropertyAnalyticsPage({ params }: Props) {
-  if (!params.id) {
+export  default async function PropertyAnalyticsPage({ params }: Props) {
+  const { id } = await params;
+  if (!id) {
     notFound();
   }
 
   return (
     <div className="container mx-auto p-6">
       <Suspense fallback={<PropertyDetailsLoading />}>
-        <PropertyAnalytics propertyId={params.id} />
+        <PropertyAnalytics propertyId={id} />
       </Suspense>
     </div>
   );

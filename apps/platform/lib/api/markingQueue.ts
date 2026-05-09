@@ -46,6 +46,21 @@ export interface JoinQueueResponse {
   estimatedStartTime: string;
 }
 
+// fix lines 255 & 267: typed the update data field with a discriminated union
+// instead of `any` — each event type carries a different known payload shape
+export type QueueUpdateData =
+  | { newPosition: number; previousPosition: number }   // POSITION_CHANGED
+  | { timeSlotStart: string; timeSlotEnd: string }       // TURN_STARTED
+  | { completedAt: string; agentId: string }             // JOB_COMPLETED
+  | { expiredAt: string; reason?: string }               // JOB_EXPIRED
+
+export interface QueueUpdate {
+  jobId: string;
+  type: 'POSITION_CHANGED' | 'TURN_STARTED' | 'JOB_COMPLETED' | 'JOB_EXPIRED';
+  data: QueueUpdateData;
+  timestamp: string;
+}
+
 /**
  * Get available marking jobs for agent (based on proximity)
  */
@@ -249,159 +264,14 @@ export async function getQueueStatistics(): Promise<{
 export async function getQueueUpdates(
   lastUpdateTime?: string
 ): Promise<{
-  updates: Array<{
-    jobId: string;
-    type: 'POSITION_CHANGED' | 'TURN_STARTED' | 'JOB_COMPLETED' | 'JOB_EXPIRED';
-    data: any;
-    timestamp: string;
-  }>;
+  updates: QueueUpdate[];
   hasMore: boolean;
 }> {
   const response = await apiClient.get('/api/marking-queue/updates', {
     params: { since: lastUpdateTime },
   });
   return response.data as {
-    updates: Array<{
-      jobId: string;
-      type: 'POSITION_CHANGED' | 'TURN_STARTED' | 'JOB_COMPLETED' | 'JOB_EXPIRED';
-      data: any;
-      timestamp: string;
-    }>;
+    updates: QueueUpdate[];
     hasMore: boolean;
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-// // apps/platform/lib/api/markingQueue.ts
-// import { client } from './client';
-// import type {
-//   QueuePosition,
-//   QueueStatusResponse,
-//   QueueHistoryResponse,
-//   JoinQueueRequest,
-//   JoinQueueResponse
-// } from '@/types/queue';
-
-// /**
-//  * Join the marking job queue for a specific job
-//  * @param jobId - The marking job ID
-//  * @param data - Additional data for joining the queue
-//  */
-// export async function joinMarkingQueue(
-//   jobId: string,
-//   data?: JoinQueueRequest
-// ): Promise<JoinQueueResponse> {
-//   return client.post(`/marking-queue/${jobId}/join`, data);
-// }
-
-// /**
-//  * Leave the marking job queue
-//  * @param jobId - The marking job ID
-//  */
-// export async function leaveMarkingQueue(jobId: string): Promise<{
-//   success: boolean;
-//   message: string;
-// }> {
-//   return client.post(`/marking-queue/${jobId}/leave`);
-// }
-
-// /**
-//  * Get current queue position for a marking job
-//  * @param jobId - The marking job ID
-//  */
-// export async function getQueuePosition(jobId: string): Promise<QueuePosition> {
-//   return client.get(`/marking-queue/${jobId}/position`);
-// }
-
-// /**
-//  * Get queue status for a marking job (total agents, current agent, etc.)
-//  * @param jobId - The marking job ID
-//  */
-// export async function getQueueStatus(jobId: string): Promise<QueueStatusResponse> {
-//   return client.get(`/marking-queue/${jobId}/status`);
-// }
-
-// /**
-//  * Get all active queue positions for the current user
-//  */
-// export async function getMyQueuePositions(): Promise<QueuePosition[]> {
-//   return client.get('/marking-queue/my-positions');
-// }
-
-// /**
-//  * Get queue history for a marking job
-//  * @param jobId - The marking job ID
-//  */
-// export async function getQueueHistory(jobId: string): Promise<QueueHistoryResponse> {
-//   return client.get(`/marking-queue/${jobId}/history`);
-// }
-
-// /**
-//  * Check if user is currently in queue for a job
-//  * @param jobId - The marking job ID
-//  */
-// export async function isInQueue(jobId: string): Promise<{
-//   inQueue: boolean;
-//   position?: number;
-//   estimatedWaitTime?: number; // in minutes
-// }> {
-//   return client.get(`/marking-queue/${jobId}/check`);
-// }
-
-// /**
-//  * Get next agent in queue (admin/system use)
-//  * @param jobId - The marking job ID
-//  */
-// export async function getNextInQueue(jobId: string): Promise<QueuePosition | null> {
-//   return client.get(`/marking-queue/${jobId}/next`);
-// }
-
-// /**
-//  * Promote agent in queue (admin use)
-//  * @param jobId - The marking job ID
-//  * @param agentId - The agent ID to promote
-//  */
-// export async function promoteInQueue(
-//   jobId: string,
-//   agentId: string
-// ): Promise<QueueStatusResponse> {
-//   return client.post(`/marking-queue/${jobId}/promote`, { agentId });
-// }
-
-// /**
-//  * Remove agent from queue (admin use)
-//  * @param jobId - The marking job ID
-//  * @param agentId - The agent ID to remove
-//  * @param reason - Reason for removal
-//  */
-// export async function removeFromQueue(
-//   jobId: string,
-//   agentId: string,
-//   reason?: string
-// ): Promise<{
-//   success: boolean;
-//   message: string;
-// }> {
-//   return client.post(`/marking-queue/${jobId}/remove`, { agentId, reason });
-// }
-
-// /**
-//  * Get queue statistics
-//  */
-// export async function getQueueStats(): Promise<{
-//   totalActiveQueues: number;
-//   totalAgentsInQueue: number;
-//   averageWaitTime: number;
-//   completionRate: number;
-// }> {
-//   return client.get('/marking-queue/stats');
-// }
