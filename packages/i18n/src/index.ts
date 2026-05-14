@@ -6,7 +6,7 @@
  */
 
 // Configuration exports
-export { i18nConfig, initI18n, getI18n } from './config/i18n.config';
+// export { i18nConfig, initI18n, getI18n } from './config/i18n.config';
 export { NAMESPACES, type Namespace } from './config/namespaces';
 export { 
   SUPPORTED_LOCALES,
@@ -14,9 +14,11 @@ export {
   LOCALE_NAMES as localeNames, 
   DEFAULT_LOCALE, 
   LOCALE_CONFIG,
+  RTL_LOCALES as rtlLocales,
   type LocaleCode,
   type LocaleCode as Locale,
   type LocaleConfig,
+  isLocaleSupported, 
 } from './config/locales';
 
 export { 
@@ -34,10 +36,6 @@ export {
   DEFAULT_CURRENCY
 } from './utils/currency'
 
-// Hook exports
-export { useTranslation } from './hooks/useTranslation';
-export { useLocale } from './hooks/useLocale';
-export { useCurrency } from './hooks/useCurrency';
 
 // Middleware exports
 export { 
@@ -46,22 +44,6 @@ export {
   parseAcceptLanguage 
 } from './middleware/languageDetection';
 
-// Type exports for external use
-export type {
-  TranslationFunction,
-  TranslationKey,
-  InterpolationOptions
-} from './hooks/useTranslation';
-
-export type {
-  CurrencyFormatOptions,
-  NumberFormatOptions
-} from './hooks/useCurrency';
-
-export type {
-  LocaleChangeCallback,
-  LocaleContext
-} from './hooks/useLocale';
 
 // Re-export i18next types for convenience
 export type { TFunction, i18n } from 'i18next';

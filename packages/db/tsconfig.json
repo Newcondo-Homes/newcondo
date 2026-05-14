@@ -11,13 +11,15 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+     "types": ["node"],
     "outDir": "./dist",
     "rootDir": "./",
+    "ignoreDeprecations": "6.0",
     "baseUrl": "./",
     "paths": {
       "@/*": ["./*"],
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "index.ts", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

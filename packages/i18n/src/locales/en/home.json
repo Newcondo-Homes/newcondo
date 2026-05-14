@@ -1,0 +1,33 @@
+{
+  "hero": {
+    "title": "Find Your Perfect Home",
+    "subtitle": "Discover verified properties across Nigeria",
+    "searchPlaceholder": "Search by city, state or property type",
+    "searchButton": "Search Properties"
+  },
+  "sections": {
+    "featuredProperties": "Featured Properties",
+    "recentListings": "Recent Listings",
+    "howItWorks": "How It Works",
+    "whyChooseUs": "Why Choose Newcondo",
+    "testimonials": "What Our Users Say",
+    "stats": "Our Numbers"
+  },
+  "stats": {
+    "properties": "Properties Listed",
+    "users": "Happy Users",
+    "cities": "Cities Covered",
+    "agents": "Verified Agents"
+  },
+  "cta": {
+    "listProperty": "List Your Property",
+    "findHome": "Find a Home",
+    "becomeAgent": "Become an Agent",
+    "learnMore": "Learn More"
+  },
+  "howItWorks": {
+    "step1": { "title": "Search", "description": "Browse verified properties across Nigeria" },
+    "step2": { "title": "Connect", "description": "Contact owners or agents directly" },
+    "step3": { "title": "Move In", "description": "Complete your rental securely" }
+  }
+}

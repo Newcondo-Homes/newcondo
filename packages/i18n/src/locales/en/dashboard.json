@@ -1,0 +1,45 @@
+{
+  "title": "Dashboard",
+  "welcome": "Welcome back, {{name}}",
+  "overview": "Overview",
+  "quickStats": {
+    "totalProperties": "Total Properties",
+    "activeListings": "Active Listings",
+    "pendingJobs": "Pending Jobs",
+    "totalEarnings": "Total Earnings",
+    "activeRentals": "Active Rentals",
+    "pendingPayments": "Pending Payments"
+  },
+  "recentActivity": "Recent Activity",
+  "noRecentActivity": "No recent activity",
+  "quickActions": {
+    "title": "Quick Actions",
+    "addProperty": "Add Property",
+    "viewProperties": "View Properties",
+    "requestMarking": "Request Marking",
+    "viewPayments": "View Payments",
+    "manageProfile": "Manage Profile"
+  },
+  "sections": {
+    "properties": "My Properties",
+    "markingJobs": "Marking Jobs",
+    "payments": "Payments",
+    "rentals": "Rentals",
+    "notifications": "Notifications"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all as read",
+    "noNotifications": "No new notifications",
+    "viewAll": "View all notifications"
+  },
+  "charts": {
+    "revenue": "Revenue Overview",
+    "properties": "Property Performance",
+    "period": {
+      "week": "This Week",
+      "month": "This Month",
+      "year": "This Year"
+    }
+  }
+}

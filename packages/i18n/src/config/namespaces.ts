@@ -24,6 +24,9 @@ export const NAMESPACES = [
   'validation',    // Form validation messages
   'dashboard',     // Dashboard-specific text
   'search',        // Search and filter text
+  'navigation',  // add if you create this file
+  'home',        // add if you create this file
+  'dashboard',   
 ] as const;
 
 /**
@@ -50,6 +53,8 @@ export const NAMESPACE_DESCRIPTIONS: Record<Namespace, string> = {
   validation: 'Form field validation messages and input requirements',
   dashboard: 'Dashboard widgets, statistics, and dashboard-specific content',
   search: 'Search functionality, filters, sorting, and search results',
+  navigation: 'Sidebar links, navbar items, breadcrumbs, and menu labels used for app routing',
+  home: 'Landing page content, hero sections, marketing copy, and guest-facing information',
 };
 
 /**

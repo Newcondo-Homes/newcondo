@@ -1,3 +1,5 @@
+'use client'
+
 import { useTranslation as useI18NextTranslation, UseTranslationOptions } from 'react-i18next';
 import { Namespace, getNamespaceWithDependencies } from '../config/namespaces';
 import { TFunction } from 'i18next';

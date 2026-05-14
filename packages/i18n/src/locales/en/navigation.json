@@ -1,0 +1,23 @@
+{
+  "home": "Home",
+  "dashboard": "Dashboard",
+  "profile": "Profile",
+  "settings": "Settings",
+  "help": "Help",
+  "about": "About",
+  "contact": "Contact",
+  "termsOfService": "Terms of Service",
+  "privacyPolicy": "Privacy Policy",
+  "logout": "Logout",
+  "login": "Login",
+  "register": "Register",
+  "menu": "Menu",
+  "notifications": "Notifications",
+  "messages": "Messages",
+  "account": "Account",
+  "properties": "Properties",
+  "markingJobs": "Marking Jobs",
+  "payments": "Payments",
+  "referrals": "Referrals",
+  "support": "Support"
+}

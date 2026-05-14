@@ -8,8 +8,15 @@
   ],
   "pnpm": {
     "overrides": {
+      "react": "19.2.6",
+      "react-dom": "19.2.6",
       "react-hook-form": "7.58.1",
-      "@hookform/resolvers": "3.10.0"
+      "@types/react": "19.0.10",
+      "@types/react-dom": "19.0.4",
+      "@prisma/client": "7.8.0",
+      "prisma": "7.8.0",
+      "esbuild": "0.25.12",
+      "@auth/core": "0.37.2"
     }
   },
   "scripts": {
@@ -21,7 +28,7 @@
     "db:generate": "prisma generate",
     "install:platform": "pnpm install --filter=@newcondo/db && pnpm install",
     "build:backend": "pnpm run build --filter=@newcondo/db && pnpm run build --filter=@newcondo/backend-shared && pnpm run build --filter=@newcondo/auth-service && pnpm run build --filter=@newcondo/combined-backend",
-    "build:platform":"pnpm run build --filter=@newcondo/db && pnpm run build --filter=@newcondo/platform",
+    "build:platform": "pnpm run build --filter=@newcondo/db && pnpm run build --filter=@newcondo/auth && pnpm run build --filter=@newcondo/platform",
     "start:backend": "cd backend/combined-backend && pnpm run start",
     "start:platform-dev": "concurrently \"pnpm --filter combined-backend dev\" \"pnpm --filter platform dev\""
   },

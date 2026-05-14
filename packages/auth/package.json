@@ -5,8 +5,8 @@
   "main": "index.ts",
   "exports": {
     ".": "./index.ts",
+    "./middleware": "./middleware.ts",
     "./client": "./client.ts",
-    "./server": "./auth.ts",
     "./types": "./src/types.d.ts"
   },
   "scripts": {

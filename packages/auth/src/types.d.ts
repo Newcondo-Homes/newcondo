@@ -3,7 +3,7 @@ import { Role, VerificationStatus, UserType } from "@newcondo/db";
 
 declare module "next-auth" {
   interface User {
-    id: string;
+    id?: string | undefined;
     email?: string | null | undefined;
     name?: string | null;
     role: Role;
@@ -29,6 +29,8 @@ declare module "next-auth" {
       verificationStatus: VerificationStatus;
       isAvailableForMarking?: boolean;
       userType?: UserType | null;
+      isPremium: boolean;
+      agentServiceAreas: string[];
       // Add any other specific fields you need on the client-side session.
       // E.g., if you want the referralCode or companyName directly
       referralCode?: string;
@@ -39,15 +41,13 @@ declare module "next-auth" {
 
 declare module "@auth/core/jwt" {
   interface JWT {
-    accessToken?: string;
-    refreshToken?: string;
     id?: string; // The user's ID
     email?: string;
     name?: string | null;
     picture?: string | null;
-    role: Role;
+    role?: Role;
     phone?: string | null;
-    verificationStatus: VerificationStatus;
+    verificationStatus?: VerificationStatus;
     isAvailableForMarking?: boolean;
     userType?: UserType | null;
 
