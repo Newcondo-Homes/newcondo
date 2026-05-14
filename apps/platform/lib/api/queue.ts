@@ -111,15 +111,19 @@ export interface AssignedJob {
 export interface QueueItem {
   id: string;
   jobId: string;
-  status: string;
+  agentId?: string;
   position: number;
-  joinedAt: string;
+  joinedAt: Date;
   timeSlotStart?: Date;
   timeSlotEnd?: Date;
+  status: 'WAITING' | 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
+  notificationSent?: boolean;
   property: {
+    id?: string;
     title: string;
     address: string;
     city: string;
+    state?: string;
   };
 }
 
@@ -130,9 +134,11 @@ export interface ActiveJob {
   timeSlotStart?: string;
   timeSlotEnd?: string;
   property: {
+    id?: string;
     title: string;
     address: string;
     city: string;
+    state?: string;
   };
 }
 

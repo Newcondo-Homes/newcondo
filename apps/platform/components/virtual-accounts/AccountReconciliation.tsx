@@ -8,7 +8,7 @@ import { Label } from '@newcondo/ui/components/label';
 import { Separator } from '@newcondo/ui/components/separator';
 import { AlertCircle, CheckCircle2, DollarSign, FileText, Search } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils/format';
-import { useReconcileAccount } from '@/hooks/useVirtualAccounts';
+// import { useReconcileAccount } from '@/hooks/useVirtualAccounts';
 import { useVirtualAccountStatements } from '@/hooks/useVirtualAccountStatements';
 import { VirtualAccount, ReconciliationReport, VirtualAccountTransaction } from '@/types/virtualAccount';
 import { LoadingSpinner } from '@/components/shared/feedback/LoadingSpinner';
@@ -21,7 +21,7 @@ interface AccountReconciliationProps {
 
 export function AccountReconciliation({
   account,
-  onReconciliationComplete
+  // onReconciliationComplete
 }: AccountReconciliationProps) {
   const [reconciliationPeriod, setReconciliationPeriod] = useState({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
@@ -31,7 +31,7 @@ export function AccountReconciliation({
   const [reconciliationReport, setReconciliationReport] = useState<ReconciliationReport | null>(null);
   const [isReconciling, setIsReconciling] = useState(false);
 
-  const reconcileMutation = useReconcileAccount();
+  // const reconcileMutation = useReconcileAccount();
   const {
     statements,
     transactions,
@@ -51,16 +51,19 @@ export function AccountReconciliation({
 
     setIsReconciling(true);
     try {
-      const report = await reconcileMutation.mutateAsync({
-        accountId: account.id,
-        startDate: reconciliationPeriod.startDate,
-        endDate: reconciliationPeriod.endDate,
-        manualBalance: parseFloat(manualBalance),
-        statementBalance: account.balance,
-      })as ReconciliationReport;
+      //TODO: implement the reconcile feature
+      // const report = await reconcileMutation.mutateAsync({
+      //   accountId: account.id,
+      //   startDate: reconciliationPeriod.startDate,
+      //   endDate: reconciliationPeriod.endDate,
+      //   manualBalance: parseFloat(manualBalance),
+      //   statementBalance: account.balance,
+      // })as ReconciliationReport;
 
-      setReconciliationReport(report);
-      onReconciliationComplete?.(report);
+      // setReconciliationReport(report);
+      // onReconciliationComplete?.(report);
+      setReconciliationReport(null);
+
     } catch (error) {
       console.error('Reconciliation failed:', error);
     } finally {

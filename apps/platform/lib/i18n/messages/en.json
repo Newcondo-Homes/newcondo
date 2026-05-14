@@ -1,0 +1,21 @@
+{
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account",
+      "description": "Login to your Newcondo account",
+      "noAccount": "Don't have an account?",
+      "signUpLink": "Sign up",
+      "orContinueWith": "Or continue with",
+      "terms": "By signing in, you agree to our",
+      "termsLink": "Terms of Service",
+      "and": "and",
+      "privacyLink": "Privacy Policy"
+    }
+  },
+  "metadata": {
+    "siteName": "Newcondo",
+    "siteDescription": "Find your perfect property",
+    "keywords": "property, rental, Nigeria"
+  }
+}

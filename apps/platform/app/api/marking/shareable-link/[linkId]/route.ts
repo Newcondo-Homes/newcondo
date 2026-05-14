@@ -24,18 +24,15 @@ const completeMarkingSchema = z.object({
 });
 
 interface RouteContext {
-  params: {
-    linkId: string;
-  };
+  params: Promise<{ linkId: string }>;
 }
-
 /**
  * GET /api/marking/shareable-link/[linkId]
  * Validate and fetch marking job details for shareable link
  */
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { linkId } = context.params;
+    const { linkId } = await context.params;
 
     // Validate link ID format
     const validation = shareableLinkSchema.safeParse({ linkId });
@@ -51,6 +48,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     // Find the marking job by shareable link
+    //TODO: put this prisma call in the express service
     const job = await prisma.propertyMarkingJob.findFirst({
       where: {
         property: {
@@ -157,7 +155,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { linkId } = context.params;
+    const { linkId } = await context.params;
 
     // Validate link ID format
     const linkValidation = shareableLinkSchema.safeParse({ linkId });
@@ -317,7 +315,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
  */
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { linkId } = context.params;
+    const { linkId } = await context.params;
 
     // Validate link ID format
     const validation = shareableLinkSchema.safeParse({ linkId });

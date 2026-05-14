@@ -21,10 +21,13 @@ export interface ApiError {
   code?: string;
 }
 
-const API_BASE_URL =
-  process.env.NODE_ENV! as string === "production"
-    ? process.env.NEXT_PUBLIC_API_URL
-    : process.env.NEXT_PUBLIC_API_URL_DEV;
+//TODO: Note the api url for development and production
+// const API_BASE_URL =
+//   process.env.NODE_ENV! as string === "production"
+//     ? process.env.NEXT_PUBLIC_API_URL
+//     : process.env.NEXT_PUBLIC_API_URL_DEV;
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 if (!API_BASE_URL) {
   throw new Error("API URL is not configured.");

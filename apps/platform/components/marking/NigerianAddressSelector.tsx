@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui/components/card';
-import StateSelector from './StateSelector';
-import LGASelector from './LGASelector';
-import LocationSelector from './LocationSelector';
-import AddressDisplay from './AddressDisplay';
+import StateSelector from '../address/StateSelector';
+import LGASelector from '../address/LGASelector';
+import LocationSelector from '../address/LocationSelector';
+import { AddressDisplay } from '../address/AddressDisplay';
 import { Label } from '@newcondo/ui/components/label';
 
 export interface NigerianAddress {
@@ -39,7 +39,7 @@ export default function NigerianAddressSelector({
     setSelectedState(state);
     setSelectedLGA('');
     setSelectedLocation('');
-    
+
     onChange({
       state,
       lga: '',
@@ -51,7 +51,7 @@ export default function NigerianAddressSelector({
   const handleLGAChange = (lga: string) => {
     setSelectedLGA(lga);
     setSelectedLocation('');
-    
+
     onChange({
       state: selectedState,
       lga,
@@ -62,7 +62,7 @@ export default function NigerianAddressSelector({
 
   const handleLocationChange = (location: string) => {
     setSelectedLocation(location);
-    
+
     onChange({
       state: selectedState,
       lga: selectedLGA,
@@ -74,7 +74,7 @@ export default function NigerianAddressSelector({
   const handleStreetAddressChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newStreetAddress = e.target.value;
     setStreetAddress(newStreetAddress);
-    
+
     if (selectedState && selectedLGA && selectedLocation) {
       onChange({
         state: selectedState,

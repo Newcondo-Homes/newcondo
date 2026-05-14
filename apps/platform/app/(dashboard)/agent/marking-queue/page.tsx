@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueueStore } from "@/store/queueStore";
-// fix line 32: removed unused `user` — drop useAuth import entirely
 import { queueApi } from "@/lib/api/queue";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@newcondo/ui/components/card";
 import { Switch } from "@newcondo/ui/components/switch";
-// fix line 12: removed unused `Label` import
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import {
@@ -29,8 +27,8 @@ import { Progress } from "@newcondo/ui/components/progress";
 
 // Typed interface for queue items used in calculateTimeSlotProgress
 interface TimeSlottedItem {
-  timeSlotStart?: Date;
-  timeSlotEnd?: Date;
+  timeSlotStart?: string;
+  timeSlotEnd?: string;
 }
 
 export default function AgentQueueDashboardPage() {
@@ -116,8 +114,8 @@ export default function AgentQueueDashboardPage() {
     if (!item.timeSlotStart || !item.timeSlotEnd) return 0;
 
     const now = new Date();
-    const start = item.timeSlotStart;
-    const end = item.timeSlotEnd;
+    const start = new Date(item.timeSlotStart);
+    const end = new Date(item.timeSlotEnd);
     const total = differenceInMinutes(end, start);
     const elapsed = differenceInMinutes(now, start);
 

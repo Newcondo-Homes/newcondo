@@ -105,3 +105,5 @@ describe('getAlternateLanguageUrls', () => {
     expect(urls[0]).toEqual({ lang: 'en', url: 'https://example.com/dashboard' });
     expect(urls[1]).toEqual({ lang: 'fr', url: 'https://example.com/fr/dashboard' });
     expect(urls[2]).toEqual({ lang: 'pcm', url: 'https://example.com/pcm/dashboard' });
+  });
+})

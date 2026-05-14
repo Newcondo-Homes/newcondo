@@ -1,6 +1,5 @@
 import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
-// import { getServerSession } from '@newcondo/auth';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@newcondo/ui';
 import { Button } from '@newcondo/ui';
 import { Badge } from '@newcondo/ui';
@@ -9,10 +8,11 @@ import { DateDisplay } from '@/components/i18n/DateDisplay';
 import { MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'marking' });
 
   return {
@@ -22,12 +22,13 @@ export async function generateMetadata({
 }
 
 export default async function MarkingPage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
   // const session = await getServerSession();
   // TODO: should all the pages be checked for a session inside a component that requires a logged in user?
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'marking' });
 
   // Mock data - replace with actual API calls
@@ -174,7 +175,7 @@ export default async function MarkingPage({
 
 function StatusBadge({ status }: { status: string; locale: string }) {
   const t = useTranslations('marking');
-  
+
   const statusConfig = {
     QUEUED: { label: t('status.queued'), variant: 'secondary' as const },
     ASSIGNED: { label: t('status.assigned'), variant: 'default' as const },

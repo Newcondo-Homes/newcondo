@@ -1,7 +1,7 @@
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import LoginForm  from '@/components/auth/LoginForm';
+import { LoginContent } from './_components/LoginContent'
 
 export async function generateMetadata({
   params,
@@ -76,7 +76,3 @@ export default async function LoginPage({
   );
 }
 
-function LoginContent({ keyPrefix, className }: { keyPrefix: string; className?: string }) {
-  const t = useTranslations('auth');
-  return <span className={className}>{t(keyPrefix)}</span>;
-}

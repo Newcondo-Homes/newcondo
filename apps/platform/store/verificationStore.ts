@@ -2,7 +2,11 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { VerificationDocument, VerificationProgress, FileUploadState } from '../types/verification';
-import { DocumentType, DocumentStatus, VerificationStatus } from '@newcondo/db';
+import { 
+  DocumentType, 
+  // DocumentStatus, 
+  // VerificationStatus
+ } from '@newcondo/db';
 import { verificationAPI } from '../lib/api/verification';
 
 interface VerificationStore {

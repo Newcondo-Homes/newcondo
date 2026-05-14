@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { MapPin, Bed, Bath, Square, Share2, Heart } from 'lucide-react';
 
 interface SharePageProps {
-  params: {
+  params: Promise<{
     shareCode: string;
-  };
+  }>;
 }
 
 // ✅ Typed interfaces replacing any
@@ -39,6 +39,7 @@ interface SharedProperty {
 }
 
 async function getSharedProperty(shareCode: string): Promise<SharedProperty | null> {
+
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/properties/share/${shareCode}`,
@@ -55,7 +56,9 @@ async function getSharedProperty(shareCode: string): Promise<SharedProperty | nu
 }
 
 export default async function SharedPropertyPage({ params }: SharePageProps) {
-  const property = await getSharedProperty(params.shareCode);
+  
+  const { shareCode } = await params
+  const property = await getSharedProperty(shareCode);
 
   if (!property) {
     notFound();
@@ -190,11 +193,10 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
                 <div>
                   <dt className="text-sm text-gray-500">Availability</dt>
                   <dd className="mt-1">
-                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-                      property.isAvailable
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${property.isAvailable
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}>
                       {property.isAvailable ? 'Available' : 'Not Available'}
                     </span>
                   </dd>

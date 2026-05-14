@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@newcondo/ui/";
 import { SessionProvider } from "@newcondo/auth/client";
+import { Providers } from '@/components/providers';
 import "./globals.css";
 
+//TODO: do prisma migrate in @newcondo/db to effect new changes in schema
 // TODO: Make sure to clean up expired OTP - code is in backend ( authservice - otpService.ts)
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +32,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider>{children}</SessionProvider>
+        <SessionProvider>
+          <Providers>
+            {children}
+          </Providers>
+        </SessionProvider>
         <Toaster />
       </body>
     </html>

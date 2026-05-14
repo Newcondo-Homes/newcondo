@@ -9,9 +9,9 @@ import { CheckCircle, Gift, TrendingUp, Users, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface Props {
-  params: {
+  params: Promise<{
     code: string;
-  };
+  }>;
 }
 
 // This would fetch referral data server-side
@@ -33,7 +33,9 @@ async function getReferralData(code: string) {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const data = await getReferralData(params.code);
+  const { code } = await params;
+
+  const data = await getReferralData(code);
 
   if (!data?.valid) {
     return {
@@ -48,7 +50,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ReferralLandingPage({ params }: Props) {
-  const data = await getReferralData(params.code);
+  const { code } = await params;
+
+  const data = await getReferralData(code);
 
   // Invalid code
   if (!data?.valid) {
@@ -174,7 +178,7 @@ export default async function ReferralLandingPage({ params }: Props) {
               <p className="mb-6 opacity-90">
                 Join NewCondo today and claim your welcome reward
               </p>
-              <Link href={`/register?ref=${params.code}`}>
+              <Link href={`/register?ref=${code}`}>
                 <Button size="lg" variant="secondary" className="gap-2">
                   Create Your Account
                   <ArrowRight className="h-5 w-5" />
@@ -182,7 +186,7 @@ export default async function ReferralLandingPage({ params }: Props) {
               </Link>
               <p className="text-sm mt-4 opacity-75">
                 Already have an account?{' '}
-                <Link href={`/login?ref=${params.code}`} className="underline font-medium">
+                <Link href={`/login?ref=${code}`} className="underline font-medium">
                   Sign in
                 </Link>
               </p>

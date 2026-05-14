@@ -15,6 +15,10 @@ export interface CreateMarkingJobPayload {
 }
 
 export interface MarkingJobResponse extends PropertyMarkingJob {
+    status: MarkingJobStatus
+    completedAt: Date | null  
+    completionImages: string[]
+    completionNotes: string | null
     property: {
         id: string
         title: string

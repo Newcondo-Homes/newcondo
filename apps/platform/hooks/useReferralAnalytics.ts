@@ -3,7 +3,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import * as analyticsApi from '@/lib/api/referralAnalytics';
-import { ReferralAnalytics } from '@/types/referral';
+// import { ReferralAnalytics } from '@/types/referral';
 
 export function useAnalyticsOverview(params: {
   period: 'day' | 'week' | 'month' | 'year';

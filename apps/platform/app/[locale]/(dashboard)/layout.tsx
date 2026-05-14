@@ -18,11 +18,12 @@ interface SidebarUser {
 
 export default async function DashboardLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params
   const session = await getServerSession();
   const user = session?.user
 

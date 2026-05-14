@@ -9,9 +9,9 @@ import MarkingInstructions from '@/components/marking/MarkingInstructions';
 import { MarkPropertySelf } from '@/components/marking/MarkPropertySelf';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     linkId: string;
-  };
+  }>;
 }
 
 // generateMetadata doesn't need params — static metadata is sufficient here
@@ -22,8 +22,8 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function MarkPropertyPublicPage({ params }: PageProps) {
-  const { linkId } = params;
+export default async function MarkPropertyPublicPage({ params }: PageProps) {
+  const { linkId } = await params;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">

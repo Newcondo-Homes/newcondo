@@ -6,7 +6,6 @@ import Image from "next/image";
 import { queueApi } from "@/lib/api/queue";
 import { Badge } from "@newcondo/ui/components/badge";
 import { Button } from "@newcondo/ui/components/button";
-// fix lines 8: removed unused CardDescription, CardHeader, CardTitle
 import { Card, CardContent } from "@newcondo/ui/components/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/components/tabs";
 import { Alert, AlertDescription } from "@newcondo/ui/components/alert";
@@ -42,13 +41,12 @@ interface AvailableJob {
   createdAt: Date;
 }
 
-// fix line 53: replaced `any[]` with a typed interface
 interface AssignedJob {
   id: string;
   status: string;
   markingFee: number;
-  assignedAt: Date;
-  timeSlotExpiry?: Date;
+  assignedAt: string;
+  timeSlotExpiry?: string;
   property: {
     title: string;
     address: string;

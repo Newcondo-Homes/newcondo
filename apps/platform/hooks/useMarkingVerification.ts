@@ -1,7 +1,7 @@
 // apps/platform/hooks/useMarkingVerification.ts
 'use client'
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface MarkingVerificationData {

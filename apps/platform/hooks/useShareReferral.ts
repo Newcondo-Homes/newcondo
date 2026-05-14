@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import * as referralApi from '@/lib/api/referrals';
+// import * as referralApi from '@/lib/api/referrals';
 import * as trackingApi from '@/lib/api/referralTracking';
 import {
   getShareMessage,

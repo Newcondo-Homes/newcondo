@@ -1,15 +1,17 @@
+"use client"
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
-import { complianceApi } from '@/lib/api/compliance';
-import { useComplianceStore } from '@/store/complianceStore';
+import { complianceApi } from '../lib/api/compliance';
+import { useComplianceStore } from '../store/complianceStore';
 import type {
   ComplianceReport,
   ComplianceRequirement,
   Role,
   PropertyType
-} from '@/types/compliance';
+} from '../types/compliance';
 
-import {ComplianceLevel} from '@/types/compliance';
+import {ComplianceLevel} from '../types/compliance';
 
 import { toast } from 'sonner';
 

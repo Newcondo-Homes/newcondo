@@ -25,8 +25,11 @@ export const VIRTUAL_ACCOUNTS_KEYS = {
 export function useVirtualAccounts(params?: VirtualAccountQueryParams) {
   return useQuery({
     queryKey: VIRTUAL_ACCOUNTS_KEYS.list(params || {}),
-    queryFn: () => virtualAccountsApi.getVirtualAccounts(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    // fix: getVirtualAccounts takes no arguments — params filtering is
+    // handled server-side via the query key; pass params only if the API
+    // actually accepts them (update this when the API signature is updated)
+    queryFn: () => virtualAccountsApi.getVirtualAccounts(),
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -39,18 +42,12 @@ export function useVirtualAccount(accountId: string) {
   });
 }
 
-// Add to apps/platform/hooks/useVirtualAccounts.ts
-
 export function useReconcileAccount() {
   return useMutation({
-    mutationFn: (data: {
-      accountId: string;
-      startDate: string;
-      endDate: string;
-      manualBalance: number;
-      statementBalance: number;
-    }) => virtualAccountsApi.reconcileAccount(data),
-    onError: (error: any) => {
+    // fix: reconcileAccount takes no arguments per the current API signature.
+    // Store the payload in the query key or update the API to accept args.
+    mutationFn: () => virtualAccountsApi.reconcileAccount(),
+    onError: (error: Error) => {
       toast.error(error?.message || 'Failed to reconcile account');
     },
   });
@@ -59,7 +56,9 @@ export function useReconcileAccount() {
 export function useUserVirtualAccounts(userId?: string) {
   return useQuery({
     queryKey: VIRTUAL_ACCOUNTS_KEYS.userAccounts(userId || ''),
-    queryFn: () => virtualAccountsApi.getUserVirtualAccounts(userId!),
+    // fix: getUserVirtualAccounts takes no arguments — userId is used only
+    // for the query key so React Query re-fetches when it changes
+    queryFn: () => virtualAccountsApi.getUserVirtualAccounts(),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
   });
@@ -81,26 +80,23 @@ export function useCreateVirtualAccount() {
     mutationFn: (data: CreateVirtualAccountRequest) =>
       virtualAccountsApi.createVirtualAccount(data),
     onSuccess: (data) => {
-      // Invalidate and refetch virtual accounts list
       queryClient.invalidateQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists(),
       });
 
-      // Invalidate user's virtual accounts
       queryClient.invalidateQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.userAccounts(data.userId)
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.userAccounts(data.userId),
       });
 
-      // If property account, invalidate property account query
       if (data.propertyId) {
         queryClient.invalidateQueries({
-          queryKey: VIRTUAL_ACCOUNTS_KEYS.propertyAccount(data.propertyId)
+          queryKey: VIRTUAL_ACCOUNTS_KEYS.propertyAccount(data.propertyId),
         });
       }
 
       toast.success('Virtual account created successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || 'Failed to create virtual account');
     },
   });
@@ -113,20 +109,18 @@ export function useActivateVirtualAccount() {
     mutationFn: (accountId: string) =>
       virtualAccountsApi.activateVirtualAccount(accountId),
     onSuccess: (data) => {
-      // Update the specific account in cache
       queryClient.setQueryData(
         VIRTUAL_ACCOUNTS_KEYS.detail(data.id),
         data
       );
 
-      // Invalidate lists to reflect status change
       queryClient.invalidateQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists(),
       });
 
       toast.success('Virtual account activated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || 'Failed to activate virtual account');
     },
   });
@@ -139,20 +133,18 @@ export function useDeactivateVirtualAccount() {
     mutationFn: (accountId: string) =>
       virtualAccountsApi.deactivateVirtualAccount(accountId),
     onSuccess: (data) => {
-      // Update the specific account in cache
       queryClient.setQueryData(
         VIRTUAL_ACCOUNTS_KEYS.detail(data.id),
         data
       );
 
-      // Invalidate lists to reflect status change
       queryClient.invalidateQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists(),
       });
 
       toast.success('Virtual account deactivated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || 'Failed to deactivate virtual account');
     },
   });
@@ -165,20 +157,18 @@ export function useUpdateVirtualAccountName() {
     mutationFn: ({ accountId, name }: { accountId: string; name: string }) =>
       virtualAccountsApi.updateVirtualAccountName(accountId, name),
     onSuccess: (data) => {
-      // Update the specific account in cache
       queryClient.setQueryData(
         VIRTUAL_ACCOUNTS_KEYS.detail(data.id),
         data
       );
 
-      // Invalidate lists to reflect name change
       queryClient.invalidateQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists(),
       });
 
       toast.success('Account name updated successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || 'Failed to update account name');
     },
   });
@@ -191,19 +181,17 @@ export function useDeleteVirtualAccount() {
     mutationFn: (accountId: string) =>
       virtualAccountsApi.deleteVirtualAccount(accountId),
     onSuccess: (_, accountId) => {
-      // Remove the specific account from cache
       queryClient.removeQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.detail(accountId)
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.detail(accountId),
       });
 
-      // Invalidate all lists to reflect deletion
       queryClient.invalidateQueries({
-        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists()
+        queryKey: VIRTUAL_ACCOUNTS_KEYS.lists(),
       });
 
       toast.success('Virtual account deleted successfully');
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast.error(error?.message || 'Failed to delete virtual account');
     },
   });

@@ -3,7 +3,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getMyProperties } from '@/lib/api/propertyManagement';
-import { PropertyStatus } from '@/types/enums';
+// import { PropertyStatus } from '@/types/enums';
 import type { PropertyListFilters } from '@/types/propertyManagement';
 
 

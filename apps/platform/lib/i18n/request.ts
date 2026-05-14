@@ -1,10 +1,28 @@
 import { cookies, headers } from 'next/headers';
 import { fallbackLng, languages } from './translations';
+import { getRequestConfig } from 'next-intl/server';
+import { NAMESPACES } from '@newcondo/i18n';
+
 
 /**
  * Language detection for Next.js 15 App Router
  * Extracts language from cookies, headers, or URL
  */
+
+export default getRequestConfig(async ({ requestLocale }) => {
+  const locale = (await requestLocale) ?? 'en';
+
+  const messages = Object.fromEntries(
+    await Promise.all(
+      NAMESPACES.map(async (namespace) => {
+        const module = await import(`@newcondo/i18n/locales/${locale}/${namespace}.json`);
+        return [namespace, module.default];
+      })
+    )
+  );
+
+  return { locale, messages };
+});
 
 /**
  * Get language from cookie

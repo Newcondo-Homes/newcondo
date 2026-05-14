@@ -17,7 +17,7 @@ export interface UnitData {
   floor?: number;
   bedrooms?: number;
   bathrooms?: number;
-  area?: string;
+  area?: number;
   features?: string[];
   price: number;
   currency?: string;

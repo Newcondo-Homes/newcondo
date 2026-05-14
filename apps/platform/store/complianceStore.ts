@@ -20,88 +20,59 @@ import {
   ComplianceLevel
 } from '../types/compliance';
 
-// Type-only imports
 import type {
-  ComplianceStatus,
   ComplianceRequirement,
   ComplianceReport,
   ComplianceIssue,
   ComplianceCheck,
   TermsAcceptance,
   PrivacyConsent,
-  CompliancePriority,
   ComplianceRoleStats,
-  ComplianceReportData,
 } from '../types/compliance';
 
-
-// Specific types for the store's internal state
 type OverallStatus = 'COMPLIANT' | 'NON_COMPLIANT' | 'PENDING' | 'PARTIAL';
 type ZustandComplianceLevel = 'BASIC' | 'STANDARD' | 'ADVANCED' | 'PREMIUM';
 
-
 interface ComplianceState {
-  // Compliance checks
   complianceChecks: ComplianceCheck[];
   requirements: ComplianceRequirement[];
   overallStatus: OverallStatus;
   complianceLevel: ZustandComplianceLevel;
-
-  // Terms and Privacy
   termsAcceptance: TermsAcceptance[];
   privacyConsents: PrivacyConsent[];
-
-  // Issues and Reports
   issues: ComplianceIssue[];
   reports: ComplianceReport[];
   lastCheck: string | null;
-
-  // UI state
   isChecking: boolean;
   isGeneratingReport: boolean;
   showComplianceModal: boolean;
   selectedRequirement: ComplianceRequirement | null;
-
-  // Error state
   error: string | null;
 }
 
 interface ComplianceActions {
-  // Compliance checks
   setComplianceChecks: (checks: ComplianceCheck[]) => void;
   updateComplianceCheck: (id: string, updates: Partial<ComplianceCheck>) => void;
   addComplianceCheck: (check: ComplianceCheck) => void;
-
-  // Requirements
   setRequirements: (requirements: ComplianceRequirement[]) => void;
   updateRequirement: (id: string, updates: Partial<ComplianceRequirement>) => void;
-
-  // Status management
   setOverallStatus: (status: OverallStatus) => void;
   setComplianceLevel: (level: ZustandComplianceLevel) => void;
   calculateOverallStatus: () => void;
-
-  // Terms and Privacy
   setTermsAcceptance: (acceptance: TermsAcceptance[]) => void;
   addTermsAcceptance: (acceptance: TermsAcceptance) => void;
   setPrivacyConsents: (consents: PrivacyConsent[]) => void;
   addPrivacyConsent: (consent: PrivacyConsent) => void;
-
-  // Issues and Reports
   setIssues: (issues: ComplianceIssue[]) => void;
   addIssue: (issue: ComplianceIssue) => void;
   resolveIssue: (id: string) => void;
   setReports: (reports: ComplianceReport[]) => void;
   addReport: (report: ComplianceReport) => void;
-
-  // UI state
   setChecking: (checking: boolean) => void;
   setGeneratingReport: (generating: boolean) => void;
   setShowComplianceModal: (show: boolean) => void;
   setSelectedRequirement: (requirement: ComplianceRequirement | null) => void;
   setError: (error: string | null) => void;
-
-  // Utilities
   getRequirementsByStatus: (status: ComplianceRequirementStatus) => ComplianceRequirement[];
   getPendingRequirements: () => ComplianceRequirement[];
   getFailedRequirements: () => ComplianceRequirement[];
@@ -110,14 +81,11 @@ interface ComplianceActions {
   getComplianceScore: () => number;
   hasValidTermsAcceptance: (version: string) => boolean;
   hasValidPrivacyConsent: (version: string) => boolean;
-
-  // Actions
   performComplianceCheck: () => void;
   generateComplianceReport: () => void;
-  acceptTerms: (version: string, signature?: any) => void;
-  grantPrivacyConsent: (version: string, consentData: any) => void;
-
-  // Reset
+  // signature typed as unknown — callers can pass anything, stored object is always typed
+  acceptTerms: (version: string, signature?: unknown) => void;
+  grantPrivacyConsent: (version: string, consentData: Record<string, unknown>) => void;
   reset: () => void;
   resetError: () => void;
 }
@@ -147,7 +115,6 @@ export const useComplianceStore = create<ComplianceStore>()(
       immer((set, get) => ({
         ...initialState,
 
-        // Compliance checks
         setComplianceChecks: (checks) => set((state) => {
           state.complianceChecks = checks;
           state.lastCheck = new Date().toISOString();
@@ -165,7 +132,6 @@ export const useComplianceStore = create<ComplianceStore>()(
           state.complianceChecks.push(check);
         }),
 
-        // Requirements
         setRequirements: (requirements) => set((state) => {
           state.requirements = requirements;
         }),
@@ -178,7 +144,6 @@ export const useComplianceStore = create<ComplianceStore>()(
           }
         }),
 
-        // Status management
         setOverallStatus: (status) => set((state) => {
           state.overallStatus = status;
         }),
@@ -217,7 +182,6 @@ export const useComplianceStore = create<ComplianceStore>()(
             state.overallStatus = 'PENDING';
           }
 
-          // Determine compliance level
           const score = get().getComplianceScore();
           if (score >= 95) {
             state.complianceLevel = 'PREMIUM';
@@ -230,7 +194,6 @@ export const useComplianceStore = create<ComplianceStore>()(
           }
         }),
 
-        // Terms and Privacy
         setTermsAcceptance: (acceptance) => set((state) => {
           state.termsAcceptance = acceptance;
         }),
@@ -247,7 +210,6 @@ export const useComplianceStore = create<ComplianceStore>()(
           state.privacyConsents.push(consent);
         }),
 
-        // Issues and Reports
         setIssues: (issues) => set((state) => {
           state.issues = issues;
         }),
@@ -271,7 +233,6 @@ export const useComplianceStore = create<ComplianceStore>()(
           state.reports.push(report);
         }),
 
-        // UI state
         setChecking: (checking) => set((state) => {
           state.isChecking = checking;
         }),
@@ -292,7 +253,6 @@ export const useComplianceStore = create<ComplianceStore>()(
           state.error = error;
         }),
 
-        // Utilities
         getRequirementsByStatus: (status) => {
           return get().requirements.filter(req => req.status === status);
         },
@@ -313,46 +273,42 @@ export const useComplianceStore = create<ComplianceStore>()(
         },
 
         isCompliant: () => {
-          const { overallStatus } = get();
-          return overallStatus === 'COMPLIANT';
+          return get().overallStatus === 'COMPLIANT';
         },
 
         getComplianceScore: () => {
-          const requirements: ComplianceRequirement[] = get().requirements;;
+          const requirements: ComplianceRequirement[] = get().requirements;
           if (requirements.length === 0) return 0;
 
           const totalWeight = requirements.reduce((sum: number, req: ComplianceRequirement) => {
-            const priorityWeight = req.isCritical ? 3 : (req.weight || 1);
-            return sum + priorityWeight;
+            return sum + (req.isCritical ? 3 : (req.weight || 1));
           }, 0);
 
           const passedWeight = requirements
             .filter((req: ComplianceRequirement) => req.status === 'COMPLETED')
             .reduce((sum: number, req: ComplianceRequirement) => {
-              const priorityWeight = req.isCritical ? 3 : (req.weight || 1);
-              return sum + priorityWeight;
+              return sum + (req.isCritical ? 3 : (req.weight || 1));
             }, 0);
 
           return (passedWeight / totalWeight) * 100;
         },
 
         hasValidTermsAcceptance: (version) => {
-          const latestAcceptance = get().termsAcceptance.sort((a, b) => new Date(b.acceptedAt).getTime() - new Date(a.acceptedAt).getTime())[0];
-          return latestAcceptance?.version === version;
+          const latest = get().termsAcceptance
+            .sort((a, b) => new Date(b.acceptedAt).getTime() - new Date(a.acceptedAt).getTime())[0];
+          return latest?.version === version;
         },
 
         hasValidPrivacyConsent: (version) => {
-          const latestConsent = get().privacyConsents.sort((a, b) => new Date(b.grantedAt!).getTime() - new Date(a.grantedAt!).getTime())[0];
-          return latestConsent?.version === version;
+          const latest = get().privacyConsents
+            .sort((a, b) => new Date(b.grantedAt!).getTime() - new Date(a.grantedAt!).getTime())[0];
+          return latest?.version === version;
         },
 
-        // Actions (placeholder implementations)
         performComplianceCheck: () => {
           set({ isChecking: true });
-          // Simulating an async check
           setTimeout(() => {
             set((state) => {
-              // Simulating check results
               state.complianceChecks = [
                 {
                   id: '1',
@@ -388,7 +344,7 @@ export const useComplianceStore = create<ComplianceStore>()(
                 averageScore: 0,
                 commonIssues: [],
               });
-              // Simulating report generation
+
               const newReport: ComplianceReport = {
                 id: `report-${Date.now()}`,
                 reportType: ComplianceReportType.OVERALL_COMPLIANCE,
@@ -410,7 +366,7 @@ export const useComplianceStore = create<ComplianceStore>()(
                     expiredDocuments: 10,
                     pendingDocuments: 40,
                     rejectedDocuments: 0,
-                    averageProcessingDays: 2.5
+                    averageProcessingDays: 2.5,
                   },
                   complianceByRole: {
                     [RoleValues.OWNER]: roleStats(RoleValues.OWNER),
@@ -419,15 +375,15 @@ export const useComplianceStore = create<ComplianceStore>()(
                     [RoleValues.ADMIN]: roleStats(RoleValues.ADMIN),
                   },
                   trendData: [],
-                  topIssues: []
+                  topIssues: [],
                 },
                 summary: {
                   overallComplianceRate: 75,
                   criticalIssues: 5,
                   warnings: 10,
                   improvements: ['Improved document verification process'],
-                  recommendations: ['Educate users on compliance requirements']
-                }
+                  recommendations: ['Educate users on compliance requirements'],
+                },
               };
               state.reports.push(newReport);
               state.isGeneratingReport = false;
@@ -435,16 +391,18 @@ export const useComplianceStore = create<ComplianceStore>()(
           }, 2000);
         },
 
-        acceptTerms: (version, signature) => {
+        // ── Fixed: push objects that exactly match TermsAcceptance / PrivacyConsent ──
+
+        acceptTerms: (version, _signature) => {
           set((state) => {
             const acceptance: TermsAcceptance = {
               id: `terms-${Date.now()}`,
-              userId: '',           // pass userId in or get from auth store
+              userId: '',           // pass userId in or resolve from auth store
               version,
-              acceptedAt: new Date(),
+              acceptedAt: new Date(),   // Date, not string
               createdAt: new Date(),
             };
-            state.termsAcceptance.push({ version, acceptedAt: new Date().toISOString(), signature });
+            state.termsAcceptance.push(acceptance);
           });
         },
 
@@ -452,24 +410,23 @@ export const useComplianceStore = create<ComplianceStore>()(
           set((state) => {
             const consent: PrivacyConsent = {
               id: `consent-${Date.now()}`,
-              userId: '',           // pass userId in or get from auth store
-              consentType: consentData?.consentType || 'general',
+              userId: '',           // pass userId in or resolve from auth store
+              consentType: (consentData?.consentType as string) || 'general',
               version,
               isGranted: true,
-              grantedAt: new Date(),
+              grantedAt: new Date(),    // Date, not string; field is grantedAt not consentedAt
               createdAt: new Date(),
               updatedAt: new Date(),
             };
-            state.privacyConsents.push({ version, consentedAt: new Date().toISOString(), consentData });
+            state.privacyConsents.push(consent);
           });
         },
 
-        // Reset
         reset: () => set(initialState),
         resetError: () => set((state) => { state.error = null; }),
       })),
       {
-        name: 'compliance-store', // name of the item in storage
+        name: 'compliance-store',
       }
     )
   )

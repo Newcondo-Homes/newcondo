@@ -17,14 +17,14 @@ interface MarkingJob {
   createdAt: string;
 }
 
-interface MarkingJobDetails {
-  jobId: string;
-  contactPersonName: string;
-  contactPersonPhone: string;
-  accessInstructions?: string;
-  completionImages: string[];
-  boundaryData?: any;
-}
+// interface MarkingJobDetails {
+//   jobId: string;
+//   contactPersonName: string;
+//   contactPersonPhone: string;
+//   accessInstructions?: string;
+//   completionImages: string[];
+//   boundaryData?: any;
+// }
 
 interface MarkingServiceState {
   // Marking jobs

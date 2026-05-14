@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import { Inter } from 'next/font/google';
 import { locales, rtlLocales } from '@newcondo/i18n';
 import { Providers } from '@/components/providers';
-import { Toaster } from '@newcondo/ui';
 import '@/app/globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -14,10 +13,12 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params
+
   const t = await getTranslations({ locale, namespace: 'metadata' });
 
   return {
@@ -62,11 +63,12 @@ export async function generateMetadata({
 
 export default async function LocaleLayout({
   children,
-  params: { locale },
+  params,
 }: {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   // Validate locale
   if (!locales.includes(locale as (typeof locales)[number])) {
     notFound();
@@ -84,7 +86,6 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Providers>
             {children}
-            <Toaster />
           </Providers>
         </NextIntlClientProvider>
       </body>

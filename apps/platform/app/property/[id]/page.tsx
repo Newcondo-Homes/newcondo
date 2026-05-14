@@ -10,17 +10,18 @@ import { SimilarProperties } from '@/components/properties/SimilarProperties'
 import { Breadcrumbs } from '@/components/shared/navigation/Breadcrumbs'
 
 interface PropertyPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
-  searchParams: {
+  }>
+  searchParams: Promise<{
     unit?: string // For multi-family properties
-  }
+  }>
 }
 
 export async function generateMetadata({ params }: PropertyPageProps): Promise<Metadata> {
+  const { id } = await params
   try {
-    const property = await getProperty(params.id)
+    const property = await getProperty(id)
     
     if (!property) {
       return {
@@ -54,8 +55,11 @@ export async function generateMetadata({ params }: PropertyPageProps): Promise<M
 export default async function PropertyPage({ params, searchParams }: PropertyPageProps) {
   let property
 
+  const { id } = await params;
+  const { unit } = await searchParams;
+  
   try {
-    property = await getProperty(params.id)
+    property = await getProperty(id)
   } catch (error) {
     console.error('Error fetching property:', error)
     notFound()
@@ -180,7 +184,7 @@ export default async function PropertyPage({ params, searchParams }: PropertyPag
                 }>
                   <PropertyActions 
                     property={property}
-                    selectedUnit={searchParams.unit}
+                    selectedUnit={unit}
                   />
                 </Suspense>
               </div>

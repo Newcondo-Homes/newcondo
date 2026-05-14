@@ -14,20 +14,7 @@ import {
 } from 'lucide-react';
 import { DocumentStatus } from '@/types/enums';
 import { formatDate } from '@/lib/utils/format';
-
-// ✅ Typed interface replacing any[]
-interface VerificationDocument {
-  id: string;
-  documentType: string;
-  documentSide?: string;
-  documentNumber?: string;
-  fileName?: string;
-  fileUrl?: string;
-  status: DocumentStatus;
-  verificationNotes?: string;
-  createdAt: string;
-  expiresAt?: string;
-}
+import type { VerificationDocument } from "@/types/verification";
 
 interface VerificationDocumentsProps {
   documents: VerificationDocument[];

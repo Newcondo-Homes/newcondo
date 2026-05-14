@@ -7,7 +7,7 @@ import { toast } from '@newcondo/ui';
 import { paymentsApi } from '@/lib/api/payments';
 // import { useAuthStore } from '@/store/authStore';
 import type {
-  Payment,
+  // Payment,
   PaymentCreateRequest,
   PaymentHistoryParams,
   PaymentRefundRequest,

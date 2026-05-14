@@ -214,7 +214,7 @@ export function useLockTimer(options: LockTimerOptions): LockTimerReturn {
   const extendLock = useCallback(
     async (additionalSeconds?: number) => {
       try {
-        await extendLockMutation.mutateAsync(additionalSeconds);
+        await extendLockMutation.mutateAsync(additionalSeconds as number);
         return true;
       } catch (error) {
         console.error('Failed to extend lock:', error);

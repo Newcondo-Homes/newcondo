@@ -3,7 +3,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getRentalMetrics, RentalMetrics } from '@/lib/api/rentalHistory';
-import type { RentalMetricsFilters as ApiRentalMetricsFilters } from '@/lib/api/rentalHistory';
+// import type { RentalMetricsFilters as ApiRentalMetricsFilters } from '@/lib/api/rentalHistory';
 
 export interface RentalMetricsFilters {
   propertyId?: string;

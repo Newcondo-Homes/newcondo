@@ -8,10 +8,12 @@ import { Home, Wallet, FileText, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'dashboard' });
 
   return {
@@ -21,10 +23,11 @@ export async function generateMetadata({
 }
 
 export default async function DashboardPage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params
   const session = await getServerSession();
   const t = await getTranslations({ locale, namespace: 'dashboard' });
 

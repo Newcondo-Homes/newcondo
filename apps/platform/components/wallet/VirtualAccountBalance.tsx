@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newc
 import { Skeleton } from '@newcondo/ui/components/skeleton';
 import { formatCurrency } from '@/lib/utils/format';
 import { virtualAccountsApi } from '@/lib/api/virtualAccounts';
-import type { VirtualAccount } from '@/types/api';
+import type { VirtualAccount } from '@/types/virtualAccount';
 
 interface VirtualAccountBalanceProps {
   showWithdrawButton?: boolean;
@@ -30,7 +30,7 @@ export function VirtualAccountBalance({
     isRefetching,
   } = useQuery({
     queryKey: ['virtual-account-balance'],
-    queryFn: (): Promise<VirtualAccount> => virtualAccountsApi.getUserAccounts().then(accounts => accounts[0]),
+    queryFn: (): Promise<VirtualAccount> => virtualAccountsApi.getUserVirtualAccounts().then(accounts => accounts[0]),
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 

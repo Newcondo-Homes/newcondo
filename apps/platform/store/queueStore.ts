@@ -9,23 +9,38 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
+export interface ActiveJob {
+  id: string;
+  jobId: string;
+  status: string;
+  timeSlotStart?: string;
+  timeSlotEnd?: string;
+  property: {
+    id?: string;
+    title: string;
+    address: string;
+    city: string;
+    state?: string;
+  };
+}
+
 // Types
 export interface QueueItem {
   id: string;
   jobId: string;
-  agentId: string;
+  agentId?: string;
   position: number;
   joinedAt: Date;
   timeSlotStart?: Date;
   timeSlotEnd?: Date;
   status: 'WAITING' | 'ACTIVE' | 'COMPLETED' | 'EXPIRED' | 'CANCELLED';
-  notificationSent: boolean;
+  notificationSent?: boolean;
   property: {
-    id: string;
+    id?: string;
     title: string;
     address: string;
     city: string;
-    state: string;
+    state?: string;
   };
 }
 
@@ -33,7 +48,7 @@ export interface AgentQueueStats {
   totalQueued: number;
   totalActive: number;
   totalCompleted: number;
-  averageWaitTime: number;
+  averageWaitTime?: number;
   currentPosition?: number;
 }
 
@@ -50,7 +65,7 @@ interface QueueStore {
   // State
   queueItems: QueueItem[];
   myQueueItems: QueueItem[];
-  activeJobs: QueueItem[];
+  activeJobs: ActiveJob[];
   stats: AgentQueueStats | null;
   notifications: QueueNotification[];
   isLoading: boolean;
@@ -67,7 +82,7 @@ interface QueueStore {
   // Actions
   setQueueItems: (items: QueueItem[]) => void;
   setMyQueueItems: (items: QueueItem[]) => void;
-  setActiveJobs: (jobs: QueueItem[]) => void;
+  setActiveJobs: (jobs: ActiveJob[]) => void;
   setStats: (stats: AgentQueueStats) => void;
   addQueueItem: (item: QueueItem) => void;
   updateQueueItem: (id: string, updates: Partial<QueueItem>) => void;
@@ -130,16 +145,16 @@ export const useQueueStore = create<QueueStore>()(
         })),
         
         updateQueueItem: (id, updates) => set((state) => ({
-          queueItems: state.queueItems.map((item) =>
-            item.id === id ? { ...item, ...updates } : item
+        queueItems: state.queueItems.map((item) =>
+          item.id === id ? { ...item, ...updates } : item
         ),
         myQueueItems: state.myQueueItems.map((item) =>
           item.id === id ? { ...item, ...updates } : item
-      ),
-      activeJobs: state.activeJobs.map((item) =>
-        item.id === id ? { ...item, ...updates } : item
-    ),
-  })),
+        ),
+        activeJobs: state.activeJobs.map((item) =>
+          item.id === id ? { ...item, ...updates } as ActiveJob : item
+        ),
+})),
   
   removeQueueItem: (id) => set((state) => ({
     queueItems: state.queueItems.filter((item) => item.id !== id),

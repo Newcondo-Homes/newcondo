@@ -2,7 +2,7 @@
 
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { getI18n } from '@newcondo/i18n';
+import { getI18n } from '@newcondo/i18n/client'
 import LanguageDetector from 'i18next-browser-languagedetector';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { getOptions, languages, fallbackLng } from './translations';
@@ -38,7 +38,7 @@ if (!i18next.isInitialized) {
  * Change language on client side
  */
 export async function changeLanguage(lng: string) {
-  const { initI18n } = await import('@newcondo/i18n');
+  const { initI18n } = await import('@newcondo/i18n/client');
   const i18n = await initI18n();
 
   if (!languages.includes(lng as (typeof languages)[number])) {

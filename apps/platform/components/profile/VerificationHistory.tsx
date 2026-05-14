@@ -9,15 +9,7 @@ import {
 } from 'lucide-react';
 import { DocumentStatus } from '@/types/enums';
 import { formatDate } from '@/lib/utils/format';
-
-// ✅ Typed interface replacing any[]
-interface VerificationDocument {
-  id: string;
-  documentType: string;
-  documentSide?: string;
-  status: DocumentStatus;
-  createdAt: string;
-}
+import type { VerificationDocument } from "@/types/verification";
 
 interface VerificationHistoryProps {
   documents: VerificationDocument[];

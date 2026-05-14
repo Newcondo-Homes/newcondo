@@ -4,14 +4,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@newcondo/ui';
-import { flutterwaveClient, generatePaymentReference, validatePaymentAmount } from '@/lib/api/flutterwave';
-import { usePayments } from '@/hooks/usePayments';
-import { useAuthStore } from '@/store/authStore';
+import { flutterwaveClient, generatePaymentReference, validatePaymentAmount } from '../lib/api/flutterwave';
+import { usePayments } from '../hooks/usePayments';
+import { useAuthStore } from '../store/authStore';
 import type {
   FlutterwaveCustomer,
   FlutterwaveCustomization,
   FlutterwaveResponse,
-} from '@/types/payment';
+  PaymentInitResponse,
+} from '../types/payment';
 
 interface UseFlutterwaveConfig {
   amount: number;
@@ -22,7 +23,7 @@ interface UseFlutterwaveConfig {
   markingJobId?: string;
   redirectUrl?: string;
   onSuccess?: (response: FlutterwaveResponse) => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
   onCancel?: () => void;
 }
 
@@ -45,7 +46,6 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
 
     checkFlutterwaveScript();
 
-    // Check periodically if not loaded
     const interval = setInterval(() => {
       if (!flutterwaveLoaded && window.FlutterwaveCheckout) {
         setFlutterwaveLoaded(true);
@@ -66,9 +66,7 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
     }
 
     if (!validatePaymentAmount(config.amount)) {
-      toast.error('Validation Error', {
-        description: 'Invalid payment amount.',
-      });
+      toast.error('Validation Error', { description: 'Invalid payment amount.' });
       return;
     }
 
@@ -77,7 +75,11 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
       const paymentRef = generatePaymentReference(user.id);
       setPaymentReference(paymentRef);
 
-      const paymentType = config.rentalId ? 'RENTAL' : config.markingJobId ? 'PROPERTY_MARKING' : 'GENERAL';
+      const paymentType = config.rentalId
+        ? 'RENTAL'
+        : config.markingJobId
+        ? 'PROPERTY_MARKING'
+        : 'GENERAL';
 
       await initiatePayment({
         userId: user.id,
@@ -88,77 +90,69 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
         paymentType,
         rentalId: config.rentalId,
         markingJobId: config.markingJobId,
-      });
-
-
-
+      } as any);
     } catch (error) {
       console.error('Failed to create payment record:', error);
       toast.error('Payment Error', {
         description: 'Failed to initialize payment. Please try again.',
       });
       setIsInitializing(false);
-      if (config.onError) {
-        config.onError(error);
-      }
+      config.onError?.(error);
     }
-  }, [user, config, isCreatingPayment, initiatePayment, toast]);
+  }, [user, config, isCreatingPayment, initiatePayment]);
 
   // Handle payment success callback from Flutterwave
-  const handlePaymentSuccess = useCallback(async (response: FlutterwaveResponse, paymentId: string) => {
-    if (response.status === 'successful' && response.transaction_id) {
-      try {
-        const confirmResult = await confirmPayment({
-          paymentId,
-          data: {
-            flutterwaveRef: response.transaction_id,
-            txRef: response.tx_ref,
-          },
-        });
+  const handlePaymentSuccess = useCallback(
+    async (response: FlutterwaveResponse, paymentId: string) => {
+      if (response.status === 'successful' && response.transaction_id) {
+        try {
+          const confirmResult = await confirmPayment({
+            paymentId,
+            data: {
+              flutterwaveRef: response.transaction_id,
+              txRef: response.tx_ref,
+            },
+          });
 
-        if (confirmResult.success) {
-          toast.success('Payment Confirmed', {
-            description: 'Your payment was successful and confirmed.',
-          });
-          if (config.onSuccess) {
-            config.onSuccess(response);
+          // confirmPayment returns ApiResponse<Payment>
+          const typed = confirmResult as { success?: boolean; message?: string };
+
+          if (typed.success) {
+            toast.success('Payment Confirmed', {
+              description: 'Your payment was successful and confirmed.',
+            });
+            config.onSuccess?.(response);
+          } else {
+            toast.error('Payment Verification Failed', {
+              description:
+                typed.message || 'Payment was successful but could not be verified.',
+            });
+            config.onError?.(new Error(typed.message));
           }
-        } else {
-          toast.error('Payment Verification Failed', {
-            description: confirmResult.message || 'Payment was successful but could not be verified.',
+        } catch (error) {
+          console.error('Payment confirmation error:', error);
+          toast.error('Payment Error', {
+            description: 'An error occurred while confirming your payment.',
           });
-          if (config.onError) {
-            config.onError(new Error(confirmResult.message));
-          }
+          config.onError?.(error);
         }
-      } catch (error) {
-        console.error('Payment confirmation error:', error);
-        toast.error('Payment Error', {
-          description: 'An error occurred while confirming your payment.',
+      } else {
+        toast.error('Payment Failed', {
+          description: 'Your payment was not successful. Please try again.',
         });
-        if (config.onError) {
-          config.onError(error);
-        }
+        config.onError?.(new Error('Payment failed on Flutterwave.'));
       }
-    } else {
-      toast.error('Payment Failed', {
-        description: 'Your payment was not successful. Please try again.',
-      });
-      if (config.onError) {
-        config.onError(new Error('Payment failed on Flutterwave.'));
-      }
-    }
-  }, [confirmPayment, toast, config]);
+    },
+    [confirmPayment, config]
+  );
 
   // Handle payment cancellation
   const handlePaymentCancel = useCallback(() => {
     toast.error('Payment Canceled', {
       description: 'You have canceled the payment process.',
     });
-    if (config.onCancel) {
-      config.onCancel();
-    }
-  }, [toast, config]);
+    config.onCancel?.();
+  }, [config]);
 
   // Main payment initiation function
   const initializePayment = useCallback(async () => {
@@ -179,27 +173,34 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
 
     setIsInitializing(true);
 
-    // Create payment record and get a reference
-    const paymentRecordResponse = await initiatePayment({
+    // initiatePayment returns ApiResponse / PaymentInitResponse
+    // Cast to PaymentInitResponse so .success, .message, .data are typed
+    const paymentRecordResponse = (await initiatePayment({
       userId: user.id,
       amount: config.amount,
       currency: config.currency || 'NGN',
       description: config.description || 'NewCondo Payment',
-      paymentType: config.rentalId ? 'RENTAL' : config.markingJobId ? 'PROPERTY_MARKING' : 'GENERAL',
+      paymentType: config.rentalId
+        ? 'RENTAL'
+        : config.markingJobId
+        ? 'PROPERTY_MARKING'
+        : 'GENERAL',
       rentalId: config.rentalId,
       markingJobId: config.markingJobId,
-    });
+    } as any)) as PaymentInitResponse;
 
     if (!paymentRecordResponse || !paymentRecordResponse.success) {
       toast.error('Payment Error', {
-        description: paymentRecordResponse?.message || 'Failed to initialize payment on the backend.',
+        description:
+          paymentRecordResponse?.message || 'Failed to initialize payment on the backend.',
       });
       setIsInitializing(false);
       return;
     }
 
+    // PaymentInitResponse.data = { payment: Payment, paymentLink?, flutterwaveRef }
     const txRef = paymentRecordResponse.data?.flutterwaveRef;
-    const paymentId = paymentRecordResponse.data?.id;
+    const paymentId = paymentRecordResponse.data?.payment?.id;
 
     if (!txRef || !paymentId) {
       toast.error('Payment Error', {
@@ -212,7 +213,7 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
     const customer: FlutterwaveCustomer = {
       email: user.email,
       name: user.name || 'User',
-      phone: user.phone || undefined,
+      phone: (user as any).phone || undefined,
     };
 
     const customization: FlutterwaveCustomization = {
@@ -232,7 +233,7 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
       callback: (response: FlutterwaveResponse) => {
         setIsInitializing(false);
         if (response.status === 'successful') {
-          handlePaymentSuccess(response, paymentId!);
+          handlePaymentSuccess(response, paymentId);
         } else {
           handlePaymentCancel();
         }
@@ -241,9 +242,9 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
         setIsInitializing(false);
         handlePaymentCancel();
       },
-      ...config.redirectUrl && {
+      ...(config.redirectUrl && {
         redirect_url: `${config.redirectUrl}?paymentId=${paymentId}&txRef=${txRef}`,
-      }
+      }),
     };
 
     if (!window.FlutterwaveCheckout) {
@@ -255,15 +256,12 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
     }
 
     window.FlutterwaveCheckout(paymentData);
-
     setIsInitializing(false);
-
   }, [
     flutterwaveLoaded,
     user,
     config,
     router,
-    toast,
     initiatePayment,
     handlePaymentSuccess,
     handlePaymentCancel,
@@ -271,6 +269,7 @@ export const useFlutterwave = (config: UseFlutterwaveConfig) => {
 
   return {
     initializePayment,
+    createPaymentRecord,
     isInitializing: isInitializing || isCreatingPayment,
     isConfirming: isConfirmingPayment,
     paymentReference,

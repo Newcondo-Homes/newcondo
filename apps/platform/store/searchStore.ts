@@ -58,33 +58,33 @@ interface SearchState {
   // Current search
   query: string;
   isSearching: boolean;
-  searchResults: any[];
+  searchResults: unknown[];
   searchResultsCount: number;
-  
+
   // Suggestions and autocomplete
   suggestions: SearchSuggestion[];
   isLoadingSuggestions: boolean;
   locationSuggestions: LocationSuggestion[];
   showSuggestions: boolean;
-  
+
   // Search history
   searchHistory: SearchHistory[];
   recentSearches: string[];
-  
+
   // Saved searches
   savedSearches: SavedSearch[];
-  
+
   // Popular searches
   popularSearches: string[];
   trendingLocations: LocationSuggestion[];
-  
+
   // Quick filters (for landing page)
   quickFilters: {
     propertyTypes: { label: string; value: string; count: number }[];
     priceRanges: { label: string; min: number; max: number; count: number }[];
     locations: LocationSuggestion[];
   };
-  
+
   // Search context
   searchContext: {
     fromPage: string;
@@ -96,7 +96,7 @@ interface SearchState {
       state?: string;
     };
   };
-  
+
   // Error handling
   error: string | null;
   lastSearchTime: number | null;
@@ -107,42 +107,42 @@ interface SearchActions {
   setQuery: (query: string) => void;
   performSearch: (query?: string, context?: Partial<SearchState['searchContext']>) => Promise<void>;
   clearSearch: () => void;
-  
+
   // Suggestions
   fetchSuggestions: (query: string) => Promise<void>;
   fetchLocationSuggestions: (query: string) => Promise<void>;
   clearSuggestions: () => void;
   setShowSuggestions: (show: boolean) => void;
-  
+
   // Search history
   addToHistory: (query: string, resultCount: number, clickedPropertyId?: string) => void;
   clearHistory: () => void;
   removeFromHistory: (historyId: string) => void;
-  
+
   // Recent searches
   addRecentSearch: (query: string) => void;
   clearRecentSearches: () => void;
-  
+
   // Saved searches
   saveSearch: (search: Omit<SavedSearch, 'id' | 'createdAt'>) => void;
   removeSavedSearch: (searchId: string) => void;
   updateSavedSearch: (searchId: string, updates: Partial<SavedSearch>) => void;
   toggleSearchAlerts: (searchId: string) => void;
-  
+
   // Quick filters and popular data
   fetchQuickFilters: () => Promise<void>;
   fetchPopularSearches: () => Promise<void>;
   fetchTrendingLocations: () => Promise<void>;
-  
+
   // Search context
   setSearchContext: (context: Partial<SearchState['searchContext']>) => void;
   setUserLocation: (location: SearchState['searchContext']['userLocation']) => void;
-  
+
   // Utility functions
   getSearchSuggestions: (query: string) => SearchSuggestion[];
   isRecentSearch: (query: string) => boolean;
   hasSavedSearches: () => boolean;
-  
+
   // Error handling
   setError: (error: string | null) => void;
   setSearching: (searching: boolean) => void;
@@ -185,38 +185,38 @@ export const useSearchStore = create<SearchState & SearchActions>()(
         isSearching: false,
         searchResults: [],
         searchResultsCount: 0,
-        
+
         suggestions: [],
         isLoadingSuggestions: false,
         locationSuggestions: [],
         showSuggestions: false,
-        
+
         searchHistory: [],
         recentSearches: [],
-        
+
         savedSearches: [],
-        
+
         popularSearches: POPULAR_SEARCHES,
         trendingLocations: [],
-        
+
         quickFilters: {
           propertyTypes: QUICK_PROPERTY_TYPES,
           priceRanges: QUICK_PRICE_RANGES,
           locations: [],
         },
-        
+
         searchContext: {
           fromPage: '',
           timestamp: new Date().toISOString(),
           userLocation: undefined,
         },
-        
+
         error: null,
         lastSearchTime: null,
 
         // Actions
         setQuery: (query) => set({ query }),
-        
+
         performSearch: async (query, context) => {
           set((state) => {
             state.isSearching = true;
@@ -232,19 +232,21 @@ export const useSearchStore = create<SearchState & SearchActions>()(
           const currentQuery = query || get().query;
           const searchCount = Math.floor(Math.random() * 500) + 50;
 
-          // Simulate an API call
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
           set((state) => {
             state.isSearching = false;
-            state.searchResults = Array.from({ length: searchCount }, (_, i) => ({ id: i, name: `Mock Property ${i}` }));
+            state.searchResults = Array.from(
+              { length: searchCount },
+              (_, i) => ({ id: i, name: `Mock Property ${i}` })
+            );
             state.searchResultsCount = searchCount;
             state.lastSearchTime = Date.now();
-            state.addRecentSearch(currentQuery);
-            state.addToHistory(currentQuery, searchCount);
+            get().addRecentSearch(currentQuery);
+            get().addToHistory(currentQuery, searchCount);
           });
         },
-        
+
         clearSearch: () => {
           set((state) => {
             state.query = '';
@@ -254,7 +256,7 @@ export const useSearchStore = create<SearchState & SearchActions>()(
             state.error = null;
           });
         },
-        
+
         fetchSuggestions: async (query) => {
           if (!query) {
             get().clearSuggestions();
@@ -265,39 +267,41 @@ export const useSearchStore = create<SearchState & SearchActions>()(
             state.isLoadingSuggestions = true;
           });
 
-          // Simulate API call
           await new Promise((resolve) => setTimeout(resolve, 500));
-          
-          const mockSuggestions = [
+
+          // Explicitly typed so 'type' resolves to the literal union, not string
+          const mockSuggestions: SearchSuggestion[] = [
             { id: '1', text: `${query} in Lagos`, type: 'location', metadata: { city: 'Lagos', state: 'Lagos' } },
             { id: '2', text: `${query} near Lekki`, type: 'location', metadata: { city: 'Lekki', state: 'Lagos' } },
             { id: '3', text: `Mini flat in ${query}`, type: 'property_type' },
           ];
-          
+
           set((state) => {
             state.suggestions = mockSuggestions;
             state.isLoadingSuggestions = false;
           });
         },
-        
+
         fetchLocationSuggestions: async (query) => {
           set({ isLoadingSuggestions: true });
-          
-          // Simulate API call
+
           await new Promise((resolve) => setTimeout(resolve, 500));
-          
-          const mockLocations = [
+
+          // Explicitly typed so 'type' resolves to 'city' | 'area' | 'landmark', not string
+          const mockLocations: LocationSuggestion[] = [
             { id: '1', name: 'Lekki', city: 'Lagos', state: 'Lagos', type: 'area', propertyCount: 1500 },
             { id: '2', name: 'Victoria Island', city: 'Lagos', state: 'Lagos', type: 'area', propertyCount: 900 },
             { id: '3', name: 'Abuja', city: 'Abuja', state: 'FCT', type: 'city', propertyCount: 2500 },
           ];
 
           set((state) => {
-            state.locationSuggestions = mockLocations.filter(loc => loc.name.toLowerCase().includes(query.toLowerCase()));
+            state.locationSuggestions = mockLocations.filter(
+              (loc) => loc.name.toLowerCase().includes(query.toLowerCase())
+            );
             state.isLoadingSuggestions = false;
           });
         },
-        
+
         clearSuggestions: () => {
           set((state) => {
             state.suggestions = [];
@@ -305,9 +309,9 @@ export const useSearchStore = create<SearchState & SearchActions>()(
             state.showSuggestions = false;
           });
         },
-        
+
         setShowSuggestions: (show) => set({ showSuggestions: show }),
-        
+
         addToHistory: (query, resultCount, clickedPropertyId) => {
           set((state) => {
             state.searchHistory.unshift({
@@ -317,45 +321,44 @@ export const useSearchStore = create<SearchState & SearchActions>()(
               resultCount,
               clickedPropertyId,
             });
-            // Cap history at 10 items
             if (state.searchHistory.length > 10) {
               state.searchHistory.pop();
             }
           });
         },
-        
+
         clearHistory: () => {
           set((state) => {
             state.searchHistory = [];
           });
         },
-        
+
         removeFromHistory: (historyId) => {
           set((state) => {
-            state.searchHistory = state.searchHistory.filter((item: SearchHistory) => item.id !== historyId);
+            state.searchHistory = state.searchHistory.filter(
+              (item: SearchHistory) => item.id !== historyId
+            );
           });
         },
-        
+
         addRecentSearch: (query) => {
           set((state) => {
-            // Remove if it already exists to move it to the front
             state.recentSearches = state.recentSearches.filter(
               (recentQuery: string) => recentQuery !== query
             );
             state.recentSearches.unshift(query);
-            // Cap recent searches at 5
             if (state.recentSearches.length > 5) {
               state.recentSearches.pop();
             }
           });
         },
-        
+
         clearRecentSearches: () => {
           set((state) => {
             state.recentSearches = [];
           });
         },
-        
+
         saveSearch: (search) => {
           set((state) => {
             state.savedSearches.unshift({
@@ -365,108 +368,113 @@ export const useSearchStore = create<SearchState & SearchActions>()(
             });
           });
         },
-        
+
         removeSavedSearch: (searchId) => {
           set((state) => {
-            state.savedSearches = state.savedSearches.filter((s: SavedSearch) => s.id !== searchId);
+            state.savedSearches = state.savedSearches.filter(
+              (s: SavedSearch) => s.id !== searchId
+            );
           });
         },
-        
+
         updateSavedSearch: (searchId, updates) => {
           set((state) => {
-            const searchToUpdate = state.savedSearches.find((s: SavedSearch) => s.id === searchId);
+            const searchToUpdate = state.savedSearches.find(
+              (s: SavedSearch) => s.id === searchId
+            );
             if (searchToUpdate) {
               Object.assign(searchToUpdate, updates);
             }
           });
         },
-        
+
         toggleSearchAlerts: (searchId) => {
           set((state) => {
-            const searchToUpdate = state.savedSearches.find((s: SavedSearch) => s.id === searchId);
+            const searchToUpdate = state.savedSearches.find(
+              (s: SavedSearch) => s.id === searchId
+            );
             if (searchToUpdate) {
               searchToUpdate.alertsEnabled = !searchToUpdate.alertsEnabled;
             }
           });
         },
-        
+
         fetchQuickFilters: async () => {
-          // Simulate an API call
           await new Promise((resolve) => setTimeout(resolve, 500));
-          
+
           set((state) => {
-            state.quickFilters.propertyTypes = QUICK_PROPERTY_TYPES.map(type => ({
+            state.quickFilters.propertyTypes = QUICK_PROPERTY_TYPES.map((type) => ({
               ...type,
-              count: Math.floor(Math.random() * 500) + 100
+              count: Math.floor(Math.random() * 500) + 100,
             }));
-            state.quickFilters.priceRanges = QUICK_PRICE_RANGES.map(range => ({
+            state.quickFilters.priceRanges = QUICK_PRICE_RANGES.map((range) => ({
               ...range,
-              count: Math.floor(Math.random() * 500) + 100
+              count: Math.floor(Math.random() * 500) + 100,
             }));
           });
         },
-        
+
         fetchPopularSearches: async () => {
-          // No API call, just setting the constant data
           set({ popularSearches: POPULAR_SEARCHES });
         },
-        
+
         fetchTrendingLocations: async () => {
-          // Simulate an API call
           await new Promise((resolve) => setTimeout(resolve, 500));
-          
+
           const mockTrending: LocationSuggestion[] = [
             { id: '1', name: 'Lekki', city: 'Lagos', state: 'Lagos', type: 'area', propertyCount: 1500, coordinates: { lat: 6.4462, lng: 3.472 } },
             { id: '2', name: 'Wuse', city: 'Abuja', state: 'FCT', type: 'area', propertyCount: 1200, coordinates: { lat: 9.0628, lng: 7.464 } },
             { id: '3', name: 'Ikeja', city: 'Lagos', state: 'Lagos', type: 'area', propertyCount: 950, coordinates: { lat: 6.6018, lng: 3.351 } },
           ];
-          
+
           set({ trendingLocations: mockTrending });
         },
-        
+
         setSearchContext: (context) => {
           set((state) => {
             state.searchContext = { ...state.searchContext, ...context };
           });
         },
-        
+
         setUserLocation: (location) => {
           set((state) => {
             state.searchContext.userLocation = location;
           });
         },
-        
+
         getSearchSuggestions: (query) => {
           const state = get();
           const lowerQuery = query.toLowerCase();
-          const recent = state.recentSearches
-            .filter(q => q.toLowerCase().includes(lowerQuery))
-            .slice(0, 3)
-            .map(q => ({ id: `recent-${q}`, text: q, type: 'recent' as const }));
 
-          const popular = state.popularSearches
-            .filter(p => p.toLowerCase().includes(lowerQuery))
+          const recent: SearchSuggestion[] = state.recentSearches
+            .filter((q) => q.toLowerCase().includes(lowerQuery))
             .slice(0, 3)
-            .map(p => ({ id: `popular-${p}`, text: p, type: 'property_type' as const }));
+            .map((q) => ({ id: `recent-${q}`, text: q, type: 'recent' as const }));
+
+          const popular: SearchSuggestion[] = state.popularSearches
+            .filter((p) => p.toLowerCase().includes(lowerQuery))
+            .slice(0, 3)
+            .map((p) => ({ id: `popular-${p}`, text: p, type: 'property_type' as const }));
 
           return [...recent, ...popular];
         },
-        
+
         isRecentSearch: (query) => {
           return get().recentSearches.includes(query);
         },
-        
+
         hasSavedSearches: () => {
           return get().savedSearches.length > 0;
         },
-        
+
         setError: (error) => set({ error }),
-        
+
         setSearching: (searching) => set({ isSearching: searching }),
-      }))
-    , {
-      name: 'newcondo-search-storage',
-      version: 1,
-    })
+      })),
+      {
+        name: 'newcondo-search-storage',
+        version: 1,
+      }
+    )
   )
 );

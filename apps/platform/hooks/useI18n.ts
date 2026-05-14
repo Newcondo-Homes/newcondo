@@ -1,6 +1,7 @@
 'use client';
 
-import { useTranslation, type CurrencyCode } from '@newcondo/i18n';
+import {  type CurrencyCode } from '@newcondo/i18n';
+import { useTranslation }  from '@newcondo/i18n/hooks/useTranslation'
 
 // TODO: when you correct translations bug, make sure to effect the changes in @newcondo/i18n and 
 // uncomment the code below.

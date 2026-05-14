@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 }
 
 interface FavoritesPageProps {
-  searchParams: {
+  searchParams: Promise<{
     sortBy?: string
-  }
+  }>
 }
 
 interface FavoriteItem {
@@ -29,6 +29,7 @@ interface FavoriteItem {
 }
 
 export default async function FavoritesPage({ searchParams }: FavoritesPageProps) {
+  const { sortBy } = await searchParams;
   const session = await getServerSession()
   const user = session?.user
   if (!user) {
@@ -66,7 +67,7 @@ export default async function FavoritesPage({ searchParams }: FavoritesPageProps
               <label htmlFor="sortBy" className="text-sm font-medium text-gray-700">
                 Sort by:
               </label>
-              <FavoritesSortSelect defaultValue={searchParams.sortBy} />
+              <FavoritesSortSelect defaultValue={sortBy} />
             </div>
           </div>
         </div>
@@ -77,7 +78,7 @@ export default async function FavoritesPage({ searchParams }: FavoritesPageProps
         <Suspense fallback={<PropertyGridSkeleton />}>
           <FavoriteProperties
             userId={user.id}
-            sortBy={searchParams.sortBy || 'newest'}
+            sortBy={sortBy || 'newest'}
           />
         </Suspense>
       </div>

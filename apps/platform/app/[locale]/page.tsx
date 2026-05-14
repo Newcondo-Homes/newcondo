@@ -1,4 +1,3 @@
-import { useTranslations } from 'next-intl';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -7,10 +6,11 @@ import { CurrencyDisplay } from '@/components/i18n/CurrencyDisplay';
 import { Search, Home, Shield, Zap } from 'lucide-react';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'home' });
 
   return {
@@ -19,11 +19,17 @@ export async function generateMetadata({
   };
 }
 
-export default function HomePage({
-  params: { locale },
+export default async function HomePage({
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params;
+
+  // Fetch all translation namespaces needed on this page
+  const tNav = await getTranslations({ locale, namespace: 'navigation' });
+  const tHome = await getTranslations({ locale, namespace: 'home' });
+
   return (
     <div className="min-h-screen">
       {/* Navigation */}
@@ -32,18 +38,14 @@ export default function HomePage({
           <Link href={`/${locale}`} className="text-2xl font-bold text-primary">
             Newcondo
           </Link>
-          
+
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <Button asChild variant="ghost">
-              <Link href={`/${locale}/login`}>
-                <HomeContent namespace="navigation" keyPrefix="login" />
-              </Link>
+              <Link href={`/${locale}/login`}>{tNav('login')}</Link>
             </Button>
             <Button asChild>
-              <Link href={`/${locale}/register`}>
-                <HomeContent namespace="navigation" keyPrefix="register" />
-              </Link>
+              <Link href={`/${locale}/register`}>{tNav('register')}</Link>
             </Button>
           </div>
         </div>
@@ -52,13 +54,11 @@ export default function HomePage({
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-b from-primary/5 to-background">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            <HomeContent namespace="home" keyPrefix="hero.title" />
-          </h1>
+          <h1 className="text-5xl font-bold mb-6">{tHome('hero.title')}</h1>
           <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            <HomeContent namespace="home" keyPrefix="hero.subtitle" />
+            {tHome('hero.subtitle')}
           </p>
-          
+
           {/* Search Bar */}
           <div className="max-w-2xl mx-auto mb-12">
             <div className="flex gap-2">
@@ -70,21 +70,19 @@ export default function HomePage({
                   className="w-full pl-10 pr-4 py-3 rounded-lg border bg-background"
                 />
               </div>
-              <Button size="lg">
-                <HomeContent namespace="home" keyPrefix="hero.searchButton" />
-              </Button>
+              <Button size="lg">{tHome('hero.searchButton')}</Button>
             </div>
           </div>
 
           <div className="flex gap-4 justify-center">
             <Button asChild size="lg">
               <Link href={`/${locale}/properties`}>
-                <HomeContent namespace="home" keyPrefix="hero.browseProperties" />
+                {tHome('hero.browseProperties')}
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href={`/${locale}/properties/create`}>
-                <HomeContent namespace="home" keyPrefix="hero.listProperty" />
+                {tHome('hero.listProperty')}
               </Link>
             </Button>
           </div>
@@ -95,24 +93,24 @@ export default function HomePage({
       <section className="py-20">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
-            <HomeContent namespace="home" keyPrefix="features.title" />
+            {tHome('features.title')}
           </h2>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Shield className="h-12 w-12 text-primary" />}
-              titleKey="features.secure.title"
-              descKey="features.secure.description"
+              title={tHome('features.secure.title')}
+              description={tHome('features.secure.description')}
             />
             <FeatureCard
               icon={<Home className="h-12 w-12 text-primary" />}
-              titleKey="features.verified.title"
-              descKey="features.verified.description"
+              title={tHome('features.verified.title')}
+              description={tHome('features.verified.description')}
             />
             <FeatureCard
               icon={<Zap className="h-12 w-12 text-primary" />}
-              titleKey="features.fast.title"
-              descKey="features.fast.description"
+              title={tHome('features.fast.title')}
+              description={tHome('features.fast.description')}
             />
           </div>
         </div>
@@ -121,13 +119,11 @@ export default function HomePage({
       {/* Sample Pricing */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            <HomeContent namespace="home" keyPrefix="pricing.title" />
-          </h2>
+          <h2 className="text-3xl font-bold mb-4">{tHome('pricing.title')}</h2>
           <p className="text-lg text-muted-foreground mb-8">
-            <HomeContent namespace="home" keyPrefix="pricing.subtitle" />
+            {tHome('pricing.subtitle')}
           </p>
-          
+
           <div className="flex gap-4 justify-center items-center">
             <CurrencyDisplay amount={500000} locale={locale} className="text-2xl font-bold" />
             <span className="text-muted-foreground">-</span>
@@ -139,34 +135,28 @@ export default function HomePage({
       {/* Footer */}
       <footer className="border-t py-12 bg-background">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2025 Newcondo. <HomeContent namespace="home" keyPrefix="footer.rights" /></p>
+          <p>&copy; 2025 Newcondo. {tHome('footer.rights')}</p>
         </div>
       </footer>
     </div>
   );
 }
 
-function HomeContent({ namespace, keyPrefix }: { namespace: string; keyPrefix: string }) {
-  const t = useTranslations(namespace);
-  return <>{t(keyPrefix)}</>;
-}
-
+// Pure presentational component — no hooks needed
 function FeatureCard({
   icon,
-  titleKey,
-  descKey,
+  title,
+  description,
 }: {
   icon: React.ReactNode;
-  titleKey: string;
-  descKey: string;
+  title: string;
+  description: string;
 }) {
-  const t = useTranslations('home');
-  
   return (
     <div className="text-center p-6 rounded-lg border bg-card">
       <div className="flex justify-center mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold mb-2">{t(titleKey)}</h3>
-      <p className="text-muted-foreground">{t(descKey)}</p>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-muted-foreground">{description}</p>
     </div>
   );
 }

@@ -6,10 +6,11 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'properties' });
 
   return {
@@ -19,12 +20,13 @@ export async function generateMetadata({
 }
 
 export default async function PropertiesPage({
-  params: { locale },
+  params,
   
 }: {
-  params: { locale: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'properties' });
 
   return (

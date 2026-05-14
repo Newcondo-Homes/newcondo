@@ -10,23 +10,26 @@ export const metadata: Metadata = {
     'Discover amazing rental properties across Nigeria. Filter by location, price, and amenities.',
 };
 
-interface PropertiesPageProps {
-  searchParams: {
-    search?: string;
-    city?: string;
-    state?: string;
-    propertyType?: string;
-    minPrice?: string;
-    maxPrice?: string;
-    bedrooms?: string;
-    bathrooms?: string;
-    features?: string;
-    sortBy?: string;
-    page?: string;
-  };
+interface SearchParams {
+  search?: string;
+  city?: string;
+  state?: string;
+  propertyType?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  bedrooms?: string;
+  bathrooms?: string;
+  features?: string;
+  sortBy?: string;
+  page?: string;
 }
 
-export default function PropertiesPage({ searchParams }: PropertiesPageProps) {
+interface PropertiesPageProps {
+  searchParams: Promise<SearchParams>;
+}
+
+export default async function PropertiesPage({ searchParams }: PropertiesPageProps) {
+  const resolvedParams = await searchParams;
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -49,7 +52,7 @@ export default function PropertiesPage({ searchParams }: PropertiesPageProps) {
            * It receives the initial URL params as plain serialisable props so
            * the server component doesn't need to import any client hooks.
            */}
-          <PropertiesPageClient initialSearchParams={searchParams} />
+          <PropertiesPageClient initialSearchParams={resolvedParams} />
         </div>
       </section>
     </div>

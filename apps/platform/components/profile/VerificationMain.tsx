@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useVerification } from "@/hooks/useVerification";
 import { useAuth } from "@/hooks/useAuth";
 import { VerificationStatus } from "@/components/profile/VerificationStatus";
-// import VerificationUploader from "@/components/profile/VerificationUploader";
 import { VerificationHistory } from "@/components/profile/VerificationHistory";
 import { VerificationDocuments } from "@/components/profile/VerificationDocuments";
 import { VerificationOverview } from "@/components/profile/VerificationOverview";
@@ -12,17 +11,12 @@ import { VerificationProgress } from "@/components/profile/VerificationProgress"
 import { VerificationBadge } from "@/components/profile/VerificationBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@newcondo/ui/";
 import { Alert, AlertDescription } from "@newcondo/ui/";
-// import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@newcondo/ui/";
 import {
   Shield,
-  // CheckCircle,
-  // XCircle,
-  // Clock,
   AlertTriangle,
-  // RefreshCw,
 } from "lucide-react";
-import {  DocumentStatus } from "@/types/enums";
+import { DocumentStatus } from "@/types/enums";
 
 export function VerificationMain() {
   const { user } = useAuth();

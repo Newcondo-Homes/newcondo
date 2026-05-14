@@ -7,10 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@newcondo/ui';
 import { Wallet, ArrowUpRight, Clock } from 'lucide-react';
 
 export async function generateMetadata({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'payments' });
 
   return {
@@ -20,12 +21,13 @@ export async function generateMetadata({
 }
 
 export default async function PaymentsPage({
-  params: { locale },
+  params,
 }: {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }) {
   // TODO: should all the pages be checked for a session inside a component that requires a logged in user?
   // const session = await getServerSession();
+  const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'payments' });
 
   // Mock data - replace with actual API calls
