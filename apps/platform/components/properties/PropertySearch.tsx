@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Search, MapPin, Filter, X, Loader2, Bed, Bath, DollarSign, Home, CheckSquare, Building2, Zap } from 'lucide-react';
 import { Button } from '@newcondo/ui/components/button';
 import { Input } from '@newcondo/ui/components/input';
@@ -8,12 +8,10 @@ import { Badge } from '@newcondo/ui/components/badge';
 import { Card, CardContent } from '@newcondo/ui/components/card';
 import { Popover, PopoverContent, PopoverTrigger, PopoverClose } from '@newcondo/ui/components/popover';
 import { Label } from '@newcondo/ui/components/label';
-// import { Slider } from '@newcondo/ui/components/slider';
 import { Checkbox } from '@newcondo/ui/components/checkbox';
 import { RadioGroup, RadioGroupItem } from '@newcondo/ui/components/radio-group';
 import { Separator } from '@newcondo/ui/components/separator';
 import { useDebounce } from '@/hooks/useDebounce';
-// import { cn } from '@newcondo/ui/lib/utils';
 import { formatNumber } from '@/lib/utils';
 
 export interface SearchFilters {
@@ -24,7 +22,7 @@ export interface SearchFilters {
     coordinates?: {
       lat: number;
       lng: number;
-      radius?: number; // in km
+      radius?: number;
     };
   };
   priceRange?: {
@@ -94,19 +92,44 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(false);
 
-  // Debounced search query
+  // Stable ref to onFiltersChange so effects don't re-run when the prop reference changes
+  const onFiltersChangeRef = useRef(onFiltersChange);
+  useEffect(() => {
+    onFiltersChangeRef.current = onFiltersChange;
+  });
+
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const debouncedLocationQuery = useDebounce(locationQuery, 300);
 
-  // Handle search query changes
-  useEffect(() => {
-    if (debouncedSearchQuery !== filters.query) {
-      const updatedFilters = { ...filters, query: debouncedSearchQuery || undefined };
-      onFiltersChange(updatedFilters);
-    }
-  }, [debouncedSearchQuery, filters, onFiltersChange]);
+  // FIX: Use a ref to track the previous debounced query to avoid
+  // reading `filters` inside the effect (which caused the infinite loop).
+  // We only call onFiltersChange when the debounced query actually changes,
+  // using a functional update pattern via the ref.
+  const prevDebouncedQuery = useRef(filters.query ?? '');
 
-  // Handle location search
+  useEffect(() => {
+    if (debouncedSearchQuery !== prevDebouncedQuery.current) {
+      prevDebouncedQuery.current = debouncedSearchQuery;
+      // Use the ref so this effect doesn't depend on `filters` or `onFiltersChange`
+      onFiltersChangeRef.current(
+        // We need the current filters here — use a setter-style approach by
+        // passing a callback-shaped update through the parent's handler.
+        // Since onFiltersChange doesn't support functional updates, we read
+        // the latest value via a ref instead.
+        // See filtersRef below.
+        { ...filtersRef.current, query: debouncedSearchQuery || undefined }
+      );
+    }
+  }, [debouncedSearchQuery]);
+
+  // Keep a ref to the latest filters so effects can read current value
+  // without adding `filters` to their dependency arrays.
+  const filtersRef = useRef(filters);
+  useEffect(() => {
+    filtersRef.current = filters;
+  });
+
+  // Handle location search suggestions
   useEffect(() => {
     if (debouncedLocationQuery && debouncedLocationQuery.length >= 2 && onLocationSearch) {
       setIsLocationLoading(true);
@@ -126,40 +149,59 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
       setLocationSuggestionsList(locationSuggestions);
       setShowLocationSuggestions(false);
     }
-  }, [debouncedLocationQuery, onLocationSearch, locationSuggestions]);
+    // onLocationSearch and locationSuggestions are stable enough here;
+    // debouncedLocationQuery is the only value that should trigger re-runs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedLocationQuery]);
+
+  // Sync locationQuery display when filters.location changes externally
+  const locationDisplayText = useMemo(() => {
+    if (filters.location?.city && filters.location?.state) {
+      return `${filters.location.city}, ${filters.location.state}`;
+    }
+    return '';
+  }, [filters.location?.city, filters.location?.state]);
+
+  const prevLocationDisplay = useRef('');
+  useEffect(() => {
+    if (locationDisplayText && locationDisplayText !== prevLocationDisplay.current && !locationQuery) {
+      prevLocationDisplay.current = locationDisplayText;
+      setLocationQuery(locationDisplayText);
+    }
+  }, [locationDisplayText, locationQuery]);
 
   const handleSearchSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(filters);
-  }, [filters, onSearch]);
+    onSearch(filtersRef.current);
+  }, [onSearch]);
 
   const handleLocationSelect = useCallback((location: LocationSuggestion) => {
     const updatedFilters = {
-      ...filters,
+      ...filtersRef.current,
       location: {
         city: location.city,
         state: location.state,
         coordinates: location.coordinates,
-      }
+      },
     };
-    onFiltersChange(updatedFilters);
+    onFiltersChangeRef.current(updatedFilters);
     setLocationQuery(location.displayName);
     setShowLocationSuggestions(false);
-  }, [filters, onFiltersChange]);
+  }, []);
 
   const handleClearLocation = useCallback(() => {
-    const updatedFilters = { ...filters, location: undefined };
-    onFiltersChange(updatedFilters);
+    const updatedFilters = { ...filtersRef.current, location: undefined };
+    onFiltersChangeRef.current(updatedFilters);
     setLocationQuery('');
     setShowLocationSuggestions(false);
-  }, [filters, onFiltersChange]);
+  }, []);
 
   const handlePopularSearchClick = useCallback((searchTerm: string) => {
     setSearchQuery(searchTerm);
-    const updatedFilters = { ...filters, query: searchTerm };
-    onFiltersChange(updatedFilters);
+    const updatedFilters = { ...filtersRef.current, query: searchTerm };
+    onFiltersChangeRef.current(updatedFilters);
     onSearch(updatedFilters);
-  }, [filters, onFiltersChange, onSearch]);
+  }, [onSearch]);
 
   const activeFiltersCount = useMemo(() => {
     let count = 0;
@@ -174,27 +216,13 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
     return count;
   }, [filters]);
 
-  const getLocationDisplayText = useMemo(() => {
-    if (filters.location?.city && filters.location?.state) {
-      return `${filters.location.city}, ${filters.location.state}`;
-    }
-    return '';
-  }, [filters.location]);
-
-  useEffect(() => {
-    if (getLocationDisplayText && !locationQuery) {
-      setLocationQuery(getLocationDisplayText);
-    }
-  }, [getLocationDisplayText, locationQuery]);
-
-  const clearFilter = (filterKey: keyof SearchFilters) => {
-    const updatedFilters = { ...filters, [filterKey]: undefined };
-    onFiltersChange(updatedFilters);
-  };
+  const clearFilter = useCallback((filterKey: keyof SearchFilters) => {
+    const updatedFilters = { ...filtersRef.current, [filterKey]: undefined };
+    onFiltersChangeRef.current(updatedFilters);
+  }, []);
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Main Search Bar */}
       <Card className="shadow-sm">
         <CardContent className="p-4">
           <form onSubmit={handleSearchSubmit} className="space-y-4">
@@ -279,11 +307,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
               </div>
 
               {/* Search Button */}
-              <Button
-                type="submit"
-                disabled={loading}
-                className="lg:w-auto w-full"
-              >
+              <Button type="submit" disabled={loading} className="lg:w-auto w-full">
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -301,11 +325,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
               {showAdvancedFilters && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="relative"
-                    >
+                    <Button type="button" variant="outline" className="relative">
                       <Filter className="mr-2 h-4 w-4" />
                       Filters
                       {activeFiltersCount > 0 && (
@@ -320,13 +340,6 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
                   </PopoverTrigger>
                   <PopoverContent className="w-[350px] p-4" align="end">
                     <AdvancedFilters filters={filters} onFiltersChange={onFiltersChange} />
-                    <div className="mt-4 flex justify-end">
-                      <PopoverClose asChild>
-                        <Button type="button" size="sm">
-                          Apply Filters
-                        </Button>
-                      </PopoverClose>
-                    </div>
                   </PopoverContent>
                 </Popover>
               )}
@@ -339,7 +352,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
               {filters.location && (
                 <Badge variant="secondary" className="gap-1">
                   <MapPin className="h-3 w-3" />
-                  {getLocationDisplayText}
+                  {locationDisplayText}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -353,7 +366,8 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
 
               {(filters.priceRange?.min || filters.priceRange?.max) && (
                 <Badge variant="secondary" className="gap-1">
-                  Price: {filters.priceRange.min ? `₦${formatNumber(filters.priceRange.min)}` : '0'} - {filters.priceRange.max ? `₦${formatNumber(filters.priceRange.max)}` : 'Max'}
+                  Price: {filters.priceRange?.min ? `₦${formatNumber(filters.priceRange.min)}` : '0'} -{' '}
+                  {filters.priceRange?.max ? `₦${formatNumber(filters.priceRange.max)}` : 'Max'}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -365,16 +379,18 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
                 </Badge>
               )}
 
-              {filters.propertyType && filters.propertyType.map((type) => (
+              {filters.propertyType?.map((type) => (
                 <Badge key={type} variant="secondary" className="gap-1">
                   {type}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onFiltersChange({
-                      ...filters,
-                      propertyType: filters.propertyType?.filter(t => t !== type)
-                    })}
+                    onClick={() =>
+                      onFiltersChange({
+                        ...filtersRef.current,
+                        propertyType: filters.propertyType?.filter((t) => t !== type),
+                      })
+                    }
                     className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
                   >
                     <X className="h-3 w-3" />
@@ -384,7 +400,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
 
               {(filters.bedrooms?.min || filters.bedrooms?.max) && (
                 <Badge variant="secondary" className="gap-1">
-                  Beds: {filters.bedrooms.min} - {filters.bedrooms.max || 'Max'}
+                  Beds: {filters.bedrooms?.min} - {filters.bedrooms?.max || 'Max'}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -398,7 +414,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
 
               {(filters.bathrooms?.min || filters.bathrooms?.max) && (
                 <Badge variant="secondary" className="gap-1">
-                  Baths: {filters.bathrooms.min} - {filters.bathrooms.max || 'Max'}
+                  Baths: {filters.bathrooms?.min} - {filters.bathrooms?.max || 'Max'}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -410,16 +426,18 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
                 </Badge>
               )}
 
-              {filters.features && filters.features.map((feature) => (
+              {filters.features?.map((feature) => (
                 <Badge key={feature} variant="secondary" className="gap-1">
                   {feature}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => onFiltersChange({
-                      ...filters,
-                      features: filters.features?.filter(f => f !== feature)
-                    })}
+                    onClick={() =>
+                      onFiltersChange({
+                        ...filtersRef.current,
+                        features: filters.features?.filter((f) => f !== feature),
+                      })
+                    }
                     className="h-4 w-4 p-0 ml-1 hover:bg-transparent"
                   >
                     <X className="h-3 w-3" />
@@ -481,9 +499,7 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
       {resultCount !== undefined && (
         <div className="flex justify-between items-center text-gray-600">
           <p className="text-sm">
-            <span className="font-semibold text-gray-900">
-              {resultCount}
-            </span> results found
+            <span className="font-semibold text-gray-900">{resultCount}</span> results found
           </p>
         </div>
       )}
@@ -491,6 +507,8 @@ export const PropertySearch: React.FC<PropertySearchProps> = ({
   );
 };
 
+
+// ─── Advanced Filters ────────────────────────────────────────────────────────
 
 interface AdvancedFiltersProps {
   filters: SearchFilters;
@@ -500,62 +518,47 @@ interface AdvancedFiltersProps {
 const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersChange }) => {
   const [localFilters, setLocalFilters] = useState<SearchFilters>(filters);
 
+  // Sync local state when parent filters change (e.g. external reset)
+  // Use a ref to avoid running on every render
+  const prevFiltersRef = useRef(filters);
   useEffect(() => {
-    setLocalFilters(filters);
+    if (filters !== prevFiltersRef.current) {
+      prevFiltersRef.current = filters;
+      setLocalFilters(filters);
+    }
   }, [filters]);
 
-  // const handlePriceRangeChange = useCallback((value: [number, number]) => {
-  //   setLocalFilters(prev => ({
-  //     ...prev,
-  //     priceRange: { min: value[0], max: value[1] }
-  //   }));
-  // }, []);
-
-  // const handleBedroomsChange = useCallback((value: [number, number]) => {
-  //   setLocalFilters(prev => ({
-  //     ...prev,
-  //     bedrooms: { min: value[0], max: value[1] }
-  //   }));
-  // }, []);
-
-  // const handleBathroomsChange = useCallback((value: [number, number]) => {
-  //   setLocalFilters(prev => ({
-  //     ...prev,
-  //     bathrooms: { min: value[0], max: value[1] }
-  //   }));
-  // }, []);
-
   const handlePropertyTypeChange = useCallback((type: string, isChecked: boolean) => {
-    setLocalFilters(prev => {
+    setLocalFilters((prev) => {
       const currentTypes = prev.propertyType || [];
       return {
         ...prev,
-        propertyType: isChecked ? [...currentTypes, type] : currentTypes.filter(t => t !== type)
+        propertyType: isChecked ? [...currentTypes, type] : currentTypes.filter((t) => t !== type),
       };
     });
   }, []);
 
   const handleFeatureChange = useCallback((feature: string, isChecked: boolean) => {
-    setLocalFilters(prev => {
+    setLocalFilters((prev) => {
       const currentFeatures = prev.features || [];
       return {
         ...prev,
-        features: isChecked ? [...currentFeatures, feature] : currentFeatures.filter(f => f !== feature)
+        features: isChecked ? [...currentFeatures, feature] : currentFeatures.filter((f) => f !== feature),
       };
     });
   }, []);
 
   const handleStructureChange = useCallback((structure: string) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
-      structure: structure as 'SINGLE_UNIT' | 'MULTI_FAMILY' | 'ALL'
+      structure: structure as 'SINGLE_UNIT' | 'MULTI_FAMILY' | 'ALL',
     }));
   }, []);
 
   const handleAvailabilityChange = useCallback((availability: string) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
-      availability: availability as 'AVAILABLE' | 'ALL'
+      availability: availability as 'AVAILABLE' | 'ALL',
     }));
   }, []);
 
@@ -563,6 +566,10 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
     setLocalFilters({});
     onFiltersChange({});
   }, [onFiltersChange]);
+
+  const handleApply = useCallback(() => {
+    onFiltersChange(localFilters);
+  }, [localFilters, onFiltersChange]);
 
   return (
     <div className="space-y-6">
@@ -584,7 +591,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
             type="number"
             placeholder="Min"
             value={localFilters.priceRange?.min || ''}
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, priceRange: { ...prev.priceRange, min: Number(e.target.value) || undefined } }))}
+            onChange={(e) =>
+              setLocalFilters((prev) => ({
+                ...prev,
+                priceRange: { ...prev.priceRange, min: Number(e.target.value) || undefined },
+              }))
+            }
             className="w-1/2"
           />
           <span className="text-gray-500">-</span>
@@ -592,7 +604,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
             type="number"
             placeholder="Max"
             value={localFilters.priceRange?.max || ''}
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, priceRange: { ...prev.priceRange, max: Number(e.target.value) || undefined } }))}
+            onChange={(e) =>
+              setLocalFilters((prev) => ({
+                ...prev,
+                priceRange: { ...prev.priceRange, max: Number(e.target.value) || undefined },
+              }))
+            }
             className="w-1/2"
           />
         </div>
@@ -607,7 +624,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
           Property Type
         </Label>
         <div className="grid grid-cols-2 gap-2">
-          {PROPERTY_TYPES.map(type => (
+          {PROPERTY_TYPES.map((type) => (
             <div key={type} className="flex items-center space-x-2">
               <Checkbox
                 id={`type-${type}`}
@@ -633,7 +650,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
             type="number"
             placeholder="Min"
             value={localFilters.bedrooms?.min || ''}
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, bedrooms: { ...prev.bedrooms, min: Number(e.target.value) || undefined } }))}
+            onChange={(e) =>
+              setLocalFilters((prev) => ({
+                ...prev,
+                bedrooms: { ...prev.bedrooms, min: Number(e.target.value) || undefined },
+              }))
+            }
           />
         </div>
         <div>
@@ -645,7 +667,12 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
             type="number"
             placeholder="Min"
             value={localFilters.bathrooms?.min || ''}
-            onChange={(e) => setLocalFilters(prev => ({ ...prev, bathrooms: { ...prev.bathrooms, min: Number(e.target.value) || undefined } }))}
+            onChange={(e) =>
+              setLocalFilters((prev) => ({
+                ...prev,
+                bathrooms: { ...prev.bathrooms, min: Number(e.target.value) || undefined },
+              }))
+            }
           />
         </div>
       </div>
@@ -659,7 +686,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
           Features
         </Label>
         <div className="grid grid-cols-2 gap-2">
-          {PROPERTY_FEATURES.map(feature => (
+          {PROPERTY_FEATURES.map((feature) => (
             <div key={feature} className="flex items-center space-x-2">
               <Checkbox
                 id={`feature-${feature}`}
@@ -724,7 +751,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
 
       <div className="mt-4 flex justify-end">
         <PopoverClose asChild>
-          <Button type="button" size="sm" onClick={() => onFiltersChange(localFilters)}>
+          <Button type="button" size="sm" onClick={handleApply}>
             Apply Filters
           </Button>
         </PopoverClose>
@@ -733,5 +760,4 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({ filters, onFiltersCha
   );
 };
 
-// Add this line at the very bottom of PropertySearch.tsx:
-export { PropertySearch as SearchBox }
+export { PropertySearch as SearchBox };

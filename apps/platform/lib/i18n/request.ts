@@ -1,17 +1,21 @@
 import { cookies, headers } from 'next/headers';
 import { fallbackLng, languages } from './translations';
 import { getRequestConfig } from 'next-intl/server';
-import { NAMESPACES } from '@newcondo/i18n';
+import { NAMESPACES, SUPPORTED_LOCALES } from '@newcondo/i18n';
 
-
+const DEFAULT_LOCALE = 'en';
 /**
  * Language detection for Next.js 15 App Router
  * Extracts language from cookies, headers, or URL
  */
 
 export default getRequestConfig(async ({ requestLocale }) => {
-  const locale = (await requestLocale) ?? 'en';
+  let locale = (await requestLocale) ?? DEFAULT_LOCALE;
 
+  // Guard: if locale is not valid (e.g. "login", "favicon.ico"), fall back
+  if (!SUPPORTED_LOCALES.includes(locale as typeof SUPPORTED_LOCALES[number])) {
+    locale = DEFAULT_LOCALE;
+  }
   const messages = Object.fromEntries(
     await Promise.all(
       NAMESPACES.map(async (namespace) => {
