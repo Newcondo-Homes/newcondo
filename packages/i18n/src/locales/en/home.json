@@ -1,9 +1,35 @@
 {
+  "title": "Newcondo - Find Your Perfect Home",
+  "description": "Browse verified properties across Nigeria. Rent securely with Newcondo.",
   "hero": {
     "title": "Find Your Perfect Home",
-    "subtitle": "Discover verified properties across Nigeria",
+    "subtitle": "Discover verified properties across Nigeria. Connect directly with owners and agents.",
     "searchPlaceholder": "Search by city, state or property type",
-    "searchButton": "Search Properties"
+    "searchButton": "Search Properties",
+    "browseProperties": "Browse Properties",
+    "listProperty": "List Your Property"
+  },
+  "features": {
+    "title": "Why Choose Newcondo",
+    "secure": {
+      "title": "Secure Payments",
+      "description": "Your payments are held securely until you confirm your rental. Full protection against fraud."
+    },
+    "verified": {
+      "title": "Verified Properties",
+      "description": "Every property is physically marked and verified by our agents before listing."
+    },
+    "fast": {
+      "title": "Fast Process",
+      "description": "From search to move-in in days, not weeks. Streamlined for your convenience."
+    }
+  },
+  "pricing": {
+    "title": "Properties for Every Budget",
+    "subtitle": "Browse properties ranging from affordable rentals to premium listings"
+  },
+  "footer": {
+    "rights": "All rights reserved."
   },
   "sections": {
     "featuredProperties": "Featured Properties",
@@ -26,8 +52,17 @@
     "learnMore": "Learn More"
   },
   "howItWorks": {
-    "step1": { "title": "Search", "description": "Browse verified properties across Nigeria" },
-    "step2": { "title": "Connect", "description": "Contact owners or agents directly" },
-    "step3": { "title": "Move In", "description": "Complete your rental securely" }
+    "step1": {
+      "title": "Search",
+      "description": "Browse verified properties across Nigeria"
+    },
+    "step2": {
+      "title": "Connect",
+      "description": "Contact owners or agents directly"
+    },
+    "step3": {
+      "title": "Move In",
+      "description": "Complete your rental securely"
+    }
   }
 }

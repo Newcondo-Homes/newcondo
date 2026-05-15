@@ -13,20 +13,21 @@ export const NAMESPACES = [
   'auth',          // Authentication-related text (login, register, verify)
   'properties',      // Property listing text (titles, descriptions, filters)
   'payments',       // Payment and transaction text
-  'profile',       // User profile and settings text
+  // 'profile',       // User profile and settings text
   'admin',         // Admin dashboard text
   'errors',        // Error messages and validation text
   'marking',       // Property marking service text
   'legal',         // Terms, conditions, and legal text
   'referrals',      // Referral system text
   'notifications',  // Notification messages
-  'email',         // Email templates text
+  // 'email',         // Email templates text
   'validation',    // Form validation messages
   'dashboard',     // Dashboard-specific text
-  'search',        // Search and filter text
+  // 'search',        // Search and filter text
   'navigation',  // add if you create this file
   'home',        // add if you create this file
   'dashboard',   
+  'metadata',
 ] as const;
 
 /**
@@ -42,19 +43,20 @@ export const NAMESPACE_DESCRIPTIONS: Record<Namespace, string> = {
   auth: 'Login, registration, OTP verification, password reset, and authentication flows',
   properties: 'Property listings, details, creation, editing, filters, and property-related actions',
   payments: 'Payment forms, transaction history, virtual accounts, and payment-related messages',
-  profile: 'User profiles, settings, preferences, and account management',
+  // profile: 'User profiles, settings, preferences, and account management',
   admin: 'Admin dashboard, user management, approvals, and administrative functions',
   errors: 'Error messages, validation errors, and error states',
   marking: 'Property marking service, agent assignment, job management, and completion',
   legal: 'Terms of service, privacy policy, disclaimers, and legal agreements',
   referrals: 'Referral program, invite links, rewards, and referral tracking',
   notifications: 'In-app notifications, alerts, and notification preferences',
-  email: 'Email template content and email-specific messages',
+  // email: 'Email template content and email-specific messages',
   validation: 'Form field validation messages and input requirements',
   dashboard: 'Dashboard widgets, statistics, and dashboard-specific content',
-  search: 'Search functionality, filters, sorting, and search results',
+  // search: 'Search functionality, filters, sorting, and search results',
   navigation: 'Sidebar links, navbar items, breadcrumbs, and menu labels used for app routing',
   home: 'Landing page content, hero sections, marketing copy, and guest-facing information',
+  metadata: 'Brief info about the page'
 };
 
 /**
@@ -81,9 +83,10 @@ export const LAZY_NAMESPACES: Namespace[] = NAMESPACES.filter(
  */
 export const NAMESPACE_DEPENDENCIES: Partial<Record<Namespace, Namespace[]>> = {
   auth: ['validation', 'errors'],
-  properties: ['validation', 'errors', 'search'],
+  // properties: ['validation', 'errors', 'search'],
+  properties: ['validation', 'errors'],
   payments: ['validation', 'errors'],
-  profile: ['validation', 'errors'],
+  // profile: ['validation', 'errors'],
   marking: ['validation', 'errors', 'payments'],
   admin: ['validation', 'errors', 'properties', 'payments'],
 };
