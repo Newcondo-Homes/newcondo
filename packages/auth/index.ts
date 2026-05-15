@@ -6,6 +6,7 @@ import NextAuth from "next-auth";
 import { prisma, Role, UserType, VerificationStatus } from "@newcondo/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  trustHost: true,
   callbacks: {
     async signIn({ account }) {
       if (account?.provider !== "credentials") return true;

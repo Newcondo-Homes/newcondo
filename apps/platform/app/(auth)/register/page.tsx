@@ -11,13 +11,9 @@ export const metadata: Metadata = {
 }
 
 export default async function RegisterPage() {
-  // Await headers first to satisfy Next.js 15 requirements
-  // const headersList = await headers()
-
   
   const session = await auth();
 
-  
   // Redirect if already authenticated
   if (session) {
     redirect('/dashboard')

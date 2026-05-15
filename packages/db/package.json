@@ -8,7 +8,7 @@
     ".": "./index.ts"
   },
   "scripts": {
-    "db:migrate": "prisma migrate dev --name init --skip-generate --config prisma.config.ts",
+    "db:migrate": "prisma migrate dev --name init  --config prisma.config.ts",
     "db:generate": "prisma generate --config prisma.config.ts",
     "db:push": "prisma db push --config prisma.config.ts",
     "db:deploy": "prisma migrate deploy --config prisma.config.ts",
