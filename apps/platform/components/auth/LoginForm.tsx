@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { signIn, getSession } from '@newcondo/auth/client'
-import { useRouter, useSearchParams  } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@newcondo/ui'
 import { Input } from '@newcondo/ui'
 import { Label } from '@newcondo/ui'
@@ -32,9 +32,9 @@ export default function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
- 
+
   const [error, setError] = useState('')
-  
+
 
   const [formData, setFormData] = useState<LoginFormData>(initialFormData)
   const [showPassword, setShowPassword] = useState(false)
@@ -44,7 +44,7 @@ export default function LoginForm() {
   const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
 
 
-    const handleInputChange = (field: keyof LoginFormData, value: string | boolean) => {
+  const handleInputChange = (field: keyof LoginFormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear errors when user starts typing
     if (errors[field]) {
@@ -84,62 +84,55 @@ export default function LoginForm() {
 
 
     try {
+
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
+        loginType: "email", // 👈 Added parameter here
         redirect: false
-      })
+      });
 
       if (result?.error) {
-        setError('Invalid email or password')
-        console.log(error)
-      } else {
-        router.push('/dashboard')
-      }
-      if (result?.error) {
-        // Handle specific error cases
+        // Single unified place to handle errors cleanly
         switch (result.error) {
           case 'CredentialsSignin':
-            setLoginError('Invalid email or password. Please try again.')
-            break
+            setLoginError('Invalid email or password. Please try again.');
+            break;
           case 'AccountNotVerified':
-            setLoginError('Please verify your email before logging in.')
-            // Redirect to verification page
-            router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`)
-            return
+            setLoginError('Please verify your email before logging in.');
+            router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
+            break;
           case 'AccountLocked':
-            setLoginError('Account has been locked due to too many failed attempts. Please try again later.')
-            break
+            setLoginError('Account has been locked due to too many failed attempts. Please try again later.');
+            break;
           default:
-            setLoginError('Login failed. Please try again.')
+            setLoginError('Login failed. Please try again.');
         }
       } else if (result?.ok) {
-        // Successful login
-       toast('Welcome back!', {
+        toast('Welcome back!', {
           description: 'You have been successfully logged in.',
-        })
-        
-        // Get updated session and redirect
-        const session = await getSession()
+        });
+
+        const session = await getSession();
         if (session) {
-          router.push(callbackUrl)
-          router.refresh()
+          router.push(callbackUrl || '/dashboard');
+          router.refresh();
         }
       }
     } catch (err) {
-      console.error(err)
-      setLoginError('An unexpected error occurred. Please try again.')
+      console.error("Unexpected login error:", err);
+      setLoginError('An unexpected error occurred. Please try again.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
-    const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
     try {
       setIsLoading(true)
-      await signIn(provider, { 
+      await signIn(provider, {
         callbackUrl,
-        redirect: true 
+        redirect: true
       })
     } catch (error) {
       console.error('Social login error:', error)
