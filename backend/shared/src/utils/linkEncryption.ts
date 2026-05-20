@@ -301,3 +301,17 @@ export function decryptTempData<T = any>(encryptedData: string): T | null {
     return null;
   }
 }
+
+/**
+ * Alias compatibility function mapping back to decryptMarkingLink
+ */
+export function decryptShareableLink(encryptedData: string): DecryptedLinkData | null {
+  return decryptMarkingLink(encryptedData);
+}
+
+/**
+ * Standalone validation helper mapping directly against payload object states
+ */
+export function validateShareableLink(data: DecryptedLinkData | null): boolean {
+  return !!data && data.isValid && !data.isExpired;
+}

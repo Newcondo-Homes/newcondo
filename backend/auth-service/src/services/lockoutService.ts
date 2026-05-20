@@ -1,10 +1,10 @@
 // backend/auth-service/src/services/lockoutService.ts
-import { redis } from "../../../shared/src/config/redis";
+import { redis } from "@newcondo/backend-shared";
 import { prisma } from "@newcondo/db";
 import {
   sendAccountLockedEmail,
   sendAccountUnlockedEmail,
-} from "../../../shared/src/utils/email";
+} from "@newcondo/backend-shared";
 
 interface LockoutData {
   attempts: number;

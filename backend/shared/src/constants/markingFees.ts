@@ -23,15 +23,15 @@ export const AGENT_COMMISSION_PERCENTAGE = 25; // 25%
 /**
  * Calculate agent commission from marking fee
  */
-export const calculateAgentCommission = (markingFee: number): number => {
+export const calculateAgentCommissionFromMarkingFee = (markingFee: number): number => {
   return (markingFee * AGENT_COMMISSION_PERCENTAGE) / 100;
 };
 
 /**
  * Calculate platform fee (remaining after agent commission)
  */
-export const calculatePlatformFee = (markingFee: number): number => {
-  return markingFee - calculateAgentCommission(markingFee);
+export const calculatePlatformFeeAfterAgentCommission = (markingFee: number): number => {
+  return markingFee - calculateAgentCommissionFromMarkingFee(markingFee);
 };
 
 /**
@@ -44,7 +44,7 @@ export const INITIAL_AGENT_PAYMENT = 1000; // ₦1,000
  * Calculate remaining payment after initial advance
  */
 export const calculateRemainingPayment = (markingFee: number): number => {
-  return calculateAgentCommission(markingFee) - INITIAL_AGENT_PAYMENT;
+  return calculateAgentCommissionFromMarkingFee(markingFee) - INITIAL_AGENT_PAYMENT;
 };
 
 /**
@@ -57,7 +57,7 @@ export const COMPENSATION_PER_EXPIRY = 2000; // ₦2,000 per expiry cycle
  * Maximum number of expiry cycles before full payment
  */
 export const MAX_EXPIRY_CYCLES = Math.ceil(
-  calculateAgentCommission(MARKING_BASE_FEE) / COMPENSATION_PER_EXPIRY
+  calculateAgentCommissionFromMarkingFee(MARKING_BASE_FEE) / COMPENSATION_PER_EXPIRY
 );
 
 /**
@@ -77,12 +77,12 @@ export interface MarkingFeeBreakdown {
 export const getMarkingFeeBreakdown = (
   markingFee: number = MARKING_BASE_FEE
 ): MarkingFeeBreakdown => {
-  const agentCommission = calculateAgentCommission(markingFee);
+  const agentCommission = calculateAgentCommissionFromMarkingFee(markingFee);
   
   return {
     totalFee: markingFee,
     agentCommission,
-    platformFee: calculatePlatformFee(markingFee),
+    platformFee: calculatePlatformFeeAfterAgentCommission(markingFee),
     initialPayment: INITIAL_AGENT_PAYMENT,
     remainingPayment: agentCommission - INITIAL_AGENT_PAYMENT
   };
@@ -148,7 +148,7 @@ export const REFUND_POLICY = {
 /**
  * Calculate refund amount based on time elapsed
  */
-export const calculateRefundAmount = (
+export const calculateRefundAmountBasedOnElapsedTime = (
   paidAmount: number,
   hoursElapsed: number
 ): number => {

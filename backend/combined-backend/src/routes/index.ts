@@ -6,7 +6,7 @@ import type { Router as ExpressRouter } from 'express'
 // Import service routers
 import { authRouter } from './auth';
 // import { propertyRouter } from './properties';
-// import { paymentRouter } from './payments';
+import { paymentRouter } from './payments';
 // import { bookingRouter } from './bookings';
 // import { markingRouter } from './marking';
 // import { adminRouter } from './admin';
@@ -39,8 +39,8 @@ const mountRoute = (path: string, routerInstance: Router, serviceName: string) =
 
 // Mount all service routes
 mountRoute('/auth', authRouter, 'Auth Service');
+mountRoute('/payments', paymentRouter, 'Payment Service');
 // mountRoute('/properties', propertyRouter, 'Property Service');
-// mountRoute('/payments', paymentRouter, 'Payment Service');
 // mountRoute('/bookings', bookingRouter, 'Booking Service');
 // mountRoute('/marking', markingRouter, 'Marking Service');
 // mountRoute('/admin', adminRouter, 'Admin Service');

@@ -225,7 +225,7 @@ export interface CreateReferralRewardDTO {
   expiresAt?: Date;
 }
 
-export interface RedeemRewardDTO {
+export interface ReferralRedeemRewardDTO {
   rewardId: string;
   userId: string;
   redemptionMethod: 'WALLET' | 'BANK_TRANSFER' | 'CREDIT_BALANCE';

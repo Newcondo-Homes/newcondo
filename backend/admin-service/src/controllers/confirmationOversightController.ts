@@ -31,12 +31,18 @@ const bulkActionSchema = z.object({
   extensionDays: z.number().min(1).max(7).optional(),
 });
 
+// Helper to extract and validate adminId from request
+function getAdminId(req: Request): string | null {
+  return req.user?.id ?? null;
+}
+
+
 export const confirmationOversightController = {
   /**
    * Get all payments awaiting confirmation
    * GET /api/admin/confirmations
    */
-  async getConfirmations(req: Request, res: Response) {
+  async getConfirmations(req: Request, res: Response): Promise<Response | void> {
     try {
       const query = getConfirmationsQuerySchema.parse(req.query);
 
@@ -74,7 +80,7 @@ export const confirmationOversightController = {
    * Get confirmation statistics
    * GET /api/admin/confirmations/stats
    */
-  async getConfirmationStats(req: Request, res: Response) {
+  async getConfirmationStats(req: Request, res: Response): Promise<Response | void> {
     try {
       const stats = await confirmationOversightService.getConfirmationStats();
 
@@ -95,24 +101,29 @@ export const confirmationOversightController = {
    * Get details of a specific confirmation
    * GET /api/admin/confirmations/:paymentId
    */
-  async getConfirmationDetails(req: Request, res: Response) {
+  async getConfirmationDetails(req: Request, res: Response): Promise<Response | void>  {
     try {
       const { paymentId } = req.params;
+      const adminId = getAdminId(req);
 
-      const details = await confirmationOversightService.getConfirmationDetails(paymentId);
-
-      if (!details) {
-        return res.status(404).json({
-          success: false,
-          error: 'Confirmation not found',
-        });
+      if (!adminId) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
+
+      const details = await confirmationOversightService.getConfirmationDetails(paymentId, adminId );
 
       res.status(200).json({
         success: true,
         data: details,
       });
     } catch (error) {
+      if (error instanceof Error && error.message === 'Payment not found') {
+        return res.status(404).json({ success: false, error: 'Confirmation not found' });
+      }
+      if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+        return res.status(403).json({ success: false, error: error.message });
+      }
+
       console.error('Error fetching confirmation details:', error);
       res.status(500).json({
         success: false,
@@ -125,7 +136,7 @@ export const confirmationOversightController = {
    * Force release payment (admin override)
    * POST /api/admin/confirmations/force-release
    */
-  async forceReleasePayment(req: Request, res: Response) {
+  async forceReleasePayment(req: Request, res: Response): Promise<Response  | void>  {
     try {
       const data = forceReleaseSchema.parse(req.body);
       const adminId = req.user?.id;
@@ -158,6 +169,10 @@ export const confirmationOversightController = {
         });
       }
 
+      if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+        return res.status(403).json({ success: false, error: error.message });
+      }
+
       console.error('Error forcing payment release:', error);
       res.status(500).json({
         success: false,
@@ -170,10 +185,10 @@ export const confirmationOversightController = {
    * Extend confirmation deadline
    * POST /api/admin/confirmations/extend-deadline
    */
-  async extendDeadline(req: Request, res: Response) {
+  async extendDeadline(req: Request, res: Response): Promise<Response  | void> {
     try {
       const data = extendDeadlineSchema.parse(req.body);
-      const adminId = req.user?.id;
+      const adminId = getAdminId(req);
 
       if (!adminId) {
         return res.status(401).json({
@@ -183,11 +198,11 @@ export const confirmationOversightController = {
       }
 
       const result = await confirmationOversightService.extendConfirmationDeadline({
-        paymentId: data.paymentId,
-        extensionDays: data.extensionDays,
-        adminId,
-        reason: data.reason,
-      });
+          paymentId: data.paymentId,
+          extensionDays: data.extensionDays,
+          adminId,
+          reason: data.reason,
+        });
 
       res.status(200).json({
         success: true,
@@ -203,6 +218,10 @@ export const confirmationOversightController = {
         });
       }
 
+      if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+        return res.status(403).json({ success: false, error: error.message });
+      }
+
       console.error('Error extending deadline:', error);
       res.status(500).json({
         success: false,
@@ -215,7 +234,7 @@ export const confirmationOversightController = {
    * Get expired confirmations that need attention
    * GET /api/admin/confirmations/expired
    */
-  async getExpiredConfirmations(req: Request, res: Response) {
+  async getExpiredConfirmations(req: Request, res: Response): Promise<Response  | void>  {
     try {
       const expired = await confirmationOversightService.getExpiredConfirmations();
 
@@ -236,10 +255,10 @@ export const confirmationOversightController = {
    * Bulk action on multiple confirmations
    * POST /api/admin/confirmations/bulk-action
    */
-  async bulkAction(req: Request, res: Response) {
+  async bulkAction(req: Request, res: Response): Promise<Response | void> {
     try {
       const data = bulkActionSchema.parse(req.body);
-      const adminId = req.user?.id;
+      const adminId = getAdminId(req);
 
       if (!adminId) {
         return res.status(401).json({
@@ -270,6 +289,9 @@ export const confirmationOversightController = {
         });
       }
 
+      if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+        return res.status(403).json({ success: false, error: error.message });
+      }
       console.error('Error performing bulk action:', error);
       res.status(500).json({
         success: false,
@@ -282,9 +304,15 @@ export const confirmationOversightController = {
    * Get confirmation timeline/history
    * GET /api/admin/confirmations/:paymentId/timeline
    */
-  async getConfirmationTimeline(req: Request, res: Response) {
+  async getConfirmationTimeline(req: Request, res: Response): Promise<Response | void> {
     try {
       const { paymentId } = req.params;
+      const adminId = getAdminId(req);
+
+      if (!adminId) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+      }
+
 
       const timeline = await confirmationOversightService.getConfirmationTimeline(paymentId);
 
@@ -293,6 +321,10 @@ export const confirmationOversightController = {
         data: timeline,
       });
     } catch (error) {
+       if (error instanceof Error && error.message === 'Payment not found') {
+        return res.status(404).json({ success: false, error: 'Payment not found' });
+      }
+      
       console.error('Error fetching confirmation timeline:', error);
       res.status(500).json({
         success: false,

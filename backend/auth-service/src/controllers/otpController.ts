@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { prisma } from "@newcondo/db";
-import { sendResponse } from "../../../shared/src/utils/response";
-import { generateOTP } from "../../../shared/src/utils/otp";
-import { sendEmail } from "../../../shared/src/utils/email";
+import { sendResponse } from "@newcondo/backend-shared";
+import { generateOTP } from "@newcondo/backend-shared";
+import { sendEmail } from "@newcondo/backend-shared";
 import type { AuthenticatedRequest } from "../types/auth";
 // import { otpService } from '../services/otpService';
 

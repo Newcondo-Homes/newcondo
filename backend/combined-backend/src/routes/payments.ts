@@ -18,6 +18,49 @@ import type { Router as ExpressRouter } from 'express'
 
 const router: ExpressRouter = Router();
 
+// This endpoint will catch POST requests sent to /webhooks/flutterwave
+router.post('/webhooks/flutterwave', async (req, res) => {
+    try {
+        // 1. Verify the request is genuinely from Flutterwave
+        const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
+        const signature = req.headers['verif-hash'];
+
+        if (!signature || signature !== secretHash) {
+            //   logger.warn('⚠️ Unauthorized Flutterwave webhook attempt blocked.');
+            console.log('⚠️ Unauthorized Flutterwave webhook attempt blocked. ')
+            return res.status(401).json({ error: 'Unauthorized signature' });
+        }
+
+        const payload = req.body;
+        // logger.info(`📡 Flutterwave Webhook received for event: ${payload.event}`);
+        console.log(`📡 Flutterwave Webhook received for event: ${payload.event}`)
+
+        // 2. Handle the specific payment event
+        if (payload.event === 'charge.completed') {
+            const { status, tx_ref, amount, customer } = payload.data;
+
+            if (status === 'successful') {
+                // logger.info(`✅ Payment successful! Ref: ${tx_ref} | Amount: ${amount} | Customer: ${customer?.email}`);
+                console.log(`✅ Payment successful! Ref: ${tx_ref} | Amount: ${amount} | Customer: ${customer?.email}`)
+
+                // Update your database here
+                // await prisma.invoice.update({
+                //   where: { reference: tx_ref },
+                //   data: { status: 'PAID' }
+                // });
+            }
+        }
+
+        // 3. ALWAYS return a 200 OK immediately so Flutterwave stops retrying
+        return res.status(200).send('Webhook processed successfully');
+
+    } catch (error) {
+        // logger.error('❌ Error handling webhook execution:', error);
+        console.error('❌ Error handling webhook execution:', error)
+        return res.status(500).json({ error: 'Internal processing error' });
+    }
+});
+
 // Payment initialization routes
 // router.post('/initialize',
 //   authenticateToken,
@@ -173,4 +216,4 @@ const router: ExpressRouter = Router();
 //   paymentController.getRevenueAnalytics
 // );
 
-export default router;
+export { router as paymentRouter }

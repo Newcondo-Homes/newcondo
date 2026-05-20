@@ -226,13 +226,6 @@ export function formatHeatmapData(
 }
 
 /**
- * Format percentage data
- */
-export function formatPercentageData(value: number, decimals: number = 2): string {
-  return `${value.toFixed(decimals)}%`;
-}
-
-/**
  * Format currency data
  */
 export function formatCurrencyData(

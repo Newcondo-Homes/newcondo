@@ -2,7 +2,7 @@
 
 import { Request, Response } from 'express';
 import { PrismaClient } from '@newcondo/db';
-import { successResponse, errorResponse } from '../../../shared/src/utils/response';
+import { successResponse, errorResponse } from '@newcondo/backend-shared/';
 
 const prisma = new PrismaClient();
 

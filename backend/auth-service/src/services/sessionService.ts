@@ -1,8 +1,6 @@
 // backend/auth-service/src/services/sessionService.ts
 import { prisma } from '@newcondo/db';
-import { redis } from '../../../shared/src/config/redis';
-
-// const prisma = new PrismaClient();
+import { redis } from '@newcondo/backend-shared';
 
 interface SessionData {
   userId: string;

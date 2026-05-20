@@ -12,13 +12,13 @@ export interface ApiResponse<T = any> {
 /**
  * Error response interface with additional error details
  */
-export interface ErrorResponse extends ApiResponse<null> {
-  error?: {
-    code?: string
-    details?: any
-    stack?: string
-  }
-}
+// export interface ErrorResponse extends ApiResponse<null> {
+//   error?: {
+//     code?: string
+//     details?: any
+//     stack?: string
+//   }
+// }
 
 /**
  * Paginated response interface
@@ -69,7 +69,7 @@ export interface ApiQuery extends PaginationQuery, FilterQuery {}
 /**
  * Authentication response
  */
-export interface AuthResponse extends ApiResponse<{
+export interface ApiAuthResponse extends ApiResponse<{
   user: UserInfo
   token: string
   refreshToken?: string

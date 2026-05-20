@@ -1,6 +1,6 @@
 // backend/admin-service/src/services/referralAdminService.ts
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@newcondo/db';
 import { rewardDistributionService } from '../../../payment-service/src/services/rewardDistributionService';
 
 const prisma = new PrismaClient();

@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
-import { errorHandler } from "@newcondo/backend-shared/src";
+import { errorHandler } from "@newcondo/backend-shared";
 import { authRoutes } from "./routes/auth";
 import { otpRoutes } from "./routes/otp";
 import profileRoutes from "./routes/profile";

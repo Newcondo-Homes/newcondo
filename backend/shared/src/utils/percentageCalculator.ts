@@ -26,7 +26,7 @@ export const calculatePercentageChange = (
  * @param total - Total value
  * @returns Percentage (0-100)
  */
-export const calculatePercentage = (value: number, total: number): number => {
+const calculatePercentage = (value: number, total: number): number => {
   if (total === 0) return 0;
   return (value / total) * 100;
 };
@@ -171,7 +171,7 @@ export const calculatePercentageToTarget = (
  * @param showSign - Whether to show + sign for positive values
  * @returns Formatted percentage string
  */
-export const formatPercentage = (
+export const formatPercentageUtil = (
   value: number,
   decimals: number = 2,
   showSign: boolean = false
@@ -326,7 +326,7 @@ export default {
   calculateCompoundPercentage,
   calculateDistribution,
   calculatePercentageToTarget,
-  formatPercentage,
+  formatPercentageUtil,
   calculateYoYChange,
   calculateMoMChange,
   calculatePercentageSplit,

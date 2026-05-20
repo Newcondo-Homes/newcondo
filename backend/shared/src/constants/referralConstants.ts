@@ -75,7 +75,7 @@ export const MAX_REFERRALS_SAME_DEVICE_FINGERPRINT = 5;
 export const SUSPICIOUS_ACTIVITY_THRESHOLD = 10;
 
 // Error messages
-export const ERROR_MESSAGES = {
+export const REFERRAL_ERROR_MESSAGES = {
   INVALID_REFERRAL_CODE: 'Invalid referral code',
   REFERRAL_CODE_NOT_FOUND: 'Referral code not found',
   REFERRAL_CODE_EXPIRED: 'Referral code has expired',
@@ -93,7 +93,7 @@ export const ERROR_MESSAGES = {
 } as const;
 
 // Success messages
-export const SUCCESS_MESSAGES = {
+export const REFERRAL_SUCCESS_MESSAGES = {
   REFERRAL_CREATED: 'Referral successfully created',
   REWARD_EARNED: 'Congratulations! You\'ve earned a reward',
   REWARD_REDEEMED: 'Reward successfully redeemed',
@@ -102,7 +102,7 @@ export const SUCCESS_MESSAGES = {
 } as const;
 
 // Email templates
-export const EMAIL_TEMPLATES = {
+export const REFERRAL_EMAIL_TEMPLATES = {
   REFERRAL_INVITATION: 'referral-invitation',
   REFERRAL_SIGNUP: 'referral-signup',
   REFERRAL_QUALIFIED: 'referral-qualified',

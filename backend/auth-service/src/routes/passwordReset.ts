@@ -2,7 +2,7 @@
 import { Router } from "express";
 import type { Router as ExpressRouter } from "express";
 import { body, param } from "express-validator";
-import { validateRequest } from "../../../shared/src/middleware/auth";
+import { validateRequest } from "@newcondo/backend-shared";
 import { passwordResetController } from "../controllers/passwordResetController";
 
 const router: ExpressRouter = Router();

@@ -1,7 +1,7 @@
 // backend/admin-service/src/controllers/supportController.ts
 
 import { Request, Response } from 'express';
-import { PrismaClient, TicketStatus, TicketPriority, TicketCategory } from '@newcondo/db';
+import { PrismaClient, TicketPriority } from '@newcondo/db';
 import { successResponse, errorResponse } from '../../../shared/src/utils/response';
 import { adminController } from './adminController';
 

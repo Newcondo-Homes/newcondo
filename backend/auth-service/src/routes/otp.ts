@@ -6,8 +6,6 @@ import { sendOTPSchema, verifyOTPSchema } from "../validations/otpValidation";
 
 const router: ExpressRouter = Router();
 
-// const otpController = new OTPController();
-
 // Send OTP
 router.post(
   "/send",

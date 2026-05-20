@@ -163,7 +163,7 @@ export const extractIPAddress = (
 /**
  * Calculate distance between two coordinates (Haversine formula)
  */
-export const calculateDistance = (
+export const ipCalculateDistance = (
   lat1: number,
   lon1: number,
   lat2: number,
@@ -227,7 +227,7 @@ export const getNigerianStateFromCoordinates = (
   ];
 
   for (const state of stateApproximations) {
-    const distance = calculateDistance(
+    const distance = ipCalculateDistance(
       latitude,
       longitude,
       state.lat,

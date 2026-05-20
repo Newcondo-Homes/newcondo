@@ -1,7 +1,7 @@
 // backend/auth-service/src/controllers/passwordResetController.ts
 import { Request, Response } from 'express';
 import { passwordResetService } from '../services/passwordResetService';
-import { ApiResponse } from '../../../shared/src/types/api';
+import { ApiResponse } from '@newcondo/backend-shared';
 
 export const passwordResetController = {
   async requestReset(req: Request, res: Response) {

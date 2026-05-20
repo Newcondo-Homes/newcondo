@@ -136,7 +136,7 @@ export interface VirtualAccountResponse {
 }
 
 // Refund types
-export interface RefundRequest {
+export interface PaymentRefundRequest {
   id: string;
   amount?: number;
   reason?: string;
@@ -284,11 +284,26 @@ export interface PaymentError {
   retryable: boolean;
 }
 
-export interface FlutterwaveError {
-  error: boolean;
-  message: string;
-  code?: string;
-  data?: any;
+export class FlutterwaveError extends Error {
+  public error: boolean;
+  public code?: string;
+  public data?: any;
+
+  constructor(payload: { error: boolean; message: string; code?: string; data?: any }) {
+    super(payload.message);
+    this.name = 'FlutterwaveError';
+    this.error = payload.error;
+    this.code = payload.code;
+    this.data = payload.data;
+  }
+}
+
+/**
+ * FIXED: Added missing RefundRequest interface schema
+ */
+export interface PaymentRefundRequest {
+  amount?: number;
+  comments?: string;
 }
 
 // API response wrappers
@@ -299,7 +314,7 @@ export interface PaymentApiResponse<T = any> {
   message?: string;
 }
 
-export interface PaginatedResponse<T> {
+export interface PaymentsPaginatedResponse<T> {
   data: T[];
   pagination: {
     page: number;

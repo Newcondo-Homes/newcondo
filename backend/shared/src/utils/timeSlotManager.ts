@@ -7,7 +7,7 @@
 
 import { addHours, addDays, isBefore, isAfter, differenceInMinutes, differenceInHours } from 'date-fns';
 
-export interface TimeSlotConfig {
+interface TimeSlotConfig {
   slotDurationHours: number; // Default: 3 hours per agent
   maxCompletionDays: number; // Default: 3 days for property owner
   bufferMinutes: number; // Buffer time before expiry warnings

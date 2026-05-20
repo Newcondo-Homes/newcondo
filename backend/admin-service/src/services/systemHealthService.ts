@@ -13,6 +13,7 @@ import os from 'os';
 
 const prisma = new PrismaClient();
 
+//TODO: make sure the urls match for both development and production
 export class SystemHealthService {
   private readonly services = [
     { name: 'admin-service', url: process.env.ADMIN_SERVICE_URL || 'http://localhost:4001' },

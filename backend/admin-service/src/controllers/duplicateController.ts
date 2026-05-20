@@ -1,8 +1,8 @@
 // backend/admin-service/src/controllers/duplicateController.ts
 
 import { Request, Response } from 'express';
-import { PrismaClient, DuplicateStatus } from '@newcondo/db';
-import { successResponse, errorResponse } from '../../../shared/src/utils/response';
+import { PrismaClient } from '@newcondo/db';
+import { successResponse, errorResponse } from '@newcondo/backend-shared/';
 import { adminController } from './adminController';
 
 const prisma = new PrismaClient();

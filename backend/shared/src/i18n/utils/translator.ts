@@ -1,5 +1,8 @@
-import i18next, { TFunction } from 'i18next';
-import { SupportedLocale, DEFAULT_LOCALE } from '../middleware/i18nMiddleware';
+// src/i18n/utils/translator.ts
+
+import { TFunction } from '@newcondo/i18n';
+import { SupportedLocale, DEFAULT_LOCALE } from '@newcondo/i18n';
+import { i18next } from "@newcondo/i18n/client";
 
 /**
  * Translator class for managing translations
@@ -17,35 +20,40 @@ export class Translator {
    * Translate a key with optional interpolation
    */
   translate(key: string, options?: Record<string, any>): string {
-    return this.t(key, options);
+    // FIXED: Cast return value to string or pass string constraint to t()
+    return this.t(key, options) as string;
   }
 
   /**
    * Translate error messages
    */
   translateError(errorKey: string, options?: Record<string, any>): string {
-    return this.t(`errors.${errorKey}`, options);
+    // FIXED: Added <string> generic constraint
+    return this.t(`errors.${errorKey}`, options) as string;
   }
 
   /**
    * Translate notification messages
    */
   translateNotification(notificationKey: string, options?: Record<string, any>): string {
-    return this.t(`notifications.${notificationKey}`, options);
+    // FIXED: Added <string> generic constraint
+    return this.t(`notifications.${notificationKey}`, options) as string;
   }
 
   /**
    * Translate email content
    */
   translateEmail(emailKey: string, options?: Record<string, any>): string {
-    return this.t(`email.${emailKey}`, options);
+    // FIXED: Added <string> generic constraint
+    return this.t(`email.${emailKey}`, options) as string;
   }
 
   /**
    * Translate SMS content
    */
   translateSMS(smsKey: string, options?: Record<string, any>): string {
-    return this.t(`sms.${smsKey}`, options);
+    // FIXED: Added <string> generic constraint
+    return this.t(`sms.${smsKey}`, options) as string;
   }
 
   /**
@@ -138,7 +146,6 @@ export function translateEnum<T extends string>(
     return translator.translate(key);
   }
 
-  // Return formatted value as fallback
   return value.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
 }
 

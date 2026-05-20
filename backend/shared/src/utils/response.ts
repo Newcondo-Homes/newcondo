@@ -1,9 +1,11 @@
 import { Response } from "express";
+import { ApiResponse } from '../types'; 
+import { HttpStatusCode } from '../types';
 
 /**
  * Standard API response interface
  */
-export interface ApiResponse<T = any> {
+export interface ApiResponseForUtil<T = any> {
   success: boolean;
   message: string;
   data: T | null;
@@ -14,7 +16,7 @@ export interface ApiResponse<T = any> {
 /**
  * Error response interface with additional error details
  */
-export interface ErrorResponse extends ApiResponse<null> {
+export interface ErrorResponse extends ApiResponseForUtil<null> {
   error?: {
     code?: string;
     details?: any;
@@ -36,8 +38,8 @@ export const standardResponse = <T = any>(
   data: T | null = null,
   errorCode?: string,
   errorDetails?: any
-): ApiResponse<T> | ErrorResponse => {
-  const response: ApiResponse<T> | ErrorResponse = {
+): ApiResponseForUtil<T> | ErrorResponse => {
+  const response: ApiResponseForUtil<T> | ErrorResponse = {
     success,
     message,
     data,
@@ -75,10 +77,10 @@ export const sendResponse = <T = any>(
     details?: any;
     stack?: string;
   }
-): Response<ApiResponse<T> | ErrorResponse> => {
+): Response<ApiResponseForUtil<T> | ErrorResponse> => {
   const success = statusCode >= 200 && statusCode < 300;
 
-  const response: ApiResponse<T> | ErrorResponse = {
+  const response: ApiResponseForUtil<T> | ErrorResponse = {
     success,
     message,
     data,
@@ -98,7 +100,7 @@ export const sendSuccess = <T = any>(
   message: string = "Success",
   data: T | null = null,
   statusCode: number = 200
-): Response<ApiResponse<T>> => {
+): Response<ApiResponseForUtil<T>> => {
   return sendResponse(res, statusCode, message, data);
 };
 
@@ -109,7 +111,7 @@ export const sendCreated = <T = any>(
   res: Response,
   message: string = "Resource created successfully",
   data: T | null = null
-): Response<ApiResponse<T>> => {
+): Response<ApiResponseForUtil<T>> => {
   return sendResponse(res, 201, message, data);
 };
 
@@ -247,7 +249,7 @@ export const sendPaginatedResponse = <T = any>(
   limit: number,
   message: string = "Data retrieved successfully"
 ): Response<
-  ApiResponse<{
+  ApiResponseForUtil<{
     items: T[];
     pagination: {
       total: number;
@@ -275,3 +277,51 @@ export const sendPaginatedResponse = <T = any>(
     },
   });
 };
+
+
+/**
+ * Sends a structured standard success API response
+ */
+export function successResponse<T = any>(
+  res: Response,
+  data: T,
+  message = 'Operation successful',
+  statusCode: number = HttpStatusCode.OK
+): Response {
+  const responseBody: ApiResponse<T> = {
+    success: true,
+    message,
+    data,
+    timestamp: new Date().toISOString(),
+    statusCode
+  };
+  
+  return res.status(statusCode).json(responseBody);
+}
+
+/**
+ * Sends a structured standard error API response
+ */
+export function errorResponse(
+  res: Response,
+  message = 'An unexpected error occurred',
+  statusCode: number = HttpStatusCode.INTERNAL_SERVER_ERROR,
+  errorCode?: string,
+  details: any = null
+): Response {
+  const responseBody: ErrorResponse = {
+    success: false,
+    message,
+    data: null,
+    timestamp: new Date().toISOString(),
+    statusCode,
+    error: {
+      code: errorCode,
+      details,
+      // Optional: Add stack trace in development mode
+      ...(process.env.NODE_ENV === 'development' && { stack: new Error().stack })
+    }
+  };
+
+  return res.status(statusCode).json(responseBody);
+}

@@ -1,6 +1,8 @@
 import { ConfirmationPeriod, ConfirmationStatus } from '../types/confirmation';
 
 export class ConfirmationPeriodUtils {
+  // TODO: since CONFIRMATION_PERIOD_HOURS may change in the future, find the best
+  // place to put it so it can be referenced here or anywhere its needed
   private static readonly CONFIRMATION_PERIOD_HOURS = 24;
   private static readonly WARNING_THRESHOLD_HOURS = 6;
 

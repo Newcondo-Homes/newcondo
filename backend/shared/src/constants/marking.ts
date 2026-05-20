@@ -112,7 +112,7 @@ export const URGENCY_PRIORITY_SCORES = {
 } as const;
 
 // Notification Triggers
-export const NOTIFICATION_TRIGGERS = {
+export const MARKING_NOTIFICATION_TRIGGERS = {
   JOB_CREATED: 'JOB_CREATED',
   JOB_ASSIGNED: 'JOB_ASSIGNED',
   JOB_AVAILABLE: 'JOB_AVAILABLE',
@@ -159,7 +159,7 @@ export const VALIDATION_MESSAGES = {
 } as const;
 
 // Error Codes
-export const ERROR_CODES = {
+export const MARKING_ERROR_CODES = {
   JOB_NOT_FOUND: 'MARKING_JOB_NOT_FOUND',
   JOB_ALREADY_ASSIGNED: 'MARKING_JOB_ALREADY_ASSIGNED',
   JOB_ALREADY_COMPLETED: 'MARKING_JOB_ALREADY_COMPLETED',
@@ -349,7 +349,7 @@ export const DB_LIMITS = {
 } as const;
 
 // Coordinate Validation
-export const COORDINATES = {
+export const MARKING_COORDINATES = {
   MIN_LATITUDE: -90,
   MAX_LATITUDE: 90,
   MIN_LONGITUDE: -180,
@@ -403,10 +403,10 @@ export const MARKING_CONSTANTS = {
     LEVELS: URGENCY_LEVELS,
     PRIORITY_SCORES: URGENCY_PRIORITY_SCORES,
   },
-  NOTIFICATIONS: NOTIFICATION_TRIGGERS,
+  NOTIFICATIONS: MARKING_NOTIFICATION_TRIGGERS,
   SHAREABLE_LINK,
   VALIDATION: VALIDATION_MESSAGES,
-  ERRORS: ERROR_CODES,
+  ERRORS: MARKING_ERROR_CODES,
   RATE_LIMITS,
   AGENT_PERFORMANCE,
   DISTANCE,
@@ -425,7 +425,7 @@ export const MARKING_CONSTANTS = {
   ADMIN,
   FEATURES,
   DB_LIMITS,
-  COORDINATES,
+  MARKING_COORDINATES,
   PHONE,
   EMAIL,
   LOGGING,
@@ -436,8 +436,8 @@ export type MarkingStatus = keyof typeof MARKING_STATUSES;
 export type PaymentStatus = keyof typeof PAYMENT_STATUSES;
 export type QueueEntryStatus = keyof typeof QUEUE_ENTRY_STATUSES;
 export type UrgencyLevel = keyof typeof URGENCY_LEVELS;
-export type NotificationTrigger = keyof typeof NOTIFICATION_TRIGGERS;
-export type ErrorCode = keyof typeof ERROR_CODES;
+export type NotificationTrigger = keyof typeof MARKING_NOTIFICATION_TRIGGERS;
+export type MarkingErrorCode = keyof typeof MARKING_ERROR_CODES;
 export type AnalyticsPeriod = keyof typeof ANALYTICS_PERIODS;
 
 // Default export

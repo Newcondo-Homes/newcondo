@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
+
 // Environment validation schema
 const envSchema = z.object({
   // Server configuration

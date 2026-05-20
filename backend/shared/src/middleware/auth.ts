@@ -306,22 +306,22 @@ export const validateRequest = (
 /**
  * Admin role requirement middleware
  */
-export const requireAdmin = requireRole([Role.ADMIN, Role.ADMIN]);
+export const requireAdmin = requireRole(['ADMIN', 'ADMIN']);
 
 /**
  * Property owner/manager role requirement middleware
  */
 export const requirePropertyOwner = requireRole([
-  Role.OWNER,
-  Role.AGENT,
-  Role.ADMIN,
-  Role.ADMIN,
+  'OWNER',
+  'AGENT',
+  'ADMIN',
+  'ADMIN',
 ]);
 
 /**
  * Agent role requirement middleware
  */
-export const requireAgent = requireRole([Role.AGENT, Role.ADMIN, Role.ADMIN]);
+export const requireAgent = requireRole(['AGENT', 'ADMIN', 'ADMIN']);
 
 /**
  * Multiple roles requirement middleware

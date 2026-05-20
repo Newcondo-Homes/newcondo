@@ -2,8 +2,8 @@
 
 import { Request, Response } from 'express';
 import { markingDisputeService } from '../services/markingDisputeService';
-import { StandardResponse } from '../../shared/utils/response';
-import { ApiError } from '../../shared/utils/response';
+import { StandardResponse } from '@newcondo/backend-shared/';
+import { ApiError } from '@newcondo/backend-shared/';
 
 /**
  * Admin controller for handling marking job disputes

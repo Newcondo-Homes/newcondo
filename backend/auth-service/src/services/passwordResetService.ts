@@ -5,7 +5,7 @@ import crypto from "crypto";
 import {
   sendPasswordResetEmail,
   sendPasswordChangeConfirmation,
-} from "../../../shared/src/utils/email";
+} from "@newcondo/backend-shared";
 
 // const prisma = new prisma();
 

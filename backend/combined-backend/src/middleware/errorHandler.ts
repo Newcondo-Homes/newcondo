@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
-import { Prisma } from '@newcondo/db';
+import { Prisma } from '@prisma/client';
 
 export interface ApiError extends Error {
   statusCode?: number;

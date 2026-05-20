@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { verificationService } from "../services/verificationService";
 import { AuthenticatedRequest } from "../types/auth";
-import { standardResponse } from "@newcondo/backend-shared/src/utils";
+import { standardResponse } from "@newcondo/backend-shared";
 import { z } from "zod";
 
 // Validation schemas

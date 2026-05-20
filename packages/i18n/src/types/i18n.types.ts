@@ -4,10 +4,14 @@
  */
 // Add this to packages/i18n/src/types/i18n.types.ts
 
+// Define the Locale type based on your supported languages
+export type Locale = 'en' | 'fr' | 'pcm';
+
+
 export interface I18nConfig {
-  supportedLocales: string[];
-  defaultLocale: string;
-  fallbackLocale: string;
+  supportedLocales: Locale[];
+  defaultLocale: Locale;
+  fallbackLocale: Locale;
   namespaces: string[];
   detection: LanguageDetectionConfig;
   cache: CacheConfig;
@@ -118,7 +122,7 @@ export interface LanguageDetectionResult {
 }
 
 export interface LocaleMetadata {
-  code: string;
+  code: Locale;
   name: string;
   nativeName: string;
   direction: 'ltr' | 'rtl';

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { redisClient } from '../config/redis';
+import redisClient  from '../config/redis';
 
 /**
  * Rate limiter specifically for queue operations to prevent abuse

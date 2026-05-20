@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { SupportedLocale, DEFAULT_LOCALE, SUPPORTED_LOCALES } from '../middleware/i18nMiddleware';
+import { SupportedLocale, DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@newcondo/i18n';
 
 /**
  * Locale detection strategies

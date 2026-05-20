@@ -1,6 +1,6 @@
 // backend/admin-service/src/services/markingAnalyticsService.ts
 
-import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+import { PrismaClient, MarkingJobStatus } from '@newcondo/db';
 
 const prisma = new PrismaClient();
 

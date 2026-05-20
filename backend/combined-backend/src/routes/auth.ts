@@ -2,17 +2,17 @@
 import { Router } from "express";
 import type { Router as ExpressRouter } from "express";
 // Import auth service controllers
-import { authController } from "@newcondo/auth-service/controllers";
-import { otpController } from "@newcondo/auth-service/controllers";
-import { profileController } from "@newcondo/auth-service/controllers";
-import { verificationController } from "@newcondo/auth-service/controllers";
+import { authController } from "@newcondo/auth-service";
+import { otpController } from "@newcondo/auth-service";
+import { profileController } from "@newcondo/auth-service";
+import { verificationController } from "@newcondo/auth-service";
 
-// Import auth service middleware
-import { authValidation } from "@newcondo/auth-service/validations";
-import { verificationValidation } from "@newcondo/auth-service/validations";
+// Import auth validation middleware
+import { authValidation } from "@newcondo/auth-service";
+import { verificationValidation } from "@newcondo/auth-service";
 
 // Import shared middleware
-import { auth } from "@newcondo/backend-shared/middleware";
+import { auth } from "@newcondo/backend-shared";
 // import { validation } from '@newcondo/backend-shared/middleware/validation';
 
 const router: ExpressRouter = Router();
@@ -98,7 +98,7 @@ router.put(
   "/verification/resubmit",
   auth,
   verificationValidation.resubmitDocuments,
-  verificationController.resubmitDocuments
+  verificationController.resubmitDocument
 );
 
 // Account security routes

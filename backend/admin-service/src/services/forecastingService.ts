@@ -1,12 +1,11 @@
 // backend/admin-service/src/services/forecastingService.ts
-import { PrismaClient } from '@newcondo/db';
+import { prisma } from '@newcondo/db';
 import { 
   RevenueForecast, 
   ForecastModel,
   TrendData 
 } from '../types/revenue';
 
-const prisma = new PrismaClient();
 
 export class ForecastingService {
   /**

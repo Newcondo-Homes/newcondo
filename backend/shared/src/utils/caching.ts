@@ -1,7 +1,6 @@
 // backend/shared/src/utils/caching.ts
 
 import Redis from 'ioredis';
-import { PropertyStatus, AdminApprovalStatus } from '@newcondo/db';
 
 // Initialize Redis client (configuration should be in shared/src/config/redis.ts)
 let redis: Redis | null = null;
@@ -329,8 +328,8 @@ export class PropertyCacheManager extends CacheManager {
 }
 
 // Export singleton instance
-export const propertyCache = new PropertyCacheManager();
-export const cacheManager = new CacheManager();
+export const propertyCache = () => new PropertyCacheManager();
+export const cacheManager = () => new CacheManager();
 
 // Cache warming utilities
 export const warmCache = async () => {

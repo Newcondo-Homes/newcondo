@@ -27,13 +27,13 @@ export interface PaymentQueueMetadata {
   deviceType?: 'mobile' | 'tablet' | 'desktop';
 }
 
-export interface QueuePosition {
+export interface PaymentQueuePosition {
   position: number;
   totalInQueue: number;
   estimatedWaitTime: number; // milliseconds
 }
 
-export interface QueueStats {
+export interface PaymentQueueStats {
   totalQueued: number;
   totalProcessing: number;
   totalCompleted: number;

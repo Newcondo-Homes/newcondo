@@ -1,75 +1,90 @@
-import { PrismaClient, PaymentStatus, AdminActionType } from '@prisma/client';
+import { prisma, PaymentStatus, AdminActionType, Prisma } from '@newcondo/db';
+import { Decimal, JsonValue } from '@newcondo/db';
 import { addHours, isPast, formatDistanceToNow } from 'date-fns';
 
-const prisma = new PrismaClient();
+import {
+  ConfirmationFilters,
+  ConfirmationStats,
+  PaymentTimeline,
+  TimelineEvent,
+  CommissionBreakdown,
+  EnhancedConfirmation,
+  ConfirmationsResult,
+  ConfirmationDetails,
+  UpdatedPayment,
+  ForceReleaseParams,
+  ExtendDeadlineParams,
+  BulkActionParams,
+  BulkActionResult
+} from '../types'
 
-interface ConfirmationFilters {
-  status?: 'PENDING' | 'CONFIRMED' | 'DISPUTED' | 'CANCELLED';
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
-}
-
-interface ConfirmationStats {
-  total: number;
-  pendingConfirmation: number;
-  confirmed: number;
-  disputed: number;
-  expiringSoon: number; // Within 24 hours
-  averageConfirmationTime: number; // In hours
-  totalValueHeld: number;
-}
-
-interface PaymentTimeline {
-  paymentId: string;
-  events: TimelineEvent[];
-}
-
-interface TimelineEvent {
-  timestamp: Date;
-  type: string;
-  description: string;
-  actor?: string;
-  metadata?: any;
-}
 
 export class ConfirmationOversightService {
-  /**
-   * Get all confirmations with filters
-   */
-  async getAllConfirmations(filters: ConfirmationFilters, adminId: string) {
+  async getConfirmations(
+    filters: ConfirmationFilters,
+  ): Promise<ConfirmationsResult> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
 
-    // Build where clause
-    const where: any = {
+    const sortField =
+      filters.sortBy === 'confirmationDeadline'
+        ? 'confirmationPeriodEnd'
+        : filters.sortBy === 'amount'
+          ? 'amount'
+          : 'createdAt';
+
+    const orderBy: Prisma.PaymentOrderByWithRelationInput = {
+      [sortField]: filters.sortOrder || 'asc',
+    };
+
+    const where: Prisma.PaymentWhereInput = {
       paymentType: 'RENT',
       confirmationPeriodEnd: { not: null },
     };
 
-    // Filter by status
+    const now = new Date();
+
     if (filters.status === 'PENDING') {
       where.status = PaymentStatus.HELD;
       where.isReleased = false;
-      where.confirmationPeriodEnd = { gte: new Date() };
+      where.confirmationPeriodEnd = { gte: now };
     } else if (filters.status === 'CONFIRMED') {
       where.status = PaymentStatus.RELEASED;
       where.isReleased = true;
     } else if (filters.status === 'DISPUTED') {
-      // Need to check if there's a related dispute
       where.status = PaymentStatus.HELD;
+    } else if (filters.status === 'EXPIRED') {
+      where.status = PaymentStatus.HELD;
+      where.isReleased = false;
+      where.confirmationPeriodEnd = { lt: now };
     } else if (filters.status === 'CANCELLED') {
       where.status = { in: [PaymentStatus.REFUNDED, PaymentStatus.CANCELLED] };
     }
 
-    // Date range filters
     if (filters.startDate) {
-      where.createdAt = { ...where.createdAt, gte: new Date(filters.startDate) };
+      where.createdAt = { gte: new Date(filters.startDate) };
     }
     if (filters.endDate) {
-      where.createdAt = { ...where.createdAt, lte: new Date(filters.endDate) };
+      where.createdAt = {
+        ...(where.createdAt as object),
+        lte: new Date(filters.endDate),
+      };
+    }
+
+    if (filters.search) {
+      where.OR = [
+        { flutterwaveRef: { contains: filters.search, mode: 'insensitive' } },
+        { transactionId: { contains: filters.search, mode: 'insensitive' } },
+        {
+          user: {
+            OR: [
+              { email: { contains: filters.search, mode: 'insensitive' } },
+              { name: { contains: filters.search, mode: 'insensitive' } },
+            ],
+          },
+        },
+      ];
     }
 
     const [confirmations, total] = await Promise.all([
@@ -110,17 +125,18 @@ export class ConfirmationOversightService {
       prisma.payment.count({ where }),
     ]);
 
-    // Enhance with time remaining
-    const enhancedConfirmations = confirmations.map((payment) => ({
-      ...payment,
-      timeRemaining: payment.confirmationPeriodEnd
-        ? formatDistanceToNow(payment.confirmationPeriodEnd, { addSuffix: true })
-        : null,
-      isExpiringSoon:
-        payment.confirmationPeriodEnd &&
-        !payment.isReleased &&
-        isPast(addHours(payment.confirmationPeriodEnd, -24)),
-    }));
+    const enhancedConfirmations: EnhancedConfirmation[] = confirmations.map(
+      (payment) => ({
+        ...payment,
+        timeRemaining: payment.confirmationPeriodEnd
+          ? formatDistanceToNow(payment.confirmationPeriodEnd, { addSuffix: true })
+          : null,
+        isExpiringSoon:
+          payment.confirmationPeriodEnd && !payment.isReleased
+            ? isPast(addHours(payment.confirmationPeriodEnd, -24))
+            : null,
+      })
+    );
 
     return {
       confirmations: enhancedConfirmations,
@@ -133,9 +149,6 @@ export class ConfirmationOversightService {
     };
   }
 
-  /**
-   * Get confirmation statistics
-   */
   async getConfirmationStats(): Promise<ConfirmationStats> {
     const now = new Date();
     const twentyFourHoursFromNow = addHours(now, 24);
@@ -149,14 +162,9 @@ export class ConfirmationOversightService {
       totalHeldPayments,
       confirmedPayments,
     ] = await Promise.all([
-      // Total confirmations
       prisma.payment.count({
-        where: {
-          paymentType: 'RENT',
-          confirmationPeriodEnd: { not: null },
-        },
+        where: { paymentType: 'RENT', confirmationPeriodEnd: { not: null } },
       }),
-      // Pending confirmation
       prisma.payment.count({
         where: {
           status: PaymentStatus.HELD,
@@ -164,14 +172,9 @@ export class ConfirmationOversightService {
           confirmationPeriodEnd: { gte: now },
         },
       }),
-      // Confirmed
       prisma.payment.count({
-        where: {
-          status: PaymentStatus.RELEASED,
-          isReleased: true,
-        },
+        where: { status: PaymentStatus.RELEASED, isReleased: true },
       }),
-      // Disputed (approximation - would need a disputes table)
       prisma.payment.count({
         where: {
           status: PaymentStatus.HELD,
@@ -179,47 +182,35 @@ export class ConfirmationOversightService {
           isReleased: false,
         },
       }),
-      // Expiring soon
       prisma.payment.count({
         where: {
           status: PaymentStatus.HELD,
           isReleased: false,
-          confirmationPeriodEnd: {
-            gte: now,
-            lte: twentyFourHoursFromNow,
-          },
+          confirmationPeriodEnd: { gte: now, lte: twentyFourHoursFromNow },
         },
       }),
-      // Total value held
       prisma.payment.aggregate({
-        where: {
-          status: PaymentStatus.HELD,
-          isReleased: false,
-        },
+        where: { status: PaymentStatus.HELD, isReleased: false },
         _sum: { amount: true },
       }),
-      // Calculate average confirmation time
       prisma.payment.findMany({
         where: {
           status: PaymentStatus.RELEASED,
           isReleased: true,
           releasedAt: { not: null },
         },
-        select: {
-          createdAt: true,
-          releasedAt: true,
-        },
-        take: 100, // Sample last 100
+        select: { createdAt: true, releasedAt: true },
+        take: 100,
       }),
     ]);
 
-    // Calculate average confirmation time
     let averageConfirmationTime = 0;
     if (confirmedPayments.length > 0) {
       const totalHours = confirmedPayments.reduce((sum, payment) => {
         if (payment.releasedAt) {
           const hours =
-            (payment.releasedAt.getTime() - payment.createdAt.getTime()) / (1000 * 60 * 60);
+            (payment.releasedAt.getTime() - payment.createdAt.getTime()) /
+            (1000 * 60 * 60);
           return sum + hours;
         }
         return sum;
@@ -238,10 +229,19 @@ export class ConfirmationOversightService {
     };
   }
 
-  /**
-   * Get detailed confirmation information
-   */
-  async getConfirmationDetails(paymentId: string, adminId: string) {
+  async getConfirmationDetails(
+    paymentId: string,
+    adminId: string
+  ): Promise<ConfirmationDetails> {
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true },
+    });
+
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       include: {
@@ -259,25 +259,12 @@ export class ConfirmationOversightService {
             property: {
               include: {
                 owner: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    phone: true,
-                  },
+                  select: { id: true, name: true, email: true, phone: true },
                 },
                 agent: {
-                  select: {
-                    id: true,
-                    name: true,
-                    email: true,
-                    phone: true,
-                  },
+                  select: { id: true, name: true, email: true, phone: true },
                 },
-                images: {
-                  where: { isPrimary: true },
-                  take: 1,
-                },
+                images: { where: { isPrimary: true }, take: 1 },
               },
             },
             unit: true,
@@ -290,25 +277,14 @@ export class ConfirmationOversightService {
       throw new Error('Payment not found');
     }
 
-    // Get related admin actions
     const adminActions = await prisma.adminAction.findMany({
-      where: {
-        targetType: 'Payment',
-        targetId: paymentId,
-      },
+      where: { targetType: 'Payment', targetId: paymentId },
       include: {
-        admin: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
+        admin: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Calculate commission breakdown
     const commissionBreakdown = this.calculateCommissionBreakdown(payment);
 
     return {
@@ -318,53 +294,49 @@ export class ConfirmationOversightService {
       timeRemaining: payment.confirmationPeriodEnd
         ? formatDistanceToNow(payment.confirmationPeriodEnd, { addSuffix: true })
         : null,
-      canBeReleased: payment.status === PaymentStatus.HELD && !payment.isReleased,
+      canBeReleased:
+        payment.status === PaymentStatus.HELD && !payment.isReleased,
       canBeRefunded:
         payment.status === PaymentStatus.HELD ||
-        (payment.status === PaymentStatus.RELEASED && payment.releasedAt &&
-          isPast(addHours(payment.releasedAt, -24))), // Within 24h of release
+        (payment.status === PaymentStatus.RELEASED &&
+          payment.releasedAt != null &&
+          isPast(addHours(payment.releasedAt, -24))),
     };
   }
 
-  /**
-   * Force release payment (admin override)
-   */
-  async forceReleasePayment(
-    paymentId: string,
-    adminId: string,
-    reason: string,
-    notifyParties: boolean
-  ) {
+  async forceReleasePayment({
+    paymentId,
+    adminId,
+    reason,
+    notifyParties,
+  }: ForceReleaseParams): Promise<UpdatedPayment> {
+    // Verify admin
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true },
+    });
+
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       include: {
         rental: {
           include: {
-            property: {
-              include: {
-                owner: true,
-                agent: true,
-              },
-            },
+            property: { include: { owner: true, agent: true } },
           },
         },
         user: true,
       },
     });
 
-    if (!payment) {
-      throw new Error('Payment not found');
-    }
-
-    if (payment.isReleased) {
-      throw new Error('Payment already released');
-    }
-
-    if (payment.status !== PaymentStatus.HELD) {
+    if (!payment) throw new Error('Payment not found');
+    if (payment.isReleased) throw new Error('Payment already released');
+    if (payment.status !== PaymentStatus.HELD)
       throw new Error('Payment not in HELD status');
-    }
 
-    // Update payment status
     const updatedPayment = await prisma.payment.update({
       where: { id: paymentId },
       data: {
@@ -374,11 +346,10 @@ export class ConfirmationOversightService {
       },
     });
 
-    // Log admin action
     await prisma.adminAction.create({
       data: {
         adminId,
-        action: AdminActionType.PAYMENT_REFUNDED, // Could add PAYMENT_RELEASED
+        action: AdminActionType.PAYMENT_REFUNDED,
         targetType: 'Payment',
         targetId: paymentId,
         description: `Force released payment. Reason: ${reason}`,
@@ -389,62 +360,57 @@ export class ConfirmationOversightService {
       },
     });
 
-    // Distribute commission (would call commission service)
-    // await this.distributeCommission(payment);
-
-    // Send notifications if requested
     if (notifyParties) {
+      //TODO: send notifications for payment release
       // await this.notifyPaymentRelease(payment);
     }
 
     return updatedPayment;
   }
 
-  /**
-   * Extend confirmation period
-   */
-  async extendConfirmationPeriod(
-    paymentId: string,
-    adminId: string,
-    extensionHours: number,
-    reason: string
-  ) {
+  async extendConfirmationDeadline({
+    paymentId,
+    adminId,
+    extensionDays,
+    reason,
+  }: ExtendDeadlineParams): Promise<UpdatedPayment> {
+    // Verify admin
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true },
+    });
+
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
     });
 
-    if (!payment) {
-      throw new Error('Payment not found');
-    }
-
-    if (payment.isReleased) {
+    if (!payment) throw new Error('Payment not found');
+    if (payment.isReleased)
       throw new Error('Cannot extend period for released payment');
-    }
-
-    if (!payment.confirmationPeriodEnd) {
+    if (!payment.confirmationPeriodEnd)
       throw new Error('Payment has no confirmation period');
-    }
 
-    const newDeadline = addHours(payment.confirmationPeriodEnd, extensionHours);
+    const newDeadline = addHours(payment.confirmationPeriodEnd, extensionDays);
 
     const updatedPayment = await prisma.payment.update({
       where: { id: paymentId },
-      data: {
-        confirmationPeriodEnd: newDeadline,
-      },
+      data: { confirmationPeriodEnd: newDeadline },
     });
 
-    // Log admin action
     await prisma.adminAction.create({
       data: {
         adminId,
-        action: AdminActionType.PAYMENT_REFUNDED, // Could add CONFIRMATION_EXTENDED
+        action: AdminActionType.PAYMENT_REFUNDED,
         targetType: 'Payment',
         targetId: paymentId,
-        description: `Extended confirmation period by ${extensionHours} hours. Reason: ${reason}`,
+        description: `Extended confirmation period by ${extensionDays} hours. Reason: ${reason}`,
         metadata: {
           reason,
-          extensionHours,
+          extensionDays,
           oldDeadline: payment.confirmationPeriodEnd,
           newDeadline,
         },
@@ -454,44 +420,107 @@ export class ConfirmationOversightService {
     return updatedPayment;
   }
 
-  /**
-   * Cancel payment and process refund
-   */
-  async cancelPayment(
-    paymentId: string,
-    adminId: string,
-    reason: string,
-    refundAmount?: number
-  ) {
+  async getExpiredConfirmations(): Promise<ConfirmationsResult> {
+    return this.getConfirmations({ status: 'EXPIRED', sortBy: 'confirmationDeadline', sortOrder: 'asc' });
+  }
+
+  async bulkAction({
+    paymentIds,
+    action,
+    adminId,
+    reason,
+    extensionDays,
+  }: BulkActionParams): Promise<BulkActionResult> {
+    // Verify admin once upfront
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true },
+    });
+
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
+    const succeeded: string[] = [];
+    const failed: { paymentId: string; reason: string }[] = [];
+
+    await Promise.all(
+      paymentIds.map(async (paymentId) => {
+        try {
+          if (action === 'RELEASE') {
+            await this.forceReleasePayment({
+              paymentId,
+              adminId,
+              reason,
+              notifyParties: true,
+            });
+          } else if (action === 'EXTEND') {
+            if (!extensionDays) {
+              throw new Error('extensionDays required for EXTEND action');
+            }
+            await this.extendConfirmationDeadline({
+              paymentId,
+              adminId,
+              extensionDays,
+              reason,
+            });
+          } else if (action === 'CANCEL') {
+            await this.cancelPayment({ paymentId, adminId, reason });
+          }
+          succeeded.push(paymentId);
+        } catch (error) {
+          failed.push({
+            paymentId,
+            reason: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      })
+    );
+
+    return {
+      succeeded,
+      failed,
+      total: paymentIds.length,
+      successCount: succeeded.length,
+      failureCount: failed.length,
+    };
+  }
+
+  async cancelPayment({
+    paymentId,
+    adminId,
+    reason,
+    refundAmount,
+  }: {
+    paymentId: string;
+    adminId: string;
+    reason: string;
+    refundAmount?: number;
+  }): Promise<UpdatedPayment> {
+    // Verify admin
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true },
+    });
+
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       include: {
         user: true,
-        rental: {
-          include: {
-            property: true,
-          },
-        },
+        rental: { include: { property: true } },
       },
     });
 
-    if (!payment) {
-      throw new Error('Payment not found');
-    }
-
-    if (payment.status === PaymentStatus.REFUNDED) {
+    if (!payment) throw new Error('Payment not found');
+    if (payment.status === PaymentStatus.REFUNDED)
       throw new Error('Payment already refunded');
-    }
 
     const amountToRefund = refundAmount || Number(payment.amount);
 
-    // Process refund through Flutterwave
-    // const refundResult = await flutterwaveService.processRefund({
-    //   transactionId: payment.transactionId,
-    //   amount: amountToRefund,
-    // });
-
-    // Update payment status
     const updatedPayment = await prisma.payment.update({
       where: { id: paymentId },
       data: {
@@ -500,17 +529,13 @@ export class ConfirmationOversightService {
       },
     });
 
-    // Update rental status if exists
     if (payment.rentalId) {
       await prisma.rental.update({
         where: { id: payment.rentalId },
-        data: {
-          status: 'TERMINATED',
-        },
+        data: { status: 'TERMINATED' },
       });
     }
 
-    // Log admin action
     await prisma.adminAction.create({
       data: {
         adminId,
@@ -529,46 +554,32 @@ export class ConfirmationOversightService {
     return updatedPayment;
   }
 
-  /**
-   * Get payment timeline
-   */
-  async getPaymentTimeline(paymentId: string): Promise<PaymentTimeline> {
+  async getConfirmationTimeline(paymentId: string): Promise<PaymentTimeline> {
     const [payment, adminActions, eventLogs] = await Promise.all([
       prisma.payment.findUnique({
         where: { id: paymentId },
-        include: {
-          user: { select: { name: true } },
-        },
+        include: { user: { select: { name: true } } },
       }),
       prisma.adminAction.findMany({
-        where: {
-          targetType: 'Payment',
-          targetId: paymentId,
-        },
-        include: {
-          admin: { select: { name: true } },
-        },
+        where: { targetType: 'Payment', targetId: paymentId },
+        include: { admin: { select: { name: true } } },
         orderBy: { createdAt: 'asc' },
       }),
       prisma.eventLog.findMany({
         where: {
-          type: { in: ['PAYMENT_INITIATED', 'PAYMENT_SUCCESS', 'PAYMENT_CONFIRMED'] },
-          metadata: {
-            path: ['paymentId'],
-            equals: paymentId,
+          type: {
+            in: ['PAYMENT_INITIATED', 'PAYMENT_SUCCESS', 'PAYMENT_CONFIRMED'],
           },
+          metadata: { path: ['paymentId'], equals: paymentId },
         },
         orderBy: { timestamp: 'asc' },
       }),
     ]);
 
-    if (!payment) {
-      throw new Error('Payment not found');
-    }
+    if (!payment) throw new Error('Payment not found');
 
     const events: TimelineEvent[] = [];
 
-    // Payment created
     events.push({
       timestamp: payment.createdAt,
       type: 'PAYMENT_CREATED',
@@ -576,7 +587,6 @@ export class ConfirmationOversightService {
       actor: payment.user.name || 'User',
     });
 
-    // Payment successful
     if (payment.paidAt) {
       events.push({
         timestamp: payment.paidAt,
@@ -585,7 +595,6 @@ export class ConfirmationOversightService {
       });
     }
 
-    // Add event logs
     eventLogs.forEach((log) => {
       events.push({
         timestamp: log.timestamp,
@@ -595,7 +604,6 @@ export class ConfirmationOversightService {
       });
     });
 
-    // Add admin actions
     adminActions.forEach((action) => {
       events.push({
         timestamp: action.createdAt,
@@ -606,7 +614,6 @@ export class ConfirmationOversightService {
       });
     });
 
-    // Payment released
     if (payment.releasedAt) {
       events.push({
         timestamp: payment.releasedAt,
@@ -615,19 +622,90 @@ export class ConfirmationOversightService {
       });
     }
 
-    // Sort events by timestamp
     events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
-    return {
-      paymentId,
-      events,
-    };
+    return { paymentId, events };
   }
 
-  /**
-   * Calculate commission breakdown
-   */
-  private calculateCommissionBreakdown(payment: any) {
+  async getPaymentTimeline(paymentId: string): Promise<PaymentTimeline> {
+    const [payment, adminActions, eventLogs] = await Promise.all([
+      prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: { user: { select: { name: true } } },
+      }),
+      prisma.adminAction.findMany({
+        where: { targetType: 'Payment', targetId: paymentId },
+        include: { admin: { select: { name: true } } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.eventLog.findMany({
+        where: {
+          type: {
+            in: ['PAYMENT_INITIATED', 'PAYMENT_SUCCESS', 'PAYMENT_CONFIRMED'],
+          },
+          metadata: { path: ['paymentId'], equals: paymentId },
+        },
+        orderBy: { timestamp: 'asc' },
+      }),
+    ]);
+
+    if (!payment) throw new Error('Payment not found');
+
+    const events: TimelineEvent[] = [];
+
+    events.push({
+      timestamp: payment.createdAt,
+      type: 'PAYMENT_CREATED',
+      description: 'Payment initiated',
+      actor: payment.user.name || 'User',
+    });
+
+    if (payment.paidAt) {
+      events.push({
+        timestamp: payment.paidAt,
+        type: 'PAYMENT_SUCCESS',
+        description: 'Payment successful - Funds held',
+      });
+    }
+
+    eventLogs.forEach((log) => {
+      events.push({
+        timestamp: log.timestamp,
+        type: log.type,
+        description: log.type.replace(/_/g, ' ').toLowerCase(),
+        metadata: log.metadata,
+      });
+    });
+
+    adminActions.forEach((action) => {
+      events.push({
+        timestamp: action.createdAt,
+        type: action.action,
+        description: action.description || action.action,
+        actor: action.admin.name || 'Admin',
+        metadata: action.metadata,
+      });
+    });
+
+    if (payment.releasedAt) {
+      events.push({
+        timestamp: payment.releasedAt,
+        type: 'PAYMENT_RELEASED',
+        description: 'Funds released to parties',
+      });
+    }
+
+    events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    return { paymentId, events };
+  }
+
+  private calculateCommissionBreakdown(payment: {
+    amount: Decimal;
+    platformFee: Decimal | null;
+    agentCommission: Decimal | null;
+    ownerAmount: Decimal | null;
+  }): CommissionBreakdown {
     const totalAmount = Number(payment.amount);
     const platformFee = Number(payment.platformFee || 0);
     const agentCommission = Number(payment.agentCommission || 0);
@@ -638,7 +716,10 @@ export class ConfirmationOversightService {
       platformFee,
       platformFeePercentage: ((platformFee / totalAmount) * 100).toFixed(2),
       agentCommission,
-      agentCommissionPercentage: agentCommission > 0 ? ((agentCommission / totalAmount) * 100).toFixed(2) : '0',
+      agentCommissionPercentage:
+        agentCommission > 0
+          ? ((agentCommission / totalAmount) * 100).toFixed(2)
+          : '0',
       ownerAmount,
       ownerAmountPercentage: ((ownerAmount / totalAmount) * 100).toFixed(2),
     };

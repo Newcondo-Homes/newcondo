@@ -1,7 +1,7 @@
-import { Router, Response, NextFunction } from "express";
+import { Router } from "express";
 import type { Router as ExpressRouter } from "express";
 import { verificationController } from "../controllers/verificationController";
-import { authMiddleware } from "../../../shared/src/middleware/auth";
+import { authMiddleware } from "@newcondo/backend-shared";
 import { otpLimiter, rateLimiter } from "../middleware/rateLimiter";
 import { verificationValidation } from "../validations/verificationValidation";
 

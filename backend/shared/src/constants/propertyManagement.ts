@@ -45,7 +45,7 @@ export const ADMIN_APPROVAL_STATUS = {
 } as const;
 
 // Property sharing/promotion types
-export const PROMOTION_TYPES = {
+export const PROPERTY_PROMOTION_TYPES = {
   PUBLIC: 'public', // Anyone can share
   PERMISSION_BASED: 'permission_based', // Agents must request permission
   RESTRICTED: 'restricted', // No agent promotion allowed
@@ -152,7 +152,7 @@ export const OCCUPANCY_SETTINGS = {
 } as const;
 
 // Property validation rules
-export const VALIDATION_RULES = {
+export const PROPERTY_VALIDATION_RULES = {
   MIN_TITLE_LENGTH: 10,
   MAX_TITLE_LENGTH: 200,
   MIN_DESCRIPTION_LENGTH: 50,
@@ -168,7 +168,7 @@ export const VALIDATION_RULES = {
 } as const;
 
 // Property export formats
-export const EXPORT_FORMATS = {
+export const EXPORT_FORMATS_DOCS = {
   CSV: 'csv',
   PDF: 'pdf',
   XLSX: 'xlsx',
@@ -193,7 +193,7 @@ export const NOTIFICATION_EVENTS = {
 } as const;
 
 // Analytics periods
-export const ANALYTICS_PERIODS = {
+export const PROPERTY_ANALYTICS_PERIODS = {
   DAY: 'day',
   WEEK: 'week',
   MONTH: 'month',
@@ -244,7 +244,7 @@ export const ERROR_MESSAGES = {
 } as const;
 
 // Success messages
-export const SUCCESS_MESSAGES = {
+export const PROPERTY_SUCCESS_MESSAGES = {
   PROPERTY_CREATED: 'Property created successfully',
   PROPERTY_UPDATED: 'Property updated successfully',
   PROPERTY_DELETED: 'Property deleted successfully',

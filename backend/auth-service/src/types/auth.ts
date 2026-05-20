@@ -6,22 +6,6 @@ import { Request } from "express";
 
 export { OTPType };
 
-// // Request with authenticated user
-// export interface AuthenticatedRequest extends Request {
-//   user: {
-//     id: string;
-//     email: string;
-//     role: Role;
-//     name?: string | null;
-//     emailVerified?: boolean;
-//     phoneVerified?: boolean;
-//     verificationStatus?: string;
-//     iat?: number;
-//     exp?: number;
-//   };
-//   sessionId?: string;
-//   deviceFingerprint?: string;
-// }
 
 export type AuthenticatedRequest = Request & {
   user: NonNullable<Request['user']>; // Ensures user is not undefined

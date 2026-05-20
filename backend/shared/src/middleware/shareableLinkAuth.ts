@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { decryptShareableLink, validateShareableLink } from '../utils/linkEncryption';
+import { RedisHelper } from '../config/redis';
 
 export interface ShareableLinkRequest extends Request {
   markingData?: {
@@ -32,25 +33,21 @@ export const authenticateShareableLink = async (
     // Decrypt and validate the token
     const markingData = decryptShareableLink(token);
 
-    if (!markingData) {
+    if (!markingData || !markingData.isValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid or corrupted shareable link',
+        message: markingData?.isExpired
+          ? 'This shareable link has expired'
+          : 'Invalid or corrupted shareable link',
       });
     }
 
-    // Validate the link hasn't expired
-    const isValid = validateShareableLink(markingData);
-
-    if (!isValid) {
-      return res.status(401).json({
-        success: false,
-        message: 'This shareable link has expired',
-      });
-    }
-
-    // Attach marking data to request
-    req.markingData = markingData;
+    req.markingData = {
+      propertyId: markingData.propertyId,
+      jobId: markingData.markingJobId, // mapped markingJobId to jobId
+      expiresAt: markingData.expiresAt,
+      markerEmail: markingData.requestedBy, // fallback mapping if applicable
+    };
 
     next();
   } catch (error) {
@@ -79,7 +76,7 @@ export const verifyJobPending = async (
     }
 
     const { prisma } = await import('@newcondo/db');
-    
+
     const markingJob = await prisma.propertyMarkingJob.findUnique({
       where: { id: req.markingData.jobId },
       select: {
@@ -122,7 +119,7 @@ export const verifyJobPending = async (
 /**
  * Rate limiting for shareable link usage to prevent abuse
  */
-export const rateLimit ShareableLinks = async (
+export const rateLimitShareableLinks = async (
   req: ShareableLinkRequest,
   res: Response,
   next: NextFunction
@@ -141,10 +138,28 @@ export const rateLimit ShareableLinks = async (
     // TODO: Implement Redis-based rate limiting
     // For now, we'll track in-memory (replace with Redis in production)
     const rateLimitKey = `shareable_link:${ip}:${token}`;
-    
-    // This is a placeholder - implement actual rate limiting with Redis
-    // Example: Allow 10 requests per hour per IP per link
-    
+    const limit = 10; // Max 10 requests
+    const windowInSeconds = 3600; // Per 1 hour window
+
+    // Increment current hit rate count
+    const currentHits = await RedisHelper.increment(rateLimitKey, 1);
+
+
+    if (currentHits !== null) {
+      // Set key expiry on the first record hit
+      if (currentHits === 1) {
+        const { redis } = await import('../config/redis');
+        await redis.expire(rateLimitKey, windowInSeconds);
+      }
+
+      if (currentHits > limit) {
+        return res.status(429).json({
+          success: false,
+          message: 'Too many requests on this link. Please try again in an hour.',
+        });
+      }
+    }
+
     next();
   } catch (error) {
     console.error('Rate limiting error:', error);

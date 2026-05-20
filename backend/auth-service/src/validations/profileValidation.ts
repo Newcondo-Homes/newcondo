@@ -1,58 +1,65 @@
 // backend/auth-service/src/validations/profileValidation.ts
 import { z } from 'zod';
-import { Role } from '@newcondo/db';
+
+enum Role {
+  "OWNER",
+  "AGENT",
+  "RENTER",
+  "ADMIN"
+}
+// import { Role } from '@newcondo/db';
 
 export const updateProfileSchema = z.object({
   name: z.string()
     .min(2, 'Name must be at least 2 characters')
     .max(100, 'Name cannot exceed 100 characters')
     .optional(),
-  
+
   email: z.string()
     .email('Invalid email format')
     .optional(),
-  
+
   phone: z.string()
     .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format')
     .optional(),
-  
+
   image: z.string()
     .url('Invalid image URL')
     .optional()
     .nullable(),
-  
+
   dateOfBirth: z.string()
     .datetime('Invalid date format')
     .optional()
     .nullable()
     .transform(val => val ? new Date(val) : null),
-  
+
   address: z.string()
     .min(5, 'Address must be at least 5 characters')
     .max(500, 'Address cannot exceed 500 characters')
     .optional()
     .nullable(),
-  
+
   city: z.string()
     .min(2, 'City must be at least 2 characters')
     .max(100, 'City cannot exceed 100 characters')
     .optional()
     .nullable(),
-  
+
   state: z.string()
     .min(2, 'State must be at least 2 characters')
     .max(100, 'State cannot exceed 100 characters')
     .optional()
     .nullable(),
-  
+
   country: z.string()
     .min(2, 'Country must be at least 2 characters')
     .max(100, 'Country cannot exceed 100 characters')
     .optional(),
-  
+
   // Agent-specific fields
   isAvailableForMarking: z.boolean().optional(),
-  
+
   agentServiceAreas: z.array(z.string())
     .max(10, 'Cannot have more than 10 service areas')
     .optional()
@@ -67,7 +74,7 @@ export const updateProfileSchema = z.object({
 export const changePasswordSchema = z.object({
   currentPassword: z.string()
     .min(1, 'Current password is required'),
-  
+
   newPassword: z.string()
     .min(8, 'Password must be at least 8 characters')
     .max(128, 'Password cannot exceed 128 characters')
@@ -75,7 +82,7 @@ export const changePasswordSchema = z.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
       'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
     ),
-  
+
   confirmPassword: z.string()
 }).refine(data => data.newPassword === data.confirmPassword, {
   message: 'Passwords do not match',
@@ -84,21 +91,21 @@ export const changePasswordSchema = z.object({
 
 export const agentProfileSchema = z.object({
   isAvailableForMarking: z.boolean(),
-  
+
   agentServiceAreas: z.array(z.string())
     .min(1, 'At least one service area is required')
     .max(10, 'Cannot have more than 10 service areas'),
-  
+
   // Optional fields for agent profile enhancement
   bio: z.string()
     .max(1000, 'Bio cannot exceed 1000 characters')
     .optional(),
-  
+
   experience: z.number()
     .min(0, 'Experience cannot be negative')
     .max(50, 'Experience cannot exceed 50 years')
     .optional(),
-  
+
   specializations: z.array(z.string())
     .max(5, 'Cannot have more than 5 specializations')
     .optional()
@@ -111,21 +118,21 @@ export const userPreferencesSchema = z.object({
     paymentReminders: z.boolean().default(true),
     marketingEmails: z.boolean().default(false)
   }).optional(),
-  
+
   smsNotifications: z.object({
     urgentAlerts: z.boolean().default(true),
     markingJobAssignments: z.boolean().default(true),
     paymentConfirmations: z.boolean().default(true)
   }).optional(),
-  
+
   privacy: z.object({
     showPhoneNumber: z.boolean().default(false),
     showEmail: z.boolean().default(false),
     allowContactFromAgents: z.boolean().default(true)
   }).optional(),
-  
+
   language: z.enum(['en', 'ig', 'ha', 'yo']).default('en').optional(),
-  
+
   currency: z.enum(['NGN', 'USD']).default('NGN').optional()
 });
 
@@ -138,12 +145,13 @@ export const profileImageSchema = z.object({
     }, 'Invalid image format. Only JPG, PNG, and WebP are allowed')
 });
 
+
 export const roleChangeRequestSchema = z.object({
   newRole: z.nativeEnum(Role),
   reason: z.string()
     .min(10, 'Reason must be at least 10 characters')
     .max(500, 'Reason cannot exceed 500 characters'),
-  
+
   // Additional documentation for role changes
   supportingDocuments: z.array(z.string().url())
     .max(5, 'Cannot upload more than 5 supporting documents')
@@ -171,7 +179,7 @@ export const validateProfile = [
       const birthDate = new Date(value);
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
-      
+
       if (age < 18) {
         throw new Error('You must be at least 18 years old');
       }

@@ -8,7 +8,7 @@ import { SupportedLocale, SupportedCurrency } from '../types/i18n.types';
 /**
  * Format currency with locale-specific formatting
  */
-export const formatCurrency = (
+export const formatCurrencyUtil = (
   amount: number,
   currency: SupportedCurrency = 'NGN',
   locale: SupportedLocale = 'en'
@@ -36,7 +36,7 @@ export const formatCurrency = (
 /**
  * Get currency symbol for a given currency code
  */
-export const getCurrencySymbol = (currency: SupportedCurrency): string => {
+const getCurrencySymbol = (currency: SupportedCurrency): string => {
   const symbols: Record<SupportedCurrency, string> = {
     NGN: '₦',
     USD: '$',
@@ -49,7 +49,7 @@ export const getCurrencySymbol = (currency: SupportedCurrency): string => {
 /**
  * Format date with locale-specific formatting
  */
-export const formatDate = (
+export const formatDateUtil = (
   date: Date | string,
   locale: SupportedLocale = 'en',
   options?: Intl.DateTimeFormatOptions
@@ -94,13 +94,13 @@ export const formatDateTime = (
     ...options,
   };
 
-  return formatDate(date, locale, defaultOptions);
+  return formatDateUtil(date, locale, defaultOptions);
 };
 
 /**
  * Format time with locale-specific formatting
  */
-export const formatTime = (
+const formatTime = (
   date: Date | string,
   locale: SupportedLocale = 'en',
   options?: Intl.DateTimeFormatOptions
@@ -112,13 +112,13 @@ export const formatTime = (
     ...options,
   };
 
-  return formatDate(date, locale, defaultOptions);
+  return formatDateUtil(date, locale, defaultOptions);
 };
 
 /**
  * Format relative time (e.g., "2 hours ago")
  */
-export const formatRelativeTime = (
+const formatRelativeTime = (
   date: Date | string,
   locale: SupportedLocale = 'en'
 ): string => {
@@ -148,7 +148,7 @@ export const formatRelativeTime = (
     } else if (diffDays < 30) {
       return rtf.format(-diffDays, 'day');
     } else {
-      return formatDate(dateObj, locale);
+      return formatDateUtil(dateObj, locale);
     }
   } catch (error) {
     // Fallback for unsupported environments
@@ -156,7 +156,7 @@ export const formatRelativeTime = (
     if (diffMinutes < 60) return `${diffMinutes}m ago`;
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
-    return formatDate(dateObj, locale);
+    return formatDateUtil(dateObj, locale);
   }
 };
 
@@ -184,7 +184,7 @@ export const formatNumber = (
 /**
  * Format percentage with locale-specific formatting
  */
-export const formatPercentage = (
+export const formattingFormatPercentage = (
   value: number,
   locale: SupportedLocale = 'en',
   decimals: number = 0
@@ -243,27 +243,27 @@ export const pluralize = (
   }
 };
 
-/**
- * Format address based on Nigerian context
- */
-export const formatAddress = (
-  address: {
-    street?: string;
-    city?: string;
-    state?: string;
-    country?: string;
-  },
-  locale: SupportedLocale = 'en'
-): string => {
-  const parts: string[] = [];
+// /**
+//  * Format address based on Nigerian context
+//  */
+// export const formatAddress = (
+//   address: {
+//     street?: string;
+//     city?: string;
+//     state?: string;
+//     country?: string;
+//   },
+//   locale: SupportedLocale = 'en'
+// ): string => {
+//   const parts: string[] = [];
   
-  if (address.street) parts.push(address.street);
-  if (address.city) parts.push(address.city);
-  if (address.state) parts.push(address.state);
-  if (address.country && address.country !== 'Nigeria') parts.push(address.country);
+//   if (address.street) parts.push(address.street);
+//   if (address.city) parts.push(address.city);
+//   if (address.state) parts.push(address.state);
+//   if (address.country && address.country !== 'Nigeria') parts.push(address.country);
   
-  return parts.join(', ');
-};
+//   return parts.join(', ');
+// };
 
 /**
  * Format file size with locale-specific units

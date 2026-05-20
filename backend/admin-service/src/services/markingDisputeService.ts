@@ -2,7 +2,6 @@
 
 import { PrismaClient } from "@newcondo/db";
 import {
-  PropertyMarkingJob,
   MarkingJobStatus,
   Payment,
   PaymentStatus,

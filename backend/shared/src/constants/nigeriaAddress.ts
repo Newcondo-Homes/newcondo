@@ -9,7 +9,7 @@ export interface LGA extends AddressLocation {
   locations: string[];
 }
 
-export interface NigerianState extends AddressLocation {
+interface NigerianState extends AddressLocation {
   lgas: LGA[];
 }
 

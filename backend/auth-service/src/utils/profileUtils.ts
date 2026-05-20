@@ -1,5 +1,5 @@
 // utils/profileUtils.ts
-import { Prisma } from '@newcondo/db';
+import { Prisma, DecimalClass } from '@newcondo/db';
 import { UserProfile } from '../types/profile';
 
 // Convert UserProfile with Decimal to a serializable format
@@ -19,7 +19,7 @@ export function serializeUserProfile(user: UserProfile): SerializableUserProfile
 
 // Convert number to Prisma Decimal for database operations
 export function deserializeReliabilityScore(score: number): Prisma.Decimal {
-  return new Prisma.Decimal(score);
+  return new DecimalClass(score);
 }
 
 // Helper function to safely convert Decimal to number
@@ -29,5 +29,5 @@ export function decimalToNumber(decimal: Prisma.Decimal | null): number | null {
 
 // Helper function to safely convert number to Decimal
 export function numberToDecimal(num: number | null): Prisma.Decimal | null {
-  return num !== null ? new Prisma.Decimal(num) : null;
+  return num !== null ? new DecimalClass(num) : null;
 }

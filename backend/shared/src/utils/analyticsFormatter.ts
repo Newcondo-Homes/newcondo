@@ -1,7 +1,9 @@
+import { formatPercentageUtil }  from './percentageCalculator'
+
 /**
  * Format currency values for display
  */
-export function formatCurrency(amount: number, currency: string = 'NGN'): string {
+export function analyticsFormatCurrency(amount: number, currency: string = 'NGN'): string {
   const currencySymbols: { [key: string]: string } = {
     NGN: '₦',
     USD: '$',
@@ -11,13 +13,6 @@ export function formatCurrency(amount: number, currency: string = 'NGN'): string
 
   const symbol = currencySymbols[currency] || currency;
   return `${symbol}${amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-/**
- * Format percentage values
- */
-export function formatPercentage(value: number, decimals: number = 2): string {
-  return `${value.toFixed(decimals)}%`;
 }
 
 /**
@@ -103,7 +98,7 @@ export function formatOccupancyRate(rate: number): {
   }
 
   return {
-    formatted: formatPercentage(rate),
+    formatted: formatPercentageUtil(rate),
     status,
     color,
   };
@@ -112,7 +107,7 @@ export function formatOccupancyRate(rate: number): {
 /**
  * Format growth rate with indicator
  */
-export function formatGrowthRate(rate: number): {
+export function analyticsFormatGrowthRate(rate: number): {
   formatted: string;
   indicator: 'up' | 'down' | 'neutral';
   color: string;
@@ -121,7 +116,7 @@ export function formatGrowthRate(rate: number): {
   const color = rate > 0 ? '#10b981' : rate < 0 ? '#ef4444' : '#6b7280';
 
   return {
-    formatted: `${rate > 0 ? '+' : ''}${formatPercentage(rate)}`,
+    formatted: `${rate > 0 ? '+' : ''}${formatPercentageUtil(rate)}`,
     indicator,
     color,
   };
@@ -140,8 +135,8 @@ export function formatChange(current: number, previous: number): {
 
   return {
     absolute: absolute > 0 ? `+${absolute}` : absolute.toString(),
-    percentage: formatGrowthRate(percentage).formatted,
-    indicator: formatGrowthRate(percentage).indicator,
+    percentage: analyticsFormatGrowthRate(percentage).formatted,
+    indicator: analyticsFormatGrowthRate(percentage).indicator,
   };
 }
 
@@ -226,10 +221,10 @@ export function formatComparisonToAverage(value: number, average: number): {
   };
 
   return {
-    difference: formatCurrency(Math.abs(difference)),
-    percentage: formatPercentage(Math.abs(percentage)),
+    difference: analyticsFormatCurrency(Math.abs(difference)),
+    percentage: formatPercentageUtil(Math.abs(percentage)),
     status,
-    formatted: `${formatPercentage(Math.abs(percentage))} ${statusLabels[status]}`,
+    formatted: `${formatPercentageUtil(Math.abs(percentage))} ${statusLabels[status]}`,
   };
 }
 
@@ -256,13 +251,13 @@ export function formatConversionRate(rate: number, benchmark: number = 2.5): {
   const comparison = ((rate - benchmark) / benchmark) * 100;
   const comparisonText =
     comparison > 0
-      ? `${formatPercentage(comparison)} above benchmark`
+      ? `${formatPercentageUtil(comparison)} above benchmark`
       : comparison < 0
-      ? `${formatPercentage(Math.abs(comparison))} below benchmark`
+      ? `${formatPercentageUtil(Math.abs(comparison))} below benchmark`
       : 'at benchmark';
 
   return {
-    formatted: formatPercentage(rate),
+    formatted: formatPercentageUtil(rate),
     status,
     comparisonToBenchmark: comparisonText,
   };

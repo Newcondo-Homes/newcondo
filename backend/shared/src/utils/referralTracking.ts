@@ -154,7 +154,7 @@ export const checkReferralQualification = (
 /**
  * Calculate commission split for agent referrals
  */
-export const calculateAgentCommission = (
+export const referralCalculateAgentCommission = (
   rentAmount: number,
   hasSubAgent: boolean
 ): {
@@ -221,7 +221,7 @@ export const generateReferralMessage = (
 /**
  * Calculate referral conversion rate
  */
-export const calculateConversionRate = (
+export const referralCalculateConversionRate = (
   clicks: number,
   conversions: number
 ): number => {
@@ -283,7 +283,7 @@ export const generateReferralSummary = (data: {
   averageReward: number;
   summary: string;
 } => {
-  const conversionRate = calculateConversionRate(
+  const conversionRate = referralCalculateConversionRate(
     data.totalClicks,
     data.qualifiedReferrals
   );

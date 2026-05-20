@@ -1,6 +1,6 @@
 // backend/admin-service/src/services/queueManagementService.ts
 
-import { PrismaClient, MarkingJobStatus } from '@newcondo/db';
+import { PrismaClient } from '@newcondo/db';
 import { adminService } from './adminService';
 
 const prisma = new PrismaClient();

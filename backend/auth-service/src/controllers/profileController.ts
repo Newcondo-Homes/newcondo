@@ -3,13 +3,12 @@ import { Request, Response } from "express";
 import { prisma } from "@newcondo/db";
 import { profileService } from "../services/profileService";
 import {
-  standardResponse,
   sendResponse,
   sendBadRequest,
   sendNotFound,
   sendInternalError,
-} from "../../../shared/src/utils/response";
-// import { AuthRequest } from '../types/auth';
+} from "@newcondo/backend-shared";
+
 import {
   updateProfileSchema,
   changePasswordSchema,

@@ -4,7 +4,7 @@
  */
 
 import { addHours, addDays, isBefore, isAfter, differenceInMilliseconds } from 'date-fns';
-import { MarkingJobStatus, UrgencyLevel } from '@prisma/client';
+import { MarkingJobStatus, UrgencyLevel } from '@newcondo/db';
 
 // Constants
 export const MARKING_TIME_SLOT_HOURS = 3;
@@ -12,7 +12,7 @@ export const MAX_COMPLETION_DAYS = 3;
 export const CONFIRMATION_WINDOW_DAYS = 2;
 export const PARTIAL_PAYMENT_AMOUNT = 1000; // NGN
 export const FULL_MARKING_FEE = 20000; // NGN
-export const AGENT_COMMISSION_PERCENTAGE = 0.25; // 25%
+const AGENT_COMMISSION_PERCENTAGE = 0.25; // 25%
 export const NEWCONDO_MARKING_FEE = 25000; // NGN
 
 /**
@@ -38,7 +38,7 @@ export const calculateMaxCompletionTime = (createdAt: Date): Date => {
  * @param markedAt - The time when the property was marked
  * @returns The confirmation deadline (2 days from marking)
  */
-export const calculateConfirmationDeadline = (markedAt: Date): Date => {
+export const calculateConfirmationDeadlineForPropertyOwner = (markedAt: Date): Date => {
   return addDays(markedAt, CONFIRMATION_WINDOW_DAYS);
 };
 
@@ -47,7 +47,7 @@ export const calculateConfirmationDeadline = (markedAt: Date): Date => {
  * @param timeSlotExpiry - The expiry time of the slot
  * @returns true if expired, false otherwise
  */
-export const isTimeSlotExpired = (timeSlotExpiry: Date): boolean => {
+export const isMarkingTimeSlotExpired = (timeSlotExpiry: Date): boolean => {
   return isBefore(timeSlotExpiry, new Date());
 };
 
@@ -65,7 +65,7 @@ export const isConfirmationDeadlinePassed = (confirmationDeadline: Date): boolea
  * @param markingFee - The total marking fee
  * @returns The agent's commission amount
  */
-export const calculateAgentCommission = (markingFee: number): number => {
+export const markingCalculateAgentCommission = (markingFee: number): number => {
   return markingFee * AGENT_COMMISSION_PERCENTAGE;
 };
 
@@ -74,7 +74,7 @@ export const calculateAgentCommission = (markingFee: number): number => {
  * @param markingFee - The total marking fee
  * @returns The platform's fee amount
  */
-export const calculatePlatformFee = (markingFee: number): number => {
+export const calculatePlatformFeeForMarkingJob = (markingFee: number): number => {
   return markingFee * (1 - AGENT_COMMISSION_PERCENTAGE);
 };
 
@@ -92,7 +92,7 @@ export const getPartialPaymentAmount = (): number => {
  * @param partialPayment - The partial payment already made
  * @returns The remaining payment amount
  */
-export const calculateRemainingPayment = (
+export const calculateRemainingPaymentAfterPartialPayment = (
   totalFee: number,
   partialPayment: number
 ): number => {
@@ -334,13 +334,13 @@ const toRadians = (degrees: number): number => {
 export default {
   calculateTimeSlotExpiry,
   calculateMaxCompletionTime,
-  calculateConfirmationDeadline,
-  isTimeSlotExpired,
+  calculateConfirmationDeadlineForPropertyOwner,
+  isMarkingTimeSlotExpired,
   isConfirmationDeadlinePassed,
-  calculateAgentCommission,
-  calculatePlatformFee,
+  markingCalculateAgentCommission,
+  calculatePlatformFeeForMarkingJob,
   getPartialPaymentAmount,
-  calculateRemainingPayment,
+  calculateRemainingPaymentAfterPartialPayment,
   calculatePartialPaymentCycles,
   getMarkingFee,
   getTimeSlotRemaining,

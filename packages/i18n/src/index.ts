@@ -5,6 +5,8 @@
  * Provides multi-language support, currency formatting, and locale management
  */
 
+import { LocaleCode } from './config/locales';
+
 // Configuration exports
 // export { i18nConfig, initI18n, getI18n } from './config/i18n.config';
 export { NAMESPACES, type Namespace } from './config/namespaces';
@@ -20,6 +22,8 @@ export {
   type LocaleConfig,
   isLocaleSupported, 
 } from './config/locales';
+
+export type SupportedLocale = LocaleCode
 
 export { 
   languageMetadata,

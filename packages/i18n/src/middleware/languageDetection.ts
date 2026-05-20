@@ -7,6 +7,7 @@ import {
   getBestMatchingLocale,
 } from '../config/locales';
 
+
 /**
  * Language detection sources
  */

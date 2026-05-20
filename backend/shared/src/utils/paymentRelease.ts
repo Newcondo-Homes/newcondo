@@ -1,28 +1,25 @@
 // backend/shared/src/utils/paymentRelease.ts
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@newcondo/db';
 import { 
-  PaymentReleaseSchedule, 
-  PaymentReleaseStatus,
-  PaymentHoldPeriod 
+  PaymentHoldStatus, 
+  PaymentHold,
+  PaymentReleaseSchedule,
 } from '../types/paymentRelease';
 
-/**
- * Confirmation period in hours (24 hours)
- */
-export const CONFIRMATION_PERIOD_HOURS = 24;
+import { CONFIRMATION_PERIOD_HOURS } from '../constants';
+
 
 /**
  * Confirmation period in milliseconds
  */
-export const CONFIRMATION_PERIOD_MS = CONFIRMATION_PERIOD_HOURS * 60 * 60 * 1000;
+export const CONFIRMATION_PERIOD_MS_FOR_PAYMENTRELEASE = CONFIRMATION_PERIOD_HOURS * 60 * 60 * 1000;
 
 /**
  * Calculate confirmation deadline from payment date
  */
-export function calculateConfirmationDeadline(paymentDate: Date): Date {
-  const deadline = new Date(paymentDate.getTime() + CONFIRMATION_PERIOD_MS);
-  return deadline;
+export function calculateConfirmationDeadlineForPayment(paymentDate: Date): Date {
+  return new Date(paymentDate.getTime() + CONFIRMATION_PERIOD_MS_FOR_PAYMENTRELEASE);
 }
 
 /**
@@ -55,7 +52,7 @@ export function getTimeRemainingInConfirmation(confirmationDeadline: Date): {
 }
 
 /**
- * Create payment release schedule
+ * Create a base payment hold profile setup
  */
 export function createPaymentReleaseSchedule(params: {
   paymentId: string;
@@ -65,77 +62,86 @@ export function createPaymentReleaseSchedule(params: {
   propertyOwnerId: string;
   listingAgentId?: string;
   subAgentId?: string;
-}): PaymentReleaseSchedule {
-  const { paymentId, rentalId, paymentDate, totalAmount } = params;
+  propertyId: string;
+  renterId: string;
+  rentAmount: Decimal;
+  serviceFee: Decimal;
+  transactionFee: Decimal;
+  holdingVirtualAccountId: string;
+}): Partial<PaymentHold> {
+  const { paymentId, rentalId, paymentDate, totalAmount, propertyId, renterId, rentAmount, serviceFee, transactionFee, holdingVirtualAccountId } = params;
   
-  const confirmationDeadline = calculateConfirmationDeadline(paymentDate);
+  const confirmationDeadline = calculateConfirmationDeadlineForPayment(paymentDate);
   
   return {
     paymentId,
     rentalId,
-    paymentDate,
-    confirmationDeadline,
-    releaseScheduledFor: confirmationDeadline,
-    status: 'PENDING_CONFIRMATION',
+    propertyId,
+    renterId,
     totalAmount,
-    isAutoRelease: true,
+    rentAmount,
+    serviceFee,
+    transactionFee,
+    holdingVirtualAccountId,
+    status: PaymentHoldStatus.HELD,
+    heldAt: paymentDate,
+    releaseScheduledAt: confirmationDeadline,
+    isConfirmed: false
   };
 }
 
 /**
- * Determine payment release status based on current state
+ * Determine payment release status based on current state metrics
  */
 export function determinePaymentReleaseStatus(params: {
   isConfirmed: boolean;
   confirmationDeadline: Date;
-  isReleased: boolean;
-  isRefunded: boolean;
-}): PaymentReleaseStatus {
-  const { isConfirmed, confirmationDeadline, isReleased, isRefunded } = params;
+  status: PaymentHoldStatus;
+}): PaymentHoldStatus {
+  const { isConfirmed, confirmationDeadline, status } = params;
   
-  if (isRefunded) {
-    return 'REFUNDED';
+  if (status === PaymentHoldStatus.REFUNDED) {
+    return PaymentHoldStatus.REFUNDED;
   }
   
-  if (isReleased) {
-    return 'RELEASED';
+  if (status === PaymentHoldStatus.RELEASED) {
+    return PaymentHoldStatus.RELEASED;
+  }
+  
+  if (status === PaymentHoldStatus.DISPUTED) {
+    return PaymentHoldStatus.DISPUTED;
   }
   
   if (isConfirmed) {
-    return 'CONFIRMED_PENDING_RELEASE';
+    return PaymentHoldStatus.PENDING_RELEASE;
   }
   
   const isPeriodExpired = isConfirmationPeriodExpired(confirmationDeadline);
   
   if (isPeriodExpired) {
-    return 'AUTO_RELEASE_READY';
+    return PaymentHoldStatus.PENDING_RELEASE;
   }
   
-  return 'PENDING_CONFIRMATION';
+  return PaymentHoldStatus.HELD;
 }
 
 /**
- * Check if payment is ready for release
+ * Check if payment is ready for release execution
  */
 export function isPaymentReadyForRelease(params: {
   isConfirmed: boolean;
   confirmationDeadline: Date;
-  isReleased: boolean;
+  status: PaymentHoldStatus;
 }): boolean {
-  const { isConfirmed, confirmationDeadline, isReleased } = params;
+  const { isConfirmed, confirmationDeadline, status } = params;
   
-  // Already released
-  if (isReleased) {
+  // Cannot release if already finished or blocked
+  if ([PaymentHoldStatus.RELEASED, PaymentHoldStatus.REFUNDED, PaymentHoldStatus.DISPUTED, PaymentHoldStatus.CANCELLED].includes(status)) {
     return false;
   }
   
-  // Confirmed by renter
-  if (isConfirmed) {
-    return true;
-  }
-  
-  // Auto-release after confirmation period
-  if (isConfirmationPeriodExpired(confirmationDeadline)) {
+  // Confirmed by renter or elapsed auto-release window opens processing
+  if (isConfirmed || isConfirmationPeriodExpired(confirmationDeadline)) {
     return true;
   }
   
@@ -146,17 +152,16 @@ export function isPaymentReadyForRelease(params: {
  * Check if payment can still be refunded
  */
 export function canPaymentBeRefunded(params: {
-  isReleased: boolean;
-  isRefunded: boolean;
+  status: PaymentHoldStatus;
   confirmationDeadline: Date;
 }): { canRefund: boolean; reason?: string } {
-  const { isReleased, isRefunded, confirmationDeadline } = params;
+  const { status, confirmationDeadline } = params;
   
-  if (isRefunded) {
+  if (status === PaymentHoldStatus.REFUNDED) {
     return { canRefund: false, reason: 'Payment has already been refunded' };
   }
   
-  if (isReleased) {
+  if (status === PaymentHoldStatus.RELEASED) {
     return { canRefund: false, reason: 'Payment has already been released to recipients' };
   }
   
@@ -168,10 +173,10 @@ export function canPaymentBeRefunded(params: {
 }
 
 /**
- * Get payment hold period information
+ * Get unified dashboard data frame representation details
  */
-export function getPaymentHoldPeriod(paymentDate: Date): PaymentHoldPeriod {
-  const confirmationDeadline = calculateConfirmationDeadline(paymentDate);
+export function getPaymentHoldPeriod(paymentDate: Date) {
+  const confirmationDeadline = calculateConfirmationDeadlineForPayment(paymentDate);
   const timeRemaining = getTimeRemainingInConfirmation(confirmationDeadline);
   const status = timeRemaining.isExpired ? 'EXPIRED' : 'ACTIVE';
   
@@ -186,7 +191,6 @@ export function getPaymentHoldPeriod(paymentDate: Date): PaymentHoldPeriod {
 
 /**
  * Calculate next auto-release batch time
- * Releases happen every hour on the hour
  */
 export function getNextAutoReleaseBatchTime(): Date {
   const now = new Date();
@@ -198,7 +202,7 @@ export function getNextAutoReleaseBatchTime(): Date {
 }
 
 /**
- * Get payments ready for auto-release in current batch
+ * Get payments ready for auto-release tracking schedules
  */
 export function filterPaymentsForAutoRelease(
   schedules: PaymentReleaseSchedule[]
@@ -206,18 +210,13 @@ export function filterPaymentsForAutoRelease(
   const now = new Date();
   
   return schedules.filter(schedule => {
-    // Must be pending or confirmed
-    if (!['PENDING_CONFIRMATION', 'CONFIRMED_PENDING_RELEASE', 'AUTO_RELEASE_READY'].includes(schedule.status)) {
+    // Must be in active SCHEDULED lifecycle state
+    if (schedule.status !== 'SCHEDULED') {
       return false;
     }
     
-    // Must be past confirmation deadline
-    if (schedule.confirmationDeadline > now) {
-      return false;
-    }
-    
-    // Must be scheduled for release at or before current time
-    if (schedule.releaseScheduledFor && schedule.releaseScheduledFor > now) {
+    // Must be past targeted completion timeline
+    if (schedule.scheduledAt > now) {
       return false;
     }
     
@@ -251,23 +250,22 @@ export function formatTimeRemaining(timeRemaining: {
 }
 
 /**
- * Validate payment release eligibility
+ * Validate payment release eligibility criteria
  */
 export function validatePaymentReleaseEligibility(params: {
   paymentId: string;
-  isReleased: boolean;
-  isRefunded: boolean;
+  status: PaymentHoldStatus;
   confirmationDeadline: Date;
   totalAmount: Decimal;
 }): { isEligible: boolean; errors: string[] } {
   const errors: string[] = [];
-  const { isReleased, isRefunded, confirmationDeadline, totalAmount } = params;
+  const { status, confirmationDeadline, totalAmount } = params;
   
-  if (isReleased) {
+  if (status === PaymentHoldStatus.RELEASED) {
     errors.push('Payment has already been released');
   }
   
-  if (isRefunded) {
+  if (status === PaymentHoldStatus.REFUNDED) {
     errors.push('Payment has been refunded');
   }
   

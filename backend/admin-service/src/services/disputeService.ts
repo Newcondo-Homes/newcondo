@@ -1,46 +1,260 @@
-import { PrismaClient, PaymentStatus, RentalStatus, AdminActionType } from '@newcondo/db';
-import { BadRequestError, NotFoundError, ForbiddenError } from '../../../shared/src/utils/errors';
-import { flutterwaveService } from '../../../shared/src/utils/flutterwave';
-import { emailService } from '../../../shared/src/utils/email';
-import { smsService } from '../../../shared/src/utils/sms';
+import { prisma, PaymentStatus, RentalStatus, AdminActionType, Prisma } from '@newcondo/db';
+import {
+  BadRequestError,
+  NotFoundError,
+  ForbiddenError
+} from '@newcondo/backend-shared/';
+import { processRefund as flutterwaveProcessRefund } from '@newcondo/backend-shared/';
+import { sendEmail as sendEmailRaw } from '@newcondo/backend-shared/';
+//TODO: implement sms service at backend-shared
+// import { smsService } from '@newcondo/backend-shared/';
+import {
+  DisputeReason,
+  DisputeResolution,
+  DisputeDetails,
+  DisputeFilters,
+  ResolveDisputeParams,
+  UpdateDisputeStatusParams,
+  AddDisputeNoteParams,
+  EscalateDisputeParams,
+  SubmitDisputeResult,
+  DisputeStats,
+  DisputeListItem,
+  DisputeListResult,
+  DisputeDetailsResult,
+  DisputeNote,
+  TimelineEvent,
+  DisputeTimeline,
+  UpdatedDispute
+} from '../types/dispute'
 
-const prisma = new PrismaClient();
-
-interface DisputeReason {
-  category: 'PROPERTY_MISMATCH' | 'UNAVAILABLE' | 'FRAUD' | 'OTHER';
-  description: string;
-  evidence?: string[]; // URLs to uploaded evidence
+interface NotifyEmailParams {
+  to: string;
+  subject: string;
+  body: string;
 }
 
-interface DisputeResolution {
-  action: 'FULL_REFUND' | 'PARTIAL_REFUND' | 'NO_REFUND';
-  refundAmount?: number;
-  reason: string;
-  compensationToOwner?: number;
+
+// ── SMS: no sms util exists yet — thin stub so the file compiles ──────────────
+// Replace this with a real import once you build backend/shared/src/utils/sms.ts
+const smsStub = {
+  send: async ({ to, message }: { to: string; message: string }): Promise<void> => {
+    // TODO: implement sms.ts in backend-shared and replace this stub
+    console.log(`[SMS STUB] To: ${to} | ${message}`);
+  },
+};
+
+// sendEmailRaw() expects { to, subject, html, text? }.
+// We wrap it in two thin helpers to keep the rest of the file clean.
+
+//TODO: the design for the dispute email is bare and plain, design it letter
+// to suit newcondo brand and design
+async function sendPlainEmail(to: string, subject: string, body: string): Promise<void> {
+  await sendEmailRaw({
+    to,
+    subject,
+    html: `<p>${body.replace(/\n/g, '<br/>')}</p>`,
+    text: body,
+  });
 }
 
-interface DisputeDetails {
-  id: string;
-  paymentId: string;
-  rentalId: string;
-  renterId: string;
-  renterName: string;
-  renterEmail: string;
-  renterPhone: string;
-  propertyId: string;
-  unitId?: string;
-  propertyTitle: string;
-  propertyAddress: string;
-  amount: number;
-  disputeReason: DisputeReason;
-  status: 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED' | 'REJECTED';
-  submittedAt: Date;
-  reviewedBy?: string;
-  resolvedAt?: Date;
-  resolution?: DisputeResolution;
+async function sendSms(to: string, message: string): Promise<void> {
+  await smsStub.send({ to, message });
+}
+
+// ─── Email helpers that previously used emailService.send() ──────────────────
+// emailService.send() accepted { to, subject, template, data }.
+// Since that object doesn't exist, we fall back to sendPlainEmail().
+// When you add HTML templates, replace the body strings with proper HTML.
+
+async function emailAdminOfDispute(
+  admin: { name: string | null; email: string },
+  propertyTitle: string,
+  amount: number,
+  reason: string,
+  description: string
+): Promise<void> {
+  await sendPlainEmail(
+    admin.email,
+    'New Payment Dispute Submitted',
+    `Hi ${admin.name ?? 'Admin'},\n\nA new dispute has been submitted for "${propertyTitle}".\nAmount: ₦${amount.toLocaleString()}\nReason: ${reason}\n\n${description}`
+  );
+}
+
+async function emailOwnerOfDispute(
+  owner: { name: string | null; email: string },
+  propertyTitle: string,
+  reason: string,
+  description: string
+): Promise<void> {
+  await sendPlainEmail(
+    owner.email,
+    'Payment Dispute Notification',
+    `Hi ${owner.name ?? 'Owner'},\n\nA dispute has been raised for your property "${propertyTitle}".\nReason: ${reason}\n\n${description}\n\nThe admin team is reviewing the case.`
+  );
+}
+
+async function emailRenterOfResolution(
+  renter: { name: string | null; email: string },
+  propertyTitle: string,
+  resolutionOutcome: string,
+  refundAmount: number | undefined,
+  resolutionReason: string
+): Promise<void> {
+  const actionText =
+    resolutionOutcome === 'FULL_REFUND'
+      ? 'approved for full refund'
+      : resolutionOutcome === 'PARTIAL_REFUND'
+        ? `approved for partial refund of ₦${refundAmount?.toLocaleString()}`
+        : 'rejected — payment released to owner';
+
+  await sendPlainEmail(
+    renter.email,
+    'Dispute Resolution Update',
+    `Hi ${renter.name ?? 'User'},\n\nYour dispute for "${propertyTitle}" has been ${actionText}.\nReason: ${resolutionReason}`
+  );
+}
+
+async function emailOwnerOfResolution(
+  owner: { name: string | null; email: string },
+  propertyTitle: string,
+  resolutionOutcome: string,
+  reason: string
+): Promise<void> {
+  await sendPlainEmail(
+    owner.email,
+    'Dispute Resolution Update',
+    `Hi ${owner.name ?? 'Owner'},\n\nThe dispute for "${propertyTitle}" has been resolved: ${resolutionOutcome}.\n${reason}`
+  );
 }
 
 export class DisputeService {
+
+  private async verifyAdmin(adminId: string): Promise<void> {
+    const admin = await prisma.user.findUnique({
+      where: { id: adminId },
+      select: { id: true, role: true },
+    });
+    if (!admin || admin.role !== 'ADMIN') {
+      throw new Error('Unauthorized: Admin access required');
+    }
+  }
+
+  /**
+ * get disputes
+ */
+  async getDisputes(filters: DisputeFilters): Promise<DisputeListResult> {
+    const page = filters.page || 1;
+    const limit = filters.limit || 20;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.DisputeWhereInput = {};
+
+    if (filters.status && filters.status !== 'ALL') {
+      where.status = filters.status as Prisma.EnumDisputeStatusFilter;
+    }
+
+    const sortField = filters.sortBy === 'priority'
+      ? 'reason'
+      : filters.sortBy || 'createdAt';
+
+    const orderBy: Prisma.DisputeOrderByWithRelationInput = {
+      [sortField]: filters.sortOrder || 'desc',
+    };
+
+    const [disputes, total] = await Promise.all([
+      prisma.dispute.findMany({
+        where,
+        include: {
+          rental: {
+            include: {
+              property: {
+                select: {
+                  id: true,
+                  title: true,
+                  address: true,
+                },
+              },
+            },
+          },
+          payment: {
+            select: {
+              id: true,
+              amount: true,
+            },
+          },
+          renter: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy,
+        skip,
+        take: limit,
+      }),
+      prisma.dispute.count({ where }),
+    ]);
+
+    const disputeList: DisputeListItem[] = disputes.map((d) => ({
+      id: d.id,
+      rentalId: d.rentalId,
+      paymentId: d.paymentId,
+      renterId: d.renterId,
+      renterName: d.renter.name,
+      renterEmail: d.renter.email,
+      propertyTitle: d.rental.property.title,
+      propertyAddress: d.rental.property.address,
+      amount: Number(d.payment.amount),
+      reason: d.reason,
+      description: d.description,
+      preferredResolution: d.preferredResolution,
+      status: d.status,
+      assignedAdminId: d.assignedAdminId,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
+    }));
+
+    return {
+      disputes: disputeList,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+ * Get dispute stats
+ */
+  async getDisputeStats(): Promise<DisputeStats> {
+    const [total, pending, investigating, resolved, rejected, refundedPayments] =
+      await Promise.all([
+        prisma.dispute.count(),
+        prisma.dispute.count({ where: { status: 'PENDING' } }),
+        prisma.dispute.count({ where: { status: 'INVESTIGATING' } }),
+        prisma.dispute.count({ where: { status: 'RESOLVED' } }),
+        prisma.dispute.count({ where: { status: 'REJECTED' } }),
+        prisma.payment.aggregate({
+          where: { status: PaymentStatus.REFUNDED },
+          _sum: { amount: true },
+        }),
+      ]);
+
+    return {
+      total,
+      pending,
+      investigating,
+      resolved,
+      rejected,
+      totalRefunded: Number(refundedPayments._sum.amount || 0),
+    };
+  }
+
   /**
    * Submit a dispute for a payment during the confirmation period
    */
@@ -48,7 +262,7 @@ export class DisputeService {
     paymentId: string,
     renterId: string,
     disputeReason: DisputeReason
-  ): Promise<DisputeDetails> {
+  ): Promise<SubmitDisputeResult> {
     // Fetch payment with all related data
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
@@ -56,7 +270,16 @@ export class DisputeService {
         user: true,
         rental: {
           include: {
-            property: true,
+            property: {
+              include: {
+                owner: {
+                  select: { id: true, name: true, email: true, phone: true },
+                },
+                agent: {
+                  select: { id: true, name: true, email: true, phone: true },
+                },
+              },
+            },
             unit: true,
           },
         },
@@ -125,11 +348,28 @@ export class DisputeService {
       },
     });
 
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' },
+      select: { name: true, email: true },
+    });
+
     // Notify admin
-    await this.notifyAdminOfDispute(payment, disputeReason);
+    await this.notifyAdminOfDispute(
+      admins,
+      payment.rental.property.title,
+      parseFloat(payment.amount.toString()),
+      disputeReason.category,
+      disputeReason.description
+    );
 
     // Notify property owner/agent
-    await this.notifyOwnerOfDispute(payment.rental, disputeReason);
+    await this.notifyOwnerOfDispute(
+      payment.rental.property.owner,
+      payment.rental.property.agent,
+      payment.rental.property.title,
+      disputeReason.category,
+      disputeReason.description
+    );
 
     return {
       id: ticket.id,
@@ -153,118 +393,44 @@ export class DisputeService {
   /**
    * Get all pending disputes for admin review
    */
-  async getPendingDisputes(adminId: string): Promise<DisputeDetails[]> {
+  async getPendingDisputes(adminId: string): Promise<DisputeListResult> {
     // Verify admin role
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId },
-    });
+    await this.verifyAdmin(adminId);
 
-    if (!admin || admin.role !== 'ADMIN') {
-      throw new ForbiddenError('Only admins can view disputes');
-    }
-
-    const tickets = await prisma.supportTicket.findMany({
-      where: {
-        category: 'BILLING',
-        priority: 'HIGH',
-        status: {
-          in: ['OPEN', 'IN_PROGRESS'],
-        },
-      },
-      include: {
-        user: true,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    const disputes: DisputeDetails[] = [];
-
-    for (const ticket of tickets) {
-      try {
-        const metadata = JSON.parse(ticket.description);
-        
-        if (!metadata.disputeReason) continue; // Skip non-dispute tickets
-
-        const payment = await prisma.payment.findUnique({
-          where: { id: metadata.paymentId },
-          include: {
-            rental: {
-              include: {
-                property: true,
-              },
-            },
-          },
-        });
-
-        if (!payment || !payment.rental) continue;
-
-        disputes.push({
-          id: ticket.id,
-          paymentId: payment.id,
-          rentalId: payment.rentalId!,
-          renterId: ticket.userId,
-          renterName: ticket.user.name || 'Unknown',
-          renterEmail: ticket.user.email,
-          renterPhone: ticket.user.phone || '',
-          propertyId: metadata.propertyId,
-          unitId: metadata.unitId,
-          propertyTitle: payment.rental.property.title,
-          propertyAddress: payment.rental.property.address,
-          amount: parseFloat(payment.amount.toString()),
-          disputeReason: metadata.disputeReason,
-          status: ticket.status === 'OPEN' ? 'PENDING' : 'UNDER_REVIEW',
-          submittedAt: ticket.createdAt,
-          reviewedBy: ticket.resolvedBy || undefined,
-          resolvedAt: ticket.resolvedAt || undefined,
-        });
-      } catch (error) {
-        console.error('Error parsing ticket metadata:', error);
-      }
-    }
-
-    return disputes;
+    return this.getDisputes({ status: 'PENDING', sortBy: 'createdAt', sortOrder: 'desc' });
   }
 
   /**
    * Resolve a dispute with admin decision
    */
-  async resolveDispute(
-    ticketId: string,
-    adminId: string,
-    resolution: DisputeResolution
-  ): Promise<DisputeDetails> {
+  async resolveDispute({
+    disputeId,
+    adminId,
+    resolution,
+    refundAmount,
+    reason,
+    additionalNotes,
+  }: ResolveDisputeParams): Promise<DisputeDetails> {
     // Verify admin role
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId },
-    });
+    await this.verifyAdmin(adminId);
 
-    if (!admin || admin.role !== 'ADMIN') {
-      throw new ForbiddenError('Only admins can resolve disputes');
-    }
-
-    const ticket = await prisma.supportTicket.findUnique({
-      where: { id: ticketId },
+    const dispute = await prisma.dispute.findUnique({
+      where: { id: disputeId },
       include: {
-        user: true,
-      },
-    });
-
-    if (!ticket) {
-      throw new NotFoundError('Dispute ticket not found');
-    }
-
-    const metadata = JSON.parse(ticket.description);
-    const payment = await prisma.payment.findUnique({
-      where: { id: metadata.paymentId },
-      include: {
+        payment: true,
+        renter: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
         rental: {
           include: {
             property: {
               include: {
-                owner: true,
-                agent: true,
+                owner: {
+                  select: { id: true, name: true, email: true, phone: true },
+                },
+                agent: {
+                  select: { id: true, name: true, email: true, phone: true },
+                },
               },
             },
             unit: true,
@@ -273,130 +439,371 @@ export class DisputeService {
       },
     });
 
-    if (!payment || !payment.rental) {
-      throw new NotFoundError('Payment or rental not found');
+    if (!dispute) throw new Error('Dispute not found');
+    if (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED') {
+      throw new Error('Dispute already closed');
     }
 
-    // Process refund if applicable
-    let refundSuccessful = false;
-    if (resolution.action === 'FULL_REFUND' || resolution.action === 'PARTIAL_REFUND') {
-      const refundAmount = resolution.action === 'FULL_REFUND' 
-        ? parseFloat(payment.amount.toString())
-        : resolution.refundAmount!;
+    let resolutionOutcome: 'FULL_REFUND' | 'PARTIAL_REFUND' | 'NO_REFUND' | 'DISMISSED';
+    let newPaymentStatus: typeof PaymentStatus[keyof typeof PaymentStatus];
+    let newRentalStatus: typeof RentalStatus[keyof typeof RentalStatus];
 
-      try {
-        refundSuccessful = await this.processRefund(payment.id, refundAmount, resolution.reason);
-      } catch (error) {
-        console.error('Refund processing failed:', error);
-        throw new BadRequestError('Failed to process refund. Please try again.');
-      }
+    if (resolution === 'REFUND_FULL') {
+      resolutionOutcome = 'FULL_REFUND';
+      newPaymentStatus = PaymentStatus.REFUNDED;
+      newRentalStatus = RentalStatus.TERMINATED;
+    } else if (resolution === 'REFUND_PARTIAL') {
+      resolutionOutcome = 'PARTIAL_REFUND';
+      newPaymentStatus = PaymentStatus.REFUNDED;
+      newRentalStatus = RentalStatus.TERMINATED;
+    } else if (resolution === 'RELEASE_PAYMENT') {
+      resolutionOutcome = 'NO_REFUND';
+      newPaymentStatus = PaymentStatus.RELEASED;
+      newRentalStatus = RentalStatus.ACTIVE;
+    } else {
+      resolutionOutcome = 'DISMISSED';
+      newPaymentStatus = PaymentStatus.RELEASED;
+      newRentalStatus = RentalStatus.ACTIVE;
     }
 
-    // Update ticket
-    await prisma.supportTicket.update({
-      where: { id: ticketId },
+    // Update dispute
+    await prisma.dispute.update({
+      where: { id: disputeId },
       data: {
         status: 'RESOLVED',
-        resolvedBy: adminId,
+        resolutionOutcome,
+        resolutionNotes: additionalNotes
+          ? `${reason}\n\n${additionalNotes}`
+          : reason,
+        refundAmount: refundAmount ?? null,
         resolvedAt: new Date(),
-        adminResponse: JSON.stringify(resolution),
+        assignedAdminId: adminId,
       },
     });
 
-    // Update rental status
-    const newRentalStatus = resolution.action === 'NO_REFUND' 
-      ? RentalStatus.ACTIVE 
-      : RentalStatus.TERMINATED;
-
-    await prisma.rental.update({
-      where: { id: payment.rentalId! },
+    // Update payment
+    await prisma.payment.update({
+      where: { id: dispute.paymentId },
       data: {
-        status: newRentalStatus,
+        status: newPaymentStatus,
+        isReleased: newPaymentStatus === PaymentStatus.RELEASED,
+        releasedAt:
+          newPaymentStatus === PaymentStatus.RELEASED ? new Date() : undefined,
       },
     });
 
-    // Update payment status
-    if (refundSuccessful) {
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.REFUNDED,
-        },
-      });
-    } else if (resolution.action === 'NO_REFUND') {
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          status: PaymentStatus.RELEASED,
-          isReleased: true,
-          releasedAt: new Date(),
-        },
-      });
-    }
+    // Update rental
+    await prisma.rental.update({
+      where: { id: dispute.rentalId },
+      data: { status: newRentalStatus },
+    });
 
-    // Release property/unit lock if refunded
-    if (refundSuccessful) {
-      if (payment.rental.unitId) {
+    // Release property lock if refunded
+    if (
+      resolutionOutcome === 'FULL_REFUND' ||
+      resolutionOutcome === 'PARTIAL_REFUND'
+    ) {
+      if (dispute.rental.unitId) {
         await prisma.propertyUnit.update({
-          where: { id: payment.rental.unitId },
-          data: {
-            isPaymentLocked: false,
-            paymentLockExpiry: null,
-          },
+          where: { id: dispute.rental.unitId },
+          data: { isPaymentLocked: false, paymentLockExpiry: null },
         });
       } else {
         await prisma.property.update({
-          where: { id: payment.rental.propertyId },
-          data: {
-            isPaymentLocked: false,
-            paymentLockExpiry: null,
-          },
+          where: { id: dispute.rental.propertyId },
+          data: { isPaymentLocked: false, paymentLockExpiry: null },
         });
       }
     }
 
-    // Log admin action
+    // Log admin action — cast metadata to Prisma.InputJsonValue
     await prisma.adminAction.create({
       data: {
         adminId,
         action: AdminActionType.PAYMENT_REFUNDED,
-        targetType: 'Payment',
-        targetId: payment.id,
-        description: `Dispute resolved: ${resolution.action}`,
+        targetType: 'Dispute',
+        targetId: disputeId,
+        description: `Dispute resolved: ${resolutionOutcome}. Reason: ${reason}`,
         metadata: {
-          ticketId,
+          disputeId,
           resolution,
-          refundAmount: resolution.refundAmount,
-        },
+          resolutionOutcome,
+          refundAmount: refundAmount ?? null,
+          reason,
+          additionalNotes: additionalNotes ?? null,
+        } satisfies Prisma.InputJsonValue,
       },
     });
 
     // Notify renter of resolution
-    await this.notifyRenterOfResolution(ticket.user, payment.rental, resolution);
+    await this.notifyRenterOfResolution(
+      dispute.renter,
+      dispute.rental.property.title,
+      resolutionOutcome,
+      refundAmount,
+      reason
+    );
 
     // Notify owner/agent of resolution
-    await this.notifyOwnerOfResolution(payment.rental, resolution);
+    await this.notifyOwnerOfResolution(
+      dispute.rental.property.owner,
+      dispute.rental.property.agent,
+      dispute.rental.property.title,
+      resolutionOutcome,
+      reason
+    );
+
+    // return updatedDispute;
+    return this.getDisputeDetails(disputeId, adminId);
+
+  }
+
+  async updateDisputeStatus({
+    disputeId,
+    status,
+    adminId,
+    notes,
+  }: UpdateDisputeStatusParams): Promise<UpdatedDispute> {
+    await this.verifyAdmin(adminId);
+
+    const dispute = await prisma.dispute.findUnique({
+      where: { id: disputeId },
+      include: {
+        renter: { select: { name: true, email: true, phone: true } },
+        rental: {
+          include: {
+            property: { select: { title: true } },
+          },
+        },
+      },
+    });
+
+    if (!dispute) throw new Error('Dispute not found');
+
+    const updatedDispute = await prisma.dispute.update({
+      where: { id: disputeId },
+      data: {
+        status,
+        assignedAdminId: adminId,
+        ...(status === 'RESOLVED' && { resolvedAt: new Date() }),
+        ...(notes && { resolutionNotes: notes }),
+      },
+    });
+
+    await prisma.adminAction.create({
+      data: {
+        adminId,
+        action: AdminActionType.TICKET_RESOLVED,
+        targetType: 'Dispute',
+        targetId: disputeId,
+        description: `Dispute status updated to ${status}`,
+        metadata: {
+          status,
+          notes: notes ?? null,
+        } satisfies Prisma.InputJsonValue,
+      },
+    });
+
+    await this.notifyRenterOfStatusChange(
+      dispute.renter,
+      dispute.rental.property.title,
+      status
+    );
+
+    return updatedDispute;
+  }
+
+  async addDisputeNote({
+    disputeId,
+    adminId,
+    note,
+    isInternal,
+  }: AddDisputeNoteParams): Promise<DisputeNote> {
+    await this.verifyAdmin(adminId);
+
+    const dispute = await prisma.dispute.findUnique({
+      where: { id: disputeId },
+    });
+
+    if (!dispute) throw new Error('Dispute not found');
+
+    const comment = await prisma.disputeComment.create({
+      data: {
+        disputeId,
+        authorId: adminId,
+        authorRole: 'ADMIN',
+        comment: isInternal ? `[INTERNAL] ${note}` : note,
+      },
+    });
 
     return {
-      id: ticket.id,
-      paymentId: payment.id,
-      rentalId: payment.rental.id,
-      renterId: ticket.userId,
-      renterName: ticket.user.name || 'Unknown',
-      renterEmail: ticket.user.email,
-      renterPhone: ticket.user.phone || '',
-      propertyId: payment.rental.propertyId,
-      unitId: payment.rental.unitId || undefined,
-      propertyTitle: payment.rental.property.title,
-      propertyAddress: payment.rental.property.address,
-      amount: parseFloat(payment.amount.toString()),
-      disputeReason: metadata.disputeReason,
-      status: 'RESOLVED',
-      submittedAt: ticket.createdAt,
-      reviewedBy: adminId,
-      resolvedAt: new Date(),
-      resolution,
+      id: comment.id,
+      disputeId: comment.disputeId,
+      authorId: comment.authorId,
+      comment: comment.comment,
+      authorRole: comment.authorRole,
+      createdAt: comment.createdAt,
     };
+  }
+
+
+  async escalateDispute({
+    disputeId,
+    priority,
+    adminId,
+    reason,
+  }: EscalateDisputeParams): Promise<UpdatedDispute> {
+    await this.verifyAdmin(adminId);
+
+    const dispute = await prisma.dispute.findUnique({
+      where: { id: disputeId },
+      include: {
+        renter: { select: { name: true, email: true, phone: true } },
+        rental: {
+          include: {
+            property: {
+              include: {
+                owner: { select: { name: true, email: true, phone: true } },
+                agent: { select: { name: true, email: true, phone: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!dispute) throw new Error('Dispute not found');
+    if (dispute.status === 'RESOLVED' || dispute.status === 'REJECTED') {
+      throw new Error('Cannot escalate a closed dispute');
+    }
+
+    // Move to INVESTIGATING if still PENDING
+    const updatedDispute = await prisma.dispute.update({
+      where: { id: disputeId },
+      data: {
+        status: dispute.status === 'PENDING' ? 'INVESTIGATING' : dispute.status,
+        assignedAdminId: adminId,
+      },
+    });
+
+    // Add escalation comment
+    await prisma.disputeComment.create({
+      data: {
+        disputeId,
+        authorId: adminId,
+        authorRole: 'ADMIN',
+        comment: `[ESCALATED to ${priority}] ${reason}`,
+      },
+    });
+
+    await prisma.adminAction.create({
+      data: {
+        adminId,
+        action: AdminActionType.TICKET_RESOLVED,
+        targetType: 'Dispute',
+        targetId: disputeId,
+        description: `Dispute escalated to ${priority} priority`,
+        metadata: {
+          priority,
+          reason,
+        } satisfies Prisma.InputJsonValue,
+      },
+    });
+
+    await this.notifyPartiesOfEscalation(
+      dispute.renter,
+      dispute.rental.property.owner,
+      dispute.rental.property.agent,
+      dispute.rental.property.title,
+      priority
+    );
+
+    return updatedDispute;
+  }
+
+  async getDisputeTimeline(disputeId: string): Promise<DisputeTimeline> {
+    const [dispute, comments, adminActions, eventLogs] = await Promise.all([
+      prisma.dispute.findUnique({
+        where: { id: disputeId },
+        include: {
+          renter: { select: { name: true } },
+        },
+      }),
+      prisma.disputeComment.findMany({
+        where: { disputeId },
+        include: {
+          author: { select: { name: true, role: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.adminAction.findMany({
+        where: { targetType: 'Dispute', targetId: disputeId },
+        include: { admin: { select: { name: true } } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.eventLog.findMany({
+        where: {
+          metadata: { path: ['disputeId'], equals: disputeId },
+        },
+        orderBy: { timestamp: 'asc' },
+      }),
+    ]);
+
+    if (!dispute) throw new Error('Dispute not found');
+
+    const events: TimelineEvent[] = [];
+
+    // Dispute created
+    events.push({
+      timestamp: dispute.createdAt,
+      type: 'DISPUTE_CREATED',
+      description: `Dispute submitted: ${dispute.reason}`,
+      actor: dispute.renter.name || 'Renter',
+    });
+
+    // Comments
+    comments.forEach((c) => {
+      events.push({
+        timestamp: c.createdAt,
+        type: 'COMMENT_ADDED',
+        description: c.comment,
+        actor: c.author.name || c.author.role,
+      });
+    });
+
+    // Event logs
+    eventLogs.forEach((log) => {
+      events.push({
+        timestamp: log.timestamp,
+        type: log.type,
+        description: log.type.replace(/_/g, ' ').toLowerCase(),
+        metadata: log.metadata,
+      });
+    });
+
+    // Admin actions
+    adminActions.forEach((action) => {
+      events.push({
+        timestamp: action.createdAt,
+        type: action.action,
+        description: action.description || action.action,
+        actor: action.admin.name || 'Admin',
+        metadata: action.metadata,
+      });
+    });
+
+    // Resolution
+    if (dispute.resolvedAt) {
+      events.push({
+        timestamp: dispute.resolvedAt,
+        type: 'DISPUTE_RESOLVED',
+        description: `Resolved: ${dispute.resolutionOutcome || 'N/A'}. ${dispute.resolutionNotes || ''}`,
+      });
+    }
+
+    events.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    return { disputeId, events };
   }
 
   /**
@@ -417,10 +824,10 @@ export class DisputeService {
 
     try {
       // Process refund through Flutterwave
-      const refundResponse = await flutterwaveService.processRefund({
-        transactionId: payment.transactionId,
+      const refundResponse = await flutterwaveProcessRefund(payment.transactionId, {
+        id: payment.transactionId,
         amount: refundAmount,
-        comments: reason,
+        reason: reason,
       });
 
       if (refundResponse.status === 'success') {
@@ -446,25 +853,17 @@ export class DisputeService {
   /**
    * Notify admin of new dispute
    */
-  private async notifyAdminOfDispute(payment: any, disputeReason: DisputeReason): Promise<void> {
-    const admins = await prisma.user.findMany({
-      where: { role: 'ADMIN' },
-    });
+  private async notifyAdminOfDispute(
+    admins: { name: string | null; email: string }[],
+    propertyTitle: string,
+    amount: number,
+    reason: string,
+    description: string
+  ): Promise<void> {
 
     for (const admin of admins) {
       if (admin.email) {
-        await emailService.send({
-          to: admin.email,
-          subject: 'New Payment Dispute Submitted',
-          template: 'dispute-notification',
-          data: {
-            adminName: admin.name,
-            propertyTitle: payment.rental.property.title,
-            amount: parseFloat(payment.amount.toString()),
-            category: disputeReason.category,
-            description: disputeReason.description,
-          },
-        });
+        await emailAdminOfDispute(admin, propertyTitle, amount, reason, description);
       }
     }
   }
@@ -472,226 +871,164 @@ export class DisputeService {
   /**
    * Notify property owner/agent of dispute
    */
-  private async notifyOwnerOfDispute(rental: any, disputeReason: DisputeReason): Promise<void> {
-    const owner = rental.property.owner;
-    const agent = rental.property.agent;
+  private async notifyOwnerOfDispute(
+    owner: { name: string | null; email: string; phone: string | null },
+    agent: { name: string | null; email: string; phone: string | null } | null,
+    propertyTitle: string,
+    reason: string,
+    description: string
+  ): Promise<void> {
 
-    const message = `A dispute has been raised for your property "${rental.property.title}". Reason: ${disputeReason.category}. The admin team is reviewing the case.`;
 
+    const smsMessage = `A dispute has been raised for your property "${propertyTitle}". Reason: ${reason}. The admin team is reviewing the case.`;
     // Notify owner
-    if (owner.email) {
-      await emailService.send({
-        to: owner.email,
-        subject: 'Payment Dispute Notification',
-        template: 'owner-dispute-notification',
-        data: {
-          ownerName: owner.name,
-          propertyTitle: rental.property.title,
-          category: disputeReason.category,
-          description: disputeReason.description,
-        },
-      });
-    }
-
-    if (owner.phone) {
-      await smsService.send({
-        to: owner.phone,
-        message,
-      });
-    }
+    if (owner.email) await emailOwnerOfDispute(owner, propertyTitle, reason, description);
+    if (owner.phone) await sendSms(owner.phone, smsMessage);
 
     // Notify agent if exists
     if (agent) {
-      if (agent.email) {
-        await emailService.send({
-          to: agent.email,
-          subject: 'Payment Dispute Notification',
-          template: 'agent-dispute-notification',
-          data: {
-            agentName: agent.name,
-            propertyTitle: rental.property.title,
-            category: disputeReason.category,
-            description: disputeReason.description,
-          },
-        });
-      }
-
-      if (agent.phone) {
-        await smsService.send({
-          to: agent.phone,
-          message,
-        });
-      }
+      if (agent.email) await emailOwnerOfDispute(agent, propertyTitle, reason, description);
+      if (agent.phone) await sendSms(agent.phone, smsMessage);
     }
+
+
+  }
+
+  private async notifyPartiesOfEscalation(
+    renter: { name: string | null; email: string; phone: string | null },
+    owner: { name: string | null; email: string; phone: string | null },
+    agent: { name: string | null; email: string; phone: string | null } | null,
+    propertyTitle: string,
+    priority: string
+  ): Promise<void> {
+    const message = `The dispute for "${propertyTitle}" has been escalated to ${priority} priority and is under urgent review.`;
+
+    if (renter.email) await sendPlainEmail(renter.email, 'Dispute Escalated', message);
+    if (renter.phone) await sendSms(renter.phone, message);
+
+    if (owner.email) await sendPlainEmail(owner.email, 'Dispute Escalated', message);
+    if (owner.phone) await sendSms(owner.phone, message);
+
+    if (agent?.email) await sendPlainEmail(agent.email, 'Dispute Escalated', message);
+    if (agent?.phone) await sendSms(agent.phone, message);
+  }
+
+  private async notifyRenterOfStatusChange(
+    renter: { name: string | null; email: string; phone: string | null },
+    propertyTitle: string,
+    status: string
+  ): Promise<void> {
+    const message = `Your dispute for "${propertyTitle}" status has been updated to: ${status}.`;
+
+    if (renter.email) await sendPlainEmail(renter.email, 'Dispute Status Update', message);
+    if (renter.phone) await sendSms(renter.phone, message);
   }
 
   /**
    * Notify renter of dispute resolution
    */
   private async notifyRenterOfResolution(
-    renter: any,
-    rental: any,
-    resolution: DisputeResolution
+    renter: { name: string | null; email: string; phone: string | null },
+    propertyTitle: string,
+    resolutionOutcome: string,
+    refundAmount: number | undefined,
+    resolutionReason: string
   ): Promise<void> {
-    const actionText = resolution.action === 'FULL_REFUND' 
+    const actionText = resolutionOutcome === 'FULL_REFUND'
       ? 'approved for full refund'
-      : resolution.action === 'PARTIAL_REFUND'
-      ? `approved for partial refund of ₦${resolution.refundAmount?.toLocaleString()}`
-      : 'rejected';
+      : resolutionOutcome === 'PARTIAL_REFUND'
+        ? `approved for partial refund of ₦${refundAmount?.toLocaleString()}`
+        : 'rejected — payment released to owner';
 
-    const message = `Your dispute for "${rental.property.title}" has been ${actionText}. Reason: ${resolution.reason}`;
+    const smsMessage = `Your dispute for "${propertyTitle}" has been ${actionText}. Reason: ${resolutionReason}`;
+
 
     if (renter.email) {
-      await emailService.send({
-        to: renter.email,
-        subject: 'Dispute Resolution Update',
-        template: 'dispute-resolution',
-        data: {
-          renterName: renter.name,
-          propertyTitle: rental.property.title,
-          action: resolution.action,
-          refundAmount: resolution.refundAmount,
-          reason: resolution.reason,
-        },
-      });
+      await emailRenterOfResolution(renter, propertyTitle, resolutionOutcome, refundAmount, resolutionReason);
     }
 
-    if (renter.phone) {
-      await smsService.send({
-        to: renter.phone,
-        message,
-      });
-    }
+    if (renter.phone) await sendSms(renter.phone, smsMessage);
   }
 
   /**
    * Notify owner/agent of dispute resolution
    */
   private async notifyOwnerOfResolution(
-    rental: any,
-    resolution: DisputeResolution
+    owner: { name: string | null; email: string; phone: string | null },
+    agent: { name: string | null; email: string; phone: string | null } | null,
+    propertyTitle: string,
+    resolutionOutcome: string,
+    reason: string
   ): Promise<void> {
-    const owner = rental.property.owner;
-    const agent = rental.property.agent;
 
-    const message = `The dispute for "${rental.property.title}" has been resolved: ${resolution.action}. ${resolution.reason}`;
+    const message = `The dispute for "${propertyTitle}" has been resolved: ${resolutionOutcome}. ${reason}`;
+    const smsMessage = `The dispute for "${propertyTitle}" has been resolved: ${resolutionOutcome}. ${reason}`;
 
     // Notify owner
-    if (owner.email) {
-      await emailService.send({
-        to: owner.email,
-        subject: 'Dispute Resolution Update',
-        template: 'owner-resolution-notification',
-        data: {
-          ownerName: owner.name,
-          propertyTitle: rental.property.title,
-          action: resolution.action,
-          compensationToOwner: resolution.compensationToOwner,
-          reason: resolution.reason,
-        },
-      });
-    }
+    if (owner.email) await emailOwnerOfResolution(owner, propertyTitle, resolutionOutcome, reason);
 
-    if (owner.phone) {
-      await smsService.send({
-        to: owner.phone,
-        message,
-      });
-    }
+    if (owner.phone) await sendSms(owner.phone, smsMessage);
+
 
     // Notify agent if exists
     if (agent) {
-      if (agent.email) {
-        await emailService.send({
-          to: agent.email,
-          subject: 'Dispute Resolution Update',
-          template: 'agent-resolution-notification',
-          data: {
-            agentName: agent.name,
-            propertyTitle: rental.property.title,
-            action: resolution.action,
-            reason: resolution.reason,
-          },
-        });
-      }
+      if (agent.email) await emailOwnerOfResolution(agent, propertyTitle, resolutionOutcome, reason);
+      if (agent.phone) await sendSms(agent.phone, smsMessage);
 
-      if (agent.phone) {
-        await smsService.send({
-          to: agent.phone,
-          message,
-        });
-      }
     }
   }
 
   /**
    * Get dispute details by ticket ID
    */
-  async getDisputeDetails(ticketId: string, adminId: string): Promise<DisputeDetails> {
-    const admin = await prisma.user.findUnique({
-      where: { id: adminId },
-    });
+  async getDisputeDetails(disputeId: string, adminId: string): Promise<DisputeDetails> {
+    await this.verifyAdmin(adminId);
 
-    if (!admin || admin.role !== 'ADMIN') {
-      throw new ForbiddenError('Only admins can view dispute details');
-    }
-
-    const ticket = await prisma.supportTicket.findUnique({
-      where: { id: ticketId },
-      include: {
-        user: true,
-      },
-    });
-
-    if (!ticket) {
-      throw new NotFoundError('Dispute ticket not found');
-    }
-
-    const metadata = JSON.parse(ticket.description);
-    const payment = await prisma.payment.findUnique({
-      where: { id: metadata.paymentId },
+    const dispute = await prisma.dispute.findUnique({
+      where: { id: disputeId },
       include: {
         rental: {
           include: {
-            property: true,
+            property: {
+              include: {
+                owner: {
+                  select: { id: true, name: true, email: true, phone: true },
+                },
+                agent: {
+                  select: { id: true, name: true, email: true, phone: true },
+                },
+              },
+            },
+            unit: true,
           },
         },
+        payment: true,
+        renter: {
+          select: { id: true, name: true, email: true, phone: true },
+        },
+        comments: {
+          include: {
+            author: {
+              select: { id: true, name: true, role: true },
+            },
+          },
+        },
+        evidence: true,
       },
     });
 
-    if (!payment || !payment.rental) {
-      throw new NotFoundError('Payment or rental not found');
-    }
+    if (!dispute) throw new Error('Dispute not found');
 
-    let resolution: DisputeResolution | undefined;
-    if (ticket.adminResponse) {
-      try {
-        resolution = JSON.parse(ticket.adminResponse);
-      } catch (error) {
-        console.error('Error parsing admin response:', error);
-      }
-    }
 
-    return {
-      id: ticket.id,
-      paymentId: payment.id,
-      rentalId: payment.rentalId!,
-      renterId: ticket.userId,
-      renterName: ticket.user.name || 'Unknown',
-      renterEmail: ticket.user.email,
-      renterPhone: ticket.user.phone || '',
-      propertyId: metadata.propertyId,
-      unitId: metadata.unitId,
-      propertyTitle: payment.rental.property.title,
-      propertyAddress: payment.rental.property.address,
-      amount: parseFloat(payment.amount.toString()),
-      disputeReason: metadata.disputeReason,
-      status: ticket.status === 'RESOLVED' ? 'RESOLVED' : ticket.status === 'IN_PROGRESS' ? 'UNDER_REVIEW' : 'PENDING',
-      submittedAt: ticket.createdAt,
-      reviewedBy: ticket.resolvedBy || undefined,
-      resolvedAt: ticket.resolvedAt || undefined,
-      resolution,
-    };
+    const adminActions = await prisma.adminAction.findMany({
+      where: { targetType: 'Dispute', targetId: disputeId },
+      include: {
+        admin: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return { dispute, adminActions };
   }
 }
 

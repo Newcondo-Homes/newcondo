@@ -10,7 +10,6 @@ import {
 } from '../validations/authValidation'
 
 const router: ExpressRouter = Router()
-// const authController = new AuthController()
 
 // Register
 router.post('/register', 

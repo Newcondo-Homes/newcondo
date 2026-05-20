@@ -1,4 +1,4 @@
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@newcondo/db';
 
 export interface PaymentRelease {
   paymentId: string;
@@ -72,15 +72,6 @@ export interface ReleaseNotification {
   virtualAccountId: string;
   message: string;
   metadata: Record<string, any>;
-}
-
-export interface VirtualAccountBalance {
-  virtualAccountId: string;
-  userId: string;
-  balance: Decimal;
-  availableBalance: Decimal; // Balance minus held funds
-  heldBalance: Decimal; // Funds in confirmation period
-  lastUpdated: Date;
 }
 
 export interface WithdrawalRequest {

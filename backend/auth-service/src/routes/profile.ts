@@ -15,7 +15,7 @@ import {
   deleteProfileImage,
   getUploadLimits,
 } from "../controllers/profileController";
-import { authenticateToken } from "../../../shared/src/middleware/auth";
+import { authenticateToken } from "@newcondo/backend-shared";
 import { rateLimiter } from "../middleware/rateLimiter";
 // import { authMiddleware } from '../middleware/authMiddleware';
 // import { validateProfile } from '../validations/profileValidation';

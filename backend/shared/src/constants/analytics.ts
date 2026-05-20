@@ -85,7 +85,7 @@ export const USER_METRICS = {
 } as const;
 
 // Property Metrics
-export const PROPERTY_METRICS = {
+export const ANALYTICS_PROPERTY_METRICS = {
   TOTAL_PROPERTIES: 'total_properties',
   NEW_LISTINGS: 'new_listings',
   ACTIVE_LISTINGS: 'active_listings',
@@ -105,7 +105,7 @@ export const PROPERTY_METRICS = {
 } as const;
 
 // Payment Metrics
-export const PAYMENT_METRICS = {
+export const ANALYTICS_PAYMENT_METRICS = {
   TOTAL_REVENUE: 'total_revenue',
   GROSS_REVENUE: 'gross_revenue',
   NET_REVENUE: 'net_revenue',
@@ -151,7 +151,7 @@ export const MARKING_METRICS = {
 } as const;
 
 // Engagement Metrics
-export const ENGAGEMENT_METRICS = {
+export const ANALYTICS_ENGAGEMENT_METRICS = {
   TOTAL_PAGE_VIEWS: 'total_page_views',
   UNIQUE_VISITORS: 'unique_visitors',
   BOUNCE_RATE: 'bounce_rate',
@@ -174,7 +174,7 @@ export const CONVERSION_METRICS = {
 } as const;
 
 // Referral Metrics
-export const REFERRAL_METRICS = {
+export const ANALYTICS_REFERRAL_METRICS = {
   TOTAL_REFERRALS: 'total_referrals',
   SUCCESSFUL_REFERRALS: 'successful_referrals',
   REFERRAL_CONVERSION_RATE: 'referral_conversion_rate',
@@ -319,13 +319,13 @@ export default {
   AGGREGATION_TYPES,
   CHART_TYPES,
   USER_METRICS,
-  PROPERTY_METRICS,
-  PAYMENT_METRICS,
+  ANALYTICS_PROPERTY_METRICS,
+  ANALYTICS_PAYMENT_METRICS,
   AGENT_METRICS,
   MARKING_METRICS,
-  ENGAGEMENT_METRICS,
+  ANALYTICS_ENGAGEMENT_METRICS,
   CONVERSION_METRICS,
-  REFERRAL_METRICS,
+  ANALYTICS_REFERRAL_METRICS,
   DATA_GRANULARITY,
   TREND_INDICATORS,
   EXPORT_FORMATS,

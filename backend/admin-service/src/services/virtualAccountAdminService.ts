@@ -2,7 +2,7 @@
 
 import { PrismaClient, VirtualAccount, User, Property } from '@newcondo/db';
 import { accountAuditService } from './accountAuditService';
-import { logger } from '../../shared/src/middleware/logger';
+import { logger } from '@newcondo/backend-shared/';
 
 const prisma = new PrismaClient();
 

@@ -1,11 +1,10 @@
 // backend/admin-service/src/app.ts
 
 import express, { Application, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import { errorHandler } from '../../shared/src/middleware/errorHandler';
-import { corsMiddleware } from '../../shared/src/middleware/cors';
+import { errorHandler } from '@newcondo/backend-shared/';
+import { corsMiddleware } from '@newcondo/backend-shared/';
 
 // Import routes (to be implemented)
 // import adminRoutes from './routes/admin';

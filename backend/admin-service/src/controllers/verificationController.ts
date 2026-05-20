@@ -1,7 +1,7 @@
 // backend/admin-service/src/controllers/verificationController.ts
 
 import { Request, Response } from 'express';
-import { PrismaClient, VerificationStatus, DocumentStatus } from '@newcondo/db';
+import { PrismaClient, DocumentStatus } from '@newcondo/db';
 import { successResponse, errorResponse } from '../../../shared/src/utils/response';
 import { adminController } from './adminController';
 

@@ -1,4 +1,3 @@
-// import express from "express";
 import express, { Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -13,6 +12,7 @@ import { logger } from "./utils/logger";
 // Import combined app middleware
 import { healthCheck } from "./middleware/healthCheck";
 import { errorHandler } from "./middleware/errorHandler";
+
 
 // Import main router
 import { mainRouter } from "./routes/index";

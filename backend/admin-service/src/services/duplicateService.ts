@@ -1,7 +1,5 @@
-import { PrismaClient, DuplicateStatus, AdminActionType, Prisma } from '@newcondo/db';
+import { prisma, DuplicateStatus, AdminActionType, Prisma } from '@newcondo/db';
 import { AppError } from '../../../shared/src/utils/response';
-
-const prisma = new PrismaClient();
 
 interface DuplicateFilters {
   status?: DuplicateStatus;
@@ -337,7 +335,7 @@ export class DuplicateService {
    */
   async detectPotentialDuplicates(limit: number = 50) {
     // Find properties with same buildingFingerprint
-    const potentialDuplicates = await prisma.$queryRaw
+    const potentialDuplicates = await prisma.$queryRaw<
       Array<{
         buildingFingerprint: string;
         count: number;

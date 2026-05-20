@@ -5,7 +5,7 @@
  */
 
 // Platform Commission Rates
-export const COMMISSION_RATES = {
+export const MARKING_COMMISSION_RATES = {
   PLATFORM_BASE_RATE: 0.2, // 20% of rent
   LISTING_AGENT_SHARE: 0.5, // 50% of platform commission
   SUB_AGENT_SHARE: 0.5, // 50% of listing agent's share
@@ -204,7 +204,7 @@ export const UPLOAD_METRICS = {
 } as const;
 
 // Rate Limiting Metrics
-export const RATE_LIMITS = {
+export const METRICS_RATE_LIMITS = {
   API_REQUESTS_PER_MINUTE: 60,
   API_REQUESTS_PER_HOUR: 1000,
   LOGIN_ATTEMPTS_PER_HOUR: 5,
@@ -254,7 +254,7 @@ export const AB_TEST_METRICS = {
 } as const;
 
 export default {
-  COMMISSION_RATES,
+  MARKING_COMMISSION_RATES,
   CONFIRMATION_PERIODS,
   MARKING_SERVICE_METRICS,
   PROPERTY_METRICS,
@@ -273,7 +273,7 @@ export default {
   NOTIFICATION_METRICS,
   LOCATION_METRICS,
   UPLOAD_METRICS,
-  RATE_LIMITS,
+  METRICS_RATE_LIMITS,
   CACHE_METRICS,
   SEARCH_METRICS,
   HEALTH_INDICATORS,

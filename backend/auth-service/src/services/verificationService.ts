@@ -7,8 +7,8 @@ import {
 } from "@newcondo/db";
 import { OTPType } from "@newcondo/db";
 import { otpService } from "./otpService";
-import { sendVerificationEmail } from "../../../shared/src/utils/email";
-// import { notificationService } from '../../../shared/src/utils/notifications';
+import { sendVerificationEmail } from "@newcondo/backend-shared";
+// import { notificationService } from '@newcondo/backend-shared';
 // import { AuthError } from '../types/auth';
 
 interface UploadDocumentData {

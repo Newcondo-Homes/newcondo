@@ -1,8 +1,8 @@
 // backend/shared/src/utils/refund.ts
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { DecimalClass, Decimal } from '@newcondo/db';
 
-export interface RefundRequest {
+interface RefundRequest {
   paymentId: string;
   rentalId: string;
   userId: string;
@@ -18,7 +18,7 @@ export interface RefundBreakdown {
   refundableAmount: Decimal;
   flutterwaveRefundFee: Decimal;
   netRefundAmount: Decimal; // Amount user actually receives back
-  
+
   breakdown: {
     originalPayment: string;
     serviceFeeDeducted: string;
@@ -54,19 +54,19 @@ export function calculateRefundBreakdown(
   totalPaid: Decimal | number,
   serviceFee: Decimal | number
 ): RefundBreakdown {
-  const total = new Decimal(totalPaid);
-  const fee = new Decimal(serviceFee);
-  
+  const total = new DecimalClass(totalPaid);
+  const fee = new DecimalClass(serviceFee);
+
   // Refundable amount = total paid - service fee
   const refundableAmount = total.sub(fee);
-  
+
   // Flutterwave charges approximately 1.4% + NGN 100 for refunds
   const flutterwaveRefundFee = refundableAmount.mul(0.014).add(100);
-  
+
   // Net refund = refundable amount - flutterwave refund fee
   // Note: Service fee covers this, but we still deduct actual cost
   const netRefundAmount = refundableAmount.sub(flutterwaveRefundFee);
-  
+
   return {
     totalPaid: total,
     serviceFee: fee,
@@ -95,7 +95,7 @@ export function checkRefundEligibility(
   isReleased: boolean
 ): RefundEligibilityCheck {
   const now = new Date();
-  
+
   // Check if payment is in correct status
   if (paymentStatus !== 'SUCCESS' && paymentStatus !== 'HELD') {
     return {
@@ -104,7 +104,7 @@ export function checkRefundEligibility(
       reason: 'Payment must be successful before requesting refund',
     };
   }
-  
+
   // Check if already released
   if (isReleased) {
     return {
@@ -113,7 +113,7 @@ export function checkRefundEligibility(
       reason: 'Payment has already been released. Refund period has expired.',
     };
   }
-  
+
   // Check if within 24-hour confirmation period
   if (now > confirmationPeriodEnd) {
     return {
@@ -123,12 +123,12 @@ export function checkRefundEligibility(
       deadlineDate: confirmationPeriodEnd,
     };
   }
-  
+
   // Calculate hours remaining
   const hoursRemaining = Math.floor(
     (confirmationPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60)
   );
-  
+
   return {
     isEligible: true,
     status: RefundEligibility.ELIGIBLE,
@@ -147,27 +147,27 @@ export function validateRefundRequest(request: RefundRequest): {
   errors: string[];
 } {
   const errors: string[] = [];
-  
+
   if (!request.paymentId || request.paymentId.trim().length === 0) {
     errors.push('Payment ID is required');
   }
-  
+
   if (!request.rentalId || request.rentalId.trim().length === 0) {
     errors.push('Rental ID is required');
   }
-  
+
   if (!request.userId || request.userId.trim().length === 0) {
     errors.push('User ID is required');
   }
-  
+
   if (!request.reason || request.reason.trim().length < 10) {
     errors.push('Refund reason must be at least 10 characters');
   }
-  
+
   if (request.originalAmount.lessThanOrEqualTo(0)) {
     errors.push('Original amount must be greater than zero');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -221,14 +221,14 @@ export function getTimeRemainingInRefundPeriod(confirmationPeriodEnd: Date): {
 } {
   const now = new Date();
   const diffMs = confirmationPeriodEnd.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) {
     return { hours: 0, minutes: 0, isExpired: true };
   }
-  
+
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  
+
   return { hours, minutes, isExpired: false };
 }
 
@@ -240,11 +240,11 @@ export function getTimeRemainingInRefundPeriod(confirmationPeriodEnd: Date): {
  */
 export function formatRefundReason(reason: string, maxLength: number = 200): string {
   const trimmed = reason.trim();
-  
+
   if (trimmed.length <= maxLength) {
     return trimmed;
   }
-  
+
   return `${trimmed.substring(0, maxLength - 3)}...`;
 }
 

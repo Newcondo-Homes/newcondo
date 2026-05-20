@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwt';
+import { verifyAccessToken } from '../utils/jwt';
 import { prisma } from '@newcondo/db';
-import { Role } from '@prisma/client';
+import { Role } from '@newcondo/db';
 
 export interface MarkingAuthRequest extends Request {
   user?: {
@@ -30,7 +30,7 @@ export const authenticateMarking = async (
       });
     }
 
-    const decoded = verifyToken(token);
+    const decoded = verifyAccessToken(token);
     
     if (!decoded || !decoded.userId) {
       return res.status(401).json({
@@ -90,7 +90,7 @@ export const canRequestMarking = async (
       });
     }
 
-    const allowedRoles: Role[] = [Role.OWNER, Role.AGENT];
+    const allowedRoles: Role[] = ['OWNER', 'AGENT'];
     
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
@@ -144,8 +144,8 @@ export const canPerformMarking = async (
 
     // Check if user can perform marking
     const canMark = 
-      (user.role === Role.AGENT && user.isAvailableForMarking) ||
-      (user.role === Role.RENTER && user.isPremium && user.isAvailableForMarking);
+      (user.role === 'AGENT' && user.isAvailableForMarking) ||
+      (user.role === 'RENTER' && user.isPremium && user.isAvailableForMarking);
 
     if (!canMark) {
       return res.status(403).json({

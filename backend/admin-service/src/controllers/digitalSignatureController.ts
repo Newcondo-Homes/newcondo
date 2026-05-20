@@ -5,7 +5,7 @@ import { prisma } from '@newcondo/db';
 import { z } from 'zod';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
-import { AdminActionType } from '@prisma/client';
+import { AdminActionType } from '@newcondo/db';
 
 // Validation schemas
 const createSignatureSessionSchema = z.object({
@@ -80,7 +80,7 @@ let digitalSignatures: DigitalSignature[] = [];
 
 export class DigitalSignatureController {
   // Create signature session
-  static async createSignatureSession(req: Request, res: Response) {
+  static async createSignatureSession(req: Request, res: Response): Promise<Response | void> {
     try {
       const validatedData = createSignatureSessionSchema.parse(req.body);
       const adminId = req.user?.id;
@@ -151,7 +151,7 @@ export class DigitalSignatureController {
       });
     } catch (error) {
       console.error('Error creating signature session:', error);
-      
+
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
@@ -169,7 +169,7 @@ export class DigitalSignatureController {
   }
 
   // Get signature session by ID
-  static async getSignatureSession(req: Request, res: Response) {
+  static async getSignatureSession(req: Request, res: Response): Promise<Response | void> {
     try {
       const { sessionId } = req.params;
       const { token } = req.query;
@@ -231,7 +231,7 @@ export class DigitalSignatureController {
   }
 
   // Sign document
-  static async signDocument(req: Request, res: Response) {
+  static async signDocument(req: Request, res: Response): Promise<Response | void> {
     try {
       const validatedData = signDocumentSchema.parse(req.body);
 
@@ -345,7 +345,7 @@ export class DigitalSignatureController {
       });
     } catch (error) {
       console.error('Error signing document:', error);
-      
+
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
@@ -363,7 +363,7 @@ export class DigitalSignatureController {
   }
 
   // Verify signature
-  static async verifySignature(req: Request, res: Response) {
+  static async verifySignature(req: Request, res: Response): Promise<Response | void> {
     try {
       const validatedData = verifySignatureSchema.parse(req.body);
 
@@ -405,7 +405,7 @@ export class DigitalSignatureController {
       // The key part of verification: compare the stored hash with the recomputed hash
       // The documentHash from the request should be a hash of the original document content
       const isSignatureValid = signature.signatureHash === recomputedHash;
-      
+
       // Update signature validity status in memory
       signature.isValid = isSignatureValid;
 

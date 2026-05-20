@@ -2,11 +2,11 @@ import bcrypt from "bcryptjs";
 import jwt, { Secret, SignOptions } from "jsonwebtoken";
 import crypto from "crypto";
 import { prisma, VerificationStatus, Role } from "@newcondo/db";
-import { generateOTP, verifyOTP } from "../../../shared/src/utils/otp";
-import { sendEmail } from "../../../shared/src/utils/email";
+import { generateOTP, verifyOTP } from "@newcondo/backend-shared";
+import { sendEmail } from "@newcondo/backend-shared";
 import { StringValue } from "ms";
 
-// import { sendSMS } from "../../../shared/src/utils/sms";
+// import { sendSMS } from "@newcondo/backend-shared";
 import {
   RegisterUserData,
   LoginUserData,
@@ -65,7 +65,7 @@ export class AuthService {
         passwordHash,
         name: userData.name || null,
         phone: userData.phone || null,
-        role: userData.role || Role.RENTER,
+        role: userData.role || "RENTER",
       },
       select: {
         id: true,

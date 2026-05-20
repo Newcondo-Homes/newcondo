@@ -1,8 +1,6 @@
 // backend/admin-service/src/services/referralAuditService.ts
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@newcondo/db';
 
 interface AuditLogEntry {
   userId?: string;

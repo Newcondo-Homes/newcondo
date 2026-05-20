@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import i18next from 'i18next';
-import Backend from 'i18next-fs-backend';
+import {i18next} from '@newcondo/i18n/client';
+import Backend from '@newcondo/i18n';
 import { join } from 'path';
 
 // Supported locales
@@ -24,7 +24,9 @@ declare global {
  * Initialize i18next with backend loading
  */
 export async function initI18n(): Promise<void> {
-  await i18next.use(Backend).init({
+  const backendInstance = typeof Backend === 'function' ? new (Backend as any)() : Backend;
+
+  await i18next.use(backendInstance).init({
     lng: DEFAULT_LOCALE,
     fallbackLng: DEFAULT_LOCALE,
     supportedLngs: [...SUPPORTED_LOCALES],

@@ -1,7 +1,6 @@
 // backend/shared/src/utils/imageOptimization.ts
 
 import sharp from 'sharp';
-import { v4 as uuidv4 } from 'uuid';
 
 // Image processing configuration
 export const ImageConfig = {
@@ -301,10 +300,10 @@ export class ImageProcessor {
    */
   static async extractDominantColors(imageBuffer: Buffer): Promise<string[]> {
     try {
-      const { dominant } = await sharp(imageBuffer)
-        .resize(100, 100, { fit: 'cover' })
-        .raw()
-        .toBuffer({ resolveWithObject: true });
+      // const {  } = await sharp(imageBuffer)
+      //   .resize(100, 100, { fit: 'cover' })
+      //   .raw()
+      //   .toBuffer({ resolveWithObject: true });
 
       // Simple color extraction (you might want to use a more sophisticated library like node-vibrant)
       const colors: string[] = [];

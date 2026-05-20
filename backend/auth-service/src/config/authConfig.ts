@@ -1,5 +1,9 @@
 // backend/auth-service/src/config/authConfig.ts
 import { z } from 'zod';
+import dotenv from 'dotenv';
+
+// Configure dotenv to load .env file
+dotenv.config();
 
 const authConfigSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT secret must be at least 32 characters'),

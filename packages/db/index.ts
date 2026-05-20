@@ -6,6 +6,9 @@ export * from "@prisma/client";
 export type Decimal = Prisma.Decimal;
 export type JsonValue = Prisma.JsonValue;
 
+// 2. FIXED: Export Decimal as an absolute runtime value constructor, not a type alias
+export const DecimalClass = Prisma.Decimal;
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };

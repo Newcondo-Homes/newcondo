@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 // import { sessionService } from "../services/sessionService";
 import { authService } from "../services/authService";
-import { Role } from "../../../shared/src/types/auth";
+import { Role } from "@newcondo/backend-shared";
 
 interface AuthRequest extends Request {
   user?: {

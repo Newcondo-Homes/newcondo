@@ -3,13 +3,13 @@
  * For agent assignment and service area management
  */
 
-export interface Coordinates {
+export interface ProximityCoordinates {
   lat: number;
   lng: number;
 }
 
 export interface ProximitySearchParams {
-  center: Coordinates;
+  center: ProximityCoordinates;
   radiusKm: number; // Search radius in kilometers
   maxResults?: number;
   includeDistance?: boolean;
@@ -42,15 +42,15 @@ export interface ServiceAreaDefinition {
   locationId?: string;
   locationName?: string;
   // For RADIUS type
-  centerPoint?: Coordinates;
+  centerPoint?: ProximityCoordinates;
   radiusKm?: number;
   // For POLYGON type (custom drawn areas)
-  polygonCoordinates?: Coordinates[];
+  polygonCoordinates?: ProximityCoordinates[];
 }
 
-export interface DistanceCalculation {
-  from: Coordinates;
-  to: Coordinates;
+export interface ProximityDistanceCalculation {
+  from: ProximityCoordinates;
+  to: ProximityCoordinates;
   distanceKm: number;
   distanceMeters: number;
   straightLine: boolean; // true if calculated as crow flies, false if road distance
@@ -69,8 +69,8 @@ export interface RouteStep {
   instruction: string;
   distanceMeters: number;
   durationSeconds: number;
-  startLocation: Coordinates;
-  endLocation: Coordinates;
+  startLocation: ProximityCoordinates;
+  endLocation: ProximityCoordinates;
 }
 
 // Agent availability with proximity
@@ -78,7 +78,7 @@ export interface AgentProximityInfo {
   userId: string;
   userName: string;
   userPhone: string;
-  currentLocation?: Coordinates;
+  currentLocation?: ProximityCoordinates;
   serviceAreas: ServiceAreaDefinition[];
   distance?: number; // Distance from property in km
   isAvailable: boolean;
@@ -91,7 +91,7 @@ export interface AgentProximityInfo {
 
 // Proximity-based assignment criteria
 export interface ProximityAssignmentCriteria {
-  propertyLocation: Coordinates;
+  propertyLocation: ProximityCoordinates;
   maxDistanceKm: number;
   minReliabilityScore?: number;
   preferredStates?: string[];
@@ -132,10 +132,10 @@ export interface GeohashInfo {
 
 // Batch proximity calculation
 export interface BatchProximityRequest {
-  origin: Coordinates;
+  origin: ProximityCoordinates;
   destinations: Array<{
     id: string;
-    coordinates: Coordinates;
+    coordinates: ProximityCoordinates;
     metadata?: Record<string, any>;
   }>;
   includeRoute?: boolean;
@@ -144,7 +144,7 @@ export interface BatchProximityRequest {
 export interface BatchProximityResponse {
   results: Array<{
     id: string;
-    distance: DistanceCalculation;
+    distance: ProximityDistanceCalculation;
     metadata?: Record<string, any>;
   }>;
   totalProcessed: number;
@@ -156,8 +156,8 @@ export interface BatchProximityResponse {
 
 // Helper functions type definitions
 export type CalculateDistanceFunction = (
-  from: Coordinates,
-  to: Coordinates,
+  from: ProximityCoordinates,
+  to: ProximityCoordinates,
   options?: {
     unit?: "km" | "m" | "mi";
     precise?: boolean;
@@ -167,12 +167,12 @@ export type CalculateDistanceFunction = (
 export type GetDistanceTierFunction = (distanceKm: number) => DistanceTier;
 
 export type IsWithinRadiusFunction = (
-  point: Coordinates,
-  center: Coordinates,
+  point: ProximityCoordinates,
+  center: ProximityCoordinates,
   radiusKm: number
 ) => boolean;
 
 export type CalculateBearingFunction = (
-  from: Coordinates,
-  to: Coordinates
+  from: ProximityCoordinates,
+  to: ProximityCoordinates
 ) => number;

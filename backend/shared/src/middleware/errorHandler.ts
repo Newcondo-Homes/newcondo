@@ -33,6 +33,13 @@ export class ValidationError extends CustomError {
   }
 }
 
+/** Alias for ValidationError — use when a request has invalid/missing params */
+export class BadRequestError extends CustomError {
+  constructor(message: string = 'Bad request') {
+    super(message, 400, true, 'BAD_REQUEST_ERROR')
+  }
+}
+
 export class AuthenticationError extends CustomError {
   constructor(message: string = 'Authentication failed') {
     super(message, 401, true, 'AUTHENTICATION_ERROR')
@@ -42,6 +49,13 @@ export class AuthenticationError extends CustomError {
 export class AuthorizationError extends CustomError {
   constructor(message: string = 'Access denied') {
     super(message, 403, true, 'AUTHORIZATION_ERROR')
+  }
+}
+
+/** Alias for AuthorizationError — maps to HTTP 403 Forbidden */
+export class ForbiddenError extends CustomError {
+  constructor(message: string = 'Forbidden') {
+    super(message, 403, true, 'FORBIDDEN_ERROR')
   }
 }
 

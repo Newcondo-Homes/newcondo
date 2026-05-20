@@ -1,6 +1,6 @@
 // backend/shared/src/types/legalDocuments.ts
 
-import { DocumentType, DocumentStatus, DocumentSide, Role } from '@prisma/client';
+import { DocumentType, DocumentStatus, DocumentSide, Role } from '@newcondo/db';
 
 // Document Template Types
 export interface DocumentTemplate {

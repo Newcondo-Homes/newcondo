@@ -1,11 +1,6 @@
-/**
- * Search Helpers Utility
- * Location: backend/shared/src/utils/searchHelpers.ts
- * 
- * Shared utilities for property search functionality across services
- */
+// backend/shared/src/utils/searchHelpers.ts
 
-import { PropertyType, PropertyStatus, AdminApprovalStatus, PropertyStructure, UnitStatus } from '@prisma/client';
+import { PropertyType, PropertyStatus, AdminApprovalStatus, PropertyStructure, UnitStatus } from '@newcondo/db';
 
 // Search filter interfaces
 export interface PropertySearchFilters {
@@ -113,15 +108,13 @@ export interface SearchResponse {
  */
 export function buildPropertySearchWhere(filters: PropertySearchFilters) {
   const where: any = {
-    // Only show published, approved, and available properties
     status: PropertyStatus.PUBLISHED,
     adminApprovalStatus: AdminApprovalStatus.APPROVED,
   };
 
-  // Text search across title and description
   if (filters.query) {
     const searchTerms = filters.query.trim().split(/\s+/);
-    where.OR = searchTerms.map(term => ({
+    where.OR = searchTerms.map((term: string) => ({
       OR: [
         { title: { contains: term, mode: 'insensitive' } },
         { description: { contains: term, mode: 'insensitive' } },
@@ -132,7 +125,6 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     }));
   }
 
-  // Property type filter
   if (filters.propertyType) {
     if (Array.isArray(filters.propertyType)) {
       where.propertyType = { in: filters.propertyType };
@@ -141,10 +133,9 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     }
   }
 
-  // Price range filter (handles both single units and multi-family)
   if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
     const priceConditions: any = {};
-    
+
     if (filters.minPrice !== undefined) {
       priceConditions.gte = filters.minPrice;
     }
@@ -152,8 +143,6 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
       priceConditions.lte = filters.maxPrice;
     }
 
-    // For single units, filter by property price
-    // For multi-family, filter by unit prices
     where.OR = [
       {
         structure: PropertyStructure.SINGLE_UNIT,
@@ -171,9 +160,8 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     ];
   }
 
-  // Bedrooms filter
   if (filters.bedrooms !== undefined) {
-    const bedroomConditions = Array.isArray(filters.bedrooms) 
+    const bedroomConditions = Array.isArray(filters.bedrooms)
       ? { in: filters.bedrooms }
       : { equals: filters.bedrooms };
 
@@ -195,7 +183,6 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     ];
   }
 
-  // Bathrooms filter
   if (filters.bathrooms !== undefined) {
     const bathroomConditions = Array.isArray(filters.bathrooms)
       ? { in: filters.bathrooms }
@@ -219,10 +206,9 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     ];
   }
 
-  // Location filters
   if (filters.city) {
     if (Array.isArray(filters.city)) {
-      where.city = { in: filters.city.map(c => c.toLowerCase()) };
+      where.city = { in: filters.city.map((c: string) => c.toLowerCase()) };
     } else {
       where.city = { equals: filters.city.toLowerCase(), mode: 'insensitive' };
     }
@@ -230,13 +216,12 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
 
   if (filters.state) {
     if (Array.isArray(filters.state)) {
-      where.state = { in: filters.state.map(s => s.toLowerCase()) };
+      where.state = { in: filters.state.map((s: string) => s.toLowerCase()) };
     } else {
       where.state = { equals: filters.state.toLowerCase(), mode: 'insensitive' };
     }
   }
 
-  // Features filter
   if (filters.features) {
     const features = Array.isArray(filters.features) ? filters.features : [filters.features];
     where.OR = [
@@ -252,12 +237,10 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     ];
   }
 
-  // Structure filter
   if (filters.structure) {
     where.structure = filters.structure;
   }
 
-  // Availability filter
   if (filters.isAvailable !== undefined) {
     if (filters.isAvailable) {
       where.OR = [
@@ -276,17 +259,14 @@ export function buildPropertySearchWhere(filters: PropertySearchFilters) {
     }
   }
 
-  // Owner filter
   if (filters.ownerId) {
     where.ownerId = filters.ownerId;
   }
 
-  // Agent filter
   if (filters.agentId) {
     where.agentId = filters.agentId;
   }
 
-  // Owner listing filter
   if (filters.isOwnerListing !== undefined) {
     where.isOwnerListing = filters.isOwnerListing;
   }
@@ -337,13 +317,13 @@ export function calculatePagination(
  */
 export function extractSearchKeywords(query: string): string[] {
   if (!query || typeof query !== 'string') return [];
-  
+
   return query
     .toLowerCase()
     .trim()
     .split(/\s+/)
-    .filter(word => word.length > 2) // Only include words longer than 2 characters
-    .slice(0, 10); // Limit to 10 keywords for performance
+    .filter((word: string) => word.length > 2)
+    .slice(0, 10);
 }
 
 /**
@@ -352,45 +332,24 @@ export function extractSearchKeywords(query: string): string[] {
 export function buildPropertySearchAggregations() {
   return {
     propertyTypes: {
-      _count: {
-        _all: true,
-      },
-      _group: {
-        propertyType: true,
-      },
+      _count: { _all: true },
+      _group: { propertyType: true },
     },
     locations: {
-      _count: {
-        _all: true,
-      },
-      _group: {
-        city: true,
-        state: true,
-      },
+      _count: { _all: true },
+      _group: { city: true, state: true },
     },
     priceRange: {
-      _min: {
-        price: true,
-      },
-      _max: {
-        price: true,
-      },
+      _min: { price: true },
+      _max: { price: true },
     },
     bedroomRange: {
-      _min: {
-        bedrooms: true,
-      },
-      _max: {
-        bedrooms: true,
-      },
+      _min: { bedrooms: true },
+      _max: { bedrooms: true },
     },
     bathroomRange: {
-      _min: {
-        bathrooms: true,
-      },
-      _max: {
-        bathrooms: true,
-      },
+      _min: { bathrooms: true },
+      _max: { bathrooms: true },
     },
   };
 }
@@ -401,22 +360,19 @@ export function buildPropertySearchAggregations() {
 export function sanitizeSearchFilters(filters: any): PropertySearchFilters {
   const sanitized: PropertySearchFilters = {};
 
-  // Sanitize query
   if (filters.query && typeof filters.query === 'string') {
-    sanitized.query = filters.query.trim().substring(0, 200); // Limit query length
+    sanitized.query = filters.query.trim().substring(0, 200);
   }
 
-  // Sanitize property type
   if (filters.propertyType) {
-    const validTypes = Object.values(PropertyType);
+    const validTypes = Object.values(PropertyType) as string[];
     if (Array.isArray(filters.propertyType)) {
-      sanitized.propertyType = filters.propertyType.filter(type => validTypes.includes(type));
+      sanitized.propertyType = filters.propertyType.filter((type: any) => validTypes.includes(type));
     } else if (validTypes.includes(filters.propertyType)) {
       sanitized.propertyType = filters.propertyType;
     }
   }
 
-  // Sanitize price range
   if (filters.minPrice !== undefined) {
     const minPrice = Number(filters.minPrice);
     if (!isNaN(minPrice) && minPrice >= 0) {
@@ -431,12 +387,11 @@ export function sanitizeSearchFilters(filters: any): PropertySearchFilters {
     }
   }
 
-  // Sanitize bedrooms
   if (filters.bedrooms !== undefined) {
     if (Array.isArray(filters.bedrooms)) {
       sanitized.bedrooms = filters.bedrooms
-        .map(num => Number(num))
-        .filter(num => !isNaN(num) && num >= 0 && num <= 10);
+        .map((num: any) => Number(num))
+        .filter((num: number) => !isNaN(num) && num >= 0 && num <= 10);
     } else {
       const bedrooms = Number(filters.bedrooms);
       if (!isNaN(bedrooms) && bedrooms >= 0 && bedrooms <= 10) {
@@ -445,12 +400,11 @@ export function sanitizeSearchFilters(filters: any): PropertySearchFilters {
     }
   }
 
-  // Sanitize bathrooms
   if (filters.bathrooms !== undefined) {
     if (Array.isArray(filters.bathrooms)) {
       sanitized.bathrooms = filters.bathrooms
-        .map(num => Number(num))
-        .filter(num => !isNaN(num) && num >= 0 && num <= 10);
+        .map((num: any) => Number(num))
+        .filter((num: number) => !isNaN(num) && num >= 0 && num <= 10);
     } else {
       const bathrooms = Number(filters.bathrooms);
       if (!isNaN(bathrooms) && bathrooms >= 0 && bathrooms <= 10) {
@@ -459,49 +413,44 @@ export function sanitizeSearchFilters(filters: any): PropertySearchFilters {
     }
   }
 
-  // Sanitize location
   if (filters.city && typeof filters.city === 'string') {
     sanitized.city = filters.city.trim().substring(0, 100);
   } else if (Array.isArray(filters.city)) {
     sanitized.city = filters.city
-      .filter(c => typeof c === 'string')
-      .map(c => c.trim().substring(0, 100))
-      .filter(c => c.length > 0);
+      .filter((c: any) => typeof c === 'string')
+      .map((c: string) => c.trim().substring(0, 100))
+      .filter((c: string) => c.length > 0);
   }
 
   if (filters.state && typeof filters.state === 'string') {
     sanitized.state = filters.state.trim().substring(0, 100);
   } else if (Array.isArray(filters.state)) {
     sanitized.state = filters.state
-      .filter(s => typeof s === 'string')
-      .map(s => s.trim().substring(0, 100))
-      .filter(s => s.length > 0);
+      .filter((s: any) => typeof s === 'string')
+      .map((s: string) => s.trim().substring(0, 100))
+      .filter((s: string) => s.length > 0);
   }
 
-  // Sanitize features
   if (filters.features) {
     if (Array.isArray(filters.features)) {
       sanitized.features = filters.features
-        .filter(f => typeof f === 'string')
-        .map(f => f.trim())
-        .filter(f => f.length > 0)
-        .slice(0, 20); // Limit to 20 features
+        .filter((f: any) => typeof f === 'string')
+        .map((f: string) => f.trim())
+        .filter((f: string) => f.length > 0)
+        .slice(0, 20);
     } else if (typeof filters.features === 'string') {
       sanitized.features = filters.features.trim();
     }
   }
 
-  // Sanitize structure
   if (filters.structure && Object.values(PropertyStructure).includes(filters.structure)) {
     sanitized.structure = filters.structure;
   }
 
-  // Sanitize availability
   if (filters.isAvailable !== undefined) {
     sanitized.isAvailable = Boolean(filters.isAvailable);
   }
 
-  // Sanitize owner listing
   if (filters.isOwnerListing !== undefined) {
     sanitized.isOwnerListing = Boolean(filters.isOwnerListing);
   }
@@ -515,23 +464,20 @@ export function sanitizeSearchFilters(filters: any): PropertySearchFilters {
 export function sanitizePaginationOptions(options: any): SearchPaginationOptions {
   const sanitized: SearchPaginationOptions = {};
 
-  // Sanitize page
   if (options.page !== undefined) {
     const page = Number(options.page);
-    if (!isNaN(page) && page >= 1 && page <= 1000) { // Limit to 1000 pages
+    if (!isNaN(page) && page >= 1 && page <= 1000) {
       sanitized.page = page;
     }
   }
 
-  // Sanitize limit
   if (options.limit !== undefined) {
     const limit = Number(options.limit);
-    if (!isNaN(limit) && limit >= 1 && limit <= 100) { // Limit to 100 items per page
+    if (!isNaN(limit) && limit >= 1 && limit <= 100) {
       sanitized.limit = limit;
     }
   }
 
-  // Sanitize sort options
   const validSortBy = ['price', 'createdAt', 'updatedAt', 'viewCount', 'favoriteCount'];
   if (options.sortBy && validSortBy.includes(options.sortBy)) {
     sanitized.sortBy = options.sortBy;
@@ -555,14 +501,13 @@ export function generateSearchCacheKey(
   const filterString = JSON.stringify(filters);
   const optionsString = JSON.stringify(options);
   const combined = `${filterString}:${optionsString}`;
-  
-  // Simple hash function for cache key
+
   let hash = 0;
   for (let i = 0; i < combined.length; i++) {
     const char = combined.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    hash = hash & hash;
   }
-  
+
   return `property_search:${Math.abs(hash)}`;
 }

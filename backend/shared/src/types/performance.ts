@@ -328,24 +328,12 @@ export enum LeaderboardCategory {
 }
 
 export default {
-  AgentReliabilityScore,
-  ScoreComponent,
-  AgentPerformanceMetrics,
   PerformanceTrend,
-  ScoringWeightsConfig,
-  JobQualityAssessment,
   AgentTier,
-  PerformanceMilestone,
   MilestoneType,
-  PerformanceAlert,
   AlertType,
   AlertSeverity,
-  PerformanceImprovementPlan,
   PIPStatus,
-  ProgressCheck,
   PIPOutcome,
-  AgentRanking,
-  PerformanceComparison,
-  LeaderboardEntry,
   LeaderboardCategory,
 };

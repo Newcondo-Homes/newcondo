@@ -3,9 +3,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "@newcondo/db";
 import { Role } from "@newcondo/db";
-import { sendResponse, ApiResponse } from "../../../shared/src/utils/response";
-import { generateOTP } from "../../../shared/src/utils/otp";
-import { sendEmail } from "../../../shared/src/utils/email";
+import { sendResponse } from "@newcondo/backend-shared";
+import { generateOTP } from "@newcondo/backend-shared";
+import { sendEmail } from "@newcondo/backend-shared";
 import { AuthService } from "../services/authService";
 import type { AuthenticatedRequest } from "../types/auth";
 
@@ -38,7 +38,7 @@ class AuthController {
           passwordHash,
           name: name || null,
           phone: phone || null,
-          role: (role as Role) || Role.RENTER,
+          role: (role as Role) || "RENTER",
         },
         select: {
           id: true,
@@ -53,28 +53,30 @@ class AuthController {
       });
 
       // Generate and send email verification OTP
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      //TODO: when you fix the email sending platform, uncomment the code below
+      // const otp = generateOTP();
+      // const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-      await prisma.oTPCode.create({
-        data: {
-          identifier: email,
-          code: otp,
-          type: "EMAIL_VERIFICATION",
-          expiresAt,
-        },
-      });
+      // await prisma.oTPCode.create({
+      //   data: {
+      //     identifier: email,
+      //     code: otp,
+      //     type: "EMAIL_VERIFICATION",
+      //     expiresAt,
+      //   },
+      // });
 
       // Send verification email
-      await sendEmail({
-        to: email,
-        subject: "Verify your NewCondo account",
-        html: `
-          <h2>Welcome to NewCondo!</h2>
-          <p>Your verification code is: <strong>${otp}</strong></p>
-          <p>This code will expire in 10 minutes.</p>
-        `,
-      });
+      //TODO: when you fix the email sending platform, uncomment the code below
+      // await sendEmail({
+      //   to: email,
+      //   subject: "Verify your NewCondo account",
+      //   html: `
+      //     <h2>Welcome to NewCondo!</h2>
+      //     <p>Your verification code is: <strong>${otp}</strong></p>
+      //     <p>This code will expire in 10 minutes.</p>
+      //   `,
+      // });
 
       // Log user registration event
       await prisma.eventLog.create({
@@ -103,8 +105,8 @@ class AuthController {
   async login(req: Request, res: Response) {
     try {
       const { email, password } = req.body;
-      const MAX_ATTEMPTS = 5;
-      const LOCKOUT_TIME = 30 * 60 * 1000; // 30 minutes
+      // const MAX_ATTEMPTS = 5;
+      // const LOCKOUT_TIME = 30 * 60 * 1000; // 30 minutes
 
       // Find user
       const user = await prisma.user.findUnique({
@@ -126,8 +128,8 @@ class AuthController {
       }
 
       // Check for account lockout (implement with Redis or database)
-      const lockoutKey = `lockout:${email}`;
-      // In production, use Redis for this
+      // TODO: In production, use Redis for this
+      // const lockoutKey = `lockout:${email}`;
 
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.passwordHash);

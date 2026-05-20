@@ -45,6 +45,7 @@ export interface AccountLockedEmail {
 
 export const sendEmail = async (template: EmailTemplate) => {
   try {
+    //TODO: Email service url
     const messageData = {
       from: process.env.FROM_EMAIL || "NewCondo <noreply@newcondo.com>",
       to: template.to,

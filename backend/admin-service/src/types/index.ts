@@ -3,6 +3,9 @@
 // Admin Types
 export * from './admin';
 
+// Confirmation Types
+export * from './confirmation'
+
 // Verification Types
 export * from './verification';
 

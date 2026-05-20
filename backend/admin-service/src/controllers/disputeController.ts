@@ -38,12 +38,35 @@ const escalateDisputeSchema = z.object({
   reason: z.string().min(10).max(500),
 });
 
+
+function getAdminId(req: Request): string | null {
+  return req.user?.id ?? null;
+}
+
+function handleUnauthorized(res: Response): Response {
+  return res.status(401).json({ success: false, error: 'Unauthorized' });
+}
+
+function handleAdminError(res: Response, error: unknown): Response {
+  if (error instanceof Error && error.message.startsWith('Unauthorized')) {
+    return res.status(403).json({ success: false, error: error.message });
+  }
+  if (error instanceof Error && error.message.includes('not found')) {
+    return res.status(404).json({ success: false, error: error.message });
+  }
+  return res.status(500).json({
+    success: false,
+    error: error instanceof Error ? error.message : 'Internal server error',
+  });
+}
+
+
 export const disputeController = {
   /**
    * Get all disputes
    * GET /api/admin/disputes
    */
-  async getDisputes(req: Request, res: Response) {
+  async getDisputes(req: Request, res: Response): Promise<Response | void>  {
     try {
       const query = getDisputesQuerySchema.parse(req.query);
 
@@ -70,10 +93,7 @@ export const disputeController = {
       }
 
       console.error('Error fetching disputes:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch disputes',
-      });
+      return handleAdminError(res, error);
     }
   },
 
@@ -81,7 +101,7 @@ export const disputeController = {
    * Get dispute statistics
    * GET /api/admin/disputes/stats
    */
-  async getDisputeStats(req: Request, res: Response) {
+  async getDisputeStats(_req: Request, res: Response): Promise<Response | void> {
     try {
       const stats = await disputeService.getDisputeStats();
 
@@ -102,18 +122,15 @@ export const disputeController = {
    * Get dispute details
    * GET /api/admin/disputes/:disputeId
    */
-  async getDisputeDetails(req: Request, res: Response) {
+  async getDisputeDetails(req: Request, res: Response): Promise<Response | void>  {
     try {
       const { disputeId } = req.params;
+      const adminId = getAdminId(req);
 
-      const details = await disputeService.getDisputeDetails(disputeId);
+      if (!adminId) return handleUnauthorized(res);
 
-      if (!details) {
-        return res.status(404).json({
-          success: false,
-          error: 'Dispute not found',
-        });
-      }
+      const details = await disputeService.getDisputeDetails(disputeId, adminId);
+
 
       res.status(200).json({
         success: true,
@@ -121,10 +138,7 @@ export const disputeController = {
       });
     } catch (error) {
       console.error('Error fetching dispute details:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch dispute details',
-      });
+      return handleAdminError(res, error);
     }
   },
 
@@ -132,17 +146,13 @@ export const disputeController = {
    * Resolve a dispute
    * POST /api/admin/disputes/resolve
    */
-  async resolveDispute(req: Request, res: Response) {
+  async resolveDispute(req: Request, res: Response): Promise<Response | void>  {
     try {
       const data = resolveDisputeSchema.parse(req.body);
-      const adminId = req.user?.id;
+      const adminId = getAdminId(req);
 
-      if (!adminId) {
-        return res.status(401).json({
-          success: false,
-          error: 'Unauthorized',
-        });
-      }
+      if (!adminId) return handleUnauthorized(res);
+
 
       const result = await disputeService.resolveDispute({
         disputeId: data.disputeId,
@@ -168,10 +178,7 @@ export const disputeController = {
       }
 
       console.error('Error resolving dispute:', error);
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Failed to resolve dispute',
-      });
+      return handleAdminError(res, error);
     }
   },
 
@@ -179,20 +186,15 @@ export const disputeController = {
    * Update dispute status
    * PATCH /api/admin/disputes/:disputeId/status
    */
-  async updateDisputeStatus(req: Request, res: Response) {
+  async updateDisputeStatus(req: Request, res: Response): Promise<Response | void>  {
     try {
       const data = updateDisputeStatusSchema.parse({
         ...req.body,
         disputeId: req.params.disputeId,
       });
-      const adminId = req.user?.id;
+      const adminId = getAdminId(req);
 
-      if (!adminId) {
-        return res.status(401).json({
-          success: false,
-          error: 'Unauthorized',
-        });
-      }
+      if (!adminId) return handleUnauthorized(res);
 
       const result = await disputeService.updateDisputeStatus({
         disputeId: data.disputeId,
@@ -216,10 +218,7 @@ export const disputeController = {
       }
 
       console.error('Error updating dispute status:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to update dispute status',
-      });
+      return handleAdminError(res, error);
     }
   },
 
@@ -227,20 +226,16 @@ export const disputeController = {
    * Add note to dispute
    * POST /api/admin/disputes/:disputeId/notes
    */
-  async addDisputeNote(req: Request, res: Response) {
+  async addDisputeNote(req: Request, res: Response): Promise<Response | void>  {
     try {
       const data = addDisputeNoteSchema.parse({
         ...req.body,
         disputeId: req.params.disputeId,
       });
-      const adminId = req.user?.id;
 
-      if (!adminId) {
-        return res.status(401).json({
-          success: false,
-          error: 'Unauthorized',
-        });
-      }
+      const adminId = getAdminId(req);
+
+      if (!adminId) return handleUnauthorized(res);
 
       const result = await disputeService.addDisputeNote({
         disputeId: data.disputeId,
@@ -264,10 +259,7 @@ export const disputeController = {
       }
 
       console.error('Error adding dispute note:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to add note',
-      });
+      return handleAdminError(res, error);
     }
   },
 
@@ -275,20 +267,16 @@ export const disputeController = {
    * Escalate dispute priority
    * POST /api/admin/disputes/:disputeId/escalate
    */
-  async escalateDispute(req: Request, res: Response) {
+  async escalateDispute(req: Request, res: Response): Promise<Response | void>  {
     try {
       const data = escalateDisputeSchema.parse({
         ...req.body,
         disputeId: req.params.disputeId,
       });
-      const adminId = req.user?.id;
+      
+      const adminId = getAdminId(req);
 
-      if (!adminId) {
-        return res.status(401).json({
-          success: false,
-          error: 'Unauthorized',
-        });
-      }
+      if (!adminId) return handleUnauthorized(res);
 
       const result = await disputeService.escalateDispute({
         disputeId: data.disputeId,
@@ -312,10 +300,7 @@ export const disputeController = {
       }
 
       console.error('Error escalating dispute:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to escalate dispute',
-      });
+      return handleAdminError(res, error);
     }
   },
 
@@ -323,9 +308,13 @@ export const disputeController = {
    * Get dispute timeline
    * GET /api/admin/disputes/:disputeId/timeline
    */
-  async getDisputeTimeline(req: Request, res: Response) {
+  async getDisputeTimeline(req: Request, res: Response): Promise<Response | void> {
     try {
       const { disputeId } = req.params;
+
+      const adminId = getAdminId(req);
+
+      if (!adminId) return handleUnauthorized(res);
 
       const timeline = await disputeService.getDisputeTimeline(disputeId);
 
@@ -335,10 +324,7 @@ export const disputeController = {
       });
     } catch (error) {
       console.error('Error fetching dispute timeline:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch dispute timeline',
-      });
+      return handleAdminError(res, error);
     }
   },
 };

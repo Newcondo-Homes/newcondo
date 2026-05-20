@@ -1,4 +1,4 @@
-import { PrismaClient, PaymentStatus, AdminApprovalStatus, Prisma } from '@newcondo/db';
+import { PrismaClient, PaymentStatus, Prisma } from '@newcondo/db';
 import { AppError } from '../../../shared/src/utils/response';
 
 const prisma = new PrismaClient();
@@ -132,16 +132,17 @@ export class ReportGenerationService {
       ),
       rentedProperties,
       occupancyRate:
-        totalProperties > 0 ? ((rentedProperties / totalProperties) * 100).toFixed(2) + '%' : '0%' };
-    }
+        totalProperties > 0 ? ((rentedProperties / totalProperties) * 100).toFixed(2) + '%' : '0%'
+    };
+  }
 
 
 
 
 
-    /**
-   * Get payment statistics
-   */
+  /**
+ * Get payment statistics
+ */
   private async getPaymentStats(startDate: Date, endDate: Date) {
     const where: Prisma.PaymentWhereInput = {
       createdAt: { gte: startDate, lte: endDate },
@@ -574,7 +575,7 @@ export class ReportGenerationService {
    * Get top revenue generating properties
    */
   private async getTopRevenueProperties(startDate: Date, endDate: Date, limit: number = 10) {
-    const properties = await prisma.$queryRaw
+    const properties = await prisma.$queryRaw<
       Array<{
         propertyId: string;
         title: string;
@@ -673,7 +674,7 @@ export class ReportGenerationService {
    * Get top property owners by number of properties
    */
   private async getTopPropertyOwners(startDate: Date, endDate: Date) {
-    return prisma.$queryRaw
+    return prisma.$queryRaw<
       Array<{
         userId: string;
         name: string;
@@ -707,7 +708,7 @@ export class ReportGenerationService {
    * Get top agents by commission earned
    */
   private async getTopAgents(startDate: Date, endDate: Date) {
-    return prisma.$queryRaw
+    return prisma.$queryRaw<
       Array<{
         userId: string;
         name: string;
@@ -740,7 +741,7 @@ export class ReportGenerationService {
    * Get top renters by total payments
    */
   private async getTopRenters(startDate: Date, endDate: Date) {
-    return prisma.$queryRaw
+    return prisma.$queryRaw<
       Array<{
         userId: string;
         name: string;
@@ -792,7 +793,7 @@ export class ReportGenerationService {
     };
 
 
+  }
 }
-
 
 export const reportGenerationService = new ReportGenerationService();

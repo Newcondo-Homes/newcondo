@@ -113,7 +113,8 @@ export const initI18n = async (serverLocale?: string) => {
   }
 
   // Determine if we're in browser or server
-  const isBrowser = typeof window !== 'undefined';
+  // const isBrowser = typeof window !== 'undefined';
+  const isBrowser = typeof globalThis !== 'undefined' && 'window' in globalThis;
 
   // Configure plugins based on environment
   const plugins = [initReactI18next];

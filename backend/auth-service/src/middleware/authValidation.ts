@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { ZodSchema } from 'zod'
-import { sendResponse } from '../../../shared/src/utils/response'
+import { sendResponse } from '@newcondo/backend-shared'
 
 export const validateRequest = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction) => {

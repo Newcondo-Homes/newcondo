@@ -3,7 +3,6 @@
 import { Request, Response } from 'express';
 import { VirtualAccountAdminService } from '../services/virtualAccountAdminService';
 import { AccountAuditService } from '../services/accountAuditService';
-import { Role } from '@prisma/client';
 
 export class VirtualAccountAdminController {
   constructor(

@@ -1,8 +1,7 @@
-import { PrismaClient, MarkingJobStatus } from '@prisma/client';
+import { MarkingJobStatus, prisma } from '@newcondo/db';
 
-const prisma = new PrismaClient();
 
-export interface QueueItem {
+export interface QueueItemManagement {
   id: string;
   userId: string;
   propertyId: string;
@@ -13,7 +12,7 @@ export interface QueueItem {
   createdAt: Date;
 }
 
-export interface QueueStats {
+interface QueueStats {
   totalInQueue: number;
   activeAssignments: number;
   completedToday: number;
@@ -21,13 +20,13 @@ export interface QueueStats {
   currentPosition: number | null;
 }
 
-export interface TimeSlotConfig {
+export interface QueueTimeSlotConfig {
   durationMinutes: number;
   bufferMinutes: number;
   maxConcurrentAssignments: number;
 }
 
-const DEFAULT_TIME_SLOT_CONFIG: TimeSlotConfig = {
+const DEFAULT_TIME_SLOT_CONFIG: QueueTimeSlotConfig = {
   durationMinutes: 180, // 3 hours
   bufferMinutes: 15, // 15-minute buffer
   maxConcurrentAssignments: 10, // Maximum concurrent marking jobs
@@ -40,7 +39,7 @@ export async function addToQueue(
   markingJobId: string,
   userId: string,
   propertyId: string
-): Promise<QueueItem> {
+): Promise<QueueItemManagement> {
   // Get current queue position
   const currentMaxPosition = await prisma.propertyMarkingJob.findFirst({
     where: {
@@ -82,7 +81,7 @@ export async function addToQueue(
  */
 export async function getNextInQueue(
   markingJobId: string
-): Promise<QueueItem | null> {
+): Promise<QueueItemManagement | null> {
   const job = await prisma.propertyMarkingJob.findFirst({
     where: {
       propertyId: {
@@ -123,7 +122,7 @@ export async function getNextInQueue(
 export async function assignTimeSlot(
   markingJobId: string,
   agentId: string,
-  config: TimeSlotConfig = DEFAULT_TIME_SLOT_CONFIG
+  config: QueueTimeSlotConfig = DEFAULT_TIME_SLOT_CONFIG
 ): Promise<{
   success: boolean;
   timeSlotExpiry: Date | null;
@@ -216,7 +215,7 @@ export async function releaseExpiredTimeSlots(): Promise<number> {
  */
 export async function moveToNextInQueue(
   propertyId: string
-): Promise<QueueItem | null> {
+): Promise<QueueItemManagement | null> {
   // Get the next job in queue
   const nextJob = await prisma.propertyMarkingJob.findFirst({
     where: {
@@ -356,14 +355,14 @@ export async function getQueueStats(
   const avgCompletionTime =
     completedJobs.length > 0
       ? completedJobs.reduce((sum, job) => {
-          if (job.assignedAt && job.completedAt) {
-            return (
-              sum +
-              (job.completedAt.getTime() - job.assignedAt.getTime()) / 60000
-            );
-          }
-          return sum;
-        }, 0) / completedJobs.length
+        if (job.assignedAt && job.completedAt) {
+          return (
+            sum +
+            (job.completedAt.getTime() - job.assignedAt.getTime()) / 60000
+          );
+        }
+        return sum;
+      }, 0) / completedJobs.length
       : 0;
 
   // Get current user's position if userId provided
@@ -435,7 +434,7 @@ export async function reorderQueue(propertyId: string): Promise<void> {
 /**
  * Get agent's current queue assignments
  */
-export async function getAgentQueueAssignments(agentId: string): Promise
+export async function getAgentQueueAssignments(agentId: string): Promise<
   Array<{
     markingJobId: string;
     propertyId: string;
@@ -443,7 +442,7 @@ export async function getAgentQueueAssignments(agentId: string): Promise
     timeSlotExpiry: Date | null;
     status: MarkingJobStatus;
   }>
- {
+> {
   const assignments = await prisma.propertyMarkingJob.findMany({
     where: {
       assignedAgentId: agentId,

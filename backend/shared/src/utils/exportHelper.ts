@@ -7,6 +7,7 @@
 import { Parser } from 'json2csv';
 import PDFDocument from 'pdfkit';
 import { Readable } from 'stream';
+import { formatDateUtil, formatDateTime } from './formatting'
 
 interface ExportColumn {
   label: string;
@@ -205,44 +206,11 @@ export const generateFilename = (
 /**
  * Format currency for exports
  */
-export const formatCurrency = (amount: number, currency = 'NGN'): string => {
+export const exportFormatCurrency = (amount: number, currency = 'NGN'): string => {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
     currency,
   }).format(amount);
-};
-
-/**
- * Format date for exports
- */
-export const formatDate = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-NG', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-};
-
-/**
- * Format datetime for exports
- */
-export const formatDateTime = (date: Date | string): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleString('en-NG', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
-/**
- * Format percentage for exports
- */
-export const formatPercentage = (value: number, decimals = 2): string => {
-  return `${value.toFixed(decimals)}%`;
 };
 
 /**
@@ -313,10 +281,9 @@ export default {
   exportToPDF,
   dataToTableFormat,
   generateFilename,
-  formatCurrency,
-  formatDate,
+  exportFormatCurrency,
+  formatDateUtil,
   formatDateTime,
-  formatPercentage,
   sanitizeExportData,
   createCSVStream,
 };

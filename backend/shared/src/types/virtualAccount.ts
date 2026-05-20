@@ -1,4 +1,5 @@
 import { VirtualAccountType, VirtualAccountStatus } from '../constants/virtualAccount';
+import { Decimal } from '@newcondo/db';
 
 export interface VirtualAccountData {
   id: string;
@@ -30,22 +31,28 @@ export interface CreateVirtualAccountResponse {
 }
 
 export interface VirtualAccountBalance {
+  virtualAccountId: string;
+  userId: string;
+  balance: Decimal;
   accountNumber: string;
-  balance: number;
   currency: string;
   lastUpdated: Date;
   pendingTransactions?: number;
-  availableBalance?: number;
+  heldBalance: Decimal;
+  availableBalance?: Decimal;
 }
 
 export interface VirtualAccountTransaction {
   id: string;
   accountNumber: string;
+  balance: number;
+  txnRef: string;
   amount: number;
   currency: string;
   type: 'CREDIT' | 'DEBIT';
-  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REVERSED';
+  status?: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REVERSED';
   reference: string;
+  senderName?: string;
   description?: string;
   metadata?: Record<string, any>;
   createdAt: Date;
@@ -154,28 +161,6 @@ export interface BulkOperationResult {
 }
 
 // Flutterwave specific types
-export interface FlutterwaveVirtualAccountRequest {
-  email: string;
-  bvn?: string;
-  tx_ref: string;
-  narration?: string;
-  is_permanent?: boolean;
-}
-
-export interface FlutterwaveVirtualAccountResponse {
-  status: string;
-  message: string;
-  data: {
-    account_number: string;
-    bank_name: string;
-    account_reference: string;
-    response_code: string;
-    response_message: string;
-    flw_ref: string;
-    order_ref: string;
-    created_at: string;
-  };
-}
 
 export interface FlutterwaveWebhookData {
   event: string;

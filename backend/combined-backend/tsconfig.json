@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2023",
-    "lib": ["esnext"],
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -14,14 +16,12 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
-    "baseUrl": ".",
-    "allowImportingTsExtensions": false,
-    "noEmit": false,
+    "rootDir": "./src",
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./*"]
     }
   },
- 
-  "include": ["src/**/*", "src/types/**/*", "**/*.ts", "**/*.tsx",],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

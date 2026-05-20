@@ -1,11 +1,11 @@
 import { PaymentType, PaymentStatus } from '@newcondo/db';
-import {
-  BasePayment,
-  PaymentError,
-  ReceiptData,
-  PaymentEventPayload,
-  TransactionFilter,
-} from '../types/payment';
+// import {
+//   BasePayment,
+//   PaymentError,
+//   ReceiptData,
+//   PaymentEventPayload,
+//   TransactionFilter,
+// } from '../types/payment';
 
 /**
  * Payment validation utilities

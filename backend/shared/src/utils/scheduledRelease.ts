@@ -1,13 +1,13 @@
 // backend/shared/src/utils/scheduledRelease.ts
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { DecimalClass, Decimal } from '@newcondo/db';
 
 /**
  * Confirmation period is 24 hours from payment
  */
-export const CONFIRMATION_PERIOD_HOURS = 24;
+export const CONFIRMATION_RELEASE_PERIOD_HOURS = 24;
 
-export interface PaymentReleaseSchedule {
+interface PaymentReleaseSchedule {
   paymentId: string;
   paymentDate: Date;
   confirmationPeriodEnd: Date;
@@ -27,7 +27,7 @@ export interface ReleaseDistribution {
   }>;
 }
 
-export enum ReleaseStatus {
+enum ReleaseStatus {
   PENDING = 'PENDING',
   SCHEDULED = 'SCHEDULED',
   IN_PROGRESS = 'IN_PROGRESS',
@@ -54,7 +54,7 @@ export interface ReleaseJob {
  */
 export function calculateConfirmationPeriodEnd(paymentDate: Date): Date {
   const endDate = new Date(paymentDate);
-  endDate.setHours(endDate.getHours() + CONFIRMATION_PERIOD_HOURS);
+  endDate.setHours(endDate.getHours() + CONFIRMATION_RELEASE_PERIOD_HOURS);
   return endDate;
 }
 
@@ -77,11 +77,11 @@ export function getHoursRemainingInConfirmationPeriod(
 ): number {
   const now = new Date();
   const diffMs = confirmationPeriodEnd.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) {
     return 0;
   }
-  
+
   return Math.ceil(diffMs / (1000 * 60 * 60));
 }
 
@@ -91,14 +91,14 @@ export function getHoursRemainingInConfirmationPeriod(
  * @param paymentDate - Date when payment was made
  * @returns Release schedule
  */
-export function createPaymentReleaseSchedule(
+export function createPaymentReleaseScheduleFunction(
   paymentId: string,
   paymentDate: Date
 ): PaymentReleaseSchedule {
   const confirmationPeriodEnd = calculateConfirmationPeriodEnd(paymentDate);
   const isEligibleForRelease = hasConfirmationPeriodEnded(confirmationPeriodEnd);
   const hoursUntilRelease = getHoursRemainingInConfirmationPeriod(confirmationPeriodEnd);
-  
+
   return {
     paymentId,
     paymentDate,
@@ -118,7 +118,7 @@ export function findPaymentsReadyForRelease(
   payments: Array<{ id: string; confirmationPeriodEnd: Date; isReleased: boolean }>
 ): string[] {
   const now = new Date();
-  
+
   return payments
     .filter(payment => !payment.isReleased && now >= payment.confirmationPeriodEnd)
     .map(payment => payment.id);
@@ -141,29 +141,29 @@ export function createReleaseDistribution(
     virtualAccountId?: string;
   }>
 ): ReleaseDistribution {
-  const total = new Decimal(totalAmount);
-  
+  const total = new DecimalClass(totalAmount);
+
   // Convert all amounts to Decimal
   const formattedDistributions = distributions.map(dist => ({
     recipientId: dist.recipientId,
     recipientType: dist.recipientType,
-    amount: new Decimal(dist.amount),
+    amount: new DecimalClass(dist.amount),
     virtualAccountId: dist.virtualAccountId,
   }));
-  
+
   // Validate total matches sum of distributions
   const sum = formattedDistributions.reduce(
     (acc, dist) => acc.add(dist.amount),
-    new Decimal(0)
+    new DecimalClass(0)
   );
-  
+
   const difference = total.sub(sum).abs();
   if (difference.greaterThan(0.01)) {
     throw new Error(
       `Distribution mismatch: Total ${total.toString()} does not match sum ${sum.toString()}`
     );
   }
-  
+
   return {
     paymentId,
     totalAmount: total,
@@ -181,37 +181,37 @@ export function validateReleaseDistribution(distribution: ReleaseDistribution): 
   errors: string[];
 } {
   const errors: string[] = [];
-  
+
   if (!distribution.paymentId || distribution.paymentId.trim().length === 0) {
     errors.push('Payment ID is required');
   }
-  
+
   if (distribution.totalAmount.lessThanOrEqualTo(0)) {
     errors.push('Total amount must be greater than zero');
   }
-  
+
   if (distribution.distributions.length === 0) {
     errors.push('At least one distribution recipient is required');
   }
-  
+
   // Check for duplicate recipients
   const recipientIds = distribution.distributions.map(d => d.recipientId);
   const uniqueRecipientIds = new Set(recipientIds);
   if (recipientIds.length !== uniqueRecipientIds.size) {
     errors.push('Duplicate recipients found in distribution');
   }
-  
+
   // Check each distribution
   distribution.distributions.forEach((dist, index) => {
     if (!dist.recipientId || dist.recipientId.trim().length === 0) {
       errors.push(`Distribution ${index + 1}: Recipient ID is required`);
     }
-    
+
     if (dist.amount.lessThanOrEqualTo(0)) {
       errors.push(`Distribution ${index + 1}: Amount must be greater than zero`);
     }
   });
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -257,10 +257,10 @@ export function calculateNextRetryTime(retryCount: number): Date {
   // Exponential backoff: 5 minutes * (2 ^ retryCount)
   const baseDelayMinutes = 5;
   const delayMinutes = baseDelayMinutes * Math.pow(2, retryCount);
-  
+
   const nextRetry = new Date();
   nextRetry.setMinutes(nextRetry.getMinutes() + delayMinutes);
-  
+
   return nextRetry;
 }
 
@@ -274,13 +274,13 @@ export function getReleaseSummary(distribution: ReleaseDistribution): string {
     `Total Amount Released: NGN ${distribution.totalAmount.toFixed(2)}`,
     '\nDistribution:',
   ];
-  
+
   distribution.distributions.forEach(dist => {
     lines.push(
       `- ${dist.recipientType}: NGN ${dist.amount.toFixed(2)} (${dist.recipientId})`
     );
   });
-  
+
   return lines.join('\n');
 }
 
@@ -302,7 +302,7 @@ export function createReleaseNotificationMessage(
     SUB_AGENT: 'sub-agent',
     PLATFORM: 'platform',
   };
-  
+
   return `Payment has been released!\n\n` +
     `Amount: NGN ${amount.toFixed(2)}\n` +
     `Your Role: ${typeLabels[recipientType]}\n` +
@@ -321,11 +321,11 @@ export function batchPaymentsForRelease(
   batchSize: number = 50
 ): string[][] {
   const batches: string[][] = [];
-  
+
   for (let i = 0; i < payments.length; i += batchSize) {
     batches.push(payments.slice(i, i + batchSize));
   }
-  
+
   return batches;
 }
 
@@ -337,16 +337,16 @@ export function batchPaymentsForRelease(
 export function getEstimatedReleaseMessage(confirmationPeriodEnd: Date): string {
   const now = new Date();
   const diffMs = confirmationPeriodEnd.getTime() - now.getTime();
-  
+
   if (diffMs <= 0) {
     return 'Payment is being processed for release now.';
   }
-  
+
   const hours = Math.ceil(diffMs / (1000 * 60 * 60));
-  
+
   if (hours <= 1) {
     return 'Payment will be released in less than 1 hour.';
   }
-  
+
   return `Payment will be released in approximately ${hours} hours.`;
 }

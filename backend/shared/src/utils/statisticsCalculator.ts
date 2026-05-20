@@ -69,7 +69,7 @@ export function linearRegression(
 /**
  * Calculate compound annual growth rate (CAGR)
  */
-export function calculateCAGR(
+export function calculateCAGRValue(
   beginningValue: number,
   endingValue: number,
   periods: number
@@ -81,7 +81,7 @@ export function calculateCAGR(
 /**
  * Calculate year-over-year growth
  */
-export function calculateYoYGrowth(currentValue: number, previousValue: number): number {
+export function calculateYoYGrowthValue(currentValue: number, previousValue: number): number {
   if (previousValue === 0) return 0;
   return ((currentValue - previousValue) / previousValue) * 100;
 }
@@ -89,8 +89,8 @@ export function calculateYoYGrowth(currentValue: number, previousValue: number):
 /**
  * Calculate month-over-month growth
  */
-export function calculateMoMGrowth(currentValue: number, previousValue: number): number {
-  return calculateYoYGrowth(currentValue, previousValue);
+export function calculateMoMGrowthValue(currentValue: number, previousValue: number): number {
+  return calculateYoYGrowthValue(currentValue, previousValue);
 }
 
 /**

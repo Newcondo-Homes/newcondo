@@ -2,51 +2,11 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '@newcondo/db';
-
+import { AdminPermission } from '../types/admin'
 /**
  * Define admin permission levels
  */
-export enum AdminPermission {
-  // User management
-  VIEW_USERS = 'VIEW_USERS',
-  VERIFY_USERS = 'VERIFY_USERS',
-  SUSPEND_USERS = 'SUSPEND_USERS',
-  DELETE_USERS = 'DELETE_USERS',
-  
-  // Property management
-  VIEW_PROPERTIES = 'VIEW_PROPERTIES',
-  APPROVE_PROPERTIES = 'APPROVE_PROPERTIES',
-  REJECT_PROPERTIES = 'REJECT_PROPERTIES',
-  DELETE_PROPERTIES = 'DELETE_PROPERTIES',
-  RESOLVE_DUPLICATES = 'RESOLVE_DUPLICATES',
-  
-  // Payment management
-  VIEW_PAYMENTS = 'VIEW_PAYMENTS',
-  PROCESS_REFUNDS = 'PROCESS_REFUNDS',
-  MANAGE_VIRTUAL_ACCOUNTS = 'MANAGE_VIRTUAL_ACCOUNTS',
-  VIEW_FINANCIAL_REPORTS = 'VIEW_FINANCIAL_REPORTS',
-  
-  // Marking job oversight
-  VIEW_MARKING_JOBS = 'VIEW_MARKING_JOBS',
-  ASSIGN_MARKING_JOBS = 'ASSIGN_MARKING_JOBS',
-  REVIEW_MARKING_JOBS = 'REVIEW_MARKING_JOBS',
-  SUSPEND_AGENTS = 'SUSPEND_AGENTS',
-  
-  // Support & disputes
-  VIEW_SUPPORT_TICKETS = 'VIEW_SUPPORT_TICKETS',
-  RESOLVE_SUPPORT_TICKETS = 'RESOLVE_SUPPORT_TICKETS',
-  RESOLVE_BOUNDARY_DISPUTES = 'RESOLVE_BOUNDARY_DISPUTES',
-  
-  // Analytics & reporting
-  VIEW_ANALYTICS = 'VIEW_ANALYTICS',
-  EXPORT_DATA = 'EXPORT_DATA',
-  GENERATE_REPORTS = 'GENERATE_REPORTS',
-  
-  // System administration
-  MANAGE_ADMINS = 'MANAGE_ADMINS',
-  CONFIGURE_SYSTEM = 'CONFIGURE_SYSTEM',
-  VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS'
-}
+
 
 /**
  * Admin role definitions with their permissions

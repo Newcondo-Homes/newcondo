@@ -2,6 +2,7 @@ export interface FlutterwaveVirtualAccountRequest {
   email: string;
   is_permanent?: boolean;
   bvn?: string;
+  tx_ref: string;
   phonenumber?: string;
   firstname?: string;
   lastname?: string;
@@ -80,27 +81,6 @@ export interface VirtualAccountBalanceData {
   ledgerBalance: number;
   currency: string;
   lastUpdated: Date;
-}
-
-export interface VirtualAccountStatement {
-  accountNumber: string;
-  transactions: VirtualAccountTransaction[];
-  startDate: Date;
-  endDate: Date;
-  openingBalance: number;
-  closingBalance: number;
-}
-
-export interface VirtualAccountTransaction {
-  id: string;
-  txnRef: string;
-  amount: number;
-  currency: string;
-  type: 'CREDIT' | 'DEBIT';
-  description: string;
-  senderName?: string;
-  date: Date;
-  balance: number;
 }
 
 export interface VirtualAccountConfig {

@@ -2,8 +2,8 @@
 
 import { Request, Response } from 'express';
 import { markingOversightService } from '../services/markingOversightService';
-import { StandardResponse } from '../../shared/utils/response';
-import { ApiError } from '../../shared/utils/response';
+import { StandardResponse } from '@newcondo/backend-shared/';
+import { ApiError } from '@newcondo/backend-shared/';
 
 /**
  * Admin controller for overseeing marking jobs

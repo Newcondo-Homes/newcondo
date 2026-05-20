@@ -1,7 +1,7 @@
 // backend/admin-service/src/controllers/boundaryDisputeController.ts
 
 import { Request, Response } from 'express';
-import { PrismaClient, DuplicateStatus } from '@newcondo/db';
+import { PrismaClient} from '@newcondo/db';
 import { successResponse, errorResponse } from '../../../shared/src/utils/response';
 import { adminController } from './adminController';
 

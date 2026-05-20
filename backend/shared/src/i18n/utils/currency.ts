@@ -1,4 +1,5 @@
-import { SupportedLocale, DEFAULT_LOCALE } from '../i18n/middleware/i18nMiddleware';
+import { SupportedLocale, DEFAULT_LOCALE } from '@newcondo/i18n';
+
 
 /**
  * Supported currencies

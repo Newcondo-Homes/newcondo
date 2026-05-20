@@ -1,6 +1,6 @@
 // backend/shared/src/utils/complianceChecker.ts
 
-import { DocumentType, DocumentStatus, Role } from '@prisma/client';
+import { DocumentType, DocumentStatus, Role } from '@newcondo/db';
 
 export interface ComplianceRule {
   id: string;

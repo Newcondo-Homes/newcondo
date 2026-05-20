@@ -3,7 +3,7 @@
  * Location: backend/shared/src/types/paymentRelease.ts
  */
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@newcondo/db';
 import { CommissionDistribution } from './commission';
 
 /**
@@ -198,7 +198,7 @@ export interface AutomatedReleaseJob {
   
   // Results
   processedPaymentHolds: string[]; // Payment hold IDs
-  errors: JobError[];
+  errors: PaymentJobError[];
 }
 
 /**
@@ -215,7 +215,7 @@ export enum JobStatus {
 /**
  * Job error
  */
-export interface JobError {
+export interface PaymentJobError {
   paymentHoldId: string;
   errorType: string;
   errorMessage: string;
@@ -226,7 +226,7 @@ export interface JobError {
 /**
  * Release notification
  */
-export interface ReleaseNotification {
+export interface PaymentReleaseNotification {
   recipientId: string;
   recipientType: 'RENTER' | 'PROPERTY_OWNER' | 'AGENT';
   notificationType: NotificationType;

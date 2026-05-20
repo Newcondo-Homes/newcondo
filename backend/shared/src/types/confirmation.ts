@@ -3,13 +3,13 @@
  * Location: backend/shared/src/types/confirmation.ts
  */
 
-import { Decimal } from '@prisma/client/runtime/library';
+import { Decimal } from '@newcondo/db';
+// import { CONFIRMATION_PERIOD_HOURS } from 'src/constants';
 
 /**
  * Confirmation period duration (24 hours)
  */
-export const CONFIRMATION_PERIOD_HOURS = 24;
-export const CONFIRMATION_PERIOD_MS = CONFIRMATION_PERIOD_HOURS * 60 * 60 * 1000;
+// export const CONFIRMATION_PERIOD_MS = CONFIRMATION_PERIOD_HOURS * 60 * 60 * 1000;
 
 /**
  * Reminder schedule for confirmation reminders
@@ -19,6 +19,18 @@ export const CONFIRMATION_REMINDER_SCHEDULE = {
   SECOND_REMINDER_HOURS: 20, // 20 hours after payment
   FINAL_REMINDER_HOURS: 23, // 1 hour before deadline
 };
+
+/**
+ * Struct definition tracking active confirmation timelines
+ */
+export interface ConfirmationPeriod {
+  startTime: Date;
+  endTime: Date;
+  durationHours: number;
+  isActive: boolean;
+  hasExpired: boolean;
+  remainingHours: number;
+}
 
 /**
  * Confirmation status
@@ -209,7 +221,7 @@ export interface ConfirmationReminder {
   sentAt?: Date;
   
   // Delivery
-  channels: NotificationChannel[];
+  channels: ConfirmationNotificationChannel[];
   status: ReminderStatus;
   
   // Content
@@ -235,7 +247,7 @@ export enum ReminderType {
 /**
  * Notification channel
  */
-export enum NotificationChannel {
+export enum ConfirmationNotificationChannel {
   EMAIL = 'EMAIL',
   SMS = 'SMS',
   PUSH = 'PUSH',
@@ -318,7 +330,7 @@ export interface ConfirmationPropertyDetails {
 export interface AutoConfirmationJob {
   id: string;
   scheduledAt: Date;
-  status: JobStatus;
+  status: ConfirmationJobStatus;
   
   // Processing details
   totalProcessed: number;
@@ -331,13 +343,13 @@ export interface AutoConfirmationJob {
   
   // Results
   processedConfirmations: string[]; // Confirmation IDs
-  errors: JobError[];
+  errors: ConfirmationJobError[];
 }
 
 /**
  * Job status
  */
-export enum JobStatus {
+export enum ConfirmationJobStatus {
   SCHEDULED = 'SCHEDULED',
   RUNNING = 'RUNNING',
   COMPLETED = 'COMPLETED',
@@ -348,7 +360,7 @@ export enum JobStatus {
 /**
  * Job error
  */
-export interface JobError {
+export interface ConfirmationJobError {
   confirmationId: string;
   errorType: string;
   errorMessage: string;
@@ -482,74 +494,3 @@ export enum DisputeResolutionAction {
   ESCALATE = 'ESCALATE', // Resolves to ESCALATED
   CONFIRM_PROPERTY = 'CONFIRM_PROPERTY', // Overrides dispute and confirms property (Rare)
 }
-
-// import { PaymentStatus } from '@prisma/client';
-
-// export interface ConfirmationPeriod {
-//   startTime: Date;
-//   endTime: Date;
-//   durationHours: number;
-//   isActive: boolean;
-//   hasExpired: boolean;
-//   remainingHours: number;
-// }
-
-// export interface PaymentConfirmation {
-//   paymentId: string;
-//   rentalId: string;
-//   renterId: string;
-//   propertyId: string;
-//   unitId?: string;
-//   amount: number;
-//   confirmationDeadline: Date;
-//   isConfirmed: boolean;
-//   confirmedAt?: Date;
-//   status: PaymentStatus;
-// }
-
-// export interface ConfirmationRequest {
-//   paymentId: string;
-//   renterId: string;
-//   propertyConditionVerified: boolean;
-//   confirmationNotes?: string;
-//   verificationImages?: string[];
-// }
-
-// export interface ConfirmationResponse {
-//   success: boolean;
-//   paymentId: string;
-//   confirmedAt: Date;
-//   releaseScheduled: Date;
-//   message: string;
-// }
-
-// export interface DisputeRequest {
-//   paymentId: string;
-//   renterId: string;
-//   disputeReason: string;
-//   evidenceImages?: string[];
-//   requestedAction: 'FULL_REFUND' | 'PARTIAL_REFUND' | 'RESOLUTION';
-// }
-
-// export interface DisputeResponse {
-//   success: boolean;
-//   disputeId: string;
-//   status: 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED';
-//   message: string;
-// }
-
-// export enum ConfirmationStatus {
-//   PENDING = 'PENDING',
-//   CONFIRMED = 'CONFIRMED',
-//   DISPUTED = 'DISPUTED',
-//   EXPIRED = 'EXPIRED',
-//   AUTO_CONFIRMED = 'AUTO_CONFIRMED'
-// }
-
-// export interface ConfirmationNotification {
-//   type: 'CONFIRMATION_REMINDER' | 'CONFIRMATION_SUCCESS' | 'CONFIRMATION_EXPIRED' | 'DISPUTE_OPENED';
-//   recipientId: string;
-//   paymentId: string;
-//   message: string;
-//   metadata: Record<string, any>;
-// }

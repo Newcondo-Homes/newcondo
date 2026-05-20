@@ -5,7 +5,7 @@
 
 import { DocumentType } from '@newcondo/db';
 
-export interface DocumentTemplate {
+interface DocumentTemplate {
   id: string;
   name: string;
   documentType: DocumentType;

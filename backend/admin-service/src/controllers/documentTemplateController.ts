@@ -3,7 +3,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '@newcondo/db';
 import { z } from 'zod';
-import { AdminActionType, DocumentType } from '@prisma/client';
+import { AdminActionType, DocumentType } from '@newcondo/db';
 
 // Validation schemas
 const createTemplateSchema = z.object({

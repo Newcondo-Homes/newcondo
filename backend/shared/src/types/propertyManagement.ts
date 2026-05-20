@@ -1,4 +1,4 @@
-import { PropertyStatus, PropertyType, PropertyStructure, UnitStatus } from '@prisma/client';
+import { PropertyStatus, PropertyType, PropertyStructure, UnitStatus } from '@newcondo/db';
 
 export interface PropertyManagementFilters {
   status?: PropertyStatus;
@@ -101,7 +101,7 @@ export interface PropertyPerformanceData {
   conversionRate: number;
 }
 
-export interface AgentReferralData {
+export interface PropertyAgentReferralData {
   agentId: string;
   agentName: string;
   agentEmail: string;
