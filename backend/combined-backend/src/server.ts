@@ -6,6 +6,7 @@ import { logger } from './utils/logger';
 import { config } from './config/environment';
 
 const PORT = config.PORT || 5000;
+const HOST = '0.0.0.0';
 
 // Graceful shutdown handler
 const gracefulShutdown = (signal: string) => {
@@ -31,7 +32,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the server
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   logger.info(`🚀 Combined NewCondo Backend running on port ${PORT}`);
   logger.info(`📡 Health check available at: http://localhost:${PORT}/health`);
   logger.info(`🔗 API Documentation: http://localhost:${PORT}/api/docs`);

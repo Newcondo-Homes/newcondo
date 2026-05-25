@@ -17,6 +17,7 @@ const envSchema = z.object({
   // CORS configuration
   CORS_ORIGINS: z
     .string()
+    .default("http://localhost:3000,http://localhost:5173,http://localhost:4000")
     .transform((val) => val.split(",").map((origin) => origin.trim())),
 
   // Database configuration
@@ -37,8 +38,8 @@ const envSchema = z.object({
   EMAIL_FROM: z.string().email().default("noreply@newcondo.com"),
 
   // mailgun
-  MAILGUN_API_KEY: z.string(),
-  MAILGUN_DOMAIN: z.string(),
+  MAILGUN_API_KEY: z.string().optional(),
+  MAILGUN_DOMAIN: z.string().optional(),
   MAILGUN_URL: z.string().default("https://api.mailgun.net"),
 
   // SMS configuration
@@ -59,8 +60,16 @@ const envSchema = z.object({
   // Payment configuration
   FLUTTERWAVE_PUBLIC_KEY: z.string().optional(),
   FLUTTERWAVE_SECRET_KEY: z.string().optional(),
+  FLUTTERWAVE_ENCRYPTION_KEY: z.string().optional(),
+  FLUTTERWAVE_BASE_URL: z
+    .string()
+    .default("https://api.flutterwave.com/v3"),
+  FLUTTERWAVE_WEBHOOK_SECRET: z.string().optional(),
   PAYSTACK_PUBLIC_KEY: z.string().optional(),
   PAYSTACK_SECRET_KEY: z.string().optional(),
+
+  FRONTEND_URL: z.string().default("http://localhost:3000"),
+  WEBHOOK_URL: z.string().default("http://localhost:5000"),
 
   // Google Maps configuration
   GOOGLE_MAPS_API_KEY: z.string().optional(),
@@ -116,17 +125,42 @@ const envSchema = z.object({
   ANALYTICS_SERVICE_URL: z.string().optional(),
 });
 
+
+function assertProductionVars(
+  cfg: z.infer<typeof envSchema>
+): void {
+  if (cfg.NODE_ENV !== "production") return;
+
+  const required: Array<[keyof typeof cfg, string]> = [
+    ["MAILGUN_API_KEY", "MAILGUN_API_KEY is required in production"],
+    ["MAILGUN_DOMAIN", "MAILGUN_DOMAIN is required in production"],
+    ["REDIS_URL", "REDIS_URL is required in production (sessions and OTP storage)"],
+  ];
+
+  const missing = required
+    .filter(([key]) => !cfg[key])
+    .map(([, msg]) => msg);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Production environment check failed:\n${missing.join("\n")}`
+    );
+  }
+}
+
 // Validate environment variables
 const validateEnv = () => {
   try {
-    return envSchema.parse(process.env);
+    const parsed = envSchema.parse(process.env);
+    assertProductionVars(parsed);
+    return parsed;
   } catch (error) {
     if (error instanceof z.ZodError) {
       const missingVars = error.errors.map(
         (err) => `${err.path.join(".")}: ${err.message}`
-      );
+      ).join("\n");
       throw new Error(
-        `Environment validation failed:\n${missingVars.join("\n")}`
+        `Environment validation failed:\n${missingVars}`
       );
     }
     throw error;
@@ -135,3 +169,9 @@ const validateEnv = () => {
 
 // Export the validated configuration
 export const config = validateEnv();
+
+// Use these in code instead of checking NODE_ENV strings directly
+
+export const isProduction = config.NODE_ENV === "production";
+export const isDevelopment = config.NODE_ENV === "development";
+export const isTest = config.NODE_ENV === "test";

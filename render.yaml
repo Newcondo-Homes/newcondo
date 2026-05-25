@@ -1,0 +1,44 @@
+services:
+  - type: web
+    name: newcondo-combined-backend
+    runtime: node
+    region: oregon          # or frankfurt if your users are in Africa/Europe
+    plan: free
+    # DO NOT set rootDir here — we need repo root for pnpm workspace resolution
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @newcondo/combined-backend build
+    startCommand: node backend/combined-backend/dist/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      # All secrets below — set these manually in dashboard, not here
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: MAILGUN_API_KEY
+        sync: false
+      - key: MAILGUN_DOMAIN
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+    buildFilter:
+      paths:
+        - backend/**
+        - packages/**      # shared packages like @newcondo/db, @newcondo/backend-shared
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+      ignoredPaths:
+        - apps/**          # frontend changes don't trigger backend redeploy
+        - docs/**
+        - "**/*.md"
