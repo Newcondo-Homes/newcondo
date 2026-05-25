@@ -2,7 +2,7 @@ services:
   - type: web
     name: newcondo-combined-backend
     runtime: node
-    region: oregon          # or frankfurt if your users are in Africa/Europe
+    region: frankfurt          # oregon or frankfurt if your users are in Africa/Europe
     plan: free
     # DO NOT set rootDir here — we need repo root for pnpm workspace resolution
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @newcondo/combined-backend build
