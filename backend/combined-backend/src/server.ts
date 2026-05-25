@@ -43,7 +43,7 @@ app.listen(PORT, HOST, () => {
   logger.info(`🔗 API Documentation: http://localhost:${PORT}/api/docs`);
   logger.info(`🌍 Environment: ${config.NODE_ENV}`);
 
-  if (config.NODE_ENV === 'production') {
+  if (config.NODE_ENV === 'development') {
     const PING_URL = 'https://newcondo-combined-backend.onrender.com/health';
     const INTERVAL = 14 * 60 * 1000; // 14 minutes
 
