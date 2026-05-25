@@ -1,6 +1,11 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+// to keep render service alive!
+//------------------------
+import https from 'https';
+//------------------------
+
 import app from './app';
 import { logger } from './utils/logger';
 import { config } from './config/environment';
@@ -37,6 +42,25 @@ app.listen(PORT, HOST, () => {
   logger.info(`📡 Health check available at: http://localhost:${PORT}/health`);
   logger.info(`🔗 API Documentation: http://localhost:${PORT}/api/docs`);
   logger.info(`🌍 Environment: ${config.NODE_ENV}`);
+
+  if (config.NODE_ENV === 'production') {
+    const PING_URL = 'https://newcondo-combined-backend.onrender.com/health';
+    const INTERVAL = 14 * 60 * 1000; // 14 minutes
+
+    logger.info(`⏰ Self-pinger initialized. Will ping ${PING_URL} every 14 minutes.`);
+
+    setInterval(() => {
+      https.get(PING_URL, (res) => {
+        if (res.statusCode === 200) {
+          logger.info('💓 Self-ping successful. Keeping the instance awake.');
+        } else {
+          logger.warn(`⚠️ Self-ping returned status code: ${res.statusCode}`);
+        }
+      }).on('error', (err) => {
+        logger.error('❌ Error during self-ping:', err.message);
+      });
+    }, INTERVAL);
+  }
 });
 
 // export { app };
