@@ -33,6 +33,7 @@
     "prisma": "^5.0.0",
     "redis": "^4.6.7",
     "resend": "^1.0.0",
+    "tsconfig-paths": "^4.2.0",
     "winston": "^3.10.0",
     "zod": "^3.21.4"
   },

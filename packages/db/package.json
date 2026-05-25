@@ -2,10 +2,15 @@
   "name": "@newcondo/db",
   "version": "1.0.0",
   "description": "",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
     "db:migrate": "prisma migrate dev --name init  --config prisma.config.ts",

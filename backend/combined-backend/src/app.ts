@@ -3,7 +3,6 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
-// import type { Application } from 'express';
 
 // Import shared middleware
 // import { logger, requestLogger } from "./utils/logger";
