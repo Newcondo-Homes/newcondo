@@ -15,14 +15,14 @@ router.post(
 
 // Verify OTP
 router.post(
-  "/verify",
+  "/verify-otp",
   validateRequest(verifyOTPSchema),
   otpController.verifyOTP.bind(otpController)
 );
 
 // Resend OTP
 router.post(
-  "/resend",
+  "/resend-otp",
   validateRequest(sendOTPSchema),
   otpController.resendOTP.bind(otpController)
 );

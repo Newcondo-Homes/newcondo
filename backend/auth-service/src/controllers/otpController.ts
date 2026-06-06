@@ -47,7 +47,7 @@ class OTPController {
           html: `
             <h2>Verification Code</h2>
             <p>Your verification code is: <strong>${otp}</strong></p>
-            <p>This code will expire in 10 minutes.</p>
+            <p>This code will expire in 5 minutes.</p>
           `,
         });
       }
@@ -161,7 +161,7 @@ class OTPController {
         where: {
           identifier,
           type,
-          createdAt: { gt: new Date(Date.now() - 2 * 60 * 1000) }, // 2 minutes ago
+          createdAt: { gt: new Date(Date.now() - 1 * 60 * 1000) }, // 1 minute ago
         },
       });
 
@@ -169,14 +169,14 @@ class OTPController {
         return sendResponse(
           res,
           429,
-          "Please wait before requesting another code",
+          "Please wait 1 minute before requesting another code",
           null
         );
       }
 
       // Generate new OTP
       const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
       // Delete existing OTPs
       await prisma.oTPCode.deleteMany({
@@ -204,7 +204,7 @@ class OTPController {
           html: `
             <h2>Verification Code</h2>
             <p>Your new verification code is: <strong>${otp}</strong></p>
-            <p>This code will expire in 10 minutes.</p>
+            <p>This code will expire in 5 minutes.</p>
           `,
         });
       }

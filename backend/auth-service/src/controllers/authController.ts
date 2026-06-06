@@ -14,7 +14,8 @@ class AuthController {
 
   async register(req: Request, res: Response): Promise<any> {
     try {
-      const { email, password, name, role, phone } = req.body;
+      console.log("📥 RAW BACKEND BODY:", JSON.stringify(req.body, null, 2));
+      const { email, password, name, userType, phone } = req.body;
 
       // Check if user already exists
       const existingUser = await prisma.user.findFirst({
@@ -24,9 +25,15 @@ class AuthController {
       });
 
       if (existingUser) {
-        return sendResponse(res, 400, "User already exists", null);
+        if (existingUser.emailVerified) {
+          console.log("User already exists and is registered and verified")
+          return res.status(400).json({ error: "Email is already registered and verified." });
+        }
       }
 
+    
+      console.error("🚨 CRITICAL DEBUG - USER ROLE IS:", userType);
+      const assignedRole = userType ? (userType as Role) : "RENTER";
       // Hash password
       const saltRounds = 12;
       const passwordHash = await bcrypt.hash(password, saltRounds);
@@ -38,7 +45,7 @@ class AuthController {
           passwordHash,
           name: name || null,
           phone: phone || null,
-          role: (role as Role) || "RENTER",
+          role: assignedRole ,
         },
         select: {
           id: true,
@@ -53,30 +60,43 @@ class AuthController {
       });
 
       // Generate and send email verification OTP
-      //TODO: when you fix the email sending platform, uncomment the code below
-      // const otp = generateOTP();
-      // const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      // TODO: find where otp values are used, in calculations and in emails.
+      // have otp values imported from backend-shared, one single source of truth and 
+      // be where they are needed
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-      // await prisma.oTPCode.create({
-      //   data: {
-      //     identifier: email,
-      //     code: otp,
-      //     type: "EMAIL_VERIFICATION",
-      //     expiresAt,
-      //   },
-      // });
+      await prisma.oTPCode.upsert({
+        where: {
+          identifier_type: {
+            identifier: email,
+            type: "EMAIL_VERIFICATION",
+          },
+        },
+        update: {
+          code: otp,
+          expiresAt,
+          verified: false,
+          attempts: 0, // Reset attempts for a fresh resend/retry
+        },
+        create: {
+          identifier: email,
+          code: otp,
+          type: "EMAIL_VERIFICATION",
+          expiresAt,
+        },
+      });
 
       // Send verification email
-      //TODO: when you fix the email sending platform, uncomment the code below
-      // await sendEmail({
-      //   to: email,
-      //   subject: "Verify your NewCondo account",
-      //   html: `
-      //     <h2>Welcome to NewCondo!</h2>
-      //     <p>Your verification code is: <strong>${otp}</strong></p>
-      //     <p>This code will expire in 10 minutes.</p>
-      //   `,
-      // });
+      await sendEmail({
+        to: email,
+        subject: "Verify your NewCondo account",
+        html: `
+          <h2>Welcome to NewCondo!</h2>
+          <p>Your verification code is: <strong>${otp}</strong></p>
+          <p>This code will expire in 5 minutes.</p>
+        `,
+      });
 
       // Log user registration event
       await prisma.eventLog.create({

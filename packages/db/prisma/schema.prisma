@@ -7,9 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
 }
-
 
 model User {
   id            String    @id @default(cuid())
@@ -93,6 +92,7 @@ model User {
   disputeComments    DisputeComment[]
   disputeEvidences   DisputeEvidence[]
   paymentAttemptLogs PaymentAttemptLog[]
+  otpcodes           OTPCode[]
 
   @@index([email])
   @@index([phone])
@@ -831,6 +831,8 @@ model OTPCode {
   expiresAt   DateTime
 
   createdAt DateTime @default(now())
+
+  user User @relation(fields: [identifier], references: [email], onDelete: Cascade)
 
   @@unique([identifier, type], name: "identifier_type")
   @@index([expiresAt])
