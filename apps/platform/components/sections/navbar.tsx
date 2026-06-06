@@ -83,7 +83,8 @@ export function Navbar() {
         </div>
 
         <button
-          className="nav-burger-btn ml-auto items-center justify-center p-1.5 bg-transparent border-0 cursor-pointer"
+          
+          className="nav-burger-btn data-nav-item flex ml-auto items-center justify-center p-1.5 bg-transparent border-0 cursor-pointer"
           aria-label="Menu"
           onClick={() => setOpen((o) => !o)}
           style={{ color: onDark ? "var(--cream)" : "var(--ink)" }}

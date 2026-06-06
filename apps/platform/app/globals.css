@@ -224,12 +224,6 @@
   font-weight: 400; color: var(--text-secondary);
 }
 
-/* ---- reveal base state (JS animates these in; cleared if gsap absent) ---- */
-[data-reveal] { opacity: 0; }
-.no-anim [data-reveal], .no-anim [data-prob], .no-anim [data-feat],
-.no-anim [data-result], .no-anim [data-cmp-row], .no-anim [data-step],
-.no-anim .js-plan, .no-anim .js-cmp, .no-anim .js-ceo, .no-anim .js-faq,
-.no-anim [data-hero], .no-anim .hero-line { opacity: 1 !important; transform: none !important; }
 
 /* Reveal elements default to VISIBLE. The animation layer (site-animations.tsx)
    hides + re-reveals them via JS only when GSAP is confirmed running, so if JS

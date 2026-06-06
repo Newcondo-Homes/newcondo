@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     '@newcondo/i18n',
     '@newcondo/auth',
     '@newcondo/db',
+    'lucide-react'
   ],
 
 
