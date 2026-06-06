@@ -231,6 +231,9 @@
 .no-anim .js-plan, .no-anim .js-cmp, .no-anim .js-ceo, .no-anim .js-faq,
 .no-anim [data-hero], .no-anim .hero-line { opacity: 1 !important; transform: none !important; }
 
+/* Reveal elements default to VISIBLE. The animation layer (site-animations.tsx)
+   hides + re-reveals them via JS only when GSAP is confirmed running, so if JS
+   is slow/absent nothing is ever stuck hidden. */
 @media (prefers-reduced-motion: reduce) {
   [data-reveal], [data-prob], [data-feat], [data-result], [data-cmp-row],
   .js-plan, .js-cmp, .js-ceo, .js-faq, [data-hero], .hero-line,
