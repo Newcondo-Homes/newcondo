@@ -28,17 +28,6 @@ export default async function LoginPage() {
 
       <LoginForm />
 
-      <div className="text-center">
-        <p className="text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
-          <Link 
-            href="/register" 
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-          >
-            Sign up here
-          </Link>
-        </p>
-      </div>
 
       <div className="text-center">
         <Link 

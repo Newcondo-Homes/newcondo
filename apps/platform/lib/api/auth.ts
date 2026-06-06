@@ -18,8 +18,8 @@ const AUTH_ENDPOINTS = {
   REGISTER: "/auth/register",
   LOGIN: "/auth/login",
   LOGOUT: "/auth/logout",
-  VERIFY_OTP: "/otp/verify",
-  RESEND_OTP: "/otp/resend",
+  VERIFY_OTP: "/auth/verify-otp",
+  RESEND_OTP: "/auth/resend-otp",
   REQUEST_PASSWORD_RESET: "/auth/forgot-password",
   RESET_PASSWORD: "/auth/reset-password",
   UPDATE_PROFILE: "/auth/profile",
@@ -31,10 +31,7 @@ export const authApi = {
   // Register new user
   register: async (data: RegisterData): Promise<AuthResponse> => {
     try {
-      const { firstName, lastName, ...restOfData } = data;
-
-      // Create the 'name' string: filter out any undefined/null values, then join
-      const name = [firstName, lastName].filter(Boolean).join(" ");
+      const { firstName, lastName, name, ...restOfData } = data;
 
       // Construct the new payload with the combined 'name' and the rest of the data
       const payload = {

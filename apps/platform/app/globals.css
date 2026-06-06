@@ -1,13 +1,15 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* @import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap"); */
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ShadCN / app tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans, "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
+  --font-mono: var(--font-geist-mono, "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -41,9 +43,38 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* NewCondo design utilities */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-cream: var(--cream);
+  --color-nc-background: var(--nc-background);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-on-dark: var(--text-on-dark);
+  --color-text-on-dark-2: var(--text-on-dark-2);
+  --color-nc-border: var(--nc-border);
+  --color-green: var(--green);
+  --color-green-bright: var(--green-bright);
+  --color-green-dark: var(--green-dark);
+  --color-green-wash: var(--green-wash);
+  --color-danger: var(--danger);
+
+  --radius-card: 28px;
+  --shadow-card: 0 10px 30px rgba(19, 19, 19, 0.07);
+  --shadow-lift: 0 20px 50px rgba(19, 19, 19, 0.12);
+  --shadow-pop: 0 24px 64px rgba(19, 19, 19, 0.18);
+  --ease-nc: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-nc-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-nc-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
 :root {
+  /* ShadCN / app tokens */
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -76,6 +107,42 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* NewCondo design tokens */
+  --ink: #131313;
+  --ink-soft: #2a2a28;
+  --cream: #f9f9ef;
+  --nc-background: #f7f6ef;
+  --surface: #ffffff;
+  --surface-soft: #ece9de;
+  --surface-sunken: #efede3;
+  --text-primary: #050505;
+  --text-secondary: #4b4b4b;
+  --text-tertiary: #8a877c;
+  --text-on-dark: #f9f9ef;
+  --text-on-dark-2: #b9b7ac;
+  --nc-border: #ddd8c8;
+  --border-strong: rgba(0, 0, 0, 0.14);
+  --border-hair: rgba(0, 0, 0, 0.06);
+  --divider: rgba(0, 0, 0, 0.08);
+  --green: #00b473;
+  --green-bright: #00d084;
+  --green-dark: #008f5a;
+  --green-wash: #e7f4ed;
+  --danger: #c0392b;
+  --r-card: 28px;
+  --r-pill: 999px;
+  --r-md: 16px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur: 280ms;
+  --dur-slow: 700ms;
+  --gutter: clamp(20px, 5vw, 64px);
+  --maxw: 1440px;
+  --fs-h2: clamp(32px, 4vw, 56px);
+  --fs-h4: clamp(20px, 2vw, 26px);
+  --fs-lead: clamp(18px, 1.6vw, 22px);
 }
 
 .dark {
@@ -115,8 +182,292 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
   }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    margin: 0;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
+
+  img {
+    display: block;
+  }
+}
+
+/* Add this class to a landing page wrapper if you want the NewCondo page background/font. */
+.newcondo-page {
+  background: var(--nc-background);
+  color: var(--text-primary);
+  font-family: var(--font-nc-sans);
+}
+
+
+/* ---- semantic type classes (from the NewCondo design system) ---- */
+.nc-h2 {
+  font-size: var(--fs-h2); line-height: 0.98; letter-spacing: -0.04em;
+  font-weight: 700; color: var(--text-primary); text-wrap: balance; margin: 0;
+}
+.nc-h4 {
+  font-size: var(--fs-h4); line-height: 1.2; letter-spacing: -0.02em;
+  font-weight: 600; color: var(--text-primary);
+}
+.nc-lead {
+  font-size: var(--fs-lead); line-height: 1.45; letter-spacing: -0.01em;
+  font-weight: 400; color: var(--text-secondary);
+}
+
+/* ---- reveal base state (JS animates these in; cleared if gsap absent) ---- */
+[data-reveal] { opacity: 0; }
+.no-anim [data-reveal], .no-anim [data-prob], .no-anim [data-feat],
+.no-anim [data-result], .no-anim [data-cmp-row], .no-anim [data-step],
+.no-anim .js-plan, .no-anim .js-cmp, .no-anim .js-ceo, .no-anim .js-faq,
+.no-anim [data-hero], .no-anim .hero-line { opacity: 1 !important; transform: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal], [data-prob], [data-feat], [data-result], [data-cmp-row],
+  .js-plan, .js-cmp, .js-ceo, .js-faq, [data-hero], .hero-line,
+  .cw-anim .cw-blob { opacity: 1 !important; transform: none !important; animation: none !important; }
+}
+
+/* ============================================================
+   NAVBAR — glass + on-dark/solid swap
+   ============================================================ */
+.nav-shell {
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+  border-bottom: 1px solid transparent;
+}
+.nav-logo-cream { display: none; }
+.nav--ondark .nav-logo-dark { display: none; }
+.nav--ondark .nav-logo-cream { display: block; }
+.nav--solid {
+  background: rgba(247, 246, 239, 0.82);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  border-bottom-color: var(--border-hair);
+}
+
+/* Navbar responsive show/hide — self-contained media queries, independent of
+   Tailwind's breakpoint variants, so the hamburger reliably appears < 1024px. */
+.nav-desktop-links,
+.nav-desktop-cta { display: none; }
+.nav-burger-btn { display: inline-flex !important; }
+@media (min-width: 1024px) {
+  .nav-desktop-links { display: flex; }
+  .nav-desktop-cta { display: inline-flex; }
+  .nav-burger-btn { display: none !important; }
+  .nav-mobile-menu { display: none !important; }
+}
+/* ============================================================
+   HERO — procedural canvas + cinematic overlay + line reveal
+   ============================================================ */
+.hero-canvas {
+  width: 100%; height: 100%; display: block;
+  transform: scale(1.12); transform-origin: center;
+  filter: blur(7px) saturate(0.9);
+}
+.hero-media-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, rgba(8, 8, 7, 0.82) 0%, rgba(8, 8, 7, 0.4) 52%, rgba(8, 8, 7, 0.12) 100%),
+    linear-gradient(to top, rgba(8, 8, 7, 0.8) 0%, rgba(8, 8, 7, 0.28) 50%, rgba(8, 8, 7, 0.35) 100%);
+}
+.line-mask { display: block; overflow: hidden; padding-bottom: 0.04em; }
+.line-mask--open { overflow: visible; }
+.hero-line { display: block; }
+
+.scribble {
+  position: absolute; left: -1.5%; top: 100%; width: 103%; height: 0.3em;
+  transform: translateY(0.2em); overflow: visible; pointer-events: none;
+}
+.scribble path { stroke-dasharray: 640; stroke-dashoffset: 640; }
+
+.scroll-arrow { animation: scrollBob 2s var(--ease-in-out) infinite; }
+@keyframes scrollBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+@media (max-height: 780px) { .hero-scroll { display: none; } }
+
+.circle-btn svg { transition: transform var(--dur) var(--ease-out); }
+
+/* ============================================================
+   HOW IT WORKS — drag carousel + animated gradient cards
+   ============================================================ */
+.carousel { cursor: grab; touch-action: pan-y; }
+.carousel.is-grabbing { cursor: grabbing; }
+.carousel.is-grabbing .carousel-track { user-select: none; }
+.carousel.is-grabbing .cw-card { pointer-events: none; }
+.carousel img { -webkit-user-drag: none; user-drag: none; }
+.carousel-track { will-change: transform; }
+
+.cw-card { position: relative; flex: 0 0 calc((100% - 56px) / 3); min-width: 0; display: flex; flex-direction: column; }
+@media (max-width: 1080px) { .cw-card { flex: 0 0 calc((100% - 28px) / 2); } }
+@media (max-width: 620px) { .cw-card { flex: 0 0 100%; } }
+
+.cw-anim { isolation: isolate; }
+.cw-anim .cw-blob {
+  position: absolute; width: 80%; height: 80%; border-radius: 50%;
+  filter: blur(13px); opacity: 0.92; mix-blend-mode: screen; z-index: 1; will-change: transform;
+}
+.cw-anim::after {
+  content: ""; position: absolute; inset: 0; z-index: 1;
+  background: radial-gradient(125% 125% at 50% 48%, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.08) 55%, rgba(0, 0, 0, 0.26));
+}
+.cw-anim .b1 { background: radial-gradient(circle at 50% 50%, var(--g1), transparent 54%); top: -18%; left: -14%; }
+.cw-anim .b2 { background: radial-gradient(circle at 50% 50%, var(--g2), transparent 54%); bottom: -22%; right: -16%; }
+.cw-anim .b3 { background: radial-gradient(circle at 50% 50%, var(--g3), transparent 54%); top: 6%; right: -20%; }
+.cw-anim .b4 { background: radial-gradient(circle at 50% 50%, var(--g4), transparent 54%); bottom: -16%; left: -10%; }
+
+.cw-anim--coral { background: linear-gradient(150deg, #b8505e, #8c4080); --g1: #ff6a47; --g2: #ff5093; --g3: #ffae4a; --g4: #b566ff; }
+.cw-anim--lilac { background: linear-gradient(150deg, #4a5ea8, #86519a); --g1: #5f86ff; --g2: #ff77c0; --g3: #a47cff; --g4: #ff85a6; }
+.cw-anim--teal { background: linear-gradient(150deg, #1a7a80, #1a8268); --g1: #1fd6cf; --g2: #3ce896; --g3: #74f0d6; --g4: #22b0d6; }
+.cw-anim--sunset { background: linear-gradient(150deg, #b86a30, #9a3a60); --g1: #ff8c3e; --g2: #ff6582; --g3: #ffbc4e; --g4: #aa66ff; }
+
+.cw-anim--coral .b1 { animation: cwC1 10s ease-in-out infinite; }
+.cw-anim--coral .b2 { animation: cwC2 12s ease-in-out infinite; }
+.cw-anim--coral .b3 { animation: cwC3 13.5s ease-in-out infinite; }
+.cw-anim--coral .b4 { animation: cwC4 11s ease-in-out infinite; }
+.cw-card:hover .cw-anim--coral .cw-blob { animation-duration: 6.5s, 8s, 9s, 7.5s; }
+.cw-anim--lilac .b1 { animation: cwL1 8s ease-in-out infinite; }
+.cw-anim--lilac .b2 { animation: cwL2 9.5s ease-in-out infinite; }
+.cw-anim--lilac .b3 { animation: cwL3 7.5s ease-in-out infinite; }
+.cw-anim--lilac .b4 { animation: cwL4 10.5s ease-in-out infinite; }
+.cw-card:hover .cw-anim--lilac .cw-blob { animation-duration: 5.5s, 6.5s, 5s, 7s; }
+.cw-anim--teal .b1 { animation: cwT1 11.5s ease-in-out infinite; }
+.cw-anim--teal .b2 { animation: cwT2 8.5s ease-in-out infinite; }
+.cw-anim--teal .b3 { animation: cwT3 13s ease-in-out infinite; }
+.cw-anim--teal .b4 { animation: cwT4 9.5s ease-in-out infinite; }
+.cw-card:hover .cw-anim--teal .cw-blob { animation-duration: 7.5s, 5.5s, 8.5s, 6.5s; }
+.cw-anim--sunset .b1 { animation: cwS1 14s ease-in-out infinite; }
+.cw-anim--sunset .b2 { animation: cwS2 10s ease-in-out infinite; }
+.cw-anim--sunset .b3 { animation: cwS3 12.5s ease-in-out infinite; }
+.cw-anim--sunset .b4 { animation: cwS4 15s ease-in-out infinite; }
+.cw-card:hover .cw-anim--sunset .cw-blob { animation-duration: 9s, 6.5s, 8s, 9.5s; }
+
+@keyframes cwC1 { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(28%, 8%) scale(1.18); } 50% { transform: translate(22%, 30%) scale(0.95); } 75% { transform: translate(-6%, 22%) scale(1.1); } }
+@keyframes cwC2 { 0%, 100% { transform: translate(0, 0) scale(1.05); } 33% { transform: translate(-20%, -18%) scale(0.9); } 66% { transform: translate(-30%, 10%) scale(1.2); } }
+@keyframes cwC3 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-26%, 18%) scale(1.22); } }
+@keyframes cwC4 { 0%, 100% { transform: translate(0, 0) scale(1.1); } 40% { transform: translate(18%, -22%) scale(0.92); } 70% { transform: translate(8%, -30%) scale(1.2); } }
+@keyframes cwL1 { 0%, 100% { transform: translate(0, 0) scale(1.05); } 50% { transform: translate(-18%, 34%) scale(0.9); } }
+@keyframes cwL2 { 0%, 100% { transform: translate(0, 0) scale(1); } 30% { transform: translate(20%, 16%) scale(1.22); } 60% { transform: translate(30%, -12%) scale(0.94); } }
+@keyframes cwL3 { 0%, 100% { transform: translate(0, 0) scale(0.95); } 50% { transform: translate(26%, 28%) scale(1.25); } }
+@keyframes cwL4 { 0%, 100% { transform: translate(0, 0) scale(1.1); } 35% { transform: translate(-22%, -24%) scale(0.95); } 70% { transform: translate(-10%, -34%) scale(1.18); } }
+@keyframes cwT1 { 0%, 100% { transform: translate(0, 0) scale(0.9); } 50% { transform: translate(34%, -26%) scale(1.3); } }
+@keyframes cwT2 { 0%, 100% { transform: translate(0, 0) scale(1.25); } 50% { transform: translate(-34%, 26%) scale(0.85); } }
+@keyframes cwT3 { 0%, 100% { transform: translate(0, 0) scale(1); } 33% { transform: translate(-28%, -14%) scale(1.2); } 66% { transform: translate(20%, -26%) scale(0.92); } }
+@keyframes cwT4 { 0%, 100% { transform: translate(0, 0) scale(1.05); } 50% { transform: translate(24%, 30%) scale(0.9); } }
+@keyframes cwS1 { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(36%, 6%) scale(1.16); } }
+@keyframes cwS2 { 0%, 100% { transform: translate(0, 0) scale(1.1); } 50% { transform: translate(-34%, -8%) scale(0.92); } }
+@keyframes cwS3 { 0%, 100% { transform: translate(0, 0) scale(0.95); } 40% { transform: translate(-30%, 12%) scale(1.2); } 75% { transform: translate(-14%, -10%) scale(1); } }
+@keyframes cwS4 { 0%, 100% { transform: translate(0, 0) scale(1.15); } 50% { transform: translate(30%, -12%) scale(0.95); } }
+
+.cw-anim-text {
+  position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 0 18px;
+  font-size: clamp(26px, 2.4vw, 34px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.05;
+  color: rgba(255, 255, 255, 0.97); text-shadow: 0 1px 24px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.14);
+}
+.cz-dot { width: 30px; height: 4px; border-radius: 999px; background: rgba(19, 19, 19, 0.16); border: none; padding: 0; cursor: pointer; transition: background var(--dur) var(--ease-out); }
+.cz-dot.active { background: var(--ink); }
+.cz-btn {
+  width: 52px; height: 52px; border-radius: 999px; border: 1px solid var(--border-strong);
+  background: transparent; color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background var(--dur) var(--ease-out), opacity var(--dur) var(--ease-out);
+}
+.cz-btn:hover { background: rgba(0, 0, 0, 0.05); }
+.cz-btn:disabled { opacity: 0.3; cursor: default; }
+
+.how-arrow path { stroke-dasharray: 260; stroke-dashoffset: 260; }
+
+/* ============================================================
+   COMPARISON highlight column + mobile swipe hint
+   ============================================================ */
+.cmp-hl {
+  position: absolute; top: 8px; bottom: 14px; right: clamp(16px, 2.4vw, 34px);
+  width: calc((100% - 2 * clamp(16px, 2.4vw, 34px)) * (1.15 / 3.65));
+  background: var(--surface-soft); border-radius: 22px; z-index: 1;
+}
+.cmp-swipe { display: none; }
+.cmp-swipe-ico { animation: cmpSwipeNudge 1.8s var(--ease-in-out) infinite; }
+@keyframes cmpSwipeNudge { 0%, 100% { transform: translateX(-5px); } 50% { transform: translateX(5px); } }
+@media (max-width: 620px) {
+  .cmp-swipe { display: flex; }
+  .cmp-hl { display: none; }
+}
+
+/* ============================================================
+   FAQ accordion height transition
+   ============================================================ */
+.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.45s var(--ease-out); }
+.faq-item.open .faq-a { max-height: 360px; }
+
+/* ============================================================
+   CEO play pulse
+   ============================================================ */
+.ceo-play::after {
+  content: ""; position: absolute; inset: -8px; border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.5); animation: pulse 2.2s var(--ease-out) infinite;
+}
+@keyframes pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.5); opacity: 0; } }
+
+/* ============================================================
+   FOOTER oversized wordmark
+   ============================================================ */
+.footer-wordmark {
+  display: flex; align-items: center; gap: clamp(14px, 1.8vw, 32px);
+  font-size: clamp(56px, 13vw, 200px); font-weight: 700; letter-spacing: -0.05em;
+  line-height: 0.8; color: var(--cream); white-space: nowrap;
+}
+.footer-wm-tile {
+  flex: none; height: clamp(50px, 11vw, 170px); width: clamp(50px, 11vw, 170px);
+  border: clamp(3px, 0.55vw, 7px) solid var(--cream); border-radius: clamp(14px, 2.2vw, 40px);
+  display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+  margin-bottom: clamp(8px, 1.1vw, 18px);
+}
+.footer-wm-tile img { width: 52%; height: auto; }
+
+
+@media (max-width: 620px) {
+  .cta-group {
+    width: 100%;
+    gap: 8px;
+  }
+  .cta-group .pill-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.3;
+    font-size: 14.5px;
+    padding: 14px 20px;
+  }
+  .cta-group .circle-btn {
+    flex: none;
+    width: 52px;
+    height: 52px;
+  }
+}
+
+
+@media (max-width: 1080px) {
+  #problems .grid,
+  #features .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  #stories .grid { grid-template-columns: 1fr; }                                  /* testimonials */
+  #pricing .grid { grid-template-columns: 1fr; }                                  /* pricing plans */
+  footer > div:first-child { grid-template-columns: 1fr; }                        /* footer top */
+  footer > div:first-child > div:last-child { grid-template-columns: repeat(2, minmax(0, 1fr)); } /* footer link cols */
+  #problems > div:last-child,
+  #comparison > div:last-child { flex-direction: column; align-items: flex-start; } /* closing rows */
+}
+@media (max-width: 620px) {
+  #problems .grid,
+  #features .grid { grid-template-columns: 1fr; }
+  .js-cmp { overflow-x: auto; }
+  .js-cmp > div { min-width: 540px; }
 }

@@ -45,12 +45,6 @@ export default async function VerifyOTPPage({ searchParams }: VerifyOTPPageProps
         <div className="text-center">
           <p className="text-sm text-gray-600">
             Didn&apos;t receive the code?{' '}
-            <button
-              onClick={() => window.location.reload()}
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              Resend code
-            </button>
           </p>
         </div>
       </div>

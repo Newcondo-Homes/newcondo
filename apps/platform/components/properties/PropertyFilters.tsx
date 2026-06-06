@@ -96,12 +96,12 @@ const SORT_OPTIONS = [
   { value: 'popular', label: 'Most Popular' },
 ];
 
-export function PropertyFilters({ 
-  filters, 
-  onFiltersChange, 
-  onClearFilters, 
+export function PropertyFilters({
+  filters,
+  onFiltersChange,
+  onClearFilters,
   isLoading = false,
-  className = '' 
+  className = ''
 }: PropertyFiltersProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeFilterCount, setActiveFilterCount] = useState(0);
@@ -109,7 +109,7 @@ export function PropertyFilters({
   // Calculate active filter count
   useEffect(() => {
     let count = 0;
-    
+
     if (filters.priceRange[0] > 0 || filters.priceRange[1] < 10000000) count++;
     if (filters.location.city || filters.location.state || filters.location.area) count++;
     if (filters.propertyType.length > 0) count++;
@@ -118,7 +118,7 @@ export function PropertyFilters({
     if (filters.features.length > 0) count++;
     if (filters.availability !== 'all') count++;
     if (filters.structure.length > 0) count++;
-    
+
     setActiveFilterCount(count);
   }, [filters]);
 
@@ -131,7 +131,7 @@ export function PropertyFilters({
     const newArray = currentArray.includes(value)
       ? currentArray.filter(item => item !== value)
       : [...currentArray, value];
-    
+
     updateFilters({ [key]: newArray });
   };
 
@@ -212,14 +212,14 @@ export function PropertyFilters({
               </Label>
               <div className="grid grid-cols-1 gap-3">
                 <Select
-                  value={filters.location.state || ''}
-                  onValueChange={(value) => 
-                    updateFilters({ 
-                      location: { 
-                        ...filters.location, 
-                        state: value || undefined,
-                        city: undefined // Reset city when state changes
-                      } 
+                  value={filters.location.state || 'all-states'}
+                  onValueChange={(value) =>
+                    updateFilters({
+                      location: {
+                        ...filters.location,
+                        state: value === 'all-states' ? undefined : value,
+                        city: undefined
+                      }
                     })
                   }
                   disabled={isLoading}
@@ -228,19 +228,19 @@ export function PropertyFilters({
                     <SelectValue placeholder="Select State" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All States</SelectItem>
+                    <SelectItem value="all">All States</SelectItem>
                     {NIGERIAN_STATES.map(state => (
                       <SelectItem key={state} value={state}>{state}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                
+
                 <Input
                   placeholder="Enter city or area"
-                  value={filters.location.city || ''}
-                  onChange={(e) => 
-                    updateFilters({ 
-                      location: { ...filters.location, city: e.target.value || undefined } 
+                  value={filters.location.city || 'all-states'}
+                  onChange={(e) =>
+                    updateFilters({
+                      location: { ...filters.location, city: e.target.value || undefined }
                     })
                   }
                   disabled={isLoading}
@@ -260,8 +260,8 @@ export function PropertyFilters({
                       onCheckedChange={() => toggleArrayFilter('propertyType', type.value)}
                       disabled={isLoading}
                     />
-                    <Label 
-                      htmlFor={`type-${type.value}`} 
+                    <Label
+                      htmlFor={`type-${type.value}`}
                       className="text-sm cursor-pointer"
                     >
                       {type.label}
@@ -283,8 +283,8 @@ export function PropertyFilters({
                       onCheckedChange={() => toggleArrayFilter('structure', structure.value)}
                       disabled={isLoading}
                     />
-                    <Label 
-                      htmlFor={`structure-${structure.value}`} 
+                    <Label
+                      htmlFor={`structure-${structure.value}`}
                       className="text-sm cursor-pointer"
                     >
                       {structure.label}
@@ -346,8 +346,8 @@ export function PropertyFilters({
                       onCheckedChange={() => toggleArrayFilter('features', feature)}
                       disabled={isLoading}
                     />
-                    <Label 
-                      htmlFor={`feature-${feature}`} 
+                    <Label
+                      htmlFor={`feature-${feature}`}
                       className="text-sm cursor-pointer"
                     >
                       {feature}

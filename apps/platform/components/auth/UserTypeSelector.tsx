@@ -102,7 +102,7 @@ export default function UserTypeSelector({ selectedType, onSelect, disabled }: U
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   {userType.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}

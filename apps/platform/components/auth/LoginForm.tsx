@@ -27,6 +27,12 @@ const initialFormData: LoginFormData = {
   rememberMe: false
 }
 
+interface NextAuthSignInResult {
+  error: string | null;
+  status: number;
+  ok: boolean;
+  url: string | null;
+}
 
 export default function LoginForm() {
   const router = useRouter()
@@ -85,12 +91,13 @@ export default function LoginForm() {
 
     try {
 
-      const result = await signIn('credentials', {
+      const result = (await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        loginType: "email", // 👈 Added parameter here
-        redirect: false
-      });
+        loginType: "email",
+        redirect: true,
+        callbackUrl: callbackUrl || '/dashboard'
+      })) as unknown as NextAuthSignInResult | undefined
 
       if (result?.error) {
         // Single unified place to handle errors cleanly
@@ -108,17 +115,8 @@ export default function LoginForm() {
           default:
             setLoginError('Login failed. Please try again.');
         }
-      } else if (result?.ok) {
-        toast('Welcome back!', {
-          description: 'You have been successfully logged in.',
-        });
-
-        const session = await getSession();
-        if (session) {
-          router.push(callbackUrl || '/dashboard');
-          router.refresh();
-        }
       }
+      
     } catch (err) {
       console.error("Unexpected login error:", err);
       setLoginError('An unexpected error occurred. Please try again.');

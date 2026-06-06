@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button } from '@newcondo/ui/'
+import { Button } from '@newcondo/ui'
 import { Input } from '@newcondo/ui'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
 import { Alert, AlertDescription } from '@newcondo/ui'
@@ -23,22 +23,70 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
   const [isVerifying, setIsVerifying] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [error, setError] = useState('')
-  const [timeLeft, setTimeLeft] = useState(300) // 5 minutes
-  const [canResend, setCanResend] = useState(false)
-  
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const storageKey = `otp_expiry_${email}_${type}`
+      const storedTarget = localStorage.getItem(storageKey)
+
+      if (storedTarget) {
+        const remaining = Math.ceil((parseInt(storedTarget, 10) - Date.now()) / 1000)
+
+        if (remaining > 0) {
+          return remaining
+        } else {
+          // Clear out old, stale, negative historical keys right away!
+          localStorage.removeItem(storageKey)
+        }
+      }
+    }
+    return 60 // Fresh registration defaults to a clean 60-second timer window!
+  })
+
+  const [canResend, setCanResend] = useState(timeLeft <= 0)
+
   const router = useRouter()
   const { verifyOTP, resendOTP } = useAuth()
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
 
-  // Countdown timer
+  // 2. Persistent Countdown Effect
   useEffect(() => {
-    if (timeLeft > 0) {
-      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000)
-      return () => clearTimeout(timer)
-    } else {
-      setCanResend(true)
+    // If there isn't a target time in localStorage yet (e.g., first mount), set one.
+    const storageKey = `otp_expiry_${email}_${type}`
+    if (!localStorage.getItem(storageKey) && timeLeft > 0) {
+      const targetTime = Date.now() + timeLeft * 1000
+      localStorage.setItem(storageKey, targetTime.toString())
     }
-  }, [timeLeft])
+
+    if (timeLeft <= 0) {
+      setCanResend(true)
+      localStorage.removeItem(storageKey) // Clean up storage when done
+      return
+    }
+
+    setCanResend(false)
+
+    // Using precise interval sync based on system clock
+    const timer = setInterval(() => {
+      const storedTarget = localStorage.getItem(storageKey)
+      if (storedTarget) {
+        const remaining = Math.ceil((parseInt(storedTarget, 10) - Date.now()) / 1000)
+        if (remaining <= 0) {
+          setTimeLeft(0)
+          setCanResend(true)
+          localStorage.removeItem(storageKey)
+          clearInterval(timer)
+        } else {
+          setTimeLeft(remaining)
+        }
+      } else {
+        // Fallback if localStorage disappeared unexpectedly
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0))
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [timeLeft, email, type])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -47,19 +95,17 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
   }
 
   const handleInputChange = (index: number, value: string) => {
-    if (value.length > 1) return // Prevent multiple characters
-    
+    if (value.length > 1) return
+
     const newOtp = [...otp]
     newOtp[index] = value
     setOtp(newOtp)
     setError('')
 
-    // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus()
     }
 
-    // Auto-submit when all fields are filled
     if (newOtp.every(digit => digit !== '') && value) {
       handleVerifyOTP(newOtp.join(''))
     }
@@ -75,12 +121,12 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
     e.preventDefault()
     const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
     const newOtp = [...otp]
-    
+
     for (let i = 0; i < pastedData.length; i++) {
       newOtp[i] = pastedData[i]
     }
     setOtp(newOtp)
-    
+
     if (pastedData.length === 6) {
       handleVerifyOTP(pastedData)
     }
@@ -103,9 +149,10 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
       })
 
       if (result.success) {
+        // Cleanup storage on successful verification
+        localStorage.removeItem(`otp_expiry_${email}_${type}`)
+
         if (type === 'EMAIL_VERIFICATION') {
-          router.push('/dashboard')
-        } else if (type === 'LOGIN') {
           router.push('/dashboard')
         } else if (type === 'PASSWORD_RESET') {
           router.push('/reset-password')
@@ -139,7 +186,11 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
       })
 
       if (result.success) {
-        setTimeLeft(300) // Reset to 5 minutes
+        // 3. Establish a brand-new 60-second target timestamp in localStorage on resend
+        const newTargetTime = Date.now() + 60 * 1000
+        localStorage.setItem(`otp_expiry_${email}_${type}`, newTargetTime.toString())
+
+        setTimeLeft(60)
         setCanResend(false)
         setOtp(['', '', '', '', '', ''])
         inputRefs.current[0]?.focus()
@@ -156,27 +207,19 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
 
   const getTitle = () => {
     switch (type) {
-      case 'EMAIL_VERIFICATION':
-        return 'Verify Your Email'
-      case 'LOGIN':
-        return 'Enter Verification Code'
-      case 'PASSWORD_RESET':
-        return 'Reset Your Password'
-      default:
-        return 'Verify Your Email'
+      case 'EMAIL_VERIFICATION': return 'Verify Your Email'
+      case 'LOGIN': return 'Enter Verification Code'
+      case 'PASSWORD_RESET': return 'Reset Your Password'
+      default: return 'Verify Your Email'
     }
   }
 
   const getDescription = () => {
     switch (type) {
-      case 'EMAIL_VERIFICATION':
-        return 'We sent a 6-digit verification code to your email address.'
-      case 'LOGIN':
-        return 'Please enter the 6-digit code sent to your email.'
-      case 'PASSWORD_RESET':
-        return 'Enter the 6-digit code to reset your password.'
-      default:
-        return 'We sent a 6-digit verification code to your email address.'
+      case 'EMAIL_VERIFICATION': return 'We sent a 6-digit verification code to your email address.'
+      case 'LOGIN': return 'Please enter the 6-digit code sent to your email.'
+      case 'PASSWORD_RESET': return 'Enter the 6-digit code to reset your password.'
+      default: return 'We sent a 6-digit verification code to your email address.'
     }
   }
 
@@ -193,7 +236,7 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
           <span className="font-medium text-foreground">{email}</span>
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {error && (
           <Alert variant="destructive">
@@ -254,7 +297,7 @@ export function OTPVerification({ email, type, onSuccess, onBack }: OTPVerificat
             >
               {isResending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {!isResending && <RefreshCw className="mr-2 h-4 w-4" />}
-              Resend Code
+              {canResend ? "Resend Code" : `Resend in ${formatTime(timeLeft)}`}
             </Button>
           </div>
 

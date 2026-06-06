@@ -21,7 +21,7 @@ import { toast } from "@newcondo/ui";
 import UserTypeSelector from "./UserTypeSelector";
 import { useRegister } from "../../hooks/useAuth";
 import { cn } from "@newcondo/ui/lib/utils";
-import { UserType } from "@/types/api"; 
+import { UserType } from "@/types/api";
 
 interface RegisterFormData {
   name: string;
@@ -131,15 +131,16 @@ export default function RegisterForm() {
           toast("Registration successful", {
             description: "Please check your email to verify your account.",
           });
+          localStorage.removeItem(`otp_expiry_${formData.email.trim().toLowerCase()}_EMAIL_VERIFICATION`);
           router.push(
-            "/verify-otp?email=" + encodeURIComponent(formData.email)
+            `/verify-otp?email=${encodeURIComponent(formData.email)}&type=EMAIL_VERIFICATION`
           );
         },
         onError: (error) => {
           console.error(error)
           toast("Registration failed", {
             description:
-            "Something went wrong. Please try again.",
+              "Something went wrong. Please try again.",
           });
         },
       }
