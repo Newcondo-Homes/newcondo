@@ -1,6 +1,56 @@
 // Core API Response Types
 // types/api.ts
 
+/* ============================================================
+   Shared API types for the platform app.
+   ============================================================ */
+
+/**
+ * The three account types Newcondo supports.
+ *
+ * NOTE: all three roles exist in the system and are accepted by the
+ * backend. The onboarding UI only *surfaces* PROPERTY_OWNER and RENTER
+ * (see `UserTypeSelector`) — AGENT accounts are created through the
+ * agent-invite / promotion flow, not self-serve onboarding.
+ */
+
+
+/** Payload sent to the register endpoint (@newcondo/auth). */
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  userType: UserType;
+}
+
+/** The minimal profile the onboarding flow carries between steps. */
+export interface OnboardingProfile {
+  name: string;
+  email: string;
+  phone: string;
+  role: UserType;
+}
+
+/** A subscription plan option shown in the plan step. */
+export interface Plan {
+  id: string;
+  name: string;
+  tagline: string;
+  /** Monthly price in naira. 0 == free. */
+  price: number;
+  highlight?: boolean;
+  badge?: string;
+  features: string[];
+}
+
+/** Result returned by the (Flutterwave) payment call. */
+export interface PaymentResult {
+  reference: string;
+  status: "successful" | "pending" | "failed";
+  amount: number;
+}
+
 export interface User {
   id: string;
   name?: string | null;

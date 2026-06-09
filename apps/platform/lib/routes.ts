@@ -12,6 +12,7 @@ export const publicRoutes = [
   "/register",
   "/signup",
   "/verify-otp",
+  "/onboarding",
   "/contact",
   "/privacy",
   "/terms",

@@ -1,5 +1,9 @@
+"use client";
+
+import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { Icon } from "./icon";
+import { Reveal, vFade } from "@/components/motion";
 
 export function TextLink({
   href = "#",
@@ -7,13 +11,14 @@ export function TextLink({
   className = "",
 }: {
   href?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) {
   return (
-    <a
+    <Reveal
+      as="a"
       href={href}
-      data-reveal
+      variants={vFade}
       className={cx(
         "group inline-flex items-center gap-[9px] no-underline font-semibold text-[16px] text-ink",
         className
@@ -25,6 +30,6 @@ export function TextLink({
         size={18}
         className="transition-transform duration-200 ease-nc group-hover:translate-x-[5px]"
       />
-    </a>
+    </Reveal>
   );
 }

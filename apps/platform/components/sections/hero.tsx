@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { SplitButton } from "@/components/ui/split-button";
+import { container, mount, EASE, EXPO } from "@/components/motion";
 import { makePerlin } from "@/lib/perlin";
 
 /** Procedural "ethereal shadows" — domain-warped fractal Perlin noise. */
@@ -94,6 +96,11 @@ function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>
   }, [canvasRef]);
 }
 
+/* ---- entrance variants ---- */
+const line = { hidden: { y: "115%" }, show: { y: "0%", transition: { duration: 0.9, ease: EXPO } } };
+const fade = { hidden: { opacity: 0, y: 22 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } };
+const scribble = { hidden: { pathLength: 0 }, show: { pathLength: 1, transition: { duration: 0.9, ease: EASE, delay: 0.4 } } };
+
 export function Hero() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   useEtherealShadows(canvasRef);
@@ -104,57 +111,70 @@ export function Hero() {
       id="hero"
       data-screen-label="Hero"
     >
-      <div className="hero-media absolute inset-0 opacity-0">
+      <motion.div
+        className="absolute inset-0"
+        initial={{ opacity: 0, scale: 1.06 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.3, ease: EASE }}
+      >
         <canvas className="hero-canvas" ref={canvasRef} />
         <div className="hero-media-overlay" />
-      </div>
+      </motion.div>
 
-      <div className="relative z-[3] w-full max-w-[1440px] mx-auto px-[var(--gutter)]">
-        <div
+      <motion.div
+        className="relative z-[3] w-full max-w-[1440px] mx-auto px-[var(--gutter)]"
+        variants={container(0.12, 0.35)}
+        {...mount}
+      >
+        <motion.div
+          variants={fade}
           className="text-[12px] font-semibold tracking-[0.16em] uppercase text-green-bright mb-[22px]"
-          data-hero="eyebrow"
         >
           Built for Nigerian property owners
-        </div>
+        </motion.div>
 
         <h1 className="m-0 font-bold text-cream max-w-[17ch] text-[clamp(40px,6vw,84px)] leading-[0.97] tracking-[-0.045em]">
           <span className="line-mask">
-            <span className="hero-line" data-hero="line">
+            <motion.span className="block" variants={line}>
               Your property is making
-            </span>
+            </motion.span>
           </span>
           <span className="line-mask">
-            <span className="hero-line" data-hero="line">
+            <motion.span className="block" variants={line}>
               money for everyone
-            </span>
+            </motion.span>
           </span>
           <span className="line-mask line-mask--open">
-            <span className="hero-line" data-hero="line">
+            <motion.span className="block" variants={line}>
               <span className="relative inline-block">
                 except&nbsp;you.
                 <svg className="scribble" viewBox="0 0 520 26" preserveAspectRatio="none" fill="none" aria-hidden="true">
-                  <path
+                  <motion.path
                     d="M5 17 C 120 6, 250 6, 330 11 C 420 17, 495 14, 515 8"
                     stroke="var(--green-bright)"
                     strokeWidth="6"
                     strokeLinecap="round"
+                    variants={scribble}
                   />
                 </svg>
               </span>
-            </span>
+            </motion.span>
           </span>
         </h1>
 
-        <p
+        <motion.p
+          variants={fade}
           className="text-[clamp(16px,1.35vw,19px)] leading-[1.55] text-text-on-dark-2 max-w-[600px] mt-11"
-          data-hero="sub"
         >
           Agents collect rent and go silent. Tenants damage property and deny it. You manage everything from WhatsApp at
           midnight. Newcondo fixes all of that — and covers your fumigation, waste management, and legal paperwork while
           doing it.
-        </p>
+        </motion.p>
 
-        <div className="flex items-center gap-[22px] mt-8 flex-wrap max-[620px]:gap-4 max-[620px]:w-full" data-hero="cta">
+        <motion.div
+          variants={fade}
+          className="flex items-center gap-[22px] mt-8 flex-wrap max-[620px]:gap-4 max-[620px]:w-full"
+        >
           <SplitButton
             href="#pricing"
             variant="light"
@@ -168,19 +188,21 @@ export function Hero() {
           >
             See what&apos;s included in each plan
           </a>
-        </div>
+        </motion.div>
 
-        <p className="inline-flex items-center gap-2.5 mt-6 text-[14.5px] text-text-on-dark-2" data-hero="trust">
+        <motion.p variants={fade} className="inline-flex items-center gap-2.5 mt-6 text-[14.5px] text-text-on-dark-2">
           <Icon name="shield-check" size={17} className="text-green-bright" />
           No hidden fees. Cancel anytime. Your rent is escrowed — agents cannot touch it.
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
-      <a
+      <motion.a
         className="hero-scroll absolute left-1/2 -translate-x-1/2 bottom-[30px] z-[3] flex flex-col items-center gap-[9px] no-underline text-text-on-dark-2 text-[12px] tracking-[0.14em] uppercase"
         href="#problems"
-        data-hero="scroll"
         aria-label="Scroll"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 1.4, ease: EASE }}
       >
         <svg viewBox="0 0 60 60" fill="none" className="w-[58px] h-[58px]">
           <circle cx="30" cy="30" r="28" stroke="rgba(249,249,239,0.4)" strokeWidth="1.5" />
@@ -194,7 +216,7 @@ export function Hero() {
           />
         </svg>
         <span>Scroll</span>
-      </a>
+      </motion.a>
     </section>
   );
 }

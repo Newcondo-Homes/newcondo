@@ -1,5 +1,7 @@
+import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import { Eyebrow } from "./eyebrow";
+import { Reveal } from "@/components/motion";
 
 export function SectionHead({
   eyebrow,
@@ -10,22 +12,22 @@ export function SectionHead({
   children,
 }: {
   eyebrow?: string;
-  title: React.ReactNode;
+  title: ReactNode;
   lead?: string;
   center?: boolean;
   className?: string;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <div className={cx(center ? "max-w-[920px] mx-auto text-center" : "max-w-[920px]", "mb-14", className)}>
       {eyebrow && <Eyebrow className="mb-[18px]">{eyebrow}</Eyebrow>}
-      <h2 className="nc-h2" data-reveal>
+      <Reveal as="h2" className="nc-h2">
         {title}
-      </h2>
+      </Reveal>
       {lead && (
-        <p className={cx("nc-lead mt-5", center && "mx-auto")} data-reveal>
+        <Reveal as="p" className={cx("nc-lead mt-5", center && "mx-auto")}>
           {lead}
-        </p>
+        </Reveal>
       )}
       {children}
     </div>

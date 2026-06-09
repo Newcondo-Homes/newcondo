@@ -2,6 +2,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { TextLink } from "@/components/ui/text-link";
 import { Icon } from "@/components/ui/icon";
+import { Group, Item, Reveal, vRow } from "@/components/motion";
 import { CMP_ROWS } from "@/lib/data";
 
 export function Comparison() {
@@ -12,9 +13,9 @@ export function Comparison() {
         eyebrow="Newcondo vs. how it works today"
         title="You've been managing a ₦50 million asset with WhatsApp and verbal agreements."
       >
-        <p className="nc-lead mt-5 mx-auto" data-reveal>
+        <Reveal as="p" className="nc-lead mt-5 mx-auto">
           Here is what the old way looks like — and what Newcondo replaces it with.
-        </p>
+        </Reveal>
         <div className="cmp-swipe flex-col items-center gap-1 mt-[18px] mx-auto text-text-tertiary" aria-hidden>
           <svg className="cmp-swipe-ico w-12 h-auto" viewBox="0 0 56 24" fill="none">
             <path d="M12 12 H44" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -25,9 +26,9 @@ export function Comparison() {
         </div>
       </SectionHead>
 
-      <div className="js-cmp relative max-w-[1080px] mx-auto bg-surface rounded-card shadow-card pt-3 px-[clamp(16px,2.4vw,34px)] pb-7 max-[620px]:px-3 max-[620px]:overflow-x-auto">
+      <Reveal className="js-cmp relative max-w-[1080px] mx-auto bg-surface rounded-card shadow-card pt-3 px-[clamp(16px,2.4vw,34px)] pb-7 max-[620px]:px-3 max-[620px]:overflow-x-auto">
         <div className="cmp-hl" />
-        <div className="relative z-[2] max-[620px]:min-w-[540px]">
+        <Group stagger={0.05} className="relative z-[2] max-[620px]:min-w-[540px]">
           <div className="grid grid-cols-[1.5fr_1fr_1.15fr] py-5 max-[860px]:grid-cols-[1.3fr_1fr_1.1fr]">
             <div className="text-[13px] font-semibold tracking-[0.04em] uppercase text-text-tertiary self-center">Feature</div>
             <div className="text-[17px] font-bold tracking-[-0.02em] text-text-secondary px-[22px] self-center max-[860px]:px-3 max-[860px]:text-[13.5px]">
@@ -39,9 +40,9 @@ export function Comparison() {
             </div>
           </div>
           {CMP_ROWS.map(([f, o, n]) => (
-            <div
+            <Item
               key={f}
-              data-cmp-row
+              variants={vRow}
               className="grid grid-cols-[1.5fr_1fr_1.15fr] py-5 border-t border-[rgba(0,0,0,0.06)] max-[860px]:grid-cols-[1.3fr_1fr_1.1fr]"
             >
               <div className="text-[16px] font-semibold tracking-[-0.01em] text-text-primary self-center pr-[18px]">{f}</div>
@@ -53,18 +54,18 @@ export function Comparison() {
                 <Icon name="check" size={17} className="flex-none mt-0.5 text-green-dark" />
                 <span dangerouslySetInnerHTML={{ __html: n }} />
               </div>
-            </div>
+            </Item>
           ))}
-        </div>
-      </div>
+        </Group>
+      </Reveal>
 
       <div className="flex items-center justify-between gap-7 mt-[52px] flex-wrap max-[860px]:flex-col max-[860px]:items-start">
-        <p
+        <Reveal
+          as="p"
           className="text-[clamp(20px,2.2vw,28px)] font-semibold tracking-[-0.025em] leading-[1.25] text-text-primary m-0 max-w-[34ch]"
-          data-reveal
         >
           The old way built on WhatsApp and verbal agreements was never a system. It was a risk you got used to carrying. Newcondo is the system.
-        </p>
+        </Reveal>
         <TextLink href="#pricing">Start listing your property</TextLink>
       </div>
     </Section>

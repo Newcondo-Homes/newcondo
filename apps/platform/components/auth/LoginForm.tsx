@@ -1,31 +1,29 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { signIn, getSession } from '@newcondo/auth/client'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@newcondo/ui'
-import { Input } from '@newcondo/ui'
-import { Label } from '@newcondo/ui'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui'
-import { Alert, AlertDescription } from '@newcondo/ui'
-import { Checkbox } from '@newcondo/ui'
-import { Separator } from '@newcondo/ui'
-import { Eye, EyeOff, Mail, AlertCircle, Loader2 } from 'lucide-react'
-import { toast } from '@newcondo/ui'
-import { cn } from '@newcondo/ui/lib/utils'
+import { useState } from "react";
+import { signIn } from "@newcondo/auth/client";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "@newcondo/ui";
+import { AnimatePresence, motion } from "framer-motion";
+import { Mail, Lock, Eye, EyeOff, Check, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
+import { cx } from "@/lib/cx";
+import { EASE } from "@/components/motion";
 
-// check
+/* ============================================================
+   Real auth wiring (NextAuth via @newcondo/auth) fused into the
+   NewCondo split-screen sign-in design.
+   ============================================================ */
 interface LoginFormData {
-  email: string
-  password: string
-  rememberMe: boolean
+  email: string;
+  password: string;
+  rememberMe: boolean;
 }
 
 const initialFormData: LoginFormData = {
-  email: '',
-  password: '',
-  rememberMe: false
-}
+  email: "",
+  password: "",
+  rememberMe: true,
+};
 
 interface NextAuthSignInResult {
   error: string | null;
@@ -34,315 +32,293 @@ interface NextAuthSignInResult {
   url: string | null;
 }
 
-export default function LoginForm() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+const INPUT_BASE =
+  "w-full rounded-2xl border bg-surface font-sans text-[16px] text-text-primary " +
+  "py-[clamp(11px,1.6vh,14px)] pl-[46px] pr-4 placeholder:text-text-tertiary " +
+  "outline-none transition-[border-color,box-shadow] duration-200 ease-nc " +
+  "focus:border-ink focus:shadow-[0_0_0_4px_rgba(19,19,19,0.06)] " +
+  "disabled:cursor-not-allowed disabled:opacity-60";
 
+/** Google "G" mark. */
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[19px] w-[19px]" aria-hidden>
+      <path fill="#4285F4" d="M23.06 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h6.2a5.3 5.3 0 0 1-2.3 3.48v2.88h3.72c2.18-2 3.44-4.96 3.44-8.37z" />
+      <path fill="#34A853" d="M12 24c3.11 0 5.72-1.03 7.62-2.79l-3.72-2.88c-1.03.69-2.35 1.1-3.9 1.1-3 0-5.54-2.03-6.45-4.75H1.7v2.98A11.5 11.5 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.55 14.68a6.9 6.9 0 0 1 0-4.36V7.34H1.7a11.5 11.5 0 0 0 0 9.32l3.85-2.98z" />
+      <path fill="#EA4335" d="M12 4.77c1.69 0 3.21.58 4.4 1.72l3.3-3.3A11.5 11.5 0 0 0 12 0 11.5 11.5 0 0 0 1.7 7.34l3.85 2.98C6.46 6.8 9 4.77 12 4.77z" />
+    </svg>
+  );
+}
 
-  const [error, setError] = useState('')
+export function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const [formData, setFormData] = useState<LoginFormData>(initialFormData);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Partial<LoginFormData>>({});
+  const [loginError, setLoginError] = useState("");
 
-  const [formData, setFormData] = useState<LoginFormData>(initialFormData)
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [errors, setErrors] = useState<Partial<LoginFormData>>({})
-  const [loginError, setLoginError] = useState<string>('')
-  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
-
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
 
   const handleInputChange = (field: keyof LoginFormData, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear errors when user starts typing
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear field error as the user types
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
-    if (loginError) {
-      setLoginError('')
-    }
-  }
+    if (loginError) setLoginError("");
+  };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<LoginFormData> = {}
-
+    const newErrors: Partial<LoginFormData> = {};
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required'
+      newErrors.email = "Email is required";
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address'
+      newErrors.email = "Please enter a valid email address";
     }
-
     if (!formData.password) {
-      newErrors.password = 'Password is required'
+      newErrors.password = "Password is required";
     }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    if (!validateForm()) {
-      return
-    }
-
-    setIsLoading(true)
-    setLoginError('')
-
+    setIsLoading(true);
+    setLoginError("");
 
     try {
-
-      const result = (await signIn('credentials', {
+      const result = (await signIn("credentials", {
         email: formData.email,
         password: formData.password,
         loginType: "email",
         redirect: true,
-        callbackUrl: callbackUrl || '/dashboard'
-      })) as unknown as NextAuthSignInResult | undefined
+        callbackUrl: callbackUrl || "/dashboard",
+      })) as unknown as NextAuthSignInResult | undefined;
 
       if (result?.error) {
-        // Single unified place to handle errors cleanly
         switch (result.error) {
-          case 'CredentialsSignin':
-            setLoginError('Invalid email or password. Please try again.');
+          case "CredentialsSignin":
+            setLoginError("Invalid email or password. Please try again.");
             break;
-          case 'AccountNotVerified':
-            setLoginError('Please verify your email before logging in.');
+          case "AccountNotVerified":
+            setLoginError("Please verify your email before logging in.");
             router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
             break;
-          case 'AccountLocked':
-            setLoginError('Account has been locked due to too many failed attempts. Please try again later.');
+          case "AccountLocked":
+            setLoginError("Account has been locked due to too many failed attempts. Please try again later.");
             break;
           default:
-            setLoginError('Login failed. Please try again.');
+            setLoginError("Login failed. Please try again.");
         }
       }
-      
     } catch (err) {
       console.error("Unexpected login error:", err);
-      setLoginError('An unexpected error occurred. Please try again.');
+      setLoginError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
-  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+  const handleSocialLogin = async (provider: "google" | "facebook") => {
     try {
-      setIsLoading(true)
-      await signIn(provider, {
-        callbackUrl,
-        redirect: true
-      })
+      setIsLoading(true);
+      await signIn(provider, { callbackUrl, redirect: true });
     } catch (error) {
-      console.error('Social login error:', error)
-      toast.error('Social login failed', {
-        description: 'Please try again or use email login.',
-      })
-      setIsLoading(false)
+      console.error("Social login error:", error);
+      toast.error("Social login failed", {
+        description: "Please try again or use email login.",
+      });
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleForgotPassword = () => {
     if (formData.email.trim()) {
-      router.push(`/forgot-password?email=${encodeURIComponent(formData.email)}`)
+      router.push(`/forgot-password?email=${encodeURIComponent(formData.email)}`);
     } else {
-      router.push('/forgot-password')
+      router.push("/forgot-password");
     }
-  }
-
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     [e.target.name]: e.target.value
-  //   }))
-  // }
+  };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Welcome back</CardTitle>
-        <CardDescription className="text-center">
-          Sign in to your NewCondo account
-        </CardDescription>
-      </CardHeader>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: EASE }}
+      >
+        {/* redirected-from-protected-route notice */}
+        <AnimatePresence>
+          {searchParams?.get("callbackUrl") && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className="overflow-hidden"
+            >
+              <p className="m-0 mb-4 flex items-center gap-2.5 rounded-2xl border border-border bg-surface px-4 py-3 text-[13.5px] text-text-secondary">
+                <AlertCircle size={16} strokeWidth={1.85} className="flex-none text-text-tertiary" />
+                Please sign in to access that page.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <CardContent className="space-y-4">
-        {/* Show URL callback message if redirected from protected route */}
-        {searchParams?.get('callbackUrl') && (
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Please sign in to access that page.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* login error */}
+        <AnimatePresence>
+          {loginError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className="overflow-hidden"
+            >
+              <p className="m-0 mb-4 flex items-start gap-2.5 rounded-2xl border border-[rgba(192,57,43,0.25)] bg-[rgba(192,57,43,0.07)] px-4 py-3 text-[13.5px] text-danger">
+                <AlertCircle size={16} strokeWidth={1.85} className="mt-px flex-none" />
+                {loginError}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {loginError && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{loginError}</AlertDescription>
-          </Alert>
-        )}
+        {/* social */}
+        <button
+          type="button"
+          onClick={() => handleSocialLogin("google")}
+          disabled={isLoading}
+          className="flex w-full items-center justify-center gap-[11px] rounded-full border border-border bg-surface px-5 py-[clamp(11px,1.6vh,13px)] font-sans text-[15px] font-semibold text-text-primary transition-[background,box-shadow,transform] duration-200 ease-nc hover:bg-white hover:shadow-sm active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <GoogleMark />
+          Continue with Google
+        </button>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
+        <div className="my-[clamp(14px,2.2vh,24px)] flex items-center gap-4 text-[12.5px] font-semibold uppercase tracking-[0.1em] text-text-tertiary before:h-px before:flex-1 before:bg-border before:content-[''] after:h-px after:flex-1 after:bg-border after:content-['']">
+          or sign in with email
+        </div>
+
+        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-[clamp(11px,1.7vh,18px)]">
+          {/* email */}
+          <div className="flex flex-col gap-[clamp(6px,1vh,8px)]">
+            <label htmlFor="email" className="text-[13.5px] font-semibold tracking-[-0.01em] text-text-primary">
+              Email address
+            </label>
+            <div className="relative flex">
+              <input
                 id="email"
                 type="email"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                disabled={isLoading}
-                className={cn("pl-9", errors.email ? 'border-destructive' : '')}
                 autoComplete="email"
+                placeholder="you@example.com"
+                value={formData.email}
+                disabled={isLoading}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className={cx(INPUT_BASE, errors.email && "border-danger focus:shadow-[0_0_0_4px_rgba(192,57,43,0.12)]")}
               />
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary">
+                <Mail size={19} strokeWidth={1.85} />
+              </span>
             </div>
             {errors.email && (
-              <p className="text-sm text-destructive">{errors.email}</p>
+              <p className="m-0 flex items-center gap-1.5 text-[12.5px] text-danger">
+                <AlertCircle size={14} strokeWidth={1.85} /> {errors.email}
+              </p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Button
+          {/* password */}
+          <div className="flex flex-col gap-[clamp(6px,1vh,8px)]">
+            <div className="flex items-baseline justify-between gap-3">
+              <label htmlFor="password" className="text-[13.5px] font-semibold tracking-[-0.01em] text-text-primary">
+                Password
+              </label>
+              <button
                 type="button"
-                variant="link"
-                className="px-0 font-normal text-sm"
                 onClick={handleForgotPassword}
                 disabled={isLoading}
+                className="border-0 bg-transparent p-0 text-[13px] font-semibold text-text-secondary transition-colors duration-200 ease-nc hover:text-ink hover:underline hover:underline-offset-[3px] disabled:opacity-60"
               >
                 Forgot password?
-              </Button>
+              </button>
             </div>
-            <div className="relative">
-              <Input
+            <div className="relative flex">
+              <input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
                 placeholder="Enter your password"
                 value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
                 disabled={isLoading}
-                className={cn("pr-9", errors.password ? 'border-destructive' : '')}
-                autoComplete="current-password"
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                className={cx(INPUT_BASE, "pr-[50px]", errors.password && "border-danger focus:shadow-[0_0_0_4px_rgba(192,57,43,0.12)]")}
               />
-              <Button
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary">
+                <Lock size={19} strokeWidth={1.85} />
+              </span>
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() => setShowPassword((s) => !s)}
                 disabled={isLoading}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent text-text-tertiary transition-[color,background] duration-200 ease-nc hover:bg-black/[0.04] hover:text-ink disabled:opacity-60"
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
+                {showPassword ? <EyeOff size={19} strokeWidth={1.85} /> : <Eye size={19} strokeWidth={1.85} />}
+              </button>
             </div>
             {errors.password && (
-              <p className="text-sm text-destructive">{errors.password}</p>
+              <p className="m-0 flex items-center gap-1.5 text-[12.5px] text-danger">
+                <AlertCircle size={14} strokeWidth={1.85} /> {errors.password}
+              </p>
             )}
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="rememberMe"
-              checked={formData.rememberMe}
-              onCheckedChange={(checked) => handleInputChange('rememberMe', checked as boolean)}
-              disabled={isLoading}
-            />
-            <Label
-              htmlFor="rememberMe"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Remember me for 30 days
-            </Label>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
+          {/* remember */}
+          <button
+            type="button"
+            onClick={() => handleInputChange("rememberMe", !formData.rememberMe)}
             disabled={isLoading}
+            className="mt-0.5 flex cursor-pointer select-none items-center gap-2.5 border-0 bg-transparent p-0 text-[14px] text-text-secondary disabled:opacity-60"
+          >
+            <span
+              className={cx(
+                "grid h-5 w-5 flex-none place-items-center rounded-md border-[1.5px] text-cream transition-[background,border-color] duration-200 ease-nc",
+                formData.rememberMe ? "border-ink bg-ink" : "border-[rgba(0,0,0,0.14)] bg-surface"
+              )}
+            >
+              <Check
+                size={14}
+                strokeWidth={2.4}
+                className={cx("transition-all duration-200 ease-nc", formData.rememberMe ? "scale-100 opacity-100" : "scale-50 opacity-0")}
+              />
+            </span>
+            Keep me signed in
+          </button>
+
+          {/* submit */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="mt-1 inline-flex w-full items-center justify-center gap-2.5 rounded-full border border-transparent bg-ink px-6 py-[15px] text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97] disabled:cursor-default disabled:opacity-[0.65]"
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Signing in...
+                <Loader2 size={18} strokeWidth={2} className="animate-spin" /> Signing in…
               </>
             ) : (
-              'Sign in'
+              <>
+                Sign in <ArrowRight size={18} strokeWidth={1.85} />
+              </>
             )}
-          </Button>
+          </button>
         </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleSocialLogin('google')}
-            disabled={isLoading}
-          >
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
-            </svg>
-            Google
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => handleSocialLogin('facebook')}
-            disabled={isLoading}
-          >
-            <svg className="mr-2 h-4 w-4" fill="#1877F2" viewBox="0 0 24 24">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
-            Facebook
-          </Button>
-        </div>
-
-        <div className="text-center text-sm">
-          <span className="text-muted-foreground">Don&apos;t have an account? </span>
-          <Button
-            type="button"
-            variant="link"
-            className="px-0 font-normal"
-            onClick={() => router.push('/register')}
-            disabled={isLoading}
-          >
-            Sign up
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  )
+      </motion.div>
+    </>
+  );
 }

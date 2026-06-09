@@ -1,4 +1,6 @@
+import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
+import { Reveal } from "@/components/motion";
 
 export function Eyebrow({
   className = "",
@@ -6,12 +8,12 @@ export function Eyebrow({
   onDark = false,
 }: {
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
   onDark?: boolean;
 }) {
   return (
-    <span
-      data-reveal
+    <Reveal
+      as="span"
       className={cx(
         "block text-[12px] font-semibold tracking-[0.14em] uppercase",
         onDark ? "text-green-bright" : "text-text-tertiary",
@@ -19,6 +21,6 @@ export function Eyebrow({
       )}
     >
       {children}
-    </span>
+    </Reveal>
   );
 }

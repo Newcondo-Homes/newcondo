@@ -5,6 +5,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { ImageSlot } from "@/components/ui/image-slot";
 import { Icon } from "@/components/ui/icon";
+import { Reveal } from "@/components/motion";
 
 export function CEO() {
   const [played, setPlayed] = useState(false);
@@ -17,8 +18,7 @@ export function CEO() {
         title="Why we're building Newcondo."
         lead="With years of experience in the Nigerian rental market, we're building the system that was missing — so owning property finally feels like owning property."
       />
-      <div
-        data-reveal
+      <Reveal
         className="js-ceo group relative max-w-[1000px] mx-auto h-[560px] rounded-card overflow-hidden shadow-card max-[860px]:h-[420px]"
         style={{ background: "linear-gradient(135deg,#2a2a28,#3c3c38)" }}
       >
@@ -43,7 +43,7 @@ export function CEO() {
             Samuel Chidera Ibekwe-Obani <span className="font-normal text-text-on-dark-2">· CEO &amp; Co-Founder</span>
           </div>
         </div>
-      </div>
+      </Reveal>
     </Section>
   );
 }

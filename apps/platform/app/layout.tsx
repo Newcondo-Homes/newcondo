@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MotionProvider } from "@/components/motion-provider";
 import { Toaster } from "@newcondo/ui/";
 import { SessionProvider } from "@newcondo/auth/client";
 import { Providers } from '@/components/providers';
@@ -36,7 +37,9 @@ export default function RootLayout({
       >
         <SessionProvider>
           <Providers>
-            {children}
+            <MotionProvider>
+              {children}
+            </MotionProvider>
           </Providers>
         </SessionProvider>
         <Toaster />

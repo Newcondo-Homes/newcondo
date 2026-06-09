@@ -2,6 +2,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { Icon } from "@/components/ui/icon";
 import { ImageSlot } from "@/components/ui/image-slot";
+import { Group, Item } from "@/components/motion";
 import { TESTIMONIALS } from "@/lib/data";
 
 export function Testimonials() {
@@ -11,11 +12,11 @@ export function Testimonials() {
         eyebrow="What landlords say"
         title="You're not the first person who got tired of managing property with WhatsApp."
       />
-      <div className="grid grid-cols-3 gap-[22px] max-[860px]:grid-cols-1">
+      <Group stagger={0.1} className="grid grid-cols-3 gap-[22px] max-[860px]:grid-cols-1">
         {TESTIMONIALS.map((t) => (
-          <article
+          <Item
+            as="article"
             key={t.id}
-            data-result
             className="group relative h-[480px] rounded-card overflow-hidden flex flex-col justify-between shadow-card transition-[transform,box-shadow] duration-[280ms] ease-nc hover:-translate-y-2 hover:shadow-lift max-[860px]:h-[420px]"
             style={{ background: "linear-gradient(135deg,#3a3a36,#23231f)" }}
           >
@@ -35,9 +36,9 @@ export function Testimonials() {
               </p>
               <p className="text-[13.5px] text-text-on-dark-2 m-0">{t.by}</p>
             </div>
-          </article>
+          </Item>
         ))}
-      </div>
+      </Group>
     </Section>
   );
 }

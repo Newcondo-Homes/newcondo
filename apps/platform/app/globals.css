@@ -58,6 +58,13 @@
   --color-text-on-dark: var(--text-on-dark);
   --color-text-on-dark-2: var(--text-on-dark-2);
   --color-nc-border: var(--nc-border);
+  /* ▼▼ FIX 1 — these were missing, so `border-border-hair`, `border-border-strong`
+     and `bg-divider` never generated and fell back to currentColor (dark borders).
+     My onboarding cards rely on every one of these. ▼▼ */
+  --color-border-hair: var(--border-hair);
+  --color-border-strong: var(--border-strong);
+  --color-divider: var(--divider);
+  /* ▲▲ */
   --color-green: var(--green);
   --color-green-bright: var(--green-bright);
   --color-green-dark: var(--green-dark);
@@ -73,27 +80,45 @@
   --font-nc-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+@theme {
+  --radius-card: 28px;
+  --shadow-card: 0 10px 30px rgba(19, 19, 19, 0.07);
+  --shadow-lift: 0 20px 50px rgba(19, 19, 19, 0.12);
+  --shadow-pop: 0 24px 64px rgba(19, 19, 19, 0.18);
+  --ease-nc: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
 :root {
-  /* ShadCN / app tokens */
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+
+  /* ▼▼ FIX 2 — shadcn's neutral tokens, re-pointed at the WARM NewCondo palette.
+     The page is cream and cards/popovers are white (the NewCondo way), and the
+     primary/border/ring/muted/destructive tokens now match the brand so every
+     shadcn component (the inputs & buttons inside your preserved RegisterForm)
+     lands on-brand instead of cool-grey. ▼▼ */
+  --background: #f7f6ef;          /* cream page  (was oklch(1 0 0) = pure white) */
+  --foreground: #050505;          /* ink text */
+  --card: #ffffff;                /* white cards sit on the cream page */
+  --card-foreground: #050505;
+  --popover: #ffffff;
+  --popover-foreground: #050505;
+  --primary: #131313;             /* ink — matches the NewCondo primary button */
+  --primary-foreground: #f9f9ef;  /* cream */
+  --secondary: #efede3;           /* surface-sunken */
+  --secondary-foreground: #131313;
+  --muted: #efede3;
+  --muted-foreground: #8a877c;    /* = text-tertiary */
+  --accent: #efede3;
+  --accent-foreground: #131313;
+  --destructive: #c0392b;         /* = NewCondo danger */
+  --border: #ddd8c8;              /* warm border (was cool grey oklch(0.922 0 0)) */
+  --input: #ddd8c8;
+  --ring: #131313;
+  /* ▲▲ */
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -108,7 +133,7 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* NewCondo design tokens */
+  /* NewCondo design tokens (the source of truth — keep these literal) */
   --ink: #131313;
   --ink-soft: #2a2a28;
   --cream: #f9f9ef;
@@ -146,6 +171,8 @@
 }
 
 .dark {
+  /* Dark mode is left on shadcn defaults — NewCondo's app surfaces are light.
+     (If you never toggle `.dark`, this block is inert.) */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -179,28 +206,20 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-    box-sizing: border-box;
-  }
-
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    margin: 0;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
-  }
-
-  img {
-    display: block;
-  }
+/* ============================================================
+   Base
+   ============================================================ */
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
+img { display: block; }
 
 /* Add this class to a landing page wrapper if you want the NewCondo page background/font. */
 .newcondo-page {
@@ -225,13 +244,14 @@
 }
 
 
-/* Reveal elements default to VISIBLE. The animation layer (site-animations.tsx)
-   hides + re-reveals them via JS only when GSAP is confirmed running, so if JS
-   is slow/absent nothing is ever stuck hidden. */
+/* Reduced motion is handled by Framer Motion via <MotionConfig reducedMotion="user">,
+   which jumps transform/opacity animations straight to their resting state.
+   We additionally silence the decorative looping blobs. */
 @media (prefers-reduced-motion: reduce) {
-  [data-reveal], [data-prob], [data-feat], [data-result], [data-cmp-row],
-  .js-plan, .js-cmp, .js-ceo, .js-faq, [data-hero], .hero-line,
-  .cw-anim .cw-blob { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .cw-anim .cw-blob,
+  .scroll-arrow,
+  .ceo-play::after,
+  .cmp-swipe-ico { animation: none !important; }
 }
 
 /* ============================================================
@@ -252,15 +272,8 @@
 
 /* Navbar responsive show/hide — self-contained media queries, independent of
    Tailwind's breakpoint variants, so the hamburger reliably appears < 1024px. */
-.nav-desktop-links,
-.nav-desktop-cta { display: none; }
-.nav-burger-btn { display: inline-flex !important; }
-@media (min-width: 1024px) {
-  .nav-desktop-links { display: flex; }
-  .nav-desktop-cta { display: inline-flex; }
-  .nav-burger-btn { display: none !important; }
-  .nav-mobile-menu { display: none !important; }
-}
+
+
 /* ============================================================
    HERO — procedural canvas + cinematic overlay + line reveal
    ============================================================ */
@@ -294,7 +307,7 @@
 /* ============================================================
    HOW IT WORKS — drag carousel + animated gradient cards
    ============================================================ */
-.carousel { cursor: grab; touch-action: pan-y; }
+.carousel { cursor: grab; touch-action: pan-y; overflow: hidden; }
 .carousel.is-grabbing { cursor: grabbing; }
 .carousel.is-grabbing .carousel-track { user-select: none; }
 .carousel.is-grabbing .cw-card { pointer-events: none; }
@@ -378,7 +391,6 @@
 .cz-btn:hover { background: rgba(0, 0, 0, 0.05); }
 .cz-btn:disabled { opacity: 0.3; cursor: default; }
 
-.how-arrow path { stroke-dasharray: 260; stroke-dashoffset: 260; }
 
 /* ============================================================
    COMPARISON highlight column + mobile swipe hint
@@ -399,8 +411,8 @@
 /* ============================================================
    FAQ accordion height transition
    ============================================================ */
-.faq-a { max-height: 0; overflow: hidden; transition: max-height 0.45s var(--ease-out); }
-.faq-item.open .faq-a { max-height: 360px; }
+/* .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.45s var(--ease-out); }
+.faq-item.open .faq-a { max-height: 360px; } */
 
 /* ============================================================
    CEO play pulse
@@ -428,6 +440,11 @@
 .footer-wm-tile img { width: 52%; height: auto; }
 
 
+/* ============================================================
+   MOBILE — split-button (hero + final CTA) wrapping & sizing
+   The pill inherits `whitespace-nowrap`; on small screens let the
+   long label wrap and let the pill flex to fill the row.
+   ============================================================ */
 @media (max-width: 620px) {
   .cta-group {
     width: 100%;
@@ -450,6 +467,37 @@
 }
 
 
+/* ============================================================
+   ONBOARDING — subscribe-button cue
+   Guides the user to the plan step's Subscribe button after picking a
+   plan, so they realise selecting a card isn't the final action.
+   ============================================================ */
+@keyframes onbSubBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes onbSubRing {
+  0% { box-shadow: 0 0 0 0 rgba(0, 143, 90, 0.5); }
+  70% { box-shadow: 0 0 0 11px rgba(0, 143, 90, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 143, 90, 0); }
+}
+@keyframes onbSubArrow { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@keyframes onbSubPop { 0% { transform: scale(1); } 32% { transform: scale(1.06); } 100% { transform: scale(1); } }
+@keyframes onbCueFade { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes onbCueChev { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+.onb-sub-hint { animation: onbSubBob 1.5s var(--ease-nc) infinite, onbSubRing 1.8s var(--ease-nc) infinite; }
+.onb-sub-hint .onb-sub-arrow { animation: onbSubArrow 1.5s var(--ease-nc) infinite; }
+.onb-sub-emph { animation: onbSubPop 0.5s var(--ease-nc); }
+.onb-cue { animation: onbCueFade 1.3s var(--ease-nc) infinite; }
+.onb-cue .onb-cue-chev { animation: onbCueChev 1.3s var(--ease-nc) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .onb-sub-hint, .onb-sub-hint .onb-sub-arrow, .onb-sub-emph, .onb-cue, .onb-cue .onb-cue-chev { animation: none; }
+}
+
+
+/* ============================================================
+   Responsive hardening — explicit media queries keyed off section
+   structure, so the layout collapses correctly on tablet/phone even
+   if a Tailwind responsive variant ever fails to compile. These agree
+   with the Tailwind `max-[...]:` breakpoints already on the markup.
+   ============================================================ */
 @media (max-width: 1080px) {
   #problems .grid,
   #features .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -1,125 +1,131 @@
-'use client'
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@newcondo/ui'
-import { CheckCircle, Home, Building, Users } from 'lucide-react'
-import type { UserType } from '@/types/api'
+import { Building2, Briefcase, ArrowRight, Check, type LucideIcon } from "lucide-react";
+import { cx } from "@/lib/cx";
+import { UserType } from "@/types/api";
 
+/* ============================================================
+   UserTypeSelector
 
-interface UserTypeSelectorProps {
-  selectedType: UserType | null
-  onSelect: (type: UserType) => void
-  disabled?: boolean
+   All three account types are defined here. `display: false` keeps
+   AGENT in the system (and selectable programmatically) while hiding
+   it from the self-serve onboarding screen — agents join through the
+   invite / sub-agent promotion flow. To surface it, flip `display`.
+   ============================================================ */
+interface RoleOption {
+  type: UserType;
+  display: boolean;
+  icon: LucideIcon;
+  title: string;
+  blurb: string;
+  points: string[];
 }
 
-const userTypes = [
+const ROLE_OPTIONS: RoleOption[] = [
   {
-    type: 'RENTER' as UserType,
-    title: 'I want to rent',
-    description: 'Looking for properties to rent',
-    icon: Home,
-    features: [
-      'Browse available properties',
-      'Book property viewings',
-      'Apply for rentals',
-      'Make secure payments'
-    ],
-    badge: 'Most Popular'
+    type: UserType.PROPERTY_OWNER,
+    display: true,
+    icon: Building2,
+    title: "I own property",
+    blurb: "List and rent out your property with escrow rent, verified tenants, and one dashboard.",
+    points: ["Rent collected in escrow", "Identity-verified tenants", "Every agent tracked"],
   },
   {
-    type: 'OWNER' as UserType,
-    title: 'I own properties',
-    description: 'List and manage my properties',
-    icon: Building,
-    features: [
-      'List properties for rent',
-      'Manage tenant applications',
-      'Track rental payments',
-      'Property verification services'
-    ]
+    type: UserType.AGENT,
+    display: true,
+    icon: Briefcase,
+    title: "I'm an agent",
+    blurb: "List and promote properties with unique tracked links, and earn commission on every let you close.",
+    points: ["List & promote properties", "Tracked promotion links", "Earn commission per let"],
   },
-  {
-    type: 'AGENT' as UserType,
-    title: 'I\'m a real estate agent',
-    description: 'Help others find and manage properties',
-    icon: Users,
-    features: [
-      'List client properties',
-      'Earn commission on rentals',
-      'Property marking services',
-      'Manage multiple listings'
-    ]
-  }
-]
+  // ── RENTER — temporarily disabled. Newcondo is opening to property owners and
+  //    agents first. Flip `display` to true (and re-enable the renter plan set in
+  //    plan-selector.tsx) when we open the platform to renters. ──
+  // {
+  //   type: UserType.RENTER,
+  //   display: true,
+  //   icon: Search,
+  //   title: "I'm looking for a home",
+  //   blurb: "Browse verified listings only — no fake posts, no double-booking, no agent runaround.",
+  //   points: ["Verified, real listings", "Your deposit protected", "Direct, tracked agents"],
+  // },
+];
 
-export default function UserTypeSelector({ selectedType, onSelect, disabled }: UserTypeSelectorProps) {
+export default function UserTypeSelector({
+  selectedType,
+  onSelect,
+  disabled = false,
+}: {
+  selectedType?: UserType;
+  onSelect: (type: UserType) => void;
+  disabled?: boolean;
+}) {
+  const visible = ROLE_OPTIONS.filter((r) => r.display);
+
   return (
-    <div className="space-y-4">
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">What brings you to NewCondo?</h2>
-        <p className="text-muted-foreground">
-          Choose your account type to get started with the right features
-        </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        {userTypes.map((userType) => {
-          const Icon = userType.icon
-          const isSelected = selectedType === userType.type
-          
-          return (
-            <Card
-              key={userType.type}
-              className={`relative cursor-pointer transition-all hover:shadow-md ${
-                isSelected ? 'ring-2 ring-primary shadow-md' : ''
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={() => !disabled && onSelect(userType.type)}
+    <div className="grid grid-cols-2 gap-5 max-[680px]:grid-cols-1">
+      {visible.map((role) => {
+        const RoleIcon = role.icon;
+        const active = selectedType === role.type;
+        return (
+          <button
+            key={role.type}
+            type="button"
+            disabled={disabled}
+            onClick={() => onSelect(role.type)}
+            className={cx(
+              "group relative flex flex-col items-start gap-5 rounded-card border bg-surface p-7 text-left",
+              "transition-[transform,box-shadow,border-color] duration-200 ease-nc",
+              "hover:-translate-y-1.5 hover:shadow-lift focus-visible:outline-none",
+              "disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none",
+              active
+                ? "border-ink shadow-lift ring-1 ring-ink"
+                : "border-border-hair shadow-card hover:border-border"
+            )}
+          >
+            {/* selected check */}
+            <span
+              className={cx(
+                "absolute right-5 top-5 grid h-7 w-7 place-items-center rounded-full bg-ink text-cream transition-all duration-200 ease-nc",
+                active ? "scale-100 opacity-100" : "scale-50 opacity-0"
+              )}
             >
-              {userType.badge && (
-                <div className="absolute -top-2 left-4">
-                  <Badge variant="secondary" className="text-xs">
-                    {userType.badge}
-                  </Badge>
-                </div>
-              )}
-              
-              {isSelected && (
-                <div className="absolute -top-2 -right-2">
-                  <CheckCircle className="h-6 w-6 text-primary bg-white rounded-full" />
-                </div>
-              )}
+              <Check size={16} strokeWidth={2.4} />
+            </span>
 
-              <CardHeader className="text-center pb-3">
-                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Icon className="h-6 w-6 text-primary" />
-                </div>
-                <CardTitle className="text-lg">{userType.title}</CardTitle>
-                <CardDescription className="text-sm">
-                  {userType.description}
-                </CardDescription>
-              </CardHeader>
+            <span className="grid h-[58px] w-[58px] place-items-center rounded-[18px] bg-surface-sunken text-ink transition-colors duration-200 ease-nc group-hover:bg-ink group-hover:text-cream">
+              <RoleIcon size={27} strokeWidth={1.75} />
+            </span>
 
-              <CardContent className="pt-0">
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  {userType.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+            <div>
+              <h3 className="m-0 text-[23px] font-bold tracking-[-0.03em] text-text-primary">
+                {role.title}
+              </h3>
+              <p className="mt-2 text-[15px] leading-[1.5] text-text-secondary text-balance">
+                {role.blurb}
+              </p>
+            </div>
 
-      {selectedType && (
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            You can change your account type later in your profile settings
-          </p>
-        </div>
-      )}
+            <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
+              {role.points.map((p) => (
+                <li key={p} className="flex items-center gap-2.5 text-[14px] font-medium text-text-secondary">
+                  <Check size={16} strokeWidth={2.2} className="flex-none text-green-dark" />
+                  {p}
+                </li>
+              ))}
+            </ul>
+
+            <span className="mt-1 inline-flex items-center gap-2 text-[14.5px] font-semibold text-ink">
+              Continue
+              <ArrowRight
+                size={17}
+                strokeWidth={2}
+                className="transition-transform duration-200 ease-nc group-hover:translate-x-1"
+              />
+            </span>
+          </button>
+        );
+      })}
     </div>
-  )
+  );
 }

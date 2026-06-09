@@ -1,4 +1,4 @@
-import { SiteAnimations } from "@/components/site-animations";
+import { Pageload } from "@/components/ui/pageload";
 import { Navbar } from "@/components/sections/navbar";
 import { Hero } from "@/components/sections/hero";
 import { Problems } from "@/components/sections/problems";
@@ -16,19 +16,8 @@ import { ChatButton } from "@/components/chat-button";
 export default function Home() {
   return (
     <>
-      {/* pageload overlay — faded out by <SiteAnimations /> */}
-      <div
-        id="pageload"
-        className="fixed inset-0 z-[200] bg-background flex items-start justify-start"
-      >
-        <div className="flex items-center gap-[11px] px-[var(--gutter)] py-[26px] font-bold text-[21px] tracking-[-0.04em] text-ink">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/logo-mark-dark.png" alt="" className="w-[30px] h-auto" />
-          <span>newcondo</span>
-        </div>
-      </div>
-
-      <SiteAnimations />
+      {/* pageload overlay — fades itself out via Framer Motion / AnimatePresence */}
+      <Pageload />
       <Navbar />
       <main>
         <Hero />

@@ -3,6 +3,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { Group, Item } from "@/components/motion";
 import { FEATURES } from "@/lib/data";
 
 export function Features() {
@@ -13,11 +14,11 @@ export function Features() {
         title="We didn't just build a listing site. We built a property management operation."
         lead="Every feature below is included in your subscription — not sold separately."
       />
-      <div className="grid grid-cols-3 gap-5 max-[1080px]:grid-cols-2 max-[620px]:grid-cols-1">
+      <Group stagger={0.07} className="grid grid-cols-3 gap-5 max-[1080px]:grid-cols-2 max-[620px]:grid-cols-1">
         {FEATURES.map(([ic, t, x, elite]) => (
-          <article
+          <Item
+            as="article"
             key={t}
-            data-feat
             className="relative bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[30px] pt-8 pb-[34px] flex flex-col transition-[transform,box-shadow] duration-[280ms] ease-nc hover:-translate-y-1.5 hover:shadow-lift"
           >
             {elite && (
@@ -37,9 +38,9 @@ export function Features() {
               {t}
             </h3>
             <p className="text-[14.5px] leading-[1.55] text-text-secondary m-0">{x}</p>
-          </article>
+          </Item>
         ))}
-      </div>
+      </Group>
     </Section>
   );
 }

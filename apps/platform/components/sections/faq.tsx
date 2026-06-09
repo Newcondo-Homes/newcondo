@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { cx } from "@/lib/cx";
 import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { Icon } from "@/components/ui/icon";
+import { Reveal, EASE } from "@/components/motion";
 import { FAQS } from "@/lib/data";
 
 export function FAQ() {
@@ -17,11 +19,11 @@ export function FAQ() {
         eyebrow="Questions landlords ask before signing up"
         title="We know what you're thinking. Here are the honest answers."
       />
-      <div className="js-faq max-w-[860px] mx-auto" data-reveal>
+      <Reveal className="max-w-[860px] mx-auto">
         {FAQS.map(([q, a], i) => (
           <div
             key={i}
-            className={cx("faq-item border-t border-[var(--border)]", open === i && "open", i === FAQS.length - 1 && "border-b")}
+            className={cx("border-t border-[var(--border)]", i === FAQS.length - 1 && "border-b")}
           >
             <button
               onClick={() => setOpen(open === i ? -1 : i)}
@@ -32,12 +34,23 @@ export function FAQ() {
                 <Icon name={open === i ? "minus" : "plus"} size={22} />
               </span>
             </button>
-            <div className="faq-a">
-              <p className="text-[16px] leading-[1.6] text-text-secondary m-0 mx-1 mb-[26px] max-w-[72ch]">{a}</p>
-            </div>
+            <AnimatePresence initial={false}>
+              {open === i && (
+                <motion.div
+                  key="answer"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.4, ease: EASE }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <p className="text-[16px] leading-[1.6] text-text-secondary m-0 mx-1 mb-[26px] max-w-[72ch]">{a}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
-      </div>
+      </Reveal>
     </Section>
   );
 }

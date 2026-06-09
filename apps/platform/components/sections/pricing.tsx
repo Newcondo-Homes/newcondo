@@ -4,6 +4,7 @@ import { SectionHead } from "@/components/ui/section-head";
 import { Button } from "@/components/ui/nc-button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { Group, Item, Reveal, vFade } from "@/components/motion";
 import { PLAN_ESSENTIAL, PLAN_ELITE } from "@/lib/data";
 
 function PlanList({ items, elite = false }: { items: string[]; elite?: boolean }) {
@@ -35,9 +36,9 @@ export function Pricing() {
         lead="Both plans include escrow rent collection, tenant verification, legal agreements, fumigation, waste management, photography, blacklist access, and the full Newcondo platform. Elite adds the features that make it pay for itself."
       />
 
-      <div className="grid grid-cols-2 gap-6 max-w-[1040px] mx-auto max-[860px]:grid-cols-1">
+      <Group stagger={0.12} className="grid grid-cols-2 gap-6 max-w-[1040px] mx-auto max-[860px]:grid-cols-1">
         {/* Essential */}
-        <article data-reveal className="js-plan bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
+        <Item as="article" variants={vFade} className="js-plan bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
           <div>
             <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-text-primary">Essential</h3>
             <p className="text-[14.5px] text-text-secondary m-0">Landlords with 1–2 properties</p>
@@ -50,10 +51,10 @@ export function Pricing() {
             Start with Essential
           </Button>
           <PlanList items={PLAN_ESSENTIAL} />
-        </article>
+        </Item>
 
         {/* Elite */}
-        <article data-reveal className="js-plan bg-ink text-cream border border-transparent rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
+        <Item as="article" variants={vFade} className="js-plan bg-ink text-cream border border-transparent rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
           <span className="absolute top-[30px] right-[34px]">
             <Badge tone="bright">Most popular</Badge>
           </span>
@@ -70,11 +71,10 @@ export function Pricing() {
           </Button>
           <p className="text-[14px] font-semibold text-text-on-dark-2 mt-7 mb-1.5">Everything in Essential, plus:</p>
           <PlanList items={PLAN_ELITE} elite />
-        </article>
-      </div>
+        </Item>
+      </Group>
 
-      <div
-        data-reveal
+      <Reveal
         className="flex gap-[22px] items-start max-w-[1040px] mx-auto mt-[30px] bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] py-8 max-[860px]:flex-col"
       >
         <div className="w-[52px] h-[52px] rounded-[14px] bg-green-wash text-green-dark flex items-center justify-center flex-none">
@@ -92,7 +92,7 @@ export function Pricing() {
             <Icon name="gift" size={18} /> Pay annually and get 2 months free on either plan.
           </p>
         </div>
-      </div>
+      </Reveal>
     </Section>
   );
 }

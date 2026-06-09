@@ -1,4 +1,5 @@
 "use client";
+
 // apps/platform/hooks/useAuth.ts
 import { useState, useCallback } from 'react'
 import { useSession, signIn, signOut } from '@newcondo/auth/client'
@@ -10,10 +11,18 @@ import type {
   RegisterData,
   LoginData,
   OTPVerificationData,
+  PaymentResult,
+  Plan,
   OTPResendData,
   AuthResponse,
   User
 } from '@/types/api'
+
+
+interface MutateOptions<T = void> {
+  onSuccess?: (data: T) => void;
+  onError?: (error: Error) => void;
+}
 
 export function useAuth() {
   const { data: session, status, update } = useSession()
@@ -51,7 +60,7 @@ export function useAuth() {
         })
 
         if (signInResult?.ok) {
-          router.push('/dashboard')
+          // router.push('/dashboard')
           return {
             success: true,
             message: 'Registration successful!',
@@ -527,4 +536,48 @@ export function usePasswordReset() {
     isError: !!error,
     isSuccess: !!data?.success
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* usePayment — Flutterwave subscription charge                        */
+/* ------------------------------------------------------------------ */
+export function usePayment() {
+  const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const pay = useCallback(
+    (plan: Plan, options?: MutateOptions<PaymentResult>) => {
+      setIsPending(true);
+      setError(null);
+
+      // TODO: implement flutterwave payment
+      /* 🔌 BACKEND / FLUTTERWAVE INTEGRATION POINT — subscription payment
+         The real flow:
+           1. POST to your server to create a Flutterwave payment / virtual
+              account for `plan.price` (kobo) tied to this user.
+           2. Open the Flutterwave checkout (FlutterwaveCheckout / inline
+              SDK) OR redirect to the hosted link.
+           3. On the success callback, verify the transaction server-side
+              (GET /flw/verify/:txRef) before granting the subscription.
+           4. Resolve onSuccess with the verified PaymentResult.
+
+         Free plans (plan.price === 0) skip the charge entirely.
+      */
+
+         //TODO: remove 'delay'
+      const delay = plan.price === 0 ? 400 : 1800;
+
+      setTimeout(() => {
+        setIsPending(false);
+        options?.onSuccess?.({
+          reference: `FLW-${Date.now()}`,
+          status: "successful",
+          amount: plan.price,
+        });
+      }, delay);
+    },
+    []
+  );
+
+  return { pay, isPending, error };
 }
