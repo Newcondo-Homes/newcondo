@@ -17,9 +17,13 @@ const getOptional = (key: string, fallback = ''): string => {
 export const env = {
   // ── Flutterwave ──────────────────────────────────────────────────────────
   // Public key is safe to expose to the browser (prefixed with NEXT_PUBLIC_)
-  NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY: getRequired('NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY'),
+  // NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY: getRequired('NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY'),
+  NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY: getOptional('NEXT_PUBLIC_FLUTTERWAVE_PUBLIC_KEY'),
+
   // Secret key must NEVER be sent to the browser — server-side only
-  FLUTTERWAVE_SECRET_KEY: getRequired('FLUTTERWAVE_SECRET_KEY'),
+  // FLUTTERWAVE_SECRET_KEY: getRequired('FLUTTERWAVE_SECRET_KEY'),
+  FLUTTERWAVE_SECRET_KEY: getOptional('FLUTTERWAVE_SECRET_KEY'),
+
   FLUTTERWAVE_WEBHOOK_HASH: getOptional('FLUTTERWAVE_WEBHOOK_HASH'),
 
   // ── App ──────────────────────────────────────────────────────────────────
