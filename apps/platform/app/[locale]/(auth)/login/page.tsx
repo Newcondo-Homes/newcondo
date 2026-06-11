@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
-import LoginForm  from '@/components/auth/LoginForm';
+import {LoginForm}  from '@/components/auth/LoginForm';
 import { LoginContent } from './_components/LoginContent'
 
 export async function generateMetadata({
