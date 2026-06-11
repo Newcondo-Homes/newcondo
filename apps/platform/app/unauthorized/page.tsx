@@ -104,6 +104,7 @@ export default async function UnauthorizedPage({
 //   };
 // }
 
+
 export function generateMetadata() {
   return {
     title: "Access Denied - NewCondo",
