@@ -6,7 +6,7 @@ import OnboardingFlow from "@/components/auth/onboarding-flow";
 export const metadata: Metadata = {
   title: "Get started | NewCondo",
   description:
-    "Create your NewCondo account, choose your plan, and start renting out — or finding — verified property.",
+    "Create your Newcondo account, choose your plan, and start renting out — or finding — verified property.",
 };
 
 export default async function OnboardingPage() {

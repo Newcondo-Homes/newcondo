@@ -111,3 +111,4 @@ export function generateMetadata() {
     robots: "noindex,nofollow",
   };
 }
+
