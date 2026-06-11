@@ -35,7 +35,8 @@ export const env = {
   DIRECT_URL: getOptional('DIRECT_URL'),
 
   // ── Auth ─────────────────────────────────────────────────────────────────
-  NEXTAUTH_SECRET: getRequired('NEXTAUTH_SECRET'),
+  // NEXTAUTH_SECRET: getOptional('NEXTAUTH_SECRET'),
+  NEXTAUTH_SECRET: getOptional('NEXTAUTH_SECRET'),
   NEXTAUTH_URL: getOptional('NEXTAUTH_URL', 'http://localhost:3000'),
 } as const;
 
