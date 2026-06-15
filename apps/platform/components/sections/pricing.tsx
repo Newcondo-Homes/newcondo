@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/nc-button";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Group, Item, Reveal, vFade } from "@/components/motion";
+import Link from "next/link";
 import { PLAN_ESSENTIAL, PLAN_ELITE } from "@/lib/data";
 
 function PlanList({ items, elite = false }: { items: string[]; elite?: boolean }) {
@@ -47,9 +48,11 @@ export function Pricing() {
             <span className="text-[46px] font-bold tracking-[-0.04em] text-text-primary">₦7,500</span>
             <span className="text-[16px] text-text-tertiary">/month</span>
           </div>
-          <Button as="a" href="#" variant="dark" size="block" icon="arrow-right">
-            Start with Essential
-          </Button>
+          <Link href="/onboarding">
+            <Button as="button" variant="dark" size="block" icon="arrow-right">
+              Start with Essential
+            </Button>
+          </Link>
           <PlanList items={PLAN_ESSENTIAL} />
         </Item>
 
@@ -66,9 +69,11 @@ export function Pricing() {
             <span className="text-[46px] font-bold tracking-[-0.04em] text-cream">₦18,500</span>
             <span className="text-[16px] text-text-on-dark-2">/month</span>
           </div>
-          <Button as="a" href="#" variant="light" size="block" icon="arrow-right">
-            Start with Elite
-          </Button>
+          <Link href="/onboarding" >
+            <Button as="button" variant="light" size="block" icon="arrow-right">
+              Start with Elite
+            </Button>
+          </Link>
           <p className="text-[14px] font-semibold text-text-on-dark-2 mt-7 mb-1.5">Everything in Essential, plus:</p>
           <PlanList items={PLAN_ELITE} elite />
         </Item>

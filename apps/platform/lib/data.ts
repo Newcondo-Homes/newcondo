@@ -123,7 +123,7 @@ export const FAQS: Faq[] = [
 export const FOOTER: Record<string, string[]> = {
   PRODUCT: ["How it works", "Features", "Pricing", "For Agents", "For Renters"],
   COMPANY: ["About", "Blog", "Support", "Careers"],
-  LEGAL: ["Privacy Policy", "Terms of Service", "Trust & Safety", "Cookie Policy"],
+  LEGAL: ["Privacy Policy", "Refund Policy", "Terms of Service", "Trust & Safety", "Cookie Policy"],
 };
 
 export type NavLink = [label: string, href: string];

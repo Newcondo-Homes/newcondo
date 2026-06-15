@@ -22,9 +22,14 @@ export const metadata: Metadata = {
   title: "Newcondo — For Property Owners",
   description:
     "Rent out your property without agent confusion, double-booking, or payment stress. Escrow rent collection, verified tenants, and one owner dashboard.",
+  metadataBase: new URL("https://newcondo.homes"),
 };
 
-
+// export const metadata: Metadata = {
+//   title: { template: "%s | Newcondo", default: "Newcondo" },
+//   description: "The property platform built for Nigeria.",
+//   metadataBase: new URL("https://newcondo.homes"),
+// };
 export default function RootLayout({
   children,
 }: Readonly<{

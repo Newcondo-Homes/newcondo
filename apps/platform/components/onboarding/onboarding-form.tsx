@@ -26,7 +26,7 @@ import { toast } from "@newcondo/ui";
 import { Mail, Phone, Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { cx } from "@/lib/cx";
 import UserTypeSelector from "./UserTypeSelector";
-import GoogleOneTap from "./GoogleOneTap";
+import GoogleOneTap from "../auth/GoogleOneTap";
 import { UserType } from "@/types/api";
 
 /** Details collected in the form — held in the flow until final registration. */

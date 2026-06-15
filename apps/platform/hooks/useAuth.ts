@@ -4,7 +4,6 @@
 import { useState, useCallback } from 'react'
 import { useSession, signIn, signOut } from '@newcondo/auth/client'
 import { useRouter } from 'next/navigation'
-//TODO: you may delete authStore
 import { useAuthStore } from '@/store/authStore'
 import { authApi } from '@/lib/api/auth'
 import type {
@@ -18,7 +17,6 @@ import type {
   User
 } from '@/types/api'
 
-
 interface MutateOptions<T = void> {
   onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
@@ -28,10 +26,12 @@ export function useAuth() {
   const { data: session, status, update } = useSession()
   const router = useRouter()
   const { setUser, clearUser, setLoading } = useAuthStore()
-
   const [isLoading, setIsLoading] = useState(false)
 
-  // Register new user
+  // ─── Register ────────────────────────────────────────────────────────────────
+  // NOTE: this does NOT auto sign-in. The onboarding flow handles sign-in
+  // separately after payment. The login page handles sign-in after registration
+  // via the normal login flow.
   const register = useCallback(async (data: RegisterData): Promise<AuthResponse> => {
     setIsLoading(true)
     setLoading(true)
@@ -41,32 +41,6 @@ export function useAuth() {
 
       if (response.success && response.user) {
         setUser(response.user)
-
-        // If email verification is required, don't sign in yet
-        if (response.requiresVerification) {
-          return {
-            success: true,
-            message: 'Registration successful. Please verify your email.',
-            requiresVerification: true,
-            user: response.user
-          }
-        }
-
-        // Auto sign in after successful registration
-        const signInResult = await signIn('credentials', {
-          email: data.email,
-          password: data.password,
-          redirect: false
-        })
-
-        if (signInResult?.ok) {
-          // router.push('/dashboard')
-          return {
-            success: true,
-            message: 'Registration successful!',
-            user: response.user
-          }
-        }
       }
 
       return response
@@ -80,22 +54,22 @@ export function useAuth() {
       setIsLoading(false)
       setLoading(false)
     }
-  }, [setUser, setLoading, router])
+  }, [setUser, setLoading])
 
-  // Login user
+  // ─── Login ───────────────────────────────────────────────────────────────────
   const login = useCallback(async (data: LoginData): Promise<AuthResponse> => {
     setIsLoading(true)
     setLoading(true)
 
     try {
-      // First, validate credentials with our backend
+      // Validate credentials with our backend first
       const response = await authApi.login(data)
 
       if (!response.success) {
         return response
       }
 
-      // If OTP is required for login
+      // OTP required for login
       if (response.requiresOTP) {
         return {
           success: true,
@@ -112,24 +86,19 @@ export function useAuth() {
       })
 
       if (signInResult?.ok) {
-        // Update session to get latest user data
         await update()
-
-        if (response.user) {
-          setUser(response.user)
-        }
-
+        if (response.user) setUser(response.user)
         router.push('/dashboard')
         return {
           success: true,
           message: 'Login successful!',
           user: response.user
         }
-      } else {
-        return {
-          success: false,
-          error: signInResult?.error || 'Login failed'
-        }
+      }
+
+      return {
+        success: false,
+        error: signInResult?.error || 'Login failed'
       }
     } catch (error) {
       console.error('Login error:', error)
@@ -143,7 +112,41 @@ export function useAuth() {
     }
   }, [setUser, setLoading, router, update])
 
-  // Logout user
+  // ─── Sign in after registration ──────────────────────────────────────────────
+  // Called explicitly by the onboarding flow after payment + registration succeed.
+  const signInAfterRegister = useCallback(async (email: string, password: string): Promise<AuthResponse> => {
+    setIsLoading(true)
+    setLoading(true)
+
+    try {
+      const signInResult = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      })
+
+      if (signInResult?.ok) {
+        await update()
+        return { success: true, message: 'Signed in successfully.' }
+      }
+
+      return {
+        success: false,
+        error: signInResult?.error || 'Sign in failed after registration.'
+      }
+    } catch (error) {
+      console.error('Sign in after register error:', error)
+      return {
+        success: false,
+        error: 'Failed to sign in. Please log in manually.'
+      }
+    } finally {
+      setIsLoading(false)
+      setLoading(false)
+    }
+  }, [update, setLoading])
+
+  // ─── Logout ──────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     setIsLoading(true)
     setLoading(true)
@@ -160,7 +163,25 @@ export function useAuth() {
     }
   }, [clearUser, setLoading, router])
 
-  // Verify OTP
+  // ─── Send OTP ────────────────────────────────────────────────────────────────
+  // Used for first-time sends including pre-registration.
+  const sendOTP = useCallback(async (data: OTPResendData): Promise<AuthResponse> => {
+    setIsLoading(true)
+    try {
+      const response = await authApi.sendOTP(data)
+      return response
+    } catch (error) {
+      console.error('Send OTP error:', error)
+      return {
+        success: false,
+        error: 'Failed to send code. Please try again.'
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // ─── Verify OTP ──────────────────────────────────────────────────────────────
   const verifyOTP = useCallback(async (data: OTPVerificationData): Promise<AuthResponse> => {
     setIsLoading(true)
 
@@ -168,28 +189,21 @@ export function useAuth() {
       const response = await authApi.verifyOTP(data)
 
       if (response.success) {
-        // If this is email verification, update user status
+        // EMAIL_VERIFICATION during onboarding — user may not exist yet,
+        // so we only update session/store if a user is returned.
         if (data.type === 'EMAIL_VERIFICATION' && response.user) {
           setUser(response.user)
-          await update() // Update NextAuth session
+          await update()
         }
 
-        // If this is login OTP, sign them in
-        //TODO: other code in this file that uses 'signIn', see if you should make 'signIn' handle the redirect
+        // LOGIN OTP — sign the user in via NextAuth
         if (data.type === 'LOGIN') {
-          const signInResult = await signIn('credentials', {
+          await signIn('credentials', {
             email: data.identifier,
             otpCode: data.code,
             callbackUrl: '/dashboard',
             redirect: true
-          }) as { ok: boolean; error: string | null; status: number; url: string | null } | undefined;
-
-          if (signInResult?.ok) {
-            await update()
-            if (response.user) {
-              setUser(response.user)
-            }
-          }
+          })
         }
       }
 
@@ -205,10 +219,9 @@ export function useAuth() {
     }
   }, [setUser, update])
 
-  // Resend OTP
+  // ─── Resend OTP ──────────────────────────────────────────────────────────────
   const resendOTP = useCallback(async (data: OTPResendData): Promise<AuthResponse> => {
     setIsLoading(true)
-
     try {
       const response = await authApi.resendOTP(data)
       return response
@@ -223,86 +236,73 @@ export function useAuth() {
     }
   }, [])
 
-  // Request password reset
+  // ─── Password reset ──────────────────────────────────────────────────────────
   const requestPasswordReset = useCallback(async (email: string): Promise<AuthResponse> => {
     setIsLoading(true)
-
     try {
-      const response = await authApi.requestPasswordReset(email)
-      return response
+      return await authApi.requestPasswordReset(email)
     } catch (error) {
       console.error('Password reset request error:', error)
-      return {
-        success: false,
-        error: 'Failed to send password reset email. Please try again.'
-      }
+      return { success: false, error: 'Failed to send password reset email. Please try again.' }
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  // Reset password with token
-  const resetPassword = useCallback(async (token: string, newPassword: string, confirmPassword: string): Promise<AuthResponse> => {
+  const resetPassword = useCallback(async (
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Promise<AuthResponse> => {
     setIsLoading(true)
-
     try {
-      const response = await authApi.resetPassword(token, newPassword, confirmPassword)
-      return response
+      return await authApi.resetPassword(token, newPassword, confirmPassword)
     } catch (error) {
       console.error('Password reset error:', error)
-      return {
-        success: false,
-        error: 'Failed to reset password. Please try again.'
-      }
+      return { success: false, error: 'Failed to reset password. Please try again.' }
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  // Update user profile
+  // ─── Update profile ──────────────────────────────────────────────────────────
   const updateProfile = useCallback(async (data: Partial<User>): Promise<AuthResponse> => {
     setIsLoading(true)
-
     try {
       const response = await authApi.updateProfile(data)
-
       if (response.success && response.user) {
         setUser(response.user)
-        await update() // Update NextAuth session
+        await update()
       }
-
       return response
     } catch (error) {
       console.error('Profile update error:', error)
-      return {
-        success: false,
-        error: 'Failed to update profile. Please try again.'
-      }
+      return { success: false, error: 'Failed to update profile. Please try again.' }
     } finally {
       setIsLoading(false)
     }
   }, [setUser, update])
 
   return {
-    // State
     user: session?.user as User | null,
     isAuthenticated: status === 'authenticated',
     isLoading: status === 'loading' || isLoading,
     session,
-
-    // Methods
     register,
     login,
+    signInAfterRegister,
     logout,
+    sendOTP,
     verifyOTP,
     resendOTP,
     requestPasswordReset,
     resetPassword,
-    updateProfile
+    updateProfile,
   }
 }
 
-// Individual hooks for mutation-like behavior
+// ─── Individual mutation hooks ────────────────────────────────────────────────
+
 export function useRegister() {
   const [isPending, setIsPending] = useState(false)
   const [error, setError] = useState<{ message: string } | null>(null)
@@ -310,7 +310,8 @@ export function useRegister() {
 
   const { register: registerFn } = useAuth()
 
-  const mutate = useCallback(async (registerData: RegisterData,
+  const mutate = useCallback(async (
+    registerData: RegisterData,
     options?: {
       onSuccess?: (data: AuthResponse) => void
       onError?: (error: { message: string }) => void
@@ -344,14 +345,7 @@ export function useRegister() {
     }
   }, [registerFn])
 
-  return {
-    mutate,
-    isPending,
-    error,
-    data,
-    isError: !!error,
-    isSuccess: !!data?.success
-  }
+  return { mutate, isPending, error, data, isError: !!error, isSuccess: !!data?.success }
 }
 
 export function useLogin() {
@@ -369,11 +363,9 @@ export function useLogin() {
     try {
       const response = await loginFn(loginData)
       setData(response)
-
       if (!response.success) {
         setError({ message: response.error || 'Login failed' })
       }
-
       return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed'
@@ -384,14 +376,7 @@ export function useLogin() {
     }
   }, [loginFn])
 
-  return {
-    mutate,
-    isPending,
-    error,
-    data,
-    isError: !!error,
-    isSuccess: !!data?.success
-  }
+  return { mutate, isPending, error, data, isError: !!error, isSuccess: !!data?.success }
 }
 
 export function useVerifyOTP() {
@@ -409,11 +394,9 @@ export function useVerifyOTP() {
     try {
       const response = await verifyOTPFn(otpData)
       setData(response)
-
       if (!response.success) {
         setError({ message: response.error || 'Verification failed' })
       }
-
       return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Verification failed'
@@ -424,14 +407,7 @@ export function useVerifyOTP() {
     }
   }, [verifyOTPFn])
 
-  return {
-    mutate,
-    isPending,
-    error,
-    data,
-    isError: !!error,
-    isSuccess: !!data?.success
-  }
+  return { mutate, isPending, error, data, isError: !!error, isSuccess: !!data?.success }
 }
 
 export function useResendOTP() {
@@ -449,11 +425,9 @@ export function useResendOTP() {
     try {
       const response = await resendOTPFn(resendData)
       setData(response)
-
       if (!response.success) {
         setError({ message: response.error || 'Failed to resend code' })
       }
-
       return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code'
@@ -464,14 +438,7 @@ export function useResendOTP() {
     }
   }, [resendOTPFn])
 
-  return {
-    mutate,
-    isPending,
-    error,
-    data,
-    isError: !!error,
-    isSuccess: !!data?.success
-  }
+  return { mutate, isPending, error, data, isError: !!error, isSuccess: !!data?.success }
 }
 
 export function usePasswordReset() {
@@ -489,11 +456,9 @@ export function usePasswordReset() {
     try {
       const response = await requestPasswordReset(email)
       setData(response)
-
       if (!response.success) {
         setError({ message: response.error || 'Failed to send reset email' })
       }
-
       return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send reset email'
@@ -504,7 +469,11 @@ export function usePasswordReset() {
     }
   }, [requestPasswordReset])
 
-  const confirmReset = useCallback(async (token: string, newPassword: string, confirmPassword: string) => {
+  const confirmReset = useCallback(async (
+    token: string,
+    newPassword: string,
+    confirmPassword: string
+  ) => {
     setIsPending(true)
     setError(null)
     setData(null)
@@ -512,11 +481,9 @@ export function usePasswordReset() {
     try {
       const response = await resetPassword(token, newPassword, confirmPassword)
       setData(response)
-
       if (!response.success) {
         setError({ message: response.error || 'Failed to reset password' })
       }
-
       return response
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to reset password'
@@ -527,20 +494,10 @@ export function usePasswordReset() {
     }
   }, [resetPassword])
 
-  return {
-    requestReset,
-    confirmReset,
-    isPending,
-    error,
-    data,
-    isError: !!error,
-    isSuccess: !!data?.success
-  }
+  return { requestReset, confirmReset, isPending, error, data, isError: !!error, isSuccess: !!data?.success }
 }
 
-/* ------------------------------------------------------------------ */
-/* usePayment — Flutterwave subscription charge                        */
-/* ------------------------------------------------------------------ */
+// ─── usePayment ───────────────────────────────────────────────────────────────
 export function usePayment() {
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -550,21 +507,14 @@ export function usePayment() {
       setIsPending(true);
       setError(null);
 
-      // TODO: implement flutterwave payment
-      /* 🔌 BACKEND / FLUTTERWAVE INTEGRATION POINT — subscription payment
-         The real flow:
-           1. POST to your server to create a Flutterwave payment / virtual
-              account for `plan.price` (kobo) tied to this user.
-           2. Open the Flutterwave checkout (FlutterwaveCheckout / inline
-              SDK) OR redirect to the hosted link.
-           3. On the success callback, verify the transaction server-side
-              (GET /flw/verify/:txRef) before granting the subscription.
-           4. Resolve onSuccess with the verified PaymentResult.
+      // TODO: implement Flutterwave payment
+      // 1. POST to server to create Flutterwave payment for plan.price
+      // 2. Open Flutterwave checkout or redirect to hosted link
+      // 3. On success callback, verify transaction server-side
+      // 4. Resolve onSuccess with verified PaymentResult
+      // Free plans (plan.price === 0) skip the charge entirely.
 
-         Free plans (plan.price === 0) skip the charge entirely.
-      */
-
-         //TODO: remove 'delay'
+      // TODO: remove mock delay
       const delay = plan.price === 0 ? 400 : 1800;
 
       setTimeout(() => {

@@ -141,9 +141,9 @@ export function LoginForm() {
 
   const handleForgotPassword = () => {
     if (formData.email.trim()) {
-      router.push(`/forgot-password?email=${encodeURIComponent(formData.email)}`);
+      router.push(`/reset-password?email=${encodeURIComponent(formData.email)}`);
     } else {
-      router.push("/forgot-password");
+      router.push("/reset-password");
     }
   };
 

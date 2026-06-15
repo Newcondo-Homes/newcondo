@@ -20,6 +20,7 @@ const AUTH_ENDPOINTS = {
   LOGOUT: "/auth/logout",
   VERIFY_OTP: "/auth/verify-otp",
   RESEND_OTP: "/auth/resend-otp",
+  SEND_OTP: "/auth/send-otp",
   REQUEST_PASSWORD_RESET: "/auth/forgot-password",
   RESET_PASSWORD: "/auth/reset-password",
   UPDATE_PROFILE: "/auth/profile",
@@ -107,6 +108,33 @@ export const authApi = {
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Logout failed";
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  },
+
+  // SendOTP
+  sendOTP: async (data: OTPResendData): Promise<AuthResponse> => {
+    try {
+      const response = await apiClient.post<ApiResponse>(
+        AUTH_ENDPOINTS.SEND_OTP,
+        data
+      );
+
+      return {
+        success: true,
+        user: response.data!.user,
+        token: response.data!.token,
+        refreshToken: response.data!.refreshToken,
+        expiresAt: response.data!.expiresAt,
+        message: response.message,
+        data: response.data,
+      };
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "OTP verification failed";
       return {
         success: false,
         error: errorMessage,

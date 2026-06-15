@@ -15,8 +15,15 @@ export const publicRoutes = [
   "/onboarding",
   "/contact",
   "/privacy",
+  "/refund",
+  "/trust",
   "/terms",
-  "/help",
+  "/about",
+  "/cookies",
+  "/careers",
+  "/support",
+  "/blog",
+  "/blog/*",
   "/properties", // Public property browsing
   "/properties/*", // Public property details (but not actions)
   "/api/properties/search", // Public property search
@@ -25,6 +32,7 @@ export const publicRoutes = [
   "/email-verification",
   "/reset-password",
   "/password-reset-email-redirect",
+  "/mark-property/*"
 ];
 
 /**
@@ -35,8 +43,8 @@ export const publicRoutes = [
 export const authRoutes = [
   "/login",
   "/register",
-  "/forgot-password",
   "/verify-otp",
+  "/reset-password",
 ];
 
 /**

@@ -19,7 +19,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2, ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
-import { usePayment, useRegister, useAuth } from "@/hooks/useAuth";
+import { usePayment, useRegister } from "@/hooks/useAuth";
 import type { Plan, PaymentResult } from "@/types/api";
 import type { OnboardingDraft } from "./onboarding-form";
 
@@ -43,20 +43,9 @@ export default function PaymentProcessing({
 }) {
   const { pay } = usePayment();
   const { mutate: register } = useRegister();
-  const { signInAfterRegister } = useAuth();
-
-  // Store signInAfterRegister in a ref so that when NextAuth triggers a
-  // re-render (session state change after sign-in), the in-flight async
-  // sequence isn't affected by a stale closure or a re-render cancellation.
-  const signInRef = useRef(signInAfterRegister);
-  useEffect(() => {
-    signInRef.current = signInAfterRegister;
-  });
 
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
-
-  // Guards StrictMode double-invoke — never runs the same attempt twice.
   const ranFor = useRef(-1);
 
   const free = plan.price === 0;
@@ -69,11 +58,6 @@ export default function PaymentProcessing({
 
   const registerAsync = () =>
     new Promise<void>((resolve, reject) => {
-      // Safety timeout — surfaces an error if the API never responds.
-      const timeout = setTimeout(() => {
-        reject(new Error("Registration timed out. Please try again."));
-      }, 15_000);
-
       register(
         {
           name: draft.name.trim(),
@@ -82,93 +66,51 @@ export default function PaymentProcessing({
           password: draft.password,
           userType: draft.role,
         },
-        {
-          onSuccess: () => {
-            clearTimeout(timeout);
-            resolve();
-          },
-          onError: (err) => {
-            clearTimeout(timeout);
-            reject(new Error(err.message));
-          },
-        }
+        { onSuccess: () => resolve(), onError: reject }
       );
     });
 
   useEffect(() => {
-    // Guard: never run the same attempt index twice (StrictMode double-invoke).
+    // Guard StrictMode's double-invoke per attempt so we never charge twice.
     if (ranFor.current === attempt) return;
     ranFor.current = attempt;
 
-    // Use a `completed` flag instead of a `cancelled` flag.
-    //
-    // The old pattern `cancelled = true` in the cleanup fired on EVERY
-    // re-render — including when NextAuth re-renders this component after
-    // sign-in succeeds (session state change). That was silently blocking
-    // onComplete from ever being called even though all three steps logged
-    // successfully.
-    //
-    // `completed` only prevents duplicate onComplete/setError calls.
-    // It is NOT reset by re-renders, so the sign-in → re-render → onComplete
-    // sequence works correctly.
-    let completed = false;
+    let cancelled = false;
 
     (async () => {
       setError(null);
       try {
         let paymentResult: PaymentResult | undefined;
 
-        // 1) Charge first for paid plans (email already verified earlier).
+        // 1) Charge first for paid plans (email already verified earlier in the flow).
         if (!free) {
-          console.log("[PaymentProcessing] Starting payment...");
           paymentResult = await payAsync(plan);
-          console.log("[PaymentProcessing] Payment complete:", paymentResult);
         }
 
-        // 2) Create the account — unless social user who already exists.
+        // 2) Create the account — unless this is a social user who already exists.
+        //    Backend should treat the email as pre-verified (OTP was done in-flow)
+        //    and attach the chosen `plan` as the active subscription.
         if (!alreadyRegistered) {
-          console.log("[PaymentProcessing] Registering user...");
           await registerAsync();
-          console.log("[PaymentProcessing] Registration complete");
-
-          // 3) Sign in so the NextAuth session is live before we navigate.
-          //    Uses a ref so the function reference is always current even
-          //    if React re-renders mid-flight.
-          console.log("[PaymentProcessing] Signing in...");
-          const signInResult = await signInRef.current(
-            draft.email.trim().toLowerCase(),
-            draft.password
-          );
-
-          if (!signInResult.success) {
-            // Non-fatal — account was created; user can log in manually.
-            console.warn("[PaymentProcessing] Auto sign-in failed:", signInResult.error);
-          } else {
-            console.log("[PaymentProcessing] Signed in successfully");
-          }
         }
 
-        // 4) Advance the flow.
-        if (!completed) {
-          completed = true;
-          onComplete({ payment: paymentResult });
-        }
+        // 3) TODO(optional): if subscription activation is a SEPARATE backend call
+        //    from register/pay, fire it here with `plan` + `paymentResult`.
+
+        if (!cancelled) onComplete({ payment: paymentResult });
       } catch (e: unknown) {
-        console.error("[PaymentProcessing] Error:", e);
         const message =
-          e instanceof Error
-            ? e.message
+          e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string"
+            ? (e as { message: string }).message
             : "Something went wrong while finishing up. Please try again.";
-        if (!completed) {
-          completed = true;
-          setError(message);
-        }
+        if (!cancelled) setError(message);
       }
     })();
 
-    // No cleanup cancellation here — ranFor already prevents double-execution,
-    // and cancelling on re-render was the bug (session change = re-render mid-flight).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [attempt]);
 
   /* ---- Error state ---- */
@@ -181,9 +123,7 @@ export default function PaymentProcessing({
         <h2 className="mt-6 text-[clamp(23px,2.8vw,30px)] font-bold tracking-[-0.035em] text-text-primary">
           We couldn&apos;t finish that
         </h2>
-        <p className="mt-2.5 max-w-[46ch] text-[15px] leading-[1.55] text-text-secondary">
-          {error}
-        </p>
+        <p className="mt-2.5 max-w-[46ch] text-[15px] leading-[1.55] text-text-secondary">{error}</p>
         {!free && (
           <p className="mt-2 text-[13px] text-text-tertiary">
             If you were charged, your account will still be created — retrying is safe.
@@ -196,11 +136,7 @@ export default function PaymentProcessing({
               onClick={onBack}
               className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-6 py-[13px] text-[15px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken max-[480px]:w-full"
             >
-              <ArrowLeft
-                size={17}
-                strokeWidth={2}
-                className="transition-transform duration-200 ease-nc group-hover:-translate-x-1"
-              />
+              <ArrowLeft size={17} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:-translate-x-1" />
               Back to plans
             </button>
           )}
@@ -237,12 +173,10 @@ export default function PaymentProcessing({
       {!free && (
         <div className="mt-7 flex items-center gap-5 text-[13px] font-medium text-text-tertiary">
           <span className="inline-flex items-center gap-2">
-            <ShieldCheck size={16} strokeWidth={1.9} className="text-green-dark" />
-            Held in escrow
+            <ShieldCheck size={16} strokeWidth={1.9} className="text-green-dark" /> Held in escrow
           </span>
           <span className="inline-flex items-center gap-2">
-            <Lock size={15} strokeWidth={1.9} className="text-green-dark" />
-            Secured by Flutterwave
+            <Lock size={15} strokeWidth={1.9} className="text-green-dark" /> Secured by Flutterwave
           </span>
         </div>
       )}

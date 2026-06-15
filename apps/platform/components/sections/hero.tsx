@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { SplitButton } from "@/components/ui/split-button";
 import { container, mount, EASE, EXPO } from "@/components/motion";
 import { makePerlin } from "@/lib/perlin";
+import Link from 'next/link';
 
 /** Procedural "ethereal shadows" — domain-warped fractal Perlin noise. */
 function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
@@ -176,7 +177,7 @@ export function Hero() {
           className="flex items-center gap-[22px] mt-8 flex-wrap max-[620px]:gap-4 max-[620px]:w-full"
         >
           <SplitButton
-            href="#pricing"
+            href="/onboarding"
             variant="light"
             ariaLabel="List your property"
             label="List your property — plans from ₦7,500/month"

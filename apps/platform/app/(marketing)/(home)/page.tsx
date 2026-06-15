@@ -1,5 +1,4 @@
 import { Pageload } from "@/components/ui/pageload";
-import { Navbar } from "@/components/sections/navbar";
 import { Hero } from "@/components/sections/hero";
 import { Problems } from "@/components/sections/problems";
 import { HowItWorks } from "@/components/sections/how-it-works";
@@ -10,29 +9,26 @@ import { Pricing } from "@/components/sections/pricing";
 import { CEO } from "@/components/sections/ceo";
 import { FAQ } from "@/components/sections/faq";
 import { FinalCTA } from "@/components/sections/final-cta";
-import { Footer } from "@/components/sections/footer";
-import { ChatButton } from "@/components/chat-button";
 
-export default function Home() {
+export const metadata = {
+  title: "Newcondo — For Property Owners",
+  description: "Rent out your property without agent confusion, double-booking, or payment stress.",
+};
+
+export default function OwnersPage() {
   return (
     <>
-      {/* pageload overlay — fades itself out via Framer Motion / AnimatePresence */}
       <Pageload />
-      <Navbar />
-      <main>
-        <Hero />
-        <Problems />
-        <HowItWorks />
-        <Comparison />
-        <Features />
-        <Testimonials />
-        <Pricing />
-        <CEO />
-        <FAQ />
-        <FinalCTA />
-      </main>
-      <Footer />
-      <ChatButton />
+      <Hero />
+      <Problems />
+      <HowItWorks />
+      <Comparison />
+      <Features />
+      <Testimonials />
+      <Pricing />
+      <CEO />
+      <FAQ />
+      <FinalCTA />
     </>
   );
 }

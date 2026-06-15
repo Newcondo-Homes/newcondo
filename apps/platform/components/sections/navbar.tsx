@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cx } from "@/lib/cx";
 import { Icon } from "@/components/ui/icon";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/nc-button";
 import { SplitButton } from "@/components/ui/split-button";
 import { container, mount, EASE } from "@/components/motion";
 import { NAV_LINKS } from "@/lib/data";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
 const LOGO_CREAM = "/assets/logo-mark-cream.png";
@@ -17,11 +19,16 @@ const navItem = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
 
-export function Navbar() {
-  const [solid, setSolid] = useState(false);
+export function Navbar({ forceSolid = false }) {
+  const [solid, setSolid] = useState(forceSolid);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
+    // Pages without a dark hero (e.g. legal docs) keep the glass bar from the top.
+    if (forceSolid) return;
+
     const hero = document.getElementById("hero");
     const onScroll = () => {
       const threshold = (hero ? hero.offsetHeight : window.innerHeight) - 90;
@@ -30,9 +37,25 @@ export function Navbar() {
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [forceSolid]);
 
   const onDark = !solid;
+  const isHomePage = pathname === "/";
+
+  // CHANGED: logo click handler — on the homepage, scroll to top smoothly
+  // (preserving the original behaviour); on any other page, navigate home.
+  const handleLogoClick = useCallback(
+    (e: React.MouseEvent<HTMLAnchorElement>) => {
+      if (isHomePage) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      } else {
+        // Let Next.js handle the navigation via the Link's href="/"
+        setOpen(false);
+      }
+    },
+    [isHomePage]
+  );
 
   return (
     <header
@@ -44,18 +67,21 @@ export function Navbar() {
         variants={container(0.06, 0.7)}
         {...mount}
       >
-        <motion.a
-          href="#"
-          variants={navItem}
-          className="flex items-center gap-[11px] no-underline font-bold text-[21px] tracking-[-0.04em]"
-          style={{ color: onDark ? "var(--cream)" : "var(--ink)" }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="nav-logo-dark w-[30px] h-auto" src={LOGO_DARK} alt="Newcondo" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="nav-logo-cream w-[30px] h-auto" src={LOGO_CREAM} alt="Newcondo" />
-          <span>newcondo</span>
-        </motion.a>
+        {/* CHANGED: href="#" -> href="/" with Next.js Link, plus smart click handler */}
+        <motion.div variants={navItem}>
+          <Link
+            href="/"
+            onClick={handleLogoClick}
+            className="flex items-center gap-[11px] no-underline font-bold text-[21px] tracking-[-0.04em]"
+            style={{ color: onDark ? "var(--cream)" : "var(--ink)" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="nav-logo-dark w-[30px] h-auto" src={LOGO_DARK} alt="Newcondo" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="nav-logo-cream w-[30px] h-auto" src={LOGO_CREAM} alt="Newcondo" />
+            <span>newcondo</span>
+          </Link>
+        </motion.div>
 
         <nav className="hidden lg:flex gap-7 ml-1.5">
           {NAV_LINKS.map(([label, href]) => (
@@ -73,7 +99,7 @@ export function Navbar() {
 
         <motion.div variants={navItem} className="hidden lg:inline-flex ml-auto">
           <SplitButton
-            href="#pricing"
+            href="/onboarding"
             variant={onDark ? "light" : "dark"}
             label="List your property"
             ariaLabel="List your property"
@@ -111,9 +137,13 @@ export function Navbar() {
                 {label}
               </a>
             ))}
-            <Button as="a" href="#pricing" variant="dark" className="justify-center mt-3.5" icon="arrow-right" onClick={() => setOpen(false)}>
-              List your property
-            </Button>
+            <SplitButton
+              href="/onboarding"
+              variant="dark"
+              label="List your property"
+              ariaLabel="List your property"
+              className="justify-center mt-3.5"
+            />
           </motion.div>
         )}
       </AnimatePresence>

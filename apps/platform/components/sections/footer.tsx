@@ -1,6 +1,23 @@
 import { Icon } from "@/components/ui/icon";
 import { FOOTER } from "@/lib/data";
 
+const FOOTER_HREFS: Record<string, string> = {
+  // Product
+  "How it works": "/#how",
+  Features: "/#features",
+  Pricing: "/#pricing",
+  // Company
+  About: "/about",
+  Blog: "/blog",
+  Support: "/support",
+  Careers: "/careers",
+  "Privacy Policy": "/privacy",
+  "Refund Policy":  "/refund",
+  "Cookie Policy": "/cookies",
+  "Terms of Service": "/terms",
+  "Trust & Safety": "/trust",
+};
+
 export function Footer() {
   return (
     <footer className="bg-ink text-text-on-dark relative overflow-hidden" data-screen-label="Footer">
@@ -15,7 +32,7 @@ export function Footer() {
             Property management, finally working the way it should.
           </p>
           <p className="flex items-center gap-2.5 text-[14.5px] text-text-on-dark-2 m-0 mb-2.5">
-            <Icon name="mail" size={17} /> hello@newcondo.homes
+            <Icon name="mail" size={17} /> info@newcondo.homes
           </p>
           <p className="flex items-center gap-2.5 text-[14.5px] text-text-on-dark-2 m-0">
             <Icon name="map-pin" size={17} /> Nigeria
@@ -28,7 +45,7 @@ export function Footer() {
               {items.map((it) => (
                 <a
                   key={it}
-                  href="#"
+                  href={FOOTER_HREFS[it] ?? "#"}
                   className="no-underline text-[14.5px] text-text-on-dark opacity-[0.78] transition-opacity duration-200 ease-nc hover:opacity-100"
                 >
                   {it}

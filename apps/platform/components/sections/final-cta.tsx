@@ -17,14 +17,13 @@ export function FinalCTA() {
         </Reveal>
         <Reveal className="flex flex-col items-center gap-[18px] mt-10">
           <SplitButton
-            href="#pricing"
+            href="/onboarding"
             variant="light"
             ariaLabel="List your property"
             label="List your property — start with Elite"
             className="max-[620px]:w-full"
           />
           <a
-            href="#pricing"
             className="text-text-on-dark text-[15.5px] font-semibold no-underline border-b border-[rgba(249,249,239,0.4)] pb-[3px] transition-colors duration-200 ease-nc hover:border-cream"
           >
             Start with Essential
