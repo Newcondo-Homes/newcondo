@@ -16,6 +16,7 @@ export default async function OnboardingPage() {
   // if (session) {
   //   redirect("/dashboard");
   // }
+  //TODO: make sure to collect referral code from the url parameter and implement the functionality
 
   return <OnboardingFlow />;
 }

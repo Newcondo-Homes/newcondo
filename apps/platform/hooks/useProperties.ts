@@ -32,6 +32,7 @@ export function useMarkProperty() {
       propertyId: string;
       data: {
         boundaryCoordinates: { lat: number; lng: number }[];
+        boundaryCenter?: { lat: number; lng: number };
         boundaryImages: string[];
         boundaryVerified: boolean;
         boundaryMarkedAt: Date;

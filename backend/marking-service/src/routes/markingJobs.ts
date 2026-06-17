@@ -1,10 +1,11 @@
 import express from 'express';
+import type { Router as ExpressRouter } from "express";
 import { auth, requireRole } from '@newcondo/auth/middleware';
 import { markingJobController } from '../controllers/markingJobController';
 import { markingValidation } from '../middleware/markingValidation';
 import { validateRequest } from '../../../shared/src/middleware/validation';
 
-const router = express.Router();
+const router: ExpressRouter = express.Router();
 
 // Public routes (for property owners)
 router.post(

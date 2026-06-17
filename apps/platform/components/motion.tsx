@@ -25,6 +25,12 @@ export const vRow: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
 };
+/* slower text rise for section headings/leads/eyebrows — further travel and
+   ~50% longer than vFade so headers don't whip in too soon on scroll. */
+export const vLead: Variants = {
+  hidden: { opacity: 0, y: 36 },
+  show: { opacity: 1, y: 0, transition: { duration: 1.05, ease: EASE } },
+};
 export const container = (stagger = 0.1, delay = 0): Variants => ({
   hidden: {},
   show: { transition: { staggerChildren: stagger, delayChildren: delay } },
@@ -36,6 +42,10 @@ export const reveal = {
   whileInView: "show",
   viewport: { once: true, amount: 0.18 },
 } as const;
+
+/* later trigger — hold off until ~45% of the element is in view, so text
+   reveals don't fire the instant they peek in from the bottom. */
+export const lateViewport = { once: true, amount: 0.45 } as const;
 
 /* on-load props */
 export const mount = { initial: "hidden", animate: "show" } as const;

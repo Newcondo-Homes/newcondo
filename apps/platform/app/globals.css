@@ -228,6 +228,22 @@ img { display: block; }
   font-family: var(--font-nc-sans);
 }
 
+/* ---- Share page "Paper" atmosphere ----
+   Crisp, cool-white retheme scoped to the public shared-property page only
+   (chosen via the Tweaks panel). Overrides the warm-cream tokens locally so
+   the rest of the app keeps its default palette. */
+.share-paper {
+  --nc-background: #f6f7f8;
+  --surface: #ffffff;
+  --surface-soft: #eef0f2;
+  --surface-sunken: #f1f3f5;
+  --text-primary: #0b0c0e;
+  --text-secondary: #494d54;
+  --text-tertiary: #8a8f97;
+  --nc-border: #e4e6e9;
+  --border-hair: rgba(15, 23, 42, 0.07);
+  --divider: rgba(15, 23, 42, 0.08);
+}
 
 /* ---- semantic type classes (from the NewCondo design system) ---- */
 .nc-h2 {
@@ -241,6 +257,11 @@ img { display: block; }
 .nc-lead {
   font-size: var(--fs-lead); line-height: 1.45; letter-spacing: -0.01em;
   font-weight: 400; color: var(--text-secondary);
+}
+
+.nc-leadd {
+  font-size: var(--fs-lead); line-height: 1.45; letter-spacing: -0.01em;
+  font-weight: 400; color: var(--text-on-dark-2)
 }
 
 

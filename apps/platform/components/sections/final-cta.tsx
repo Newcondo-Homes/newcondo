@@ -11,7 +11,7 @@ export function FinalCTA() {
         >
           The property is already yours. The income should be too.
         </Reveal>
-        <Reveal as="p" className="nc-lead text-text-on-dark-2 mt-[26px] mx-auto max-w-[640px]">
+        <Reveal as="p" className="nc-leadd text-text-on-dark-2 mt-[26px] mx-auto max-w-[640px]">
           Stop managing a ₦50 million asset with an old phone and a prayer. Newcondo handles your rent, your tenants, your
           maintenance, your documents, and your peace of mind — for less than ₦625 a day.
         </Reveal>

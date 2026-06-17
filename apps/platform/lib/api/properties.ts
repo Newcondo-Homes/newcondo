@@ -365,6 +365,7 @@ export async function markProperty(
   propertyId: string,
   data: {
     boundaryCoordinates: { lat: number; lng: number }[]
+    boundaryCenter?: { lat: number; lng: number }
     boundaryImages: string[]
     boundaryVerified: boolean
     boundaryMarkedAt: Date
@@ -376,7 +377,7 @@ export async function markProperty(
       // Convert flat {lat,lng}[] to GeoJSON coordinate ring
       coordinates: [data.boundaryCoordinates.map((c) => [c.lng, c.lat])],
     },
-    gpsCoordinates: data.boundaryCoordinates[0] ?? { lat: 0, lng: 0 },
+    gpsCoordinates: data.boundaryCenter ?? data.boundaryCoordinates[0] ?? { lat: 0, lng: 0 },
     boundaryImages: data.boundaryImages,
     buildingFingerprint: `fp-${propertyId}-${Date.now()}`,
   }

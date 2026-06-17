@@ -2,7 +2,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { Icon } from "@/components/ui/icon";
 import { ImageSlot } from "@/components/ui/image-slot";
-import { Group, Item } from "@/components/motion";
+import { Group, Item, vFade } from "@/components/motion";
 import { TESTIMONIALS } from "@/lib/data";
 
 export function Testimonials() {
@@ -17,7 +17,8 @@ export function Testimonials() {
           <Item
             as="article"
             key={t.id}
-            className="group relative h-[480px] rounded-card overflow-hidden flex flex-col justify-between shadow-card transition-[transform,box-shadow] duration-[280ms] ease-nc hover:-translate-y-2 hover:shadow-lift max-[860px]:h-[420px]"
+            variants={vFade}
+            className="group relative h-[480px] rounded-card overflow-hidden flex flex-col justify-between shadow-card transition-[transform,box-shadow] duration-[450ms] ease-nc hover:-translate-y-2 hover:shadow-lift max-[860px]:h-[420px]"
             style={{ background: "linear-gradient(135deg,#3a3a36,#23231f)" }}
           >
             <div className="absolute inset-0 transition-transform duration-[700ms] ease-nc group-hover:scale-105">

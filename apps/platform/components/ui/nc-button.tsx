@@ -6,7 +6,7 @@ type Variant = "dark" | "light" | "secondary" | "green";
 type Size = "md" | "sm" | "block";
 
 const BASE =
-  "inline-flex items-center gap-2.5 font-semibold leading-none whitespace-nowrap rounded-full " +
+  "group inline-flex items-center gap-2.5 font-semibold leading-none whitespace-nowrap rounded-full " +
   "border border-transparent cursor-pointer transition-[transform,background,box-shadow,color] " +
   "duration-200 ease-nc active:scale-[0.97] no-underline";
 
@@ -49,7 +49,13 @@ export function Button({
   return (
     <Tag className={cx(BASE, VARIANTS[variant], SIZES[size], className)} {...rest}>
       {children}
-      {icon && <Icon name={icon} size={18} />}
+      {icon && (
+        <Icon
+          name={icon}
+          size={18}
+          className="transition-transform duration-200 ease-nc group-hover:translate-x-1"
+        />
+      )}
     </Tag>
   );
 }

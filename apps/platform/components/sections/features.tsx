@@ -3,7 +3,7 @@ import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { Group, Item } from "@/components/motion";
+import { Group, Item, vFade } from "@/components/motion";
 import { FEATURES } from "@/lib/data";
 
 export function Features() {
@@ -19,7 +19,8 @@ export function Features() {
           <Item
             as="article"
             key={t}
-            className="relative bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[30px] pt-8 pb-[34px] flex flex-col transition-[transform,box-shadow] duration-[280ms] ease-nc hover:-translate-y-1.5 hover:shadow-lift"
+            variants={vFade}
+            className="relative bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[30px] pt-8 pb-[34px] flex flex-col transition-[transform,box-shadow] duration-[450ms] ease-nc hover:-translate-y-1.5 hover:shadow-lift"
           >
             {elite && (
               <span className="absolute top-[30px] right-7">

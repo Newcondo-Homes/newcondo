@@ -1,7 +1,7 @@
 import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { TextLink } from "@/components/ui/text-link";
-import { Group, Item, Reveal } from "@/components/motion";
+import { Group, Item, Reveal, vFade } from "@/components/motion";
 import { PROBLEMS } from "@/lib/data";
 
 export function Problems() {
@@ -20,7 +20,8 @@ export function Problems() {
           <Item
             as="article"
             key={n}
-            className="bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] pt-[38px] pb-10 flex flex-col transition-[transform,box-shadow] duration-[280ms] ease-nc hover:-translate-y-1.5 hover:shadow-lift will-change-transform"
+            variants={vFade}
+            className="bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] pt-[38px] pb-10 flex flex-col transition-[transform,box-shadow] duration-[450ms] ease-nc hover:-translate-y-1.5 hover:shadow-lift will-change-transform"
           >
             <span className="font-mono text-text-tertiary text-[14px] mb-[26px]">{n}</span>
             <h3 className="text-[clamp(21px,2vw,26px)] font-bold tracking-[-0.03em] leading-[1.1] m-0 mb-3.5 text-text-primary">

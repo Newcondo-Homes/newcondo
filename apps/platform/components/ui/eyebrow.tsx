@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
-import { Reveal } from "@/components/motion";
+import { Reveal, vLead, lateViewport } from "@/components/motion";
 
 export function Eyebrow({
   className = "",
@@ -14,6 +14,8 @@ export function Eyebrow({
   return (
     <Reveal
       as="span"
+      variants={vLead}
+      viewport={lateViewport}
       className={cx(
         "block text-[12px] font-semibold tracking-[0.14em] uppercase",
         onDark ? "text-green-bright" : "text-text-tertiary",
