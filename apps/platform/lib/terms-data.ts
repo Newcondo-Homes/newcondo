@@ -53,12 +53,12 @@ export const PROHIBITED: string[] = [
   "Using the platform for money laundering or any unlawful purpose.",
 ];
 
-/* ---- 08 Enforcement penalties ---- */
+/* ---- 08 Enforcement consequences ---- */
 export const ENFORCEMENT_ROWS: [breach: string, consequence: string][] = [
-  ["Forged ownership or ID documents", "Immediate ban, listing removal, EFCC referral, and <strong>\u20A6500,000</strong> penalty"],
-  ["Off-platform payment circumvention", "Account suspension and forfeiture of pending payouts"],
-  ["Fraudulent or duplicate listings", "Delisting, <strong>\u20A6100,000</strong> fine, and permanent ban on repeat offence"],
-  ["Cancelling a paid renter (Owner / Agent)", "<strong>\u20A6100,000</strong> fine, permanent ban, and property delisting"],
+  ["Forged ownership or ID documents", "Immediate ban, listing removal, and EFCC referral"],
+  ["Off-platform payment circumvention", "Account suspension"],
+  ["Fraudulent or duplicate listings", "Delisting and permanent ban on repeat offence"],
+  ["Cancelling a paid renter (Owner / Agent)", "Permanent ban and property delisting"],
 ];
 
 /* ---- 12 Contact ---- */

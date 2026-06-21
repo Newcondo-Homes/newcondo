@@ -20,6 +20,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check } from "lucide-react";
@@ -80,7 +81,7 @@ function roleFromParam(p: string | null): UserType | undefined {
     case "owners":
     case "property-owner":
     case "property_owner":
-      return UserType.PROPERTY_OWNER;
+      return UserType.OWNER;
     default:
       return undefined;
   }
@@ -90,6 +91,7 @@ export default function OnboardingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+  const { goToDashboard } = useAuth();
 
   const initialRole = roleFromParam(searchParams.get("role"));
 
@@ -129,13 +131,13 @@ export default function OnboardingFlow() {
       email: u.email ?? "",
       phone: u.phone ?? "",
       password: "", // unused — account already exists
-      role: initialRole ?? u.userType ?? UserType.PROPERTY_OWNER,
+      role: initialRole ?? u.userType ?? UserType.OWNER,
     });
     setAlreadyRegistered(true);
     setPhase("plan");
   }, [status, session, phase, draft, initialRole]);
 
-  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+  // const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
   const activeIndex = PHASE_INDEX[phase];
 
   return (
@@ -234,7 +236,7 @@ export default function OnboardingFlow() {
                       Choose your plan
                     </h1>
                     <p className="mx-auto mt-2 max-w-[52ch] text-[15.5px] leading-[1.5] text-text-secondary">
-                      {draft.role === UserType.PROPERTY_OWNER
+                      {draft.role === UserType.OWNER
                         ? "Every plan includes escrow rent, verified tenants, and your dashboard."
                         : "Start free or unlock priority access. Change this anytime from your dashboard."}
                     </p>

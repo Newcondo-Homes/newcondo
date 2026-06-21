@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Check, ArrowRight, Gift, Copy, CheckCheck } from "lucide-react";
 import { cx } from "@/lib/cx";
 import { UserType } from "@/types/api";
@@ -17,7 +17,7 @@ import type { OnboardingProfile, Plan, PaymentResult } from "@/types/api";
 const naira = (n: number) => `₦${n.toLocaleString("en-NG")}`;
 
 const ROLE_LABEL: Record<UserType, string> = {
-    [UserType.PROPERTY_OWNER]: "Property owner",
+    [UserType.OWNER]: "Property owner",
     [UserType.RENTER]: "Renter",
     [UserType.AGENT]: "Agent",
     [UserType.PROPERTY_MANAGER]: "Property manager",
@@ -49,9 +49,14 @@ export default function PaymentSuccess({
     // TODO: create referral code page
     const referralLink = `https://newcondo.homes/r/${referralCode}`;
 
+    const firedRef = useRef(false);
+
     useEffect(() => {
         if (seconds <= 0) {
-            onContinue();
+            if (!firedRef.current) {
+                firedRef.current = true;
+                onContinue();
+            }
             return;
         }
         const t = setTimeout(() => setSeconds((s) => s - 1), 1000);

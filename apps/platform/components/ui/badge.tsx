@@ -5,14 +5,15 @@ export function Badge({
   className = "",
   children,
 }: {
-  tone?: "green" | "bright";
+  tone?: "green" | "bright"  | "ink";
   className?: string;
   children: React.ReactNode;
 }) {
-  const tones = {
-    green: "text-green-dark bg-green-wash",
-    bright: "text-ink bg-green-bright",
-  };
+ const tones = {
+  green: "text-green-dark bg-green-wash",
+  bright: "text-ink bg-green-bright",
+  ink: "text-cream bg-ink",
+};
   return (
     <span
       className={cx(

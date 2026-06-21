@@ -3,14 +3,15 @@ import { FOOTER } from "@/lib/data";
 
 const FOOTER_HREFS: Record<string, string> = {
   // Product
-  "How it works": "/#how",
-  Features: "/#features",
-  Pricing: "/#pricing",
+  "How it works": "/how-it-works",
+  Features: "/features",
+  Pricing: "/pricing",
   // Company
   About: "/about",
   Blog: "/blog",
   Support: "/support",
   Careers: "/careers",
+  // Legal
   "Privacy Policy": "/privacy",
   "Refund Policy":  "/refund",
   "Cookie Policy": "/cookies",

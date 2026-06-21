@@ -12,7 +12,7 @@ import type { Plan } from "@/types/api";
    Elite). Renter + Agent sets are defined for completeness.
    ============================================================ */
 const PLANS_BY_ROLE: Partial<Record<UserType, Plan[]>> = {
-  [UserType.PROPERTY_OWNER]: [
+  [UserType.OWNER]: [
     {
       id: "essential",
       name: "Essential",
@@ -105,7 +105,7 @@ export default function PlanSelector({
   onChoose: (plan: Plan) => void;
   onBack?: () => void;
 }) {
-  const plans = PLANS_BY_ROLE[role] ?? PLANS_BY_ROLE[UserType.PROPERTY_OWNER] ?? [];
+  const plans = PLANS_BY_ROLE[role] ?? PLANS_BY_ROLE[UserType.OWNER] ?? [];
   const [selected, setSelected] = useState<string>(
     plans.find((p) => p.highlight)?.id ?? plans[0].id
   );

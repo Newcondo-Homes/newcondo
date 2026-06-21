@@ -294,6 +294,16 @@ img { display: block; }
 /* Navbar responsive show/hide — self-contained media queries, independent of
    Tailwind's breakpoint variants, so the hamburger reliably appears < 1024px. */
 
+.nav-desktop-links { display: flex; align-items: center; }
+.nav-desktop-cta { display: block; }
+.nav-burger-btn { display: none; }
+.nav-mobile-menu { display: none; }
+@media (max-width: 1024px) {
+  .nav-desktop-links { display: none; }
+  .nav-desktop-cta { display: none; }
+  .nav-burger-btn { display: inline-flex; }
+  .nav-mobile-menu { display: flex; }
+}
 
 /* ============================================================
    HERO — procedural canvas + cinematic overlay + line reveal
@@ -537,3 +547,92 @@ img { display: block; }
   .js-cmp { overflow-x: auto; }
   .js-cmp > div { min-width: 540px; }
 }
+
+/* Policy links (onboarding terms row) — animated underline grow on hover.
+   Uses a background-size transition so the underline wipes in left→right. */
+.nc-policy-link {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1.5px;
+  transition: background-size var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+.nc-policy-link:hover,
+.nc-policy-link:focus-visible {
+  background-size: 100% 1.5px;
+  color: var(--ink);
+  outline: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nc-policy-link { transition: none; }
+  .nc-policy-link:hover, .nc-policy-link:focus-visible { text-decoration: underline; }
+}
+
+
+/* ============================================================
+   Sub-pages — segmented audience control, billing toggle,
+   plan-card / feature-card animations, comparison table.
+   (Pricing, How it works, Features)
+   ============================================================ */
+
+/* segmented audience control */
+.seg { position: relative; display: inline-flex; gap: 4px; padding: 5px; border-radius: 999px; background: var(--surface-soft); border: 1px solid var(--border-hair); }
+.seg-btn { position: relative; z-index: 1; border: 0; background: transparent; cursor: pointer; padding: 11px 24px; border-radius: 999px; font-family: var(--font-nc-sans); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; color: var(--text-tertiary); white-space: nowrap; transition: color var(--dur) var(--ease-out); }
+.seg-btn:hover { color: var(--text-secondary); }
+.seg-btn.active { color: var(--cream); }
+.seg-thumb { position: absolute; z-index: 0; border-radius: 999px; background: var(--ink); box-shadow: 0 6px 18px rgba(19,19,19,0.18); }
+@media (max-width: 560px) { .seg { width: 100%; } .seg-btn { flex: 1 1 0; padding: 11px 8px; font-size: 13.5px; } }
+
+/* billing toggle */
+.bill { display: inline-flex; align-items: center; gap: 14px; font-size: 15px; font-weight: 600; color: var(--text-tertiary); user-select: none; }
+.bill .on { color: var(--text-primary); }
+.bill-switch { position: relative; width: 54px; height: 30px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); cursor: pointer; padding: 0; transition: background var(--dur) var(--ease-out); }
+.bill-switch.on { background: var(--ink); border-color: var(--ink); }
+.bill-knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 999px; background: var(--ink); transition: transform 0.34s var(--ease-out), background var(--dur) var(--ease-out); }
+.bill-switch.on .bill-knob { transform: translateX(24px); background: var(--cream); }
+.bill-save { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green-dark); background: var(--green-wash); padding: 5px 11px; border-radius: 999px; }
+
+/* plan cards */
+.plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; max-width: 880px; margin: 0 auto; }
+@media (max-width: 720px) { .plan-grid { grid-template-columns: 1fr; max-width: 460px; } }
+.plan-card { will-change: transform; }
+.plan-card.is-light:hover { box-shadow: var(--shadow-lift); border-color: var(--nc-border); }
+
+/* button arrow nudge (works alongside the shared Button's group-hover arrow) */
+.nc-btn-arrow { transition: transform var(--dur) var(--ease-out); will-change: transform; }
+.group:hover .nc-btn-arrow, .nc-btn-x:hover .nc-btn-arrow { transform: translateX(5px); }
+
+/* comparison table */
+.cmp2 { max-width: 1080px; margin: 0 auto; }
+.cmp2-grid { --col: 1.7fr 1fr 1fr; }
+.cmp2-row { display: grid; grid-template-columns: var(--col); align-items: center; }
+.cmp2-head { position: sticky; top: 64px; z-index: 20; background: var(--nc-background); border-radius: 18px; box-shadow: 0 10px 30px rgba(19,19,19,0.06); border: 1px solid var(--border-hair); padding: 18px 0; margin-bottom: 8px; }
+.cmp2-head .cmp2-row { padding: 0 26px; }
+.cmp2-grouphead { font-size: 13px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); padding: 30px 26px 12px; border-bottom: 1px solid var(--border-hair); }
+.cmp2-feat { padding: 16px 26px; border-bottom: 1px solid var(--border-hair); }
+.cmp2-feat:hover { background: rgba(19,19,19,0.018); }
+.cmp2-label { font-size: 15.5px; font-weight: 500; letter-spacing: -0.01em; color: var(--text-primary); padding-right: 18px; }
+.cmp2-cell { font-size: 14.5px; color: var(--text-secondary); text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.cmp2-dash { color: var(--text-tertiary); opacity: 0.5; }
+.cmp2-check { color: var(--green-dark); }
+.cmp2-hl { position: absolute; top: 0; bottom: 0; border-radius: 20px; background: var(--surface-soft); opacity: 0.6; z-index: 0; pointer-events: none; }
+@media (max-width: 720px) {
+  .cmp2-head { top: 58px; }
+  .cmp2-grid { --col: 1.4fr 1fr 1fr; }
+  .cmp2-head .cmp2-row, .cmp2-grouphead, .cmp2-feat { padding-left: 14px; padding-right: 14px; }
+  .cmp2-label { font-size: 14px; padding-right: 10px; }
+  .cmp2-cell { font-size: 12.5px; }
+}
+
+/* feature cards (referral-card feel: lift + icon-tile colour flip) */
+.feat-card { background: var(--surface); border: 1px solid var(--border-hair); border-radius: var(--r-card); box-shadow: var(--shadow-card); padding: 30px 30px 34px; display: flex; flex-direction: column; will-change: transform; transition: transform .35s var(--ease-out), box-shadow .35s var(--ease-out), border-color .35s var(--ease-out); }
+.feat-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); border-color: var(--nc-border); }
+.feat-ico { width: 52px; height: 52px; border-radius: 14px; flex: none; display: grid; place-items: center; background: var(--surface-sunken); color: var(--ink); transition: background .35s var(--ease-out), color .35s var(--ease-out), transform .35s var(--ease-out); }
+.feat-card:hover .feat-ico { background: var(--ink); color: var(--cream); transform: translateY(-2px) rotate(-3deg); }
+
+/* responsive grids for steps + feature groups */
+.grid-how { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 28px; }
+.grid-feat { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 20px; }
+.grid-how .cw-card { flex: initial; }
+@media (max-width: 1080px) { .grid-how, .grid-feat { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 680px) { .grid-how, .grid-feat { grid-template-columns: 1fr; } }

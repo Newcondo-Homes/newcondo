@@ -24,7 +24,7 @@ type RoleCard = {
 
 const ROLE_CARDS: RoleCard[] = [
   {
-    type: UserType.PROPERTY_OWNER,
+    type: UserType.OWNER,
     title: "Property owner",
     blurb: "List your properties, collect rent in escrow, and manage everything from one dashboard.",
     Icon: Building2,

@@ -65,9 +65,9 @@ export const RETENTION_ROWS: [dataType: string, retention: string, after: string
 /* ---- 11 Safeguards ---- */
 export const SAFEGUARD_ROWS: [risk: string, mitigation: string][] = [
   ["Insider threat", "Individual background checks and EFCC vetting of staff."],
-  ["Third-party exploits", "Data Processing Agreements with <strong>\u20A610M</strong> breach clauses and anti-tracking provisions."],
+  ["Third-party exploits", "Data Processing Agreements with strict breach clauses and anti-tracking provisions."],
   ["Document forgery", "Automated e-GIS validation (e.g. LASG) plus a legal affidavit on authenticity."],
-  ["Fraudulent user claims", "<strong>\u20A6500,000</strong> penalty and EFCC referral under Cybercrimes Act Sec. 17(3)."],
+  ["Fraudulent user claims", "EFCC referral under the Cybercrimes Act."],
   ["Forced data disclosure", "Legal challenge of subpoenas; users notified unless under a judicial gag order."],
 ];
 

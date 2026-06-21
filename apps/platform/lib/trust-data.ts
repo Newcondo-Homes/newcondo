@@ -60,7 +60,7 @@ export const INSPECTION_TIPS: { icon: string; title: string; body: string }[] = 
 export const REPORT_STEPS: { n: string; title: string; body: string }[] = [
   { n: "1", title: "You flag it", body: "Use the report option on any listing, profile, or message — or email our Trust & Safety team directly." },
   { n: "2", title: "We review", body: "Our team assesses the report, freezes funds or listings where needed, and may request supporting evidence." },
-  { n: "3", title: "We act", body: "Confirmed violations lead to removal, financial penalties, permanent bans, and referral to the authorities where warranted." },
+  { n: "3", title: "We act", body: "Confirmed violations lead to removal, permanent bans, and referral to the authorities where warranted." },
 ];
 
 /* ---- 08 Red flags ---- */

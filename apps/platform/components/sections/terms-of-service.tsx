@@ -130,7 +130,7 @@ export function TermsOfService() {
           ))}
         </Group>
         <Callout tone="warn" icon="triangle-alert" className="mt-[22px]">
-          Releases, holds, and refunds from escrow are governed by our <DocLink href="/refund">Cancellation &amp; Refund Policy</DocLink>. Attempting to settle rent off-platform may result in suspension and forfeiture of pending payouts.
+          Releases, holds, and refunds from escrow are governed by our <DocLink href="/refund">Cancellation &amp; Refund Policy</DocLink>. Attempting to settle rent off-platform may result in account suspension.
         </Callout>
       </DocSection>
 
@@ -157,7 +157,7 @@ export function TermsOfService() {
         <P>You agree to use Newcondo lawfully and in good faith. The following conduct is strictly prohibited:</P>
         <Bullets items={PROHIBITED} />
         <Callout tone="warn" icon="ban">
-          We may investigate suspected violations and cooperate with law enforcement. Prohibited conduct can lead to immediate suspension, removal of listings, financial penalties, and referral to the authorities.
+          We may investigate suspected violations and cooperate with law enforcement. Prohibited conduct can lead to immediate suspension, removal of listings, and referral to the authorities.
         </Callout>
       </DocSection>
 
@@ -209,7 +209,7 @@ export function TermsOfService() {
           ]}
         />
         <Callout tone="warn" icon="user-x">
-          Closing your account to evade a debt, penalty, or active dispute does not extinguish it — outstanding amounts remain due and may be referred to collections or the authorities.
+          Closing your account does not automatically resolve an active dispute — any ongoing matter remains in effect until it is properly settled.
         </Callout>
       </DocSection>
 

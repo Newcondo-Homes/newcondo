@@ -138,7 +138,7 @@ export function RefundPolicy() {
           ]}
         />
         <Callout tone="warn" icon="triangle-alert">
-          Cancelling a paid renter triggers platform penalties: a <B>₦100,000</B> fine, permanent account ban, and property delisting.
+          Cancelling a paid renter may lead to account suspension and property delisting.
         </Callout>
       </DocSection>
 
@@ -179,7 +179,7 @@ export function RefundPolicy() {
 
       {/* 07 */}
       <DocSection id="fraud" label="07 Fraud">
-        <SecHead n="07">Fraudulent disputes &amp; penalties</SecHead>
+        <SecHead n="07">Fraudulent disputes &amp; consequences</SecHead>
         <P>Attempts to abuse the refund system carry strict, enforceable consequences:</P>
         <DocTable head={["Violation", "Consequence"]} rows={FRAUD_ROWS.map(([v, c]) => [v, html(c)])} />
         <Callout tone="warn" icon="gavel">

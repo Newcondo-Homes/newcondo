@@ -218,8 +218,8 @@ export function PrivacyPolicy() {
           Submit a request to <DocLink href="mailto:info@newcondo.homes">info@newcondo.homes</DocLink>. We respond within <B>30 days</B>.
           We may first need to verify your identity to protect your account, and some data must be retained where the law or fraud-prevention requires it.
         </P>
-        <Callout tone="warn" icon="octagon-alert">
-          <B>Anti-abuse measure.</B> Any frivolous, malicious, or fraudulent data access or deletion request shall incur a penalty of ₦500,000, account termination, and EFCC referral under NDPA enforcement protocol.
+        <Callout tone="note" icon="info">
+          To protect your account, we may decline requests that are clearly frivolous, malicious, or fraudulent, or ask you to verify your identity before we act.
         </Callout>
       </DocSection>
 

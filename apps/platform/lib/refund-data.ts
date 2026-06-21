@@ -46,11 +46,11 @@ export const TIMELINE_ROWS: [type: string, time: string, method: string][] = [
   ["Force majeure", "7–10 business days", "Original payment method"],
 ];
 
-/* ---- 07 Fraudulent disputes & penalties ---- */
+/* ---- 07 Fraudulent disputes & consequences ---- */
 export const FRAUD_ROWS: [violation: string, consequence: string][] = [
-  ["Chargeback without a claim", "<strong>\u20A6100,000</strong> fine + permanent ban"],
-  ["Fake force majeure evidence", "EFCC referral + <strong>\u20A6500,000</strong> penalty"],
-  ["Account deletion to evade debt", "Legal action + collections"],
+  ["Chargeback without a claim", "Permanent account ban"],
+  ["Fake force majeure evidence", "EFCC referral and permanent ban"],
+  ["Account deletion to evade a dispute", "Permanent ban from the platform"],
 ];
 
 /* ---- 10 Contact ---- */

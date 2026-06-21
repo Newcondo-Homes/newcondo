@@ -20,6 +20,7 @@
    ============================================================ */
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "@newcondo/auth/client";
 import { toast } from "@newcondo/ui";
@@ -54,12 +55,12 @@ const initialFormData: RegisterFormData = {
   phone: "",
   password: "",
   confirmPassword: "",
-  role: UserType.PROPERTY_OWNER,
+  role: UserType.OWNER,
   agreeToTerms: false,
 };
 
 const ROLE_LABEL: Partial<Record<UserType, string>> = {
-  [UserType.PROPERTY_OWNER]: "property owner",
+  [UserType.OWNER]: "property owner",
   [UserType.RENTER]: "renter",
   [UserType.AGENT]: "agent",
 };
@@ -352,26 +353,42 @@ export default function OnboardingForm({
             </div>
           </div>
 
-          {/* Terms */}
-          <button
-            type="button"
-            onClick={() => handleInputChange("agreeToTerms", !formData.agreeToTerms)}
-            className="mb-1.5 mt-1 flex w-full items-start gap-2.5 text-left"
-          >
-            <span
+          {/* Terms — checkbox toggles; the two policy phrases are real links */}
+          <div className="mb-1.5 mt-1 flex w-full items-start gap-2.5 text-left">
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={formData.agreeToTerms}
+              aria-label="I agree to the Terms of Service and Privacy Policy"
+              onClick={() => handleInputChange("agreeToTerms", !formData.agreeToTerms)}
               className={cx(
-                "mt-px grid h-5 w-5 flex-none place-items-center rounded-md border-[1.5px] transition-colors duration-200 ease-nc",
-                formData.agreeToTerms ? "border-ink bg-ink text-cream" : "border-border-strong bg-surface text-transparent"
+                "mt-px grid h-5 w-5 flex-none cursor-pointer place-items-center rounded-md border-[1.5px] transition-[background,border-color,transform] duration-200 ease-nc hover:scale-110 active:scale-95",
+                formData.agreeToTerms ? "border-ink bg-ink text-cream" : "border-border-strong bg-surface text-transparent hover:border-ink"
               )}
             >
               <Check size={13} strokeWidth={2.6} />
-            </span>
+            </button>
             <span className="text-[13.5px] leading-[1.45] text-text-secondary">
               I agree to the{" "}
-              <span className="font-medium text-text-primary underline underline-offset-2">Terms of Service</span> and{" "}
-              <span className="font-medium text-text-primary underline underline-offset-2">Privacy Policy</span>
+              <Link
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nc-policy-link cursor-pointer font-medium text-text-primary"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="nc-policy-link cursor-pointer font-medium text-text-primary"
+              >
+                Privacy Policy
+              </Link>
             </span>
-          </button>
+          </div>
           {errors.agreeToTerms && <ErrMsg>{errors.agreeToTerms}</ErrMsg>}
 
           <button

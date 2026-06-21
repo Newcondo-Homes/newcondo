@@ -149,7 +149,7 @@ export function TrustSafety() {
           ))}
         </Group>
         <Callout tone="note" icon="flag" className="mt-[22px]">
-          Enforcement actions and penalties for confirmed violations are defined in our <DocLink href="/terms">Terms of Service</DocLink>.
+          Enforcement actions for confirmed violations are defined in our <DocLink href="/terms">Terms of Service</DocLink>.
         </Callout>
       </DocSection>
 

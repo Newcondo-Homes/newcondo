@@ -120,8 +120,10 @@ export const FAQS: Faq[] = [
   ["What is the marking feature?", "Before a property can be listed, it must be GPS-marked on the map. You tap your property — we record the exact coordinates and building boundaries — so no one else can list it. It's the verification layer that prevents duplicate or fraudulent listings. Can't mark it yourself? Newcondo can send a verified agent for a one-time fee."],
 ];
 
+// TODO: do landing page for Agents and renters, and uncomment their links from here
 export const FOOTER: Record<string, string[]> = {
-  PRODUCT: ["How it works", "Features", "Pricing", "For Agents", "For Renters"],
+  // PRODUCT: ["How it works", "Features", "Pricing", "For Agents", "For Renters"],
+  PRODUCT: ["How it works", "Features", "Pricing"],
   COMPANY: ["About", "Blog", "Support", "Careers"],
   LEGAL: ["Privacy Policy", "Refund Policy", "Terms of Service", "Trust & Safety", "Cookie Policy"],
 };
@@ -132,6 +134,6 @@ export const NAV_LINKS: NavLink[] = [
   ["How it works", "#how"],
   ["Features", "#features"],
   ["Pricing", "#pricing"],
-  ["For Agents", "#"],
-  ["For Renters", "#"],
+  // ["For Agents", "#"],
+  // ["For Renters", "#"],
 ];

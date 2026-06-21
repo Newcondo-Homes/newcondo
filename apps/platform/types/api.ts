@@ -528,11 +528,11 @@ export interface Referral {
 
 // Enums
 export enum UserType {
-  RENTER = 'RENTER',
-  AGENT = 'AGENT',
-  PROPERTY_OWNER = 'PROPERTY_OWNER',
-  PROPERTY_MANAGER = 'PROPERTY_MANAGER',
-  ADMIN = 'ADMIN'
+  OWNER = "OWNER",
+  PROPERTY_MANAGER = "PROPERTY_MANAGER",
+  AGENT = "AGENT",
+  RENTER = "RENTER",
+  ADMIN = "ADMIN",
 }
 
 export enum UserStatus {

@@ -82,6 +82,7 @@ export function useAuth() {
       const signInResult = await signIn('credentials', {
         email: data.email,
         password: data.password,
+        loginType: 'email',
         redirect: false
       })
 
@@ -122,6 +123,7 @@ export function useAuth() {
       const signInResult = await signIn('credentials', {
         email,
         password,
+        loginType: 'email',
         redirect: false
       })
 
@@ -145,6 +147,16 @@ export function useAuth() {
       setLoading(false)
     }
   }, [update, setLoading])
+
+
+  // ─── Confirm session then redirect to dashboard ───────────────────────────────────────────
+  // Re-validates the session
+  // via NextAuth's own update() before navigating, closing the race condition
+  // where router.push() could fire before the session cookie fully propagates.
+  const goToDashboard = useCallback(async () => {
+    await update(); // force NextAuth to re-fetch/confirm the session is live
+    router.push('/dashboard');
+  }, [router])
 
   // ─── Logout ──────────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
@@ -201,6 +213,7 @@ export function useAuth() {
           await signIn('credentials', {
             email: data.identifier,
             otpCode: data.code,
+            loginType: 'otp',
             callbackUrl: '/dashboard',
             redirect: true
           })
@@ -291,6 +304,7 @@ export function useAuth() {
     register,
     login,
     signInAfterRegister,
+    goToDashboard,
     logout,
     sendOTP,
     verifyOTP,
