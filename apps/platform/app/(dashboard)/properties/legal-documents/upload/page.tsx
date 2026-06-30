@@ -274,7 +274,7 @@ export default function UploadLegalDocumentPage() {
     }
   };
 
-  const userCanUploadOwnership = user?.userType === 'LANDLORD' || (user?.userType === 'AGENT' && selectedProperty?.owner?.id === user?.id);
+  const userCanUploadOwnership = user?.userType === 'OWNER' || (user?.userType === 'AGENT' && selectedProperty?.owner?.id === user?.id);
   const userCanUploadConsent = user?.userType === 'AGENT';
 
   const isUploadRequired = selectedDocType?.requiresUpload;

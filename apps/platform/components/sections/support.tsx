@@ -9,12 +9,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { cx } from "@/lib/cx";
 import { Navbar } from "@/components/sections/navbar";
+import { Footer } from "@/components/sections/footer";
 import { ChatButton } from "@/components/chat-button";
 import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { PageHero } from "@/components/ui/page-hero";
 import { Icon } from "@/components/ui/icon";
 import { Reveal, Group, Item, vCard, EASE } from "@/components/motion";
+import { OPEN_CHAT_EVENT } from "@/hooks/useCrisp";
 import { SUPPORT_CATEGORIES, SUPPORT_FAQS, SUPPORT_CHANNELS } from "@/lib/support-data";
 
 export function Support() {
@@ -106,6 +108,7 @@ export function Support() {
         <Group stagger={0.07} className="grid grid-cols-3 gap-[clamp(16px,2vw,24px)] max-[760px]:grid-cols-1">
           {SUPPORT_CHANNELS.map((ch) => {
             const internal = ch.href.startsWith("/");
+            const isChat = ch.href === "#chat";
             const inner = (
               <>
                 <span className="mb-5 grid h-12 w-12 place-items-center rounded-[13px] bg-ink text-cream">
@@ -118,6 +121,20 @@ export function Support() {
             );
             const cls =
               "block h-full rounded-card border border-border-hair bg-surface p-[clamp(24px,3vw,34px)] no-underline shadow-card transition-transform duration-200 ease-nc hover:-translate-y-1";
+            if (isChat) {
+              return (
+                <Item
+                  key={ch.label}
+                  variants={vCard}
+                  as="button"
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event(OPEN_CHAT_EVENT))}
+                  className={cx(cls, "w-full text-left cursor-pointer")}
+                >
+                  {inner}
+                </Item>
+              );
+            }
             return internal ? (
               <Item key={ch.label} variants={vCard}>
                 <Link href={ch.href} className={cls}>{inner}</Link>
@@ -130,6 +147,8 @@ export function Support() {
           })}
         </Group>
       </Section>
+
+      <Footer />
       <ChatButton />
     </div>
   );

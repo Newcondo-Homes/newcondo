@@ -23,6 +23,14 @@ export interface RegisterPayload {
   password: string;
   userType: UserType;
 }
+/**
+ * What the register call resolves with. The backend JWT (`token`) is used as
+ * a fast-path bearer for the immediately-following subscription call; if it's
+ * absent the subscription client falls back to the live NextAuth session. All
+ * fields optional so a real useRegister returning a different shape still
+ * compiles.
+ */
+
 
 /** The minimal profile the onboarding flow carries between steps. */
 export interface OnboardingProfile {
@@ -39,9 +47,22 @@ export interface Plan {
   tagline: string;
   /** Monthly price in naira. 0 == free. */
   price: number;
+  /**
+   * Optional "was" price shown struck-through next to the live price — e.g. a
+   * renter plan that is free for founding users but lists its post-launch
+   * ₦3,500/mo with a line through it.
+   */
+  strikePrice?: number;
+  /** Small line under the price, e.g. "Free for the first 300 renters". */
+  priceNote?: string;
   highlight?: boolean;
   badge?: string;
   features: string[];
+   /**
+   * Optional explicit backend plan code. When set, the checkout sends this
+   * straight to the subscription API instead of resolving from (role, id).
+   */
+  subscriptionPlan?: SubscriptionPlanCode;
 }
 
 /** Result returned by the (Flutterwave) payment call. */
@@ -49,6 +70,57 @@ export interface PaymentResult {
   reference: string;
   status: "successful" | "pending" | "failed";
   amount: number;
+}
+
+
+/** Payload for verify / resend OTP. */
+export interface OTPPayload {
+  identifier: string;
+  type: OTPType;
+  code?: string;
+}
+
+/** Result of an OTP verify / resend call. */
+export interface OTPResult {
+  success: boolean;
+  error?: string;
+}
+
+/* ============================================================
+   Subscriptions / billing
+   Mirrors the backend SubscriptionPlan + BillingCycle enums
+   (packages/db). The frontend never invents amounts — the
+   initiate endpoint returns the authoritative price.
+   ============================================================ */
+
+export type BillingCycle = "MONTHLY" | "ANNUAL";
+
+/** Every paid/free plan code the backend accepts (Prisma `SubscriptionPlan`). */
+export type SubscriptionPlanCode =
+  | "OWNER_ESSENTIAL"
+  | "OWNER_ELITE"
+  | "OWNER_ESSENTIAL_ANNUAL"
+  | "OWNER_ELITE_ANNUAL"
+  | "AGENT_ESSENTIAL"
+  | "AGENT_PREMIUM"
+  | "AGENT_ESSENTIAL_ANNUAL"
+  | "AGENT_PREMIUM_ANNUAL"
+  | "RENTER_FREE"
+  | "RENTER_PREMIUM_PLUS";
+
+/**
+ * Shape returned by POST /payments/subscriptions/initiate.
+ * `flwPayload` is handed straight to FlutterwaveCheckout() (the client only
+ * adds `public_key`, `callback`, and `onclose`).
+ */
+export interface InitiateSubscriptionResult {
+  txRef: string;
+  subscriptionId: string;
+  flwPayload: import("./flutterwave").FlutterwavePayload;
+  planName: string;
+  amountNaira: number;
+  isFoundingAgent?: boolean;
+  foundingAgentNumber?: number | null;
 }
 
 export interface User {

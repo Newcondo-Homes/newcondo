@@ -47,49 +47,51 @@ const PLANS_BY_ROLE: Partial<Record<UserType, Plan[]>> = {
   // Renter plans — kept for when renter onboarding re-opens (UserTypeSelector).
   [UserType.RENTER]: [
     {
-      id: "renter-free",
-      name: "Basic",
-      tagline: "Browse and apply",
-      price: 0,
-      features: [
-        "Browse verified listings",
-        "Save and compare homes",
-        "Deposit held in escrow",
-        "Tracked, accountable agents",
-      ],
-    },
-    {
       id: "renter-plus",
-      name: "Renter+",
-      tagline: "Move faster, get seen first",
-      price: 2500,
+      name: "Premium Plus",
+      tagline: "Everything renters get on Newcondo",
+      price: 0,
+      strikePrice: 3500,
+      priceNote: "Free for the first 300 founding renters",
       highlight: true,
-      badge: "Recommended",
+      badge: "Founding offer",
       features: [
-        "Everything in Basic",
-        "Priority application review",
+        "Browse & search verified listings",
+        "24-hour confirmation & refund window",
+        "Verified-listings-only view",
         "Early access to new listings",
-        "Verified-renter badge",
-        "Rent-payment history record",
+        "Boosted referral bonus credits",
+        "Priority customer support",
       ],
     },
   ],
   [UserType.AGENT]: [
-    {
-      id: "agent-starter",
-      name: "Starter",
-      tagline: "New agents getting started",
-      price: 0,
-      features: ["List & promote properties", "Tracked promotion links", "Commission on closed lets", "Standard listing visibility"],
+     {
+      id: "agent-essential",
+      name: "Essential",
+      tagline: "Agents getting started — up to 5 listings",
+      price: 2000,
+      features: [
+        "Up to 5 active listings",
+        "GPS property marking",
+        "Commission through the platform",
+        "Standard verified-agent badge",
+      ],
     },
     {
-      id: "agent-pro",
-      name: "Pro",
-      tagline: "High-volume, full-time agents",
-      price: 9500,
+      id: "agent-premium",
+      name: "Premium",
+      tagline: "Full-time agents · every income stream",
+      price: 3500,
       highlight: true,
-      badge: "Most popular",
-      features: ["Everything in Starter", "Priority listing placement", "Priority marking-job queue", "Lower platform fee", "Performance dashboard"],
+      badge: "Founding: free for life",
+      features: [
+        "Everything in Essential",
+        "Unlimited listings",
+        "Marking-job queue access",
+        "Referral income access",
+        "Priority search placement",
+      ],
     },
   ],
 };
@@ -128,7 +130,7 @@ export default function PlanSelector({
 
   return (
     <div className="w-full">
-      <div className={cx("grid gap-4", plans.length === 2 ? "grid-cols-2 max-[680px]:grid-cols-1" : "grid-cols-3")}>
+      <div className={cx("grid gap-4", plans.length === 1 ? "mx-auto max-w-[460px] grid-cols-1" : plans.length === 2 ? "grid-cols-2 max-[680px]:grid-cols-1" : "grid-cols-3")}>
         {plans.map((plan) => {
           const isElite = !!plan.highlight;
           const isActive = selected === plan.id;

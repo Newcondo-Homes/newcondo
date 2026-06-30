@@ -187,6 +187,7 @@ export interface FlutterwaveConfig {
   amount: number;
   currency: string;
   payment_options: string;
+  payment_plan?: string | number;
   redirect_url?: string;
   customer: FlutterwaveCustomer; // ✅ use the interface instead of inline type
   customizations: FlutterwaveCustomization;

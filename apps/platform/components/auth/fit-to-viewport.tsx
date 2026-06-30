@@ -42,7 +42,21 @@ export default function FitToViewport({
       const naturalH = inner.scrollHeight; // unaffected by the transform
       const next = availH > 0 && naturalH > 0 ? Math.min(1, availH / naturalH) : 1;
       // Apply straight to the DOM — synchronous, before the next paint.
-      inner.style.transform = `scale(${next})`;
+      // CRITICAL: only set transform/will-change when we ACTUALLY scale down.
+      // `transform: scale(1)` AND `will-change: transform` each turn this node
+      // into the containing block for position:fixed descendants — which traps
+      // any fixed-positioned overlay rendered inside the flow (e.g. the
+      // Flutterwave checkout iframe), so it resolves against this small,
+      // centered box and gets clipped by the overflow:hidden frame → invisible.
+      // Emitting `none` when no scaling is needed lets fixed overlays escape to
+      // the viewport as intended.
+      if (next < 1) {
+        inner.style.transform = `scale(${next})`;
+        inner.style.willChange = "transform";
+      } else {
+        inner.style.transform = "none";
+        inner.style.willChange = "auto";
+      }
     };
 
     const schedule = () => {
@@ -84,7 +98,7 @@ export default function FitToViewport({
     <div ref={outerRef} className="relative flex h-full w-full items-center justify-center overflow-hidden">
       <div
         ref={innerRef}
-        style={{ transform: "scale(1)", transformOrigin: "center center", willChange: "transform" }}
+        style={{ transformOrigin: "center center" }}
         className={`w-full ${className}`}
       >
         {children}

@@ -351,7 +351,7 @@ export default function PropertyLegalPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {user?.userType === "LANDLORD" && (
+                {user?.userType === "OWNER" && (
                   <OwnershipProofUpload
                     propertyId={propertyId}
                     onUploadComplete={(doc) => {

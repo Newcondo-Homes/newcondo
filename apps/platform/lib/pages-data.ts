@@ -26,6 +26,8 @@ export interface Plan {
   monthly?: number;
   priceLabel?: string;
   unit?: string;
+  /** Optional struck-through "was" price shown beside the live price. */
+  strike?: string;
   note?: string;
   badge?: string;
   popular: boolean;
@@ -143,11 +145,10 @@ export const PRICING: Record<Audience, PricingModel> = {
   renter: {
     eyebrow: "For renters",
     title: "Find a home in Nigeria without getting burnt.",
-    lead: "Verified listings. Zero double-booking. No hidden agent fees. Premium is free for the first 300 renters — try the whole platform before you decide anything.",
+    lead: "Right now, renting on Newcondo is free for renters — verified listings, secure payment, the 24-hour refund window and the double-booking lock, all included. Paid plans come later; the first 300 founding renters keep their perks when they do.",
     billing: false,
     plans: [
-      { id: "free", name: "Free", tagline: "Browse and search verified listings", priceLabel: "Free", unit: "", note: "No card required", popular: false, variant: "light", cta: "Create free account", href: "/onboarding" },
-      { id: "premium", name: "Premium", tagline: "The full protection stack", badge: "247 of 300 claimed", priceLabel: "Free", unit: "", note: "for the first 300 renters · then paid", popular: true, variant: "dark", cta: "Claim free Premium", href: "/onboarding" },
+      { id: "plus", name: "Premium Plus", tagline: "Everything renters get — free while we grow", priceLabel: "Free", unit: "", strike: "₦3,500/mo", note: "Free for the first 300 founding renters · ₦3,500/mo after launch", badge: "Founding offer — free for life", popular: true, variant: "dark", cta: "Claim founding access", href: "/onboarding" },
     ],
     groups: [
       { name: "Search & discovery", rows: [
@@ -155,24 +156,25 @@ export const PRICING: Record<Audience, PricingModel> = {
         ["Filter, save & compare properties", true, true],
         ["Remote property discovery (room photos)", true, true],
         ["Verified-listings-only view", false, true],
+        ["Early access to new listings", false, true],
       ]},
       { name: "Payments & protection", rows: [
         ["Secure platform payment", true, true],
         ["No exploitative agent fees", true, true],
-        ["24-hour confirmation & refund window", false, true],
-        ["Anti-double-booking lock", false, true],
+        ["24-hour confirmation & refund window", true, true],
+        ["Anti-double-booking lock", true, true],
       ]},
       { name: "Account & rewards", rows: [
-        ["Virtual wallet & transaction history", false, true],
+        ["Virtual wallet & transaction history", true, true],
+        ["Referral bonus credits", "Standard", "Boosted"],
         ["Premium profile badge", false, true],
         ["Priority customer support", false, true],
-        ["Referral bonus credits", false, true],
       ]},
     ],
     footnote: {
-      icon: "shield-check", title: "Why Premium is free right now",
-      body: "We're giving Premium to the first 300 renters so you can experience verified listings, the refund window and the double-booking lock <strong>before you spend a naira.</strong> After the first 300, Premium becomes a paid plan.",
-      tag: "No card required. Takes 2 minutes to claim your spot.",
+      icon: "gift", title: "Free for renters, right now",
+      body: "While we build our launch base, renters use Newcondo for free — including the full Premium Plus protection stack for the first 300 founding renters. Paid plans (Basic Premium ₦1,500/mo and Premium Plus ₦3,500/mo, billed monthly with ~2 months free yearly) arrive later, and <strong>founding renters keep their founding perks.</strong>",
+      tag: "No card required. Takes 2 minutes to create your account.",
     },
   },
 };
@@ -211,7 +213,7 @@ export const HOW: Record<Audience, HowModel> = {
     title: "Find a real home, pay safely, move in — with nothing to lose.",
     lead: "No fake listings. No double-booking. No surprise agent fees. Here's how renting on Newcondo actually works.",
     steps: [
-      { n: "01", variant: "teal", label: "Create account", anim: "Create your account", title: "Sign up free in two minutes", text: "Create your account with your email or phone and choose renter. No card required. Premium is free for the first 300 renters." },
+      { n: "01", variant: "teal", label: "Create account", anim: "Create your account", title: "Sign up free in two minutes", text: "Create your account with your email or phone and choose renter. It's free for now — no card required, and the first 300 founding renters keep their perks when paid plans arrive." },
       { n: "02", variant: "sunset", label: "Browse verified", anim: "Browse verified listings", title: "Browse only verified, GPS-marked properties", text: "Every property is geo-verified before it's listed, so if you see it, it's real. Filter by city, price and type; save and compare from your phone." },
       { n: "03", variant: "coral", label: "Pay securely", anim: "Pay securely", title: "Pay through the platform — the flat locks to you", text: "The moment you start payment, that property is locked. No one else can pay for it at the same time, so double-booking simply can't happen." },
       { n: "04", variant: "lilac", label: "Confirm in 24h", anim: "Confirm within 24 hours", title: "Inspect, then confirm within 24 hours", text: "Your money is held — not released — for 24 hours. Visit the property and confirm it matches the listing. If it doesn't, request a refund automatically from your dashboard." },

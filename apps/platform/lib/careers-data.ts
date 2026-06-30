@@ -16,14 +16,21 @@ export type Role = {
   type: string; // Full-time / Contract / Internship
 };
 
-/* ---- DUMMY DATA — replace with your backend response ---- */
-export const OPEN_ROLES: Role[] = [
-  { id: "eng-1", title: "Senior Backend Engineer", team: "Engineering", location: "Lagos / Remote", type: "Full-time" },
-  { id: "eng-2", title: "Frontend Engineer (Next.js)", team: "Engineering", location: "Remote (Nigeria)", type: "Full-time" },
-  { id: "ops-1", title: "Verification Operations Lead", team: "Trust & Safety", location: "Owerri", type: "Full-time" },
-  { id: "gtm-1", title: "Field Sales Associate", team: "Growth", location: "Abuja", type: "Full-time" },
-  { id: "des-1", title: "Product Designer", team: "Product", location: "Remote (Nigeria)", type: "Contract" },
-];
+/* ---- OPEN ROLES ----
+   No open positions right now → empty array shows the "no open roles" state.
+
+   The dummy roles below are kept (commented out) so you can either restore
+   them for previewing, or use them as the shape your backend should return.
+
+// const DUMMY_ROLES: Role[] = [
+//   { id: "eng-1", title: "Senior Backend Engineer", team: "Engineering", location: "Lagos / Remote", type: "Full-time" },
+//   { id: "eng-2", title: "Frontend Engineer (Next.js)", team: "Engineering", location: "Remote (Nigeria)", type: "Full-time" },
+//   { id: "ops-1", title: "Verification Operations Lead", team: "Trust & Safety", location: "Owerri", type: "Full-time" },
+//   { id: "gtm-1", title: "Field Sales Associate", team: "Growth", location: "Abuja", type: "Full-time" },
+//   { id: "des-1", title: "Product Designer", team: "Product", location: "Remote (Nigeria)", type: "Contract" },
+// ];
+*/
+export const OPEN_ROLES: Role[] = [];
 
 export const PERKS: { icon: string; title: string; body: string }[] = [
   { icon: "banknote", title: "Honest pay", body: "Competitive salaries benchmarked to the role, reviewed regularly — no games, no surprises." },

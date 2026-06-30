@@ -31,7 +31,7 @@ export const env = {
   NODE_ENV: getOptional('NODE_ENV', 'development') as 'development' | 'test' | 'production',
 
   // ── Database ─────────────────────────────────────────────────────────────
-  DATABASE_URL: getRequired('DATABASE_URL'),
+  DATABASE_URL: getOptional('DATABASE_URL'),
   DIRECT_URL: getOptional('DIRECT_URL'),
 
   // ── Auth ─────────────────────────────────────────────────────────────────

@@ -6,7 +6,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/sections/navbar";
-import { Footer } from "@/components/sections/footer";
 import { ChatButton } from "@/components/chat-button";
 import { PageHero } from "@/components/ui/page-hero";
 import { Button } from "@/components/ui/nc-button";
@@ -41,7 +40,7 @@ function BillingToggle({ annual, onToggle }: { annual: boolean; onToggle: (v: bo
   );
 }
 
-function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
+function PlanCard({ plan, annual, solo }: { plan: Plan; annual: boolean; solo?: boolean }) {
   const dark = plan.variant === "dark";
   const pv = priceView(plan, annual);
   return (
@@ -50,6 +49,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
       variants={vFade}
       className={cx(
         "plan-card relative rounded-card px-9 pt-9 pb-10 flex flex-col transition-[transform,box-shadow,border-color] duration-[380ms] ease-nc hover:-translate-y-1.5",
+        solo && "w-full max-w-[480px]",
         dark ? "bg-ink text-cream shadow-lift hover:shadow-pop" : "is-light bg-surface border border-[rgba(0,0,0,0.06)] shadow-card"
       )}
     >
@@ -59,10 +59,13 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
       </div>
       <p className={cx("text-[14px] leading-[1.45] m-0 mt-2 min-h-[40px]", dark ? "text-text-on-dark-2" : "text-text-secondary")}>{plan.tagline}</p>
 
-      <div className="mt-7 mb-1 h-[58px] flex items-end overflow-hidden">
-        <motion.div key={pv.big + pv.unit} className="flex items-baseline gap-1.5" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.32, ease: EASE }}>
+      <div className="mt-7 mb-1 min-h-[58px] flex items-end overflow-hidden">
+        <motion.div key={pv.big + pv.unit} className="flex flex-wrap items-baseline gap-x-2 gap-y-1" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.32, ease: EASE }}>
           <span className={cx("text-[46px] font-bold tracking-[-0.04em] leading-none", dark ? "text-cream" : "text-text-primary")}>{pv.big}</span>
           {pv.unit && <span className={cx("text-[16px]", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{pv.unit}</span>}
+          {plan.strike && (
+            <span className={cx("text-[18px] font-medium line-through", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{plan.strike}</span>
+          )}
         </motion.div>
       </div>
       <p className={cx("text-[13.5px] m-0 mb-6 min-h-[20px]", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{pv.note}</p>
@@ -145,6 +148,56 @@ function ComparisonTable({ model, annual }: { model: PricingModel; annual: boole
   );
 }
 
+/* Single-card audiences (renters): one plan + a founding-aware feature list
+   instead of a two-column comparison. Every listed feature is included with
+   the card; the founding-only perks carry a "First 300" badge so it's clear
+   what the first 300 renters get for free. */
+function FoundingFeatures({ model }: { model: PricingModel }) {
+  return (
+    <div className="max-w-[820px] mx-auto">
+      <div className="text-center mb-2">
+        <h3 className="text-[clamp(20px,2.2vw,26px)] font-bold tracking-[-0.02em] text-text-primary m-0">Everything you get</h3>
+        <p className="mt-2.5 text-[15px] leading-[1.55] text-text-secondary max-w-[560px] mx-auto">
+          Every renter gets all of this. The items marked{" "}
+          <span className="inline-flex items-center gap-1 align-middle rounded-full bg-green-wash text-green-dark px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em]">
+            <Icon name="sparkles" size={11} /> First 300
+          </span>{" "}
+          are founding-renter perks — free for life for the first 300.
+        </p>
+      </div>
+      {model.groups.map((g) => (
+        <Reveal key={g.name} variants={vFade} className="block">
+          <div className="text-[13px] font-semibold tracking-[0.04em] uppercase text-text-tertiary px-1 pt-7 pb-1.5">{g.name}</div>
+          {g.rows.map(([label, a, b]) => {
+            const founding = a !== b;
+            const has = b !== false;
+            return (
+              <div key={label} className="flex items-center justify-between gap-4 py-3.5 border-b border-[rgba(0,0,0,0.06)]">
+                <div className={cx("flex items-center gap-3 text-[15.5px]", has ? "text-text-secondary" : "text-text-tertiary")}>
+                  {has ? (
+                    <Icon name="check" size={18} className="text-green-dark flex-none" />
+                  ) : (
+                    <span className="w-[18px] text-center text-text-tertiary flex-none">—</span>
+                  )}
+                  <span>{label}</span>
+                </div>
+                <div className="flex items-center gap-2.5 flex-none">
+                  {typeof b === "string" && <span className="text-[14px] font-semibold text-text-primary">{b}</span>}
+                  {founding && has && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-wash text-green-dark px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.06em]">
+                      <Icon name="sparkles" size={12} /> First 300
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </Reveal>
+      ))}
+    </div>
+  );
+}
+
 export function PricingPage() {
   const [audience, setAudience] = useAudience();
   const [annual, setAnnual] = useState(false);
@@ -182,12 +235,16 @@ export function PricingPage() {
               <p className="nc-lead mt-5 mx-auto max-w-[680px]">{model.lead}</p>
             </div>
 
-            <Group className="plan-grid" stagger={0.12}>
-              {model.plans.map((p) => <PlanCard key={p.id} plan={p} annual={annual} />)}
+            <Group className={cx(model.plans.length === 1 ? "flex justify-center" : "plan-grid")} stagger={0.12}>
+              {model.plans.map((p) => <PlanCard key={p.id} plan={p} annual={annual} solo={model.plans.length === 1} />)}
             </Group>
 
             <div className="mt-[clamp(56px,7vw,96px)]">
-              <ComparisonTable model={model} annual={annual} />
+              {model.plans.length === 1 ? (
+                <FoundingFeatures model={model} />
+              ) : (
+                <ComparisonTable model={model} annual={annual} />
+              )}
             </div>
 
             <Reveal className="flex gap-[22px] items-start max-w-[1080px] mx-auto mt-[42px] bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] py-8 shadow-card max-[680px]:flex-col">

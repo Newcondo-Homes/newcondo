@@ -19,7 +19,7 @@ export const TRUST_TOC: TocItem[] = [
 
 export const TRUST_META: MetaChip[] = [
   { icon: "shield-check", label: "", value: "NDPA 2023 compliant", green: true },
-  { icon: "lock", label: "", value: "Escrow-protected rent" },
+  { icon: "lock", label: "", value: "Secure rent collection" },
   { icon: "badge-check", label: "", value: "ID-verified users" },
   { icon: "clock", label: "", value: "~7 min read" },
 ];

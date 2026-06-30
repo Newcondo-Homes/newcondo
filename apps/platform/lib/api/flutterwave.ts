@@ -11,11 +11,12 @@ import type {
 declare global {
   interface Window {
     FlutterwaveCheckout: ((config: FlutterwaveConfig) => void) | undefined;
+    closePaymentModal?: () => void;
   }
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-// TODO: put flutterwaves types in a seperate type folder 
+// TODO: put flutterwaves types in a seperate type folder
 export interface InitPaymentOptions {
   amount: number;
   currency: string;
@@ -25,6 +26,11 @@ export interface InitPaymentOptions {
   paymentOptions?: string[];
   redirectUrl?: string;
   meta?: Record<string, unknown>;
+  /**
+   * Flutterwave payment-plan ID — set this to charge the saved card on a
+   * RECURRING schedule (e.g. monthly subscription). Omit for a one-off charge.
+   */
+  paymentPlan?: string | number;
   onSuccess: PaymentCallback;
   onCancel?: () => void;
   onError?: (response: FlutterwaveResponse) => void;
@@ -93,11 +99,13 @@ class FlutterwaveClient {
       tx_ref: options.reference,
       amount: options.amount,
       currency: options.currency,
+      // → recurring billing when a plan id is supplied (monthly subscription).
+      payment_plan: options.paymentPlan,
       customer: options.customer,
       customizations: options.customization || {
         title: 'NewCondo Payment',
         description: 'Property rental payment',
-        logo: `${window.location.origin}/images/logos/logo.png`
+        logo: "https://drive.google.com/uc?id=1CRhfvMvQS-121fKvLueM4TJDIWx6Azr6"
       },
       payment_options: options.paymentOptions?.join(',') || 'card,banktransfer,ussd',
       redirect_url: options.redirectUrl,
@@ -175,7 +183,7 @@ class FlutterwaveClient {
     return { isValid: true };
   }
 
-  
+
 
     /**
    * Get payment status color for UI
@@ -196,9 +204,9 @@ class FlutterwaveClient {
         return 'text-gray-500';
     }
   }
-  
 
-  
+
+
   /**
    * Get payment status badge variant
    */

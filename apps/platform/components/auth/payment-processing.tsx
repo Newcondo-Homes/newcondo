@@ -3,27 +3,67 @@
 /* ============================================================
    PaymentProcessing  (finalize step)
 
-   This is where the account is ACTUALLY created — registration is
-   deferred to here so an abandoned onboarding never leaves a
-   half-made account behind.
+   IMPORTANT — why the order changed to REGISTER-FIRST:
+   Your Express backend gates BOTH subscription endpoints behind
+   authMiddleware (they read req.user.id):
+       POST /payments/subscriptions/initiate       (paid)
+       POST /payments/subscriptions/renter-signup  (free renter)
+   So the account MUST exist + be authenticated BEFORE we can create a
+   subscription. The old charge-first flow never called the backend at
+   all — which is exactly why (1) no free-renter subscription row was
+   ever created and (2) paid subscriptions were never recorded.
 
-   Order of operations:
-     • Paid plan  → charge first (Flutterwave via usePayment), THEN register.
-     • Free plan  → just register.
-     • Social user (alreadyRegistered) → skip register; only charge if paid.
+   New order:
+     1. register            → create the account
+     2. signIn              → live NextAuth session (carries accessToken)
+     3. waitForSessionToken → ensure apiClient can read the new token
+     4a. FREE renter  → POST /subscriptions/renter-signup
+     4b. PAID         → POST /subscriptions/initiate → backend returns the
+         authoritative Flutterwave payload (amount + payment_plan + tx_ref)
+         → open Flutterwave Inline with THAT payload → success
+     5. onComplete
 
-   On any failure it surfaces a retry + "Back to plans" so nothing is
-   silently lost. A per-attempt ref guards React 18 StrictMode against
-   double-charging in dev.
+   Opening the modal with the BACKEND payload (not a client-guessed
+   amount) also fixes the "modal flashes / never opens" class of bug:
+   when payment_plan is attached, Flutterwave rejects the call unless the
+   amount matches the plan amount exactly — letting the server supply both
+   guarantees they match.
    ============================================================ */
 
 import { useEffect, useRef, useState } from "react";
-import { Loader2, ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft } from "lucide-react";
-import { usePayment, useRegister, useAuth } from "@/hooks/useAuth";
-import type { Plan, PaymentResult } from "@/types/api";
+import { getSession } from "@newcondo/auth/client";
+import { Loader2, ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft, Check, CreditCard } from "lucide-react";
+import { useRegister, useAuth } from "@/hooks/useAuth";
+import { useFlutterwaveInline } from "@/hooks/useFlutterwaveInline";
+import {
+  initiateSubscription,
+  createFreeRenterSubscription,
+  resolveSubscriptionPlanCode,
+} from "@/lib/api/subscriptions";
+import { UserType } from "@/types/api";
+import type { Plan, PaymentResult, AuthResponse } from "@/types/api";
 import type { OnboardingDraft } from "./onboarding-form";
 
 const naira = (n: number) => `\u20A6${n.toLocaleString("en-NG")}`;
+
+/**
+ * Poll getSession() until it returns a session carrying an accessToken (the
+ * value apiClient sends as the Bearer). Right after signIn the session can
+ * briefly still be the old token-less one; this prevents the resulting 401.
+ * Resolves anyway after the timeout so we never hang the flow.
+ */
+async function waitForSessionToken(timeoutMs = 4000, intervalMs = 150): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    try {
+      const session = (await getSession()) as { accessToken?: string } | null;
+      if (session?.accessToken) return;
+    } catch {
+      /* keep polling */
+    }
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+}
 
 export default function PaymentProcessing({
   plan,
@@ -33,43 +73,55 @@ export default function PaymentProcessing({
   onBack,
 }: {
   plan: Plan;
-  /** Collected details (incl. password) — used to register at the end. */
   draft: OnboardingDraft;
-  /** True for social sign-ups whose account already exists; skips register(). */
   alreadyRegistered?: boolean;
   onComplete: (result: { payment?: PaymentResult }) => void;
-  /** Return to plan selection (shown on error). */
   onBack?: () => void;
 }) {
-  const { pay } = usePayment();
+  const { open: openCheckout } = useFlutterwaveInline();
   const { mutate: register } = useRegister();
   const { signInAfterRegister } = useAuth();
 
-  // Store signInAfterRegister in a ref so that when NextAuth triggers a
-  // re-render (session state change after sign-in), the in-flight async
-  // sequence isn't affected by a stale closure or a re-render cancellation.
   const signInRef = useRef(signInAfterRegister);
   useEffect(() => {
     signInRef.current = signInAfterRegister;
   });
 
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState<"account" | "payment">("account");
   const [attempt, setAttempt] = useState(0);
+  // Gate: show the "Confirm subscription" review card FIRST. Nothing runs
+  // (no register, no charge) until the user taps Pay/Activate. This is the
+  // modal the user expects before the Flutterwave card sheet appears.
+  const [started, setStarted] = useState(false);
 
   // Guards StrictMode double-invoke — never runs the same attempt twice.
   const ranFor = useRef(-1);
 
   const free = plan.price === 0;
 
-  // Promise wrappers around the existing callback-style hooks.
-  const payAsync = (p: Plan) =>
+  // ---- Open Flutterwave Inline with the BACKEND-supplied payload ----
+  const payWithBackendPayload = (
+    flwPayload: Awaited<ReturnType<typeof initiateSubscription>>["flwPayload"]
+  ) =>
     new Promise<PaymentResult>((resolve, reject) => {
-      pay(p, { onSuccess: resolve, onError: reject });
+      openCheckout({
+        payload: flwPayload,
+        onSuccess: (resp) =>
+          resolve({
+            reference: String(resp.tx_ref ?? resp.flw_ref ?? flwPayload.tx_ref),
+            status: "successful",
+            amount: plan.price,
+          }),
+        onClose: () =>
+          reject(new Error("Payment was cancelled. You can try again when you're ready.")),
+        onError: (e) => reject(e),
+      });
     });
 
+  // ---- register → returns the AuthResponse (so we can read the JWT) ----
   const registerAsync = () =>
-    new Promise<void>((resolve, reject) => {
-      // Safety timeout — surfaces an error if the API never responds.
+    new Promise<AuthResponse>((resolve, reject) => {
       const timeout = setTimeout(() => {
         reject(new Error("Registration timed out. Please try again."));
       }, 15_000);
@@ -83,9 +135,9 @@ export default function PaymentProcessing({
           userType: draft.role,
         },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             clearTimeout(timeout);
-            resolve();
+            resolve(data);
           },
           onError: (err) => {
             clearTimeout(timeout);
@@ -96,59 +148,65 @@ export default function PaymentProcessing({
     });
 
   useEffect(() => {
-    // Guard: never run the same attempt index twice (StrictMode double-invoke).
+    if (!started) return; // wait for explicit confirmation
     if (ranFor.current === attempt) return;
     ranFor.current = attempt;
 
-    // Use a `completed` flag instead of a `cancelled` flag.
-    //
-    // The old pattern `cancelled = true` in the cleanup fired on EVERY
-    // re-render — including when NextAuth re-renders this component after
-    // sign-in succeeds (session state change). That was silently blocking
-    // onComplete from ever being called even though all three steps logged
-    // successfully.
-    //
-    // `completed` only prevents duplicate onComplete/setError calls.
-    // It is NOT reset by re-renders, so the sign-in → re-render → onComplete
-    // sequence works correctly.
     let completed = false;
 
     (async () => {
       setError(null);
+      setStep("account");
       try {
-        let paymentResult: PaymentResult | undefined;
-
-        // 1) Charge first for paid plans (email already verified earlier).
-        if (!free) {
-          console.log("[PaymentProcessing] Starting payment...");
-          paymentResult = await payAsync(plan);
-          console.log("[PaymentProcessing] Payment complete:", paymentResult);
-        }
-
-        // 2) Create the account — unless social user who already exists.
+        // 1) Create the account (unless a social user already exists).
         if (!alreadyRegistered) {
           console.log("[PaymentProcessing] Registering user...");
           await registerAsync();
           console.log("[PaymentProcessing] Registration complete");
 
-          // 3) Sign in so the NextAuth session is live before we navigate.
-          //    Uses a ref so the function reference is always current even
-          //    if React re-renders mid-flight.
+          // 2) Sign in so the NextAuth session (with accessToken) is live.
+          //    apiClient reads session.accessToken for the backend calls below.
           console.log("[PaymentProcessing] Signing in...");
           const signInResult = await signInRef.current(
             draft.email.trim().toLowerCase(),
             draft.password
           );
-
           if (!signInResult.success) {
-            // Non-fatal — account was created; user can log in manually.
-            console.warn("[PaymentProcessing] Auto sign-in failed:", signInResult.error);
-          } else {
-            console.log("[PaymentProcessing] Signed in successfully");
+            throw new Error(
+              signInResult.error ??
+                "We created your account but couldn't sign you in. Please log in and choose your plan from your dashboard."
+            );
           }
+
+          // 2b) Wait until the session actually carries the accessToken before
+          //     calling the backend — getSession() can briefly return the old
+          //     (token-less) session right after signIn, which would 401.
+          await waitForSessionToken();
         }
 
-        // 4) Advance the flow.
+        // 3) Create the subscription on the backend (authed via apiClient).
+        let paymentResult: PaymentResult | undefined;
+
+        if (free) {
+          // Free renter → record the free subscription server-side.
+          if (draft.role === UserType.RENTER) {
+            console.log("[PaymentProcessing] Creating free renter subscription...");
+            await createFreeRenterSubscription();
+            console.log("[PaymentProcessing] Free subscription created");
+          }
+        } else {
+          // Paid → backend builds the Flutterwave payload (authoritative
+          // amount + payment_plan), then we open the inline modal with it.
+          setStep("payment");
+          const planCode = resolveSubscriptionPlanCode(draft.role, plan.id, "MONTHLY");
+          console.log("[PaymentProcessing] Initiating subscription:", planCode);
+          const { flwPayload } = await initiateSubscription(planCode);
+          console.log("[PaymentProcessing] Opening Flutterwave with backend payload");
+          paymentResult = await payWithBackendPayload(flwPayload);
+          console.log("[PaymentProcessing] Payment complete:", paymentResult);
+        }
+
+        // 5) Done.
         if (!completed) {
           completed = true;
           onComplete({ payment: paymentResult });
@@ -156,20 +214,99 @@ export default function PaymentProcessing({
       } catch (e: unknown) {
         console.error("[PaymentProcessing] Error:", e);
         const message =
-          e instanceof Error
-            ? e.message
-            : "Something went wrong while finishing up. Please try again.";
+          e instanceof Error ? e.message : "Something went wrong while finishing up. Please try again.";
         if (!completed) {
           completed = true;
           setError(message);
         }
       }
     })();
-
-    // No cleanup cancellation here — ranFor already prevents double-execution,
-    // and cancelling on re-render was the bug (session change = re-render mid-flight).
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt]);
+  }, [attempt, started]);
+
+  const beginCheckout = () => {
+    setError(null);
+    setStarted(true);
+    setAttempt((a) => a + 1);
+  };
+
+  /* ---- Confirm subscription (review) — shown before anything runs ---- */
+  if (!started && !error) {
+    const topFeatures = (plan.features ?? []).slice(0, 4);
+    return (
+      <div className="mx-auto w-full max-w-[440px] overflow-hidden rounded-card border border-border-hair bg-surface p-[clamp(24px,2.6vw,30px)] shadow-pop">
+        <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-green-dark">
+          {free ? "Confirm your plan" : "Confirm subscription"}
+        </p>
+
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
+          <span className="text-[clamp(28px,3.2vw,34px)] font-bold tracking-[-0.04em] text-text-primary">
+            {free ? "Free" : naira(plan.price)}
+          </span>
+          {!free && <span className="text-[15px] font-medium text-text-tertiary">/month</span>}
+          {plan.strikePrice ? (
+            <span className="text-[17px] font-medium text-text-tertiary line-through">
+              {naira(plan.strikePrice)}/mo
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-[14px] text-text-secondary">
+          {plan.name} plan{plan.tagline ? ` · ${plan.tagline}` : ""}
+        </p>
+
+        <ul className="mt-5 flex list-none flex-col gap-2.5 p-0">
+          {topFeatures.map((f) => (
+            <li key={f} className="flex items-start gap-2.5 text-[14px] leading-[1.4] text-text-secondary">
+              <Check size={16} strokeWidth={2.2} className="mt-px flex-none text-green-dark" />
+              {f}
+            </li>
+          ))}
+        </ul>
+
+        <button
+          type="button"
+          onClick={beginCheckout}
+          className="mt-6 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-4 text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97]"
+        >
+          {free ? (
+            "Activate free plan"
+          ) : (
+            <>
+              <CreditCard size={18} strokeWidth={2} />
+              Pay {naira(plan.price)} / mo
+            </>
+          )}
+        </button>
+
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="mt-2.5 inline-flex w-full items-center justify-center rounded-full px-7 py-2.5 text-[14px] font-semibold text-text-secondary transition-colors duration-200 ease-nc hover:text-ink"
+          >
+            Choose a different plan
+          </button>
+        )}
+
+        {!free && (
+          <>
+            <div className="mt-5 flex items-center justify-center gap-4 text-[12px] font-medium text-text-tertiary">
+              <span className="inline-flex items-center gap-1.5">
+                <Lock size={13} strokeWidth={2} className="text-green-dark" /> Secured by Flutterwave
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck size={14} strokeWidth={2} className="text-green-dark" /> PCI-DSS
+              </span>
+            </div>
+            <p className="mt-2.5 text-center text-[11.5px] leading-[1.5] text-text-tertiary">
+              Billed monthly to your card · cancel anytime from your dashboard. We never store your
+              card details.
+            </p>
+          </>
+        )}
+      </div>
+    );
+  }
 
   /* ---- Error state ---- */
   if (error) {
@@ -181,9 +318,7 @@ export default function PaymentProcessing({
         <h2 className="mt-6 text-[clamp(23px,2.8vw,30px)] font-bold tracking-[-0.035em] text-text-primary">
           We couldn&apos;t finish that
         </h2>
-        <p className="mt-2.5 max-w-[46ch] text-[15px] leading-[1.55] text-text-secondary">
-          {error}
-        </p>
+        <p className="mt-2.5 max-w-[46ch] text-[15px] leading-[1.55] text-text-secondary">{error}</p>
         {!free && (
           <p className="mt-2 text-[13px] text-text-tertiary">
             If you were charged, your account will still be created — retrying is safe.
@@ -196,11 +331,7 @@ export default function PaymentProcessing({
               onClick={onBack}
               className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-6 py-[13px] text-[15px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken max-[480px]:w-full"
             >
-              <ArrowLeft
-                size={17}
-                strokeWidth={2}
-                className="transition-transform duration-200 ease-nc group-hover:-translate-x-1"
-              />
+              <ArrowLeft size={17} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:-translate-x-1" />
               Back to plans
             </button>
           )}
@@ -218,6 +349,12 @@ export default function PaymentProcessing({
   }
 
   /* ---- Processing state ---- */
+  const heading = free
+    ? "Setting up your account\u2026"
+    : step === "account"
+      ? "Creating your account\u2026"
+      : "Processing your payment\u2026";
+
   return (
     <div className="flex flex-col items-center text-center">
       <span className="relative grid h-[68px] w-[68px] place-items-center">
@@ -226,12 +363,12 @@ export default function PaymentProcessing({
       </span>
 
       <h2 className="mt-7 text-[clamp(24px,3vw,32px)] font-bold tracking-[-0.035em] text-text-primary">
-        {free ? "Setting up your account\u2026" : "Processing your payment\u2026"}
+        {heading}
       </h2>
       <p className="mt-2.5 max-w-[44ch] text-[15.5px] leading-[1.55] text-text-secondary">
         {free
           ? "Just a moment while we create your account and get your dashboard ready."
-          : `Securely charging ${naira(plan.price)} for your ${plan.name} plan, then creating your account. Please don't close this window.`}
+          : `Securely charging ${naira(plan.price)} for your ${plan.name} plan. Please don't close this window.`}
       </p>
 
       {!free && (

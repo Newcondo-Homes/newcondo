@@ -22,5 +22,5 @@ export const SUPPORT_FAQS: [q: string, a: string][] = [
 export const SUPPORT_CHANNELS: { icon: string; label: string; value: string; sub: string; href: string }[] = [
   { icon: "mail", label: "Email us", value: "info@newcondo.homes", sub: "Best for most questions · ~24h reply", href: "mailto:info@newcondo.homes" },
   { icon: "shield-alert", label: "Report a safety issue", value: "Trust & Safety team", sub: "Fraud, scams, or suspicious activity", href: "/trust" },
-  { icon: "message-circle", label: "In-app chat", value: "Open the chat bubble", sub: "Available while you're signed in", href: "#" },
+  { icon: "message-circle", label: "Live chat", value: "Open the chat bubble", sub: "Chat with us right here — no sign-in needed", href: "#chat" },
 ];

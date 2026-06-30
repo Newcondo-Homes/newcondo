@@ -26,7 +26,7 @@ import { OPEN_ROLES, PERKS, HIRING_STEPS, type Role } from "@/lib/careers-data";
 
 /* ============================================================
    BACKEND HOOK — commented out until the API exists.
-
+// TODO: be able to set ooen roles from admin dashboard or somewhere safer
 // const API_ENDPOINT = "/api/careers/open-roles";
 
 // async function fetchOpenRoles(): Promise<Role[]> {
@@ -104,7 +104,10 @@ export function Careers() {
             <h3 className="text-[22px] font-bold tracking-[-0.02em] text-text-primary m-0 mb-2.5">No open roles right now</h3>
             <p className="text-[15.5px] leading-[1.6] text-text-secondary m-0 mx-auto max-w-[46ch]">
               We&apos;re not actively hiring at the moment — but we&apos;re always glad to hear from great people. Send your CV to{" "}
-              <a href="mailto:careers@newcondo.homes" className="text-green-dark underline underline-offset-[3px]">careers@newcondo.homes</a>.
+              {/* TODO: see if there will be a separate careers@newcondo.homes email */}
+              {/* <a href="mailto:careers@newcondo.homes" className="text-green-dark underline underline-offset-[3px]">careers@newcondo.homes</a>. */}
+              <br />
+              <a href="mailto:info@newcondo.homes" className="text-green-dark underline underline-offset-[3px]">info@newcondo.homes</a>.
             </p>
           </Reveal>
         ) : (
@@ -115,9 +118,8 @@ export function Careers() {
                 variants={vRow}
                 as="a"
                 href={`mailto:careers@newcondo.homes?subject=Application: ${encodeURIComponent(r.title)}`}
-                className={`group flex items-center gap-5 px-[clamp(20px,3vw,34px)] py-[clamp(20px,2.4vw,28px)] no-underline transition-colors duration-200 ease-nc hover:bg-surface-sunken ${
-                  i !== 0 ? "border-t border-divider" : ""
-                }`}
+                className={`group flex items-center gap-5 px-[clamp(20px,3vw,34px)] py-[clamp(20px,2.4vw,28px)] no-underline transition-colors duration-200 ease-nc hover:bg-surface-sunken ${i !== 0 ? "border-t border-divider" : ""
+                  }`}
               >
                 <div className="min-w-0 flex-1">
                   <h3 className="text-[clamp(18px,2vw,23px)] font-bold tracking-[-0.02em] text-text-primary m-0 mb-2">{r.title}</h3>

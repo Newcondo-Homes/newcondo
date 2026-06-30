@@ -100,16 +100,17 @@ class ApiClient {
       const response = await fetch(url, config);
       return await this.handleResponse<T>(response);
     } catch (error) {
-      if (error instanceof Error && "status" in error) {
-        throw error; // Re-throw ApiError
+      
+      // ApiError is a plain object with a numeric `status` — not an Error instance
+      if (error && typeof error === "object" && "status" in error) {
+        throw error;
       }
-
-      // Handle network errors or other fetch errors
       throw {
-        message:
-          error instanceof Error ? error.message : "Network error occurred",
+        message: error instanceof Error ? error.message : "Network error occurred",
         status: 0,
       } as ApiError;
+
+      
     }
   }
 

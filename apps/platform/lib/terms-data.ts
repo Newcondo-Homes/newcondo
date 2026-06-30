@@ -9,15 +9,20 @@ export const TERMS_TOC: TocItem[] = [
   { id: "acceptance", n: "01", label: "Acceptance & eligibility" },
   { id: "accounts", n: "02", label: "Registration & verification" },
   { id: "roles", n: "03", label: "Roles & responsibilities" },
-  { id: "escrow", n: "04", label: "Escrow rent & payouts" },
+  { id: "rent", n: "04", label: "Secure rent collection" },
   { id: "fees", n: "05", label: "Fees & billing" },
   { id: "acceptable-use", n: "06", label: "Acceptable use" },
-  { id: "content", n: "07", label: "Listings & content" },
-  { id: "fraud", n: "08", label: "Fraud & enforcement" },
-  { id: "termination", n: "09", label: "Termination & suspension" },
-  { id: "indemnity", n: "10", label: "Indemnification" },
-  { id: "liability", n: "11", label: "Disclaimers & liability" },
-  { id: "changes", n: "12", label: "Changes & contact" },
+  { id: "content", n: "07", label: "Listings, content & IP" },
+  { id: "ai", n: "08", label: "AI & automated systems" },
+  { id: "maps", n: "09", label: "Maps & location" },
+  { id: "no-advice", n: "10", label: "No professional advice" },
+  { id: "property", n: "11", label: "Property disclaimer" },
+  { id: "fraud", n: "12", label: "Fraud & enforcement" },
+  { id: "termination", n: "13", label: "Termination & suspension" },
+  { id: "indemnity", n: "14", label: "Indemnification" },
+  { id: "liability", n: "15", label: "Disclaimers & liability" },
+  { id: "arbitration", n: "16", label: "Dispute resolution" },
+  { id: "changes", n: "17", label: "Changes & contact" },
 ];
 
 export const TERMS_META: MetaChip[] = [
@@ -34,9 +39,9 @@ export const ROLE_CARDS: { icon: string; role: string; body: string }[] = [
   { icon: "briefcase", role: "Agents", body: "Hold valid agency certification, list only with the owner's signed consent, represent properties honestly, and pass on all platform-collected funds correctly." },
 ];
 
-/* ---- 04 Escrow flow ---- */
+/* ---- 04 Secure rent collection flow ---- */
 export const ESCROW_STEPS: { n: string; title: string; body: string }[] = [
-  { n: "1", title: "Renter pays into escrow", body: "Rent is collected into a secure virtual account held by our PCI-DSS-compliant payment partner — never paid to an agent in cash." },
+  { n: "1", title: "Renter pays into a secure account", body: "Rent is collected into a secure virtual account operated by our licensed, PCI-DSS-compliant payment partner — never paid to an agent in cash." },
   { n: "2", title: "Dispute window opens", body: "Funds are held for a 72-hour review window during which a cancellation or refund claim can be raised under the Refund Policy." },
   { n: "3", title: "Released to the owner", body: "Once the window closes with no valid dispute, the balance (net of platform and transaction fees) is released directly to the owner or agent's account." },
 ];

@@ -33,7 +33,7 @@ import {
 
 const CLAUSES = [
   { icon: "scale", title: "Binding arbitration", body: "All cancellation and refund disputes are resolved by confidential individual arbitration — in lieu of class-action litigation — under the Nigerian Arbitration and Conciliation Act." },
-  { icon: "file-signature", title: "Statutory waiver", body: "You waive statutory rights to the extent permitted under Nigerian law, in exchange for the platform-managed refund protections set out here." },
+  { icon: "file-pen", title: "Statutory waiver", body: "You waive statutory rights to the extent permitted under Nigerian law, in exchange for the platform-managed refund protections set out here." },
   { icon: "timer", title: "Cancellation deadlines", body: "You agree to adhere to platform-specific cancellation deadlines and refund conditions. Requests outside these windows are honoured only in documented force-majeure cases." },
 ];
 
@@ -220,7 +220,7 @@ export function RefundPolicy() {
         <P>Questions about a charge, cancellation, or refund? Reach our payments team.</P>
         <ContactCard items={REFUND_CONTACT} />
         <Callout tone="note" icon="copyright" className="mt-6">
-          This Cancellation &amp; Refund Policy is the intellectual property of NewCondo Ltd, protected under the Nigerian Copyright Act Cap C28 LFN 2004. No reproduction, redistribution, or reuse is permitted without express written consent; violators face prosecution under both civil and criminal provisions.
+          This Cancellation &amp; Refund Policy is the intellectual property of Newcondo Ltd, protected under the Nigerian Copyright Act Cap C28 LFN 2004. No reproduction, redistribution, or reuse is permitted without express written consent; violators face prosecution under both civil and criminal provisions.
         </Callout>
       </DocSection>
     </LegalDoc>

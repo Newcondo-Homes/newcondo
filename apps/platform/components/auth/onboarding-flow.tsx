@@ -20,10 +20,9 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Loader2, RotateCcw } from "lucide-react";
 // NOTE: useSession comes from your NextAuth client; adjust the import if your
 // auth package exposes it elsewhere. Requires a SessionProvider above this tree.
 import { useSession } from "@newcondo/auth/client";
@@ -37,6 +36,7 @@ import PaymentProcessing from "./payment-processing";
 import PaymentSuccess from "./payment-success";
 import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
+import { getOnboardingState, changeAccountType, checkEmailRegistered } from "@/lib/api/onboarding";
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
 
@@ -91,7 +91,6 @@ export default function OnboardingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
-  const { goToDashboard } = useAuth();
 
   const initialRole = roleFromParam(searchParams.get("role"));
 
@@ -100,19 +99,46 @@ export default function OnboardingFlow() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [payment, setPayment] = useState<PaymentResult | null>(null);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  // True once we resolved a returning user via GET /onboarding/state — they
+  // have an abandoned PENDING checkout (Q1) and we dropped them back on the
+  // plan step with a "resume" banner.
+  const [resuming, setResuming] = useState(false);
+  // Blocks a flash of the register form while we resolve backend state for an
+  // authenticated arrival (the Q3 "already paid → dashboard" check).
+  const [checkingState, setCheckingState] = useState(false);
 
-  /* ── Social / authenticated entry ──
-     If we arrive already authenticated AT THE START of the flow (returning
-     from Google/Facebook, or One Tap), skip account creation and resume at
-     the plan step. The `phase === "register"` guard is critical: it stops
-     this from firing later, when our own deferred register() in the finalize
-     step makes the session authenticated. */
+  /* ── Q4 — returning SUBSCRIBER whose session expired ──
+     Requirement: a user who already has a subscription and tries to onboard
+     again should land on the DASHBOARD (active session) or the LOGIN page
+     (expired session).
+
+     • Active session  → handled below by getOnboardingState (ACTIVE → dashboard).
+     • Expired session → we do NOT guess from a localStorage marker (it goes
+       stale — a deleted/cancelled user would be wrongly bounced to login
+       forever). Instead the truth is checked at the real decision point: when
+       the user submits the register step, the backend reports whether that
+       email already exists. An existing account → send to /login; a fresh (or
+       deleted) email → onboard normally. See handleDetailsSubmit below. */
+
+  /* ── Authenticated entry: resume / guard via the backend ──
+     When we arrive already authenticated at the START of the flow (returning
+     from Google/Facebook or One Tap, OR a user who registered earlier, paid
+     or abandoned, and came back), ask the backend where they stand BEFORE
+     showing any step. This is what makes the three edge cases correct:
+
+       • Q3 — already ACTIVE/FREE_ACTIVE  → straight to /dashboard, never the
+         payment step again. No double-charge possible.
+       • Q1 — abandoned PENDING checkout  → resume on the plan step with a
+         banner; re-picking reuses the same subscription row server-side.
+       • Social / fresh authed user       → resume at plan (unchanged).
+
+     The `phase === "register"` guard stops this firing later, when our own
+     deferred register() in the finalize step makes the session authenticated. */
   const initializedFromSession = useRef(false);
   useEffect(() => {
     if (initializedFromSession.current) return;
+    if (status === "loading") return;
     if (status !== "authenticated" || !session?.user) return;
-
-    // Only treat as a social/return entry at the very beginning.
     if (phase !== "register" || draft) {
       initializedFromSession.current = true;
       return;
@@ -134,11 +160,98 @@ export default function OnboardingFlow() {
       role: initialRole ?? u.userType ?? UserType.OWNER,
     });
     setAlreadyRegistered(true);
-    setPhase("plan");
-  }, [status, session, phase, draft, initialRole]);
 
-  // const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+    // Resolve their canonical onboarding state, then route accordingly.
+    setCheckingState(true);
+    getOnboardingState()
+      .then((state) => {
+        if (state?.redirectTo === "dashboard" || state?.step === "done") {
+          // Q3 — they're already subscribed. Leave onboarding entirely.
+          router.replace("/dashboard");
+          return;
+        }
+        if (state?.pendingPlan) {
+          // Q1 — they had a checkout in progress. Resume on the plan step.
+          setResuming(true);
+        }
+        setPhase("plan");
+      })
+      .catch(() => setPhase("plan"))
+      .finally(() => setCheckingState(false));
+  }, [status, session, phase, draft, initialRole, router]);
+
+  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+
+  /* Q2 — returning user wants a different account type. Their account already
+     exists, so we change the role server-side (allowed only while their
+     subscription is still PENDING; the backend refuses once ACTIVE) and send
+     them back to the role/details step to re-pick a plan for the new role. */
+  const handleChangeAccountType = useCallback(async () => {
+    setPhase("register");
+    setResuming(false);
+    setPlan(null);
+  }, []);
+
+  /* Called when a returning (already-registered) user re-submits the role/
+     details step with a possibly-different role. Persists the role change,
+     then jumps straight to plan (no OTP — the account is already verified). */
+  /* Fresh register submit (Q4 server-truth check). Before sending an OTP, ask
+     the backend whether this email already has an account:
+       • exists  → a real returning user whose session expired → /login (with a
+         callback to the dashboard). Their subscription state is resolved there.
+       • free    → brand-new OR a previously-deleted email → onboard normally.
+     This replaces the unreliable localStorage marker: it's server truth, so a
+     deleted user is correctly treated as new, and a real user is sent to login. */
+  const [submittingDetails, setSubmittingDetails] = useState(false);
+  const handleDetailsSubmit = useCallback(
+    async (d: OnboardingDraft) => {
+      setSubmittingDetails(true);
+      try {
+        const exists = await checkEmailRegistered(d.email);
+        if (exists) {
+          router.replace(
+            `/login?callbackUrl=${encodeURIComponent("/dashboard")}&email=${encodeURIComponent(
+              d.email.trim().toLowerCase()
+            )}`
+          );
+          return;
+        }
+        setDraft(d);
+        setPhase("verify");
+      } finally {
+        setSubmittingDetails(false);
+      }
+    },
+    [router]
+  );
+
+  const handleReturningRoleSubmit = useCallback(
+    async (d: OnboardingDraft) => {
+      if (draft && d.role !== draft.role) {
+        const res = await changeAccountType(d.role);
+        if (!res.ok) {
+          // Backend refused (e.g. already ACTIVE) — keep them on the old role.
+          alert(res.reason ?? "Couldn't change your account type.");
+          return;
+        }
+      }
+      setDraft(d);
+      setPhase("plan");
+    },
+    [draft]
+  );
+
   const activeIndex = PHASE_INDEX[phase];
+
+  // Brief gate while we resolve an authenticated arrival's backend state, so
+  // the register form / plan step never flashes before the Q3 redirect.
+  if (checkingState) {
+    return (
+      <main className="flex h-dvh items-center justify-center bg-background">
+        <Loader2 className="h-7 w-7 animate-spin text-ink" strokeWidth={2} />
+      </main>
+    );
+  }
 
   return (
     <main
@@ -209,10 +322,16 @@ export default function OnboardingFlow() {
             <FitToViewport className={cx("mx-auto", PHASE_MAXW[phase])}>
               {phase === "register" && (
                 <OnboardingForm
-                  initialRole={initialRole}
+                  initialRole={draft?.role ?? initialRole}
+                  // Returning user changing account type: account already
+                  // exists, so re-submitting only changes the role (Q2). A
+                  // fresh user goes through verify as normal.
                   onDetailsSubmit={(d) => {
-                    setDraft(d);
-                    setPhase("verify");
+                    if (alreadyRegistered) {
+                      void handleReturningRoleSubmit(d);
+                    } else {
+                      void handleDetailsSubmit(d);
+                    }
                   }}
                 />
               )}
@@ -231,6 +350,12 @@ export default function OnboardingFlow() {
 
               {phase === "plan" && draft && (
                 <div>
+                  {resuming && (
+                    <div className="mx-auto mb-4 flex max-w-[640px] items-center justify-center gap-2.5 rounded-full border border-green-dark/20 bg-green-wash px-5 py-2.5 text-[13.5px] font-medium text-green-dark">
+                      <RotateCcw size={15} strokeWidth={2.2} />
+                      Welcome back — pick up where you left off, or choose a different plan.
+                    </div>
+                  )}
                   <div className="mb-5 text-center">
                     <h1 className="m-0 text-[clamp(26px,3.2vw,40px)] font-bold leading-[1.02] tracking-[-0.04em] text-text-primary text-balance">
                       Choose your plan
@@ -240,10 +365,20 @@ export default function OnboardingFlow() {
                         ? "Every plan includes escrow rent, verified tenants, and your dashboard."
                         : "Start free or unlock priority access. Change this anytime from your dashboard."}
                     </p>
+                    {/* Q2 — always offer a way to switch account type from the plan step. */}
+                    <button
+                      type="button"
+                      onClick={handleChangeAccountType}
+                      className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:text-ink hover:underline"
+                    >
+                      Not a{" "}
+                      {draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
+                    </button>
                   </div>
                   <PlanSelector
                     role={draft.role}
-                    // Social users have no details/OTP to return to — hide Back for them.
+                    // Social/returning users have no details/OTP to return to;
+                    // their "back" is the Change-account-type link above.
                     onBack={alreadyRegistered ? undefined : () => setPhase("verify")}
                     onChoose={(chosen) => {
                       setPlan(chosen);
