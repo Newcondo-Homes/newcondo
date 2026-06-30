@@ -16,6 +16,7 @@ import { UndertakingForm } from "@/components/legal/UndertakingForm";
 import { LegalDocumentsList } from "@/components/legal/LegalDocumentsList";
 import { ComplianceStatus } from "@/components/legal/ComplianceStatus";
 import { useProperty } from "@/hooks/useProperties";
+import { UserType } from '@/types/enums';
 import {
   ArrowLeft,
   AlertTriangle,
@@ -351,7 +352,7 @@ export default function PropertyLegalPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {user?.userType === "OWNER" && (
+                {user?.userType === UserType.OWNER && (
                   <OwnershipProofUpload
                     propertyId={propertyId}
                     onUploadComplete={(doc) => {
@@ -380,7 +381,7 @@ export default function PropertyLegalPage() {
                   />
                 )}
 
-                {user?.userType === "AGENT" && (
+                {user?.userType === UserType.AGENT && (
                   <ConsentDocumentForm
                     properties={[
                       {
@@ -397,7 +398,7 @@ export default function PropertyLegalPage() {
                   />
                 )}
 
-                {user?.userType === "AGENT" && (
+                {user?.userType === UserType.AGENT && (
                   <AgentPermissionForm
                     propertyId={propertyId}
                     onSubmit={() => {

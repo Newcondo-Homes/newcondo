@@ -23,7 +23,7 @@ import { UploadButton } from '@uploadthing/react';
 import type { OurFileRouter } from '@/lib/uploadthing';
 import { usePropertyStore } from '@/store/propertyStore';
 import api from '@/lib/api/client';
-import { DocumentType as PrismaDocumentType } from '@/types/enums';
+import { DocumentType as PrismaDocumentType, UserType } from '@/types/enums';
 import { useSession } from '@newcondo/auth/client';
 
 function getFileIcon(mimeType: string, className = 'h-5 w-5'): React.ReactNode {
@@ -274,8 +274,8 @@ export default function UploadLegalDocumentPage() {
     }
   };
 
-  const userCanUploadOwnership = user?.userType === 'OWNER' || (user?.userType === 'AGENT' && selectedProperty?.owner?.id === user?.id);
-  const userCanUploadConsent = user?.userType === 'AGENT';
+  const userCanUploadOwnership = user?.userType === UserType.OWNER || (user?.userType === UserType.AGENT && selectedProperty?.owner?.id === user?.id);
+  const userCanUploadConsent = user?.userType === UserType.AGENT;
 
   const isUploadRequired = selectedDocType?.requiresUpload;
   const isNumberRequired = selectedDocType?.requiresNumber;

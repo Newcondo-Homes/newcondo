@@ -12,7 +12,7 @@ export const Role = {
 } as const;
 
 export const UserType = {
-  LANDLORD: "LANDLORD",
+  OWNER: "OWNER",
   PROPERTY_MANAGER: "PROPERTY_MANAGER",
   AGENT: "AGENT",
   RENTER: "RENTER",

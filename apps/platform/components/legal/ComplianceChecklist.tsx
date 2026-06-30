@@ -64,7 +64,7 @@ export default function ComplianceChecklist({
       }
     ];
 
-    if (userType === 'LANDLORD' || userType === 'PROPERTY_MANAGER') {
+    if (userType === UserType.OWNER || userType === UserType.PROPERTY_MANAGER) {
       baseItems.push(
         {
           id: 'ownership-proof',
