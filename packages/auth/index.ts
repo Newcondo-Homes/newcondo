@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getUserById } from "./src/utils";
 import authFullConfig from "./auth.full";
 import NextAuth from "next-auth";
+import jwt from "jsonwebtoken";
 import { prisma, Role, UserType, VerificationStatus } from "@newcondo/db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -29,6 +30,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.userType = existingUser.userType;
           token.referralCode = existingUser.referralCode;
           token.companyName = existingUser.companyName;
+
+          // ── Mint the Express-compatible access token ──────────────────────
+          // This JWT is signed with JWT_SECRET — the same secret your Express
+          // authMiddleware uses. The payload shape matches what authMiddleware
+          // reads: decoded.userId, decoded.email, decoded.role.
+          // Without this, session.accessToken is undefined and every backend
+          // call through apiClient gets a 401.
+          token.accessToken = jwt.sign(
+            {
+              userId: existingUser.id,
+              email: existingUser.email,
+              role: existingUser.role,
+            },
+            process.env.JWT_SECRET!,
+            { expiresIn: "7d" }
+          );
         }
       }
 
@@ -45,6 +62,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.name = token.name;
         session.user.image = token.picture;
 
+        // ── Expose accessToken so apiClient can read it ───────────────────
+        // apiClient does: if (session?.accessToken) → Authorization: Bearer
+        // This is the line that was missing entirely before.
+        if (token.accessToken) {
+          session.accessToken = token.accessToken as string;
+        }
+        
         if (!token.referralCode) {
           const existingUser = await getUserById(session.user.id as string);
           session.user.companyName = existingUser?.companyName;

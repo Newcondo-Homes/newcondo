@@ -3,6 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
+import { startRenewalCron } from "@newcondo/payment-service";
+
 
 // Import shared middleware
 // import { logger, requestLogger } from "./utils/logger";
@@ -12,6 +14,8 @@ import { logger } from "./utils/logger";
 import { healthCheck } from "./middleware/healthCheck";
 import { errorHandler } from "./middleware/errorHandler";
 
+// Import webhooks
+import { webhookRouter } from "./routes/webhooks";
 
 // Import main router
 import { mainRouter } from "./routes/index";
@@ -66,6 +70,8 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
+app.use("/api/v1/webhooks", webhookRouter);
+
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -100,6 +106,8 @@ app.get("/", (req, res) => {
       referrals: "/api/v1/referrals",
       notifications: "/api/v1/notifications",
       analytics: "/api/v1/analytics",
+      subscriptions: "/api/v1/payments/subscriptions",
+      webhooks: "/api/v1/webhooks",
     },
   });
 });
@@ -118,6 +126,9 @@ app.use("*", (req, res) => {
 // Global error handler
 app.use(errorHandler);
 
+if (config.NODE_ENV !== "test") {
+  startRenewalCron();
+}
 // Log startup
 logger.info("✅ Combined NewCondo Backend initialized successfully");
 

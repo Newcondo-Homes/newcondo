@@ -518,6 +518,9 @@ importers:
       '@newcondo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@newcondo/payment-service':
+        specifier: workspace:*
+        version: link:../payment-service
       '@prisma/client':
         specifier: 7.8.0
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3))(typescript@5.9.3)
@@ -557,6 +560,9 @@ importers:
       multer:
         specifier: ^1.4.5-lts.1
         version: 1.4.5-lts.2
+      node-cron:
+        specifier: ^3.0.3
+        version: 3.0.3
       prisma:
         specifier: 7.8.0
         version: 7.8.0(@types/react-dom@19.0.4(@types/react@19.0.10))(@types/react@19.0.10)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
@@ -600,6 +606,9 @@ importers:
       '@types/node':
         specifier: ^20.4.2
         version: 20.19.41
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.2.0
         version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.9.3))(eslint@8.57.1)(typescript@5.9.3)
@@ -1089,6 +1098,145 @@ importers:
 
   backend/notification-service: {}
 
+  backend/payment-service:
+    dependencies:
+      '@newcondo/backend-shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@newcondo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      axios:
+        specifier: ^1.18.1
+        version: 1.18.1
+      bcryptjs:
+        specifier: ^3.0.2
+        version: 3.0.3
+      compression:
+        specifier: ^1.8.0
+        version: 1.8.1
+      cookie-parser:
+        specifier: ^1.4.7
+        version: 1.4.7
+      cors:
+        specifier: ^2.8.5
+        version: 2.8.6
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.6.1
+      express:
+        specifier: ^4.18.2
+        version: 4.22.2
+      express-rate-limit:
+        specifier: ^7.5.1
+        version: 7.5.1(express@4.22.2)
+      express-validator:
+        specifier: ^7.2.1
+        version: 7.3.2
+      form-data:
+        specifier: 4.0.3
+        version: 4.0.3
+      helmet:
+        specifier: ^8.1.0
+        version: 8.1.0
+      ioredis:
+        specifier: ^5.6.1
+        version: 5.10.1
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.3
+      mailgun.js:
+        specifier: 12.0.3
+        version: 12.0.3
+      morgan:
+        specifier: ^1.10.0
+        version: 1.10.1
+      ms:
+        specifier: ^2.1.3
+        version: 2.1.3
+      multer:
+        specifier: ^2.0.1
+        version: 2.1.1
+      passport:
+        specifier: ^0.7.0
+        version: 0.7.0
+      passport-google-oauth20:
+        specifier: ^2.0.0
+        version: 2.0.0
+      rate-limiter-flexible:
+        specifier: ^7.1.1
+        version: 7.4.0
+      sharp:
+        specifier: ^0.34.2
+        version: 0.34.5
+      uploadthing:
+        specifier: ^7.7.3
+        version: 7.7.4(express@4.22.2)(next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(tailwindcss@4.3.0)
+      uuid:
+        specifier: ^11.1.0
+        version: 11.1.1
+      zod:
+        specifier: ^3.25.55
+        version: 3.25.76
+    devDependencies:
+      '@types/bcryptjs':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@types/compression':
+        specifier: ^1.8.1
+        version: 1.8.1
+      '@types/cookie-parser':
+        specifier: ^1.4.9
+        version: 1.4.10(@types/express@4.17.25)
+      '@types/cors':
+        specifier: ^2.8.19
+        version: 2.8.19
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.25
+      '@types/google.maps':
+        specifier: ^3.64.1
+        version: 3.64.1
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
+      '@types/morgan':
+        specifier: ^1.9.10
+        version: 1.9.10
+      '@types/ms':
+        specifier: ^2.1.0
+        version: 2.1.0
+      '@types/multer':
+        specifier: ^1.4.13
+        version: 1.4.13
+      '@types/node':
+        specifier: ^20.0.0
+        version: 20.19.41
+      '@types/node-cron':
+        specifier: ^3.0.11
+        version: 3.0.11
+      '@types/passport':
+        specifier: ^1.0.16
+        version: 1.0.17
+      '@types/passport-google-oauth20':
+        specifier: ^2.0.16
+        version: 2.0.17
+      node-cron:
+        specifier: ^3.0.3
+        version: 3.0.3
+      nodemon:
+        specifier: ^3.1.10
+        version: 3.1.14
+      ts-node:
+        specifier: ^10.9.2
+        version: 10.9.2(@swc/core@1.15.33(@swc/helpers@0.5.15))(@types/node@20.19.41)(typescript@5.9.3)
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+
   backend/referral-service:
     dependencies:
       '@newcondo/auth':
@@ -1388,9 +1536,15 @@ importers:
         specifier: ^3.25.55
         version: 3.25.76
     devDependencies:
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
       '@types/node':
         specifier: ^22.15.30
         version: 22.19.19
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.3
       tsx:
         specifier: ^4.19.4
         version: 4.22.0
@@ -5734,6 +5888,9 @@ packages:
 
   axios@1.16.1:
     resolution: {integrity: sha512-caYkukvroVPO8KrzuJEb50Hm07KwfBZPEC3VeFHTsqWHvKTsy54hjJz9BS/cdaypROE2rH6xvm9mHX4fgWkr3A==}
+
+  axios@1.18.1:
+    resolution: {integrity: sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==}
 
   axobject-query@4.1.0:
     resolution: {integrity: sha512-qIj0G9wZbMGNLjLmg1PT6v2mE9AH2zlnADJD/2tC6E00hgmhUOfEB6greHPAfLRSufHqROIUTkw6E+M3lH0PTQ==}
@@ -16355,6 +16512,16 @@ snapshots:
       - debug
       - supports-color
 
+  axios@1.18.1:
+    dependencies:
+      follow-redirects: 1.16.0
+      form-data: 4.0.5
+      https-proxy-agent: 5.0.1
+      proxy-from-env: 2.1.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
   axobject-query@4.1.0: {}
 
   b4a@1.8.1: {}
@@ -19996,7 +20163,7 @@ snapshots:
 
   mailgun.js@12.0.3:
     dependencies:
-      axios: 1.16.1
+      axios: 1.18.1
       base-64: 1.0.0
       url-join: 4.0.1
     transitivePeerDependencies:

@@ -22,6 +22,10 @@ model User {
   role          Role      @default(RENTER)
   userType      UserType?
 
+
+  subscription        Subscription?
+  subscriptionHistory SubscriptionHistory[]
+  
   // Verification fields
   verificationStatus          VerificationStatus @default(PENDING)
   // idDocument         String?           // URL to uploaded ID document
@@ -153,7 +157,8 @@ model Document {
 
   // File Details (for documents that need file uploads)
   fileName      String?
-  fileUrl       String?
+  fileUrl    String?   // ← keep this as the CloudFront URL or presigned URL
+  s3Key      String?   // ← this is the raw S3 key e.g. "users/clx8j/identity/nin/front_uuid.jpg"
   fileSizeBytes Int?
   mimeType      String? // image/jpeg, application/pdf, etc.
 
@@ -461,7 +466,7 @@ enum AdminApprovalStatus {
 }
 
 enum UserType {
-  LANDLORD // Individual property owner
+  OWNER // Individual property owner
   PROPERTY_MANAGER // B2B customer managing multiple properties
   AGENT // Real estate agent
   RENTER // Property renter
@@ -1309,6 +1314,376 @@ enum VerificationStatus {
   VERIFIED
   REJECTED
 }
+
+
+// ============================================================================
+// SUBSCRIPTION SYSTEM v2 — Add to your existing schema.prisma
+// ============================================================================
+// CHANGELOG v2:
+//   - Renters are FREE now. RENTER_BASIC_PREMIUM removed entirely.
+//   - RENTER_FREE plan added — all renters start here, no card, no expiry.
+//   - RENTER_PREMIUM_PLUS kept — currently free for founding 300, paid later.
+//   - FREE_ACTIVE status added — free plans never count as paid "ACTIVE".
+//   - isFreeRenterPlan flag added — gates the future paid conversion without migration.
+//   - renterPaidPlanUnlockedAt — timestamp for when you flip renters to paid billing.
+//   - FREE_PLAN_CONVERTED event added for founding renter → paid conversion audit trail.
+//
+// INSTRUCTIONS:
+// 1. Add the new models below to your packages/db/prisma/schema.prisma
+// 2. Add the new enums below to your schema
+// 3. Add the `subscription` and `subscriptionHistory` relations to your User model
+// 4. Run: npx prisma migrate dev --name add_subscription_system
+// ============================================================================
+
+
+// ----------------------------------------------------------------------------
+// STEP 1: Add these two lines inside your existing `model User { ... }`
+// ----------------------------------------------------------------------------
+
+// subscription        Subscription?
+// subscriptionHistory SubscriptionHistory[]
+
+
+// ----------------------------------------------------------------------------
+// STEP 2: Add these NEW MODELS to your schema
+// ----------------------------------------------------------------------------
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  userId                String             @unique   // One active subscription per user at a time
+
+  // Plan Details
+  planType              SubscriptionPlan               // Which plan they're on
+  billingCycle          BillingCycle       @default(MONTHLY)
+  userRole              Role                           // OWNER | AGENT | RENTER (mirrors User.role)
+
+  // Pricing (stored at time of subscription — protects against future price changes)
+  amountNaira           Decimal            @db.Decimal(10, 2)
+  discountPercent       Decimal?           @db.Decimal(5, 2)  // e.g. 16.67 for "2 months free" annual
+  finalAmountNaira      Decimal            @db.Decimal(10, 2) // Actual charged amount after discount
+
+  // Flutterwave Subscription Data
+  flwPlanId             String?            // Flutterwave payment plan ID
+  flwSubscriptionId     String?  @unique   // Flutterwave subscription ID (returned after first charge)
+  flwCustomerToken      String?            // Tokenized card — used for recurring charges
+  flwTransactionRef     String?            // Last successful transaction reference
+  flwCustomerId         String?            // Flutterwave customer ID
+
+  // Subscription Lifecycle
+  status                SubscriptionStatus @default(PENDING)
+  currentPeriodStart    DateTime?          // When current billing period started
+  currentPeriodEnd      DateTime?          // When current billing period ends (renewal date)
+  trialEndsAt           DateTime?          // If a trial period is offered (future use)
+  cancelledAt           DateTime?          // When user cancelled
+  cancellationReason    String?            // Optional: why they cancelled
+  pausedAt              DateTime?          // For future pause feature
+  pausedUntil           DateTime?
+
+  // Landlord-specific: property cap enforcement
+  propertyListingCap    Int?               // null = unlimited (Elite), 2 = Essential cap
+  currentPropertyCount  Int      @default(0) // Tracked count for cap enforcement
+
+  // Agent-specific: founding cohort tracking
+  isFoundingAgent       Boolean  @default(false)
+  foundingAgentNumber   Int?               // Their number in the first-100 cohort (e.g. Agent #47)
+
+  // Renter-specific: free plan + founding cohort
+  // Renters are FREE now. isFreeRenterPlan = true means no charge ever runs for this subscription.
+  // When you're ready to launch paid billing, set renterPaidPlanUnlockedAt — that's the only change needed.
+  isFreeRenterPlan        Boolean   @default(false)   // true for RENTER_FREE and founding RENTER_PREMIUM_PLUS
+  renterPaidPlanUnlockedAt DateTime?                  // Set by admin/script when paid renter billing launches
+                                                      // Until this is set, the renewal cron skips this record entirely
+
+  isFoundingMember        Boolean   @default(false)
+  foundingMemberNumber    Int?                        // Their number in first-300 cohort
+  lockedRateNaira         Decimal?  @db.Decimal(10, 2) // Rate charged on first renewal after paid billing launches
+                                                        // Founding renters are NEVER charged current plan price
+
+  // Marking job access (agents on Premium + renters on Premium Plus)
+  canAccessMarkingJobs    Boolean   @default(false)
+
+  // Auto-renewal
+  autoRenew             Boolean  @default(true)
+  nextRenewalAttempt    DateTime?          // Scheduled next charge attempt
+  renewalFailureCount   Int      @default(0) // How many times renewal has failed
+  lastRenewalAttemptAt  DateTime?
+
+  // Virtual account trigger (for Premium renters — created after subscription activates)
+  virtualAccountCreated Boolean  @default(false)
+
+  // Relations
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history               SubscriptionHistory[]
+  invoices              SubscriptionInvoice[]
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([planType])
+  @@index([userRole])
+  @@index([currentPeriodEnd])  // For renewal jobs — query "find subscriptions expiring soon"
+  @@index([flwSubscriptionId])
+  @@index([isFoundingAgent])
+  @@index([isFoundingMember])
+}
+
+
+// Tracks every status change — for auditing, support, and analytics
+model SubscriptionHistory {
+  id               String             @id @default(cuid())
+  subscriptionId   String
+  userId           String
+
+  // What changed
+  eventType        SubscriptionEvent
+  fromStatus       SubscriptionStatus?
+  toStatus         SubscriptionStatus?
+  fromPlan         SubscriptionPlan?
+  toPlan           SubscriptionPlan?
+
+  // Payment context (if this event was triggered by a payment)
+  flwTransactionRef String?
+  amountCharged     Decimal?          @db.Decimal(10, 2)
+  paymentStatus     PaymentStatus?
+
+  // Metadata
+  notes            String?            // e.g. "Renewal failed — card declined"
+  triggeredBy      String?            // "system" | "user" | "admin" | userId
+
+  subscription     Subscription       @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user             User               @relation(fields: [userId], references: [id])
+
+  createdAt        DateTime @default(now())
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+
+// One record per billing cycle charge — your receipts/invoices system
+model SubscriptionInvoice {
+  id                String        @id @default(cuid())
+  subscriptionId    String
+  userId            String
+
+  // Invoice details
+  invoiceNumber     String        @unique  // e.g. "NC-INV-2024-000001"
+  periodStart       DateTime
+  periodEnd         DateTime
+  amountNaira       Decimal       @db.Decimal(10, 2)
+  currency          String        @default("NGN")
+
+  // Payment result
+  status            InvoiceStatus @default(PENDING)
+  flwTransactionRef String?       @unique
+  flwTransactionId  String?       @unique
+  paidAt            DateTime?
+  failureReason     String?
+  retryCount        Int           @default(0)
+  nextRetryAt       DateTime?
+
+  subscription      Subscription  @relation(fields: [subscriptionId], references: [id])
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+
+// Flutterwave payment plans — created once via API, reused for all subscribers
+// You create these once (via script or admin panel), then store the IDs here
+model FlutterwavePlan {
+  id              String       @id @default(cuid())
+
+  // Plan identity
+  planType        SubscriptionPlan  @unique  // Maps 1:1 to your subscription plans
+  name            String            // Human-readable: "NewCondo Elite — Monthly"
+  description     String?
+
+  // Flutterwave data
+  flwPlanId       String       @unique  // The plan ID from Flutterwave's API
+  flwPlanCode     String?              // Flutterwave's internal plan code
+
+  // Pricing
+  amountNaira     Decimal      @db.Decimal(10, 2)
+  billingCycle    BillingCycle
+  interval        String       // "monthly" | "yearly" — Flutterwave's format
+
+  // Status
+  isActive        Boolean      @default(true)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([planType])
+  @@index([flwPlanId])
+}
+
+
+// ----------------------------------------------------------------------------
+// STEP 3: Add these NEW ENUMS to your schema
+// ----------------------------------------------------------------------------
+
+// All subscription plan variants across all three user types
+enum SubscriptionPlan {
+  // Landlord / Property Owner plans
+  OWNER_ESSENTIAL          // ₦7,500/mo — up to 2 properties, 20% commission
+  OWNER_ELITE              // ₦18,500/mo — unlimited properties, 15% commission
+
+  // Agent plans (Founding Agent Program — first 100)
+  AGENT_ESSENTIAL          // Lower tier — paid only
+  AGENT_PREMIUM            // Higher tier — marking jobs access, sub-agent tools
+
+  // Renter plans
+  // RENTER_FREE is the default for ALL renters right now — no card, no expiry, no charge.
+  // RENTER_PREMIUM_PLUS is free for the first 300 founding renters.
+  // Both will become paid (₦1,500/mo and ₦3,500/mo) when renterPaidPlanUnlockedAt is set.
+  RENTER_FREE              // Free forever base plan — browse, pay, refund window, all included
+  RENTER_PREMIUM_PLUS      // Free now for founding 300 → ₦3,500/mo when paid billing launches
+
+  // Annual variants — owners and agents only for now (renters don't have annual billing yet)
+  OWNER_ESSENTIAL_ANNUAL
+  OWNER_ELITE_ANNUAL
+  AGENT_ESSENTIAL_ANNUAL
+  AGENT_PREMIUM_ANNUAL
+  // RENTER_PREMIUM_PLUS_ANNUAL — add this when paid renter billing launches
+}
+
+enum SubscriptionStatus {
+  PENDING          // Payment initiated but not yet confirmed
+  FREE_ACTIVE      // On a free plan — no payment required, no expiry date
+                   // Used for: RENTER_FREE and founding RENTER_PREMIUM_PLUS
+                   // Renewal cron ignores FREE_ACTIVE records entirely
+  ACTIVE           // Paid subscription in good standing (owners and agents only, for now)
+  TRIAL            // On a free trial (future use)
+  PAST_DUE         // Renewal payment failed — grace period active
+  CANCELLED        // User cancelled — access until period end
+  EXPIRED          // Period ended with no renewal
+  PAUSED           // Temporarily paused (future feature)
+  SUSPENDED        // Admin-suspended (e.g. policy violation)
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionEvent {
+  CREATED              // First subscription created
+  ACTIVATED            // Payment confirmed — subscription went ACTIVE
+  RENEWED              // Successful renewal charge
+  RENEWAL_FAILED       // Renewal charge failed
+  RENEWAL_RETRIED      // Retry attempt after failure
+  UPGRADED             // Moved to a higher plan (e.g. Essential → Elite)
+  DOWNGRADED           // Moved to a lower plan
+  CANCELLED            // User cancelled
+  EXPIRED              // Naturally expired without renewal
+  REACTIVATED          // Cancelled/expired user re-subscribed
+  PAUSED               // Subscription paused
+  RESUMED              // Subscription resumed from pause
+  SUSPENDED            // Admin suspended
+  TRIAL_STARTED        // Trial began
+  TRIAL_ENDED          // Trial ended (converted or expired)
+  VIRTUAL_ACCOUNT_CREATED  // For Premium renters — VA created after activation
+  PLAN_CHANGED         // General plan change event
+  FREE_PLAN_CONVERTED  // Founding renter converted from free → paid billing
+                       // Fired when renterPaidPlanUnlockedAt is set and first charge runs
+  FREE_ACCESS_GRANTED  // A free plan was granted (new renter signup, or admin grant)
+}
+
+enum InvoiceStatus {
+  PENDING      // Awaiting payment
+  PAID         // Successfully charged
+  FAILED       // Charge failed
+  REFUNDED     // Invoice amount refunded
+  VOID         // Cancelled before payment
+}
+
+
+// ============================================================================
+// ENFORCEMENT LOGIC — Notes for your backend service layer
+// ============================================================================
+//
+// 1. RENTER SIGNUP (current behaviour — free):
+//    When a new RENTER registers:
+//    → Create a Subscription record with:
+//        planType     = RENTER_FREE  (or RENTER_PREMIUM_PLUS if within first 300)
+//        status       = FREE_ACTIVE
+//        isFreeRenterPlan = true
+//        billingCycle = MONTHLY (doesn't matter yet — no charge runs)
+//        amountNaira  = 0
+//        finalAmountNaira = 0
+//        currentPeriodStart = now()
+//        currentPeriodEnd   = null  ← no expiry on free plans
+//    → For founding 300: set isFoundingMember = true, foundingMemberNumber = <next available>
+//    → Log FREE_ACCESS_GRANTED event in SubscriptionHistory
+//    → No Flutterwave interaction at all
+//
+// 2. RENTER PREMIUM PLUS — free for founding 300:
+//    → Same as above but planType = RENTER_PREMIUM_PLUS
+//    → canAccessMarkingJobs = false  (Premium Plus renters get this when paid billing launches)
+//    → lockedRateNaira = 3500  ← stored now, charged later
+//    → Virtual account: create immediately on signup (they're Premium Plus, even if free)
+//    → Log VIRTUAL_ACCOUNT_CREATED in SubscriptionHistory
+//
+// 3. FLIPPING RENTERS TO PAID BILLING (future — one admin action):
+//    When you're ready to charge renters:
+//    → Run a migration script that sets renterPaidPlanUnlockedAt = NOW() on all
+//      renter subscriptions where status = FREE_ACTIVE
+//    → The renewal cron will pick them up on next run
+//    → Founding renters: charge lockedRateNaira (never the current plan price)
+//    → Non-founding renters: charge current planType price (₦3,500 for Premium Plus)
+//    → Status transitions: FREE_ACTIVE → PENDING → ACTIVE (on successful charge)
+//    → Log FREE_PLAN_CONVERTED event in SubscriptionHistory
+//    → No schema migration needed — the fields are already there
+//
+// 4. PROPERTY CAP (Landlord Essential):
+//    Before allowing a new property listing:
+//    → Check subscription.planType === OWNER_ESSENTIAL
+//    → If yes, check subscription.currentPropertyCount >= subscription.propertyListingCap (2)
+//    → If capped: return 403 with upgrade prompt
+//    → Increment currentPropertyCount on each new listing, decrement on deletion
+//
+// 5. COMMISSION RATE:
+//    When calculating rent commission:
+//    → OWNER_ELITE / OWNER_ELITE_ANNUAL → 15% platform commission
+//    → All other owner plans or no subscription → 20% platform commission
+//
+// 6. MARKING JOB ACCESS:
+//    Before allowing a user to accept/request marking jobs:
+//    → Check subscription.canAccessMarkingJobs === true
+//    → Currently set to true for: AGENT_PREMIUM only
+//    → RENTER_PREMIUM_PLUS gets canAccessMarkingJobs = true when paid billing launches
+//
+// 7. VIRTUAL ACCOUNT CREATION:
+//    → RENTER_PREMIUM_PLUS (even free): create VA on signup
+//    → OWNER / AGENT: create VA on account creation (already in your schema)
+//    → RENTER_FREE: no VA (they use the platform payment flow without a personal VA)
+//
+// 8. RENEWAL JOB (cron) — owners and agents only for now:
+//    → Query: WHERE status = ACTIVE AND currentPeriodEnd <= NOW() + 3 days
+//             AND isFreeRenterPlan = false   ← CRITICAL: skip all free renter records
+//    → Attempt charge via Flutterwave using flwCustomerToken
+//    → On success: extend currentPeriodEnd, log RENEWED event, create new invoice
+//    → On failure: set status = PAST_DUE, increment renewalFailureCount, schedule retry
+//    → After 3 failed retries: set status = EXPIRED, log EXPIRED event
+//
+// 9. FOUNDING AGENT COHORT:
+//    → First 100 agents on AGENT_PREMIUM: isFoundingAgent = true, foundingAgentNumber = <next>
+//    → Per your frontend data: founding Premium agents get it "free for life"
+//    → Implement as: isFreeRenterPlan = false (agents are paid) BUT you manually credit
+//      their subscription or set a special flag — handle this via admin action or
+//      a foundingAgentFreeForLife Boolean field if you need hard enforcement
+//
+// ============================================================================
 
 // ============================================================================
 // EXISTING MODELS (keeping all other models as they were)

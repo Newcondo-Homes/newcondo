@@ -35,6 +35,7 @@ const prisma = globalForPrisma.prisma ?? createPrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export { prisma };
-export type { Role, User, Property, Prisma } from '@prisma/client'
+export { Role } from "@prisma/client";
+export type {  User, Property, Prisma } from '@prisma/client'
 export type { PropertyMarkingJob } from "@prisma/client"
   

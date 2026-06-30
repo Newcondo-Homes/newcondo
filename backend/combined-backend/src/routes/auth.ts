@@ -69,6 +69,11 @@ router.post(
 );
 router.post("/resend-verification", auth, authController.resendVerification);
 
+// GET /auth/email-exists?email=...
+// PUBLIC — no auth required. Returns only existence, nothing else.
+// Rate-limited to prevent email enumeration abuse.
+router.get('/email-exists', authController.checkEmailExists.bind(authController));
+
 // Phone verification routes
 router.post(
   "/verify-phone",

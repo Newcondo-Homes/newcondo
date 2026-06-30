@@ -148,7 +148,8 @@ class AuthController {
       }
 
       // Check for account lockout (implement with Redis or database)
-      // TODO: In production, use Redis for this
+      // TODO: In production, use Redis for this. also see if you can make nextauth to use the backend login so you can unlock
+      // complex logic
       // const lockoutKey = `lockout:${email}`;
 
       // Verify password
@@ -335,6 +336,59 @@ class AuthController {
       sendResponse(res, 500, "Internal server error", null);
     }
   }
+
+  async checkEmailExists(req: Request, res: Response): Promise<any> {
+  try {
+    const email = (req.query.email as string | undefined)?.trim().toLowerCase();
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ exists: false, error: "Invalid email" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        emailVerified: true,
+        subscription: {
+          select: {
+            status: true,
+          },
+        },
+      },
+    });
+
+    // Fails open — if anything is wrong, we return false so a genuine
+    // new signup is never blocked. The onboarding flow handles the rest.
+    if (!user) {
+      return res.status(200).json({ exists: false });
+    }
+
+    // User exists but never verified their email AND has no active subscription
+    // → treat as a ghost/abandoned registration → allow re-onboarding
+    const hasVerifiedEmail = !!user.emailVerified;
+    const hasActiveSubscription =
+      user.subscription !== null &&
+      [
+        "ACTIVE",
+        "FREE_ACTIVE",
+        "PAST_DUE",
+        "CANCELLED",
+        "PAUSED",
+        "SUSPENDED",
+      ].includes(user.subscription?.status ?? "");
+
+    // Only block re-registration if they're a real, verified user
+    // OR they have a subscription (paid or free — they went through onboarding)
+    const isRealUser = hasVerifiedEmail || hasActiveSubscription;
+
+    return res.status(200).json({ exists: isRealUser });
+  } catch (error) {
+    console.error("checkEmailExists error:", error);
+    // Fail open — never block a signup due to a lookup error
+    return res.status(200).json({ exists: false });
+  }
+}
 
   async refreshToken(req: Request, res: Response) {
     try {

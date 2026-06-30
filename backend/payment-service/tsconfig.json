@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "module": "CommonJS",
     "moduleResolution": "node",
     "declaration": true,
@@ -19,33 +17,12 @@
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
     "rootDir": "./src",
+    "types": ["node","google.maps"],
     "baseUrl": "./",
-    "typeRoots": [
-      "./node_modules/@types", 
-      "./src/types"
-    ],
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "@newcondo/db": [
-        "../../packages/db/src"
-      ],
-      "@newcondo/db/*": [
-        "../../packages/db/src/*"
-      ],
+      "@/*": ["./src/*"],
     }
   },
-  "include": [
-    "src/**/*"
-, "create-flw-plans.js"  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ],
-  "ts-node": {
-    "files": true
-  }
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules"]
 }
