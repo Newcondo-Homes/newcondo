@@ -59,6 +59,7 @@ export const ALLOWED_ZONES: StateZone[] = [
       { name: "Owerri", lat: 5.4836, lng: 7.0333, radiusKm: 12 },
 
       // Uncomment to add more Imo cities — each is allowed automatically:
+      // { name: "Umuguma World Bank, Owerri", lat: 5.4625, lng: 7.0094, radiusKm: 8 },
       // { name: "Orlu", lat: 5.7891, lng: 7.0339, radiusKm: 10 },
       // { name: "Okigwe", lat: 5.8296, lng: 7.3392, radiusKm: 10 },
     ],
@@ -70,11 +71,11 @@ export const ALLOWED_ZONES: StateZone[] = [
     center: { lat: 4.8156, lng: 7.0498 },
     radiusKm: 60,
     cities: [
-      { name: "Woji, Port Harcourt", lat: 4.8235, lng: 7.0398, radiusKm: 8 },
+      // { name: "Woji, Port Harcourt", lat: 4.8235, lng: 7.0398, radiusKm: 8 },
 
       // Uncomment to add more Rivers cities — each is allowed automatically:
       // { name: "GRA Phase 2, Port Harcourt", lat: 4.8156, lng: 7.0134, radiusKm: 6 },
-      // { name: "Trans-Amadi, Port Harcourt", lat: 4.7947, lng: 7.0298, radiusKm: 6 },
+      { name: "Trans-Amadi, Port Harcourt", lat: 4.7947, lng: 7.0298, radiusKm: 1 },
     ],
   },
 

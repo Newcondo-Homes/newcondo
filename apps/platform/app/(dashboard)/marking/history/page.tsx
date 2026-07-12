@@ -366,7 +366,7 @@ export default function MarkingHistoryPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push(`/marking/${job.id}/details`)}
+                    onClick={() => router.push(`/marking/${job.id}/details` as any)}
                   >
                     View Details
                   </Button>
