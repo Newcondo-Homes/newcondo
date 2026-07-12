@@ -1,0 +1,103 @@
+/* ============================================================
+   GEO ACCESS CONFIG — modular allow-list for states & cities
+   ============================================================
+
+   HOW TO GRANT A WHOLE STATE
+   ---------------------------
+   Set `allowWholeState: true` on that state's entry. Every visitor
+   located anywhere inside the state's radius passes — the `cities`
+   list is ignored while this is true.
+
+   HOW TO RESTRICT TO SPECIFIC CITIES WITHIN A STATE
+   ---------------------------------------------------
+   Keep `allowWholeState: false` and list only the cities you want to
+   allow inside that state's `cities` array. Any city NOT listed (or
+   commented out) is rejected even though it's in an allowed state.
+
+   HOW TO ADD A NEW STATE / CITY
+   -------------------------------
+   Copy an existing entry in ALLOWED_ZONES (or an existing city inside
+   a zone's `cities` array), fill in the name + lat/lng + radiusKm,
+   and it is picked up automatically — no other code changes needed.
+
+   Note on precision: this uses simple circle (haversine radius)
+   checks around a city/state center point, not real administrative
+   boundary polygons. It's accurate enough to gate "which city is this
+   visitor roughly in", but a visitor right at the edge of a radius
+   could be mis-classified. If exact polygon precision is ever needed,
+   swap `isPointAllowed` in `geo-access.ts` for a point-in-polygon
+   check against real Nigerian LGA/state boundary GeoJSON.
+   ============================================================ */
+
+export interface CityZone {
+  name: string;
+  lat: number;
+  lng: number;
+  /** Radius in kilometres around the city center considered "inside" this city. */
+  radiusKm: number;
+}
+
+export interface StateZone {
+  name: string;
+  /** true = allow EVERY visitor anywhere in this state (cities list is ignored). */
+  allowWholeState: boolean;
+  center: { lat: number; lng: number };
+  /** Radius in kilometres around the state center — only used when allowWholeState is true. */
+  radiusKm: number;
+  /** Only used when allowWholeState is false. Only these cities are allowed. */
+  cities: CityZone[];
+}
+
+export const ALLOWED_ZONES: StateZone[] = [
+  {
+    name: "Imo",
+    // Flip to `true` to open all of Imo State instead of just the cities below.
+    allowWholeState: false,
+    center: { lat: 5.485, lng: 7.035 },
+    radiusKm: 55,
+    cities: [
+      { name: "Owerri", lat: 5.4836, lng: 7.0333, radiusKm: 12 },
+
+      // Uncomment to add more Imo cities — each is allowed automatically:
+      // { name: "Orlu", lat: 5.7891, lng: 7.0339, radiusKm: 10 },
+      // { name: "Okigwe", lat: 5.8296, lng: 7.3392, radiusKm: 10 },
+    ],
+  },
+  {
+    name: "Rivers",
+    // Flip to `true` to open all of Rivers State instead of just the cities below.
+    allowWholeState: false,
+    center: { lat: 4.8156, lng: 7.0498 },
+    radiusKm: 60,
+    cities: [
+      { name: "Woji, Port Harcourt", lat: 4.8235, lng: 7.0398, radiusKm: 8 },
+
+      // Uncomment to add more Rivers cities — each is allowed automatically:
+      // { name: "GRA Phase 2, Port Harcourt", lat: 4.8156, lng: 7.0134, radiusKm: 6 },
+      // { name: "Trans-Amadi, Port Harcourt", lat: 4.7947, lng: 7.0298, radiusKm: 6 },
+    ],
+  },
+
+  // Add a whole new state the same way. Example (commented out):
+  // {
+  //   name: "Lagos",
+  //   allowWholeState: false,
+  //   center: { lat: 6.5244, lng: 3.3792 },
+  //   radiusKm: 70,
+  //   cities: [
+  //     { name: "Ikeja", lat: 6.6018, lng: 3.3515, radiusKm: 10 },
+  //     { name: "Lekki", lat: 6.4698, lng: 3.5852, radiusKm: 12 },
+  //   ],
+  // },
+];
+
+/* ============================================================
+   ROUTE EXEMPTIONS — paths that skip the location gate entirely
+   (e.g. a shared-property link a landlord sends to an out-of-state
+   family member, or a marking-agent job link). Empty by default —
+   the whole site is gated. Uncomment a prefix to exempt it.
+   ============================================================ */
+export const GATE_EXEMPT_PATH_PREFIXES: string[] = [
+  // "/share",
+  // "/mark-property",
+];

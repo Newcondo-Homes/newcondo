@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { MotionProvider } from "@/components/motion-provider";
 import { Toaster } from "@newcondo/ui/";
 import { SessionProvider } from "@newcondo/auth/client";
 import { Providers } from '@/components/providers';
+import { LocationGate } from "@/components/gate/LocationGate";
+import { IP_BYPASS_COOKIE } from "@/lib/gate-storage";
+import { GEO_ACCESS_COOKIE, verifyGeoAccess } from "@/lib/geo-token";
 import "./globals.css";
 
 //TODO: do prisma migrate in @newcondo/db to effect new changes in schema
@@ -30,11 +34,16 @@ export const metadata: Metadata = {
 //   description: "The property platform built for Nigeria.",
 //   metadataBase: new URL("https://newcondo.homes"),
 // };
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const cookieStore = await cookies();
+  const ipBypass = cookieStore.get(IP_BYPASS_COOKIE)?.value === "1";
+  const geoGranted = !!verifyGeoAccess(cookieStore.get(GEO_ACCESS_COOKIE)?.value);
+
   return (
     <html lang="en">
       <body
@@ -43,7 +52,9 @@ export default function RootLayout({
         <SessionProvider>
           <Providers>
             <MotionProvider>
-              {children}
+              <LocationGate ipBypass={ipBypass} geoGranted={geoGranted}>
+                {children}
+              </LocationGate>
             </MotionProvider>
           </Providers>
         </SessionProvider>
@@ -52,3 +63,4 @@ export default function RootLayout({
     </html>
   );
 }
+

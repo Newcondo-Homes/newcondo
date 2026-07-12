@@ -11,7 +11,9 @@
    PlanSelector shows, and the userType sent to register().
    ============================================================ */
 
-import { Building2, KeyRound, Handshake, Check } from "lucide-react";
+import { Building2, Handshake, Check } from "lucide-react";
+// KeyRound is only used by the (currently commented-out) Renter card above.
+// import { KeyRound } from "lucide-react";
 import { cx } from "@/lib/cx";
 import { UserType } from "@/types/api";
 
@@ -29,12 +31,15 @@ const ROLE_CARDS: RoleCard[] = [
     blurb: "List your properties, collect rent in escrow, and manage everything from one dashboard.",
     Icon: Building2,
   },
-  {
-    type: UserType.RENTER,
-    title: "Renter",
-    blurb: "Find verified homes — no fake listings, no double-booking, no surprise agent fees.",
-    Icon: KeyRound,
-  },
+  // Renter is disabled for now — onboarding only accepts Property owners and
+  // Agents. Uncomment this card (and switch the grid back to grid-cols-3) to
+  // re-enable renter sign-ups.
+  // {
+  //   type: UserType.RENTER,
+  //   title: "Renter",
+  //   blurb: "Find verified homes — no fake listings, no double-booking, no surprise agent fees.",
+  //   Icon: KeyRound,
+  // },
   {
     type: UserType.AGENT,
     title: "Agent",
@@ -53,7 +58,7 @@ export default function UserTypeSelector({
   disabled?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-3.5 max-[720px]:grid-cols-1">
+    <div className="mx-auto grid max-w-[640px] grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
       {ROLE_CARDS.map(({ type, title, blurb, Icon }) => {
         const isActive = selectedType === type;
         return (

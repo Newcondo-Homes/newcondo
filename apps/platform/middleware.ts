@@ -5,18 +5,18 @@ import {
   DEFAULT_LOGIN_REDIRECT,
   apiAuthPrefix,
   publicRoutes,
-  // protectedRoutes,
   authRoutes,
   adminRoutes,
   agentRoutes,
   ownerRoutes,
 } from "@/lib/routes";
-
+// Copy these two files from the marketing site into this app, unchanged:
+import { IP_WHITELIST } from "@/lib/ip-access-config";
+import { IP_BYPASS_COOKIE } from "@/lib/gate-storage";
 
 type Role = "ADMIN" | "AGENT" | "OWNER" | "RENTER";
 type VerificationStatus = "PENDING" | "VERIFIED" | "REJECTED";
 
-// Extended user type for middleware
 interface MiddlewareUser {
   id?: string;
   email?: string | null;
@@ -26,162 +26,147 @@ interface MiddlewareUser {
   verificationStatus?: VerificationStatus;
 }
 
+/**
+ * Server-side IP allow-list. If the request's IP matches an entry in
+ * IP_WHITELIST (lib/ip-access-config.ts), we drop a cookie the client
+ * checks before showing the location gate — that visitor gets instant
+ * access on every route, no GPS permission needed. Runs on the real
+ * edge request IP, so it can't be spoofed from the browser.
+ *
+ * With IP_WHITELIST empty (default), this block is a no-op and every
+ * visitor goes through the normal auth/role checks below unaffected.
+ */
+function getClientIp(req: Request): string {
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) return xff.split(",")[0]!.trim();
+  return req.headers.get("x-real-ip") || req.headers.get("cf-connecting-ip") || "";
+}
+
 export default auth((req) => {
   const { nextUrl } = req;
   const pathname = nextUrl.pathname;
   const isLoggedIn = !!req.auth;
 
-  // Cast user to our extended type
   const user = req.auth?.user as MiddlewareUser | undefined;
   const userRole = user?.role;
   const verificationStatus = user?.verificationStatus;
 
-  // Check if it's an API auth route (allow all auth API routes)
-  const isApiAuthRoute = pathname.startsWith(apiAuthPrefix);
-  if (isApiAuthRoute) {
-    return;
+  const ip = getClientIp(req);
+  const ipBypass = IP_WHITELIST.length > 0 && !!ip && IP_WHITELIST.includes(ip);
+
+  /** Wrap every returned response through here so the bypass cookie always gets set. */
+  function finish(res: NextResponse): NextResponse {
+    if (ipBypass) {
+      res.cookies.set(IP_BYPASS_COOKIE, "1", {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+        httpOnly: true, // server-only — client JS can't read or forge this
+        secure: process.env.NODE_ENV === "production"
+      });
+    }
+    return res;
   }
 
-  // Check if it's a public route
+  const isApiAuthRoute = pathname.startsWith(apiAuthPrefix);
+  if (isApiAuthRoute) {
+    return finish(NextResponse.next());
+  }
+
   const isPublicRoute = publicRoutes.some(
     (route) =>
       route === pathname ||
       (route.endsWith("*") && pathname.startsWith(route.slice(0, -1)))
   );
 
-  // Check if it's an auth route (login, register, etc.)
   const isAuthRoute = authRoutes.includes(pathname);
 
-  // If user is logged in and trying to access auth routes, redirect to dashboard
   if (isAuthRoute && isLoggedIn) {
-    return NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    return finish(NextResponse.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl)));
   }
 
-  // Allow access to public routes
   if (isPublicRoute) {
-    return;
+    return finish(NextResponse.next());
   }
 
-  // If not logged in and trying to access protected routes, redirect to login
   if (!isLoggedIn && !isPublicRoute) {
     let callbackUrl = pathname;
-    if (nextUrl.search) {
-      callbackUrl += nextUrl.search;
-    }
-
+    if (nextUrl.search) callbackUrl += nextUrl.search;
     const encodedCallbackUrl = encodeURIComponent(callbackUrl);
-    return NextResponse.redirect(
-      new URL(`/login?callbackUrl=${encodedCallbackUrl}`, nextUrl)
+    return finish(
+      NextResponse.redirect(new URL(`/login?callbackUrl=${encodedCallbackUrl}`, nextUrl))
     );
   }
 
-  // Role-based access control for logged-in users
   if (isLoggedIn && userRole) {
-    // Admin routes - only accessible by ADMIN role
-    const isAdminRoute = adminRoutes.some(
-      (route) => pathname.startsWith(route) || pathname === route
-    );
-
+    const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route) || pathname === route);
     if (isAdminRoute && userRole !== "ADMIN") {
-      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+      return finish(NextResponse.redirect(new URL("/unauthorized", nextUrl)));
     }
 
-    // Agent-specific routes
-    const isAgentRoute = agentRoutes.some(
-      (route) => pathname.startsWith(route) || pathname === route
-    );
-
+    const isAgentRoute = agentRoutes.some((route) => pathname.startsWith(route) || pathname === route);
     if (isAgentRoute && !["AGENT", "ADMIN"].includes(userRole)) {
-      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+      return finish(NextResponse.redirect(new URL("/unauthorized", nextUrl)));
     }
 
-    // Owner-specific routes
-    const isOwnerRoute = ownerRoutes.some(
-      (route) => pathname.startsWith(route) || pathname === route
-    );
-
+    const isOwnerRoute = ownerRoutes.some((route) => pathname.startsWith(route) || pathname === route);
     if (isOwnerRoute && !["OWNER", "ADMIN"].includes(userRole)) {
-      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+      return finish(NextResponse.redirect(new URL("/unauthorized", nextUrl)));
     }
 
     //TODO: update protected and non-protected routes
-    // Check if user is verified for certain protected routes
     const requiresVerification = [
       "/properties/create",
       "/properties/my-listings",
       "/marking-jobs/create",
       "/virtual-accounts",
     ];
-
-    const requiresVerificationRoute = requiresVerification.some((route) =>
-      pathname.startsWith(route)
-    );
-
-    if (
-      requiresVerificationRoute &&
-      verificationStatus !== "VERIFIED"
-    ) {
-      return NextResponse.redirect(new URL("/profile/verification", nextUrl));
+    const requiresVerificationRoute = requiresVerification.some((route) => pathname.startsWith(route));
+    if (requiresVerificationRoute && verificationStatus !== "VERIFIED") {
+      return finish(NextResponse.redirect(new URL("/profile/verification", nextUrl)));
     }
   }
 
-  // Handle specific property boundaries access
-  if (
-    pathname.includes("/boundaries") ||
-    pathname.includes("/boundary-mapping")
-  ) {
-    // Only allow access to users with OWNER, AGENT, or ADMIN roles
-    // Only allow access to users with OWNER, AGENT, or ADMIN roles
+  if (pathname.includes("/boundaries") || pathname.includes("/boundary-mapping")) {
     const allowedRoles: Role[] = ["OWNER", "AGENT", "ADMIN"];
-
     if (!userRole || !allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+      return finish(NextResponse.redirect(new URL("/unauthorized", nextUrl)));
     }
   }
 
-  // Handle marking jobs queue - only for agents
   if (pathname.includes("/marking-jobs/queue")) {
     const allowedRoles: Role[] = ["AGENT", "ADMIN"];
-
     if (!userRole || !allowedRoles.includes(userRole)) {
-      return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+      return finish(NextResponse.redirect(new URL("/unauthorized", nextUrl)));
     }
   }
 
-  // Handle virtual accounts - only for verified users
   if (pathname.startsWith("/virtual-accounts")) {
     if (verificationStatus !== "VERIFIED") {
-      return NextResponse.redirect(new URL("/profile/verification", nextUrl));
+      return finish(NextResponse.redirect(new URL("/profile/verification", nextUrl)));
     }
   }
 
-  // Add security headers
   const response = NextResponse.next();
-
-  // Add security headers
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "origin-when-cross-origin");
-  response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(self)"
-  );
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
 
-  return response;
+  return finish(response);
 });
 
-// Matcher configuration
+
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     */
+ * Match all request paths except for the ones starting with:
+ * - api (API routes)
+ * - _next/static (static files)
+ * - _next/image (image optimization files)
+ * - favicon.ico (favicon file)
+ * - public files (public folder)
+ */
     "/((?!api|_next/static|_next/image|favicon.ico|public|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
-

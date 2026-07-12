@@ -522,6 +522,30 @@ img { display: block; }
   .onb-sub-hint, .onb-sub-hint .onb-sub-arrow, .onb-sub-emph, .onb-cue, .onb-cue .onb-cue-chev { animation: none; }
 }
 
+/* ============================================================
+   LOCATION GATE — subtle "tap me" cue on the CTA button, so a
+   visitor who hasn't shared their location yet knows to tap it.
+   Same restrained bob + soft ring-pulse language as onb-sub-hint.
+   ============================================================ */
+@keyframes gateCtaBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes gateCtaRing {
+  0% { box-shadow: 0 0 0 0 rgba(249, 249, 239, 0.45); }
+  70% { box-shadow: 0 0 0 12px rgba(249, 249, 239, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(249, 249, 239, 0); }
+}
+.gate-cta-pulse { animation: gateCtaBob 1.7s var(--ease-nc) infinite, gateCtaRing 2.1s var(--ease-nc) infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .gate-cta-pulse { animation: none; }
+}
+
+/* Three-dot "working" indicator on the gate CTA while requesting location. */
+@keyframes gateDotBlink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+.gate-dot { animation: gateDotBlink 1.4s ease-in-out infinite; }
+.gate-dot:nth-child(2) { animation-delay: 0.2s; }
+.gate-dot:nth-child(3) { animation-delay: 0.4s; }
+@media (prefers-reduced-motion: reduce) {
+  .gate-dot { animation: none; }
+}
 
 /* ============================================================
    Responsive hardening — explicit media queries keyed off section
