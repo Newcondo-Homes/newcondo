@@ -71,11 +71,11 @@ export const ALLOWED_ZONES: StateZone[] = [
     center: { lat: 4.8156, lng: 7.0498 },
     radiusKm: 60,
     cities: [
-      // { name: "Woji, Port Harcourt", lat: 4.8235, lng: 7.0398, radiusKm: 8 },
+      { name: "Woji, Port Harcourt", lat: 4.8235, lng: 7.0398, radiusKm: 8 },
 
       // Uncomment to add more Rivers cities — each is allowed automatically:
       // { name: "GRA Phase 2, Port Harcourt", lat: 4.8156, lng: 7.0134, radiusKm: 6 },
-      { name: "Trans-Amadi, Port Harcourt", lat: 4.7947, lng: 7.0298, radiusKm: 1 },
+      // { name: "Trans-Amadi, Port Harcourt", lat: 4.7947, lng: 7.0298, radiusKm: 1 },
     ],
   },
 
@@ -102,3 +102,25 @@ export const GATE_EXEMPT_PATH_PREFIXES: string[] = [
   // "/share",
   // "/mark-property",
 ];
+
+// How the check works
+
+// Each state is a "zone" with one center point + radius, and a list of city zones (each also a point + radius). For a visitor's GPS coordinate, checkGeoAccess draws an imaginary circle around each allowed point and asks "is the visitor's coordinate inside this circle?" using straight-line (haversine) distance — not real map/LGA boundaries.
+
+// allowWholeState: true → only the state's center + radiusKm are checked. Anyone within that one big circle passes; the cities array is ignored entirely.
+// allowWholeState: false (current setting for both Imo and Rivers) → the state's own center/radiusKm are ignored, and instead each city in cities is checked individually. A visitor passes only if they fall inside at least one city's circle.
+// Rivers State's radiusKm (the one on the state object, line: radiusKm: 60)
+
+// This one is currently unused/dormant — it only matters if you flip allowWholeState to true for Rivers. Then it defines the radius (60km) around the Rivers center point that would open the entire state. Since you want only Woji restricted, leave allowWholeState: false and that state-level radiusKm just sits there inactive, ready for if you ever want to open all of Rivers with one flip.
+
+// City's radiusKm (e.g. Woji's radiusKm: 8)
+
+// This is the one actually gating you right now. It draws an 8km circle around Woji's lat/lng (4.8235, 7.0398) — anyone with GPS coordinates within 8km of that point passes; everyone else in Rivers (Trans-Amadi, GRA, Rumuola, etc.) is rejected, even though they're in the same state.
+
+// To restrict to a smaller/different area in Rivers (say, only Woji, not neighboring streets):
+
+// Shrink radiusKm on the Woji entry — e.g. radiusKm: 3 tightens the circle to roughly Woji's core.
+// Or add a second, more specific city entry with a smaller radius and remove/comment the broader one.
+// To open more Rivers neighborhoods later, uncomment or add more entries to the cities array — each is an independent circle, so you can have many small allowed pockets inside one state without opening the whole thing.
+// Caveat already noted in the file's comments: circles are an approximation, not true polygon boundaries — a visitor right at the edge of a radius could be misclassified either way. If you need street-accurate boundaries later, that would mean swapping this for a real GeoJSON polygon lookup.
+
