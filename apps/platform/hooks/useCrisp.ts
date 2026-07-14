@@ -94,25 +94,15 @@ export function useCrisp(): UseCrisp {
 
     bootedRef.current = true;
 
-    // Defer script injection off the current tick. ChatButton mounts the
-    // instant LocationGate grants access, which is also the instant a
+    // Defer script injection slightly off the mount tick. ChatButton mounts
+    // the instant LocationGate grants access, which is also the instant a
     // high-accuracy GPS fix resolves and the full page hydrates/animates in
     // — injecting + evaluating Crisp's remote script into that same burst is
-    // what was reading as a freeze on mobile. Waiting for an idle moment lets
-    // the gate transition and page animations finish first.
-    // lib.dom already types requestIdleCallback/cancelIdleCallback (non-
-    // optional in modern TS DOM libs) — read them off `window` via a loose
-    // cast instead of re-declaring the global, which conflicted with that
-    // built-in declaration and broke the Vercel build.
-    const win = window as unknown as {
-      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-      cancelIdleCallback?: (handle: number) => void;
-    };
-    const idle = (typeof win.requestIdleCallback === "function"
-      ? win.requestIdleCallback
-      : (cb: () => void) => window.setTimeout(cb, 1200)) as (cb: () => void) => number;
-
-    const idleHandle = idle(() => {
+    // what was reading as a freeze on mobile. A short fixed delay (rather than
+    // requestIdleCallback, which Safari/iOS doesn't support at all, and which
+    // elsewhere can be starved indefinitely under continuous work) guarantees
+    // boot still happens instead of sometimes never firing.
+    const bootTimer = window.setTimeout(() => {
       const ok = loadCrisp(user ? { tokenId: `nc_${user.id}` } : undefined);
       if (!ok) return;
       setAvailable(true);
@@ -148,7 +138,7 @@ export function useCrisp(): UseCrisp {
           setUnread((n) => n + 1);
         });
       }
-    });
+    }, 600);
 
     // Fallback: if the network is slow / blocked and session:loaded never
     // fires, stop showing "connecting" after a few seconds rather than
@@ -161,8 +151,7 @@ export function useCrisp(): UseCrisp {
     // Identity is pushed by the effect below once `available` is true.
     return () => {
       window.clearTimeout(readyTimeout);
-      if (typeof win.cancelIdleCallback === "function") win.cancelIdleCallback(idleHandle);
-      else window.clearTimeout(idleHandle);
+      window.clearTimeout(bootTimer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
