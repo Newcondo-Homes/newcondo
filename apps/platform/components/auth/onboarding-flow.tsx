@@ -3,7 +3,7 @@
 /* ============================================================
    OnboardingFlow
 
-   Phases: register → verify → plan → payment(finalize) → success
+   Phases: register → verify → (phone) → plan → payment(finalize) → success
 
    Key behaviours:
    • Deep-link role: /onboarding?role=agent|renter|owner pre-selects the
@@ -16,6 +16,13 @@
    • Social sign-in (Google/Facebook button, or Google One Tap for
      existing Gmail users) creates the account via OAuth and RETURNS here
      authenticated → we skip register/verify and resume at the plan step.
+   • Social sign-ups get two gap-fills before the plan step:
+       1. Google/Facebook never carry the role picked in step 1 (OAuth
+          callbacks don't see our callbackUrl's query params) — if the
+          account's userType differs from ?role=, we PATCH it server-side
+          via /api/user/profile and push it into the session.
+       2. Google never returns a phone number — if session.user.phone is
+          empty, we route to the "phone" phase to collect one before plan.
    ============================================================ */
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -31,19 +38,21 @@ import { EASE } from "@/components/motion";
 import { UserType } from "@/types/api";
 import type { Plan, PaymentResult } from "@/types/api";
 import OnboardingForm, { type OnboardingDraft } from "./onboarding-form";
+import PhonePrompt from "./phone-prompt";
 import PlanSelector from "./plan-selector";
 import PaymentProcessing from "./payment-processing";
 import PaymentSuccess from "./payment-success";
 import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
 import { getOnboardingState, changeAccountType, checkEmailRegistered } from "@/lib/api/onboarding";
+import { updateProfile } from "@/lib/api/profile";
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
 
 /* ------------------------------------------------------------------ */
 /* Flow phases                                                         */
 /* ------------------------------------------------------------------ */
-type Phase = "register" | "verify" | "plan" | "payment" | "success";
+type Phase = "register" | "verify" | "phone" | "plan" | "payment" | "success";
 
 const STEPS: { key: Phase | "done"; label: string }[] = [
   { key: "register", label: "Account" },
@@ -55,6 +64,10 @@ const STEPS: { key: Phase | "done"; label: string }[] = [
 const PHASE_INDEX: Record<Phase, number> = {
   register: 0,
   verify: 1,
+  // Grouped visually with "Verify" in the stepper — it's a one-off contact
+  // step for social sign-ups (Google never returns a phone number), not a
+  // whole extra stage of the flow.
+  phone: 1,
   plan: 2,
   payment: 3,
   success: 4,
@@ -63,6 +76,7 @@ const PHASE_INDEX: Record<Phase, number> = {
 const PHASE_MAXW: Record<Phase, string> = {
   register: "max-w-4xl",
   verify: "max-w-[460px]",
+  phone: "max-w-[480px]",
   plan: "max-w-[1000px]",
   payment: "max-w-[480px]",
   success: "max-w-[560px]",
@@ -90,7 +104,7 @@ function roleFromParam(p: string | null): UserType | undefined {
 export default function OnboardingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
 
   const initialRole = roleFromParam(searchParams.get("role"));
 
@@ -130,7 +144,8 @@ export default function OnboardingFlow() {
          payment step again. No double-charge possible.
        • Q1 — abandoned PENDING checkout  → resume on the plan step with a
          banner; re-picking reuses the same subscription row server-side.
-       • Social / fresh authed user       → resume at plan (unchanged).
+       • Social / fresh authed user       → resume at plan (via "phone" first
+         if they have none on file).
 
      The `phase === "register"` guard stops this firing later, when our own
      deferred register() in the finalize step makes the session authenticated. */
@@ -152,19 +167,30 @@ export default function OnboardingFlow() {
       userType?: UserType;
     };
 
+    const resolvedRole = initialRole ?? u.userType ?? UserType.OWNER;
     setDraft({
       name: u.name ?? "",
       email: u.email ?? "",
       phone: u.phone ?? "",
       password: "", // unused — account already exists
-      role: initialRole ?? u.userType ?? UserType.OWNER,
+      role: resolvedRole,
     });
     setAlreadyRegistered(true);
 
     // Resolve their canonical onboarding state, then route accordingly.
     setCheckingState(true);
-    getOnboardingState()
-      .then((state) => {
+    (async () => {
+      try {
+        // Google/Facebook sign-up never carries the role the user picked in
+        // step 1 — persist it now if it differs from what's on file. This
+        // runs before the state check so a Q3 redirect (if any) already has
+        // the right role recorded.
+        if (initialRole && u.userType && initialRole !== u.userType) {
+          const res = await updateProfile({ userType: initialRole });
+          if (res.success) await update({ userType: initialRole });
+        }
+
+        const state = await getOnboardingState();
         if (state?.redirectTo === "dashboard" || state?.step === "done") {
           // Q3 — they're already subscribed. Leave onboarding entirely.
           router.replace("/dashboard");
@@ -174,11 +200,18 @@ export default function OnboardingFlow() {
           // Q1 — they had a checkout in progress. Resume on the plan step.
           setResuming(true);
         }
-        setPhase("plan");
-      })
-      .catch(() => setPhase("plan"))
-      .finally(() => setCheckingState(false));
-  }, [status, session, phase, draft, initialRole, router]);
+
+        // Social sign-ups have no phone from OAuth — collect it once, here,
+        // before letting them into the plan step (email users already gave
+        // theirs in OnboardingForm).
+        setPhase(u.phone ? "plan" : "phone");
+      } catch {
+        setPhase(u.phone ? "plan" : "phone");
+      } finally {
+        setCheckingState(false);
+      }
+    })();
+  }, [status, session, phase, draft, initialRole, router, update]);
 
   const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
 
@@ -192,9 +225,6 @@ export default function OnboardingFlow() {
     setPlan(null);
   }, []);
 
-  /* Called when a returning (already-registered) user re-submits the role/
-     details step with a possibly-different role. Persists the role change,
-     then jumps straight to plan (no OTP — the account is already verified). */
   /* Fresh register submit (Q4 server-truth check). Before sending an OTP, ask
      the backend whether this email already has an account:
        • exists  → a real returning user whose session expired → /login (with a
@@ -225,6 +255,9 @@ export default function OnboardingFlow() {
     [router]
   );
 
+  /* Called when a returning (already-registered) user re-submits the role/
+     details step with a possibly-different role. Persists the role change,
+     then jumps straight to plan (no OTP — the account is already verified). */
   const handleReturningRoleSubmit = useCallback(
     async (d: OnboardingDraft) => {
       if (draft && d.role !== draft.role) {
@@ -345,6 +378,17 @@ export default function OnboardingFlow() {
                   onVerified={() => setPhase("plan")}
                   onBack={() => setPhase("register")}
                   backLabel="Back to details"
+                />
+              )}
+
+              {phase === "phone" && draft && (
+                <PhonePrompt
+                  name={draft.name}
+                  onUpdateSession={(patch) => update(patch)}
+                  onSaved={(phone) => {
+                    setDraft((d) => (d ? { ...d, phone } : d));
+                    setPhase("plan");
+                  }}
                 />
               )}
 

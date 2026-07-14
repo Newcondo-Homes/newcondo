@@ -21,7 +21,7 @@ import { useCrisp } from "@/hooks/useCrisp";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function ChatButton() {
-  const { available, unread, hasConversation, open, reset } = useCrisp();
+  const { available, unread, hasConversation, open, reset, connecting } = useCrisp();
   const [panelOpen, setPanelOpen] = useState(false);
 
   // No website id configured → don't render a dead bubble.
@@ -73,19 +73,31 @@ export function ChatButton() {
             <div className="flex flex-col gap-2.5 p-4">
               <button
                 onClick={startChat}
-                className="group flex items-center justify-between gap-3 rounded-[12px] bg-ink px-4 py-3 text-left text-cream transition-[background,transform] duration-200 ease-nc hover:bg-ink-soft active:scale-[0.98]"
+                disabled={connecting}
+                aria-busy={connecting}
+                className="group flex items-center justify-between gap-3 rounded-[12px] bg-ink px-4 py-3 text-left text-cream transition-[background,transform] duration-200 ease-nc hover:bg-ink-soft active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100"
               >
                 <span className="flex items-center gap-2.5">
-                  <Icon name="message-square-text" size={18} />
+                  {connecting ? (
+                    <Icon name="loader-2" size={18} className="animate-spin" />
+                  ) : (
+                    <Icon name="message-square-text" size={18} />
+                  )}
                   <span className="text-[14.5px] font-semibold">
-                    {hasConversation ? "Continue chatting" : "Start a chat"}
+                    {connecting
+                      ? "Connecting…"
+                      : hasConversation
+                      ? "Continue chatting"
+                      : "Start a chat"}
                   </span>
                 </span>
-                <Icon
-                  name="arrow-right"
-                  size={16}
-                  className="transition-transform duration-200 ease-nc group-hover:translate-x-1"
-                />
+                {!connecting && (
+                  <Icon
+                    name="arrow-right"
+                    size={16}
+                    className="transition-transform duration-200 ease-nc group-hover:translate-x-1"
+                  />
+                )}
               </button>
 
               {hasConversation && (

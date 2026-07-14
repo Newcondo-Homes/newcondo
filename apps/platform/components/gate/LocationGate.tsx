@@ -41,18 +41,28 @@ function audienceFromRoute(pathname: string | null): Audience {
  *  3. Does it carry a valid SIGNED geo-access cookie from a prior GPS pass?
  *     (app/api/geo-access + lib/geo-token.ts — httpOnly, HMAC-signed; a
  *     hand-edited or forged cookie fails verification and is ignored.)
- *  4. Otherwise: show the gate and ask for GPS location.
+ *  4. Is there a valid, authenticated session? (apps that render this inside
+ *     an @newcondo/auth-protected layout — e.g. the platform dashboard.
+ *     Someone who has already signed up and logged in has already been
+ *     through account verification; they shouldn't be re-gated by GPS just
+ *     because they're travelling. Pass `sessionBypass` from a server
+ *     component that has called `auth()`. Marketing-site pages with no
+ *     session concept simply omit this prop.)
+ *  5. Otherwise: show the gate and ask for GPS location.
  */
 export function LocationGate({
   children,
   ipBypass = false,
   geoGranted = false,
+  sessionBypass = false,
 }: {
   children: React.ReactNode;
-  /** Resolved server-side in app/layout.tsx from the httpOnly IP-whitelist cookie. */
+  /** Resolved server-side from the httpOnly IP-whitelist cookie. */
   ipBypass?: boolean;
-  /** Resolved server-side in app/layout.tsx by verifying the signed geo-access cookie. */
+  /** Resolved server-side by verifying the signed geo-access cookie. */
   geoGranted?: boolean;
+  /** Resolved server-side via @newcondo/auth's `auth()` — true when there's a logged-in session. */
+  sessionBypass?: boolean;
 }) {
   const pathname = usePathname();
   const [status, setStatus] = useState<Status>("checking");
@@ -68,12 +78,12 @@ export function LocationGate({
       setStatus("granted");
       return;
     }
-    if (ipBypass || geoGranted) {
+    if (ipBypass || geoGranted || sessionBypass) {
       setStatus("granted");
       return;
     }
     setStatus("idle");
-  }, [isExempt, ipBypass, geoGranted, pathname]);
+  }, [isExempt, ipBypass, geoGranted, sessionBypass, pathname]);
 
   function requestLocation() {
     if (typeof navigator === "undefined" || !("geolocation" in navigator)) {

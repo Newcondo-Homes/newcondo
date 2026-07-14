@@ -91,7 +91,14 @@ export default function GoogleOneTap({
         },
       });
 
-      id.prompt();
+      id.prompt((notification: any) => {
+        if (notification?.isNotDisplayed?.() || notification?.isSkippedMoment?.()) {
+          console.warn(
+            "[GoogleOneTap] not shown:",
+            notification.getNotDisplayedReason?.() ?? notification.getSkippedReason?.()
+          );
+        }
+      });
     };
 
     if (window.google?.accounts?.id) {

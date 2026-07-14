@@ -17,6 +17,18 @@
      1. register            → create the account
      2. signIn              → live NextAuth session (carries accessToken)
      3. waitForSessionToken → ensure apiClient can read the new token
+     3b. syncRoleIfNeeded   → NEW: Google/Facebook OAuth sign-up creates the
+         User row via the Prisma adapter, which only maps standard profile
+         fields (name/email/image) — it NEVER sets userType, so a fresh
+         Google user silently lands on your schema's default (RENTER),
+         regardless of the role they picked in step 1. This step compares
+         the LIVE session's userType against the role the user actually
+         chose (`draft.role`) and PATCHes it via /api/user/profile BEFORE
+         we ever call initiateSubscription — otherwise the backend correctly
+         (but confusingly) rejects e.g. "Plan OWNER_ESSENTIAL is not
+         available for RENTER accounts." Runs for every path (register OR
+         already-registered/social), so it's a no-op/no-friction safety net
+         whenever the roles already match, and the actual fix when they don't.
      4a. FREE renter  → POST /subscriptions/renter-signup
      4b. PAID         → POST /subscriptions/initiate → backend returns the
          authoritative Flutterwave payload (amount + payment_plan + tx_ref)
@@ -40,6 +52,7 @@ import {
   createFreeRenterSubscription,
   resolveSubscriptionPlanCode,
 } from "@/lib/api/subscriptions";
+import { updateProfile } from "@/lib/api/profile";
 import { UserType } from "@/types/api";
 import type { Plan, PaymentResult, AuthResponse } from "@/types/api";
 import type { OnboardingDraft } from "./onboarding-form";
@@ -63,6 +76,31 @@ async function waitForSessionToken(timeoutMs = 4000, intervalMs = 150): Promise<
     }
     await new Promise((r) => setTimeout(r, intervalMs));
   }
+}
+
+/**
+ * Force the backend's stored userType to match the role actually chosen in
+ * this onboarding session — unconditionally, every time, right before
+ * checkout. We do NOT gate this on reading the current value off the client
+ * session first: NextAuth's session object only exposes userType if a custom
+ * `session()` callback explicitly copies it there, and if it doesn't, our
+ * previous "only patch if it differs" check would silently skip the patch
+ * every single time (which is exactly the bug you just hit — the backend's
+ * DB row stayed RENTER even after "syncing"). Calling PATCH unconditionally
+ * is a harmless no-op write when the role already matches, and the guaranteed
+ * fix when it doesn't — no client-side read of the current value to trust.
+ */
+async function syncRoleIfNeeded(desiredRole: UserType): Promise<void> {
+  console.log("[PaymentProcessing] Forcing account type to:", desiredRole);
+  const patched = await updateProfile({ userType: desiredRole });
+  if (!patched.success) {
+    throw new Error(
+      patched.error ?? "Couldn't confirm your account type before checkout. Please try again."
+    );
+  }
+  console.log("[PaymentProcessing] Account type confirmed:", patched.data?.userType ?? desiredRole);
+  // Give the write a beat to land before the subscription call re-reads it.
+  await new Promise((r) => setTimeout(r, 150));
 }
 
 export default function PaymentProcessing({
@@ -184,7 +222,14 @@ export default function PaymentProcessing({
           await waitForSessionToken();
         }
 
-        // 3) Create the subscription on the backend (authed via apiClient).
+        // 3) Reconcile the DB's userType against what the user actually
+        //    picked. No-op for email/password sign-ups (already correct);
+        //    this is the real fix for Google/Facebook sign-ups, whose OAuth
+        //    account creation never sets userType at all.
+        console.log("[PaymentProcessing] Confirming account type...");
+        await syncRoleIfNeeded(draft.role);
+
+        // 4) Create the subscription on the backend (authed via apiClient).
         let paymentResult: PaymentResult | undefined;
 
         if (free) {
@@ -266,7 +311,7 @@ export default function PaymentProcessing({
         <button
           type="button"
           onClick={beginCheckout}
-          className="mt-6 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-4 text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97]"
+          className="mt-6 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-4 text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97] cursor-pointer"
         >
           {free ? (
             "Activate free plan"
@@ -282,7 +327,7 @@ export default function PaymentProcessing({
           <button
             type="button"
             onClick={onBack}
-            className="mt-2.5 inline-flex w-full items-center justify-center rounded-full px-7 py-2.5 text-[14px] font-semibold text-text-secondary transition-colors duration-200 ease-nc hover:text-ink"
+            className="mt-2.5 inline-flex w-full items-center justify-center rounded-full px-7 py-2.5 text-[14px] font-semibold text-text-secondary transition-colors duration-200 ease-nc hover:text-ink cursor-pointer"
           >
             Choose a different plan
           </button>
@@ -329,7 +374,7 @@ export default function PaymentProcessing({
             <button
               type="button"
               onClick={onBack}
-              className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-6 py-[13px] text-[15px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken max-[480px]:w-full"
+              className="group inline-flex items-center justify-center gap-2 rounded-full border border-border-strong bg-surface px-6 py-[13px] text-[15px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken max-[480px]:w-full cursor-pointer"
             >
               <ArrowLeft size={17} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:-translate-x-1" />
               Back to plans
@@ -338,7 +383,7 @@ export default function PaymentProcessing({
           <button
             type="button"
             onClick={() => setAttempt((a) => a + 1)}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-ink px-7 py-[14px] text-[15px] font-semibold text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97] max-[480px]:w-full"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-ink px-7 py-[14px] text-[15px] font-semibold text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97] max-[480px]:w-full cursor-pointer"
           >
             <RefreshCw size={16} strokeWidth={2} />
             Try again
