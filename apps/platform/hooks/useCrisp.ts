@@ -30,6 +30,13 @@ import {
 } from "@/lib/crisp";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
+declare global {
+  interface Window {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    cancelIdleCallback?: (handle: number) => void;
+  }
+}
+
 const STARTED_KEY = "newcondo.crisp.started";
 /** Public custom event any element can dispatch to open the chat. */
 export const OPEN_CHAT_EVENT = "newcondo:open-chat";
@@ -93,52 +100,54 @@ export function useCrisp(): UseCrisp {
     if (authLoading) return; // wait until we know whether there's a user
 
     bootedRef.current = true;
-    const ok = loadCrisp(user ? { tokenId: `nc_${user.id}` } : undefined);
-    if (!ok) return;
-    setAvailable(true);
-    setHasConversation(readStarted());
 
-    // Our bubble is the launcher → keep Crisp's own launcher hidden,
-    // but reveal its box when a reply lands so the user sees it.
-    hideDefaultLauncher();
+    // Defer script injection off the current tick. ChatButton mounts the
+    // instant LocationGate grants access, which is also the instant a
+    // high-accuracy GPS fix resolves and the full page hydrates/animates in
+    // — injecting + evaluating Crisp's remote script into that same burst is
+    // what was reading as a freeze on mobile. Waiting for an idle moment lets
+    // the gate transition and page animations finish first.
+    const idle = (typeof window.requestIdleCallback === "function"
+      ? window.requestIdleCallback
+      : (cb: () => void) => window.setTimeout(cb, 1200)) as (cb: () => void) => number;
 
-    // Register listeners exactly once for the page's lifetime — client-side
-    // route changes remount this hook, and without this guard each remount
-    // pushed another "on" handler onto Crisp's queue permanently, compounding
-    // into heavier work (and eventual jank/freeze) the longer someone browsed.
-    // (Also: only hide the launcher here on load — do NOT hide on
-    // "chat:closed", since chat:hide itself fires chat:closed, which would
-    // re-trigger hideDefaultLauncher() in a synchronous infinite loop. That
-    // feedback loop was the freeze.)
-    if (claimListenerSlot()) {
-      onCrisp("session:loaded", () => {
-        hideDefaultLauncher();
-        setReady(true);
-        if (pendingActionRef.current) {
-          const run = pendingActionRef.current;
-          pendingActionRef.current = null;
-          run();
-        }
-        setConnecting(false);
-      });
-      onCrisp("chat:opened", () => setUnread(0));
+    const idleHandle = idle(() => {
+      const ok = loadCrisp(user ? { tokenId: `nc_${user.id}` } : undefined);
+      if (!ok) return;
+      setAvailable(true);
+      setHasConversation(readStarted());
+      hideDefaultLauncher();
 
-      onCrisp("message:sent", () => {
-        try {
-          localStorage.setItem(STARTED_KEY, "1");
-        } catch {}
-        setHasConversation(true);
-      });
+      if (claimListenerSlot()) {
+        onCrisp("session:loaded", () => {
+          hideDefaultLauncher();
+          setReady(true);
+          if (pendingActionRef.current) {
+            const run = pendingActionRef.current;
+            pendingActionRef.current = null;
+            run();
+          }
+          setConnecting(false);
+        });
+        onCrisp("chat:opened", () => setUnread(0));
 
-      onCrisp("message:received", () => {
-        try {
-          localStorage.setItem(STARTED_KEY, "1");
-        } catch {}
-        setHasConversation(true);
-        showDefaultLauncher();
-        setUnread((n) => n + 1);
-      });
-    }
+        onCrisp("message:sent", () => {
+          try {
+            localStorage.setItem(STARTED_KEY, "1");
+          } catch {}
+          setHasConversation(true);
+        });
+
+        onCrisp("message:received", () => {
+          try {
+            localStorage.setItem(STARTED_KEY, "1");
+          } catch {}
+          setHasConversation(true);
+          showDefaultLauncher();
+          setUnread((n) => n + 1);
+        });
+      }
+    });
 
     // Fallback: if the network is slow / blocked and session:loaded never
     // fires, stop showing "connecting" after a few seconds rather than
@@ -146,10 +155,14 @@ export function useCrisp(): UseCrisp {
     const readyTimeout = window.setTimeout(() => {
       setReady((r) => r || true);
       setConnecting(false);
-    }, 6000);
+    }, 8000);
 
     // Identity is pushed by the effect below once `available` is true.
-    return () => window.clearTimeout(readyTimeout);
+    return () => {
+      window.clearTimeout(readyTimeout);
+      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idleHandle);
+      else window.clearTimeout(idleHandle);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading]);
 
@@ -161,15 +174,36 @@ export function useCrisp(): UseCrisp {
     if (identity) setIdentity(identity);
   }, [available, user]);
 
+  const hasOpenedOnceRef = useRef(false);
+
   const open = useCallback(() => {
     if (!ready) {
       // Widget script/session isn't up yet — queue the open and show a
       // loading state instead of a tap that appears to do nothing.
       pendingActionRef.current = () => {
         openCrisp();
+        hasOpenedOnceRef.current = true;
         setUnread(0);
+        setConnecting(false);
       };
       setConnecting(true);
+      return;
+    }
+    if (!hasOpenedOnceRef.current) {
+      // Crisp builds its actual chat UI (DOM, history fetch, etc.) on the
+      // FIRST open, synchronously and irrespective of "ready" — that's real
+      // work regardless of how early the script loaded. Show "Connecting…"
+      // and let it paint (two animation frames) before triggering that work,
+      // so the tap gets visible feedback instead of looking like a hang.
+      setConnecting(true);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          openCrisp();
+          hasOpenedOnceRef.current = true;
+          setUnread(0);
+          setConnecting(false);
+        })
+      );
       return;
     }
     openCrisp();
@@ -188,13 +222,18 @@ export function useCrisp(): UseCrisp {
       const identity = identityFor(user);
       if (identity) setIdentity(identity);
       openCrisp();
+      hasOpenedOnceRef.current = true;
+      setConnecting(false);
     };
     if (!ready) {
       pendingActionRef.current = run;
       setConnecting(true);
       return;
     }
-    run();
+    // session:reset also rebuilds the widget UI — give it the same
+    // paint-first treatment as the very first open.
+    setConnecting(true);
+    requestAnimationFrame(() => requestAnimationFrame(run));
   }, [ready, user]);
 
   // Let any element open the chat by dispatching OPEN_CHAT_EVENT.
