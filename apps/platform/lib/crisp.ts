@@ -52,16 +52,7 @@ const SCRIPT_SRC = "https://client.crisp.chat/l.js";
    route changes, which is what re-runs the boot effect and used to
    re-push duplicate "on" listeners and duplicate show/hide commands —
    a real source of the reported freeze on repeat taps/navigation). */
-let listenerSlotClaimed = false;
 let launcherVisible: "unknown" | "shown" | "hidden" = "unknown";
-
-/** True the first (and only the first) time this is called for the whole
- *  page lifetime — use to guard one-time onCrisp(...) registration. */
-export function claimListenerSlot(): boolean {
-  if (listenerSlotClaimed) return false;
-  listenerSlotClaimed = true;
-  return true;
-}
 
 /** The website id from env, or "" when unconfigured. */
 export function getWebsiteId(): string {

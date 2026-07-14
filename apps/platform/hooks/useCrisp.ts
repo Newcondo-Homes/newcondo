@@ -26,7 +26,6 @@ import {
   resetChat as resetCrisp,
   setIdentity,
   onCrisp,
-  claimListenerSlot,
 } from "@/lib/crisp";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -120,35 +119,41 @@ export function useCrisp(): UseCrisp {
       setHasConversation(readStarted());
       hideDefaultLauncher();
 
-      if (claimListenerSlot()) {
-        onCrisp("session:loaded", () => {
-          hideDefaultLauncher();
-          setReady(true);
-          if (pendingActionRef.current) {
-            const run = pendingActionRef.current;
-            pendingActionRef.current = null;
-            run();
-          }
-          setConnecting(false);
-        });
-        onCrisp("chat:opened", () => setUnread(0));
+      // Register this mount's listeners. (Each page mount gets its own
+      // "session:loaded" handler bound to ITS OWN setReady/setConnecting —
+      // a previous guard here that only allowed the very first page in a
+      // browsing session to ever register listeners meant every page after
+      // that never received a real "ready" signal and fell back to an
+      // 8s timeout, during which the widget looked present but wasn't
+      // actually interactive yet. That was the bug behind "loads on Home,
+      // freezes on Support" (or vice versa) depending on visit order.)
+      onCrisp("session:loaded", () => {
+        hideDefaultLauncher();
+        setReady(true);
+        if (pendingActionRef.current) {
+          const run = pendingActionRef.current;
+          pendingActionRef.current = null;
+          run();
+        }
+        setConnecting(false);
+      });
+      onCrisp("chat:opened", () => setUnread(0));
 
-        onCrisp("message:sent", () => {
-          try {
-            localStorage.setItem(STARTED_KEY, "1");
-          } catch {}
-          setHasConversation(true);
-        });
+      onCrisp("message:sent", () => {
+        try {
+          localStorage.setItem(STARTED_KEY, "1");
+        } catch {}
+        setHasConversation(true);
+      });
 
-        onCrisp("message:received", () => {
-          try {
-            localStorage.setItem(STARTED_KEY, "1");
-          } catch {}
-          setHasConversation(true);
-          showDefaultLauncher();
-          setUnread((n) => n + 1);
-        });
-      }
+      onCrisp("message:received", () => {
+        try {
+          localStorage.setItem(STARTED_KEY, "1");
+        } catch {}
+        setHasConversation(true);
+        showDefaultLauncher();
+        setUnread((n) => n + 1);
+      });
     }, 600);
 
     // Fallback: if the network is slow / blocked and session:loaded never
