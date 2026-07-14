@@ -48,6 +48,21 @@ declare global {
 const SCRIPT_ID = "crisp-sdk";
 const SCRIPT_SRC = "https://client.crisp.chat/l.js";
 
+/* Module-level guards (survive component remounts across client-side
+   route changes, which is what re-runs the boot effect and used to
+   re-push duplicate "on" listeners and duplicate show/hide commands —
+   a real source of the reported freeze on repeat taps/navigation). */
+let listenerSlotClaimed = false;
+let launcherVisible: "unknown" | "shown" | "hidden" = "unknown";
+
+/** True the first (and only the first) time this is called for the whole
+ *  page lifetime — use to guard one-time onCrisp(...) registration. */
+export function claimListenerSlot(): boolean {
+  if (listenerSlotClaimed) return false;
+  listenerSlotClaimed = true;
+  return true;
+}
+
 /** The website id from env, or "" when unconfigured. */
 export function getWebsiteId(): string {
   return process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID?.trim() || "";
@@ -85,6 +100,14 @@ export function loadCrisp(opts?: { tokenId?: string }): boolean {
   // Pin the session to the user's account (must be set BEFORE l.js runs).
   if (opts?.tokenId) window.CRISP_TOKEN_ID = opts.tokenId;
 
+  // Closest built-in Crisp preset to the ink/cream brand, set before l.js
+  // paints anything — this is what removes the default-blue flash on open.
+  // Full brand match (exact hex, logo, name, welcome message) is configured
+  // once in the Crisp Dashboard → Settings → Chatbox and Emails → Appearance,
+  // since the chat window itself is a cross-origin widget we can't safely
+  // override with our own page CSS.
+  window.CRISP_RUNTIME_CONFIG = { ...window.CRISP_RUNTIME_CONFIG, color_theme: "black" };
+
   window.$crisp = window.$crisp || ([] as unknown as CrispQueue);
   window.CRISP_WEBSITE_ID = websiteId;
 
@@ -102,9 +125,13 @@ export function loadCrisp(opts?: { tokenId?: string }): boolean {
 /* We supply our own launcher (the NewCondo bubble), so Crisp's default
    launcher stays hidden until there's something the user should see. */
 export function hideDefaultLauncher(): void {
+  if (launcherVisible === "hidden") return; // idempotent — no redundant command
+  launcherVisible = "hidden";
   crispPush(["do", "chat:hide"]);
 }
 export function showDefaultLauncher(): void {
+  if (launcherVisible === "shown") return;
+  launcherVisible = "shown";
   crispPush(["do", "chat:show"]);
 }
 

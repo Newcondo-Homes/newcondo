@@ -26,6 +26,7 @@ import {
   resetChat as resetCrisp,
   setIdentity,
   onCrisp,
+  claimListenerSlot,
 } from "@/lib/crisp";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -101,22 +102,43 @@ export function useCrisp(): UseCrisp {
     // but reveal its box when a reply lands so the user sees it.
     hideDefaultLauncher();
 
-    // NOTE: only hide the launcher on initial session load. Do NOT also
-    // hide on "chat:closed" — chat:hide itself fires chat:closed, which
-    // re-triggers hideDefaultLauncher() → chat:hide → chat:closed forever.
-    // That synchronous feedback loop is what was freezing mobile browsers.
-    onCrisp("session:loaded", () => {
-      hideDefaultLauncher();
-      setReady(true);
-      // Run whatever open()/reset() call was waiting on boot.
-      if (pendingActionRef.current) {
-        const run = pendingActionRef.current;
-        pendingActionRef.current = null;
-        run();
-      }
-      setConnecting(false);
-    });
-    onCrisp("chat:opened", () => setUnread(0));
+    // Register listeners exactly once for the page's lifetime — client-side
+    // route changes remount this hook, and without this guard each remount
+    // pushed another "on" handler onto Crisp's queue permanently, compounding
+    // into heavier work (and eventual jank/freeze) the longer someone browsed.
+    // (Also: only hide the launcher here on load — do NOT hide on
+    // "chat:closed", since chat:hide itself fires chat:closed, which would
+    // re-trigger hideDefaultLauncher() in a synchronous infinite loop. That
+    // feedback loop was the freeze.)
+    if (claimListenerSlot()) {
+      onCrisp("session:loaded", () => {
+        hideDefaultLauncher();
+        setReady(true);
+        if (pendingActionRef.current) {
+          const run = pendingActionRef.current;
+          pendingActionRef.current = null;
+          run();
+        }
+        setConnecting(false);
+      });
+      onCrisp("chat:opened", () => setUnread(0));
+
+      onCrisp("message:sent", () => {
+        try {
+          localStorage.setItem(STARTED_KEY, "1");
+        } catch {}
+        setHasConversation(true);
+      });
+
+      onCrisp("message:received", () => {
+        try {
+          localStorage.setItem(STARTED_KEY, "1");
+        } catch {}
+        setHasConversation(true);
+        showDefaultLauncher();
+        setUnread((n) => n + 1);
+      });
+    }
 
     // Fallback: if the network is slow / blocked and session:loaded never
     // fires, stop showing "connecting" after a few seconds rather than
@@ -126,21 +148,6 @@ export function useCrisp(): UseCrisp {
       setConnecting(false);
     }, 6000);
 
-    onCrisp("message:sent", () => {
-      try {
-        localStorage.setItem(STARTED_KEY, "1");
-      } catch {}
-      setHasConversation(true);
-    });
-
-    onCrisp("message:received", () => {
-      try {
-        localStorage.setItem(STARTED_KEY, "1");
-      } catch {}
-      setHasConversation(true);
-      showDefaultLauncher();
-      setUnread((n) => n + 1);
-    });
     // Identity is pushed by the effect below once `available` is true.
     return () => window.clearTimeout(readyTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps

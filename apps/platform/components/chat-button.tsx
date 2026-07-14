@@ -23,18 +23,25 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 export function ChatButton() {
   const { available, unread, hasConversation, open, reset, connecting } = useCrisp();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [instantClose, setInstantClose] = useState(false);
 
   // No website id configured → don't render a dead bubble.
   if (!available) return null;
 
   function startChat() {
-    open();
+    // Skip our own exit animation here — Crisp's first chat:open does real
+    // (and sometimes heavy) DOM/layout work; running our popover's exit
+    // transition on the main thread at the same instant made low-end mobile
+    // devices visibly stutter/hang. Closing instantly frees the thread for it.
+    setInstantClose(true);
     setPanelOpen(false);
+    open();
   }
 
   function newChat() {
-    reset();
+    setInstantClose(true);
     setPanelOpen(false);
+    reset();
   }
 
   return (
@@ -47,8 +54,8 @@ export function ChatButton() {
             aria-label="Chat with NewCondo"
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.96 }}
-            transition={{ duration: 0.28, ease: EASE }}
+            exit={instantClose ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.96 }}
+            transition={instantClose ? { duration: 0 } : { duration: 0.28, ease: EASE }}
             style={{ transformOrigin: "bottom right" }}
             className="w-[300px] max-w-[calc(100vw-48px)] overflow-hidden rounded-[16px] border border-border-hair bg-surface shadow-pop"
           >
@@ -123,7 +130,10 @@ export function ChatButton() {
       <motion.button
         aria-label={panelOpen ? "Close chat menu" : "Chat with us"}
         aria-expanded={panelOpen}
-        onClick={() => setPanelOpen((o) => !o)}
+        onClick={() => {
+          setInstantClose(false);
+          setPanelOpen((o) => !o);
+        }}
         className="relative flex h-[58px] w-[58px] items-center justify-center rounded-full border-0 bg-ink text-cream shadow-lift cursor-pointer"
         whileHover={{ y: -3 }}
         whileTap={{ scale: 0.95 }}
