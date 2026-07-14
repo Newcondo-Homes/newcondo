@@ -30,13 +30,6 @@ import {
 } from "@/lib/crisp";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
-declare global {
-  interface Window {
-    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
-    cancelIdleCallback?: (handle: number) => void;
-  }
-}
-
 const STARTED_KEY = "newcondo.crisp.started";
 /** Public custom event any element can dispatch to open the chat. */
 export const OPEN_CHAT_EVENT = "newcondo:open-chat";
@@ -107,8 +100,16 @@ export function useCrisp(): UseCrisp {
     // — injecting + evaluating Crisp's remote script into that same burst is
     // what was reading as a freeze on mobile. Waiting for an idle moment lets
     // the gate transition and page animations finish first.
-    const idle = (typeof window.requestIdleCallback === "function"
-      ? window.requestIdleCallback
+    // lib.dom already types requestIdleCallback/cancelIdleCallback (non-
+    // optional in modern TS DOM libs) — read them off `window` via a loose
+    // cast instead of re-declaring the global, which conflicted with that
+    // built-in declaration and broke the Vercel build.
+    const win = window as unknown as {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const idle = (typeof win.requestIdleCallback === "function"
+      ? win.requestIdleCallback
       : (cb: () => void) => window.setTimeout(cb, 1200)) as (cb: () => void) => number;
 
     const idleHandle = idle(() => {
@@ -160,7 +161,7 @@ export function useCrisp(): UseCrisp {
     // Identity is pushed by the effect below once `available` is true.
     return () => {
       window.clearTimeout(readyTimeout);
-      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idleHandle);
+      if (typeof win.cancelIdleCallback === "function") win.cancelIdleCallback(idleHandle);
       else window.clearTimeout(idleHandle);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
