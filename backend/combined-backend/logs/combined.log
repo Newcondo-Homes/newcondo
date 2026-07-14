@@ -1685,3 +1685,108 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-06-30 21:29:56:2956"}
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-06-30 21:43:56:4356"}
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-06-30 21:55:01:551"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-07-12 12:18:32:1832"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 12:32:33:3233"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 12:45:16:4516"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 12:49:34:4934"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 13:03:35:335"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 13:17:36:1736"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 13:31:35:3135"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 13:46:55:4655"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 14:00:56:056"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 14:14:56:1456"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 14:28:56:2856"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 14:42:56:4256"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 14:56:56:5656"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 15:07:58:758"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 15:10:56:1056"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 15:24:56:2456"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 15:38:56:3856"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 15:52:56:5256"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 16:06:56:656"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 16:20:56:2056"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 16:34:56:3456"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 16:48:56:4856"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 17:02:56:256"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 17:16:56:1656"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 17:30:58:3058"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 17:44:56:4456"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-12 17:58:56:5856"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 18:23:27:2327"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 21:51:32:5132"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-12 22:19:47:1947"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 08:14:48:1448"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 10:31:41:3141"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 10:48:45:4845"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 11:16:18:1618"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 11:52:15:5215"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 12:06:16:616"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 12:20:16:2016"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 12:34:16:3416"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 12:48:16:4816"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 13:02:16:216"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 13:25:48:2548"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 13:39:48:3948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 14:10:24:1024"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 14:17:08:178"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 14:24:13:2413"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 14:31:54:3154"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 14:38:13:3813"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 14:52:13:5213"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 15:06:13:613"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 15:20:13:2013"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 15:29:48:2948"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 15:53:12:5312"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 16:07:14:714"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 16:21:58:2158"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 16:35:58:3558"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 16:43:18:4318"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 16:49:58:4958"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 17:04:10:410"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 17:04:22:422"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 17:18:11:1811"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 17:32:11:3211"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 17:46:11:4611"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 18:00:11:011"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 18:14:10:1410"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 18:28:11:2811"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 18:42:11:4211"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 18:56:11:5611"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 19:10:11:1011"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 19:24:11:2411"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 19:59:50:5950"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 20:13:52:1352"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 20:27:52:2752"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 20:41:52:4152"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 20:55:52:5552"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 21:09:52:952"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 21:23:52:2352"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 21:37:52:3752"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 21:51:52:5152"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 22:05:52:552"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 22:19:57:1957"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 22:33:57:3357"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 22:47:56:4756"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 23:01:56:156"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 23:15:57:1557"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 23:29:56:2956"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 23:43:57:4357"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-13 23:57:56:5756"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-13 23:58:29:5829"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-14 10:48:44:4844"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-07-14 11:47:17:4717"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 12:01:19:119"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 12:15:19:1519"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 12:29:18:2918"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 12:43:19:4319"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 12:57:18:5718"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 13:11:21:1121"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 13:25:19:2519"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-07-14 13:39:19:3919"}

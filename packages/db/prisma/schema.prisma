@@ -25,6 +25,7 @@ model User {
 
   subscription        Subscription?
   subscriptionHistory SubscriptionHistory[]
+  subscriptionInvoices  SubscriptionInvoice[]
   
   // Verification fields
   verificationStatus          VerificationStatus @default(PENDING)
@@ -1453,7 +1454,7 @@ model SubscriptionHistory {
   triggeredBy      String?            // "system" | "user" | "admin" | userId
 
   subscription     Subscription       @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  user             User               @relation(fields: [userId], references: [id])
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt        DateTime @default(now())
 
@@ -1487,6 +1488,7 @@ model SubscriptionInvoice {
   nextRetryAt       DateTime?
 
   subscription      Subscription  @relation(fields: [subscriptionId], references: [id])
+  user          User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
