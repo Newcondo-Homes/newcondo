@@ -6,7 +6,6 @@ import { Icon } from "@/components/ui/icon";
 import { SplitButton } from "@/components/ui/split-button";
 import { container, mount, EASE, EXPO } from "@/components/motion";
 import { makePerlin } from "@/lib/perlin";
-import Link from 'next/link';
 
 /** Procedural "ethereal shadows" — domain-warped fractal Perlin noise. */
 function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
@@ -21,6 +20,11 @@ function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>
     let H = 96;
     let raf = 0;
     let rt: ReturnType<typeof setTimeout>;
+    // Runs forever while Home is mounted otherwise — pause whenever it's off
+    // screen or the chat widget needs the main thread, so this per-pixel
+    // fractal render isn't competing with Crisp's own heavy work on tap.
+    let visible = true;
+    let paused = false;
 
     function resize() {
       const r = canvas!.getBoundingClientRect();
@@ -84,15 +88,28 @@ function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>
     let startTime: number | null = null;
     function loop(ts: number) {
       if (startTime === null) startTime = ts;
-      render((ts - startTime) * 0.0004);
+      if (visible && !paused) render((ts - startTime) * 0.0004);
       raf = requestAnimationFrame(loop);
     }
     raf = requestAnimationFrame(loop);
+
+    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0 });
+    io.observe(canvas);
+
+    // Dispatched by the chat hook right before it does its heavy first-open
+    // work, and again once that settles — see hooks/useCrisp.ts.
+    const onPause = () => { paused = true; };
+    const onResume = () => { paused = false; };
+    window.addEventListener("newcondo:pause-heavy-anim", onPause);
+    window.addEventListener("newcondo:resume-heavy-anim", onResume);
 
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(rt);
       window.removeEventListener("resize", onResize);
+      io.disconnect();
+      window.removeEventListener("newcondo:pause-heavy-anim", onPause);
+      window.removeEventListener("newcondo:resume-heavy-anim", onResume);
     };
   }, [canvasRef]);
 }
@@ -177,7 +194,7 @@ export function Hero() {
           className="flex items-center gap-[22px] mt-8 flex-wrap max-[620px]:gap-4 max-[620px]:w-full"
         >
           <SplitButton
-            href="/onboarding"
+            href="#pricing"
             variant="light"
             ariaLabel="List your property"
             label="List your property — plans from ₦7,500/month"

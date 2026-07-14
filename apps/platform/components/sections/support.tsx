@@ -9,7 +9,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { cx } from "@/lib/cx";
 import { Navbar } from "@/components/sections/navbar";
-import { Footer } from "@/components/sections/footer";
 import { ChatButton } from "@/components/chat-button";
 import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
@@ -148,7 +147,6 @@ export function Support() {
         </Group>
       </Section>
 
-      <Footer />
       <ChatButton />
     </div>
   );

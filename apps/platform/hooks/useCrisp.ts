@@ -74,6 +74,17 @@ function identityFor(user: ReturnType<typeof useCurrentUser>["user"]) {
   };
 }
 
+/** Tell any listening heavy background animation (e.g. the hero's canvas
+ *  loop) to pause while Crisp does its own heavy first-open work, and to
+ *  resume once it's done — so the two aren't fighting for the main thread
+ *  at the same moment on pages like Home that run continuous animation. */
+function pauseHeavyAnimations() {
+  window.dispatchEvent(new Event("newcondo:pause-heavy-anim"));
+}
+function resumeHeavyAnimations() {
+  window.dispatchEvent(new Event("newcondo:resume-heavy-anim"));
+}
+
 export function useCrisp(): UseCrisp {
   const { user, isLoading: authLoading } = useCurrentUser();
   const [available, setAvailable] = useState(false);
@@ -182,16 +193,18 @@ export function useCrisp(): UseCrisp {
     if (!hasOpenedOnceRef.current) {
       // Crisp builds its actual chat UI (DOM, history fetch, etc.) on the
       // FIRST open, synchronously and irrespective of "ready" — that's real
-      // work regardless of how early the script loaded. Show "Connecting…"
-      // and let it paint (two animation frames) before triggering that work,
-      // so the tap gets visible feedback instead of looking like a hang.
+      // work regardless of how early the script loaded. Show "Connecting…",
+      // pause any competing heavy animation, and let it paint (two frames)
+      // before triggering that work.
       setConnecting(true);
+      pauseHeavyAnimations();
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
           openCrisp();
           hasOpenedOnceRef.current = true;
           setUnread(0);
           setConnecting(false);
+          window.setTimeout(resumeHeavyAnimations, 1200);
         })
       );
       return;
@@ -214,6 +227,7 @@ export function useCrisp(): UseCrisp {
       openCrisp();
       hasOpenedOnceRef.current = true;
       setConnecting(false);
+      window.setTimeout(resumeHeavyAnimations, 1200);
     };
     if (!ready) {
       pendingActionRef.current = run;
@@ -223,6 +237,7 @@ export function useCrisp(): UseCrisp {
     // session:reset also rebuilds the widget UI — give it the same
     // paint-first treatment as the very first open.
     setConnecting(true);
+    pauseHeavyAnimations();
     requestAnimationFrame(() => requestAnimationFrame(run));
   }, [ready, user]);
 

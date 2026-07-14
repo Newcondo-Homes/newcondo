@@ -119,7 +119,6 @@ export function FeaturesPage() {
         </div>
       </section>
 
-      <Footer />
       <ChatButton />
     </div>
   );

@@ -6,7 +6,6 @@
    ============================================================ */
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/sections/navbar";
-import { Footer } from "@/components/sections/footer";
 import { ChatButton } from "@/components/chat-button";
 import { PageHero } from "@/components/ui/page-hero";
 import { Button } from "@/components/ui/nc-button";
@@ -100,7 +99,6 @@ export function HowItWorksPage() {
         </div>
       </section>
 
-      <Footer />
       <ChatButton />
     </div>
   );
