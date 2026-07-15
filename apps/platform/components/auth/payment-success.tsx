@@ -91,7 +91,7 @@ export default function PaymentSuccess({
             </p>
 
             {/* recap card */}
-            <div className="mt-5 grid w-full grid-cols-2 gap-x-6 gap-y-4 rounded-card border border-border-hair bg-surface px-[22px] py-[18px] text-left shadow-card">
+            <div className="mt-5 grid w-full grid-cols-2 gap-x-6 gap-y-4 rounded-card border border-border-hair bg-surface px-[22px] py-[18px] text-left shadow-card max-[480px]:grid-cols-1 max-[480px]:gap-y-3.5 max-[480px]:px-4 max-[480px]:py-4">
                 <Stat label="Account" value={profile.name} />
                 <Stat label="Email" value={profile.email} muted />
                 <Stat label="Account type" value={ROLE_LABEL[profile.role]} />
@@ -107,24 +107,24 @@ export default function PaymentSuccess({
             </div>
 
             {/* referral */}
-            <div className="mt-3.5 w-full overflow-hidden rounded-card bg-ink px-[22px] py-[18px] text-left text-cream">
+            <div className="mt-3.5 w-full overflow-hidden rounded-card bg-ink px-[22px] py-[18px] text-left text-cream max-[480px]:px-4 max-[480px]:py-4">
                 <div className="flex items-start gap-3.5">
                     <span className="grid h-10 w-10 flex-none place-items-center rounded-xl bg-[rgba(0,208,132,0.16)] text-green-bright">
                         <Gift size={21} strokeWidth={1.9} />
                     </span>
                     <div className="min-w-0">
-                        <h3 className="m-0 text-[16.5px] font-bold tracking-[-0.02em] text-cream">
+                        <h3 className="m-0 text-[15.5px] font-bold tracking-[-0.02em] text-cream max-[480px]:text-[15px]">
                             Refer a friend — you both earn {naira(REFERRAL_CREDIT)}
                         </h3>
-                        <p className="m-0 mt-1 text-[13px] leading-[1.45] text-text-on-dark-2">
+                        <p className="m-0 mt-1 text-[12.5px] leading-[1.45] text-text-on-dark-2">
                             When someone joins with your link and subscribes, {naira(REFERRAL_CREDIT)} in credit lands in
                             both your accounts.
                         </p>
                     </div>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2.5 rounded-full border border-[rgba(249,249,239,0.16)] bg-[rgba(249,249,239,0.06)] py-1.5 pl-5 pr-1.5">
-                    <span className="min-w-0 flex-1 truncate font-mono text-[13.5px] text-text-on-dark">{referralLink}</span>
+                <div className="mt-3 flex items-center gap-2 rounded-full border border-[rgba(249,249,239,0.16)] bg-[rgba(249,249,239,0.06)] py-1.5 pl-4 pr-1.5 max-[480px]:pl-3.5">
+                    <span className="min-w-0 flex-1 truncate font-mono text-[12.5px] text-text-on-dark max-[480px]:text-[11.5px]">{referralLink}</span>
                     <button
                         type="button"
                         onClick={copyLink}
@@ -143,7 +143,7 @@ export default function PaymentSuccess({
             <button
                 type="button"
                 onClick={onContinue}
-                className="group mt-5 inline-flex items-center justify-center gap-2.5 rounded-full bg-ink px-8 py-[14px] text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97]"
+                className="group mt-5 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-8 py-[14px] text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97] max-[480px]:py-[13px] max-[480px]:text-[15px]"
             >
                 Go to dashboard
                 <ArrowRight size={18} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:translate-x-1" />

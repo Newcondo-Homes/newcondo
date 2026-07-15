@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { auth } from "@newcondo/auth";
 import OnboardingFlow from "@/components/auth/onboarding-flow";
 
@@ -26,6 +27,11 @@ export const metadata: Metadata = {
  * NOTE: do NOT blanket-redirect every session to /dashboard — that breaks
  * social-login and resume-after-abandon onboarding, where the user is
  * authenticated but not yet subscribed.
+ *
+ * <Suspense> here is REQUIRED — OnboardingFlow reads the URL via
+ * useSearchParams() (?role=agent, ?social=1). Next.js needs a Suspense
+ * boundary around any component using that hook, or the first client render
+ * can resolve before the search params are attached to the route tree.
  */
 export default async function OnboardingPage() {
   const session = await auth();
@@ -41,7 +47,11 @@ export default async function OnboardingPage() {
     // Authenticated but not subscribed → let the flow resume (Q1/Q3 client-side).
   }
 
-  return <OnboardingFlow />;
+  return (
+    <Suspense fallback={null}>
+      <OnboardingFlow />
+    </Suspense>
+  );
 }
 
 /**

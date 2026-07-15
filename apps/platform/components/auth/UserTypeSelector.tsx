@@ -58,7 +58,7 @@ export default function UserTypeSelector({
   disabled?: boolean;
 }) {
   return (
-    <div className="mx-auto grid max-w-[640px] grid-cols-2 gap-3.5 max-[560px]:grid-cols-1">
+    <div className="mx-auto grid max-w-[640px] grid-cols-2 gap-3.5 max-[560px]:grid-cols-1 max-[560px]:gap-3">
       {ROLE_CARDS.map(({ type, title, blurb, Icon }) => {
         const isActive = selectedType === type;
         return (
@@ -69,25 +69,25 @@ export default function UserTypeSelector({
             disabled={disabled}
             aria-pressed={isActive}
             className={cx(
-              "group relative flex flex-col items-start rounded-card border bg-surface p-[clamp(18px,1.8vw,24px)] text-left shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-nc hover:-translate-y-1 hover:shadow-lift disabled:pointer-events-none disabled:opacity-60",
-              isActive ? "border-ink ring-1 ring-ink" : "border-border-hair hover:border-border"
+              "group relative flex flex-col items-start rounded-card border-2 bg-surface p-[clamp(16px,1.8vw,24px)] text-left shadow-card transition-[transform,box-shadow,border-color] duration-200 ease-nc hover:-translate-y-1 hover:shadow-lift disabled:pointer-events-none disabled:opacity-60 active:scale-[0.98]",
+              isActive ? "border-ink" : "border-border-hair hover:border-border"
             )}
           >
             <span
               className={cx(
-                "grid h-12 w-12 flex-none place-items-center rounded-2xl transition-colors duration-200 ease-nc",
+                "grid h-11 w-11 flex-none place-items-center rounded-2xl transition-colors duration-200 ease-nc max-[560px]:h-10 max-[560px]:w-10",
                 isActive ? "bg-ink text-cream" : "bg-surface-sunken text-ink"
               )}
             >
-              <Icon size={24} strokeWidth={1.85} />
+              <Icon size={22} strokeWidth={1.85} />
             </span>
 
-            <h3 className="m-0 mt-4 text-[18px] font-bold tracking-[-0.02em] text-text-primary">{title}</h3>
-            <p className="m-0 mt-1.5 text-[13.5px] leading-[1.5] text-text-secondary">{blurb}</p>
+            <h3 className="m-0 mt-3.5 text-[17px] font-bold tracking-[-0.02em] text-text-primary max-[560px]:text-[16px]">{title}</h3>
+            <p className="m-0 mt-1.5 text-[13.5px] leading-[1.5] text-text-secondary max-[560px]:text-[13px]">{blurb}</p>
 
             <span
               className={cx(
-                "mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold transition-colors duration-200 ease-nc",
+                "mt-3.5 inline-flex items-center gap-1.5 text-[13px] font-semibold transition-colors duration-200 ease-nc",
                 isActive ? "text-green-dark" : "text-text-tertiary group-hover:text-ink"
               )}
             >

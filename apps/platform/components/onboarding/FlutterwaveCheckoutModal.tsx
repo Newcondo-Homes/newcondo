@@ -18,6 +18,10 @@
    Rendered through a portal to document.body so it escapes the scaled
    FitToViewport ancestor (a CSS transform would otherwise become the
    containing block for `position: fixed`).
+
+   Mobile: the sheet docks to the bottom edge (squared bottom corners)
+   and caps at ~90vh with internal scroll, so tall content on short
+   phones never gets clipped.
    ============================================================ */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -213,7 +217,7 @@ export default function FlutterwaveCheckoutModal({
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-3 max-[480px]:items-end max-[480px]:p-0"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -233,7 +237,7 @@ export default function FlutterwaveCheckoutModal({
 
           {/* panel */}
           <motion.div
-            className="relative z-10 w-full max-w-[440px] overflow-hidden rounded-card border border-border-hair bg-surface shadow-pop"
+            className="relative z-10 flex max-h-[90vh] w-full max-w-[440px] flex-col overflow-hidden rounded-card border border-border-hair bg-surface shadow-pop max-[480px]:max-h-[92vh] max-[480px]:rounded-b-none max-[480px]:rounded-t-[24px]"
             initial={{ opacity: 0, scale: 0.96, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 10 }}
@@ -253,7 +257,7 @@ export default function FlutterwaveCheckoutModal({
 
             {/* ---- REVIEW ---- */}
             {stage === "review" && (
-              <div className="p-[clamp(22px,2.6vw,30px)]">
+              <div className="overflow-y-auto p-[clamp(22px,2.6vw,30px)] max-[480px]:p-6">
                 <p className="text-[12px] font-semibold uppercase tracking-[0.14em] text-green-dark">
                   {free ? "Confirm your plan" : "Confirm subscription"}
                 </p>
@@ -325,7 +329,7 @@ export default function FlutterwaveCheckoutModal({
 
             {/* ---- WORKING ---- */}
             {stage === "working" && (
-              <div className="flex flex-col items-center p-[clamp(30px,3.4vw,42px)] text-center">
+              <div className="flex flex-col items-center p-[clamp(30px,3.4vw,42px)] text-center max-[480px]:p-8">
                 <span className="relative grid h-[60px] w-[60px] place-items-center">
                   <span className="absolute inset-0 rounded-full border-2 border-border-hair" />
                   <Loader2 size={30} strokeWidth={2} className="animate-spin text-ink" />
@@ -339,7 +343,7 @@ export default function FlutterwaveCheckoutModal({
 
             {/* ---- ERROR ---- */}
             {stage === "error" && (
-              <div className="flex flex-col items-center p-[clamp(26px,3vw,36px)] text-center">
+              <div className="flex flex-col items-center overflow-y-auto p-[clamp(26px,3vw,36px)] text-center max-[480px]:p-6">
                 <span className="grid h-[58px] w-[58px] place-items-center rounded-full bg-danger/[0.08] text-danger">
                   <AlertCircle size={28} strokeWidth={1.9} />
                 </span>

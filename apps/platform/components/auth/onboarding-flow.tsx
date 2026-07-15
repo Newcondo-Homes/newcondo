@@ -3,7 +3,7 @@
 /* ============================================================
    OnboardingFlow
 
-   Phases: register → verify → (phone) → plan → payment(finalize) → success
+   Phases: register → verify → (details) → plan → payment(finalize) → success
 
    Key behaviours:
    • Deep-link role: /onboarding?role=agent|renter|owner pre-selects the
@@ -16,13 +16,15 @@
    • Social sign-in (Google/Facebook button, or Google One Tap for
      existing Gmail users) creates the account via OAuth and RETURNS here
      authenticated → we skip register/verify and resume at the plan step.
-   • Social sign-ups get two gap-fills before the plan step:
-       1. Google/Facebook never carry the role picked in step 1 (OAuth
-          callbacks don't see our callbackUrl's query params) — if the
-          account's userType differs from ?role=, we PATCH it server-side
-          via /api/user/profile and push it into the session.
-       2. Google never returns a phone number — if session.user.phone is
-          empty, we route to the "phone" phase to collect one before plan.
+   • Social sign-ups get one cohesive gap-fill screen before the plan step
+     (SocialAccountDetails): phone number + terms-of-service acceptance in
+     a single card, since Google/Facebook never carry the role picked in
+     step 1 nor a phone number, and social users haven't seen our terms
+     checkbox (email users already accept it inline in OnboardingForm).
+       1. If the account's userType differs from ?role=, we PATCH it
+          server-side via /api/user/profile and push it into the session.
+       2. If session.user.phone is empty, we route to the "details" phase
+          to collect phone + terms before plan.
    ============================================================ */
 
 import { useState, useCallback, useEffect, useRef } from "react";
@@ -38,21 +40,21 @@ import { EASE } from "@/components/motion";
 import { UserType } from "@/types/api";
 import type { Plan, PaymentResult } from "@/types/api";
 import OnboardingForm, { type OnboardingDraft } from "./onboarding-form";
-import PhonePrompt from "./phone-prompt";
+import SocialAccountDetails from "@/components/onboarding/SocialAccountDetails";
 import PlanSelector from "./plan-selector";
 import PaymentProcessing from "./payment-processing";
 import PaymentSuccess from "./payment-success";
 import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
 import { getOnboardingState, changeAccountType, checkEmailRegistered } from "@/lib/api/onboarding";
-import { updateProfile } from "@/lib/api/profile";
+import { updateProfile, getSubscriptionStatus } from "@/lib/api/profile";
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
 
 /* ------------------------------------------------------------------ */
 /* Flow phases                                                         */
 /* ------------------------------------------------------------------ */
-type Phase = "register" | "verify" | "phone" | "plan" | "payment" | "success";
+type Phase = "register" | "verify" | "details" | "plan" | "payment" | "success";
 
 const STEPS: { key: Phase | "done"; label: string }[] = [
   { key: "register", label: "Account" },
@@ -64,10 +66,9 @@ const STEPS: { key: Phase | "done"; label: string }[] = [
 const PHASE_INDEX: Record<Phase, number> = {
   register: 0,
   verify: 1,
-  // Grouped visually with "Verify" in the stepper — it's a one-off contact
-  // step for social sign-ups (Google never returns a phone number), not a
-  // whole extra stage of the flow.
-  phone: 1,
+  // Grouped visually with "Verify" in the stepper — it's a one-off gap-fill
+  // step for social sign-ups (phone + terms), not a whole extra stage.
+  details: 1,
   plan: 2,
   payment: 3,
   success: 4,
@@ -76,7 +77,7 @@ const PHASE_INDEX: Record<Phase, number> = {
 const PHASE_MAXW: Record<Phase, string> = {
   register: "max-w-4xl",
   verify: "max-w-[460px]",
-  phone: "max-w-[480px]",
+  details: "max-w-[480px]",
   plan: "max-w-[1000px]",
   payment: "max-w-[480px]",
   success: "max-w-[560px]",
@@ -144,8 +145,8 @@ export default function OnboardingFlow() {
          payment step again. No double-charge possible.
        • Q1 — abandoned PENDING checkout  → resume on the plan step with a
          banner; re-picking reuses the same subscription row server-side.
-       • Social / fresh authed user       → resume at plan (via "phone" first
-         if they have none on file).
+       • Social / fresh authed user       → resume at plan (via "details" first
+         if they have no phone on file).
 
      The `phase === "register"` guard stops this firing later, when our own
      deferred register() in the finalize step makes the session authenticated. */
@@ -165,9 +166,10 @@ export default function OnboardingFlow() {
       email?: string | null;
       phone?: string | null;
       userType?: UserType;
+      role?: UserType;
     };
 
-    const resolvedRole = initialRole ?? u.userType ?? UserType.OWNER;
+    const resolvedRole = initialRole ?? u.role ?? UserType.OWNER;
     setDraft({
       name: u.name ?? "",
       email: u.email ?? "",
@@ -185,7 +187,12 @@ export default function OnboardingFlow() {
         // step 1 — persist it now if it differs from what's on file. This
         // runs before the state check so a Q3 redirect (if any) already has
         // the right role recorded.
-        if (initialRole && u.userType && initialRole !== u.userType) {
+        // NOTE: compare against `u.role` — the actual Prisma `role` column that
+        // authMiddleware/initiateSubscription read. `u.userType` is a separate,
+        // always-null legacy field; checking it here meant this patch NEVER
+        // fired, so a fresh Google sign-up kept the OAuth-adapter default
+        // (RENTER) forever regardless of the role chosen in step 1.
+        if (initialRole && u.role && initialRole !== u.role) {
           const res = await updateProfile({ userType: initialRole });
           if (res.success) await update({ userType: initialRole });
         }
@@ -201,19 +208,36 @@ export default function OnboardingFlow() {
           setResuming(true);
         }
 
-        // Social sign-ups have no phone from OAuth — collect it once, here,
-        // before letting them into the plan step (email users already gave
-        // theirs in OnboardingForm).
-        setPhase(u.phone ? "plan" : "phone");
+        // Social sign-ups have no phone from OAuth and haven't seen our terms
+        // checkbox — collect both once, here, before letting them into the
+        // plan step (email users already gave phone + accepted terms in
+        // OnboardingForm).
+        setPhase(u.phone ? "plan" : "details");
       } catch {
-        setPhase(u.phone ? "plan" : "phone");
+        setPhase(u.phone ? "plan" : "details");
       } finally {
         setCheckingState(false);
       }
     })();
   }, [status, session, phase, draft, initialRole, router, update]);
 
-  const goToDashboard = useCallback(() => router.push("/dashboard"), [router]);
+  const goToDashboard = useCallback(async () => {
+    // Flutterwave's client-side success callback can fire BEFORE your
+    // server-to-server webhook has run activateSubscription() (which sets
+    // isPremium: true). Read the authoritative DB value directly (never
+    // trust a bare update() to silently refetch it) and push it into the
+    // session explicitly once it lands, so the dashboard's server-side gate
+    // sees it immediately instead of bouncing back into onboarding.
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const status = await getSubscriptionStatus();
+      if (status.success && status.isPremium) {
+        await update({ isPremium: true });
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 1200));
+    }
+    router.push("/dashboard");
+  }, [router, update]);
 
   /* Q2 — returning user wants a different account type. Their account already
      exists, so we change the role server-side (allowed only while their
@@ -272,6 +296,25 @@ export default function OnboardingFlow() {
       setPhase("plan");
     },
     [draft]
+  );
+
+  /* Social sign-up gap-fill: persist the phone number server-side, push it
+     into the session (and the local draft), then continue to plan. Terms
+     acceptance is enforced client-side by SocialAccountDetails (Continue is
+     disabled until checked) — record termsAcceptedAt here too if your
+     /api/user/profile route supports it. */
+  const handleSocialDetailsSubmit = useCallback(
+    async (phone: string) => {
+      const res = await updateProfile({ phone });
+      if (!res.success) {
+        alert(res.error ?? "Couldn't save your phone number. Please try again.");
+        return;
+      }
+      await update({ phone });
+      setDraft((d) => (d ? { ...d, phone } : d));
+      setPhase("plan");
+    },
+    [update]
   );
 
   const activeIndex = PHASE_INDEX[phase];
@@ -381,14 +424,12 @@ export default function OnboardingFlow() {
                 />
               )}
 
-              {phase === "phone" && draft && (
-                <PhonePrompt
+              {phase === "details" && draft && (
+                <SocialAccountDetails
                   name={draft.name}
-                  onUpdateSession={(patch) => update(patch)}
-                  onSaved={(phone) => {
-                    setDraft((d) => (d ? { ...d, phone } : d));
-                    setPhase("plan");
-                  }}
+                  role={draft.role}
+                  onSubmit={handleSocialDetailsSubmit}
+                  onBack={handleChangeAccountType}
                 />
               )}
 
@@ -415,8 +456,8 @@ export default function OnboardingFlow() {
                       onClick={handleChangeAccountType}
                       className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:text-ink hover:underline"
                     >
-                      Not a{" "}
-                      {draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
+                      Not {" "}
+                      {draft.role === UserType.OWNER ? "a property owner" : draft.role === UserType.AGENT ? "an agent" : "a renter"}? Change account type
                     </button>
                   </div>
                   <PlanSelector

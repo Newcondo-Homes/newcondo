@@ -75,6 +75,7 @@ export async function PATCH(req: Request) {
   }
 
   try {
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data,

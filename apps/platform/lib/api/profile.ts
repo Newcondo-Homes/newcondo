@@ -35,3 +35,22 @@ export async function updateProfile(patch: {
     return { success: false, error: "Network error — please try again" };
   }
 }
+
+/** Fresh, authoritative isPremium read — bypasses stale/cached JWT claims. */
+export async function getSubscriptionStatus(): Promise<{
+  success: boolean;
+  isPremium?: boolean;
+  premiumExpiresAt?: string | null;
+}> {
+  try {
+    const res = await fetch("/api/user/subscription-status", { credentials: "include" });
+    const json = (await res.json().catch(() => null)) as {
+      success: boolean;
+      data?: { isPremium: boolean; premiumExpiresAt: string | null };
+    } | null;
+    if (!res.ok || !json?.success || !json.data) return { success: false };
+    return { success: true, isPremium: json.data.isPremium, premiumExpiresAt: json.data.premiumExpiresAt };
+  } catch {
+    return { success: false };
+  }
+}

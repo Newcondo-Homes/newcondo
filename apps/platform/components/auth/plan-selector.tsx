@@ -130,7 +130,7 @@ export default function PlanSelector({
 
   return (
     <div className="w-full">
-      <div className={cx("grid gap-4", plans.length === 1 ? "mx-auto max-w-[460px] grid-cols-1" : plans.length === 2 ? "grid-cols-2 max-[680px]:grid-cols-1" : "grid-cols-3")}>
+      <div className={cx("grid gap-3.5 max-[560px]:gap-3", plans.length === 1 ? "mx-auto max-w-[460px] grid-cols-1" : plans.length === 2 ? "grid-cols-2 max-[680px]:grid-cols-1" : "grid-cols-3")}>
         {plans.map((plan) => {
           const isElite = !!plan.highlight;
           const isActive = selected === plan.id;
@@ -140,7 +140,7 @@ export default function PlanSelector({
               type="button"
               onClick={() => pick(plan.id)}
               className={cx(
-                "group relative flex flex-col rounded-card border p-6 text-left transition-[transform,box-shadow,border-color] duration-200 ease-nc hover:-translate-y-1",
+                "group relative flex flex-col rounded-card border p-6 text-left transition-[transform,box-shadow,border-color] duration-200 ease-nc hover:-translate-y-1 max-[560px]:rounded-[20px] max-[560px]:p-[18px]",
                 isElite ? "bg-ink text-cream" : "bg-surface text-text-primary",
                 isActive
                   ? isElite
@@ -154,7 +154,7 @@ export default function PlanSelector({
               {plan.badge && (
                 <span
                   className={cx(
-                    "absolute right-6 top-6 inline-flex items-center rounded-full px-[11px] py-[5px] text-[11px] font-bold uppercase tracking-[0.08em]",
+                    "absolute right-6 top-6 inline-flex items-center rounded-full px-[11px] py-[5px] text-[11px] font-bold uppercase tracking-[0.08em] max-[560px]:right-[18px] max-[560px]:top-[18px]",
                     isElite ? "bg-green-bright text-ink" : "bg-green-wash text-green-dark"
                   )}
                 >
@@ -162,27 +162,38 @@ export default function PlanSelector({
                 </span>
               )}
 
-              <h3 className={cx("m-0 text-[24px] font-bold tracking-[-0.03em]", isElite ? "text-cream" : "text-text-primary")}>
+              <h3 className={cx("m-0 text-[22px] font-bold tracking-[-0.03em] max-[560px]:text-[20px]", isElite ? "text-cream" : "text-text-primary")}>
                 {plan.name}
               </h3>
-              <p className={cx("m-0 mt-1 text-[14px]", isElite ? "text-text-on-dark-2" : "text-text-secondary")}>
+              <p className={cx("m-0 mt-1 text-[13.5px] max-[560px]:text-[13px]", isElite ? "text-text-on-dark-2" : "text-text-secondary")}>
                 {plan.tagline}
               </p>
 
-              <div className="mt-[18px] flex items-baseline gap-1.5">
-                <span className={cx("text-[36px] font-bold tracking-[-0.04em]", isElite ? "text-cream" : "text-text-primary")}>
+              <div className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 max-[560px]:mt-3.5">
+                <span className={cx("text-[32px] font-bold tracking-[-0.04em] max-[560px]:text-[28px]", isElite ? "text-cream" : "text-text-primary")}>
                   {plan.price === 0 ? "Free" : naira(plan.price)}
                 </span>
                 {plan.price > 0 && (
                   <span className={cx("text-[15px]", isElite ? "text-text-on-dark-2" : "text-text-tertiary")}>/month</span>
                 )}
+                {plan.strikePrice && (
+                  <span className={cx("text-[17px] font-medium line-through", isElite ? "text-text-on-dark-2" : "text-text-tertiary")}>
+                    {naira(plan.strikePrice)}/mo
+                  </span>
+                )}
               </div>
+              {plan.priceNote && (
+                <p className={cx("m-0 mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold", isElite ? "text-green-bright" : "text-green-dark")}>
+                  <Check size={14} strokeWidth={2.6} className="flex-none" />
+                  {plan.priceNote}
+                </p>
+              )}
 
-              <ul className="m-0 mt-[18px] flex list-none flex-col gap-[9px] p-0">
+              <ul className="m-0 mt-4 flex list-none flex-col gap-2 p-0 max-[560px]:mt-3.5 max-[560px]:gap-[7px]">
                 {plan.features.map((f) => (
                   <li
                     key={f}
-                    className={cx("flex items-start gap-2.5 text-[14px] leading-[1.35]", isElite ? "text-text-on-dark" : "text-text-secondary")}
+                    className={cx("flex items-start gap-2.5 text-[13.5px] leading-[1.35] max-[560px]:text-[13px]", isElite ? "text-text-on-dark" : "text-text-secondary")}
                   >
                     <Check size={17} strokeWidth={2.1} className={cx("mt-px flex-none", isElite ? "text-green-bright" : "text-green-dark")} />
                     {f}
