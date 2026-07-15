@@ -54,6 +54,44 @@ const SCRIPT_SRC = "https://client.crisp.chat/l.js";
    a real source of the reported freeze on repeat taps/navigation). */
 let launcherVisible: "unknown" | "shown" | "hidden" = "unknown";
 
+/* Crisp fires "session:loaded" exactly ONCE per real session load — not
+   once per listener. Every page that calls useCrisp() registers its own
+   fresh listener, so any mount AFTER the first (e.g. /chat after Home's
+   bubble already preloaded Crisp) would never see that event fire and its
+   "ready" state would be stuck false forever — which is what caused
+   controls to hang / disappear on repeat navigation. Track it once here,
+   at module scope, so every mount can read the true current state
+   immediately instead of waiting on an event that may already have fired. */
+let sessionReady = false;
+let sessionReadyBound = false;
+const sessionReadyWaiters = new Set<() => void>();
+
+export function isSessionReady(): boolean {
+  return sessionReady;
+}
+
+/** Runs `cb` once the Crisp session has loaded — immediately if it already
+ *  has, otherwise the next time it does. Safe to call from every mount. */
+export function onSessionReady(cb: () => void): void {
+  if (sessionReady) {
+    cb();
+    return;
+  }
+  sessionReadyWaiters.add(cb);
+  if (!sessionReadyBound) {
+    sessionReadyBound = true;
+    crispPush([
+      "on",
+      "session:loaded",
+      () => {
+        sessionReady = true;
+        sessionReadyWaiters.forEach((fn) => fn());
+        sessionReadyWaiters.clear();
+      },
+    ]);
+  }
+}
+
 /** The website id from env, or "" when unconfigured. */
 export function getWebsiteId(): string {
   return process.env.NEXT_PUBLIC_CRISP_WEBSITE_ID?.trim() || "";

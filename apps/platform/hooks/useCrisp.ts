@@ -28,6 +28,7 @@ import {
   resetChat as resetCrisp,
   setIdentity,
   onCrisp,
+  onSessionReady,
 } from "@/lib/crisp";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 
@@ -103,7 +104,7 @@ export function useCrisp(): UseCrisp {
     setHasConversation(readStarted());
     hideDefaultLauncher();
 
-    onCrisp("session:loaded", () => {
+    onSessionReady(() => {
       hideDefaultLauncher();
       setReady(true);
       if (pendingActionRef.current) {

@@ -16,22 +16,23 @@
    competes with Crisp here.
 
    Flow: ChatButton links here with ?back=<path the visitor came from>.
-   Crisp opens automatically once ready. Tapping the "newcondo" wordmark, or
-   Crisp's own close (X), returns to where the visitor started.
+   The visitor taps Crisp's own launcher (bottom-right) themselves to open
+   the widget — it does NOT open automatically on arrival. Closing Crisp's
+   widget (its own X) just reveals this welcome screen again, underneath —
+   no navigation. Only the "newcondo" wordmark / back arrow up top navigates
+   back to where the visitor started.
    ============================================================ */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { useCrisp } from "@/hooks/useCrisp";
-import { onCrisp } from "@/lib/crisp";
 
 const LOGO_CREAM = "/assets/logo-mark-cream.png";
 
 export default function ChatPage() {
   const router = useRouter();
-  const { available, ready, connecting, open } = useCrisp();
-  const openedRef = useRef(false);
+  const { available, connecting, open } = useCrisp();
   const [backHref, setBackHref] = useState("/");
 
   // Read ?back= manually (not useSearchParams) so this page doesn't need a
@@ -45,21 +46,6 @@ export default function ChatPage() {
     if (window.history.length > 1) router.back();
     else router.push(backHref);
   }
-
-  // Arriving on this page IS the "open chat" action.
-  useEffect(() => {
-    if (ready && !openedRef.current) {
-      openedRef.current = true;
-      open();
-    }
-  }, [ready, open]);
-
-  // Crisp's own close (X) button means "done" — return where they came from.
-  useEffect(() => {
-    if (!available) return;
-    onCrisp("chat:closed", goBack);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [available]);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-ink touch-none">
@@ -98,12 +84,14 @@ export default function ChatPage() {
           </>
         ) : (
           <>
-            <span
-              aria-hidden="true"
-              className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(249,249,239,0.08)] text-cream"
+            <button
+              type="button"
+              onClick={open}
+              aria-label="Open chat"
+              className="grid h-14 w-14 cursor-pointer place-items-center rounded-full border-0 bg-[rgba(249,249,239,0.08)] text-cream transition-colors duration-200 ease-nc hover:bg-[rgba(249,249,239,0.14)]"
             >
               <Icon name="message-circle" size={26} />
-            </span>
+            </button>
             <div className="flex flex-col gap-2">
               <h1 className="m-0 text-[22px] font-bold tracking-[-0.02em] text-cream">
                 We&apos;re here to help
