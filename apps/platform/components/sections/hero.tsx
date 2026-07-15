@@ -20,11 +20,6 @@ function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>
     let H = 96;
     let raf = 0;
     let rt: ReturnType<typeof setTimeout>;
-    // Runs forever while Home is mounted otherwise — pause whenever it's off
-    // screen or the chat widget needs the main thread, so this per-pixel
-    // fractal render isn't competing with Crisp's own heavy work on tap.
-    let visible = true;
-    let paused = false;
 
     function resize() {
       const r = canvas!.getBoundingClientRect();
@@ -88,28 +83,15 @@ function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>
     let startTime: number | null = null;
     function loop(ts: number) {
       if (startTime === null) startTime = ts;
-      if (visible && !paused) render((ts - startTime) * 0.0004);
+      render((ts - startTime) * 0.0004);
       raf = requestAnimationFrame(loop);
     }
     raf = requestAnimationFrame(loop);
-
-    const io = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; }, { threshold: 0 });
-    io.observe(canvas);
-
-    // Dispatched by the chat hook right before it does its heavy first-open
-    // work, and again once that settles — see hooks/useCrisp.ts.
-    const onPause = () => { paused = true; };
-    const onResume = () => { paused = false; };
-    window.addEventListener("newcondo:pause-heavy-anim", onPause);
-    window.addEventListener("newcondo:resume-heavy-anim", onResume);
 
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(rt);
       window.removeEventListener("resize", onResize);
-      io.disconnect();
-      window.removeEventListener("newcondo:pause-heavy-anim", onPause);
-      window.removeEventListener("newcondo:resume-heavy-anim", onResume);
     };
   }, [canvasRef]);
 }

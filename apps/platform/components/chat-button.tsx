@@ -1,38 +1,51 @@
 "use client";
 
 /* ============================================================
-   ChatButton — the floating live-chat launcher (public pages only).
+   ChatButton — the floating live-chat launcher, mounted ONCE in
+   (site)/layout.tsx so it appears on every marketing page.
 
-   Tapping the bubble opens a small NewCondo-styled popover that lets the
-   visitor start / continue a chat (powered by Crisp) and start a brand-new
-   conversation. Chat history persists in the visitor's browser; signed-in
-   users get their identity pre-filled in the Crisp dashboard.
+   It self-selects behaviour by route:
+   • Home ("/") — renders <ChatLauncherLink>, a plain link to the dedicated
+     /chat page. Home runs a continuous hero canvas animation that fights
+     Crisp's own heavy first-open work for the main thread when Crisp boots
+     inline there — that contention read as a freeze on mobile. See
+     app/(site)/(home)/chat/page.tsx for the full explanation.
+   • Every other page — renders <ChatButtonPopover>, which boots Crisp
+     inline and opens a small popover (Start/Continue chat, New chat).
+     Those pages are light enough that this works fine.
 
-   NOTE: this is mounted on the marketing / public surfaces only. Inside the
-   authenticated platform app, owners/agents get dedicated in-product support
-   instead, so the bubble is intentionally absent there.
+   NOTE: mounted on public surfaces only. Inside the authenticated platform
+   app, owners/agents get dedicated in-product support instead.
    ============================================================ */
 
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { useCrisp } from "@/hooks/useCrisp";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { ChatLauncherLink } from "@/components/chat-launcher-link";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 export function ChatButton() {
-  const { available, unread, hasConversation, open, reset, connecting } = useCrisp();
+  const pathname = usePathname();
+  const isMobile = useIsMobile();
+  // The dedicated /chat page only exists to dodge the mobile-only main-
+  // thread contention between Home's hero canvas loop and Crisp's first
+  // open. On larger screens Home behaves like every other page.
+  const useDedicatedPage = pathname === "/" && isMobile;
+  return useDedicatedPage ? <ChatLauncherLink /> : <ChatButtonPopover />;
+}
+
+function ChatButtonPopover() {
+  const { available, hasConversation, open, reset, connecting } = useCrisp();
   const [panelOpen, setPanelOpen] = useState(false);
   const [instantClose, setInstantClose] = useState(false);
 
-  // No website id configured → don't render a dead bubble.
   if (!available) return null;
 
   function startChat() {
-    // Skip our own exit animation here — Crisp's first chat:open does real
-    // (and sometimes heavy) DOM/layout work; running our popover's exit
-    // transition on the main thread at the same instant made low-end mobile
-    // devices visibly stutter/hang. Closing instantly frees the thread for it.
     setInstantClose(true);
     setPanelOpen(false);
     open();
@@ -59,7 +72,6 @@ export function ChatButton() {
             style={{ transformOrigin: "bottom right" }}
             className="w-[300px] max-w-[calc(100vw-48px)] overflow-hidden rounded-[16px] border border-border-hair bg-surface shadow-pop"
           >
-            {/* Header */}
             <div className="bg-ink px-5 pt-5 pb-4 text-cream">
               <div className="flex items-center gap-2.5">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-cream/12 text-cream">
@@ -76,7 +88,6 @@ export function ChatButton() {
               </div>
             </div>
 
-            {/* Body */}
             <div className="flex flex-col gap-2.5 p-4">
               <button
                 onClick={startChat}
@@ -126,7 +137,6 @@ export function ChatButton() {
         )}
       </AnimatePresence>
 
-      {/* Launcher bubble */}
       <motion.button
         aria-label={panelOpen ? "Close chat menu" : "Chat with us"}
         aria-expanded={panelOpen}
@@ -150,12 +160,6 @@ export function ChatButton() {
             <Icon name={panelOpen ? "x" : "message-circle"} size={24} />
           </motion.span>
         </AnimatePresence>
-
-        {!panelOpen && unread > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 grid min-w-[22px] h-[22px] place-items-center rounded-full bg-green px-1.5 text-[12px] font-bold text-cream ring-2 ring-[var(--nc-background)]">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
       </motion.button>
     </div>
   );
