@@ -164,6 +164,16 @@ export function showDefaultLauncher(): void {
   crispPush(["do", "chat:show"]);
 }
 
+/** Force Crisp to redraw its launcher (hide+show), bypassing the idempotent
+ *  cache above. Crisp's launcher can lose its icon glyph (rendering as a
+ *  plain color circle) after sitting idle for a while or when the tab
+ *  regains focus after being backgrounded — this nudges it to repaint. */
+export function refreshDefaultLauncher(): void {
+  crispPush(["do", "chat:hide"]);
+  crispPush(["do", "chat:show"]);
+  launcherVisible = "shown";
+}
+
 /* ---- Open / close ------------------------------------------------ */
 export function openChat(): void {
   crispPush(["do", "chat:show"]);

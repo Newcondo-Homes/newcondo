@@ -27,6 +27,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/ui/icon";
 import { useCrisp } from "@/hooks/useCrisp";
+import { refreshDefaultLauncher } from "@/lib/crisp";
 
 const LOGO_CREAM = "/assets/logo-mark-cream.png";
 
@@ -46,6 +47,25 @@ export default function ChatPage() {
     if (window.history.length > 1) router.back();
     else router.push(backHref);
   }
+
+  // Crisp's launcher can lose its icon glyph (fading to a plain color
+  // circle) after sitting idle a while, or after the tab was backgrounded
+  // and resumed — nudge it to redraw periodically and whenever this tab
+  // becomes visible again, so the button stays usable indefinitely.
+  useEffect(() => {
+    if (!available) return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshDefaultLauncher();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    const interval = window.setInterval(refreshDefaultLauncher, 45000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+      window.clearInterval(interval);
+    };
+  }, [available]);
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden overscroll-none bg-ink touch-none">
