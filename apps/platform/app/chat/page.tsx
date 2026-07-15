@@ -70,7 +70,7 @@ export default function ChatPage() {
         >
           <Icon name="arrow-left" size={20} />
         </button>
-        <span className="text-[14.5px] font-semibold text-cream">Chat with NewCondo</span>
+        <span className="text-[14.5px] font-semibold text-cream">Chat with Newcondo</span>
         <span className="h-10 w-10" />
       </header>
 
@@ -97,7 +97,7 @@ export default function ChatPage() {
                 We&apos;re here to help
               </h1>
               <p className="m-0 max-w-[280px] text-[14.5px] leading-[1.55] text-text-on-dark-2">
-                Reach NewCondo instantly for questions about renting, listing, payments, or anything else — no sign-in needed.
+                Reach Newcondo instantly for questions about renting, listing, payments, or anything else — no sign-in needed.
               </p>
             </div>
             <p className="m-0 mt-2 flex items-center gap-2 text-[13.5px] font-semibold text-cream">
