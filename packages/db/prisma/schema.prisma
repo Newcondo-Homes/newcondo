@@ -19,7 +19,7 @@ model User {
   phoneVerified DateTime?
   passwordHash  String?
   image         String?
-  role          Role      @default(RENTER)
+  role          Role      
   userType      UserType?
 
 

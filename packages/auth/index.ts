@@ -1,4 +1,5 @@
-import type {} from './src/types.d';
+// packages\auth\index.ts
+import type { } from './src/types.d';
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getUserById } from "./src/utils";
 import authFullConfig from "./auth.full";
@@ -23,13 +24,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.email = existingUser.email;
           token.name = existingUser.name;
           token.picture = existingUser.image;
-          token.role = existingUser.role;
+          token.role = existingUser?.role as Role;
           token.phone = existingUser.phone;
           token.verificationStatus = existingUser.verificationStatus;
           token.isAvailableForMarking = existingUser.isAvailableForMarking;
           token.userType = existingUser.userType;
           token.referralCode = existingUser.referralCode;
           token.companyName = existingUser.companyName;
+          token.isPremium = existingUser.isPremium
 
           // ── Mint the Express-compatible access token ──────────────────────
           // This JWT is signed with JWT_SECRET — the same secret your Express
@@ -49,8 +51,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      if (trigger === "update" && session) {
-        token = { ...token, ...session };
+
+      if (trigger === "update") {
+        const fresh = await prisma.user.findUnique({ where: { id: token.id as string } });
+        if (fresh) {
+          token.role = fresh.role;
+          token.phone = fresh.phone;
+          token.isPremium = fresh.isPremium;
+        }
+        if (session) token = { ...token, ...session };
       }
 
       return token;
@@ -68,7 +77,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (token.accessToken) {
           session.accessToken = token.accessToken as string;
         }
-        
+
         if (!token.referralCode) {
           const existingUser = await getUserById(session.user.id as string);
           session.user.companyName = existingUser?.companyName;
@@ -88,6 +97,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.userType = token.userType as UserType;
         session.user.referralCode = token.referralCode as string;
         session.user.companyName = token.companyName as string;
+        session.user.isPremium = !!token.isPremium;
       }
       return session;
     },

@@ -12,6 +12,7 @@ declare module "next-auth" {
     verificationStatus: VerificationStatus;
     isAvailableForMarking?: boolean;
     userType?: UserType | null;
+    isPremium?: boolean;
     accessToken?: string;
     refreshToken?: string;
   }
@@ -29,7 +30,7 @@ declare module "next-auth" {
       verificationStatus: VerificationStatus;
       isAvailableForMarking?: boolean;
       userType?: UserType | null;
-      isPremium: boolean;
+      isPremium?: boolean;
       agentServiceAreas: string[];
       // Add any other specific fields you need on the client-side session.
       // E.g., if you want the referralCode or companyName directly
@@ -50,6 +51,7 @@ declare module "@auth/core/jwt" {
     verificationStatus?: VerificationStatus;
     isAvailableForMarking?: boolean;
     userType?: UserType | null;
+    isPremium?: boolean;
 
     // Tokens
     accessToken?: string;

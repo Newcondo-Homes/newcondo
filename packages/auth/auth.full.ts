@@ -1,3 +1,4 @@
+// packages\auth\auth.full.ts
 // Full auth config with Prisma — Node.js only, never used in middleware
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
