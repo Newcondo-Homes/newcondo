@@ -53,9 +53,9 @@ export default async function RootLayout({
         <SessionProvider>
           <Providers>
             <MotionProvider>
-              <LocationGate ipBypass={ipBypass} geoGranted={geoGranted} sessionBypass={sessionBypass}>
+              {/* <LocationGate ipBypass={ipBypass} geoGranted={geoGranted} sessionBypass={sessionBypass}> */}
                 {children}
-              </LocationGate>
+              {/* </LocationGate> */}
             </MotionProvider>
           </Providers>
         </SessionProvider>
