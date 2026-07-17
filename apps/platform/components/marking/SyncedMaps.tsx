@@ -15,7 +15,7 @@
    ============================================================ */
 
 import { useCallback, useEffect, useRef } from "react";
-import { GoogleMap, Marker, Polygon, Circle } from "@react-google-maps/api";
+import { GoogleMap, Polygon } from "@react-google-maps/api";
 import { pointInPolygon, type LatLngLiteral, type MarkedProperty } from "./marking-core";
 
 const CONTAINER = { width: "100%", height: "100%" };
@@ -69,6 +69,11 @@ export default function SyncedMaps({
   const roadRef = useRef<google.maps.Map | null>(null);
   const activeRef = useRef<"sat" | "road" | null>(null);
   const linkedRef = useRef(false);
+  // Imperative pin overlays (one Marker + one Circle per map) so there is
+  // never more than one pin on screen — each tap removes the previous
+  // instances outright instead of relying on prop-diffing to move them.
+  const satPinRef = useRef<{ marker: google.maps.Marker; circle: google.maps.Circle } | null>(null);
+  const roadPinRef = useRef<{ marker: google.maps.Marker; circle: google.maps.Circle } | null>(null);
 
   // Wire the two maps together once both exist.
   const link = useCallback(() => {
@@ -115,6 +120,42 @@ export default function SyncedMaps({
     });
   }, [onRecenterReady, center.lat, center.lng, zoom]);
 
+  // Draw/clear the pin on both maps imperatively whenever it changes.
+  useEffect(() => {
+    const draw = (map: google.maps.Map | null, ref: React.MutableRefObject<{ marker: google.maps.Marker; circle: google.maps.Circle } | null>) => {
+      if (!map) return;
+      if (ref.current) {
+        ref.current.marker.setMap(null);
+        ref.current.circle.setMap(null);
+        ref.current = null;
+      }
+      if (!pin) return;
+      const marker = new google.maps.Marker({
+        position: pin,
+        map,
+        icon: pinIcon(),
+        animation: google.maps.Animation.DROP,
+        zIndex: 3,
+        clickable: false,
+      });
+      const circle = new google.maps.Circle({
+        center: pin,
+        radius: 11,
+        map,
+        fillColor: GREEN,
+        fillOpacity: 0.18,
+        strokeColor: GREEN,
+        strokeOpacity: 0.9,
+        strokeWeight: 1.5,
+        clickable: false,
+        zIndex: 2,
+      });
+      ref.current = { marker, circle };
+    };
+    draw(satRef.current, satPinRef);
+    draw(roadRef.current, roadPinRef);
+  }, [pin?.lat, pin?.lng]);
+
   const handleClick = (e: google.maps.MapMouseEvent) => {
     if (!interactive || !e.latLng) return;
     const p = { lat: e.latLng.lat(), lng: e.latLng.lng() };
@@ -138,24 +179,6 @@ export default function SyncedMaps({
           }}
         />
       ))}
-      {pin && (
-        <>
-          <Circle
-            center={pin}
-            radius={11}
-            options={{
-              fillColor: GREEN,
-              fillOpacity: 0.18,
-              strokeColor: GREEN,
-              strokeOpacity: 0.9,
-              strokeWeight: 1.5,
-              clickable: false,
-              zIndex: 2,
-            }}
-          />
-          <Marker position={pin} icon={pinIcon()} animation={google.maps.Animation.DROP} zIndex={3} />
-        </>
-      )}
     </>
   );
 
@@ -173,6 +196,15 @@ export default function SyncedMaps({
         onLoad={(m) => {
           (which === "sat" ? satRef : roadRef).current = m;
           link();
+          // Draw the pin immediately for a map that mounts after the pin is already set.
+          if (pin) {
+            const ref = which === "sat" ? satPinRef : roadPinRef;
+            if (!ref.current) {
+              const marker = new google.maps.Marker({ position: pin, map: m, icon: pinIcon(), zIndex: 3, clickable: false });
+              const circle = new google.maps.Circle({ center: pin, radius: 11, map: m, fillColor: GREEN, fillOpacity: 0.18, strokeColor: GREEN, strokeOpacity: 0.9, strokeWeight: 1.5, clickable: false, zIndex: 2 });
+              ref.current = { marker, circle };
+            }
+          }
         }}
         onClick={handleClick}
         options={{ ...BASE_OPTIONS, mapTypeId: which === "sat" ? "satellite" : "roadmap" }}

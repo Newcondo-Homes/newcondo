@@ -101,9 +101,22 @@ export default function MarkPropertyExperience({
         setStep((s) => (s === "locate" ? "mark" : s));
       },
       () => setGeo("denied"),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 6000, maximumAge: 0 }
     );
   }, []);
+
+  // Safety net: if geolocation hangs (slow GPS fix, permission prompt never
+  // answered), don't leave mobile users stuck staring at a spinner — surface
+  // a manual/skip option after a few seconds without claiming it was denied.
+  const [showSkip, setShowSkip] = useState(false);
+  useEffect(() => {
+    if (geo !== "locating") {
+      setShowSkip(false);
+      return;
+    }
+    const t = setTimeout(() => setShowSkip(true), 3500);
+    return () => clearTimeout(t);
+  }, [geo]);
 
   useEffect(() => {
     if (isLoaded) locate();
@@ -287,7 +300,7 @@ export default function MarkPropertyExperience({
         {/* location gate */}
         <AnimatePresence>
           {!done && step === "locate" && (
-            <LocationGate reduce={reduce} status={geo} onRetry={locate} onManual={() => setStep("mark")} />
+            <LocationGate reduce={reduce} status={geo} showSkip={showSkip} onRetry={locate} onManual={() => setStep("mark")} />
           )}
         </AnimatePresence>
 
@@ -355,11 +368,13 @@ function LocationGate({
   onRetry,
   onManual,
   reduce,
+  showSkip,
 }: {
   status: GeoStatus;
   onRetry: () => void;
   onManual: () => void;
   reduce: boolean | null;
+  showSkip: boolean;
 }) {
   const denied = status === "denied";
   return (
@@ -406,9 +421,20 @@ function LocationGate({
               </button>
             </>
           ) : (
-            <span className="inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-text-secondary">
-              <Loader2 size={17} strokeWidth={2} className="animate-spin" /> Waiting for location…
-            </span>
+            <>
+              <span className="inline-flex items-center justify-center gap-2 text-[14px] font-semibold text-text-secondary">
+                <Loader2 size={17} strokeWidth={2} className="animate-spin" /> Waiting for location…
+              </span>
+              {showSkip && (
+                <button
+                  type="button"
+                  onClick={onManual}
+                  className="mt-1 inline-flex items-center justify-center rounded-full border border-border-strong bg-surface px-7 py-3.5 text-[14.5px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken"
+                >
+                  Find it on the map myself
+                </button>
+              )}
+            </>
           )}
         </div>
       </motion.div>

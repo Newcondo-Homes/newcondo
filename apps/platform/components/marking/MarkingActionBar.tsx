@@ -53,15 +53,15 @@ export default function MarkingActionBar({
               <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-ink/[0.06] text-ink">
                 <Hand size={20} strokeWidth={1.9} />
               </span>
-              <p className="m-0 flex-1 text-[14px] leading-[1.4] text-text-primary">
+              <p className="m-0 min-w-0 flex-1 text-[14px] leading-[1.4] text-text-primary">
                 Find your house on the <strong>Satellite</strong> view, then tap it to drop a pin.
               </p>
               <button
                 type="button"
                 onClick={onDropAtMe}
-                className="inline-flex flex-none items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3.5 py-2.5 text-[13px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken max-[520px]:hidden"
+                className="inline-flex flex-none items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3.5 py-2.5 text-[13px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken"
               >
-                <Crosshair size={15} strokeWidth={2} /> At my spot
+                <Crosshair size={15} strokeWidth={2} /> <span className="max-[380px]:hidden">At my spot</span>
               </button>
             </div>
           </Swap>
