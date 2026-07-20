@@ -132,7 +132,12 @@ export function Hero() {
         >
           Built for Nigerian property owners
         </motion.div>
-
+        <motion.div
+  variants={fade}
+  className="text-[12px] font-semibold tracking-[0.16em] uppercase text-green-bright mb-[22px]"
+>
+  Newcondo — Property Management & Rent Payment Platform
+</motion.div>
         <h1 className="m-0 font-bold text-cream max-w-[17ch] text-[clamp(40px,6vw,84px)] leading-[0.97] tracking-[-0.045em]">
           <span className="line-mask">
             <motion.span className="block" variants={line}>
