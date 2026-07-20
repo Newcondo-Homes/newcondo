@@ -27,7 +27,7 @@ export function Footer() {
           <a href="#" className="flex items-center gap-[11px] no-underline font-bold text-[21px] tracking-[-0.04em] text-cream mb-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/assets/logo-mark-cream.png" alt="Newcondo" className="w-[30px] h-auto" />
-            <span>newcondo</span>
+            <span>Newcondo</span>
           </a>
           <p className="text-[16px] leading-[1.5] text-text-on-dark-2 m-0 mb-[22px] max-w-[30ch]">
             Property management, finally working the way it should.
@@ -62,7 +62,7 @@ export function Footer() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/assets/logo-mark-cream-tight.png" alt="" />
         </span>
-        <span>newcondo</span>
+        <span>Newcondo</span>
       </div>
 
       <div className="max-w-[1440px] mx-auto px-[var(--gutter)] pt-8 pb-11 flex justify-between gap-4 flex-wrap text-[13px] text-text-on-dark-2 border-t border-[rgba(249,249,239,0.1)] mt-[30px]">

@@ -79,7 +79,7 @@ export function Navbar({ forceSolid = false }) {
             <img className="nav-logo-dark w-[30px] h-auto" src={LOGO_DARK} alt="Newcondo" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="nav-logo-cream w-[30px] h-auto" src={LOGO_CREAM} alt="Newcondo" />
-            <span>newcondo</span>
+            <span>Newcondo</span>
           </Link>
         </motion.div>
 
