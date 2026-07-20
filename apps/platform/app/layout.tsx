@@ -24,7 +24,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Newcondo — For Property Owners",
+  title: "Newcondo",
   description:
     "Rent out your property without agent confusion, double-booking, or payment stress. Escrow rent collection, verified tenants, and one owner dashboard.",
   metadataBase: new URL("https://newcondo.homes"),
