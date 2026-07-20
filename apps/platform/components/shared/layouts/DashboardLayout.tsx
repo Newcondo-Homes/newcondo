@@ -1,249 +1,52 @@
-// apps/platform/components/shared/layouts/DashboardLayout.tsx
 "use client";
 
-import { useState } from "react";
-// import { User } from '@newcondo/auth';
-import type { Role, VerificationStatus } from "@newcondo/db";
+/* ============================================================
+   DashboardLayout — the client shell rendered by app/(dashboard)/layout.tsx
+   after the server-side auth gate. Wires: TanStack QueryProvider,
+   RoleProvider (seeded from the session user), Sidebar, Topbar, Toaster.
+   ============================================================ */
+import { useState, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { RoleProvider } from "@/components/providers/role-provider";
+import { Toaster } from "@newcondo/ui";
+import { Sidebar } from "@/components/dashboard/Sidebar";
+import { Topbar } from "@/components/dashboard/Topbar";
+import type { Role } from "@/lib/dashboard/data";
 
-import { useRouter } from "next/navigation";
-import { Button } from "@newcondo/ui/";
-import { Avatar, AvatarFallback, AvatarImage } from "@newcondo/ui/";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@newcondo/ui/";
-import { Sheet, SheetContent, SheetTrigger } from "@newcondo/ui/";
-import { Badge } from "@newcondo/ui/";
-import {
-  Home,
-  Building,
-  // CreditCard,
-  Users,
-  Settings,
-  LogOut,
-  Menu,
-  Bell,
-  Shield,
-  MapPin,
-  Briefcase,
-} from "lucide-react";
-import { signOut } from "@newcondo/auth/client";
-import Sidebar from "@/components/shared/navigation/Sidebar";
+interface SessionUserLike { role?: string | null; userType?: string | null; }
 
-// The dashboard type below initially pulled alot of user data as the 'User' type from
-// the database suggest. the thing is, is it efficient to get all the 'User' data at once
-// when the user visits their dashboard or just get a handle-full of the user's data.
-
-// For now I'm getting a hand-full and will adjust it as need be until we get to a
-// situation where we need all the user data. for now we get what we need.
-
-// interface DashboardLayoutProps {
-//   children: React.ReactNode;
-//   user: User & {
-//     role: 'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN';
-//     verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
-//     isAvailableForMarking?: boolean;
-//   };
-// }
-
-// Minimal user type for layout purposes
-interface DashboardUser {
-  id: string;
-  email: string;
-  name?: string | null;
-  role: Role;
-  image?: string | null;
-  phone?: string | null;
-  verificationStatus: VerificationStatus;
-  isAvailableForMarking?: boolean;
-}
-
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-  user: DashboardUser;
-  // user: DashboardUser | null | undefined;
-}
-
-export default function DashboardLayout({
-  children,
-  user,
-}: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const router = useRouter();
-  if (!user) {
-    // This redirect will only happen on the client side if `user` is unexpectedly null
-    // after the initial server render where it should have been handled by layout.tsx
-    router.push("/login");
-    return null; // Don't render anything if no user
-  }
-  const handleSignOut = async () => {
-    await signOut({
-      callbackUrl: "/",
-      redirect: true,
-    });
-  };
-
-  const getVerificationBadge = () => {
-    switch (user.verificationStatus) {
-      case "VERIFIED":
-        return (
-          <Badge variant="default" className="text-xs">
-            Verified
-          </Badge>
-        );
-      case "PENDING":
-        return (
-          <Badge variant="secondary" className="text-xs">
-            Pending
-          </Badge>
-        );
-      case "REJECTED":
-        return (
-          <Badge variant="destructive" className="text-xs">
-            Rejected
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const getRoleIcon = () => {
-    switch (user.role) {
-      case "OWNER":
-        return <Building className="h-4 w-4" />;
-      case "AGENT":
-        return <Briefcase className="h-4 w-4" />;
-      case "RENTER":
-        return <Home className="h-4 w-4" />;
-      case "ADMIN":
-        return <Shield className="h-4 w-4" />;
-      default:
-        return <Users className="h-4 w-4" />;
-    }
-  };
-
+export default function DashboardLayout({ user, children }: { user?: SessionUserLike; children: ReactNode }) {
+  const [mobileNav, setMobileNav] = useState(false);
+  const initialRole = ((user?.role ?? user?.userType) as Role) || "OWNER";
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-        <Sidebar user={user} />
-      </div>
-
-      {/* Mobile sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-72">
-          <Sidebar user={user} onNavigate={() => setSidebarOpen(false)} />
-        </SheetContent>
-      </Sheet>
-
-      {/* Main content */}
-      <div className="lg:pl-72">
-        {/* Top navigation */}
-        <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-6 w-6" />
-                <span className="sr-only">Open sidebar</span>
-              </Button>
-            </SheetTrigger>
-          </Sheet>
-
-          {/* Separator */}
-          <div className="h-6 w-px bg-gray-200 lg:hidden" aria-hidden="true" />
-
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-            <div className="flex flex-1 items-center">
-              <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
-            </div>
-
-            <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {/* Notifications */}
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-              </Button>
-
-              {/* Profile dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-8 w-8 rounded-full"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={user.image || undefined}
-                        alt={user.name || "User"}
-                      />
-                      <AvatarFallback>
-                        {user.name ? user.name.charAt(0).toUpperCase() : "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user.name}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        {getRoleIcon()}
-                        <span className="text-xs text-muted-foreground capitalize">
-                          {user?.role?.toLowerCase()}
-                        </span>
-                        {getVerificationBadge()}
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/profile")}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Profile & Settings
-                  </DropdownMenuItem>
-                  {user.role === "AGENT" && (
-                    <DropdownMenuItem
-                      onClick={() => router.push("/marking-jobs/queue")}
-                    >
-                      <MapPin className="mr-2 h-4 w-4" />
-                      Agent Queue
-                      {user.isAvailableForMarking && (
-                        <Badge variant="default" className="ml-auto text-xs">
-                          Available
-                        </Badge>
-                      )}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+    <QueryProvider>
+      <RoleProvider initialRole={initialRole}>
+        <div className="flex min-h-screen bg-nc-background text-text-primary font-sans">
+          {/* mobile scrim + drawer */}
+          <AnimatePresence>
+            {mobileNav && (
+              <motion.div key="scrim" className="fixed inset-0 z-[55] bg-ink/35 min-[1001px]:hidden"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => setMobileNav(false)} />
+            )}
+          </AnimatePresence>
+          <aside
+            className={
+              "fixed inset-y-0 left-0 z-[60] flex w-64 flex-col bg-surface border-r border-border-hair px-3.5 pt-5 pb-3.5 " +
+              "transition-transform duration-300 ease-nc max-[1000px]:shadow-pop " +
+              (mobileNav ? "translate-x-0" : "max-[1000px]:-translate-x-full")
+            }
+          >
+            <Sidebar onNavigate={() => setMobileNav(false)} />
+          </aside>
+          <div className="flex min-w-0 flex-1 flex-col min-[1001px]:ml-64">
+            <Topbar onBurger={() => setMobileNav(true)} />
+            <div className="mx-auto w-full max-w-[1180px] px-[clamp(14px,3.5vw,44px)] pt-6 pb-20">{children}</div>
           </div>
         </div>
-
-        {/* Page content */}
-        <main className="py-8">
-          <div className="px-4 sm:px-6 lg:px-8">{children}</div>
-        </main>
-      </div>
-    </div>
+        <Toaster />
+      </RoleProvider>
+    </QueryProvider>
   );
 }

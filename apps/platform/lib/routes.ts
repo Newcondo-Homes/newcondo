@@ -38,7 +38,8 @@ export const publicRoutes = [
   "/password-reset-email-redirect",
   "/mark-property/*",
   "/r/*",
-  "/share/*"
+  "/share/*",
+  "/tenant-invite/*"
 ];
 
 /**
