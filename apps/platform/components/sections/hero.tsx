@@ -166,6 +166,9 @@ export function Hero() {
           variants={fade}
           className="text-[clamp(16px,1.35vw,19px)] leading-[1.55] text-text-on-dark-2 max-w-[600px] mt-11"
         >
+          Newcondo is a property management and rent payment platform that helps property owners list homes and manage tenants while allowing renters to process rent payments seamlessly.
+
+
           Agents collect rent and go silent. Tenants damage property and deny it. You manage everything from WhatsApp at
           midnight. Newcondo fixes all of that — and covers your fumigation, waste management, and legal paperwork while
           doing it.
