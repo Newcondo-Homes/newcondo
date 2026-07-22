@@ -9,7 +9,8 @@
    upgrade), plus ONE PER MARKED PROPERTY — per-property VAs make rent
    reconciliation and escrow isolation automatic. There is deliberately no
    create-VA UI.
-   API: GET /api/v1/payments/bank-accounts · POST /wallet/withdraw (TODO). */
+   API: GET /payments/wallet · POST /payments/wallet/withdraw ·
+   PATCH /payments/wallet/auto-payout (payment-service wallet.service). */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
@@ -20,6 +21,7 @@ import { useRole } from "@/components/providers/role-provider";
 import { PageHead, DBtn, StatCard, Card, CardH, Row, Thumb, KV, Banner, EmptyState, SkeletonRows } from "@/components/dashboard/primitives";
 import { Modal } from "@/components/dashboard/Modal";
 import { Field, inputCls } from "@/components/dashboard/NCSelect";
+import * as api from "@/lib/api/dashboard";
 import { useWallet, useVirtualAccounts, useBankAccounts, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
 import { BankAccountsCard, ChangeBankFlow } from "@/components/dashboard/wallet/BankAccounts";
 import { ngn } from "@/lib/dashboard/format";
@@ -46,7 +48,8 @@ export default function WalletPage() {
   const bankLabel = defaultBank ? `${defaultBank.bankName} ••${defaultBank.accountNumber.slice(-4)}` : "no payout account";
   const updateBanks = (fn: (l: BankAccount[]) => BankAccount[]) => cache.update<BankAccount[]>(["bank-accounts", role], fn);
   const setAuto = (mode: Wallet["autoPayout"]) => {
-    /* TODO(backend): PATCH /api/v1/payments/wallet/auto-payout { mode } */
+    // PATCH /api/v1/payments/wallet/auto-payout { mode } — optimistic cache keeps it instant
+    if (api.isLiveBackend) api.setAutoPayoutApi(mode).catch(() => toast.error("Could not save auto-payout — try again"));
     cache.update<Wallet>(["wallet", role], (x) => ({ ...x, autoPayout: mode }));
     toast.success("Auto-payout updated", { description: mode === "OFF" ? "You'll withdraw manually." : `Available funds transfer to ${bankLabel} ${mode.toLowerCase()}.` });
   };
@@ -119,8 +122,11 @@ function WithdrawModal({ wallet, bankLabel, onClose, onDone }: { wallet: Wallet;
     if (!n || n <= 0) { setErr("Enter an amount"); return; }
     if (n > wallet.available) { setErr(`You can withdraw up to ${ngn(wallet.available)}`); toast.error("Amount exceeds available balance"); return; }
     onClose(); onDone(n);
-    /* TODO(backend): POST /api/v1/payments/wallet/withdraw { amount } → Flutterwave transfer to the DEFAULT bank account; webhook flips SETTLED */
-    toast.promise(new Promise((res) => setTimeout(res, 2000)), {
+    // POST /api/v1/payments/wallet/withdraw { amount } — backend re-checks the
+    // balance, creates a PENDING WITHDRAWAL Payment, fires the Flutterwave
+    // transfer to the DEFAULT bank account; the transfer webhook settles it.
+    const doWithdraw = api.isLiveBackend ? api.withdrawApi(n) : new Promise((res) => setTimeout(res, 2000));
+    toast.promise(doWithdraw, {
       loading: `Sending ${ngn(n)} to ${bankLabel} — Flutterwave transfer initiated…`,
       success: "Withdrawal on its way — transfers usually land within minutes. You'll get an email receipt.",
       error: "Transfer failed — your balance was not touched",

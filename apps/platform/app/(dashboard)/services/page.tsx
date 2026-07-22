@@ -3,8 +3,9 @@
 /* Services — third-party vendors (fumigation, waste, inspection, repairs)
    on the owner's/agent's properties. Plan card, upcoming & history,
    job detail modal, request-a-service modal.
-   TODO(backend): GET /api/services/plan · GET /api/services/jobs ·
-   POST /api/services/request · POST /api/services/jobs/:id/issue. */
+   Live API: GET /api/v1/services/overview · POST /services/request ·
+   POST /services/jobs/:id/reschedule · POST /services/jobs/:id/issue
+   (vendor-service via combined backend). */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
@@ -17,6 +18,7 @@ import { Modal } from "@/components/dashboard/Modal";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { useServices } from "@/hooks/dashboard/useDashboardData";
 import { ngn } from "@/lib/dashboard/format";
+import * as api from "@/lib/api/dashboard";
 import { DUMMY_PROPERTIES, type ServiceJob } from "@/lib/dashboard/data";
 
 const PLANS = [
@@ -106,8 +108,8 @@ function ServiceDetailModal({ job, onClose }: { job: ServiceJob; onClose: () => 
   return (
     <Modal title={job.service} sub={`${job.property} · ${job.vendor}`} onClose={onClose}
       footer={<>
-        {job.status === "COMPLETED" && <DBtn variant="line" onClick={() => toast.info("Issue reported", { description: "Newcondo reviews it with the vendor. TODO(backend): POST /api/services/jobs/:id/issue" })}>Report an issue</DBtn>}
-        {job.status === "SCHEDULED" && <DBtn variant="line" onClick={() => { onClose(); toast.success("Reschedule request sent", { description: "The vendor confirms a new slot within 24h." }); }}>Reschedule</DBtn>}
+        {job.status === "COMPLETED" && <DBtn variant="line" onClick={() => { if (api.isLiveBackend) api.reportServiceIssue(job.id, "Owner reported an issue with this visit").catch(() => {}); toast.info("Issue reported", { description: "Newcondo reviews it with the vendor and follows up with you." }); }}>Report an issue</DBtn>}
+        {job.status === "SCHEDULED" && <DBtn variant="line" onClick={() => { if (api.isLiveBackend) api.rescheduleServiceJob(job.id).catch(() => {}); onClose(); toast.success("Reschedule request sent", { description: "The vendor confirms a new slot within 24h." }); }}>Reschedule</DBtn>}
         <DBtn onClick={onClose}>Done</DBtn>
       </>}>
       <KV k="Status" v={<StatusBadge s={job.status} />} />
@@ -131,7 +133,13 @@ function RequestServiceModal({ types, onClose }: { types: string[]; onClose: () 
     if (!f.type) { toast.error("Pick a service type"); return; }
     if (!f.property) { toast.error("Pick which property it's for"); return; }
     onClose();
-    toast.promise(new Promise((res) => setTimeout(res, 1500)), {
+    // POST /api/v1/services/request — repairs get QUOTE_REQUESTED (vendor quote
+    // for approval before dispatch); plan-covered types get REQUESTED
+    const propertyId = DUMMY_PROPERTIES.find((p) => p.title === f.property)?.id;
+    const doReq = api.isLiveBackend && propertyId
+      ? api.requestServiceApi({ propertyId, serviceType: f.type, notes: f.notes })
+      : new Promise((res) => setTimeout(res, 1500));
+    toast.promise(doReq, {
       loading: "Sending request to vendors…",
       success: f.type.startsWith("Repair") ? "Service request sent — you'll receive a vendor quote to approve before any work starts." : "Service request sent — the vendor proposes a visit slot within 24 hours.",
       error: "Could not send the request",

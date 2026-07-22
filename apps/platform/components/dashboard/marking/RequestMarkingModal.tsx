@@ -2,8 +2,8 @@
 
 /* Request-marking wizard: self / shared link / ₦20,000 broadcast / ₦25,000
    Newcondo-managed. Paid methods collect a contact person then pay via
-   Flutterwave. TODO(backend): POST /api/marking-jobs then Flutterwave inline
-   checkout; on webhook success the job broadcasts to agents in proximity. */
+   Flutterwave. Live: POST /api/v1/marking/jobs (after the charge verifies)
+   — the job then broadcasts to agents within proximity. */
 import { useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
@@ -12,6 +12,7 @@ import { Modal } from "@/components/dashboard/Modal";
 import { DBtn, KV, Banner, CopyField, PhotoGrid } from "@/components/dashboard/primitives";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { ngn } from "@/lib/dashboard/format";
+import * as api from "@/lib/api/dashboard";
 import { DUMMY_PROPERTIES, type MarkingMethod } from "@/lib/dashboard/data";
 
 const METHODS: { id: MarkingMethod; icon: string; t: string; p: string; fee: string }[] = [
@@ -39,7 +40,12 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
     onClose();
     if (f.method === "SELF") { toast.info("Opening the marking map…", { description: "Routes to properties/[id]/mark — the full-screen map experience." }); return; }
     if (f.method === "KNOWN_PERSON") { toast.success("Marking link created", { description: "Share it with your person — you'll be notified the moment they mark." }); return; }
-    toast.promise(new Promise((res) => setTimeout(res, 2000)), {
+    // Live: Flutterwave inline charge first, then POST /api/v1/marking/jobs
+    const propertyId = DUMMY_PROPERTIES.find((p) => p.title === f.property)?.id;
+    const doCreate = api.isLiveBackend && propertyId && f.method
+      ? api.createMarkingJobApi({ propertyId, method: f.method, contactName: f.contactName, contactPhone: f.contactPhone, accessNotes: f.access })
+      : new Promise((res) => setTimeout(res, 2000));
+    toast.promise(doCreate, {
       loading: `Processing ${ngn(fee)} payment — Flutterwave secure checkout…`,
       success: f.method === "BROADCAST" ? "Marking job is live — broadcasting to verified agents near the property." : "Marking job is live — a Newcondo agent will be assigned within 24 hours.",
       error: "Payment failed — you were not charged",

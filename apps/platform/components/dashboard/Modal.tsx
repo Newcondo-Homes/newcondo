@@ -31,7 +31,9 @@ export function Modal({ title, sub, onClose, children, wide, footer }: {
       <motion.div
         role="dialog" aria-modal="true"
         className={cx(
-          "relative max-h-[min(86vh,760px)] overflow-auto rounded-3xl bg-surface p-6 shadow-pop",
+          // Desktop: no visible scrollbar — tall wizards fit within 92vh and any
+          // rare overflow scrolls with the scrollbar hidden (kept reachable).
+          "relative max-h-[92vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-surface p-6 shadow-pop",
           wide ? "w-[640px]" : "w-[480px]",
           "max-w-full max-sm:max-h-[94dvh] max-sm:w-full max-sm:rounded-b-none max-sm:rounded-t-[26px] max-sm:px-[18px] max-sm:pb-[calc(20px+env(safe-area-inset-bottom))]"
         )}

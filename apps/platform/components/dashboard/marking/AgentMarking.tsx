@@ -2,8 +2,10 @@
 
 /* Agent marking desk — active 3-hour slot, FCFS queue of nearby jobs,
    job history, complete/abandon flows.
-   TODO(backend): GET /api/marking/available-jobs?lat&lng ·
-   POST /api/marking/queue/:jobId/join · POST /api/marking/my-jobs/:id/complete */
+   Live API: GET /api/v1/marking/available-jobs?lat&lng ·
+   POST /marking/queue/:jobId/join · POST /marking/jobs/:id/photos/presign
+   (S3 → properties/.../marking/{boundary|rooms}/) · POST /marking/jobs/:id/complete */
+import * as api from "@/lib/api/dashboard";
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
@@ -25,13 +27,19 @@ export function AgentMarking() {
   if (available.isLoading || history.isLoading) return (<><PageHead title="Marking Queue" sub="Loading…" /><SkeletonRows n={3} h={100} /></>);
   const act = active.data;
   const joinQueue = (j: AvailableJob) => {
-    /* TODO(backend): POST /api/marking/queue/:jobId/join → returns position + est. slot time */
+    // POST /api/v1/marking/queue/:jobId/join — returns { position, slotHours }
+    if (api.isLiveBackend) api.joinMarkingQueue(j.id).catch(() => toast.error("Could not join — the job may have closed"));
     cache.update<AvailableJob[]>(["marking", "available"], (l) => l.map((x) => (x.id === j.id ? { ...x, queue: x.queue + 1, joined: true } : x)));
     toast.success(`Joined the queue — position ${j.queue + 1}`, { description: j.queue === 0 ? "You are first! Your 3-hour slot starts now." : "You'll be notified when your 3-hour slot starts." });
   };
   const completeJob = () => {
     if (!act) return;
-    /* TODO(backend): POST /api/marking/my-jobs/:id/complete { boundary, photos[] } → holds ₦1,000, notifies owner */
+    // Live flow: 1) POST /marking/jobs/:id/photos/presign → presigned S3 PUTs
+    //   (properties/{country}/{state}/{city}/{propertyId}/marking/boundary|rooms/{uuid}.jpg)
+    // 2) PUT each photo to S3  3) POST /marking/jobs/:id/complete { polygonNorm,
+    //   mapBounds, photoKeys } — duplicate-check runs server-side (marking-geo);
+    //   ₦1,000 held, owner notified over SSE. The mark-property map screen owns
+    //   the polygon; this desk hands off to it.
     cache.update<ActiveJob | null>(["marking", "active"], () => null);
     cache.update<JobHistoryItem[]>(["marking", "history"], (l) => [{ id: "hx", title: act.title, date: "Today", payout: 1000, status: "PARTIAL", note: "₦1,000 held · balance on owner confirmation" }, ...l]);
     toast.promise(new Promise((res) => setTimeout(res, 1700)), {

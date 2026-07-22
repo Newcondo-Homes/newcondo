@@ -1,9 +1,9 @@
 "use client";
 
 /* Referrals — dual-sided, pay-on-success credits.
-   TODO(backend): GET /api/referrals/stats · POST /api/referrals/invite. */
+   Live: GET /api/v1/referrals/stats (wired in useReferrals) · rewards are
+   credited by the backend when the invitee's first payment verifies. */
 import { Icon } from "@/components/ui/icon";
-import { toast } from "@newcondo/ui";
 import { useRole } from "@/components/providers/role-provider";
 import { PageHead, StatCard, StatusBadge, Card, CardH, Row, CopyField, SkeletonRows } from "@/components/dashboard/primitives";
 import { useReferrals } from "@/hooks/dashboard/useDashboardData";
@@ -30,7 +30,7 @@ export default function ReferralsPage() {
             <div className="mt-1 text-[12.5px] text-text-on-dark-2">Rewards trigger only after your invitee pays — that&rsquo;s how both sides earn.</div>
           </div>
           <div className="max-w-[420px] flex-[1_1_320px]"><CopyField value={data.link} toastMsg="Referral link copied" /></div>
-          <button onClick={() => toast.info("Opening WhatsApp…", { description: "Pre-filled invite message with your link." })}
+          <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Join me on Newcondo — verified rentals, escrow-protected payments: https://${data.link}`)}`, "_blank", "noopener")}
             className="flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2.5 text-[13px] font-semibold text-white max-sm:w-full max-sm:justify-center">
             <Icon name="send" size={14} />Share on WhatsApp
           </button>

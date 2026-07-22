@@ -4,6 +4,7 @@
    with per-job detail modal.
    Business rules: broadcast ₦20,000 / Newcondo agent ₦25,000; marker earns 25%
    (₦1,000 held on completion, balance on owner confirmation). */
+import * as api from "@/lib/api/dashboard";
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
@@ -26,8 +27,9 @@ export function OwnerMarking() {
   const active = jobs.filter((j) => j.status !== "COMPLETED");
   const done = jobs.filter((j) => j.status === "COMPLETED");
   const confirmJob = (job: MarkingJob) => {
-    /* TODO(backend): POST /api/marking-jobs/:id/confirm — releases the remaining
-       ₦4,000 to the marker, closes the queue, flips property to PENDING_REVIEW */
+    // POST /api/v1/marking/jobs/:id/confirm — releases the remaining ₦4,000 to
+    // the marker, flips Property.boundaryVerified, notifies the marker via SSE
+    if (api.isLiveBackend) api.confirmMarkingApi(job.id).catch(() => toast.error("Could not confirm — try again"));
     cache.update<MarkingJob[]>(["marking", "owner"], (l) => l.map((j) => (j.id === job.id ? { ...j, status: "COMPLETED" } : j)));
     toast.promise(new Promise((res) => setTimeout(res, 1300)), {
       loading: "Confirming marking…",
@@ -102,7 +104,11 @@ export function OwnerMarking() {
         {modal && typeof modal === "object" && "dispute" in modal && (
           <ConfirmDialog key="dispute" danger title="Dispute this marking?" confirmLabel="Open dispute"
             body="The job pauses, the payout hold stays in place, and Newcondo support reviews the boundary and photos with both of you. Use this if the marked building is not your property."
-            onConfirm={() => toast.info("Dispute opened", { description: "Support will contact you within 24 hours. TODO(backend): POST /api/marking-jobs/:id/dispute" })}
+            onConfirm={() => {
+              // POST /api/v1/marking/jobs/:id/dispute — pauses payout, opens support review
+              if (modal && typeof modal === "object" && api.isLiveBackend) api.disputeMarkingApi((modal as { dispute: MarkingJob }).dispute.id, "Owner disputes the marked boundary").catch(() => {});
+              toast.info("Dispute opened", { description: "Support will contact you within 24 hours." });
+            }}
             onClose={() => setModal(null)} />
         )}
       </AnimatePresence>

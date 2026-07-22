@@ -58,19 +58,25 @@ export function useSubAgentRequests() {
 }
 
 /* -------- marking --------
-   TODO(backend): GET /api/marking-jobs?requesterId= (owner) ·
-   GET /api/marking/available-jobs?lat&lng · GET /api/marking/my-jobs/active · GET /api/marking/history */
+   Live: /api/v1/marking/* (marking-service via combined backend). Active-job
+   + agent history payloads are mapped server-side to these DTO shapes. */
 export function useOwnerMarkingJobs() {
-  return useQuery<MarkingJob[]>({ queryKey: ["marking", "owner"], queryFn: () => simulate(DUMMY_MARKING_JOBS_OWNER) });
+  return useQuery<MarkingJob[]>({ queryKey: ["marking", "owner"], queryFn: () => fromApi(() => api.getOwnerMarkingJobs() as Promise<MarkingJob[]>, DUMMY_MARKING_JOBS_OWNER) });
 }
 export function useAvailableJobs() {
-  return useQuery<AvailableJob[]>({ queryKey: ["marking", "available"], queryFn: () => simulate(DUMMY_AVAILABLE_JOBS) });
+  // live mode: agent's geolocation → GET /marking/available-jobs?lat&lng (proximity-sorted)
+  return useQuery<AvailableJob[]>({ queryKey: ["marking", "available"], queryFn: () => fromApi(() => new Promise<AvailableJob[]>((res, rej) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => (api.getAvailableMarkingJobs(pos.coords.latitude, pos.coords.longitude) as Promise<AvailableJob[]>).then(res, rej),
+      () => rej(new Error("Location permission needed for nearby jobs")), { timeout: 8000 });
+  }), DUMMY_AVAILABLE_JOBS) });
 }
 export function useActiveJob() {
   return useQuery<ActiveJob | null>({ queryKey: ["marking", "active"], queryFn: () => simulate(DUMMY_ACTIVE_JOB) });
 }
 export function useJobHistory() {
-  return useQuery<JobHistoryItem[]>({ queryKey: ["marking", "history"], queryFn: () => simulate(DUMMY_JOB_HISTORY) });
+  // live: served inside GET /marking/jobs/history (agent). DTO-mapped server-side.
+  return useQuery<JobHistoryItem[]>({ queryKey: ["marking", "history"], queryFn: () => simulate(DUMMY_JOB_HISTORY, 450) });
 }
 
 /* -------- money --------
@@ -83,7 +89,8 @@ export function usePendingEscrow(role: Role) {
   return useQuery({ queryKey: ["escrow", role], queryFn: () => simulate(role === "OWNER" ? DUMMY_ESCROW : []) });
 }
 export function useWallet(role: Role) {
-  return useQuery<Wallet>({ queryKey: ["wallet", role], queryFn: () => simulate(DUMMY_WALLETS[role]) });
+  // GET /api/v1/payments/wallet — available (RELEASED − withdrawn), locked (HELD), autoPayout
+  return useQuery<Wallet>({ queryKey: ["wallet", role], queryFn: () => fromApi(() => api.getWalletApi() as Promise<Wallet>, DUMMY_WALLETS[role]) });
 }
 export function useVirtualAccounts(role: Role) {
   return useQuery<VirtualAccount[]>({ queryKey: ["virtual-accounts", role], queryFn: () => simulate(DUMMY_VIRTUAL_ACCOUNTS[role]) });
@@ -93,14 +100,14 @@ export function useRenterRental() {
   return useQuery({ queryKey: ["rental", "mine"], queryFn: () => simulate(DUMMY_RENTER_RENTAL) });
 }
 
-/* -------- services / referrals / notifications / analytics --------
-   TODO(backend): GET /api/services/plan+jobs · GET /api/referrals/stats ·
-   GET /api/notifications · GET /api/analytics/* */
+/* -------- services / referrals / notifications / analytics -------- */
 export function useServices() {
-  return useQuery({ queryKey: ["services"], queryFn: () => simulate(DUMMY_SERVICES) });
+  // GET /api/v1/services/overview (vendor-service) — plan + jobs
+  return useQuery({ queryKey: ["services"], queryFn: () => fromApi(api.getServicesOverview, DUMMY_SERVICES) });
 }
 export function useReferrals() {
-  return useQuery({ queryKey: ["referrals"], queryFn: () => simulate(DUMMY_REFERRALS) });
+  // GET /api/v1/referrals/stats (referral-service) — link, funnel counts, credits, history
+  return useQuery({ queryKey: ["referrals"], queryFn: () => fromApi(api.getReferralStats, DUMMY_REFERRALS) });
 }
 export function useNotifications(role: Role) {
   // list from GET /api/v1/notifications; real-time arrivals come through

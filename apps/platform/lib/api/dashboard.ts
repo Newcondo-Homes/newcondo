@@ -58,3 +58,31 @@ export const markAllNotificationsRead = () => apiClient.post("/notifications/mar
 
 /* ---- payments history (matches existing dashboard hook keys) ---- */
 export const getPayments = () => apiClient.get<Tx[]>("/payments/history").then(unwrap);
+
+/* ---- wallet: balances, withdraw (→ default bank via Flutterwave), auto-payout ---- */
+export const getWalletApi = () => apiClient.get<{ available: number; locked: number; autoPayout: string }>("/payments/wallet").then(unwrap);
+export const withdrawApi = (amount: number) => apiClient.post<{ reference: string }>("/payments/wallet/withdraw", { amount }).then(unwrap);
+export const setAutoPayoutApi = (mode: string) => apiClient.patch("/payments/wallet/auto-payout", { mode });
+
+/* ---- referrals ---- */
+export const getReferralStats = () => apiClient.get("/referrals/stats").then(unwrap);
+export const sendReferralInvite = (email: string) => apiClient.post("/referrals/invite", { email });
+
+/* ---- marking ---- */
+export const getOwnerMarkingJobs = () => apiClient.get("/marking/jobs/mine").then(unwrap);
+export const createMarkingJobApi = (b: { propertyId: string; method: string; contactName?: string; contactPhone?: string; accessNotes?: string }) => apiClient.post("/marking/jobs", b).then(unwrap);
+export const confirmMarkingApi = (jobId: string) => apiClient.post(`/marking/jobs/${jobId}/confirm`);
+export const disputeMarkingApi = (jobId: string, reason: string) => apiClient.post(`/marking/jobs/${jobId}/dispute`, { reason });
+export const getAvailableMarkingJobs = (lat: number, lng: number) => apiClient.get(`/marking/available-jobs?lat=${lat}&lng=${lng}`).then(unwrap);
+export const joinMarkingQueue = (jobId: string) => apiClient.post(`/marking/queue/${jobId}/join`).then(unwrap);
+/** Presigned S3 PUTs — keys land under properties/{country}/{state}/{city}/{id}/marking/{boundary|rooms}/ */
+export const presignMarkingPhotosApi = (jobId: string, photos: { kind: "boundary" | "rooms"; contentType: string; contentLength: number }[]) =>
+  apiClient.post<{ key: string; uploadUrl: string }[]>(`/marking/jobs/${jobId}/photos/presign`, { photos }).then(unwrap);
+export const completeMarkingApi = (jobId: string, b: { polygonNorm: [number, number][]; mapBounds: object; photoKeys: string[] }) =>
+  apiClient.post(`/marking/jobs/${jobId}/complete`, b).then(unwrap);
+
+/* ---- vendor services ---- */
+export const getServicesOverview = () => apiClient.get("/services/overview").then(unwrap);
+export const requestServiceApi = (b: { propertyId: string; serviceType: string; notes?: string }) => apiClient.post("/services/request", b).then(unwrap);
+export const rescheduleServiceJob = (id: string) => apiClient.post(`/services/jobs/${id}/reschedule`);
+export const reportServiceIssue = (id: string, reason: string) => apiClient.post(`/services/jobs/${id}/issue`, { reason });
