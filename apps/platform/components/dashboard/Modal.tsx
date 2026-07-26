@@ -6,7 +6,8 @@
    feature components already wrap conditionals in AnimatePresence.
    (In the monorepo you may prefer @newcondo/ui Dialog/Drawer; this keeps
    the exact Newcondo look with zero extra deps.) */
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
@@ -22,7 +23,14 @@ export function Modal({ title, sub, onClose, children, wide, footer }: {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
-  return (
+  // Portal to <body>: ancestors with backdrop-filter/transform (the sticky
+  // glass Topbar!) become the containing block for position:fixed, which
+  // anchored modals opened from the topbar (e.g. the notifications page) to
+  // the bar and cut them off. Portaling guarantees viewport positioning.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return createPortal(
     <motion.div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-5 backdrop-blur-sm max-sm:items-end max-sm:p-0"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
@@ -48,7 +56,8 @@ export function Modal({ title, sub, onClose, children, wide, footer }: {
         {children}
         {footer && <div className="mt-5 flex justify-end gap-2.5 max-sm:sticky max-sm:bottom-0 max-sm:-mx-1 max-sm:bg-surface max-sm:px-1 max-sm:pt-3 max-sm:[&>*]:flex-1">{footer}</div>}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 

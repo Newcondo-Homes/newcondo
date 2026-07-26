@@ -8,12 +8,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
-import { toast } from "@newcondo/ui/";
+import { toast } from "@newcondo/ui";
 import { useRole } from "@/components/providers/role-provider";
 import { ROLE_LABEL } from "./Sidebar";
 import { useNotifications, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
 import { useNotificationStream } from "@/hooks/dashboard/useNotificationStream";
 import { markAllNotificationsRead, isLiveBackend } from "@/lib/api/dashboard";
+import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import type { Notification, Role } from "@/lib/dashboard/data";
 
 const CRUMB: Record<string, string> = {
@@ -40,6 +41,7 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
   const router = useRouter();
   const { role, setRole, user } = useRole();
   const [open, setOpen] = useState<"notif" | "me" | null>(null);
+  const [allNotifs, setAllNotifs] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const { data: notifs = [] } = useNotifications(role);
   useNotificationStream(role); // SSE: live pushes land in the same cache + toast
@@ -68,7 +70,7 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
         {parts.length > 1 && (<><Icon name="chevron-right" size={13} /><span className="truncate">{parts[1]}</span></>)}
       </div>
       <div ref={wrapRef} className="ml-auto flex items-center gap-2.5">
-        {/* TODO: PREVIEW ONLY — in production the role comes from the session; delete this switcher */}
+        {/* PREVIEW ONLY — in production the role comes from the session; delete this switcher */}
         <div className="flex gap-[3px] rounded-full bg-surface-sunken p-[3px] max-sm:hidden">
           {(["OWNER", "AGENT", "RENTER"] as Role[]).map((r) => (
             <button key={r} onClick={() => { setRole(r); router.push("/dashboard"); }}
@@ -92,7 +94,7 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
                 </div>
                 {notifs.length === 0 && <div className="px-3 py-4 text-[13px] text-text-tertiary">You&rsquo;re all caught up.</div>}
                 <div className="flex flex-col gap-[5px]">
-                  {notifs.map((n) => (
+                  {notifs.slice(0, 5).map((n) => (
                     <button key={n.id} onClick={() => { setOpen(null); router.push(n.to); }}
                       className={cx("flex gap-2.5 rounded-xl p-3 text-left transition-colors hover:bg-surface-sunken", n.unread && "bg-green-wash")}>
                       <span className={cx("grid size-8 flex-none place-items-center rounded-[10px]", n.unread ? "bg-white text-green-dark" : "bg-surface-sunken text-ink")}>
@@ -105,9 +107,14 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
                     </button>
                   ))}
                 </div>
+                <button onClick={() => { setOpen(null); setAllNotifs(true); }}
+                  className="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border-t border-border-hair px-3 py-3 text-[13px] font-semibold text-green-dark transition-colors hover:text-ink">
+                  View all notifications<Icon name="arrow-right" size={13} strokeWidth={2.2} />
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
+          <AnimatePresence>{allNotifs && <NotificationsModal key="all" role={role} onClose={() => setAllNotifs(false)} />}</AnimatePresence>
         </div>
         <div className="relative">
           <button onClick={() => setOpen(open === "me" ? null : "me")} className="grid size-[38px] place-items-center rounded-full bg-ink text-[12.5px] font-bold text-cream">{user.initials}</button>

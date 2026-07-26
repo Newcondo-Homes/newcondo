@@ -9,16 +9,15 @@ import { useRole } from "@/components/providers/role-provider";
 import { PageHead, DBtn, StatCard, Card, CardH, Row, Thumb, SkeletonRows, Countdown } from "@/components/dashboard/primitives";
 import { BarChart } from "@/components/dashboard/charts";
 import { ngn, initials } from "@/lib/dashboard/format";
-import { useActiveJob, useAvailableJobs, useSubAgentRequests, useCharts, useCacheUpdate, useAgentListings } from "@/hooks/dashboard/useDashboardData";
+import { useActiveJob, useAvailableJobs, useCharts, useCacheUpdate, useAgentListings } from "@/hooks/dashboard/useDashboardData";
 import { useState } from "react";
-import type { SubAgentRequest } from "@/lib/dashboard/data";
+import { SubAgentRequestsCard } from "@/components/dashboard/properties/SubAgentRequests";
 
 export function AgentHome() {
   const router = useRouter();
   const { user } = useRole();
   const active = useActiveJob();
   const available = useAvailableJobs();
-  const requests = useSubAgentRequests();
   const listings = useAgentListings();
   const charts = useCharts();
   const cache = useCacheUpdate();
@@ -32,12 +31,6 @@ export function AgentHome() {
     setAvailable((a) => !a);
     toast.success(availableForMarking ? "You are now unavailable for marking jobs" : "You are available for marking jobs",
       { description: availableForMarking ? "You will stop receiving nearby job broadcasts." : "Nearby broadcasts will notify you instantly." });
-  };
-  const respond = (r: SubAgentRequest, approve: boolean) => {
-    /* TODO(backend): POST /api/agent/sub-agent-requests/:id/(approve|decline) */
-    cache.update<SubAgentRequest[]>(["agent", "sub-agent-requests"], (l) => l.filter((x) => x.id !== r.id));
-    if (approve) toast.success(`${r.name} approved as sub-agent`, { description: "Their tracked promo link is now active. Splits are enforced automatically." });
-    else toast.info("Request declined");
   };
   return (
     <>
@@ -86,27 +79,7 @@ export function AgentHome() {
           ))}
         </Card>
       </div>
-      {(requests.data ?? []).length > 0 && (
-        <Card tight>
-          <CardH pad title="Sub-agent requests" right={<StatusBadgePending n={(requests.data ?? []).length} />} />
-          {(requests.data ?? []).map((r) => (
-            <Row key={r.id}>
-              <div className="grid size-10 flex-none place-items-center rounded-full bg-ink text-[12px] font-bold text-cream">{initials(r.name)}</div>
-              <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-semibold tracking-[-0.01em]">{r.name} wants to promote {r.property}</div>
-                <div className="mt-1 text-[12.5px] text-text-tertiary">{r.reliability} ★ reliability · requested {r.requested}</div>
-              </div>
-              <div className="flex gap-2 max-sm:w-full max-sm:justify-end">
-                <DBtn variant="line" sm onClick={() => respond(r, false)}>Decline</DBtn>
-                <DBtn sm onClick={() => respond(r, true)}>Approve</DBtn>
-              </div>
-            </Row>
-          ))}
-        </Card>
-      )}
+      <SubAgentRequestsCard />
     </>
   );
-}
-function StatusBadgePending({ n }: { n: number }) {
-  return <span className="rounded-full bg-[#B8860B]/10 px-2.5 py-1 text-[11.5px] font-semibold text-[#8a6508]">{n} pending</span>;
 }

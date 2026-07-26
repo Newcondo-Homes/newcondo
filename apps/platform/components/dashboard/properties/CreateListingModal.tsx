@@ -2,11 +2,15 @@
 
 /* Create-listing wizard — details → structured address → legal → review.
    Agents provide the owner's identity + bank (creates the property's
-   virtual account) and confirm signed owner consent.
-   TODO(backend): POST /api/properties (multipart via UploadThing) — creates
-   DRAFT then routes to marking. Agent-listed: POST /api/virtual-accounts. */
+/* Create-listing wizard.
+   AGENT rule: agents may ONLY list for property owners who invited them
+   (agent-invite link → OwnerAgentLink). The owner picker is compulsory and
+   fed by GET /agent-invites/owners; with no linked owner the wizard is
+   replaced by an explainer with instructions to get invited.
+   Live: POST /api/properties (S3 images) — creates DRAFT then routes to marking. */
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { toast } from "@newcondo/ui";
@@ -15,22 +19,53 @@ import { DBtn, KV, Banner, MapPlaceholder, PhotoGrid } from "@/components/dashbo
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { ngn } from "@/lib/dashboard/format";
 import { DUMMY_GEO, AMENITIES } from "@/lib/dashboard/data";
+import * as api from "@/lib/api/dashboard";
+
+/* Owners this agent is linked to (accepted agent-invite links). */
+export function useLinkedOwners(enabled: boolean) {
+  return useQuery<{ ownerId: string; ownerName: string }[]>({
+    queryKey: ["agent", "linked-owners"],
+    enabled,
+    queryFn: async () => {
+      if (!api.isLiveBackend) return [{ ownerId: "u_own_01", ownerName: "Adaeze Okafor" }, { ownerId: "u_own_02", ownerName: "Chinedu Okafor" }];
+      try { return await api.getLinkedOwners(); } catch { return []; }
+    },
+  });
+}
 
 interface F { title: string; type: string; price: string; flats: string; desc: string; state: string; lga: string; area: string; amenities: string[]; ownerName: string; ownerBank: string; ownerAcct: string; undertaking: boolean; consent: boolean; }
 
 export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClose: () => void }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const owners = useLinkedOwners(!!agent);
   const [f, setF] = useState<F>({ title: "", type: "Flat", price: "", flats: "1", desc: "", state: "", lga: "", area: "", amenities: [], ownerName: "", ownerBank: "", ownerAcct: "", undertaking: false, consent: false });
   const [errs, setErrs] = useState<Record<string, string | null>>({});
   const set = <K extends keyof F>(k: K, v: F[K]) => { setF((x) => ({ ...x, [k]: v })); setErrs((e) => ({ ...e, [k]: null })); };
   const steps = agent ? ["Details", "Address", "Owner & legal", "Review"] : ["Details", "Address", "Legal", "Review"];
+  // Gate: an agent with NO linked owner can't list — explain how invites work.
+  if (agent && !owners.isLoading && (owners.data ?? []).length === 0) {
+    return (
+      <Modal title="You need an owner's invitation to list" sub="Listings are always tied to a registered property owner — rent settles to their account, your commission split is automatic." onClose={onClose}
+        footer={<DBtn onClick={onClose}>Got it</DBtn>}>
+        <div className="flex flex-col gap-2.5">
+          {[["1", "The property owner creates a Newcondo owner account and picks a plan."], ["2", "From their dashboard they tap “Invite agent” and send you the invite link."], ["3", "You accept the link with your agent account — the owner then appears in this form and you can list their properties."]].map(([n, t]) => (
+            <div key={n} className="flex items-start gap-3 rounded-2xl border border-border-hair px-4 py-3">
+              <span className="grid size-7 flex-none place-items-center rounded-full bg-ink text-[12px] font-bold text-cream">{n}</span>
+              <span className="text-[13.5px] leading-relaxed text-text-secondary">{t}</span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3.5"><Banner icon="info">Share this with your owner: they can invite you in under a minute from <b>My Properties → Invite agent</b>.</Banner></div>
+      </Modal>
+    );
+  }
   const validate = () => {
     const e: Record<string, string> = {};
     if (step === 0) { if (!f.title.trim()) e.title = "Give the listing a title"; if (!f.price || +f.price <= 0) e.price = "Enter the yearly rent"; }
     if (step === 1) { if (!f.state) e.state = "Pick a state"; if (!f.lga) e.lga = "Pick an LGA"; if (!f.area) e.area = "Pick an area"; }
     if (step === 2) {
-      if (agent) { if (!f.ownerName.trim()) e.ownerName = "Owner's full name is required"; if (!f.ownerAcct.trim()) e.ownerAcct = "Owner's account number — their virtual account is built from this"; if (!f.consent) e.consent = "Required"; }
+      if (agent) { if (!f.ownerName) e.ownerName = "Choose the property owner — you can only list for owners who invited you"; if (!f.consent) e.consent = "Required"; }
       if (!f.undertaking) e.undertaking = "Required";
     }
     setErrs(e);
@@ -92,12 +127,11 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
       </>)}
       {step === 2 && (<>
         {agent && (<>
-          <p className="mb-3.5 mt-0 text-[13px] leading-normal text-text-tertiary">You&rsquo;re listing on behalf of the owner. Their bank details create the property&rsquo;s virtual account — rent goes to them, your commission split is automatic.</p>
-          <Field label="Owner's full name" error={errs.ownerName}><input className={inputCls(!!errs.ownerName)} placeholder="As on their bank account" value={f.ownerName} onChange={(e) => set("ownerName", e.target.value)} /></Field>
-          <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
-            <Field label="Owner's bank"><NCSelect value={f.ownerBank} onChange={(v) => set("ownerBank", v)} options={["GTBank", "Access", "Zenith", "UBA", "First Bank", "Opay"]} /></Field>
-            <Field label="Account number" error={errs.ownerAcct}><input className={inputCls(!!errs.ownerAcct)} inputMode="numeric" maxLength={10} placeholder="0123456789" value={f.ownerAcct} onChange={(e) => set("ownerAcct", e.target.value.replace(/\D/g, ""))} /></Field>
-          </div>
+          <p className="mb-3.5 mt-0 text-[13px] leading-normal text-text-tertiary">Pick the registered owner this listing belongs to. Rent settles to <b>their</b> Newcondo account; your commission split is enforced automatically.</p>
+          <Field label="Property owner (compulsory)" error={errs.ownerName} hint="Only owners who invited you appear here. Missing one? Ask them to send you an agent-invite link.">
+            <NCSelect error={!!errs.ownerName} value={f.ownerName} onChange={(v) => set("ownerName", v)} placeholder="Choose the property owner…"
+              options={(owners.data ?? []).map((o) => o.ownerName)} />
+          </Field>
           <div className="mb-2.5"><Check on={f.consent} onToggle={() => set("consent", !f.consent)}>
             I have <b className="text-text-primary">signed permission from the owner</b> to list this property, and will upload the consent document.{errs.consent && <span className="ml-1 text-danger"> Required</span>}
           </Check></div>
@@ -114,7 +148,7 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
         <KV k="Type · flats" v={`${f.type} · ${f.flats}`} />
         <KV k="Rent" v={f.price ? `${ngn(+f.price)}/year` : "—"} mono />
         <KV k="Address" v={[f.area, f.lga, f.state].filter(Boolean).join(", ") || "—"} />
-        {agent && <KV k="Owner" v={`${f.ownerName} · ${f.ownerBank} ••${f.ownerAcct.slice(-4)}`} />}
+        {agent && <KV k="Owner" v={f.ownerName || "—"} />}
         <div className="mt-3.5">
           <Banner icon="map-pin"><b className="font-semibold">Next: GPS marking.</b> The listing stays a draft until the property is marked on the map — that&rsquo;s what makes it impossible to double-list.</Banner>
         </div>

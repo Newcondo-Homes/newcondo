@@ -6,6 +6,7 @@
    flow (RentCheckoutModal). Cards use image placeholders until real
    photography lands (S3 coverUrl). */
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
@@ -22,6 +23,7 @@ const TYPES = ["Flat", "Mini flat", "Self-contain", "Bungalow", "Duplex", "Studi
 const PRICE_BANDS: [string, number | undefined, number | undefined][] = [["Any price", undefined, undefined], ["Under ₦500k", undefined, 500000], ["₦500k – ₦1m", 500000, 1000000], ["₦1m – ₦2m", 1000000, 2000000], ["Over ₦2m", 2000000, undefined]];
 
 export default function BrowsePage() {
+  const router = useRouter();
   const { role } = useRole();
   const [q, setQ] = useState("");
   const [state, setState] = useState("");
@@ -50,19 +52,19 @@ export default function BrowsePage() {
         <div className="grid grid-cols-3 gap-4 max-[1100px]:grid-cols-2 max-sm:grid-cols-1">
           {items.map((p) => (
             <div key={p.id} className="group overflow-hidden rounded-[22px] border border-border-hair bg-surface shadow-[0_1px_2px_rgba(19,19,19,0.04)] transition-all duration-200 ease-nc hover:-translate-y-1 hover:shadow-card">
-              <div className="relative grid h-[170px] place-items-center overflow-hidden bg-surface-sunken text-text-tertiary">
+              <div className="relative grid h-[170px] cursor-pointer place-items-center overflow-hidden bg-surface-sunken text-text-tertiary" onClick={() => router.push(`/browse/${p.id}`)}>
                 {/* Real photography: coverUrl (presigned S3) — placeholder until supplied */}
                 {p.coverUrl ? <img src={p.coverUrl} alt="" className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" /> : <Icon name="building-2" size={30} />}
                 <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold text-ink shadow-sm"><Icon name="map-pin" size={11} className="text-green-dark" />GPS-marked</span>
                 {p.vacantFlats === 0 && <span className="absolute right-3 top-3"><StatusBadge s="RENTED" /></span>}
               </div>
               <div className="p-4">
-                <div className="truncate text-[14.5px] font-semibold tracking-[-0.01em]">{p.title}</div>
+                <div className="cursor-pointer truncate text-[14.5px] font-semibold tracking-[-0.01em] hover:underline" onClick={() => router.push(`/browse/${p.id}`)}>{p.title}</div>
                 <div className="mt-1 text-[12.5px] text-text-tertiary">{p.area}, {p.state}{p.listingAgent ? ` · Agent: ${p.listingAgent.name}` : " · Listed by owner"}</div>
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <div className="font-mono text-[14px] font-semibold">{ngn(p.price)}<span className="font-sans text-[12px] font-normal text-text-tertiary">/year</span></div>
                   {p.vacantFlats > 0
-                    ? <button onClick={() => setCheckout(p)} className="rounded-full bg-ink px-4 py-2 text-[12.5px] font-semibold text-cream transition-colors hover:bg-black">Rent{p.vacantFlats > 1 ? ` · ${p.vacantFlats} vacant` : ""}</button>
+                    ? <button onClick={() => router.push(`/browse/${p.id}`)} className="rounded-full bg-ink px-4 py-2 text-[12.5px] font-semibold text-cream transition-colors hover:bg-black">View & rent{p.vacantFlats > 1 ? ` · ${p.vacantFlats} vacant` : ""}</button>
                     : <span className={cx("text-[12px] font-semibold text-text-tertiary")}>Fully rented</span>}
                 </div>
               </div>

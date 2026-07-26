@@ -83,17 +83,25 @@ function BankAccountDetail({ account: a, update, onClose }: { account: BankAccou
 }
 
 function AddBankAccountModal({ update, first, onClose }: { update: (fn: (l: BankAccount[]) => BankAccount[]) => void; first: boolean; onClose: () => void }) {
-  const [f, setF] = useState({ bank: "", number: "" });
+  const [f, setF] = useState({ bank: "", number: "", otp: "" });
   const [err, setErr] = useState<string | null>(null);
-  const submit = () => {
+  const [otpStep, setOtpStep] = useState(false);
+  const toOtp = () => {
     if (!f.bank) { setErr("Pick a bank"); return; }
     if (!/^\d{10}$/.test(f.number)) { setErr("Account number must be 10 digits"); return; }
+    // Sensitive op — request the branded OTP email (POST .../request-otp)
+    if (api.isLiveBackend) api.requestBankOtp().catch(() => toast.error("Could not send the code — try again"));
+    setOtpStep(true);
+    toast.info("Code sent to your email", { description: "Enter the 6-digit code to confirm you're adding this account." });
+  };
+  const submit = () => {
+    if (f.otp.length !== 6) { setErr("Enter the 6-digit code from your email"); return; }
     const [bankName, bankCode] = NG_BANKS.find(([n]) => n === f.bank)!;
     onClose();
-    // POST /api/v1/payments/bank-accounts — Flutterwave name-enquiry runs
-    // server-side; the returned accountName is the bank's registered holder.
+    // POST /api/v1/payments/bank-accounts { …, otp } — OTP verified server-side,
+    // then Flutterwave name-enquiry returns the registered holder name.
     const doAdd = api.isLiveBackend
-      ? api.addBankAccount({ bankName, bankCode, accountNumber: f.number })
+      ? api.addBankAccount({ bankName, bankCode, accountNumber: f.number, otp: f.otp })
       : new Promise<BankAccount>((res) => setTimeout(() => res({ id: "ba" + Date.now(), bankName, bankCode, accountNumber: f.number, accountName: "ACCOUNT HOLDER", isDefault: first, addedOn: "Today" }), 1400));
     toast.promise(doAdd.then((acct) => { update((l) => [...l.map((x) => ({ ...x, isDefault: acct.isDefault ? false : x.isDefault })), acct]); return acct; }), {
       loading: "Verifying account with the bank…",
@@ -102,14 +110,24 @@ function AddBankAccountModal({ update, first, onClose }: { update: (fn: (l: Bank
     });
   };
   return (
-    <Modal title="Add a bank account" sub="We verify the account name with the bank before saving — withdrawals only ever go to an account in your name." onClose={onClose}
-      footer={<><DBtn variant="line" onClick={onClose}>Cancel</DBtn><DBtn onClick={submit}><Icon name="check" size={14} strokeWidth={2.2} />Verify & add</DBtn></>}>
+    <Modal title="Add a bank account" sub={otpStep ? "Confirm with the code we emailed you." : "We verify the account name with the bank before saving — withdrawals only ever go to an account in your name."} onClose={onClose}
+      footer={otpStep
+        ? <><DBtn variant="line" onClick={() => setOtpStep(false)}>Back</DBtn><DBtn onClick={submit}><Icon name="check" size={14} strokeWidth={2.2} />Verify & add</DBtn></>
+        : <><DBtn variant="line" onClick={onClose}>Cancel</DBtn><DBtn onClick={toOtp}>Continue<Icon name="arrow-right" size={14} strokeWidth={2.2} /></DBtn></>}>
+      {otpStep ? (<>
+        <Field label="Verification code" error={err}>
+          <input className={cx(inputCls(!!err), "text-center font-mono text-[18px] tracking-[0.4em]")} inputMode="numeric" maxLength={6} autoFocus placeholder="••••••"
+            value={f.otp} onChange={(e) => { setF((x) => ({ ...x, otp: e.target.value.replace(/\D/g, "") })); setErr(null); }} />
+        </Field>
+        <Banner icon="info">Adding {f.bank} ••{f.number.slice(-4)}. The code expires in 10 minutes.</Banner>
+      </>) : (<>
       <Field label="Bank"><NCSelect value={f.bank} onChange={(v) => { setF((x) => ({ ...x, bank: v })); setErr(null); }} options={NG_BANKS.map(([n]) => n)} /></Field>
       <Field label="Account number" error={err}>
         <input className={inputCls(!!err)} inputMode="numeric" maxLength={10} placeholder="0123456789" value={f.number}
           onChange={(e) => { setF((x) => ({ ...x, number: e.target.value.replace(/\D/g, "") })); setErr(null); }} />
       </Field>
       {first && <Banner icon="info">Your first account automatically becomes the payout default.</Banner>}
+      </>)}
     </Modal>
   );
 }
@@ -127,8 +145,8 @@ export function ChangeBankFlow({ accounts, update, onClose }: {
   const choices = accounts.filter((a) => !a.isDefault);
   const confirm = () => {
     if (otp.length !== 6) { toast.error("Enter the 6-digit code we sent you"); return; }
-    // PATCH /api/v1/payments/bank-accounts/:id/default (OTP verified server-side)
-    if (api.isLiveBackend && picked) api.setDefaultBankAccount(picked.id).catch(() => toast.error("Could not switch — try again"));
+    // PATCH /api/v1/payments/bank-accounts/:id/default { otp } — verified server-side
+    if (api.isLiveBackend && picked) api.setDefaultBankAccount(picked.id, otp).catch(() => toast.error("Could not switch — try again"));
     update((l) => l.map((x) => ({ ...x, isDefault: x.id === picked!.id })));
     setStep(2);
   };
@@ -137,7 +155,7 @@ export function ChangeBankFlow({ accounts, update, onClose }: {
     <Modal title="Change payout account" sub={steps[step]} onClose={onClose}
       footer={step === 0 ? <>
         <DBtn variant="line" onClick={onClose}>Cancel</DBtn>
-        <DBtn disabled={!picked} onClick={() => { setStep(1); toast.info("Code sent", { description: "A 6-digit code was sent to your phone and email." }); }}>Continue<Icon name="arrow-right" size={14} strokeWidth={2.2} /></DBtn>
+        <DBtn disabled={!picked} onClick={() => { setStep(1); if (api.isLiveBackend) api.requestBankOtp().catch(() => {}); toast.info("Code sent", { description: "A 6-digit code was sent to your email." }); }}>Continue<Icon name="arrow-right" size={14} strokeWidth={2.2} /></DBtn>
       </> : step === 1 ? <>
         <DBtn variant="line" onClick={() => setStep(0)}>Back</DBtn>
         <DBtn onClick={confirm}><Icon name="shield-check" size={14} />Confirm switch</DBtn>

@@ -66,7 +66,7 @@ export default function WalletPage() {
       <div className="grid grid-cols-[1.6fr_1fr] gap-4 max-[860px]:grid-cols-1">
         <div className="flex flex-col gap-4">
           <Card tight>
-            <CardH pad title="Virtual accounts" right={<span className="text-[12px] text-text-tertiary">auto-created by NewCondo · funds held here during windows</span>} />
+            <CardH pad title="Virtual accounts" right={<span className="text-[12px] text-text-tertiary">auto-created by Newcondo · funds held here during windows</span>} />
             {(vAccounts.data ?? []).map((a) => (
               <Row key={a.id} onClick={() => toast.info("Account statement", { description: "Opens virtual-accounts/[id]/statements" })}>
                 <Thumb icon="shield-check" />

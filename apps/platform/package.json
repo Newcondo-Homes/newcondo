@@ -14,6 +14,7 @@
     "@newcondo/db": "workspace:*",
     "@newcondo/i18n": "workspace:*",
     "@newcondo/ui": "workspace:*",
+    "@newcondo/backend-shared": "workspace:*",
     "@prisma/client": "^7.8.0",
     "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slider": "^1.3.5",

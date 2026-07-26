@@ -16,6 +16,7 @@ import { LineChart, BarChart } from "@/components/dashboard/charts";
 import { flatSummary } from "../page";
 import { EditPropertyModal, type EditPayload } from "@/components/dashboard/properties/EditPropertyModal";
 import { TenantsCard } from "@/components/dashboard/properties/Tenants";
+import { SubAgentRequestsCard } from "@/components/dashboard/properties/SubAgentRequests";
 import { useMyProperties, useAgentListings, useFlatUnits, useCharts, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
 import { ngn } from "@/lib/dashboard/format";
 import type { AgentListing, Property } from "@/lib/dashboard/data";
@@ -110,6 +111,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             ))}
           </Card>
           <TenantsCard propertyId={id} propertyTitle={p.title} flats={flats.data ?? []} />
+          <SubAgentRequestsCard propertyId={id} title="Sub-agent requests on this property" />
           <Card>
             <CardH title="Photos" right={<span className="text-[12px] text-text-tertiary">{p.marked ? "6 from marking · 2 yours" : "none yet"}</span>} />
             <PhotoGrid n={6} h={64} />

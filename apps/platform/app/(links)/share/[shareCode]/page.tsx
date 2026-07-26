@@ -86,7 +86,7 @@ export default async function SharedPropertyPage({ params }: SharePageProps) {
   return (
     <div className="share-paper min-h-screen bg-nc-background">
       <ShareHeader />
-      <ShareExperience property={property} />
+      <ShareExperience property={property} shareCode={shareCode} />
       <Footer />
       <ChatButton />
     </div>

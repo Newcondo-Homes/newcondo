@@ -6,10 +6,11 @@
    vFade / vLead / vCard over 0.7–1.15s with the NewCondo EASE).
    ============================================================ */
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { RentGate } from "@/components/share/rent-gate";
 import { cx } from "@/lib/cx";
 import { Icon } from "@/components/ui/icon";
-import { Button } from "@/components/ui/nc-button";
+import { Button } from "@/components/ui/button";
 import { ImageSlot } from "@/components/ui/image-slot";
 import { Reveal, Group, Item, vFade, vLead, vCard, EASE } from "@/components/motion";
 import { type SharedProperty, formatPrice } from "./share-types";
@@ -17,9 +18,10 @@ import { type SharedProperty, formatPrice } from "./share-types";
 /* photo grid slots fall back to placeholders until real images exist */
 const SLOT_LABELS = ["Living room", "Kitchen", "Bedroom", "Bathroom"];
 
-export function ShareExperience({ property }: { property: SharedProperty }) {
+export function ShareExperience({ property, shareCode = "" }: { property: SharedProperty; shareCode?: string }) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [renting, setRenting] = useState(false);
 
   const imgs = property.images ?? [];
   const primary = imgs.find((i) => i.isPrimary)?.url ?? imgs[0]?.url;
@@ -43,6 +45,7 @@ export function ShareExperience({ property }: { property: SharedProperty }) {
   };
 
   return (
+    <>
     <main className="max-w-[1240px] mx-auto px-[var(--gutter)] pt-[clamp(20px,3vw,34px)]">
       {/* breadcrumbs */}
       <Reveal as="nav" variants={vFade} className="inline-flex items-center gap-2 text-[13.5px] text-text-tertiary mb-[18px]">
@@ -226,9 +229,10 @@ export function ShareExperience({ property }: { property: SharedProperty }) {
 
             <div className="mt-[22px]">
               {property.isAvailable ? (
-                <Button as="a" href="/register" variant="dark" size="block" icon="arrow-right">
-                  Rent this property
-                </Button>
+                <button type="button" onClick={() => setRenting(true)}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-ink py-4 text-[16px] font-semibold text-cream transition-colors hover:bg-black">
+                  Rent this property <Icon name="arrow-right" size={17} strokeWidth={2.2} />
+                </button>
               ) : (
                 <button
                   disabled
@@ -291,5 +295,11 @@ export function ShareExperience({ property }: { property: SharedProperty }) {
         </aside>
       </div>
     </main>
+      <AnimatePresence>
+        {renting && <RentGate onClose={() => setRenting(false)} signedIn={false}
+          property={{ id: (property as SharedProperty & { id?: string }).id ?? shareCode, title: property.title, price: property.price, shareCode,
+            units: (property as SharedProperty & { units?: { label: string; status: string; price?: number }[] }).units ?? [{ label: "Main unit", status: property.isAvailable ? "VACANT" : "OCCUPIED" }] }} />}
+      </AnimatePresence>
+    </>
   );
 }

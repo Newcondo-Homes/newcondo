@@ -12,7 +12,9 @@ import { Modal } from "@/components/dashboard/Modal";
 import { DBtn, KV, Banner, CopyField, PhotoGrid } from "@/components/dashboard/primitives";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { ngn } from "@/lib/dashboard/format";
+import { useRouter } from "next/navigation";
 import * as api from "@/lib/api/dashboard";
+import { useFlutterwaveInline } from "@/hooks/useFlutterwaveInline";
 import { DUMMY_PROPERTIES, type MarkingMethod } from "@/lib/dashboard/data";
 
 const METHODS: { id: MarkingMethod; icon: string; t: string; p: string; fee: string }[] = [
@@ -23,6 +25,8 @@ const METHODS: { id: MarkingMethod; icon: string; t: string; p: string; fee: str
 ];
 
 export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const flw = useFlutterwaveInline();
   const [step, setStep] = useState(0);
   const [f, setF] = useState({ property: "", method: "" as MarkingMethod | "", contactName: "", contactPhone: "", access: "" });
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
@@ -37,15 +41,28 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
     setStep(step + 1);
   };
   const finish = () => {
-    onClose();
-    if (f.method === "SELF") { toast.info("Opening the marking map…", { description: "Routes to properties/[id]/mark — the full-screen map experience." }); return; }
-    if (f.method === "KNOWN_PERSON") { toast.success("Marking link created", { description: "Share it with your person — you'll be notified the moment they mark." }); return; }
-    // Live: Flutterwave inline charge first, then POST /api/v1/marking/jobs
+    // SELF-marking routes straight into the full-screen mark-property map
+    // experience (app/mark-property) — pin → satellite snapshot → AI
+    // segmentation → confirm boundary.
+    if (f.method === "SELF") { onClose(); router.push("/mark-property/self"); return; }
+    if (f.method === "KNOWN_PERSON") { onClose(); toast.success("Marking link created", { description: "Share it with your person — you'll be notified the moment they mark." }); return; }
+    // Paid methods: real Flutterwave inline checkout (same adapter as
+    // subscriptions). Backend creates a PENDING MARKING_FEE payment; the
+    // NC-MKFEE-* webhook creates + broadcasts the job after the charge verifies.
     const propertyId = DUMMY_PROPERTIES.find((p) => p.title === f.property)?.id;
-    const doCreate = api.isLiveBackend && propertyId && f.method
-      ? api.createMarkingJobApi({ propertyId, method: f.method, contactName: f.contactName, contactPhone: f.contactPhone, accessNotes: f.access })
-      : new Promise((res) => setTimeout(res, 2000));
-    toast.promise(doCreate, {
+    if (api.isLiveBackend && propertyId && f.method) {
+      api.initiateMarkingPaymentApi({ propertyId, method: f.method, contactName: f.contactName, contactPhone: f.contactPhone, accessNotes: f.access })
+        .then(({ checkout }) => flw.open({
+          payload: checkout as never,
+          onSuccess: () => { onClose(); toast.success("Marking job is live", { description: f.method === "BROADCAST" ? "Broadcasting to verified agents near the property — most jobs are picked up within hours." : "A Newcondo agent will be assigned within 24 hours." }); },
+          onClose: () => toast.info("Checkout closed", { description: "No payment was made — your request wasn't sent." }),
+          onError: (e) => toast.error("Payment didn't complete", { description: e.message }),
+        }))
+        .catch((e) => toast.error("Could not start checkout", { description: (e as Error).message }));
+      return;
+    }
+    onClose();
+    toast.promise(new Promise((res) => setTimeout(res, 2000)), {
       loading: `Processing ${ngn(fee)} payment — Flutterwave secure checkout…`,
       success: f.method === "BROADCAST" ? "Marking job is live — broadcasting to verified agents near the property." : "Marking job is live — a Newcondo agent will be assigned within 24 hours.",
       error: "Payment failed — you were not charged",

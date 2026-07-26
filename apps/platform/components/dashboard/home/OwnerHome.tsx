@@ -12,6 +12,7 @@ import { LineChart } from "@/components/dashboard/charts";
 import { ngn } from "@/lib/dashboard/format";
 import { useMyProperties, usePendingEscrow, useOwnerMarkingJobs, useCharts } from "@/hooks/dashboard/useDashboardData";
 import { CreateListingModal } from "@/components/dashboard/properties/CreateListingModal";
+import { SubAgentRequestsCard } from "@/components/dashboard/properties/SubAgentRequests";
 import { QuickAction } from "./QuickAction";
 
 export function OwnerHome() {
@@ -64,7 +65,7 @@ export function OwnerHome() {
           <div className="flex flex-col gap-2.5">
             {attention.map((a, i) => (
               <Banner key={i} tone="warn" icon={a.icon}
-                action={<div className="flex items-center gap-2.5 max-sm:justify-between">{a.chip}<DBtn sm onClick={() => router.push(a.to)}>{a.cta}</DBtn></div>}>
+                action={<div className="flex flex-wrap items-center justify-end gap-2.5 max-sm:w-full max-sm:justify-between">{a.chip}<DBtn sm className="whitespace-nowrap" onClick={() => router.push(a.to)}>{a.cta}</DBtn></div>}>
                 <b className="font-semibold">{a.title}</b>
                 <div className="mt-0.5 text-[12.5px]">{a.sub}</div>
               </Banner>
@@ -72,6 +73,7 @@ export function OwnerHome() {
           </div>
         </Card>
       )}
+      <div className="mb-4"><SubAgentRequestsCard /></div>
       <div className="grid grid-cols-[1.6fr_1fr] gap-4 max-[860px]:grid-cols-1">
         <Card>
           <CardH title="Rent collected" right={<span className="text-[12px] text-text-tertiary">₦ thousands · last 6 months</span>} />

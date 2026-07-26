@@ -9,6 +9,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Navbar } from "@/components/sections/navbar";
+import { Footer } from "@/components/sections/footer";
 import { ChatButton } from "@/components/chat-button";
 import { Reveal, Group, Item, vFade, vRow } from "@/components/motion";
 
@@ -71,8 +72,11 @@ export function Bullets({ items }: { items: ReactNode[] }) {
 
 export function DocTable({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   return (
-    <Reveal variants={vFade} className="my-2 overflow-hidden rounded-[16px] border border-border-hair bg-surface">
-      <table className="w-full border-collapse text-[14.5px]">
+    <Reveal variants={vFade} className="my-2 rounded-[16px] border border-border-hair bg-surface">
+      {/* Mobile: the table keeps its natural width and slides horizontally —
+          content is never cut off on small screens. */}
+      <div className="overflow-x-auto rounded-[16px] [-webkit-overflow-scrolling:touch]">
+      <table className="w-full min-w-[560px] border-collapse text-[14.5px]">
         <thead>
           <tr>
             {head.map((h, i) => (
@@ -99,6 +103,7 @@ export function DocTable({ head, rows }: { head: string[]; rows: ReactNode[][] }
           ))}
         </tbody>
       </table>
+      </div>
     </Reveal>
   );
 }
@@ -261,6 +266,8 @@ export function LegalDoc({
 
         <main className="max-w-[760px]">{children}</main>
       </div>
+
+      <Footer />
       <ChatButton />
     </div>
   );

@@ -205,13 +205,27 @@ export function MapPlaceholder({ h = 200, marked, tag = "Google Maps — default
 }
 
 /* ---------- copy-to-clipboard field ---------- */
-export function CopyField({ value, toastMsg = "Link copied to clipboard" }: { value: string; toastMsg?: string }) {
+export function CopyField({ value, toastMsg = "Link copied to clipboard", silent, onCopied }: { value: string; toastMsg?: string; silent?: boolean; onCopied?: () => void }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
-    try { await navigator.clipboard.writeText("https://" + value); } catch {}
+    // Works on desktop AND mobile: clipboard API first, execCommand fallback
+    // for older mobile webviews.
+    const text = "https://" + value;
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch {}
+      document.body.removeChild(ta);
+    }
     setCopied(true);
-    toast.success(toastMsg, { description: value });
-    setTimeout(() => setCopied(false), 1800);
+    if (!silent) toast.success(toastMsg, { description: value });
+    onCopied?.();
+    // Mobile: the toast covers the button, so keep the green "Copied" state
+    // visible for a few seconds AFTER the toast clears; desktop reverts sooner.
+    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 640px)").matches;
+    setTimeout(() => setCopied(false), isMobile ? 9000 : 1800);
   };
   return (
     <div className="flex items-center gap-2.5 rounded-full border border-nc-border bg-surface-sunken py-[5px] pl-4 pr-[5px]">
