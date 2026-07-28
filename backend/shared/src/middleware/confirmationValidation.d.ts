@@ -11,30 +11,30 @@ export declare const confirmPaymentSchema: z.ZodObject<{
         propertyConditionMatches: z.ZodOptional<z.ZodBoolean>;
         issuesFound: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
     }, "strip", z.ZodTypeAny, {
-        paymentId: string;
         confirmed: boolean;
+        paymentId: string;
         verificationNotes?: string | undefined;
         propertyConditionMatches?: boolean | undefined;
         issuesFound?: string[] | undefined;
     }, {
-        paymentId: string;
         confirmed: boolean;
+        paymentId: string;
         verificationNotes?: string | undefined;
         propertyConditionMatches?: boolean | undefined;
         issuesFound?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     body: {
-        paymentId: string;
         confirmed: boolean;
+        paymentId: string;
         verificationNotes?: string | undefined;
         propertyConditionMatches?: boolean | undefined;
         issuesFound?: string[] | undefined;
     };
 }, {
     body: {
-        paymentId: string;
         confirmed: boolean;
+        paymentId: string;
         verificationNotes?: string | undefined;
         propertyConditionMatches?: boolean | undefined;
         issuesFound?: string[] | undefined;
@@ -49,26 +49,26 @@ export declare const refundRequestSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         description: string;
         paymentId: string;
-        reason: "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "PROPERTY_UNAVAILABLE" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
+        reason: "PROPERTY_UNAVAILABLE" | "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
         evidence?: string[] | undefined;
     }, {
         description: string;
         paymentId: string;
-        reason: "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "PROPERTY_UNAVAILABLE" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
+        reason: "PROPERTY_UNAVAILABLE" | "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
         evidence?: string[] | undefined;
     }>;
 }, "strip", z.ZodTypeAny, {
     body: {
         description: string;
         paymentId: string;
-        reason: "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "PROPERTY_UNAVAILABLE" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
+        reason: "PROPERTY_UNAVAILABLE" | "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
         evidence?: string[] | undefined;
     };
 }, {
     body: {
         description: string;
         paymentId: string;
-        reason: "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "PROPERTY_UNAVAILABLE" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
+        reason: "PROPERTY_UNAVAILABLE" | "OTHER" | "PROPERTY_NOT_AS_DESCRIBED" | "FRAUD_SUSPECTED" | "OWNER_CANCELLED" | "DUPLICATE_BOOKING";
         evidence?: string[] | undefined;
     };
 }>;

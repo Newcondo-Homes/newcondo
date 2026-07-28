@@ -1,9 +1,21 @@
 {
+  // backend/auth-service/tsconfig.json — REPLACES the current file.
+  // Adds a project reference to backend/shared so TypeScript consumes shared's
+  // BUILT dist/*.d.ts instead of walking into shared/src and emitting stray
+  // .js/.d.ts files there.
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "CommonJS",
     "moduleResolution": "node",
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+
+    // Belt-and-braces: never redirect an import of a referenced project to its
+    // source files — always use the emitted declarations.
+    "disableSourceOfProjectReferenceRedirect": true,
+
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -24,6 +36,7 @@
       "@newcondo/i18n/client": ["../shared/node_modules/@newcondo/i18n/dist/client.d.ts"]
     }
   },
+  "references": [{ "path": "../shared" }],
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]
 }

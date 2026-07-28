@@ -12,6 +12,7 @@ export {
   NotFoundError,
   ForbiddenError,
   logger,
+  requireRole,
   validateRequest,
   authenticateToken,
   auth

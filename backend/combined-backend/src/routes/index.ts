@@ -1,33 +1,27 @@
-// src/routes/index.ts
-import { Router } from 'express';
-import { logger } from '../utils/logger';
-import type { Router as ExpressRouter } from 'express'
+// backend/combined-backend/src/routes/index.ts
+// UPDATED main router — mounts the new property/notification routers and
+// keeps auth + payments exactly as they were. Drop-in replacement.
+import { Router } from "express";
+import { logger } from "../utils/logger";
+import type { Router as ExpressRouter } from "express";
 
-// Import service routers
-import { authRouter } from './auth';
-// import { propertyRouter } from './properties';
-import { paymentRouter } from './payments';
-// import { bookingRouter } from './bookings';
-// import { markingRouter } from './marking';
-// import { adminRouter } from './admin';
-// import { referralRouter } from './referrals';
-// import { notificationRouter } from './notifications';
-// import { analyticsRouter } from './analytics';
+import { authRouter } from "./auth";
+import { paymentRouter } from "./payments";
+import { paymentsDashboardRouter } from "./payments.dashboard"; // bank accounts, receipts, rent checkout
+import { propertyRouter } from "./properties";                  // browse, tenants, invite links
+import { notificationRouter } from "./notifications";           // list, mark-read, SSE stream
+import { collabRouter } from "./collab";                        // share links, promotions, agent invites
+import { markingRouter } from "./marking";                      // jobs, queue, photos, confirm
+import { referralRouter } from "./referrals";                   // stats, invite
+import { servicesRouter } from "./services";                    // vendor services
 
 const router: ExpressRouter = Router();
 
-// Test route to verify router is working
-router.get('/test', (req, res) => {
-  logger.info('Test route hit successfully');
-  res.json({
-    success: true,
-    message: 'Main router is working correctly',
-    timestamp: new Date().toISOString(),
-    route: '/api/v1/test'
-  });
+router.get("/test", (req, res) => {
+  logger.info("Test route hit successfully");
+  res.json({ success: true, message: "Main router is working correctly", timestamp: new Date().toISOString(), route: "/api/v1/test" });
 });
 
-// Service route mounting with error handling
 const mountRoute = (path: string, routerInstance: Router, serviceName: string) => {
   try {
     router.use(path, routerInstance);
@@ -37,33 +31,25 @@ const mountRoute = (path: string, routerInstance: Router, serviceName: string) =
   }
 };
 
-// Mount all service routes
-mountRoute('/auth', authRouter, 'Auth Service');
-mountRoute('/payments', paymentRouter, 'Payment Service');
-// mountRoute('/properties', propertyRouter, 'Property Service');
+mountRoute("/auth", authRouter, "Auth Service");
+mountRoute("/payments", paymentRouter, "Payment Service");
+mountRoute("/payments", paymentsDashboardRouter, "Payment Service (dashboard)");
+mountRoute("/properties", propertyRouter, "Property Service");
+mountRoute("/notifications", notificationRouter, "Notification Service");
+mountRoute("/", collabRouter, "Collaboration (share/promote/invite)");
+mountRoute("/marking", markingRouter, "Marking Service");
+mountRoute("/referrals", referralRouter, "Referral Service");
+mountRoute("/services", servicesRouter, "Vendor Service");
+// Still to wire as their barrels fill out:
 // mountRoute('/bookings', bookingRouter, 'Booking Service');
-// mountRoute('/marking', markingRouter, 'Marking Service');
 // mountRoute('/admin', adminRouter, 'Admin Service');
-// mountRoute('/referrals', referralRouter, 'Referral Service');
-// mountRoute('/notifications', notificationRouter, 'Notification Service');
 // mountRoute('/analytics', analyticsRouter, 'Analytics Service');
 
-// Service status endpoint
-router.get('/status', (req, res) => {
+router.get("/status", (req, res) => {
   res.json({
     success: true,
-    services: {
-      auth: 'active',
-      properties: 'active',
-      payments: 'active',
-      bookings: 'active',
-      marking: 'active',
-      admin: 'active',
-      referrals: 'active',
-      notifications: 'active',
-      analytics: 'active'
-    },
-    timestamp: new Date().toISOString()
+    services: { auth: "active", properties: "active", payments: "active", notifications: "active", bookings: "active", marking: "active", admin: "pending", referrals: "pending", analytics: "pending" },
+    timestamp: new Date().toISOString(),
   });
 });
 

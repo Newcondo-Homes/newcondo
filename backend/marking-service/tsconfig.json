@@ -1,56 +1,49 @@
 {
+  // backend/marking-service/tsconfig.json — REPLACES the current file.
+  //
+  // FIXES TS6059 ("file is not under rootDir"):
+  // the old config had "../shared/src/**/*" in `include`, which drags shared's
+  // SOURCES into this program. They sit outside rootDir ("./src"), so tsc has
+  // nowhere to emit them — the same mechanism that was littering shared/src
+  // with .js/.d.ts files. A project REFERENCE is the correct way to consume
+  // another package: tsc reads shared's built dist/*.d.ts instead.
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "commonjs",
-    "lib": ["ES2020"],
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "disableSourceOfProjectReferenceRedirect": true,
+
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "removeComments": false,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "moduleResolution": "node",
-    "baseUrl": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node", "express"],
+    "baseUrl": "./",
     "paths": {
       "@/*": ["./src/*"],
-      "@/types/*": ["./src/types/*"],
-      "@/controllers/*": ["./src/controllers/*"],
-      "@/services/*": ["./src/services/*"],
-      "@/middleware/*": ["./src/middleware/*"],
-      "@/routes/*": ["./src/routes/*"],
-      "@shared/*": ["../shared/src/*"]
-    },
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "typeRoots": ["./node_modules/@types", "../shared/node_modules/@types"],
-    "types": ["node", "jest"]
+      "@prisma/client": ["../../node_modules/.prisma/client/index.d.ts"],
+      "@newcondo/db": ["../../packages/db/dist/index.d.ts"]
+    }
   },
-  "include": [
-    "src/**/*",
-    "../shared/src/**/*"
+  // Force-load shared's ambient Express augmentation (req.user) — glob
+  // includes can't reach across a package boundary.
+  "files": ["../shared/src/types/express.d.ts"],
+  "references": [
+    { "path": "../shared" },
+    { "path": "../property-service" }
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"],
-    "files": true,
-    "experimentalSpecifierResolution": "node"
-  }
+  // ONLY this package's own sources. Never "../shared/src/**/*".
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts"]
 }

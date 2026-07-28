@@ -1,0 +1,23 @@
+// backend/shared/tsconfig.esm.json
+// Second build target: emits a real ESM copy of the constants so the
+// Next.js app can import them without Turbopack falling back to CJS interop.
+// Backend services keep using the existing CommonJS dist — unchanged.
+//
+// Add to backend/shared/package.json scripts:
+//   "build": "tsc && npm run build:esm",
+//   "build:esm": "tsc -p tsconfig.esm.json && node scripts/rename-esm.mjs"
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "es2022",
+    "outDir": "dist-esm",
+    "declaration": true,
+    "declarationDir": "dist-esm",
+    "removeComments": false
+  },
+  // Only the constants need an ESM twin — they are pure data with no
+  // Node-only imports (no prisma, ioredis, aws-sdk, pdfkit).
+  "include": ["src/constants/**/*.ts"]
+}

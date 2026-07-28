@@ -1,9 +1,28 @@
 {
+  // backend/shared/tsconfig.json — REPLACES the current file.
+  //
+  // WHY THE STRAY FILES APPEAR IN src/:
+  // auth-service and combined-backend import @newcondo/backend-shared. Via the
+  // pnpm workspace symlink, TypeScript follows the package into shared/src/*.ts
+  // and pulls those SOURCE files into the CONSUMER's program. Because they sit
+  // outside the consumer's rootDir ("./src"), tsc can't place them under the
+  // consumer's outDir, so it emits .js/.js.map/.d.ts/.d.ts.map NEXT TO THE
+  // SOURCES — i.e. inside backend/shared/src/.
+  //
+  // THE FIX: make shared a real composite project. Consumers then reference it
+  // and consume its BUILT .d.ts files instead of re-compiling its sources.
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],
     "module": "CommonJS",
     "moduleResolution": "node",
+
+    // composite is what makes this a referenceable project — it also makes
+    // tsc refuse to emit into src by design, and enables incremental builds.
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -25,5 +44,12 @@
     }
   },
   "include": ["src/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "files": ["src/types/express.d.ts"],
+  // NOTE: do NOT exclude "src/**/*.d.ts" here — src/types/express.d.ts is a
+  // hand-written ambient declaration that adds `req.user` to Express.Request.
+  // Excluding it drops the augmentation and produces ~18 "Property 'user' does
+  // not exist on type 'Request'" errors across middleware/auth.ts, i18n and
+  // locking.ts. Stray emitted .js files are harmless (allowJs is off, so tsc
+  // ignores them); the .gitignore rules + clean script keep them out.
+  "exclude": ["dist", "dist-esm", "node_modules"]
 }

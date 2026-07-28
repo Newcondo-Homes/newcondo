@@ -1,233 +1,55 @@
-// backend/combined-app/src/routes/marking.ts
-import { Router } from 'express';
-import type { Router as ExpressRouter } from 'express'
-
-// import { markingJobController } from '../../marking-service/src/controllers/markingJobController';
-// import { queueController } from '../../marking-service/src/controllers/queueController';
-// import { assignmentController } from '../../marking-service/src/controllers/assignmentController';
-// import { completionController } from '../../marking-service/src/controllers/completionController';
-
-// Import middleware from marking service
-// import { markingValidation } from '../../marking-service/src/middleware/markingValidation';
-// import { queueValidation } from '../../marking-service/src/middleware/queueValidation';
-// import { agentAuth } from '../../marking-service/src/middleware/agentAuth';
-
-// Import shared middleware
-// import { authenticateToken } from '../../shared/src/middleware/auth';
-// import { validateRequest } from '../../shared/src/middleware/validation';
+// backend/combined-backend/src/routes/marking.ts — mounted at /api/v1/marking
+import { Router, type Router as ExpressRouter } from "express";
+import { authMiddleware, requireRole } from "@newcondo/backend-shared";
+import * as m from "@newcondo/marking-service";
+import { initiateMarkingPayment } from "@newcondo/marking-service";
 
 const router: ExpressRouter = Router();
+const lister = [authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"])] as const;
+const agent = [authMiddleware, requireRole(["AGENT", "ADMIN"])] as const;
 
-// Marking job CRUD routes
-// router.get('/jobs',
-//   authenticateToken,
-//   markingJobController.getUserMarkingJobs
-// );
+// owner/agent: create job (paid methods: call AFTER Flutterwave charge verifies)
+router.post("/jobs", ...lister, async (req, res, next) => {
+  try { res.status(201).json({ success: true, data: await m.createMarkingJob({ ...req.body, requesterId: req.user!.id }) }); } catch (e) { next(e); }
+});
+router.get("/jobs/mine", ...lister, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.ownerJobs(req.user!.id) }); } catch (e) { next(e); }
+});
+router.post("/jobs/:id/confirm", ...lister, async (req, res, next) => {
+  try { await m.confirmMarking(req.params.id, req.user!.id); res.json({ success: true }); } catch (e) { next(e); }
+});
+router.post("/jobs/:id/dispute", ...lister, async (req, res, next) => {
+  try { await m.disputeMarking(req.params.id, req.user!.id, String(req.body?.reason ?? "")); res.json({ success: true }); } catch (e) { next(e); }
+});
 
-// router.get('/jobs/:jobId',
-//   authenticateToken,
-//   markingJobController.getMarkingJobById
-// );
+// agent: queue + marking
+router.get("/available-jobs", ...agent, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.availableJobs(Number(req.query.lat), Number(req.query.lng), req.query.radiusKm ? Number(req.query.radiusKm) : undefined) }); } catch (e) { next(e); }
+});
+router.post("/queue/:jobId/join", ...agent, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.joinQueue(req.params.jobId, req.user!.id) }); } catch (e) { next(e); }
+});
+router.post("/jobs/:id/photos/presign", ...agent, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.presignMarkingPhotos(req.params.id, req.user!.id, req.body?.photos ?? []) }); } catch (e) { next(e); }
+});
+router.post("/jobs/:id/complete", ...agent, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.completeMarking({ jobId: req.params.id, agentId: req.user!.id, polygonNorm: req.body.polygonNorm, mapBounds: req.body.mapBounds, photoKeys: req.body.photoKeys ?? [] }) }); } catch (e) { next(e); }
+});
+// Paid methods (BROADCAST/NEWCONDO): pay first via Flutterwave, then the
+// NC-MKFEE-* webhook creates + broadcasts the job (confirmMarkingFeePaid).
+router.post("/jobs/initiate-payment", authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"]), async (req, res, next) => {
+  try {
+    const { propertyId, method, contactName, contactPhone, accessNotes } = req.body ?? {};
+    res.json({ success: true, data: await initiateMarkingPayment({ propertyId, method, contactName, contactPhone, accessNotes, requesterId: req.user!.id, requesterEmail: req.user!.email }) });
+  } catch (e) { next(e); }
+});
+// the building green → polygon extracted server-side → returns { polygonNorm,
+// maskKey }. The client then calls /complete with that polygonNorm + mapBounds.
+router.post("/jobs/:id/segment", ...agent, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.segmentBuilding({ screenshotKey: String(req.body.screenshotKey), geo: req.body.geo }) }); } catch (e) { next(e); }
+});
+router.get("/jobs/history", ...agent, async (req, res, next) => {
+  try { res.json({ success: true, data: await m.agentHistory(req.user!.id) }); } catch (e) { next(e); }
+});
 
-// router.post('/jobs',
-//   authenticateToken,
-//   markingValidation.validateCreateMarkingJob,
-//   validateRequest,
-//   markingJobController.createMarkingJob
-// );
-
-// router.put('/jobs/:jobId',
-//   authenticateToken,
-//   markingValidation.validateUpdateMarkingJob,
-//   validateRequest,
-//   markingJobController.updateMarkingJob
-// );
-
-// router.delete('/jobs/:jobId',
-//   authenticateToken,
-//   markingJobController.cancelMarkingJob
-// );
-
-// // Marking job status management
-// router.post('/jobs/:jobId/confirm',
-//   authenticateToken,
-//   markingJobController.confirmMarkingJob
-// );
-
-// router.post('/jobs/:jobId/start',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingJobController.startMarkingJob
-// );
-
-// router.post('/jobs/:jobId/pause',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingJobController.pauseMarkingJob
-// );
-
-// router.post('/jobs/:jobId/resume',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingJobController.resumeMarkingJob
-// );
-
-// // Agent queue management
-// router.get('/queue',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   queueController.getAgentQueue
-// );
-
-// router.get('/queue/available',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   queueController.getAvailableJobs
-// );
-
-// router.post('/queue/join',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   queueValidation.validateQueueJoin,
-//   validateRequest,
-//   queueController.joinQueue
-// );
-
-// router.post('/queue/leave',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   queueController.leaveQueue
-// );
-
-// router.get('/queue/status',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   queueController.getQueueStatus
-// );
-
-// // Job assignment routes
-// router.post('/assignments/accept/:jobId',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   assignmentController.acceptJobAssignment
-// );
-
-// router.post('/assignments/reject/:jobId',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingValidation.validateJobRejection,
-//   validateRequest,
-//   assignmentController.rejectJobAssignment
-// );
-
-// router.get('/assignments/current',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   assignmentController.getCurrentAssignments
-// );
-
-// router.get('/assignments/history',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   assignmentController.getAssignmentHistory
-// );
-
-// // Job completion routes
-// router.post('/jobs/:jobId/complete',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingValidation.validateJobCompletion,
-//   validateRequest,
-//   completionController.completeMarkingJob
-// );
-
-// router.post('/jobs/:jobId/submit-evidence',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingValidation.validateJobEvidence,
-//   validateRequest,
-//   completionController.submitJobEvidence
-// );
-
-// router.get('/jobs/:jobId/evidence',
-//   authenticateToken,
-//   completionController.getJobEvidence
-// );
-
-// // Time slot management
-// router.get('/time-slots/available',
-//   markingJobController.getAvailableTimeSlots
-// );
-
-// router.post('/time-slots/book',
-//   authenticateToken,
-//   markingValidation.validateTimeSlotBooking,
-//   validateRequest,
-//   markingJobController.bookTimeSlot
-// );
-
-// router.get('/time-slots/booked',
-//   authenticateToken,
-//   markingJobController.getBookedTimeSlots
-// );
-
-// // Contact person management
-// router.post('/jobs/:jobId/contact-person',
-//   authenticateToken,
-//   markingValidation.validateContactPerson,
-//   validateRequest,
-//   markingJobController.setContactPerson
-// );
-
-// router.get('/jobs/:jobId/contact-person',
-//   authenticateToken,
-//   markingJobController.getContactPerson
-// );
-
-// router.put('/jobs/:jobId/contact-person',
-//   authenticateToken,
-//   markingValidation.validateContactPerson,
-//   validateRequest,
-//   markingJobController.updateContactPerson
-// );
-
-// // Agent performance and analytics
-// router.get('/agents/performance',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   queueController.getAgentPerformance
-// );
-
-// router.get('/analytics/jobs-summary',
-//   authenticateToken,
-//   markingJobController.getJobsAnalytics
-// );
-
-// // Property owner specific routes
-// router.get('/owner/jobs',
-//   authenticateToken,
-//   markingJobController.getOwnerMarkingJobs
-// );
-
-// router.get('/owner/jobs/:jobId/progress',
-//   authenticateToken,
-//   markingJobController.getJobProgress
-// );
-
-// // Job ratings and reviews
-// router.post('/jobs/:jobId/rate-agent',
-//   authenticateToken,
-//   markingValidation.validateAgentRating,
-//   validateRequest,
-//   completionController.rateAgent
-// );
-
-// router.post('/jobs/:jobId/rate-client',
-//   authenticateToken,
-//   agentAuth.verifyAgent,
-//   markingValidation.validateClientRating,
-//   validateRequest,
-//   completionController.rateClient
-// );
-
-export default router;
+export { router as markingRouter };

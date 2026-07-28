@@ -1,27 +1,44 @@
+// backend/payment-service/src/index.ts
+// Barrel — combined-backend imports payment-service through this file.
+// KEEP existing exports (subscriptions/onboarding/webhook) and ADD the
+// dashboard money features.
 
-// subscription services
+// ---- existing (unchanged) ----
 export {
-    verifyFlutterwaveTransaction,
-    activateSubscription,
-    initiateSubscription,
-    createFreeRenterSubscription
-} from './services'
-
-// flagging subscription that has not been renewed when due
+  verifyFlutterwaveTransaction,
+  activateSubscription,
+  initiateSubscription,
+  createFreeRenterSubscription,
+} from "./services";
 export { startRenewalCron } from "./jobs/renewSubscriptions";
-
-// onboarding services
 export {
-    getOnboardingState,
-    assertCanInitiate,
-    changeAccountType,
-    resetPendingOnboarding,
+  getOnboardingState,
+  assertCanInitiate,
+  changeAccountType,
+  resetPendingOnboarding,
 } from "./services/onboarding.service";
+export { flutterwaveWebhook } from "./webhooks";
 
+// ---- dashboard: payout bank accounts (user-managed; VAs are auto-created) ----
 export {
-    flutterwaveWebhook
-} from './webhooks'
+  listBankAccounts,
+  addBankAccount,
+  setDefaultBankAccount,
+  deleteBankAccount,
+} from "./services/bankAccount.service";
 
-// import subscriptionRoutes from "./routes/subscription.routes";
-// import webhookRoutes from "./routes/webhook.routes";
+// ---- dashboard: receipts ----
+export { buildReceiptData, generateReceiptPdf } from "./services/receipt.service";
 
+// ---- renter rent checkout (escrow + double-booking lock) ----
+export { quoteRent, initiateRent, confirmRentPaid } from "./services/rentCheckout.service";
+
+// ---- escrow release + commission split (single money-splitting truth) ----
+export { releaseEscrowAndSplit, releaseExpiredEscrows } from "./services/commissionSplit.service";
+
+// ---- bank-change OTP gate + renter escrow virtual account ----
+export { requestBankOtp, verifyBankOtp } from "./services/bankAccount.service";
+export { ensureRenterVirtualAccount } from "./services/renterVA.service";
+
+// ---- wallet: balances, withdraw, auto-payout ----
+export { getWallet, withdraw, setAutoPayout, settleWithdrawal } from "./services/wallet.service";

@@ -28,14 +28,19 @@
       "@/*": [
         "./*"
       ],
-      "@newcondo/db": [
-        "../../packages/db/src"
-      ],
-      "@newcondo/db/*": [
-        "../../packages/db/src/*"
-      ],
+      // "@newcondo/db": [
+      //   "../../packages/db/src"
+      // ],
+      // "@newcondo/db/*": [
+      //   "../../packages/db/src/*"
+      // ],
     }
   },
+  "references": [
+    { "path": "../shared" },
+    { "path": "../auth-service" },
+    { "path": "../payment-service" }
+  ],
   "include": [
     "src/**/*"
 , "create-flw-plans.js"  ],

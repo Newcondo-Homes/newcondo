@@ -3,6 +3,7 @@ export * from './jwt'
 export * from './otp'
 export * from './response'
 
+export * from './notificationBus'
 export * from './addressHierarchy';
 export * from './analyticsFormatter';
 export * from './caching';
@@ -44,3 +45,10 @@ export * from './sharingLink';
 export * from './statisticsCalculator';
 export * from './timeSlotManager';
 export * from './virtualAccount';
+
+export * from "./httpError";
+export * from "./emailTemplates";
+export * from "./emailService";
+export * from "./notificationBus";
+export * from "./s3Upload";
+export * from "./s3Layout";

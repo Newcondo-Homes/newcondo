@@ -1,122 +1,69 @@
-// backend/combined-app/src/routes/properties.ts
-import { Router } from 'express';
-import type { Router as ExpressRouter } from 'express'
-
-// import { propertyController } from '../../property-service/src/controllers/propertyController';
-// import { imageController } from '../../property-service/src/controllers/imageController';
-// import { searchController } from '../../property-service/src/controllers/searchController';
-// import { boundaryController } from '../../property-service/src/controllers/boundaryController';
-// import { duplicateController } from '../../property-service/src/controllers/duplicateController';
-// import { legalController } from '../../property-service/src/controllers/legalController';
-
-// // Import middleware from property service
-// import { propertyValidation } from '../../property-service/src/middleware/propertyValidation';
-// import { boundaryValidation } from '../../property-service/src/middleware/boundaryValidation';
-
-// // Import shared middleware
-// import { authenticateToken } from '../../shared/src/middleware/auth';
-// import { validateRequest } from '../../shared/src/middleware/validation';
+// backend/combined-backend/src/routes/properties.ts
+// Mounted at /api/v1/properties. Imports through the @newcondo/property-service
+// barrel — same pattern as payments.ts uses @newcondo/payment-service.
+import { Router, type Router as ExpressRouter } from "express";
+import { authMiddleware, requireRole } from "@newcondo/backend-shared";
+import {
+  browseProperties,
+  listTenants,
+  getTenantDetailService,
+  createTenantInvite,
+  validateTenantInvite,
+  acceptTenantInvite,
+} from "@newcondo/property-service";
+import { publishNotification } from "@newcondo/backend-shared";
 
 const router: ExpressRouter = Router();
+const listerOnly = [authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"])] as const;
 
-// Property CRUD routes
-// router.get('/', propertyController.getAllProperties);
-// router.get('/search', searchController.searchProperties);
-// router.get('/featured', propertyController.getFeaturedProperties);
-// router.get('/nearby', propertyController.getNearbyProperties);
-// router.get('/:id', propertyController.getPropertyById);
+// GET /api/v1/properties/browse — PUBLIC search grid (only PUBLISHED +
+// boundaryVerified + admin-APPROVED ever returned; 60s Redis cache inside).
+router.get("/browse", async (req, res, next) => {
+  try {
+    const q = req.query;
+    const data = await browseProperties({
+      q: q.q as string | undefined, state: q.state as string | undefined,
+      city: q.city as string | undefined,
+      type: q.type as string | undefined,
+      minPrice: q.minPrice ? Number(q.minPrice) : undefined,
+      maxPrice: q.maxPrice ? Number(q.maxPrice) : undefined,
+      page: q.page ? Number(q.page) : undefined,
+      pageSize: q.pageSize ? Number(q.pageSize) : undefined,
+    });
+    res.json({ success: true, data });
+  } catch (e) { next(e); }
+});
 
-// Protected property routes
-// router.post('/', 
-//   authenticateToken,
-//   propertyValidation.validateCreateProperty,
-//   validateRequest,
-//   propertyController.createProperty
-// );
+// ---- tenants (dashboard "Tenants" card; lister-only, ownership re-checked in service) ----
+router.get("/:propertyId/tenants", ...listerOnly, async (req, res, next) => {
+  try { res.json({ success: true, data: await listTenants(req.params.propertyId, req.user!.id) }); } catch (e) { next(e); }
+});
+router.get("/tenants/:rentalId", ...listerOnly, async (req, res, next) => {
+  try { res.json({ success: true, data: await getTenantDetailService(req.params.rentalId, req.user!.id) }); } catch (e) { next(e); }
+});
 
-// router.put('/:id',
-//   authenticateToken,
-//   propertyValidation.validateUpdateProperty,
-//   validateRequest,
-//   propertyController.updateProperty
-// );
+// ---- tenant invite links (renter onboarding is invite-only) ----
+router.post("/:propertyId/tenant-invites", ...listerOnly, async (req, res, next) => {
+  try {
+    const invite = await createTenantInvite({ propertyId: req.params.propertyId, inviterId: req.user!.id, unitId: req.body?.unitId });
+    res.status(201).json({ success: true, data: invite });
+  } catch (e) { next(e); }
+});
+// PUBLIC — the /tenant-invite/[token] onboarding page fetches context pre-auth
+router.get("/tenant-invites/:token", async (req, res, next) => {
+  try { res.json({ success: true, data: await validateTenantInvite(req.params.token) }); } catch (e) { next(e); }
+});
+// Called right after the invited renter registers + signs in
+router.post("/tenant-invites/accept", authMiddleware, async (req, res, next) => {
+  try {
+    const result = await acceptTenantInvite(String(req.body?.token ?? ""), req.user!.id);
+    await publishNotification({
+      userId: result.inviterId, kind: "tenant", title: "A tenant joined Newcondo",
+      body: `${req.user!.name ?? "Your tenant"} onboarded via your invite link${result.unitNumber ? ` (${result.unitNumber})` : ""}.`,
+      to: `/properties/${result.propertyId}`, entityType: "rental", entityId: result.rental.id,
+    });
+    res.status(201).json({ success: true, data: result.rental });
+  } catch (e) { next(e); }
+});
 
-// router.delete('/:id',
-//   authenticateToken,
-//   propertyController.deleteProperty
-// );
-
-// // Property images routes
-// router.post('/:id/images',
-//   authenticateToken,
-//   imageController.uploadPropertyImages
-// );
-
-// router.delete('/:id/images/:imageId',
-//   authenticateToken,
-//   imageController.deletePropertyImage
-// );
-
-// router.put('/:id/images/:imageId/primary',
-//   authenticateToken,
-//   imageController.setPrimaryImage
-// );
-
-// // Property boundary routes
-// router.get('/:id/boundaries', boundaryController.getPropertyBoundaries);
-// router.post('/:id/boundaries',
-//   authenticateToken,
-//   boundaryValidation.validateBoundary,
-//   validateRequest,
-//   boundaryController.createPropertyBoundary
-// );
-
-// router.put('/:id/boundaries/:boundaryId',
-//   authenticateToken,
-//   boundaryValidation.validateBoundary,
-//   validateRequest,
-//   boundaryController.updatePropertyBoundary
-// );
-
-// router.delete('/:id/boundaries/:boundaryId',
-//   authenticateToken,
-//   boundaryController.deletePropertyBoundary
-// );
-
-// // Duplicate detection routes
-// router.get('/:id/duplicates', duplicateController.checkDuplicates);
-// router.post('/:id/duplicates/resolve',
-//   authenticateToken,
-//   duplicateController.resolveDuplicate
-// );
-
-// // Legal documents routes
-// router.get('/:id/legal-documents', legalController.getLegalDocuments);
-// router.post('/:id/legal-documents',
-//   authenticateToken,
-//   legalController.uploadLegalDocument
-// );
-
-// router.delete('/:id/legal-documents/:documentId',
-//   authenticateToken,
-//   legalController.deleteLegalDocument
-// );
-
-// // Property verification routes
-// router.post('/:id/verify',
-//   authenticateToken,
-//   propertyController.verifyProperty
-// );
-
-// router.get('/user/:userId', 
-//   authenticateToken,
-//   propertyController.getUserProperties
-// );
-
-// // Property analytics
-// router.get('/:id/analytics',
-//   authenticateToken,
-//   propertyController.getPropertyAnalytics
-// );
-
-export default router;
+export { router as propertyRouter };

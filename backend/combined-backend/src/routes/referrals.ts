@@ -1,155 +1,26 @@
-// backend/combined-app/src/routes/referrals.ts
-import { Router } from 'express';
-import { Request, Response, NextFunction } from 'express';
-import type { Router as ExpressRouter } from 'express'
-
-// Import referral service controllers
-// import {
-//   referralController,
-//   trackingController,
-//   rewardController
-// } from '../../../referral-service/src/controllers';
-
-// Import referral service middleware
-// import { referralValidation } from '../../../referral-service/src/middleware/referralValidation';
-
-// // Import shared middleware
-// import { authMiddleware } from '../../../shared/src/middleware/auth';
-// import { validationMiddleware } from '../../../shared/src/middleware/validation';
+// backend/combined-backend/src/routes/referrals.ts — mounted at /api/v1/referrals
+import { Router, type Router as ExpressRouter } from "express";
+import { authMiddleware } from "@newcondo/backend-shared";
+import { getReferralStats, recordInvite, getLeaderboard } from "@newcondo/referral-service";
+import { ACTIVE_AREAS } from "@newcondo/backend-shared"; // constants/business
 
 const router: ExpressRouter = Router();
 
-// Referral Management Routes
-// router.post(
-//   '/create',
-//   authMiddleware,
-//   referralValidation.createReferral,
-//   validationMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await referralController.createReferral(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
+router.get("/stats", authMiddleware, async (req, res, next) => {
+  try { res.json({ success: true, data: await getReferralStats(req.user!.id) }); } catch (e) { next(e); }
+});
+router.post("/invite", authMiddleware, async (req, res, next) => {
+  try { res.status(201).json({ success: true, data: await recordInvite(req.user!.id, String(req.body?.email ?? "")) }); } catch (e) { next(e); }
+});
+// Leaderboard — paginated (page/pageSize); requesterId lets the UI show "you"
+router.get("/leaderboard", authMiddleware, async (req, res, next) => {
+  try { res.json({ success: true, data: await getLeaderboard({ page: req.query.page ? Number(req.query.page) : undefined, pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined, requesterId: req.user!.id }) }); } catch (e) { next(e); }
+});
+// Active coverage areas — straight from constants/business.ts (single source of truth)
+router.get("/active-areas", async (_req, res) => {
+  res.json({ success: true, data: ACTIVE_AREAS });
+});
+// attachReferral(code, userId) is called inside auth register (?ref=CODE);
+// rewardOnFirstTransaction(payerId) is called from flutterwave.webhook.ts.
 
-// router.get(
-//   '/my-referrals',
-//   authMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await referralController.getUserReferrals(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// router.get(
-//   '/stats',
-//   authMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await referralController.getReferralStats(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// router.get(
-//   '/link/:userId',
-//   authMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await referralController.getReferralLink(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// // Tracking Routes
-// router.post(
-//   '/track/click',
-//   trackingController.trackClick
-// );
-
-// router.post(
-//   '/track/signup',
-//   referralValidation.trackSignup,
-//   validationMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await trackingController.trackSignup(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// router.post(
-//   '/track/conversion',
-//   authMiddleware,
-//   referralValidation.trackConversion,
-//   validationMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await trackingController.trackConversion(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// // Reward Routes
-// router.get(
-//   '/rewards',
-//   authMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await rewardController.getUserRewards(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// router.post(
-//   '/rewards/claim/:rewardId',
-//   authMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await rewardController.claimReward(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// router.get(
-//   '/rewards/history',
-//   authMiddleware,
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await rewardController.getRewardHistory(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-// // Referral program info
-// router.get(
-//   '/program-info',
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     try {
-//       await referralController.getProgramInfo(req, res);
-//     } catch (error) {
-//       next(error);
-//     }
-//   }
-// );
-
-export default router;
+export { router as referralRouter };

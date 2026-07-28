@@ -1,4 +1,4 @@
-export { errorHandler, AppError, authMiddleware, requestLogger, corsMiddleware, BadRequestError, NotFoundError, ForbiddenError, logger, validateRequest, authenticateToken, auth } from './middleware/index';
+export { errorHandler, AppError, authMiddleware, requestLogger, corsMiddleware, BadRequestError, NotFoundError, ForbiddenError, logger, requireRole, validateRequest, authenticateToken, auth } from './middleware/index';
 export { redis, flutterwaveConfig } from './config/index';
 export type * from './types/index';
 export * from './constants/index';

@@ -1,5 +1,6 @@
 export * from './analytics';
 export * from './boundaries';
+export * from './business';
 export * from './commission';
 export * from './confirmation';
 export * from './legalDocuments';
@@ -18,4 +19,6 @@ export * from './reports';
 export * from './rewardTiers';
 export * from './timeSlots';
 export * from './virtualAccount';
+export { COMPANY, ACTIVE_AREAS, isAreaActive, MARKING, PAYMENTS, PLANS, REFERRALS, TENANTS, SERVICES, VERIFICATION, NG_BANKS, AMENITIES, } from "./business";
+export type { ActiveArea } from "./business";
 //# sourceMappingURL=index.d.ts.map

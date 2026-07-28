@@ -1,24 +1,38 @@
 {
+  // backend/referral-service/tsconfig.json — REPLACES the current file.
+  // Same shape as marking-service: NEVER include "../shared/src/**/*" (that
+  // triggers TS6059 and litters shared/src with emitted .js). Use a project
+  // reference so tsc reads shared's built dist/*.d.ts instead.
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022"],
-    "module": "es2022",
+    "module": "CommonJS",
     "moduleResolution": "node",
+    "composite": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/.tsbuildinfo",
+    "disableSourceOfProjectReferenceRedirect": true,
+
     "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "outDir": "./dist",
+    "rootDir": "./src",
+    "types": ["node", "express"],
     "baseUrl": "./",
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["./src/*"],
+      "@newcondo/db": ["../../packages/db/dist/index.d.ts"]
     }
   },
-  "include": ["src/**/*","src/types/**/*"],
-  "exclude": ["dist", "node_modules"]
+  "files": ["../shared/src/types/express.d.ts"],
+  "references": [{ "path": "../shared" }],
+  "include": ["src/**/*"],
+  "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts"]
 }
