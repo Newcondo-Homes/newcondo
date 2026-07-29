@@ -1,4 +1,15 @@
-// backend/vendor-service/src/index.ts — barrel for combined-backend
+// backend/vendor-service/src/index.ts
+// Barrel — combined-backend imports vendor-service through this file.
 export {
-  getServicesOverview, requestService, rescheduleJob, reportJobIssue, completeJob,
+  getServicesOverview,
+  requestService,
+  rescheduleJob,
+  reportJobIssue,
+  completeJob,
+} from "./services/vendorService";
+
+export type {
+  ServicesOverview,
+  ServicePlanDTO,
+  ServiceJobDTO,
 } from "./services/vendorService";

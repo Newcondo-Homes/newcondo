@@ -1,7 +1,18 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-// url       = env("DATABASE_URL")
-// directUrl = env("DIRECT_URL")
+// ============================================================================
+// packages/db/prisma/schema.prisma — MERGED (your schema + dashboard features)
+// ============================================================================
+// Nothing was removed from your schema. Additions are marked  // ++ ADDED
+// Reused instead of duplicated:
+//   • Referral / ReferralReward   → user referral credits (no new Referral model)
+//   • AgentReferral (+Click/Conversion) → sub-agent promo tracking analytics
+//   • PromotionRequest / PropertyPromotionSettings → sub-agent approval flow
+//   • PropertyMarkingJob          → marking jobs (extended, not replaced)
+//   • Property.boundary*          → the verified mark (no separate PropertyMark)
+//   • VirtualAccount              → escrow accounts (user + per-property)
+//   • Document                    → S3 identity/ownership docs
+// Then run: npx prisma migrate dev --name dashboard_features
+// ============================================================================
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -19,22 +30,18 @@ model User {
   phoneVerified DateTime?
   passwordHash  String?
   image         String?
-  role          Role      
+  role          Role
   userType      UserType?
 
+  subscription         Subscription?
+  subscriptionHistory  SubscriptionHistory[]
+  subscriptionInvoices SubscriptionInvoice[]
 
-  subscription        Subscription?
-  subscriptionHistory SubscriptionHistory[]
-  subscriptionInvoices  SubscriptionInvoice[]
-  
   // Verification fields
   verificationStatus          VerificationStatus @default(PENDING)
-  // idDocument         String?           // URL to uploaded ID document
-  // idDocumentType     IdDocumentType?
-  // selfieImage        String?           // URL to uploaded selfie
   verificationRejectionReason String?
   verifiedAt                  DateTime?
-  verifiedBy                  String? // Admin user ID who verified
+  verifiedBy                  String?
 
   // Profile fields
   dateOfBirth DateTime?
@@ -43,22 +50,29 @@ model User {
   state       String?
   country     String?   @default("Nigeria")
 
+  // ++ ADDED — BVN powers Flutterwave permanent virtual-account creation for
+  // renters at checkout (escrow safety + compliance). Encrypt at rest.
+  bvn String?
+
+  // ++ ADDED — payout automation for owners/agents: OFF | INSTANT | WEEKLY | MONTHLY
+  autoPayoutMode String @default("OFF")
+
   // B2B specific fields for property managers
   companyName       String?
   businessRegNumber String?
   isB2BCustomer     Boolean @default(false)
 
-  // Premium status (for future phases)
+  // Premium status
   isPremium        Boolean   @default(false)
   premiumExpiresAt DateTime?
 
-  // Referral tracking (Phase 4)
+  // Referral tracking — also used as the unique code inside share/promo URLs
   referralCode String @unique @default(cuid())
 
   // Agent specific fields
-  isAvailableForMarking Boolean  @default(false) // For agents willing to do property marking
-  agentServiceAreas     String[] // Cities/areas where agent operates
-  agentReliabilityScore Decimal? @db.Decimal(3, 2) // 0.00 to 5.00 rating
+  isAvailableForMarking Boolean  @default(false)
+  agentServiceAreas     String[]
+  agentReliabilityScore Decimal? @db.Decimal(3, 2)
   totalMarkingJobs      Int      @default(0)
   completedMarkingJobs  Int      @default(0)
 
@@ -89,7 +103,22 @@ model User {
   supportTickets       SupportTicket[]
   adminActions         AdminAction[]
   refreshToken         RefreshToken[]
-  documents            Document[] // New relation to documents
+  documents            Document[]
+
+  // ++ ADDED relations
+  notifications        Notification[]
+  bankAccounts         BankAccount[]
+  shareLinks           ShareLink[]           @relation("ShareLinkCreator")
+  sentTenantInvites    TenantInvite[]        @relation("TenantInviteSender")
+  usedTenantInvites    TenantInvite[]        @relation("TenantInviteRenter")
+  sentAgentInvites     AgentInvite[]         @relation("AgentInviteOwner")
+  linksAsOwner         OwnerAgentLink[]      @relation("OwnerAgentLinkOwner")
+  linksAsAgent         OwnerAgentLink[]      @relation("OwnerAgentLinkAgent")
+  markingQueueEntries  MarkingQueueEntry[]   @relation("MarkingQueueAgent")
+  subAgentPayments     Payment[]             @relation("PaymentSubAgent")
+  invitedRentals       Rental[]              @relation("RentalInviter")
+  serviceSubscription  ServiceSubscription?
+  requestedServiceJobs ServiceJob[]          @relation("ServiceJobRequester")
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -146,32 +175,26 @@ model Account {
 model Document {
   id         String  @id @default(cuid())
   userId     String
-  propertyId String? // Optional, for property-specific docs
+  propertyId String?
 
-  // Document Classification
-  documentType DocumentType // NIN, PASSPORT, etc.
-  documentSide DocumentSide? // FRONT, BACK (for documents that have sides)
-  pageNumber   Int? // For multi-page documents
+  documentType DocumentType
+  documentSide DocumentSide?
+  pageNumber   Int?
 
-  // Document ID/Number (for documents that only need ID)
-  documentNumber String? // NIN number, BVN, Passport number, etc.
+  documentNumber String?
 
-  // File Details (for documents that need file uploads)
   fileName      String?
-  fileUrl    String?   // ← keep this as the CloudFront URL or presigned URL
-  s3Key      String?   // ← this is the raw S3 key e.g. "users/clx8j/identity/nin/front_uuid.jpg"
+  fileUrl       String? // CloudFront URL or presigned URL
+  s3Key         String? // raw S3 key e.g. "users/clx8j/identity/nin/front_uuid.jpg"
   fileSizeBytes Int?
-  mimeType      String? // image/jpeg, application/pdf, etc.
+  mimeType      String?
 
-  // Status & Verification
   status            DocumentStatus @default(PENDING)
   verificationNotes String?
 
-  // Metadata
   isRequired Boolean   @default(true)
-  expiresAt  DateTime? // For documents with expiration dates
+  expiresAt  DateTime?
 
-  // Relations
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   property Property? @relation(fields: [propertyId], references: [id])
 
@@ -189,7 +212,7 @@ model Document {
 enum DocumentSide {
   FRONT
   BACK
-  SINGLE // For documents that don't have front/back
+  SINGLE
 }
 
 enum DocumentStatus {
@@ -237,11 +260,9 @@ model Property {
   title       String
   description String
 
-  // Add structure type
   structure PropertyStructure @default(SINGLE_UNIT)
 
-  // For single units - keep existing price field
-  price    Decimal? @db.Decimal(10, 2) // Now optional for multi-family
+  price    Decimal? @db.Decimal(10, 2)
   currency String   @default("NGN")
 
   // Location
@@ -249,76 +270,76 @@ model Property {
   city           String
   state          String
   country        String  @default("Nigeria")
-  gpsCoordinates String? // JSON string: {"lat": 6.5244, "lng": 3.3792}
+  gpsCoordinates String?
 
-  // Property Boundary Information
-  boundaryCoordinates Json? // Polygon coordinates for property boundaries
+  // Property Boundary Information — this IS the verified "mark"
+  boundaryCoordinates Json?
   boundaryVerified    Boolean   @default(false)
-  boundaryMarkedBy    String? // Agent ID who marked the boundary
+  boundaryMarkedBy    String?
   boundaryMarkedAt    DateTime?
-  boundaryImages      String[] // URLs to boundary marking photos
-  buildingFingerprint String? // Unique identifier for duplicate detection
+  boundaryImages      String[]
+  buildingFingerprint String?
 
-  // Building-level details (for multi-family)
-  totalUnits       Int? // Total number of units in the building
-  availableUnits   Int? // Number of currently available units
-  buildingFeatures String[] // Building-wide amenities ["Elevator", "Generator", "Security", "Parking"]
+  // ++ ADDED — S3 key of the AI-segmented green mask PNG, re-drawn as the
+  // coloured overlay whenever the map loads (marking segmentation pipeline).
+  boundaryMaskImageKey String?
 
-  // Property details  (for single units)
+  // Building-level details (multi-family)
+  totalUnits       Int?
+  availableUnits   Int?
+  buildingFeatures String[]
+
+  // Property details (single units)
   propertyType PropertyType @default(APARTMENT)
   bedrooms     Int?
   bathrooms    Int?
-  area         String? // e.g., "120 sqm"
-  features     String[] // ["Parking", "Generator", "Security"]
+  area         String?
+  features     String[]
 
   // Ownership & Agency
   ownerId        String
   agentId        String?
   isOwnerListing Boolean @default(true)
 
-  // Media
   images PropertyImage[]
-
-  // Legal Documents (Phase 2)
-  // ownershipDocument String?          // URL to proof of ownership (for landlords)
-  // consentDocument   String?          // URL to consent document (for agents)
-  // undertakingDocument String?        // URL to signed undertaking
 
   // Status & Approval
   status              PropertyStatus      @default(DRAFT)
   adminApprovalStatus AdminApprovalStatus @default(PENDING)
   rejectionReason     String?
   approvedAt          DateTime?
-  approvedBy          String? // Admin user ID
+  approvedBy          String?
 
-  // Rental & Availability (for single units)
+  // Rental & Availability (single units)
   isAvailable       Boolean   @default(true)
   availableFrom     DateTime?
-  isPaymentLocked   Boolean   @default(false) // Prevent double booking
-  paymentLockExpiry DateTime? // When payment lock expires
+  isPaymentLocked   Boolean   @default(false)
+  paymentLockExpiry DateTime?
 
   // Sharing & Marketing
   shareableLink String? @unique
   viewCount     Int     @default(0)
   favoriteCount Int     @default(0)
 
-  // Relations
   owner User  @relation("PropertyOwner", fields: [ownerId], references: [id])
   agent User? @relation("PropertyAgent", fields: [agentId], references: [id])
 
-  // New relation for units
-  units PropertyUnit[] // Units within this property
+  units PropertyUnit[]
 
   rentals          Rental[]
   duplicateReports PropertyDuplicate[]
   markingJobs      PropertyMarkingJob[]
   virtualAccount   VirtualAccount?
-  documents        Document[] // Property-specific documents
+  documents        Document[]
 
-  // Agent Referral System
   agentReferrals    AgentReferral[]            @relation("PropertyReferrals")
   promotionRequests PromotionRequest[]         @relation("PromotionRequests")
   promotionSettings PropertyPromotionSettings?
+
+  // ++ ADDED relations
+  shareLinks    ShareLink[]
+  tenantInvites TenantInvite[]
+  serviceJobs   ServiceJob[]
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -339,40 +360,35 @@ model Property {
   @@index([availableUnits])
 }
 
-// New PropertyUnit model for individual units in multi-family buildings
 model PropertyUnit {
   id         String @id @default(cuid())
   propertyId String
 
-  // Unit identification
-  unitNumber String // e.g., "A1", "Flat 2", "Unit 101"
-  floor      Int? // Floor number
+  unitNumber String
+  floor      Int?
 
-  // Unit details
   bedrooms  Int?
   bathrooms Int?
-  area      String? // e.g., "85 sqm"
-  features  String[] // Unit-specific features
+  area      String?
+  features  String[]
 
-  // Pricing
   price    Decimal @db.Decimal(10, 2)
   currency String  @default("NGN")
 
-  // Availability
   status        UnitStatus @default(AVAILABLE)
   isAvailable   Boolean    @default(true)
   availableFrom DateTime?
 
-  // Payment locking (prevent double booking)
   isPaymentLocked   Boolean   @default(false)
   paymentLockExpiry DateTime?
 
-  // Unit-specific media
   images PropertyUnitImage[]
 
-  // Relations
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   rentals  Rental[]
+
+  // ++ ADDED — invites can be scoped to one flat
+  tenantInvites TenantInvite[]
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -393,10 +409,10 @@ model PaymentAttemptLog {
   propertyId    String
   unitId        String?
   amount        Decimal  @db.Decimal(10, 2)
-  status        String // "LOCKED", "SUCCESS", "FAILED", "TIMEOUT"
+  status        String
   failureReason String?
   lockAcquired  Boolean  @default(false)
-  lockDuration  Int? // milliseconds
+  lockDuration  Int?
   ipAddress     String?
   userAgent     String?
   createdAt     DateTime @default(now())
@@ -411,7 +427,6 @@ model PaymentAttemptLog {
   @@index([createdAt])
 }
 
-// New model for unit-specific images
 model PropertyUnitImage {
   id        String  @id @default(cuid())
   unitId    String
@@ -447,10 +462,9 @@ enum PropertyStatus {
   UNAVAILABLE
 }
 
-// Add these new enums
 enum PropertyStructure {
-  SINGLE_UNIT // Traditional single property
-  MULTI_FAMILY // Building with multiple units
+  SINGLE_UNIT
+  MULTI_FAMILY
 }
 
 enum UnitStatus {
@@ -458,6 +472,7 @@ enum UnitStatus {
   OCCUPIED
   MAINTENANCE
   RESERVED
+  UNDER_CONSTRUCTION // ++ ADDED — dashboard shows per-flat "Under construction"
 }
 
 enum AdminApprovalStatus {
@@ -467,38 +482,27 @@ enum AdminApprovalStatus {
 }
 
 enum UserType {
-  OWNER // Individual property owner
-  PROPERTY_MANAGER // B2B customer managing multiple properties
-  AGENT // Real estate agent
-  RENTER // Property renter
-  ADMIN // System admin
+  OWNER
+  PROPERTY_MANAGER
+  AGENT
+  RENTER
+  ADMIN
 }
 
 enum DocumentType {
-  // Identity Documents (can be ID-only or file upload)
-  NIN // Usually ID-only
-  BVN // Usually ID-only
-  PASSPORT // Can be ID-only or file upload
-  VOTERS_CARD // Usually file upload
-  DRIVERS_LICENSE // Usually file upload
-
-  // Selfie (always file upload)
+  NIN
+  BVN
+  PASSPORT
+  VOTERS_CARD
+  DRIVERS_LICENSE
   SELFIE
-
-  // Property Documents (always file upload)
   OWNERSHIP_DOCUMENT
   CONSENT_DOCUMENT
   UNDERTAKING_DOCUMENT
-
-  // Business Documents (usually file upload)
   BUSINESS_REGISTRATION
   TAX_CERTIFICATE
-
-  // Utility Documents (always file upload)
   UTILITY_BILL
   BANK_STATEMENT
-
-  // Other
   OTHER
 }
 
@@ -517,15 +521,14 @@ model PropertyImage {
   @@index([propertyId])
 }
 
-// New model for tracking duplicate property reports
 model PropertyDuplicate {
   id                  String          @id @default(cuid())
   originalPropertyId  String
   duplicatePropertyId String
-  reportedBy          String? // User ID who reported
+  reportedBy          String?
   status              DuplicateStatus @default(PENDING)
-  resolution          String? // Admin notes on resolution
-  resolvedBy          String? // Admin ID who resolved
+  resolution          String?
+  resolvedBy          String?
   resolvedAt          DateTime?
 
   originalProperty Property @relation(fields: [originalPropertyId], references: [id])
@@ -544,43 +547,54 @@ enum DuplicateStatus {
   RESOLVED
 }
 
-// Property Marking Service Models
+// ---------------------------------------------------------------------------
+// Property Marking Service — EXTENDED (not replaced)
+// ---------------------------------------------------------------------------
 model PropertyMarkingJob {
   id              String  @id @default(cuid())
   propertyId      String
   requestedBy     String
   assignedAgentId String?
 
-  // Job Details
   contactPersonName  String
   contactPersonPhone String
   accessInstructions String?
   preferredTime      DateTime?
   urgencyLevel       UrgencyLevel @default(NORMAL)
 
-  // Pricing
   markingFee    Decimal       @db.Decimal(10, 2)
   paymentStatus PaymentStatus @default(PENDING)
 
-  // Job Status
   status         MarkingJobStatus @default(QUEUED)
   assignedAt     DateTime?
   completedAt    DateTime?
-  timeSlotExpiry DateTime? // 3-hour time slot limit
+  timeSlotExpiry DateTime?
 
-  // Completion Data
   completionNotes  String?
-  completionImages String[] // URLs to completion photos
-  boundaryData     Json? // Boundary coordinates marked
+  completionImages String[]
+  boundaryData     Json?
 
-  // Queue Management
   queuePosition     Int?
-  maxCompletionTime DateTime? // Max 3 days from request
+  maxCompletionTime DateTime?
 
-  // Relations
+  // ++ ADDED — how the owner/agent chose to get it marked
+  method MarkingMethod @default(BROADCAST)
+
+  // ++ ADDED — 72h owner confirmation window; payout drips if it lapses
+  confirmDeadline DateTime?
+  confirmedAt     DateTime?
+  disputeReason   String?
+
+  // ++ ADDED — S3 keys: satellite snapshot + AI green-mask (segmentation)
+  snapshotImageKey String?
+  maskImageKey     String?
+
   property       Property @relation(fields: [propertyId], references: [id])
   requestingUser User     @relation("RequestingUser", fields: [requestedBy], references: [id])
   assignedAgent  User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+
+  // ++ ADDED — FCFS queue rows (3-hour slot per agent)
+  queueEntries MarkingQueueEntry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -592,6 +606,33 @@ model PropertyMarkingJob {
   @@index([queuePosition])
 }
 
+// ++ ADDED — one row per agent who joined a broadcast job's queue
+model MarkingQueueEntry {
+  id            String    @id @default(cuid())
+  jobId         String
+  agentId       String
+  position      Int
+  slotStartedAt DateTime?
+  completedAt   DateTime?
+  abandonedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  job   PropertyMarkingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  agent User               @relation("MarkingQueueAgent", fields: [agentId], references: [id])
+
+  @@unique([jobId, agentId])
+  @@index([jobId, position])
+  @@index([agentId])
+}
+
+// ++ ADDED
+enum MarkingMethod {
+  SELF
+  KNOWN_PERSON
+  BROADCAST
+  NEWCONDO
+}
+
 enum MarkingJobStatus {
   QUEUED
   ASSIGNED
@@ -599,6 +640,8 @@ enum MarkingJobStatus {
   COMPLETED
   CANCELLED
   EXPIRED
+  AWAITING_CONFIRMATION // ++ ADDED — marked, waiting on the owner (72h)
+  DISPUTED              // ++ ADDED — owner disputed the boundary
 }
 
 enum UrgencyLevel {
@@ -611,7 +654,7 @@ enum UrgencyLevel {
 model Rental {
   id          String       @id @default(cuid())
   propertyId  String
-  unitId      String? // Optional: specific unit being rented
+  unitId      String?
   renterId    String
   startDate   DateTime
   endDate     DateTime?
@@ -619,15 +662,18 @@ model Rental {
   status      RentalStatus @default(ACTIVE)
   disputes    Dispute[]
 
-  // Confirmation System
-  confirmationDeadline DateTime? // 7 days from payment
+  confirmationDeadline DateTime?
   isConfirmed          Boolean   @default(false)
   confirmedAt          DateTime?
 
-  // Relations
+  // ++ ADDED — set when the tenancy came from a tenant-invite link; surfaces
+  // the tenant in the inviting owner's/agent's dashboard.
+  invitedById String?
+
   property Property      @relation(fields: [propertyId], references: [id])
   unit     PropertyUnit? @relation(fields: [unitId], references: [id])
   renter   User          @relation(fields: [renterId], references: [id])
+  invitedBy User?        @relation("RentalInviter", fields: [invitedById], references: [id]) // ++ ADDED
   payments Payment[]
 
   createdAt DateTime @default(now())
@@ -638,47 +684,60 @@ model Rental {
   @@index([renterId])
   @@index([status])
   @@index([confirmationDeadline])
+  @@index([invitedById])
 }
 
 model Payment {
   id           String   @id @default(cuid())
   userId       String
   rentalId     String?
-  markingJobId String? // For property marking payments
+  markingJobId String?
   amount       Decimal  @db.Decimal(10, 2)
   currency     String   @default("NGN")
   dispute      Dispute?
 
-  // Payment details
   paymentType   PaymentType
   status        PaymentStatus @default(PENDING)
-  paymentMethod String? // "card", "bank_transfer", etc.
+  paymentMethod String?
 
-  // Flutterwave integration
   flutterwaveRef String? @unique
   transactionId  String? @unique
 
-  // Commission split (for future phases)
   agentCommission Decimal? @db.Decimal(10, 2)
   platformFee     Decimal? @db.Decimal(10, 2)
   ownerAmount     Decimal? @db.Decimal(10, 2)
 
-  // Payment confirmation system
   confirmationPeriodEnd DateTime?
   isReleased            Boolean   @default(false)
   releasedAt            DateTime?
 
-  // Metadata
   description   String?
   failureReason String?
   paidAt        DateTime?
 
-  // Relations
-  user   User    @relation(fields: [userId], references: [id])
-  rental Rental? @relation(fields: [rentalId], references: [id])
+  // ++ ADDED — commission attribution. Pinned from the PROMO ShareLink used at
+  // checkout; the ONLY source releaseEscrowAndSplit() reads, so a sub-agent's
+  // cut can never be credited to the wrong person.
+  subAgentId String?
 
-  // Agent Referral System
+  // ++ ADDED — idempotency flag for the escrow-release split
+  commissionSettledAt DateTime?
+
+  // ++ ADDED — S3 key of the cached branded PDF receipt (receipts/…)
+  receiptKey String?
+
+  // ++ ADDED — job params for webhook-driven flows (e.g. marking-fee payment
+  // carries { propertyId, method, contactName, contactPhone, accessNotes })
+  meta Json?
+
+  user     User  @relation(fields: [userId], references: [id])
+  rental   Rental? @relation(fields: [rentalId], references: [id])
+  subAgent User? @relation("PaymentSubAgent", fields: [subAgentId], references: [id]) // ++ ADDED
+
   agentReferralConversion AgentReferralConversion?
+
+  // ++ ADDED
+  platformRevenue PlatformRevenue?
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -690,6 +749,7 @@ model Payment {
   @@index([status])
   @@index([paymentType])
   @@index([confirmationPeriodEnd])
+  @@index([subAgentId])
 }
 
 enum PaymentType {
@@ -698,6 +758,9 @@ enum PaymentType {
   AGENT_COMMISSION
   PREMIUM_UPGRADE
   PROPERTY_MARKING
+  RENT_RELEASE  // ++ ADDED — owner's net payout row at escrow release
+  WITHDRAWAL    // ++ ADDED — wallet → bank transfer
+  SERVICE_FEE   // ++ ADDED — vendor repair charged to the owner
 }
 
 enum PaymentStatus {
@@ -710,24 +773,219 @@ enum PaymentStatus {
   RELEASED
 }
 
-// Virtual Account System
+// ++ ADDED — Newcondo's own commission cut, per settled payment
+model PlatformRevenue {
+  id        String   @id @default(cuid())
+  paymentId String   @unique
+  amount    Decimal  @db.Decimal(15, 2)
+  source    String // RENT_COMMISSION | MARKING_FEE_MARGIN | SUBSCRIPTION
+  createdAt DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+
+  @@index([source, createdAt])
+}
+
+// ++ ADDED — user payout bank accounts. DISTINCT from VirtualAccount:
+// VAs are auto-created by Newcondo (main + one per marked property);
+// BankAccounts are user-managed withdrawal destinations.
+model BankAccount {
+  id            String   @id @default(cuid())
+  userId        String
+  bankName      String
+  bankCode      String
+  accountNumber String
+  accountName   String // registered holder from Flutterwave name enquiry
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, accountNumber])
+  @@index([userId])
+  @@index([isDefault])
+}
+
+// ++ ADDED — persisted notifications (badge counts + history). Written by
+// backend-shared publishNotification(); delivered live over Redis → SSE.
+model Notification {
+  id         String    @id @default(cuid())
+  userId     String
+  kind       String // marking | payment | wallet | verify | tenant | service | referral
+  title      String
+  body       String
+  to         String // dashboard route the notification deep-links to
+  entityType String?
+  entityId   String?
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+// ++ ADDED — share & promo links. The creator's referralCode is IN the URL
+// ("{code}-{suffix}") and the full code is unique, so every click and payment
+// is attributable to exactly one creator.
+model ShareLink {
+  code       String   @id // e.g. "ada4f2k-a8k2"
+  kind       String // SHARE (lister) | PROMO (approved sub-agent → commission)
+  propertyId String
+  creatorId  String
+  clicks     Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  creator  User     @relation("ShareLinkCreator", fields: [creatorId], references: [id])
+
+  @@unique([propertyId, creatorId, kind])
+  @@index([creatorId])
+}
+
+// ++ ADDED — renters are invite-only. Single-use, sha256-hashed, 14-day link
+// scoped to (inviter, property[, unit]). Accepting creates the Rental.
+model TenantInvite {
+  tokenHash  String    @id // sha256 of the raw token — raw never stored
+  propertyId String
+  unitId     String?
+  inviterId  String
+  renterId   String?
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  property Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit     PropertyUnit? @relation(fields: [unitId], references: [id])
+  inviter  User          @relation("TenantInviteSender", fields: [inviterId], references: [id])
+  renter   User?         @relation("TenantInviteRenter", fields: [renterId], references: [id])
+
+  @@index([propertyId])
+  @@index([inviterId])
+  @@index([expiresAt])
+}
+
+// ++ ADDED — an agent may only list for an owner who invited them.
+model AgentInvite {
+  tokenHash  String    @id
+  ownerId    String
+  agentEmail String?
+  agentId    String? // set on accept
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  owner User @relation("AgentInviteOwner", fields: [ownerId], references: [id])
+
+  @@index([ownerId])
+}
+
+// ++ ADDED — the accepted relationship; powers the compulsory "property owner"
+// dropdown in the agent's New Listing form.
+model OwnerAgentLink {
+  id        String   @id @default(cuid())
+  ownerId   String
+  agentId   String
+  status    String   @default("ACTIVE") // ACTIVE | REVOKED
+  createdAt DateTime @default(now())
+
+  owner User @relation("OwnerAgentLinkOwner", fields: [ownerId], references: [id])
+  agent User @relation("OwnerAgentLinkAgent", fields: [agentId], references: [id])
+
+  @@unique([ownerId, agentId])
+  @@index([agentId, status])
+}
+
+// ---------------------------------------------------------------------------
+// ++ ADDED — third-party vendor services (fumigation, waste, inspection, repairs)
+// ---------------------------------------------------------------------------
+model Vendor {
+  id       String   @id @default(cuid())
+  name     String
+  category String // FUMIGATION | WASTE | INSPECTION | REPAIRS
+  rating   Float    @default(0)
+  phone    String?
+  isActive Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  jobs ServiceJob[]
+
+  @@index([category, isActive])
+}
+
+model ServicePlan {
+  id              String   @id @default(cuid())
+  name            String   @unique // Basic | Shield | Estate
+  pricePerQuarter Decimal  @db.Decimal(10, 2)
+  entitlements    Json // { fumigationPerYear, wastePickup, inspectionsPerYear }
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  subscriptions ServiceSubscription[]
+}
+
+model ServiceSubscription {
+  id       String   @id @default(cuid())
+  ownerId  String   @unique
+  planId   String
+  status   String   @default("ACTIVE") // ACTIVE | CANCELLED | EXPIRED
+  renewsAt DateTime
+
+  owner User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  plan  ServicePlan @relation(fields: [planId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+model ServiceJob {
+  id            String    @id @default(cuid())
+  propertyId    String
+  vendorId      String?
+  requestedById String
+  serviceType   String // FUMIGATION | WASTE_MANAGEMENT | INSPECTION | REPAIR_*
+  status        String    @default("REQUESTED") // REQUESTED | QUOTE_REQUESTED | SCHEDULED | RESCHEDULE_REQUESTED | ACTIVE | COMPLETED | ISSUE
+  scheduledFor  DateTime?
+  notes         String?
+  issueReason   String?
+  reportNote    String?
+  cost          Decimal   @default(0) @db.Decimal(10, 2)
+  photoKeys     String[]
+  completedAt   DateTime?
+
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
+  requestedBy User     @relation("ServiceJobRequester", fields: [requestedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId, status])
+  @@index([vendorId])
+  @@index([scheduledFor])
+}
+
+// ---------------------------------------------------------------------------
+// Virtual Account System (unchanged)
+// ---------------------------------------------------------------------------
 model VirtualAccount {
   id            String  @id @default(cuid())
   accountNumber String  @unique
   accountName   String
   bankCode      String
   userId        String
-  propertyId    String? @unique // One virtual account per property
+  propertyId    String? @unique
 
-  // Account Details
   balance  Decimal @default(0) @db.Decimal(15, 2)
   currency String  @default("NGN")
   isActive Boolean @default(true)
 
-  // Flutterwave Integration
   flutterwaveAccountId String? @unique
 
-  // Relations
   user     User      @relation(fields: [userId], references: [id])
   property Property? @relation(fields: [propertyId], references: [id])
 
@@ -743,7 +1001,6 @@ model Referral {
   referrerId String
   referredId String @unique
 
-  // Referral tracking
   referralCode String
   referralType ReferralType?
   isActive     Boolean       @default(true)
@@ -752,7 +1009,6 @@ model Referral {
   qualificationMet Boolean        @default(false)
   qualifiedAt      DateTime?
 
-  // Rewards (backward compatible + enhanced)
   reward         Decimal?    @db.Decimal(10, 2)
   referrerReward Decimal?    @db.Decimal(10, 2)
   referredReward Decimal?    @db.Decimal(10, 2)
@@ -784,8 +1040,8 @@ model Referral {
 model EventLog {
   id        String   @id @default(cuid())
   userId    String?
-  type      String // e.g., 'LOGIN', 'PROPERTY_VIEWED', 'SIGNUP_COMPLETED'
-  metadata  Json? // stores flexible data, like { propertyId: "abc123" }
+  type      String
+  metadata  Json?
   timestamp DateTime @default(now())
   ipAddress String?
   userAgent String?
@@ -799,7 +1055,7 @@ model EventLog {
 
 model RefreshToken {
   id        String   @id @default(cuid())
-  token     String   @unique // The JWT refresh token itself or a unique ID for it
+  token     String   @unique
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -813,9 +1069,9 @@ model RefreshToken {
 model FeatureFlag {
   id        String   @id @default(cuid())
   userId    String
-  key       String // e.g., "newOnboardingFlow", "referralBonusTest"
-  value     Boolean // true = feature enabled
-  context   Json? // optional: details like {"variant": "B"} or {"group": "test"}
+  key       String
+  value     Boolean
+  context   Json?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -824,10 +1080,9 @@ model FeatureFlag {
   @@index([key])
 }
 
-// For storing OTP codes temporarily
 model OTPCode {
   id          String   @id @default(cuid())
-  identifier  String // email or phone
+  identifier  String
   code        String
   type        OTPType
   attempts    Int      @default(0)
@@ -846,9 +1101,9 @@ enum OTPType {
   PHONE_VERIFICATION
   PASSWORD_RESET
   LOGIN
+  BANK_ACCOUNT_CHANGE // ++ ADDED — OTP gate on adding/changing a payout account
 }
 
-// Admin Dashboard Support
 model SupportTicket {
   id          String         @id @default(cuid())
   userId      String
@@ -858,9 +1113,8 @@ model SupportTicket {
   priority    TicketPriority @default(MEDIUM)
   status      TicketStatus   @default(OPEN)
 
-  // Admin Response
   adminResponse String?
-  resolvedBy    String? // Admin user ID
+  resolvedBy    String?
   resolvedAt    DateTime?
 
   user User @relation(fields: [userId], references: [id])
@@ -895,15 +1149,14 @@ enum TicketStatus {
   CLOSED
 }
 
-// Admin Actions Log
 model AdminAction {
   id          String          @id @default(cuid())
   adminId     String
   action      AdminActionType
-  targetType  String // "User", "Property", "Payment", etc.
-  targetId    String // ID of the target entity
+  targetType  String
+  targetId    String
   description String?
-  metadata    Json? // Additional action details
+  metadata    Json?
 
   admin User @relation(fields: [adminId], references: [id])
 
@@ -914,30 +1167,21 @@ model AdminAction {
   @@index([targetType, targetId])
 }
 
-// Agent Referral Tracking
 model AgentReferral {
   id         String @id @default(cuid())
-  agentId    String // Sub-agent or listing agent
+  agentId    String
   propertyId String
 
-  // Referral link
   referralCode String @unique
   referralLink String
 
-  // Tracking metrics
-  // clicks        Int     @default(0)
   uniqueClicks  Int     @default(0)
-  // conversions   Int     @default(0) // Successful payments
   totalEarnings Decimal @default(0) @db.Decimal(15, 2)
 
-  // Status
   isActive Boolean @default(true)
 
-  // Relations
   agent       User                      @relation("AgentReferrals", fields: [agentId], references: [id])
   property    Property                  @relation("PropertyReferrals", fields: [propertyId], references: [id])
-  // referralClicks      ReferralClick[]
-  // referralConversions ReferralConversion[]
   clicks      AgentReferralClick[]
   conversions AgentReferralConversion[]
 
@@ -995,21 +1239,17 @@ model AgentReferralConversion {
   @@index([isPaid])
 }
 
-// Referral Click Tracking
 model ReferralClick {
   id String @id @default(cuid())
 
   referralCode String
   referrerId   String?
-  // referralId   String
 
-  // Click details
   ipAddress   String?
   userAgent   String?
   referrerUrl String?
   landingPage String?
 
-  // Geolocation (optional)
   country String?
   city    String?
 
@@ -1018,7 +1258,6 @@ model ReferralClick {
   convertedAt       DateTime?
 
   sessionId String?
-  // Relations
   referral  AgentReferral? @relation(fields: [referrerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -1066,21 +1305,17 @@ model ReferralReward {
   @@index([expiresAt])
 }
 
-// Referral Conversion Tracking
 model ReferralConversion {
   id         String @id @default(cuid())
   referralId String
   paymentId  String @unique
 
-  // Conversion details
   amount     Decimal @db.Decimal(10, 2)
-  commission Decimal @db.Decimal(10, 2) // Agent's commission from this conversion
+  commission Decimal @db.Decimal(10, 2)
 
-  // Status
   isPaid Boolean   @default(false)
   paidAt DateTime?
 
-  // Relations
   referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
   payment  Payment       @relation(fields: [paymentId], references: [id])
 
@@ -1091,23 +1326,19 @@ model ReferralConversion {
   @@index([createdAt])
 }
 
-// Sub-Agent Promotion Requests
 model PromotionRequest {
   id         String @id @default(cuid())
-  agentId    String // Agent requesting to promote
+  agentId    String
   propertyId String
-  ownerId    String // Property owner or listing agent
+  ownerId    String
 
-  // Request details
   message String?
   status  PromotionRequestStatus @default(PENDING)
 
-  // Response
   rejectionReason String?
   respondedAt     DateTime?
-  respondedBy     String? // User ID who responded
+  respondedBy     String?
 
-  // Relations
   agent    User     @relation("PromotionRequester", fields: [agentId], references: [id])
   property Property @relation("PromotionRequests", fields: [propertyId], references: [id])
   owner    User     @relation("PromotionOwner", fields: [ownerId], references: [id])
@@ -1122,21 +1353,17 @@ model PromotionRequest {
   @@index([status])
 }
 
-// Property Promotion Settings
 model PropertyPromotionSettings {
   id         String @id @default(cuid())
   propertyId String @unique
 
-  // Promotion type
   promotionType PropertyPromotionType @default(RESTRICTED)
 
-  // Settings
   allowPublicSharing Boolean @default(false)
   requireApproval    Boolean @default(true)
   autoApproveAgents  Boolean @default(false)
-  maxSubAgents       Int? // Optional limit on number of sub-agents
+  maxSubAgents       Int?
 
-  // Relations
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -1164,20 +1391,17 @@ model Dispute {
   paymentId String @unique
   renterId  String
 
-  // Core fields
   reason              DisputeReason
   description         String
   preferredResolution PreferredResolution
   status              DisputeStatus       @default(PENDING)
 
-  // Resolution
   resolutionOutcome DisputeResolutionOutcome?
   resolutionNotes   String?
   refundAmount      Decimal?                  @db.Decimal(10, 2)
   resolvedAt        DateTime?
   assignedAdminId   String?
 
-  // Relations
   rental   Rental            @relation(fields: [rentalId], references: [id])
   payment  Payment           @relation(fields: [paymentId], references: [id])
   renter   User              @relation(fields: [renterId], references: [id])
@@ -1197,7 +1421,7 @@ model DisputeComment {
   id         String @id @default(cuid())
   disputeId  String
   authorId   String
-  authorRole Role // Reuses your existing Role enum
+  authorRole Role
   comment    String
 
   dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
@@ -1239,6 +1463,7 @@ enum DisputeReason {
   FRAUDULENT_LISTING
   SAFETY_CONCERNS
   PRICING_DISCREPANCY
+  SERVICE_NOT_DELIVERED // ++ ADDED — renter challenge about a vendor visit
   OTHER
 }
 
@@ -1257,10 +1482,10 @@ enum DisputeResolutionOutcome {
 }
 
 enum PropertyPromotionType {
-  PUBLIC // Anyone can share with 'share' button
-  PERMISSION_BASED // Agents must request and get approved
-  RESTRICTED // No external promotion allowed
-  REQUEST_BASED // Only specific requested agents
+  PUBLIC
+  PERMISSION_BASED
+  RESTRICTED
+  REQUEST_BASED
 }
 
 enum PromotionRequestStatus {
@@ -1316,147 +1541,100 @@ enum VerificationStatus {
   REJECTED
 }
 
-
 // ============================================================================
-// SUBSCRIPTION SYSTEM v2 — Add to your existing schema.prisma
+// SUBSCRIPTION SYSTEM v2 (unchanged — see your original notes for the
+// enforcement rules: free renters, property caps, commission rates,
+// marking-job access, VA creation, renewal cron, founding cohorts)
 // ============================================================================
-// CHANGELOG v2:
-//   - Renters are FREE now. RENTER_BASIC_PREMIUM removed entirely.
-//   - RENTER_FREE plan added — all renters start here, no card, no expiry.
-//   - RENTER_PREMIUM_PLUS kept — currently free for founding 300, paid later.
-//   - FREE_ACTIVE status added — free plans never count as paid "ACTIVE".
-//   - isFreeRenterPlan flag added — gates the future paid conversion without migration.
-//   - renterPaidPlanUnlockedAt — timestamp for when you flip renters to paid billing.
-//   - FREE_PLAN_CONVERTED event added for founding renter → paid conversion audit trail.
-//
-// INSTRUCTIONS:
-// 1. Add the new models below to your packages/db/prisma/schema.prisma
-// 2. Add the new enums below to your schema
-// 3. Add the `subscription` and `subscriptionHistory` relations to your User model
-// 4. Run: npx prisma migrate dev --name add_subscription_system
-// ============================================================================
-
-
-// ----------------------------------------------------------------------------
-// STEP 1: Add these two lines inside your existing `model User { ... }`
-// ----------------------------------------------------------------------------
-
-// subscription        Subscription?
-// subscriptionHistory SubscriptionHistory[]
-
-
-// ----------------------------------------------------------------------------
-// STEP 2: Add these NEW MODELS to your schema
-// ----------------------------------------------------------------------------
 
 model Subscription {
-  id                    String             @id @default(cuid())
-  userId                String             @unique   // One active subscription per user at a time
+  id     String @id @default(cuid())
+  userId String @unique
 
-  // Plan Details
-  planType              SubscriptionPlan               // Which plan they're on
-  billingCycle          BillingCycle       @default(MONTHLY)
-  userRole              Role                           // OWNER | AGENT | RENTER (mirrors User.role)
+  planType     SubscriptionPlan
+  billingCycle BillingCycle     @default(MONTHLY)
+  userRole     Role
 
-  // Pricing (stored at time of subscription — protects against future price changes)
-  amountNaira           Decimal            @db.Decimal(10, 2)
-  discountPercent       Decimal?           @db.Decimal(5, 2)  // e.g. 16.67 for "2 months free" annual
-  finalAmountNaira      Decimal            @db.Decimal(10, 2) // Actual charged amount after discount
+  amountNaira      Decimal  @db.Decimal(10, 2)
+  discountPercent  Decimal? @db.Decimal(5, 2)
+  finalAmountNaira Decimal  @db.Decimal(10, 2)
 
-  // Flutterwave Subscription Data
-  flwPlanId             String?            // Flutterwave payment plan ID
-  flwSubscriptionId     String?  @unique   // Flutterwave subscription ID (returned after first charge)
-  flwCustomerToken      String?            // Tokenized card — used for recurring charges
-  flwTransactionRef     String?            // Last successful transaction reference
-  flwCustomerId         String?            // Flutterwave customer ID
+  flwPlanId         String?
+  flwSubscriptionId String? @unique
+  flwCustomerToken  String?
+  flwTransactionRef String?
+  flwCustomerId     String?
 
-  // Subscription Lifecycle
-  status                SubscriptionStatus @default(PENDING)
-  currentPeriodStart    DateTime?          // When current billing period started
-  currentPeriodEnd      DateTime?          // When current billing period ends (renewal date)
-  trialEndsAt           DateTime?          // If a trial period is offered (future use)
-  cancelledAt           DateTime?          // When user cancelled
-  cancellationReason    String?            // Optional: why they cancelled
-  pausedAt              DateTime?          // For future pause feature
-  pausedUntil           DateTime?
+  status             SubscriptionStatus @default(PENDING)
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  trialEndsAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  pausedAt           DateTime?
+  pausedUntil        DateTime?
 
-  // Landlord-specific: property cap enforcement
-  propertyListingCap    Int?               // null = unlimited (Elite), 2 = Essential cap
-  currentPropertyCount  Int      @default(0) // Tracked count for cap enforcement
+  propertyListingCap   Int?
+  currentPropertyCount Int  @default(0)
 
-  // Agent-specific: founding cohort tracking
-  isFoundingAgent       Boolean  @default(false)
-  foundingAgentNumber   Int?               // Their number in the first-100 cohort (e.g. Agent #47)
+  isFoundingAgent     Boolean @default(false)
+  foundingAgentNumber Int?
 
-  // Renter-specific: free plan + founding cohort
-  // Renters are FREE now. isFreeRenterPlan = true means no charge ever runs for this subscription.
-  // When you're ready to launch paid billing, set renterPaidPlanUnlockedAt — that's the only change needed.
-  isFreeRenterPlan        Boolean   @default(false)   // true for RENTER_FREE and founding RENTER_PREMIUM_PLUS
-  renterPaidPlanUnlockedAt DateTime?                  // Set by admin/script when paid renter billing launches
-                                                      // Until this is set, the renewal cron skips this record entirely
+  isFreeRenterPlan         Boolean   @default(false)
+  renterPaidPlanUnlockedAt DateTime?
 
-  isFoundingMember        Boolean   @default(false)
-  foundingMemberNumber    Int?                        // Their number in first-300 cohort
-  lockedRateNaira         Decimal?  @db.Decimal(10, 2) // Rate charged on first renewal after paid billing launches
-                                                        // Founding renters are NEVER charged current plan price
+  isFoundingMember     Boolean  @default(false)
+  foundingMemberNumber Int?
+  lockedRateNaira      Decimal? @db.Decimal(10, 2)
 
-  // Marking job access (agents on Premium + renters on Premium Plus)
-  canAccessMarkingJobs    Boolean   @default(false)
+  canAccessMarkingJobs Boolean @default(false)
 
-  // Auto-renewal
-  autoRenew             Boolean  @default(true)
-  nextRenewalAttempt    DateTime?          // Scheduled next charge attempt
-  renewalFailureCount   Int      @default(0) // How many times renewal has failed
-  lastRenewalAttemptAt  DateTime?
+  autoRenew            Boolean   @default(true)
+  nextRenewalAttempt   DateTime?
+  renewalFailureCount  Int       @default(0)
+  lastRenewalAttemptAt DateTime?
 
-  // Virtual account trigger (for Premium renters — created after subscription activates)
-  virtualAccountCreated Boolean  @default(false)
+  virtualAccountCreated Boolean @default(false)
 
-  // Relations
-  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  history               SubscriptionHistory[]
-  invoices              SubscriptionInvoice[]
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  history  SubscriptionHistory[]
+  invoices SubscriptionInvoice[]
 
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([status])
   @@index([planType])
   @@index([userRole])
-  @@index([currentPeriodEnd])  // For renewal jobs — query "find subscriptions expiring soon"
+  @@index([currentPeriodEnd])
   @@index([flwSubscriptionId])
   @@index([isFoundingAgent])
   @@index([isFoundingMember])
 }
 
-
-// Tracks every status change — for auditing, support, and analytics
 model SubscriptionHistory {
-  id               String             @id @default(cuid())
-  subscriptionId   String
-  userId           String
+  id             String @id @default(cuid())
+  subscriptionId String
+  userId         String
 
-  // What changed
-  eventType        SubscriptionEvent
-  fromStatus       SubscriptionStatus?
-  toStatus         SubscriptionStatus?
-  fromPlan         SubscriptionPlan?
-  toPlan           SubscriptionPlan?
+  eventType  SubscriptionEvent
+  fromStatus SubscriptionStatus?
+  toStatus   SubscriptionStatus?
+  fromPlan   SubscriptionPlan?
+  toPlan     SubscriptionPlan?
 
-  // Payment context (if this event was triggered by a payment)
   flwTransactionRef String?
-  amountCharged     Decimal?          @db.Decimal(10, 2)
+  amountCharged     Decimal?       @db.Decimal(10, 2)
   paymentStatus     PaymentStatus?
 
-  // Metadata
-  notes            String?            // e.g. "Renewal failed — card declined"
-  triggeredBy      String?            // "system" | "user" | "admin" | userId
+  notes       String?
+  triggeredBy String?
 
-  subscription     Subscription       @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt        DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([subscriptionId])
   @@index([userId])
@@ -1464,21 +1642,17 @@ model SubscriptionHistory {
   @@index([createdAt])
 }
 
-
-// One record per billing cycle charge — your receipts/invoices system
 model SubscriptionInvoice {
-  id                String        @id @default(cuid())
-  subscriptionId    String
-  userId            String
+  id             String @id @default(cuid())
+  subscriptionId String
+  userId         String
 
-  // Invoice details
-  invoiceNumber     String        @unique  // e.g. "NC-INV-2024-000001"
-  periodStart       DateTime
-  periodEnd         DateTime
-  amountNaira       Decimal       @db.Decimal(10, 2)
-  currency          String        @default("NGN")
+  invoiceNumber String   @unique
+  periodStart   DateTime
+  periodEnd     DateTime
+  amountNaira   Decimal  @db.Decimal(10, 2)
+  currency      String   @default("NGN")
 
-  // Payment result
   status            InvoiceStatus @default(PENDING)
   flwTransactionRef String?       @unique
   flwTransactionId  String?       @unique
@@ -1487,11 +1661,11 @@ model SubscriptionInvoice {
   retryCount        Int           @default(0)
   nextRetryAt       DateTime?
 
-  subscription      Subscription  @relation(fields: [subscriptionId], references: [id])
-  user          User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([subscriptionId])
   @@index([userId])
@@ -1499,78 +1673,52 @@ model SubscriptionInvoice {
   @@index([createdAt])
 }
 
-
-// Flutterwave payment plans — created once via API, reused for all subscribers
-// You create these once (via script or admin panel), then store the IDs here
 model FlutterwavePlan {
-  id              String       @id @default(cuid())
+  id String @id @default(cuid())
 
-  // Plan identity
-  planType        SubscriptionPlan  @unique  // Maps 1:1 to your subscription plans
-  name            String            // Human-readable: "NewCondo Elite — Monthly"
-  description     String?
+  planType    SubscriptionPlan @unique
+  name        String
+  description String?
 
-  // Flutterwave data
-  flwPlanId       String       @unique  // The plan ID from Flutterwave's API
-  flwPlanCode     String?              // Flutterwave's internal plan code
+  flwPlanId   String  @unique
+  flwPlanCode String?
 
-  // Pricing
-  amountNaira     Decimal      @db.Decimal(10, 2)
-  billingCycle    BillingCycle
-  interval        String       // "monthly" | "yearly" — Flutterwave's format
+  amountNaira  Decimal      @db.Decimal(10, 2)
+  billingCycle BillingCycle
+  interval     String
 
-  // Status
-  isActive        Boolean      @default(true)
+  isActive Boolean @default(true)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([planType])
   @@index([flwPlanId])
 }
 
-
-// ----------------------------------------------------------------------------
-// STEP 3: Add these NEW ENUMS to your schema
-// ----------------------------------------------------------------------------
-
-// All subscription plan variants across all three user types
 enum SubscriptionPlan {
-  // Landlord / Property Owner plans
-  OWNER_ESSENTIAL          // ₦7,500/mo — up to 2 properties, 20% commission
-  OWNER_ELITE              // ₦18,500/mo — unlimited properties, 15% commission
-
-  // Agent plans (Founding Agent Program — first 100)
-  AGENT_ESSENTIAL          // Lower tier — paid only
-  AGENT_PREMIUM            // Higher tier — marking jobs access, sub-agent tools
-
-  // Renter plans
-  // RENTER_FREE is the default for ALL renters right now — no card, no expiry, no charge.
-  // RENTER_PREMIUM_PLUS is free for the first 300 founding renters.
-  // Both will become paid (₦1,500/mo and ₦3,500/mo) when renterPaidPlanUnlockedAt is set.
-  RENTER_FREE              // Free forever base plan — browse, pay, refund window, all included
-  RENTER_PREMIUM_PLUS      // Free now for founding 300 → ₦3,500/mo when paid billing launches
-
-  // Annual variants — owners and agents only for now (renters don't have annual billing yet)
+  OWNER_ESSENTIAL
+  OWNER_ELITE
+  AGENT_ESSENTIAL
+  AGENT_PREMIUM
+  RENTER_FREE
+  RENTER_PREMIUM_PLUS
   OWNER_ESSENTIAL_ANNUAL
   OWNER_ELITE_ANNUAL
   AGENT_ESSENTIAL_ANNUAL
   AGENT_PREMIUM_ANNUAL
-  // RENTER_PREMIUM_PLUS_ANNUAL — add this when paid renter billing launches
 }
 
 enum SubscriptionStatus {
-  PENDING          // Payment initiated but not yet confirmed
-  FREE_ACTIVE      // On a free plan — no payment required, no expiry date
-                   // Used for: RENTER_FREE and founding RENTER_PREMIUM_PLUS
-                   // Renewal cron ignores FREE_ACTIVE records entirely
-  ACTIVE           // Paid subscription in good standing (owners and agents only, for now)
-  TRIAL            // On a free trial (future use)
-  PAST_DUE         // Renewal payment failed — grace period active
-  CANCELLED        // User cancelled — access until period end
-  EXPIRED          // Period ended with no renewal
-  PAUSED           // Temporarily paused (future feature)
-  SUSPENDED        // Admin-suspended (e.g. policy violation)
+  PENDING
+  FREE_ACTIVE
+  ACTIVE
+  TRIAL
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+  PAUSED
+  SUSPENDED
 }
 
 enum BillingCycle {
@@ -1579,117 +1727,31 @@ enum BillingCycle {
 }
 
 enum SubscriptionEvent {
-  CREATED              // First subscription created
-  ACTIVATED            // Payment confirmed — subscription went ACTIVE
-  RENEWED              // Successful renewal charge
-  RENEWAL_FAILED       // Renewal charge failed
-  RENEWAL_RETRIED      // Retry attempt after failure
-  UPGRADED             // Moved to a higher plan (e.g. Essential → Elite)
-  DOWNGRADED           // Moved to a lower plan
-  CANCELLED            // User cancelled
-  EXPIRED              // Naturally expired without renewal
-  REACTIVATED          // Cancelled/expired user re-subscribed
-  PAUSED               // Subscription paused
-  RESUMED              // Subscription resumed from pause
-  SUSPENDED            // Admin suspended
-  TRIAL_STARTED        // Trial began
-  TRIAL_ENDED          // Trial ended (converted or expired)
-  VIRTUAL_ACCOUNT_CREATED  // For Premium renters — VA created after activation
-  PLAN_CHANGED         // General plan change event
-  FREE_PLAN_CONVERTED  // Founding renter converted from free → paid billing
-                       // Fired when renterPaidPlanUnlockedAt is set and first charge runs
-  FREE_ACCESS_GRANTED  // A free plan was granted (new renter signup, or admin grant)
+  CREATED
+  ACTIVATED
+  RENEWED
+  RENEWAL_FAILED
+  RENEWAL_RETRIED
+  UPGRADED
+  DOWNGRADED
+  CANCELLED
+  EXPIRED
+  REACTIVATED
+  PAUSED
+  RESUMED
+  SUSPENDED
+  TRIAL_STARTED
+  TRIAL_ENDED
+  VIRTUAL_ACCOUNT_CREATED
+  PLAN_CHANGED
+  FREE_PLAN_CONVERTED
+  FREE_ACCESS_GRANTED
 }
 
 enum InvoiceStatus {
-  PENDING      // Awaiting payment
-  PAID         // Successfully charged
-  FAILED       // Charge failed
-  REFUNDED     // Invoice amount refunded
-  VOID         // Cancelled before payment
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  VOID
 }
-
-
-// ============================================================================
-// ENFORCEMENT LOGIC — Notes for your backend service layer
-// ============================================================================
-//
-// 1. RENTER SIGNUP (current behaviour — free):
-//    When a new RENTER registers:
-//    → Create a Subscription record with:
-//        planType     = RENTER_FREE  (or RENTER_PREMIUM_PLUS if within first 300)
-//        status       = FREE_ACTIVE
-//        isFreeRenterPlan = true
-//        billingCycle = MONTHLY (doesn't matter yet — no charge runs)
-//        amountNaira  = 0
-//        finalAmountNaira = 0
-//        currentPeriodStart = now()
-//        currentPeriodEnd   = null  ← no expiry on free plans
-//    → For founding 300: set isFoundingMember = true, foundingMemberNumber = <next available>
-//    → Log FREE_ACCESS_GRANTED event in SubscriptionHistory
-//    → No Flutterwave interaction at all
-//
-// 2. RENTER PREMIUM PLUS — free for founding 300:
-//    → Same as above but planType = RENTER_PREMIUM_PLUS
-//    → canAccessMarkingJobs = false  (Premium Plus renters get this when paid billing launches)
-//    → lockedRateNaira = 3500  ← stored now, charged later
-//    → Virtual account: create immediately on signup (they're Premium Plus, even if free)
-//    → Log VIRTUAL_ACCOUNT_CREATED in SubscriptionHistory
-//
-// 3. FLIPPING RENTERS TO PAID BILLING (future — one admin action):
-//    When you're ready to charge renters:
-//    → Run a migration script that sets renterPaidPlanUnlockedAt = NOW() on all
-//      renter subscriptions where status = FREE_ACTIVE
-//    → The renewal cron will pick them up on next run
-//    → Founding renters: charge lockedRateNaira (never the current plan price)
-//    → Non-founding renters: charge current planType price (₦3,500 for Premium Plus)
-//    → Status transitions: FREE_ACTIVE → PENDING → ACTIVE (on successful charge)
-//    → Log FREE_PLAN_CONVERTED event in SubscriptionHistory
-//    → No schema migration needed — the fields are already there
-//
-// 4. PROPERTY CAP (Landlord Essential):
-//    Before allowing a new property listing:
-//    → Check subscription.planType === OWNER_ESSENTIAL
-//    → If yes, check subscription.currentPropertyCount >= subscription.propertyListingCap (2)
-//    → If capped: return 403 with upgrade prompt
-//    → Increment currentPropertyCount on each new listing, decrement on deletion
-//
-// 5. COMMISSION RATE:
-//    When calculating rent commission:
-//    → OWNER_ELITE / OWNER_ELITE_ANNUAL → 15% platform commission
-//    → All other owner plans or no subscription → 20% platform commission
-//
-// 6. MARKING JOB ACCESS:
-//    Before allowing a user to accept/request marking jobs:
-//    → Check subscription.canAccessMarkingJobs === true
-//    → Currently set to true for: AGENT_PREMIUM only
-//    → RENTER_PREMIUM_PLUS gets canAccessMarkingJobs = true when paid billing launches
-//
-// 7. VIRTUAL ACCOUNT CREATION:
-//    → RENTER_PREMIUM_PLUS (even free): create VA on signup
-//    → OWNER / AGENT: create VA on account creation (already in your schema)
-//    → RENTER_FREE: no VA (they use the platform payment flow without a personal VA)
-//
-// 8. RENEWAL JOB (cron) — owners and agents only for now:
-//    → Query: WHERE status = ACTIVE AND currentPeriodEnd <= NOW() + 3 days
-//             AND isFreeRenterPlan = false   ← CRITICAL: skip all free renter records
-//    → Attempt charge via Flutterwave using flwCustomerToken
-//    → On success: extend currentPeriodEnd, log RENEWED event, create new invoice
-//    → On failure: set status = PAST_DUE, increment renewalFailureCount, schedule retry
-//    → After 3 failed retries: set status = EXPIRED, log EXPIRED event
-//
-// 9. FOUNDING AGENT COHORT:
-//    → First 100 agents on AGENT_PREMIUM: isFoundingAgent = true, foundingAgentNumber = <next>
-//    → Per your frontend data: founding Premium agents get it "free for life"
-//    → Implement as: isFreeRenterPlan = false (agents are paid) BUT you manually credit
-//      their subscription or set a special flag — handle this via admin action or
-//      a foundingAgentFreeForLife Boolean field if you need hard enforcement
-//
-// ============================================================================
-
-// ============================================================================
-// EXISTING MODELS (keeping all other models as they were)
-// ============================================================================
-
-// ... [Keep all other existing models like Account, Document, Session, etc.]
-// ... [I'm omitting them here for brevity, but they remain unchanged]

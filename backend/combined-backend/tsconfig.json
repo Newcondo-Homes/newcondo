@@ -36,11 +36,11 @@
       // ],
     }
   },
-  "references": [
-    { "path": "../shared" },
-    { "path": "../auth-service" },
-    { "path": "../payment-service" }
-  ],
+  // "references": [
+  //   { "path": "../shared" },
+  //   { "path": "../auth-service" },
+  //   { "path": "../payment-service" }
+  // ],
   "include": [
     "src/**/*"
 , "create-flw-plans.js"  ],
