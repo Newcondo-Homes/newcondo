@@ -22,7 +22,7 @@ router.get("/bank-accounts", authMiddleware, async (req, res, next) => {
 // Sensitive bank operations require a fresh OTP: request one (branded email),
 // then pass `otp` in the add / change-default body.
 router.post("/bank-accounts/request-otp", authMiddleware, async (req, res, next) => {
-  try { await requestBankOtp(req.user!.id, req.user!.email, req.user!.name); res.json({ success: true }); } catch (e) { next(e); }
+  try { await requestBankOtp(req.user!.id, req.user!.email); res.json({ success: true }); } catch (e) { next(e); }
 });
 router.post("/bank-accounts", authMiddleware, async (req, res, next) => {
   try {

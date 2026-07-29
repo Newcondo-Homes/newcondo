@@ -24,8 +24,15 @@ router.post("/jobs/:id/dispute", ...lister, async (req, res, next) => {
 
 // agent: queue + marking
 router.get("/available-jobs", ...agent, async (req, res, next) => {
-  try { res.json({ success: true, data: await m.availableJobs(Number(req.query.lat), Number(req.query.lng), req.query.radiusKm ? Number(req.query.radiusKm) : undefined) }); } catch (e) { next(e); }
+  try {
+    res.json({ success: true, data: await m.availableJobs({
+      city: req.query.city ? String(req.query.city) : undefined,
+      state: req.query.state ? String(req.query.state) : undefined,
+      limit: req.query.limit ? Number(req.query.limit) : undefined,
+    }) });
+  } catch (e) { next(e); }
 });
+
 router.post("/queue/:jobId/join", ...agent, async (req, res, next) => {
   try { res.json({ success: true, data: await m.joinQueue(req.params.jobId, req.user!.id) }); } catch (e) { next(e); }
 });
