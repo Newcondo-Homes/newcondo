@@ -20,7 +20,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
-import { toast, Toaster } from "@/components/ui/sonner";
+import { toast, Toaster } from "@newcondo/ui";
 import { validateTenantInvite, isLiveBackend } from "@/lib/api/dashboard";
 
 interface InviteCtx {
@@ -82,7 +82,7 @@ export default function TenantInvitePage({ params }: { params: Promise<{ token: 
       if (isLiveBackend) {
         // Sign in, then consume the invite with the existing account —
         // POST /properties/tenant-invites/accept creates the Rental row.
-        const { signIn } = await import("next-auth/react");
+        const { signIn } = await import("@newcondo/auth/client");
         const res = await signIn("credentials", { email: login.email, password: login.password, redirect: false });
         if (res?.error) throw new Error("Email or password is not correct");
         const apiClient = (await import("@/lib/api/client")).default;

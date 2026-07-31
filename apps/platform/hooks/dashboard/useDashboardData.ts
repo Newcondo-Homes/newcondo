@@ -102,12 +102,14 @@ export function useRenterRental() {
 
 /* -------- services / referrals / notifications / analytics -------- */
 export function useServices() {
-  // GET /api/v1/services/overview (vendor-service) — plan + jobs
-  return useQuery({ queryKey: ["services"], queryFn: () => fromApi(api.getServicesOverview, DUMMY_SERVICES) });
+  // GET /api/v1/services/overview (vendor-service) — plan + jobs.
+  // Explicit generic: without it TanStack infers `{}` from the untyped API
+  // response and every `data.x` access fails type-check in the production build.
+  return useQuery<typeof DUMMY_SERVICES>({ queryKey: ["services"], queryFn: () => fromApi(api.getServicesOverview as () => Promise<typeof DUMMY_SERVICES>, DUMMY_SERVICES) });
 }
 export function useReferrals() {
   // GET /api/v1/referrals/stats (referral-service) — link, funnel counts, credits, history
-  return useQuery({ queryKey: ["referrals"], queryFn: () => fromApi(api.getReferralStats, DUMMY_REFERRALS) });
+  return useQuery<typeof DUMMY_REFERRALS>({ queryKey: ["referrals"], queryFn: () => fromApi(api.getReferralStats as () => Promise<typeof DUMMY_REFERRALS>, DUMMY_REFERRALS) });
 }
 export function useNotifications(role: Role) {
   // list from GET /api/v1/notifications; real-time arrivals come through

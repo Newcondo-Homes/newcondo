@@ -297,7 +297,7 @@ export function ShareExperience({ property, shareCode = "" }: { property: Shared
     </main>
       <AnimatePresence>
         {renting && <RentGate onClose={() => setRenting(false)} signedIn={false}
-          property={{ id: (property as SharedProperty & { id?: string }).id ?? shareCode, title: property.title, price: property.price, shareCode,
+          property={{ id: (property as SharedProperty & { id?: string }).id ?? shareCode, title: property.title, price: Number(property.price), shareCode,
             units: (property as SharedProperty & { units?: { label: string; status: string; price?: number }[] }).units ?? [{ label: "Main unit", status: property.isAvailable ? "VACANT" : "OCCUPIED" }] }} />}
       </AnimatePresence>
     </>

@@ -84,7 +84,11 @@ export const withdrawApi = (amount: number) => apiClient.post<{ reference: strin
 export const setAutoPayoutApi = (mode: string) => apiClient.patch("/payments/wallet/auto-payout", { mode });
 
 /* ---- referrals ---- */
-export const getReferralStats = () => apiClient.get("/referrals/stats").then(unwrap);
+export interface ReferralStatsPayload {
+  link: string; invited: number; signedUp: number; converted: number; credits: number;
+  history: { id: string; name: string; status: string; reward: number; date: string; note?: string }[];
+}
+export const getReferralStats = () => apiClient.get<ReferralStatsPayload>("/referrals/stats").then(unwrap);
 export const sendReferralInvite = (email: string) => apiClient.post("/referrals/invite", { email });
 export const getLeaderboard = (page = 1, pageSize?: number) =>
   apiClient.get(`/referrals/leaderboard?page=${page}${pageSize ? `&pageSize=${pageSize}` : ""}`).then(unwrap);
