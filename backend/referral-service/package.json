@@ -2,8 +2,8 @@
   "name": "@newcondo/referral-service",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/server.js",
-  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": "./src/index.ts",
     "./controllers": "./dist/auth-service/src/controllers/index.js",

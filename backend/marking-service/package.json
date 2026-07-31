@@ -1,8 +1,9 @@
 {
   "name": "@newcondo/marking-service",
   "version": "1.0.0",
-  "description": "Property boundary marking and verification service for NewCondo platform",
-  "main": "dist/server.js",
+  "description": "Newcondo property marking — job requests, FCFS agent queue with 3-hour slots, S3 photo uploads, AI building segmentation and owner confirmation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
