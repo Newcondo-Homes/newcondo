@@ -31,7 +31,7 @@
       "@newcondo/db": ["../../packages/db/dist/index.d.ts"]
     }
   },
-  "files": ["../shared/src/types/express.d.ts"],
+
   "references": [{ "path": "../shared" }],
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules", "**/*.test.ts", "**/*.spec.ts"]

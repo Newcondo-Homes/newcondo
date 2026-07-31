@@ -38,7 +38,6 @@
   },
   // Force-load shared's ambient Express augmentation (req.user) — glob
   // includes can't reach across a package boundary.
-  "files": ["../shared/src/types/express.d.ts"],
   "references": [
     { "path": "../shared" },
     { "path": "../property-service" }
