@@ -5,10 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./controllers": "./dist/auth-service/src/controllers/index.js",
-    "./middleware": "./dist/auth-service/src/middleware/index.js",
-    "./validations": "./dist/auth-service/src/validations/index.js"
+    ".": "./dist/index.js",
+    "./services": "./dist/services/index.js"
   },
   "scripts": {
     "build": "tsc ",
