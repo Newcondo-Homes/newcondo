@@ -131,9 +131,9 @@ export const FOOTER: Record<string, string[]> = {
 export type NavLink = [label: string, href: string];
 
 export const NAV_LINKS: NavLink[] = [
-  ["How it works", "#how"],
-  ["Features", "#features"],
-  ["Pricing", "#pricing"],
+  ["How it works", "/how-it-works"],
+  ["Features", "/features"],
+  ["Pricing", "/pricing"],
   // ["For Agents", "#"],
   // ["For Renters", "#"],
 ];

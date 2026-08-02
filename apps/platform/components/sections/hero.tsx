@@ -132,12 +132,7 @@ export function Hero() {
         >
           Built for Nigerian property owners
         </motion.div>
-        <motion.div
-  variants={fade}
-  className="text-[12px] font-semibold tracking-[0.16em] uppercase text-green-bright mb-[22px]"
->
-  Newcondo — Property Management & Rent Payment Platform
-</motion.div>
+
         <h1 className="m-0 font-bold text-cream max-w-[17ch] text-[clamp(40px,6vw,84px)] leading-[0.97] tracking-[-0.045em]">
           <span className="line-mask">
             <motion.span className="block" variants={line}>
@@ -171,9 +166,6 @@ export function Hero() {
           variants={fade}
           className="text-[clamp(16px,1.35vw,19px)] leading-[1.55] text-text-on-dark-2 max-w-[600px] mt-11"
         >
-          Newcondo is a property management and rent payment platform that helps property owners list homes and manage tenants while allowing renters to process rent payments seamlessly.
-
-
           Agents collect rent and go silent. Tenants damage property and deny it. You manage everything from WhatsApp at
           midnight. Newcondo fixes all of that — and covers your fumigation, waste management, and legal paperwork while
           doing it.
