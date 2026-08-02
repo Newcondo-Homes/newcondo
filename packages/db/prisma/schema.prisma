@@ -30,7 +30,7 @@ model User {
   phoneVerified DateTime?
   passwordHash  String?
   image         String?
-  role          Role
+  role          Role      @default(RENTER)
   userType      UserType?
 
   subscription         Subscription?
