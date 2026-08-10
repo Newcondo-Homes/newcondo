@@ -28,18 +28,27 @@ export default function ReferralsPage() {
   const [copied, setCopied] = useState(false);
   if (isLoading || !data) return (<><PageHead title="Referrals" sub="Loading…" /><SkeletonRows n={4} h={70} /></>);
   return (
-    <>
+    // MOBILE FIX: `min-w-0` lets every descendant shrink instead of forcing the
+    // page wider than the viewport, and overflow-x-clip is the belt-and-braces
+    // guard so a stray wide child can never make the whole page pan sideways.
+    <div className="min-w-0 overflow-x-clip">
       <PageHead title="Referrals" sub={COPY[role]} />
       <div className="mb-4 rounded-[22px] bg-ink p-[22px] text-cream max-sm:rounded-[18px] max-sm:p-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="min-w-[240px] flex-1">
-            <div className="text-[17px] font-bold tracking-[-0.02em]">Your referral link</div>
+        {/* MOBILE FIX: this row used to be `min-w-[240px] flex-1` next to
+            `max-w-[420px] flex-[1_1_320px]` — a 240px minimum beside a 320px
+            flex-basis. On a ~360px phone those can't share a line, and the
+            320px basis pushed the Copy button past the screen edge, which is
+            what made the whole referrals page scroll left/right. Now it's a
+            single column on mobile and only goes side-by-side from `sm` up. */}
+        <div className="flex flex-col gap-3.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <div className="min-w-0 sm:min-w-[240px] sm:flex-1">
+            <div className="text-[17px] font-bold tracking-[-0.02em] max-sm:text-[15.5px]">Your referral link</div>
             <div className="mt-1 text-[12.5px] text-text-on-dark-2">Rewards trigger only after your invitee pays — that&rsquo;s how both sides earn.</div>
           </div>
           {/* onCopied opens the confirm modal/sheet listing the active areas */}
-          <div className="max-w-[420px] flex-[1_1_320px]"><CopyField value={data.link} silent onCopied={() => setCopied(true)} /></div>
+          <div className="min-w-0 sm:max-w-[420px] sm:flex-[1_1_320px]"><CopyField value={data.link} silent onCopied={() => setCopied(true)} /></div>
           <button onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Join me on Newcondo — verified rentals, escrow-protected payments: https://${data.link}`)}`, "_blank", "noopener")}
-            className="flex items-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2.5 text-[13px] font-semibold text-white max-sm:w-full max-sm:justify-center">
+            className="flex flex-none items-center justify-center gap-1.5 rounded-full bg-[#25D366] px-4 py-2.5 text-[13px] font-semibold text-white max-sm:w-full">
             <Icon name="send" size={14} />Share on WhatsApp
           </button>
         </div>
@@ -52,7 +61,7 @@ export default function ReferralsPage() {
       </div>
       {/* Agents are the primary affiliates — leaderboard sits beside activity */}
       <div className="mb-4 grid grid-cols-[1.5fr_1fr] gap-4 max-[960px]:grid-cols-1">
-        <Card tight className="self-start">
+        <Card tight className="min-w-0 self-start">
           <CardH pad title="Referral activity" />
           {data.history.map((r) => (
             <Row key={r.id}>
@@ -68,12 +77,12 @@ export default function ReferralsPage() {
             </Row>
           ))}
         </Card>
-        <div className="self-start"><LeaderboardCard /></div>
+        <div className="min-w-0 self-start"><LeaderboardCard /></div>
       </div>
       <ActiveAreasCard />
       <AnimatePresence>
         {copied && <CopiedLinkModal link={data.link} onClose={() => setCopied(false)} />}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

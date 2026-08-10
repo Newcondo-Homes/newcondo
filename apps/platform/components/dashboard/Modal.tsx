@@ -15,6 +15,53 @@ import { DBtn } from "./primitives";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/* Tracks how many modals are open so nested/stacked dialogs don't unlock the
+   page when only the inner one closes. */
+let lockCount = 0;
+
+/**
+ * Locks the page behind the modal.
+ *
+ * `overflow: hidden` alone is NOT enough on mobile Safari/Chrome — touch
+ * scrolling falls through to <body> and the page slides under the sheet
+ * (the reported bug: dragging anywhere, inside or outside the sheet, moved
+ * the screen). Position-fixing the body is what actually stops it, and we
+ * restore the exact scroll position on close so the page doesn't jump.
+ */
+function useBodyScrollLock() {
+  useEffect(() => {
+    lockCount += 1;
+    const body = document.body;
+    if (lockCount === 1) {
+      const y = window.scrollY;
+      body.dataset.ncScrollY = String(y);
+      body.style.position = "fixed";
+      body.style.top = `-${y}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      body.style.width = "100%";
+      body.style.overflow = "hidden";
+      // Stops the iOS rubber-band bounce behind the sheet.
+      body.style.overscrollBehavior = "none";
+    }
+    return () => {
+      lockCount -= 1;
+      if (lockCount === 0) {
+        const y = Number(body.dataset.ncScrollY ?? 0);
+        body.style.position = "";
+        body.style.top = "";
+        body.style.left = "";
+        body.style.right = "";
+        body.style.width = "";
+        body.style.overflow = "";
+        body.style.overscrollBehavior = "";
+        delete body.dataset.ncScrollY;
+        window.scrollTo(0, y);
+      }
+    };
+  }, []);
+}
+
 export function Modal({ title, sub, onClose, children, wide, footer }: {
   title?: string; sub?: string; onClose: () => void; children: ReactNode; wide?: boolean; footer?: ReactNode;
 }) {
@@ -23,6 +70,7 @@ export function Modal({ title, sub, onClose, children, wide, footer }: {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
+  useBodyScrollLock();
   // Portal to <body>: ancestors with backdrop-filter/transform (the sticky
   // glass Topbar!) become the containing block for position:fixed, which
   // anchored modals opened from the topbar (e.g. the notifications page) to
@@ -32,16 +80,21 @@ export function Modal({ title, sub, onClose, children, wide, footer }: {
   if (!mounted) return null;
   return createPortal(
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-ink/40 p-5 backdrop-blur-sm max-sm:items-end max-sm:p-0"
+      // overscroll-none stops a scroll gesture that reaches the end of the
+      // sheet from chaining out to the page behind it.
+      className="fixed inset-0 z-[100] flex items-center justify-center overscroll-none bg-ink/40 p-5 backdrop-blur-sm max-sm:items-end max-sm:p-0"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      // Touch equivalent of the mousedown scrim-close, so tapping outside
+      // dismisses on phones too.
+      onTouchStart={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
         role="dialog" aria-modal="true"
         className={cx(
           // Desktop: no visible scrollbar — tall wizards fit within 92vh and any
           // rare overflow scrolls with the scrollbar hidden (kept reachable).
-          "relative max-h-[92vh] overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-surface p-6 shadow-pop",
+          "relative max-h-[92vh] overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-surface p-6 shadow-pop",
           wide ? "w-[640px]" : "w-[480px]",
           "max-w-full max-sm:max-h-[94dvh] max-sm:w-full max-sm:rounded-b-none max-sm:rounded-t-[26px] max-sm:px-[18px] max-sm:pb-[calc(20px+env(safe-area-inset-bottom))]"
         )}

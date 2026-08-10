@@ -47,16 +47,27 @@ export function EditPropertyModal({ propTitle, propPrice, units, agentOwner, onS
       {f.units.length > 0 && (<>
         <div className="mb-2 mt-0.5 text-[13px] font-semibold">Flats — set which are ready to rent</div>
         {f.units.map((u, i) => (
-          <div key={u.n} className="mb-2 flex flex-wrap items-center gap-3 rounded-[14px] border border-border-hair p-3">
-            <Thumb size={40} icon={u.status === "UNDER_CONSTRUCTION" ? "hammer" : "home"} />
-            <div className="min-w-0 flex-1">
-              <div className="text-[14px] font-semibold">{u.n}</div>
-              <div className="mt-0.5 text-[12.5px] text-text-tertiary">
-                {u.status === "OCCUPIED" ? `${u.renter} · till ${u.till}` : u.status === "VACANT" ? "Visible to renters" : "Hidden from renters"}
+          // MOBILE FIX: the flat name/meta and the 230px status select used to be
+          // siblings on one flex-wrap row. On a phone the select + thumb + gaps
+          // left the text column ~60px wide, so "Flat B" and "Visible to
+          // renters" wrapped one word per line and collided (see bug report).
+          // Now the row stacks below `sm`: thumb + text keep their own full-width
+          // line, and the select drops underneath at full width.
+          <div key={u.n} className="mb-2 flex items-center gap-3 rounded-[14px] border border-border-hair p-3 max-sm:flex-col max-sm:items-stretch">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <Thumb size={40} icon={u.status === "UNDER_CONSTRUCTION" ? "hammer" : "home"} />
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-[14px] font-semibold">{u.n}</div>
+                <div className="mt-0.5 truncate text-[12.5px] text-text-tertiary">
+                  {u.status === "OCCUPIED" ? `${u.renter} · till ${u.till}` : u.status === "VACANT" ? "Visible to renters" : "Hidden from renters"}
+                </div>
               </div>
+              {/* Occupied is a static badge — keep it inline with the name even
+                  on mobile, since it's short and there's no control to stack. */}
+              {u.status === "OCCUPIED" && <div className="flex-none sm:hidden"><StatusBadge s="OCCUPIED" /></div>}
             </div>
-            {u.status === "OCCUPIED" ? <StatusBadge s="OCCUPIED" /> : (
-              <div className="w-[230px] max-w-full flex-none">
+            {u.status === "OCCUPIED" ? <div className="hidden flex-none sm:block"><StatusBadge s="OCCUPIED" /></div> : (
+              <div className="w-full flex-none sm:w-[230px]">
                 <NCSelect value={u.status} onChange={(v) => setUnit(i, v as FlatUnit["status"])}
                   options={[{ value: "VACANT", label: "Vacant — ready to rent" }, { value: "UNDER_CONSTRUCTION", label: "Under construction" }]} />
               </div>

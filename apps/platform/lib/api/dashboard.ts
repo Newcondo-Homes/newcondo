@@ -12,7 +12,7 @@
 import apiClient from "@/lib/api/client";
 import type { BankAccount, Tenant, BrowseResult, BrowseFilters, Notification, Tx } from "@/lib/dashboard/data";
 
-export const isLiveBackend = Boolean(process.env.NEXT_PUBLIC_API_URL);
+export const isLiveBackend = false;
 
 const unwrap = <T,>(res: { data?: T }) => { if (res.data === undefined) throw new Error("Empty response"); return res.data; };
 
@@ -64,7 +64,7 @@ export const requestPromotion = (propertyId: string) => apiClient.post(`/propert
 export const getPromotionRequests = () => apiClient.get("/promotion-requests").then(unwrap);
 export const approvePromotion = (id: string) => apiClient.post<{ promoUrl: string; splitPct: number }>(`/promotion-requests/${id}/approve`).then(unwrap);
 export const declinePromotion = (id: string, reason?: string) => apiClient.post(`/promotion-requests/${id}/decline`, { reason });
-export const createAgentInvite = (agentEmail?: string) => apiClient.post<{ url: string; expiresInDays: number }>("/agent-invites", { agentEmail }).then(unwrap);
+export const createAgentInvite = (agentEmail?: string) => apiClient.post<{ url: string; expiresInDays: number; emailSent?: boolean }>("/agent-invites", { agentEmail }).then(unwrap);
 export const validateAgentInvite = (token: string) => apiClient.get<{ ownerName: string }>(`/agent-invites/${token}`).then(unwrap);
 export const acceptAgentInvite = (token: string) => apiClient.post<{ ownerName: string }>("/agent-invites/accept", { token }).then(unwrap);
 export const getLinkedOwners = () => apiClient.get<{ ownerId: string; ownerName: string }[]>("/agent-invites/owners").then(unwrap);
@@ -114,9 +114,77 @@ export const initiateMarkingPaymentApi = (b: { propertyId: string; method: strin
 /** AI segmentation: satellite snapshot key → { polygonNorm, maskKey } (vision model + server-side green-polygon extraction) */
 export const segmentBuildingApi = (jobId: string, screenshotKey: string, geo: { state: string; city: string; propertyId: string }) =>
   apiClient.post<{ polygonNorm: [number, number][]; maskKey: string }>(`/marking/jobs/${jobId}/segment`, { screenshotKey, geo }).then(unwrap);
+export interface SavedCardInfo {
+  hasSavedCard: boolean;
+  last4?: string;
+  brand?: string;
+  expiry?: string;
+}
+
+export type ChargeFailureCode =
+  | "INSUFFICIENT_FUNDS"
+  | "CARD_DECLINED"
+  | "CARD_EXPIRED"
+  | "NO_SAVED_CARD"
+  | "NETWORK"
+  | "UNKNOWN";
+
+export interface MarkingChargeResult {
+  ok: boolean;
+  jobId?: string;
+  reference: string;
+  amount: number;
+  failureCode?: ChargeFailureCode;
+  failureMessage?: string;
+  retryWithInline?: boolean;
+}
+
+/** Does the user have a subscription card token we can charge silently? */
+export const getSavedCardApi = () =>
+  apiClient.get<SavedCardInfo>("/marking/saved-card").then(unwrap);
+
+/** Server-to-server tokenized charge. A DECLINE returns ok:false (not a throw). */
+export const payMarkingWithSavedCardApi = (b: {
+  propertyId: string;
+  method: string;
+  contactName: string;
+  contactPhone: string;
+  accessNotes?: string;
+}) =>
+  apiClient.post<MarkingChargeResult>("/marking/jobs/pay-with-saved-card", b).then(unwrap);
 
 /* ---- vendor services ---- */
 export const getServicesOverview = () => apiClient.get("/services/overview").then(unwrap);
 export const requestServiceApi = (b: { propertyId: string; serviceType: string; notes?: string }) => apiClient.post("/services/request", b).then(unwrap);
 export const rescheduleServiceJob = (id: string) => apiClient.post(`/services/jobs/${id}/reschedule`);
 export const reportServiceIssue = (id: string, reason: string) => apiClient.post(`/services/jobs/${id}/issue`, { reason });
+
+/* ---- agent promotions ---- */
+export interface PromoteResult {
+  status: "APPROVED" | "PENDING";
+  /** Present only when APPROVED — the agent's tracked link. */
+  promoUrl?: string;
+  /** Share of total rent the sub-agent earns, e.g. 2 (%). */
+  splitPct?: number;
+  requestId?: string;
+}
+
+
+// create property
+export interface CreatePropertyResult { id: string; title: string; status: "DRAFT"; needsMarking: true }
+
+export const createPropertyApi = (body: {
+  title: string; propertyType: string; price: number; unitCount: number;
+  description?: string; amenities?: string[];
+  state: string; lga: string; area: string; address?: string;
+  ownerId?: string; undertaking: boolean; ownerConsent?: boolean;
+}) => apiClient.post<CreatePropertyResult>("/properties", body).then(unwrap);
+
+export const getUnmarkedProperties = () =>
+  apiClient.get<{ id: string; title: string; location: string; status: string; price: number; marked: boolean }[]>(
+    "/properties/unmarked"
+  ).then(unwrap);
+
+/** Agent adds a browsed property to their promotions. */
+export const promoteProperty = (propertyId: string) =>
+  apiClient.post<PromoteResult>(`/properties/${propertyId}/promote`, {}).then(unwrap);

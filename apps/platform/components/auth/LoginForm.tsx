@@ -39,6 +39,12 @@ const INPUT_BASE =
   "focus:border-ink focus:shadow-[0_0_0_4px_rgba(19,19,19,0.06)] " +
   "disabled:cursor-not-allowed disabled:opacity-60";
 
+const SOCIAL_BTN =
+  "flex w-full items-center justify-center gap-[11px] rounded-full border border-border bg-surface " +
+  "px-5 py-[clamp(11px,1.6vh,13px)] font-sans text-[15px] font-semibold text-text-primary " +
+  "transition-[background,box-shadow,transform] duration-200 ease-nc hover:bg-white hover:shadow-sm " +
+  "active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60";
+
 /** Google "G" mark. */
 function GoogleMark() {
   return (
@@ -51,6 +57,18 @@ function GoogleMark() {
   );
 }
 
+/** Facebook "f" mark — official blue, so it reads instantly next to Google. */
+function FacebookMark() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[19px] w-[19px]" aria-hidden>
+      <path
+        fill="#1877F2"
+        d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.96h-1.51c-1.49 0-1.96.93-1.96 1.89v2.26h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"
+      />
+    </svg>
+  );
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -58,10 +76,13 @@ export function LoginForm() {
   const [formData, setFormData] = useState<LoginFormData>(initialFormData);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // Which social provider is mid-flight, so only that button spins.
+  const [socialLoading, setSocialLoading] = useState<"google" | "facebook" | null>(null);
   const [errors, setErrors] = useState<Partial<LoginFormData>>({});
   const [loginError, setLoginError] = useState("");
 
   const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
+  const busy = isLoading || socialLoading !== null;
 
   const handleInputChange = (field: keyof LoginFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -128,14 +149,14 @@ export function LoginForm() {
 
   const handleSocialLogin = async (provider: "google" | "facebook") => {
     try {
-      setIsLoading(true);
+      setSocialLoading(provider);
       await signIn(provider, { callbackUrl, redirect: true });
     } catch (error) {
       console.error("Social login error:", error);
-      toast.error("Social login failed", {
+      toast.error(`${provider === "google" ? "Google" : "Facebook"} sign-in failed`, {
         description: "Please try again or use email login.",
       });
-      setIsLoading(false);
+      setSocialLoading(null);
     }
   };
 
@@ -190,16 +211,39 @@ export function LoginForm() {
           )}
         </AnimatePresence>
 
-        {/* social */}
-        <button
-          type="button"
-          onClick={() => handleSocialLogin("google")}
-          disabled={isLoading}
-          className="flex w-full items-center justify-center gap-[11px] rounded-full border border-border bg-surface px-5 py-[clamp(11px,1.6vh,13px)] font-sans text-[15px] font-semibold text-text-primary transition-[background,box-shadow,transform] duration-200 ease-nc hover:bg-white hover:shadow-sm active:scale-[0.985] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <GoogleMark />
-          Continue with Google
-        </button>
+        {/* social — Google + Facebook. Side by side from `sm` up (labels stay
+            readable at that width); stacked full-width on small phones. */}
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => handleSocialLogin("google")}
+            disabled={busy}
+            className={SOCIAL_BTN}
+          >
+            {socialLoading === "google" ? (
+              <Loader2 size={18} strokeWidth={2} className="animate-spin" />
+            ) : (
+              <GoogleMark />
+            )}
+            <span className="sm:hidden">Continue with Google</span>
+            <span className="max-sm:hidden">Google</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSocialLogin("facebook")}
+            disabled={busy}
+            className={SOCIAL_BTN}
+          >
+            {socialLoading === "facebook" ? (
+              <Loader2 size={18} strokeWidth={2} className="animate-spin" />
+            ) : (
+              <FacebookMark />
+            )}
+            <span className="sm:hidden">Continue with Facebook</span>
+            <span className="max-sm:hidden">Facebook</span>
+          </button>
+        </div>
 
         <div className="my-[clamp(14px,2.2vh,24px)] flex items-center gap-4 text-[12.5px] font-semibold uppercase tracking-[0.1em] text-text-tertiary before:h-px before:flex-1 before:bg-border before:content-[''] after:h-px after:flex-1 after:bg-border after:content-['']">
           or sign in with email
@@ -218,7 +262,7 @@ export function LoginForm() {
                 autoComplete="email"
                 placeholder="you@example.com"
                 value={formData.email}
-                disabled={isLoading}
+                disabled={busy}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 className={cx(INPUT_BASE, errors.email && "border-danger focus:shadow-[0_0_0_4px_rgba(192,57,43,0.12)]")}
               />
@@ -242,7 +286,7 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                disabled={isLoading}
+                disabled={busy}
                 className="border-0 bg-transparent p-0 text-[13px] font-semibold text-text-secondary transition-colors duration-200 ease-nc hover:text-ink hover:underline hover:underline-offset-[3px] disabled:opacity-60"
               >
                 Forgot password?
@@ -255,7 +299,7 @@ export function LoginForm() {
                 autoComplete="current-password"
                 placeholder="Enter your password"
                 value={formData.password}
-                disabled={isLoading}
+                disabled={busy}
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 className={cx(INPUT_BASE, "pr-[50px]", errors.password && "border-danger focus:shadow-[0_0_0_4px_rgba(192,57,43,0.12)]")}
               />
@@ -265,7 +309,7 @@ export function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
-                disabled={isLoading}
+                disabled={busy}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border-0 bg-transparent text-text-tertiary transition-[color,background] duration-200 ease-nc hover:bg-black/[0.04] hover:text-ink disabled:opacity-60"
               >
@@ -283,7 +327,7 @@ export function LoginForm() {
           <button
             type="button"
             onClick={() => handleInputChange("rememberMe", !formData.rememberMe)}
-            disabled={isLoading}
+            disabled={busy}
             className="mt-0.5 flex cursor-pointer select-none items-center gap-2.5 border-0 bg-transparent p-0 text-[14px] text-text-secondary disabled:opacity-60"
           >
             <span
@@ -304,7 +348,7 @@ export function LoginForm() {
           {/* submit */}
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={busy}
             className="mt-1 inline-flex w-full items-center justify-center gap-2.5 rounded-full border border-transparent bg-ink px-6 py-[15px] text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:bg-black hover:shadow-card active:scale-[0.97] disabled:cursor-default disabled:opacity-[0.65]"
           >
             {isLoading ? (

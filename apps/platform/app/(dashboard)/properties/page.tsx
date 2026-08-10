@@ -56,20 +56,36 @@ function OwnerProperties() {
         {shown.length === 0 && <EmptyState icon="building-2" title="Nothing here" sub="No properties match this filter yet." />}
         {shown.map((p) => (
           <Row key={p.id} onClick={() => router.push(`/properties/${p.id}`)}>
-            <Thumb />
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[14px] font-semibold tracking-[-0.01em]">{p.title}</div>
-              <div className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-text-tertiary">
-                <StatusBadge s={p.status} />
-                {p.marked && <StatusBadge s="VERIFIED"><Icon name="map-pin" size={11} />Marked</StatusBadge>}
-                <span>{p.location}</span>
+            {/* MOBILE FIX: the price + flat-summary block was `flex-none` beside
+                a `flex-1` title column. Its nowrap price and long summary text
+                ("2 occupied · 1 vacant · 1 under construction") kept their full
+                width, squeezing the title column until the two collided — the
+                reported overlap. Same pattern the agent rows already use:
+                a wrapping container with a `basis-[200px]` text column, so on a
+                phone the meta block drops to its own full-width line instead of
+                competing for horizontal space. The thumb is hidden on mobile to
+                buy back 52px. */}
+            <Thumb className="max-sm:hidden" />
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1.5">
+              <div className="min-w-0 flex-1 basis-[200px]">
+                <div className="truncate text-[14px] font-semibold tracking-[-0.01em]">{p.title}</div>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-text-tertiary">
+                  <StatusBadge s={p.status} />
+                  {p.marked && <StatusBadge s="VERIFIED"><Icon name="map-pin" size={11} />Marked</StatusBadge>}
+                  <span className="min-w-0 truncate">{p.location}</span>
+                </div>
+              </div>
+              <div className="flex flex-none items-center gap-2.5 max-sm:w-full max-sm:justify-between">
+                <div className="min-w-0 sm:text-right">
+                  <div className="whitespace-nowrap font-mono text-[13px] font-semibold">{ngn(p.price)}<span className="font-normal text-text-tertiary">/{p.per}</span></div>
+                  <div className="mt-1 text-[12px] leading-snug text-text-tertiary max-sm:hidden">{flatSummary(p.id) ?? `${p.flatsRented}/${p.flats} flats rented`}</div>
+                </div>
+                {/* On mobile the summary reads better beside the price than
+                    stacked under it — and it's free to wrap here. */}
+                <span className="text-[12px] leading-snug text-text-tertiary sm:hidden">{flatSummary(p.id) ?? `${p.flatsRented}/${p.flats} flats rented`}</span>
+                <Icon name="chevron-right" size={15} className="flex-none text-text-tertiary max-sm:hidden" />
               </div>
             </div>
-            <div className="flex-none text-right">
-              <div className="whitespace-nowrap font-mono text-[13px] font-semibold">{ngn(p.price)}<span className="font-normal text-text-tertiary">/{p.per}</span></div>
-              <div className="mt-1 text-[12px] text-text-tertiary">{flatSummary(p.id) ?? `${p.flatsRented}/${p.flats} flats rented`}</div>
-            </div>
-            <Icon name="chevron-right" size={15} className="text-text-tertiary" />
           </Row>
         ))}
       </Card>

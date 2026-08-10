@@ -121,7 +121,7 @@ function PgBtn({ disabled, onClick, label }: { disabled: boolean; onClick: () =>
 }
 function pageWindow(page: number, total: number): number[] {
   const span = 5;
-  let start = Math.max(1, Math.min(page - 2, total - span + 1));
+  const start = Math.max(1, Math.min(page - 2, total - span + 1));
   return Array.from({ length: Math.min(span, total) }, (_, i) => start + i);
 }
 
@@ -140,10 +140,38 @@ export function useActiveAreas() {
 export function ActiveAreasCard() {
   const { data = ACTIVE_AREAS } = useActiveAreas();
   return (
-    <Card tight>
-      <CardH pad title="Active coverage areas" right={<span className="text-[12px] text-text-tertiary">we launch area by area</span>} />
+    <Card tight className="min-w-0">
+      <CardH pad title="Active coverage areas" right={<span className="text-[12px] text-text-tertiary max-sm:hidden">we launch area by area</span>} />
       <p className="mx-4 mb-2 mt-0 text-[12.5px] leading-normal text-text-tertiary">Your link converts only in these areas — signups from anywhere else can&rsquo;t transact yet.</p>
-      <div className="overflow-x-auto">
+
+      {/* MOBILE: a 4-column table with nowrap cells can't fit a phone, so it
+          either scrolled sideways or dragged the page with it. Below `sm` the
+          same data renders as stacked rows instead — state/city as the heading,
+          the launch date as a chip, and the areas as wrapping pills. */}
+      <div className="flex flex-col sm:hidden">
+        {data.map((a) => (
+          <div key={a.state + a.city} className="border-t border-border-hair px-4 py-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="truncate text-[13.5px] font-semibold tracking-[-0.01em]">{a.city}</div>
+                <div className="mt-0.5 text-[11.5px] text-text-tertiary">{a.state} State</div>
+              </div>
+              <span className="flex-none rounded-full bg-green-wash px-2.5 py-1 text-[10.5px] font-semibold text-green-dark">
+                Live {a.launched}
+              </span>
+            </div>
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {a.areas.map((ar) => (
+                <span key={ar} className="rounded-full bg-surface-sunken px-2.5 py-1 text-[11.5px] font-medium text-text-secondary">{ar}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* DESKTOP: the full table. `min-w-0` on the wrapper keeps its internal
+          scroll from ever propagating to the page. */}
+      <div className="hidden min-w-0 overflow-x-auto sm:block">
         <table className="w-full border-collapse">
           <thead><tr>
             {["State", "City", "Areas", "Live since"].map((h) => <th key={h} className="border-b border-border-hair px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.1em] text-text-tertiary">{h}</th>)}
@@ -151,14 +179,14 @@ export function ActiveAreasCard() {
           <tbody>
             {data.map((a) => (
               <tr key={a.state + a.city} className="border-b border-border-hair last:border-b-0">
-                <td className="px-4 py-3 text-[13px] font-semibold whitespace-nowrap">{a.state}</td>
-                <td className="px-4 py-3 text-[13px] whitespace-nowrap">{a.city}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-[13px] font-semibold">{a.state}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-[13px]">{a.city}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1.5">
                     {a.areas.map((ar) => <span key={ar} className="rounded-full bg-surface-sunken px-2.5 py-1 text-[11.5px] font-medium text-text-secondary">{ar}</span>)}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-[12px] text-text-tertiary whitespace-nowrap">{a.launched}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-[12px] text-text-tertiary">{a.launched}</td>
               </tr>
             ))}
           </tbody>

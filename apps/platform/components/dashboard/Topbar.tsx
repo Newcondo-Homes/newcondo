@@ -1,11 +1,12 @@
 "use client";
 
-/* Topbar: crumb, notifications bell (popover), user menu, preview role
-   switcher (remove in production — role comes from the session). */
+/* Topbar: crumb, notifications bell (popover), user menu, dev-only role
+   switcher (compiled out of production builds). */
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { signOut } from "@newcondo/auth/client";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { toast } from "@newcondo/ui";
@@ -16,6 +17,14 @@ import { useNotificationStream } from "@/hooks/dashboard/useNotificationStream";
 import { markAllNotificationsRead, isLiveBackend } from "@/lib/api/dashboard";
 import { NotificationsModal } from "@/components/dashboard/NotificationsModal";
 import type { Notification, Role } from "@/lib/dashboard/data";
+
+/** Gates dev-only affordances (the role switcher). Inlined at build time, so
+    the block below is dead-code-eliminated from the production bundle.     
+*/
+// TODO: change this to [const IS_DEV = process.env.NODE_ENV === "development";] when product is 
+// ready to be shipped to customers
+
+const IS_DEV = "development";
 
 const CRUMB: Record<string, string> = {
   "/dashboard": "Dashboard", "/properties": "Properties", "/marking": "Marking", "/payments": "Payments",
@@ -42,6 +51,7 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
   const { role, setRole, user } = useRole();
   const [open, setOpen] = useState<"notif" | "me" | null>(null);
   const [allNotifs, setAllNotifs] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const { data: notifs = [] } = useNotifications(role);
   useNotificationStream(role); // SSE: live pushes land in the same cache + toast
@@ -62,6 +72,25 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
     cache.update<Notification[]>(["notifications", role], (l) => l.map((n) => ({ ...n, unread: false })));
     toast.info("All notifications marked as read");
   };
+
+  /* Real sign-out. `redirect: true` lets NextAuth clear the session cookie
+     server-side and then navigate — safer than a client-side router.push,
+     which can race the cookie clear and briefly re-render a protected page.
+     We also drop the preview role so the next account doesn't inherit it. */
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      localStorage.removeItem("nc-dash-role");
+    } catch {}
+    try {
+      await signOut({ callbackUrl: "/login", redirect: true });
+    } catch (err) {
+      console.error("Sign out error:", err);
+      setSigningOut(false);
+      toast.error("Could not sign you out", { description: "Please try again." });
+    }
+  };
+
   return (
     <div className="sticky top-0 z-50 flex items-center gap-3.5 border-b border-border-hair bg-nc-background/80 px-[clamp(14px,3.5vw,44px)] py-2.5 backdrop-blur-xl">
       <button className="hidden max-[1000px]:flex text-ink" onClick={onBurger} aria-label="Menu"><Icon name="menu" size={20} /></button>
@@ -70,15 +99,17 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
         {parts.length > 1 && (<><Icon name="chevron-right" size={13} /><span className="truncate">{parts[1]}</span></>)}
       </div>
       <div ref={wrapRef} className="ml-auto flex items-center gap-2.5">
-        {/* PREVIEW ONLY — in production the role comes from the session; delete this switcher */}
-        <div className="flex gap-[3px] rounded-full bg-surface-sunken p-[3px] max-sm:hidden">
-          {(["OWNER", "AGENT", "RENTER"] as Role[]).map((r) => (
-            <button key={r} onClick={() => { setRole(r); router.push("/dashboard"); }}
-              className={cx("rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors", role === r ? "bg-ink text-cream" : "text-text-tertiary")}>
-              {ROLE_LABEL[r].split(" ")[0]}
-            </button>
-          ))}
-        </div>
+        {/* DEV ONLY — role normally comes from the session. */}
+        {IS_DEV && (
+          <div className="flex gap-[3px] rounded-full bg-surface-sunken p-[3px] max-sm:hidden" title="Dev only — role switcher">
+            {(["OWNER", "AGENT", "RENTER"] as Role[]).map((r) => (
+              <button key={r} onClick={() => { setRole(r); router.push("/dashboard"); }}
+                className={cx("rounded-full px-3 py-1.5 text-[12px] font-semibold transition-colors", role === r ? "bg-ink text-cream" : "text-text-tertiary")}>
+                {ROLE_LABEL[r].split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="relative">
           <button aria-label="Notifications" onClick={() => setOpen(open === "notif" ? null : "notif")}
             className="relative grid size-[38px] place-items-center rounded-full border border-nc-border bg-surface text-ink transition-colors hover:bg-surface-soft">
@@ -123,14 +154,16 @@ export function Topbar({ onBurger }: { onBurger: () => void }) {
               <motion.div {...pop} className="absolute right-0 top-[46px] z-[70] w-[250px] rounded-[18px] border border-border-hair bg-surface p-2 shadow-pop">
                 <div className="mb-1.5 border-b border-border-hair px-3 pb-3 pt-2.5">
                   <div className="text-[14px] font-semibold">{user.name}</div>
-                  <div className="mt-0.5 text-[12px] text-text-tertiary">{user.email}</div>
+                  <div className="mt-0.5 truncate text-[12px] text-text-tertiary">{user.email}</div>
                 </div>
                 <Link href="/profile" onClick={() => setOpen(null)} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium text-text-primary no-underline hover:bg-surface-sunken">
                   <Icon name="settings" size={16} />Profile &amp; Settings
                 </Link>
-                <button onClick={() => toast.info("Signed out (preview)", { description: "In production this calls signOut() from @newcondo/auth/client" })}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium text-danger hover:bg-surface-sunken">
-                  <Icon name="log-out" size={16} />Sign out
+                <button onClick={handleSignOut} disabled={signingOut}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] font-medium text-danger hover:bg-surface-sunken disabled:opacity-60">
+                  {signingOut
+                    ? <><Icon name="loader" size={16} className="animate-spin" />Signing out…</>
+                    : <><Icon name="log-out" size={16} />Sign out</>}
                 </button>
               </motion.div>
             )}

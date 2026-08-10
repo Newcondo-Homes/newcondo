@@ -18,6 +18,7 @@ import { Modal } from "@/components/dashboard/Modal";
 import { DBtn, KV, Banner, MapPlaceholder, PhotoGrid } from "@/components/dashboard/primitives";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { ngn } from "@/lib/dashboard/format";
+import { useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
 import { DUMMY_GEO, AMENITIES } from "@/lib/dashboard/data";
 import * as api from "@/lib/api/dashboard";
 
@@ -41,6 +42,8 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
   const owners = useLinkedOwners(!!agent);
   const [f, setF] = useState<F>({ title: "", type: "Flat", price: "", flats: "1", desc: "", state: "", lga: "", area: "", amenities: [], ownerName: "", ownerBank: "", ownerAcct: "", undertaking: false, consent: false });
   const [errs, setErrs] = useState<Record<string, string | null>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const cache = useCacheUpdate();
   const set = <K extends keyof F>(k: K, v: F[K]) => { setF((x) => ({ ...x, [k]: v })); setErrs((e) => ({ ...e, [k]: null })); };
   const steps = agent ? ["Details", "Address", "Owner & legal", "Review"] : ["Details", "Address", "Legal", "Review"];
   // Gate: an agent with NO linked owner can't list — explain how invites work.
@@ -73,14 +76,55 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
     return !Object.keys(e).length;
   };
   const next = () => { if (validate() && step < steps.length - 1) setStep(step + 1); };
-  const submit = () => {
-    onClose();
-    /* TODO(backend): mutation — on success invalidate ["properties","mine"] */
-    toast.promise(new Promise((res) => setTimeout(res, 1500)), {
-      loading: "Creating listing…",
-      success: () => { setTimeout(() => router.push("/marking"), 200); return "Listing created as draft — next: GPS-mark the property so it can go live."; },
-      error: "Could not create the listing",
-    });
+
+  /* Real create. The listing is born DRAFT + unmarked server-side, so the
+     success copy routes the user straight to marking — that's the step that
+     actually makes it listable. Invalidating ["properties","mine"] and
+     ["properties","unmarked"] makes it appear in My Properties AND in the
+     Request-marking Property dropdown without a refresh. */
+  const submit = async () => {
+    if (!validate()) return;
+    setSubmitting(true);
+    const toastId = toast.loading("Creating listing…");
+    try {
+      if (api.isLiveBackend) {
+        await api.createPropertyApi({
+          title: f.title.trim(),
+          propertyType: f.type,
+          price: Number(f.price),
+          unitCount: Math.max(1, Number(f.flats) || 1),
+          description: f.desc.trim() || undefined,
+          amenities: f.amenities,
+          state: f.state,
+          lga: f.lga,
+          area: f.area,
+          undertaking: f.undertaking,
+          ...(agent
+            ? {
+                ownerId: (owners.data ?? []).find((o) => o.ownerName === f.ownerName)?.ownerId,
+                ownerConsent: f.consent,
+              }
+            : {}),
+        });
+      } else {
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+      cache.invalidate(["properties", "mine"]);
+      cache.invalidate(["properties", "unmarked"]);
+      toast.success("Listing created as a draft", {
+        id: toastId,
+        description: "Next: GPS-mark the property so it can go live.",
+      });
+      onClose();
+      setTimeout(() => router.push("/marking"), 200);
+    } catch (e) {
+      toast.error("Could not create the listing", {
+        id: toastId,
+        description: (e as { message?: string })?.message ?? "Please try again.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
   const lgas = f.state ? Object.keys(DUMMY_GEO[f.state] ?? {}) : [];
   const areas = f.state && f.lga ? DUMMY_GEO[f.state]?.[f.lga] ?? [] : [];
@@ -90,7 +134,11 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
         {step > 0 && <DBtn variant="line" onClick={() => setStep(step - 1)}>Back</DBtn>}
         {step < steps.length - 1
           ? <DBtn onClick={next}>Continue<Icon name="arrow-right" size={14} strokeWidth={2.2} /></DBtn>
-          : <DBtn onClick={submit}><Icon name="check" size={14} strokeWidth={2.2} />Create listing</DBtn>}
+          : <DBtn onClick={submit} disabled={submitting}>
+              {submitting
+                ? <><Icon name="loader" size={14} className="animate-spin" />Creating…</>
+                : <><Icon name="check" size={14} strokeWidth={2.2} />Create listing</>}
+            </DBtn>}
       </>}>
       <div className="mb-[18px] flex items-center gap-1.5">
         {steps.map((s, i) => (

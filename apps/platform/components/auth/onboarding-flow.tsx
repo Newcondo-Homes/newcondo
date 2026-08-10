@@ -40,7 +40,7 @@ import { EASE } from "@/components/motion";
 import { UserType } from "@/types/api";
 import type { Plan, PaymentResult } from "@/types/api";
 import OnboardingForm, { type OnboardingDraft } from "./onboarding-form";
-import SocialAccountDetails from "@/components/onboarding/SocialAccountDetails";
+import SocialAccountDetails, { type SocialDetailsPayload } from "@/components/onboarding/SocialAccountDetails";
 import PlanSelector from "./plan-selector";
 import PaymentProcessing from "./payment-processing";
 import PaymentSuccess from "./payment-success";
@@ -211,10 +211,12 @@ export default function OnboardingFlow() {
         // Social sign-ups have no phone from OAuth and haven't seen our terms
         // checkbox — collect both once, here, before letting them into the
         // plan step (email users already gave phone + accepted terms in
-        // OnboardingForm).
-        setPhase(u.phone ? "plan" : "details");
+        // OnboardingForm). Facebook may also return no EMAIL, which we need
+        // for receipts and password resets, so a missing email routes here too.
+        const needsGapFill = !u.phone || !u.email;
+        setPhase(needsGapFill ? "details" : "plan");
       } catch {
-        setPhase(u.phone ? "plan" : "details");
+        setPhase(!u.phone || !u.email ? "details" : "plan");
       } finally {
         setCheckingState(false);
       }
@@ -298,20 +300,29 @@ export default function OnboardingFlow() {
     [draft]
   );
 
-  /* Social sign-up gap-fill: persist the phone number server-side, push it
-     into the session (and the local draft), then continue to plan. Terms
-     acceptance is enforced client-side by SocialAccountDetails (Continue is
-     disabled until checked) — record termsAcceptedAt here too if your
-     /api/user/profile route supports it. */
+  /* Social sign-up gap-fill: persist phone (and email, when the provider
+     gave us none) server-side, push into the session + local draft, then
+     continue to plan. Terms acceptance is enforced client-side by
+     SocialAccountDetails (Continue is disabled until checked) — record
+     termsAcceptedAt here too if your /api/user/profile route supports it.
+
+     EMAIL: Facebook does not guarantee an email (the user may have signed
+     up with a phone number or declined the permission), so an account can
+     land here with session.user.email empty. Without it we can't send
+     receipts, marking updates or password resets — hence we collect and
+     persist it before letting them reach the plan step. */
   const handleSocialDetailsSubmit = useCallback(
-    async (phone: string) => {
-      const res = await updateProfile({ phone });
+    async ({ phone, email }: SocialDetailsPayload) => {
+      const patch: { phone: string; email?: string } = { phone };
+      if (email) patch.email = email;
+
+      const res = await updateProfile(patch);
       if (!res.success) {
-        alert(res.error ?? "Couldn't save your phone number. Please try again.");
+        alert(res.error ?? "Couldn't save your details. Please try again.");
         return;
       }
-      await update({ phone });
-      setDraft((d) => (d ? { ...d, phone } : d));
+      await update(patch);
+      setDraft((d) => (d ? { ...d, phone, ...(email ? { email } : {}) } : d));
       setPhase("plan");
     },
     [update]
@@ -428,6 +439,8 @@ export default function OnboardingFlow() {
                 <SocialAccountDetails
                   name={draft.name}
                   role={draft.role}
+                  // Facebook may return no email at all — ask for one here.
+                  needsEmail={!draft.email}
                   onSubmit={handleSocialDetailsSubmit}
                   onBack={handleChangeAccountType}
                 />
@@ -456,8 +469,8 @@ export default function OnboardingFlow() {
                       onClick={handleChangeAccountType}
                       className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:text-ink hover:underline"
                     >
-                      Not {" "}
-                      {draft.role === UserType.OWNER ? "a property owner" : draft.role === UserType.AGENT ? "an agent" : "a renter"}? Change account type
+                      Not a{" "}
+                      {draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
                     </button>
                   </div>
                   <PlanSelector
