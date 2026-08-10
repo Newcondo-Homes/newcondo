@@ -18,14 +18,20 @@
 import { createHash, randomBytes } from "crypto";
 import { prisma } from "@newcondo/db";
 import {
-  forbidden, gone, notFound, paymentRequired,
+  forbidden, gone, notFound, paymentRequired, sendEmail,
   publishNotification, sendBrandedEmail, EmailTemplates,
 } from "@newcondo/backend-shared";
 
 const hashToken = (raw: string) => createHash("sha256").update(raw).digest("hex");
 const TTL_MS = 14 * 24 * 3600_000;
 
-export interface AgentInviteResult { url: string; expiresInDays: number }
+export interface AgentInviteResult {
+  url: string;
+  expiresInDays: number;
+  /** true = accepted by the mail transport; false = send failed (see logs);
+      undefined = no agentEmail was supplied, so nothing was sent. */
+  emailSent?: boolean;
+}
 
 /** Owner creates an invite; optionally emails it straight to the agent. */
 export async function createAgentInvite(opts: { ownerId: string; agentEmail?: string }): Promise<AgentInviteResult> {
@@ -50,12 +56,34 @@ export async function createAgentInvite(opts: { ownerId: string; agentEmail?: st
   });
 
   const url = `${process.env.FRONTEND_URL}/agent-invite/${raw}`;
+  let emailSent: boolean | undefined;
   if (opts.agentEmail) {
-    await sendBrandedEmail(opts.agentEmail, EmailTemplates.agentInvite({
-      ownerName: owner.name ?? "A property owner", inviteUrl: url,
-    }));
+    // sendBrandedEmail never throws, so probe the transport directly here to
+    // learn the real outcome. Import sendEmail alongside your other shared
+    // imports: `import { sendEmail } from "@newcondo/backend-shared";`
+    const content = EmailTemplates.agentInvite({
+      ownerName: owner.name ?? "A property owner",
+      inviteUrl: url,
+    });
+    try {
+      const result = await sendEmail({
+        to: opts.agentEmail,
+        subject: content.subject,
+        html: content.html,
+      });
+      emailSent = !!result?.success;
+      if (!emailSent) {
+        console.error(
+          `[agentInvite] Mailgun rejected the invite to ${opts.agentEmail}:`,
+          result?.error
+        );
+      }
+    } catch (e) {
+      emailSent = false;
+      console.error(`[agentInvite] email transport threw for ${opts.agentEmail}:`, e);
+    }
   }
-  return { url, expiresInDays: 14 };
+  return { url, expiresInDays: 14, emailSent };
 }
 
 /** PUBLIC: context for the /agent-invite/[token] page. */

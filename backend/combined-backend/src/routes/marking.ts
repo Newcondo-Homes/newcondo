@@ -2,7 +2,11 @@
 import { Router, type Router as ExpressRouter } from "express";
 import { authMiddleware, requireRole } from "@newcondo/backend-shared";
 import * as m from "@newcondo/marking-service";
-import { initiateMarkingPayment } from "@newcondo/marking-service";
+ import { 
+  initiateMarkingPayment,
+  getSavedCardForMarking,
+  chargeMarkingWithSavedCard,
+} from "@newcondo/marking-service";
 
 const router: ExpressRouter = Router();
 const lister = [authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"])] as const;
@@ -50,6 +54,35 @@ router.post("/jobs/initiate-payment", authMiddleware, requireRole(["OWNER", "AGE
     res.json({ success: true, data: await initiateMarkingPayment({ propertyId, method, contactName, contactPhone, accessNotes, requesterId: req.user!.id, requesterEmail: req.user!.email }) });
   } catch (e) { next(e); }
 });
+
+
+// Does the caller have a card we can charge without showing a checkout?
+// The UI calls this when the paid-method step opens so it can render either
+// "Pay ₦25,000 with saved card ••••4242" or the Inline checkout button.
+router.get("/saved-card", authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await getSavedCardForMarking(req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+// Charge the saved card server-to-server. Returns { ok:true, jobId } on
+// success (the job is already live — confirmMarkingFeePaid ran inline), or
+// { ok:false, failureCode, failureMessage, retryWithInline } so the client
+// can show the right modal (insufficient funds vs declined card).
+// NOTE: never throws on a declined charge — a decline is a 200 with ok:false,
+// because it's an expected business outcome, not a server error.
+router.post("/jobs/pay-with-saved-card", authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"]), async (req, res, next) => {
+  try {
+    const { propertyId, method, contactName, contactPhone, accessNotes } = req.body ?? {};
+    const result = await chargeMarkingWithSavedCard({
+      propertyId, method, contactName, contactPhone, accessNotes,
+      requesterId: req.user!.id,
+      requesterEmail: req.user!.email,
+    });
+    res.json({ success: true, data: result });
+  } catch (e) { next(e); }
+});
+
 // the building green → polygon extracted server-side → returns { polygonNorm,
 // maskKey }. The client then calls /complete with that polygonNorm + mapBounds.
 router.post("/jobs/:id/segment", ...agent, async (req, res, next) => {

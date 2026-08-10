@@ -30,20 +30,54 @@ export const subAgentEffectiveRate = (): number =>
 
 export const subAgentSplitPct = (): number => Math.round(subAgentEffectiveRate() * 1000) / 10;
 
-export async function requestPromotion(opts: { propertyId: string; subAgentId: string }) {
+export interface PromoteResult {
+  /** APPROVED → promoUrl is ready to share. PENDING → the lister must approve. */
+  status: "APPROVED" | "PENDING";
+  promoUrl?: string;
+  splitPct?: number;
+  requestId?: string;
+}
+
+/**
+ * Sub-agent taps "Promote" in Browse.
+ *
+ * The listing's PropertyPromotionSettings.promotionType decides what happens —
+ * this is the gate the Browse button depends on, so it is enforced HERE (server
+ * side) and never inferred from the client:
+ *   PUBLIC                        → auto-approve, mint the tracked link now
+ *   PERMISSION_BASED/REQUEST_BASED→ PENDING request, notify the lister
+ *   RESTRICTED                    → refused outright
+ * `autoApproveAgents` on a permission-based listing also short-circuits to
+ * APPROVED — that's the whole point of the flag.
+ *
+ * No settings row means the schema default (RESTRICTED) is too harsh for a
+ * property the lister already published to Browse, so absent settings are
+ * treated as PERMISSION_BASED: the lister still decides, but the agent isn't
+ * hard-blocked by a row nobody created.
+ */
+export async function requestPromotion(opts: { propertyId: string; subAgentId: string }): Promise<PromoteResult> {
   const property = await prisma.property.findUnique({
     where: { id: opts.propertyId },
     select: {
-      id: true, title: true, status: true, ownerId: true, agentId: true,
+      id: true, title: true, status: true, boundaryVerified: true, ownerId: true, agentId: true,
       owner: { select: { id: true, name: true, email: true } },
       agent: { select: { id: true, name: true, email: true } },
+      promotionSettings: { select: { promotionType: true, autoApproveAgents: true, maxSubAgents: true } },
     },
   });
-  if (!property || property.status !== "PUBLISHED") throw notFound("This listing is not available");
+  // Same invariant Browse enforces: only a published, marked listing is real.
+  if (!property || property.status !== "PUBLISHED" || !property.boundaryVerified) {
+    throw notFound("This listing is not available");
+  }
 
   // Requests go to the listing agent when one exists, else the property owner.
   const lister = property.agent ?? property.owner;
   if (lister.id === opts.subAgentId) throw conflict("You already list this property");
+
+  const mode = property.promotionSettings?.promotionType ?? "PERMISSION_BASED";
+  if (mode === "RESTRICTED") {
+    throw forbidden("The listing agent has restricted promotion on this property");
+  }
 
   const dup = await prisma.promotionRequest.findFirst({
     where: { propertyId: opts.propertyId, agentId: opts.subAgentId, status: { in: ["PENDING", "APPROVED"] } },
@@ -51,19 +85,50 @@ export async function requestPromotion(opts: { propertyId: string; subAgentId: s
   });
   if (dup) throw conflict(dup.status === "APPROVED" ? "You already promote this property" : "Your request is still pending");
 
-  const subAgent = await prisma.user.findUnique({ where: { id: opts.subAgentId }, select: { name: true } });
+  // Cap is counted over APPROVED rows only — pending hopefuls don't consume a slot.
+  const cap = property.promotionSettings?.maxSubAgents ?? null;
+  if (cap != null) {
+    const active = await prisma.promotionRequest.count({
+      where: { propertyId: opts.propertyId, status: "APPROVED" },
+    });
+    if (active >= cap) throw conflict("This listing has reached its sub-agent limit");
+  }
+
+  const subAgent = await prisma.user.findUnique({ where: { id: opts.subAgentId }, select: { name: true, email: true } });
   const subAgentName = subAgent?.name ?? "An agent";
+  const autoApprove = mode === "PUBLIC" || property.promotionSettings?.autoApproveAgents === true;
 
   const created = await prisma.promotionRequest.create({
     data: {
       propertyId: opts.propertyId,
       agentId: opts.subAgentId,   // the sub-agent asking
       ownerId: lister.id,         // whoever must decide
-      status: "PENDING",
+      status: autoApprove ? "APPROVED" : "PENDING",
+      ...(autoApprove ? { respondedAt: new Date(), respondedBy: lister.id } : {}),
     },
     select: { id: true },
   });
 
+  /* ---- PUBLIC / auto-approve: mint the tracked link immediately ---- */
+  if (autoApprove) {
+    const link = await getOrCreateShareLink({ propertyId: opts.propertyId, creatorId: opts.subAgentId, kind: "PROMO" });
+    const splitPct = subAgentSplitPct();
+    await Promise.all([
+      publishNotification({
+        userId: lister.id, kind: "tenant", title: "New sub-agent",
+        body: `${subAgentName} is now promoting ${property.title}.`,
+        to: "/properties", entityType: "promotionRequest", entityId: created.id,
+      }),
+      subAgent?.email
+        ? sendBrandedEmail(subAgent.email, EmailTemplates.promotionApproved({
+            subAgentName, property: property.title, splitPct, promoUrl: link.url,
+          }))
+        : Promise.resolve(),
+    ]);
+    return { status: "APPROVED", promoUrl: link.url, splitPct, requestId: created.id };
+  }
+
+  /* ---- Approval needed: the lister decides ---- */
   await Promise.all([
     publishNotification({
       userId: lister.id, kind: "tenant", title: "Promotion request",
@@ -74,7 +139,7 @@ export async function requestPromotion(opts: { propertyId: string; subAgentId: s
       listerName: lister.name ?? "there", subAgentName, property: property.title,
     })),
   ]);
-  return created;
+  return { status: "PENDING", requestId: created.id };
 }
 
 export interface PromotionRequestRow {

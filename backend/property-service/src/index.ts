@@ -28,3 +28,6 @@ export { requestPromotion, listPromotionRequests, approvePromotion, declinePromo
 
 // marking geometry (single source of truth — marking-service imports these)
 export * from "./lib/marking-geo";
+
+// createProperty
+export { createProperty, listUnmarkedProperties } from "./services/createPropertyService";

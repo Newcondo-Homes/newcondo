@@ -2,7 +2,11 @@ import { Request, Response } from "express";
 import { prisma } from "@newcondo/db";
 import { sendResponse } from "@newcondo/backend-shared";
 import { generateOTP } from "@newcondo/backend-shared";
-import { sendEmail } from "@newcondo/backend-shared";
+// import { sendEmail } from "@newcondo/backend-shared";
+
+// note: this new brandedemail( sendBrandedEmail ) does not throw an error, in the future see if
+// you can make it throw an error in events of failure
+import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
 import type { AuthenticatedRequest } from "../types/auth";
 import { OTPType } from "@newcondo/db";
 
@@ -69,17 +73,31 @@ class OTPController {
         },
       });
 
+      // if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
+      //   await sendEmail({
+      //     to: identifier,
+      //     subject: "Your NewCondo verification code",
+      //     html: `
+      //       <h2>Verification Code</h2>
+      //       <p>Your verification code is: <strong>${otp}</strong></p>
+      //       <p>This code will expire in 10 minutes.</p>
+      //       <p>If you did not request this code, please ignore this email.</p>
+      //     `,
+      //   });
+      // }
+
+
       if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
-        await sendEmail({
-          to: identifier,
-          subject: "Your NewCondo verification code",
-          html: `
-            <h2>Verification Code</h2>
-            <p>Your verification code is: <strong>${otp}</strong></p>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you did not request this code, please ignore this email.</p>
-          `,
-        });
+        await sendBrandedEmail(
+          identifier,
+          EmailTemplates.otp({
+            code: otp,
+            // Shows in the email as "…to verify your email" / "…to sign in",
+            // so one template serves both flows.
+            purpose: type === "LOGIN" ? "sign in" : "verify your email",
+            expiresMinutes: 10,
+          })
+        );
       }
 
       sendResponse(res, 200, "OTP sent successfully", {
@@ -267,17 +285,28 @@ class OTPController {
         },
       });
 
+      // if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
+      //   await sendEmail({
+      //     to: identifier,
+      //     subject: "Your NewCondo verification code (Resent)",
+      //     html: `
+      //       <h2>New Verification Code</h2>
+      //       <p>Your new verification code is: <strong>${otp}</strong></p>
+      //       <p>This code will expire in 10 minutes.</p>
+      //       <p>If you did not request this code, please ignore this email.</p>
+      //     `,
+      //   });
+      // }
+
       if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
-        await sendEmail({
-          to: identifier,
-          subject: "Your NewCondo verification code (Resent)",
-          html: `
-            <h2>New Verification Code</h2>
-            <p>Your new verification code is: <strong>${otp}</strong></p>
-            <p>This code will expire in 10 minutes.</p>
-            <p>If you did not request this code, please ignore this email.</p>
-          `,
-        });
+        await sendBrandedEmail(
+          identifier,
+          EmailTemplates.otp({
+            code: otp,
+            purpose: type === "LOGIN" ? "sign in" : "verify your email",
+            expiresMinutes: 10,
+          })
+        );
       }
 
       sendResponse(res, 200, "New OTP sent successfully", {

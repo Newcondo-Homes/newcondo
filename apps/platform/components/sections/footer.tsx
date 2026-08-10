@@ -11,6 +11,7 @@ const FOOTER_HREFS: Record<string, string> = {
   Blog: "/blog",
   Support: "/support",
   Careers: "/careers",
+  Contact: "/contact",
   // Legal
   "Privacy Policy": "/privacy",
   "Refund Policy":  "/refund",

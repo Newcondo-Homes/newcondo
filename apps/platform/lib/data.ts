@@ -124,7 +124,7 @@ export const FAQS: Faq[] = [
 export const FOOTER: Record<string, string[]> = {
   // PRODUCT: ["How it works", "Features", "Pricing", "For Agents", "For Renters"],
   PRODUCT: ["How it works", "Features", "Pricing"],
-  COMPANY: ["About", "Blog", "Support", "Careers"],
+  COMPANY: ["About", "Blog", "Support", "Careers", "Contact"],
   LEGAL: ["Privacy Policy", "Refund Policy", "Terms of Service", "Trust & Safety", "Cookie Policy"],
 };
 

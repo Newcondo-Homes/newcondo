@@ -6,6 +6,10 @@ import { Role } from "@newcondo/db";
 import { sendResponse } from "@newcondo/backend-shared";
 import { generateOTP } from "@newcondo/backend-shared";
 import { sendEmail } from "@newcondo/backend-shared";
+
+// note: this new brandedemail( sendBrandedEmail ) does not throw an error, in the future see if
+// you can make it throw an error in events of failure
+import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
 import { AuthService } from "../services/authService";
 import type { AuthenticatedRequest } from "../types/auth";
 
@@ -31,7 +35,7 @@ class AuthController {
         }
       }
 
-    
+
       console.error("🚨 CRITICAL DEBUG - USER ROLE IS:", userType);
       const assignedRole = userType ? (userType as Role) : "RENTER";
       // Hash password
@@ -45,7 +49,7 @@ class AuthController {
           passwordHash,
           name: name || null,
           phone: phone || null,
-          role: assignedRole ,
+          role: assignedRole,
         },
         select: {
           id: true,
@@ -98,6 +102,21 @@ class AuthController {
         `,
       });
 
+      // If this send is the post-registration verification CODE, use the otp
+      //  template exactly as in 1b. If it is the "welcome aboard" mail, use:
+
+      await sendBrandedEmail(
+        user.email,
+        EmailTemplates.welcome({
+          name: user.name ?? "there",
+          // Admins are created internally and never see this mail; narrow so the
+          // template's union is satisfied without casting away the check.
+          role: (user.role === "ADMIN" ? "OWNER" : user.role) as "OWNER" | "AGENT" | "RENTER",
+        })
+      );
+
+      //  Send BOTH if registration currently does both — welcome first, then the
+      //  verification code, so the code is the newest mail in their inbox.
       // Log user registration event
       await prisma.eventLog.create({
         data: {
@@ -260,17 +279,28 @@ class AuthController {
       });
 
       // Send reset email
-      await sendEmail({
-        to: email,
-        subject: "Reset your NewCondo password",
-        html: `
-          <h2>Password Reset Request</h2>
-          <p>Your password reset code is: <strong>${otp}</strong></p>
-          <p>This code will expire in 15 minutes.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-        `,
-      });
+      // await sendEmail({
+      //   to: email,
+      //   subject: "Reset your NewCondo password",
+      //   html: `
+      //     <h2>Password Reset Request</h2>
+      //     <p>Your password reset code is: <strong>${otp}</strong></p>
+      //     <p>This code will expire in 15 minutes.</p>
+      //     <p>If you didn't request this, please ignore this email.</p>
+      //   `,
+      // });
 
+      await sendBrandedEmail(
+        user.email,
+        EmailTemplates.passwordReset({
+          name: user.name ?? undefined,
+          // OTP-based flow: prefill the form with email + code (15-min expiry).
+          resetUrl: `${process.env.FRONTEND_URL}/reset-password?email=${encodeURIComponent(email)}&code=${otp}`,
+        })
+      );
+
+      //  Check FRONTEND_URL has no trailing slash and uses http:// in development
+      //  (your agent-invite link showed `https://localhost:3000`, which won't open).
       sendResponse(
         res,
         200,
@@ -338,57 +368,57 @@ class AuthController {
   }
 
   async checkEmailExists(req: Request, res: Response): Promise<any> {
-  try {
-    const email = (req.query.email as string | undefined)?.trim().toLowerCase();
+    try {
+      const email = (req.query.email as string | undefined)?.trim().toLowerCase();
 
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ exists: false, error: "Invalid email" });
-    }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ exists: false, error: "Invalid email" });
+      }
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        emailVerified: true,
-        subscription: {
-          select: {
-            status: true,
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          emailVerified: true,
+          subscription: {
+            select: {
+              status: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    // Fails open — if anything is wrong, we return false so a genuine
-    // new signup is never blocked. The onboarding flow handles the rest.
-    if (!user) {
+      // Fails open — if anything is wrong, we return false so a genuine
+      // new signup is never blocked. The onboarding flow handles the rest.
+      if (!user) {
+        return res.status(200).json({ exists: false });
+      }
+
+      // User exists but never verified their email AND has no active subscription
+      // → treat as a ghost/abandoned registration → allow re-onboarding
+      const hasVerifiedEmail = !!user.emailVerified;
+      const hasActiveSubscription =
+        user.subscription !== null &&
+        [
+          "ACTIVE",
+          "FREE_ACTIVE",
+          "PAST_DUE",
+          "CANCELLED",
+          "PAUSED",
+          "SUSPENDED",
+        ].includes(user.subscription?.status ?? "");
+
+      // Only block re-registration if they're a real, verified user
+      // OR they have a subscription (paid or free — they went through onboarding)
+      const isRealUser = hasVerifiedEmail || hasActiveSubscription;
+
+      return res.status(200).json({ exists: isRealUser });
+    } catch (error) {
+      console.error("checkEmailExists error:", error);
+      // Fail open — never block a signup due to a lookup error
       return res.status(200).json({ exists: false });
     }
-
-    // User exists but never verified their email AND has no active subscription
-    // → treat as a ghost/abandoned registration → allow re-onboarding
-    const hasVerifiedEmail = !!user.emailVerified;
-    const hasActiveSubscription =
-      user.subscription !== null &&
-      [
-        "ACTIVE",
-        "FREE_ACTIVE",
-        "PAST_DUE",
-        "CANCELLED",
-        "PAUSED",
-        "SUSPENDED",
-      ].includes(user.subscription?.status ?? "");
-
-    // Only block re-registration if they're a real, verified user
-    // OR they have a subscription (paid or free — they went through onboarding)
-    const isRealUser = hasVerifiedEmail || hasActiveSubscription;
-
-    return res.status(200).json({ exists: isRealUser });
-  } catch (error) {
-    console.error("checkEmailExists error:", error);
-    // Fail open — never block a signup due to a lookup error
-    return res.status(200).json({ exists: false });
   }
-}
 
   async refreshToken(req: Request, res: Response) {
     try {

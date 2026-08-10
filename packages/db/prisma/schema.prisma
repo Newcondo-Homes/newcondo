@@ -1565,6 +1565,10 @@ model Subscription {
   flwTransactionRef String?
   flwCustomerId     String?
 
+  cardLast4  String?
+  cardBrand  String?
+  cardExpiry String?
+
   status             SubscriptionStatus @default(PENDING)
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?

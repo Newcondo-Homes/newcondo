@@ -337,12 +337,19 @@ export async function initiateSubscription(
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. ACTIVATE SUBSCRIPTION — called by webhook after successful payment
 // ─────────────────────────────────────────────────────────────────────────────
+export interface SavedCardMeta {
+  last4?: string;
+  brand?: string;
+  expiry?: string;
+}
+
 export async function activateSubscription(
   txRef: string,
   flwTransactionId: string,
   flwSubscriptionId: string,
   flwCustomerToken: string,
   flwCustomerId: string,
+  card?: SavedCardMeta,
 ): Promise<Subscription> {
   const subscription = await prisma.subscription.findFirst({
     where: { flwTransactionRef: txRef },
@@ -371,6 +378,9 @@ export async function activateSubscription(
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
       nextRenewalAttempt: periodEnd,
+      ...(card?.last4 ? { cardLast4: card.last4 } : {}),
+      ...(card?.brand ? { cardBrand: card.brand } : {}),
+      ...(card?.expiry ? { cardExpiry: card.expiry } : {}),
     },
   });
 

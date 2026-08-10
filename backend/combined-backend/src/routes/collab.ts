@@ -32,6 +32,16 @@ router.get("/share/:code", async (req, res, next) => {
 router.post("/properties/:propertyId/promotion-requests", ...agent, async (req, res, next) => {
   try { res.status(201).json({ success: true, data: await requestPromotion({ propertyId: req.params.propertyId, subAgentId: req.user!.id }) }); } catch (e) { next(e); }
 });
+
+//TODO: there are two promote property endpoint, see communication in the frontend to the backend 
+// which one makes sense to keep and which one should go
+router.post("/properties/:id/promote", authMiddleware, requireRole(["AGENT"]), async (req, res, next) => {
+  try {
+    const data = await requestPromotion({ propertyId: req.params.id, subAgentId: req.user!.id });
+    res.json({ success: true, data });
+  } catch (e) { next(e); }
+});
+
 router.get("/promotion-requests", ...lister, async (req, res, next) => {
   try { res.json({ success: true, data: { requests: await listPromotionRequests(req.user!.id), splitPct: Math.round(subAgentEffectiveRate() * 1000) / 10 } }); } catch (e) { next(e); }
 });

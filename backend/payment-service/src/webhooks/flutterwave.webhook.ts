@@ -1,28 +1,28 @@
 /* ============================================================
-   POST /api/v1/payments/webhooks/flutterwave  (drop-in replacement)
+   POST /api/v1/payments/webhooks/flutterwave
 
-   Reconciled with YOUR backend:
-     • Uses @newcondo/db (prisma + enums) and @newcondo/payment-service
-       (verifyFlutterwaveTransaction, activateSubscription, PLAN_CONFIG).
-     • Mounted under your existing /payments router (paymentRouter), so the
-       full path is /api/v1/payments/webhooks/flutterwave — no auth (Flutterwave
-       isn't logged in); it self-verifies via verif-hash.
+   UPDATED: now persists display-only card metadata (last4 / brand / expiry)
+   alongside the card token, so the dashboard can say "Visa •••• 4242" when
+   charging the saved card for a marking fee instead of "Your saved card".
 
-   Because you attach `payment_plan` to the initial charge (Model A), Flutterwave
-   bills the card every cycle ITSELF and sends a `charge.completed` webhook each
-   time. So this handler must cover BOTH:
-     1. FIRST charge  (subscription PENDING)  → activateSubscription(...)
-     2. RENEWAL charge (subscription ACTIVE)  → extend period + invoice + history
-
-   Robustness:
+   Everything else is unchanged from your version:
      • verif-hash auth   → rejects forgeries.
-     • verify-then-act   → never trusts the body for money (re-verifies via API).
+     • verify-then-act   → never trusts the body for money.
      • idempotent        → dedupes on flwTransactionId (Flutterwave RETRIES).
      • always 200        → so Flutterwave stops retrying; 500 only on transient
                            errors we WANT retried (DB down, verify timeout).
 
-   Replace your current router.post('/webhooks/flutterwave', …) body with a call
-   to this handler:  router.post('/webhooks/flutterwave', flutterwaveWebhook);
+   Because you attach `payment_plan` to the initial charge (Model A),
+   Flutterwave bills the card every cycle itself and sends charge.completed
+   each time, so this handler covers BOTH:
+     1. FIRST charge  (subscription PENDING) → activateSubscription(...)
+     2. RENEWAL charge (subscription ACTIVE) → extend period + invoice + history
+
+   PREREQUISITES
+     • Migration `subscription_card_metadata` (Subscription.cardLast4 /
+       cardBrand / cardExpiry).
+     • activateSubscription() accepts an optional 6th `card` argument.
+     • services/flutterwave.types.ts provides extractSavedCardMeta().
    ============================================================ */
 
 import type { Request, Response } from "express";
@@ -31,12 +31,12 @@ import {
   SubscriptionStatus,
   SubscriptionEvent,
   BillingCycle,
-  type SubscriptionPlan,
 } from "@newcondo/db";
 import {
   verifyFlutterwaveTransaction,
   activateSubscription,
 } from "../services";
+import { extractSavedCardMeta } from "../services/flutterwave.types";
 
 function getPeriodEnd(start: Date, cycle: BillingCycle): Date {
   const end = new Date(start);
@@ -97,18 +97,22 @@ export async function flutterwaveWebhook(req: Request, res: Response): Promise<v
     const customerEmail: string | undefined = tx.customer?.email ?? body?.customer?.email;
     const cardToken: string = tx.card?.token ?? "";
     const flwCustomerId = tx.customer?.id ? String(tx.customer.id) : "";
+    // ++ ADDED — display-only card fields (last4 / brand / expiry). Undefined
+    // for non-card charges (transfer, USSD), so we simply skip the write.
+    const card = extractSavedCardMeta(tx);
     // Flutterwave plan-driven subs return the subscription id on the charge;
     // fall back to the plan id so activateSubscription always has a value.
     const flwSubscriptionId = String(
-      tx.subscription_id ?? meta?.subscriptionId ?? tx.payment_plan ?? ""
+      tx.subscription_id ?? (meta as { subscriptionId?: string })?.subscriptionId ?? tx.payment_plan ?? ""
     );
 
     // ── 4. Resolve the subscription ────────────────────────────────────────
     // First charge → meta.subscriptionId / tx_ref. Renewal (Flutterwave mints
     // its own tx_ref) → match by customer email → user → subscription.
+    const metaSubId = (meta as { subscriptionId?: string })?.subscriptionId;
     let subscription =
-      (meta?.subscriptionId
-        ? await prisma.subscription.findUnique({ where: { id: String(meta.subscriptionId) } })
+      (metaSubId
+        ? await prisma.subscription.findUnique({ where: { id: String(metaSubId) } })
         : null) ??
       (txRef ? await prisma.subscription.findFirst({ where: { flwTransactionRef: txRef } }) : null);
 
@@ -130,7 +134,8 @@ export async function flutterwaveWebhook(req: Request, res: Response): Promise<v
         String(transactionId),
         flwSubscriptionId,
         cardToken,
-        flwCustomerId
+        flwCustomerId,
+        card // ++ ADDED — persists cardLast4 / cardBrand / cardExpiry
       );
       console.log(`✅ Subscription ${subscription.id} activated (first charge).`);
       res.status(200).send("Activated");
@@ -159,6 +164,13 @@ export async function flutterwaveWebhook(req: Request, res: Response): Promise<v
             lastRenewalAttemptAt: now,
             // Refresh the saved card token if Flutterwave sent a new one.
             ...(cardToken ? { flwCustomerToken: cardToken } : {}),
+            // ++ ADDED — keep the display label in step with the token, so a
+            // card the bank reissued shows its new last4 rather than a stale
+            // one. Each field is written only when present, so a sparse
+            // response never blanks details we already hold.
+            ...(card?.last4 ? { cardLast4: card.last4 } : {}),
+            ...(card?.brand ? { cardBrand: card.brand } : {}),
+            ...(card?.expiry ? { cardExpiry: card.expiry } : {}),
           },
         }),
         prisma.subscriptionInvoice.upsert({

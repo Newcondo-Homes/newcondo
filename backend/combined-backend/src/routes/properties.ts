@@ -10,6 +10,8 @@ import {
   createTenantInvite,
   validateTenantInvite,
   acceptTenantInvite,
+  createProperty,
+  listUnmarkedProperties
 } from "@newcondo/property-service";
 import { publishNotification } from "@newcondo/backend-shared";
 
@@ -63,6 +65,23 @@ router.post("/tenant-invites/accept", authMiddleware, async (req, res, next) => 
       to: `/properties/${result.propertyId}`, entityType: "rental", entityId: result.rental.id,
     });
     res.status(201).json({ success: true, data: result.rental });
+  } catch (e) { next(e); }
+});
+
+
+// create lising
+router.post("/properties", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    const data = await createProperty(req.user!.id, req.body ?? {});
+    res.status(201).json({ success: true, data });
+  } catch (e) { next(e); }
+});
+
+// Properties this user may still request marking for (unmarked only) —
+// feeds the Property dropdown in the Request-marking wizard.
+router.get("/properties/unmarked", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await listUnmarkedProperties(req.user!.id) });
   } catch (e) { next(e); }
 });
 

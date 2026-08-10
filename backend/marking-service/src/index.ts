@@ -11,3 +11,9 @@ export type {
 export type { MarkingCheckout } from "./services/markingPayment.service";
 export { segmentBuilding, extractGreenPolygon } from "./services/segmentationService";
 export { initiateMarkingPayment, confirmMarkingFeePaid } from "./services/markingPayment.service";
+export {
+  getSavedCardForMarking,
+  chargeMarkingWithSavedCard,
+  type MarkingChargeResult,
+  type ChargeFailureCode,
+} from "./services/markingTokenizedCharge.service";
