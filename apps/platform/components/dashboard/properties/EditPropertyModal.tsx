@@ -36,7 +36,11 @@ export function EditPropertyModal({ propTitle, propPrice, units, agentOwner, onS
   return (
     <Modal wide title="Edit property" sub={propTitle} onClose={onClose}
       footer={<>
-        <DBtn variant="ghost" className="!text-danger max-sm:!flex-none sm:mr-auto" onClick={() => setDel(true)}><Icon name="trash-2" size={15} />Delete listing</DBtn>
+        {/* MOBILE FIX: three buttons on one row got squeezed off-screen. The
+            sticky bar in Modal wraps, so Delete drops to its OWN full-width
+            row and sits last — destructive action furthest from the thumb,
+            Cancel/Save share the row above it. */}
+        <DBtn variant="ghost" className="!text-danger max-sm:order-last max-sm:!basis-full sm:mr-auto" onClick={() => setDel(true)}><Icon name="trash-2" size={15} />Delete listing</DBtn>
         <DBtn variant="line" onClick={onClose}>Cancel</DBtn>
         <DBtn onClick={save}>Save changes</DBtn>
       </>}>
@@ -45,6 +49,10 @@ export function EditPropertyModal({ propTitle, propPrice, units, agentOwner, onS
         <Field label="Rent (₦ / year)"><input className={inputCls()} type="number" value={f.price} onChange={(e) => setF((x) => ({ ...x, price: e.target.value }))} /></Field>
       </div>
       {f.units.length > 0 && (<>
+        {/* No nested scroll region here. The Modal body is the single scroller,
+            so a long flat list scrolls the whole sheet and the banner below it
+            is always reachable — an inner max-height box swallowed the gesture
+            on short phones and left the banner permanently clipped. */}
         <div className="mb-2 mt-0.5 text-[13px] font-semibold">Flats — set which are ready to rent</div>
         {f.units.map((u, i) => (
           // MOBILE FIX: the flat name/meta and the 230px status select used to be

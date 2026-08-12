@@ -1,5 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { FOOTER } from "@/lib/data";
+import { CONTACT } from "@/lib/contact-data";
 
 const FOOTER_HREFS: Record<string, string> = {
   // Product
@@ -33,11 +34,20 @@ export function Footer() {
           <p className="text-[16px] leading-[1.5] text-text-on-dark-2 m-0 mb-[22px] max-w-[30ch]">
             Property management, finally working the way it should.
           </p>
-          <p className="flex items-center gap-2.5 text-[14.5px] text-text-on-dark-2 m-0 mb-2.5">
-            <Icon name="mail" size={17} /> info@newcondo.homes
-          </p>
-          <p className="flex items-center gap-2.5 text-[14.5px] text-text-on-dark-2 m-0">
-            <Icon name="map-pin" size={17} /> Nigeria
+          <a
+            href={`mailto:${CONTACT.email}`}
+            className="flex items-center gap-2.5 text-[14.5px] text-text-on-dark-2 m-0 mb-2.5 no-underline transition-opacity duration-200 ease-nc hover:opacity-100 opacity-[0.9]"
+          >
+            <Icon name="mail" size={17} /> {CONTACT.email}
+          </a>
+          <a
+            href={`tel:${CONTACT.phoneRaw}`}
+            className="flex items-center gap-2.5 text-[14.5px] text-text-on-dark-2 m-0 mb-2.5 no-underline transition-opacity duration-200 ease-nc hover:opacity-100 opacity-[0.9]"
+          >
+            <Icon name="phone" size={17} /> {CONTACT.phoneDisplay}
+          </a>
+          <p className="flex items-start gap-2.5 text-[14.5px] leading-[1.5] text-text-on-dark-2 m-0 max-w-[30ch]">
+            <Icon name="map-pin" size={17} className="mt-0.5 flex-none" /> {CONTACT.addressOneLine}
           </p>
         </div>
         <div className="grid grid-cols-3 gap-7 max-[860px]:grid-cols-2">

@@ -30,4 +30,6 @@ export { requestPromotion, listPromotionRequests, approvePromotion, declinePromo
 export * from "./lib/marking-geo";
 
 // createProperty
-export { createProperty, listUnmarkedProperties } from "./services/createPropertyService";
+export { createProperty, listUnmarkedProperties, listMyProperties } from "./services/createPropertyService";
+
+export { presignPropertyPhotos, attachPropertyPhotos, listPropertyPhotos, deletePropertyPhoto } from "./services/propertyPhotoService";

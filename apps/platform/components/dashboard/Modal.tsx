@@ -11,56 +11,14 @@ import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { DBtn } from "./primitives";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/* Tracks how many modals are open so nested/stacked dialogs don't unlock the
-   page when only the inner one closes. */
-let lockCount = 0;
-
-/**
- * Locks the page behind the modal.
- *
- * `overflow: hidden` alone is NOT enough on mobile Safari/Chrome — touch
- * scrolling falls through to <body> and the page slides under the sheet
- * (the reported bug: dragging anywhere, inside or outside the sheet, moved
- * the screen). Position-fixing the body is what actually stops it, and we
- * restore the exact scroll position on close so the page doesn't jump.
- */
-function useBodyScrollLock() {
-  useEffect(() => {
-    lockCount += 1;
-    const body = document.body;
-    if (lockCount === 1) {
-      const y = window.scrollY;
-      body.dataset.ncScrollY = String(y);
-      body.style.position = "fixed";
-      body.style.top = `-${y}px`;
-      body.style.left = "0";
-      body.style.right = "0";
-      body.style.width = "100%";
-      body.style.overflow = "hidden";
-      // Stops the iOS rubber-band bounce behind the sheet.
-      body.style.overscrollBehavior = "none";
-    }
-    return () => {
-      lockCount -= 1;
-      if (lockCount === 0) {
-        const y = Number(body.dataset.ncScrollY ?? 0);
-        body.style.position = "";
-        body.style.top = "";
-        body.style.left = "";
-        body.style.right = "";
-        body.style.width = "";
-        body.style.overflow = "";
-        body.style.overscrollBehavior = "";
-        delete body.dataset.ncScrollY;
-        window.scrollTo(0, y);
-      }
-    };
-  }, []);
-}
+/* Body scroll-lock lives in hooks/useBodyScrollLock so the mobile sidebar
+   drawer uses the exact same behaviour (refcounted, position-fixed, and an
+   instant — not smooth — scroll restore on release). */
 
 export function Modal({ title, sub, onClose, children, wide, footer }: {
   title?: string; sub?: string; onClose: () => void; children: ReactNode; wide?: boolean; footer?: ReactNode;
@@ -92,22 +50,48 @@ export function Modal({ title, sub, onClose, children, wide, footer }: {
       <motion.div
         role="dialog" aria-modal="true"
         className={cx(
-          // Desktop: no visible scrollbar — tall wizards fit within 92vh and any
-          // rare overflow scrolls with the scrollbar hidden (kept reachable).
-          "relative max-h-[92vh] overflow-y-auto overscroll-contain [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden rounded-3xl bg-surface p-6 shadow-pop",
+          // Flex COLUMN, not a single scrolling box: header and footer are
+          // flex-none and the body is the only scroll region. Previously the
+          // panel scrolled as a whole with a sticky footer inside it, so on
+          // short phones (iPhone 12/13 mini, 12 Pro) the last content — the
+          // "Occupied flats update automatically…" banner — could never clear
+          // the bar. Now the body owns the scroll and always reaches its end.
+          "relative flex max-h-[92vh] flex-col rounded-3xl bg-surface shadow-pop",
           wide ? "w-[640px]" : "w-[480px]",
-          "max-w-full max-sm:max-h-[94dvh] max-sm:w-full max-sm:rounded-b-none max-sm:rounded-t-[26px] max-sm:px-[18px] max-sm:pb-[calc(20px+env(safe-area-inset-bottom))]"
+          "max-w-full max-sm:max-h-[94dvh] max-sm:w-full max-sm:rounded-b-none max-sm:rounded-t-[26px]"
         )}
         initial={{ opacity: 0, y: 24, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 20, scale: 0.98 }} transition={{ duration: 0.26, ease: EASE }}
       >
-        <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 grid size-[34px] place-items-center rounded-full bg-surface-sunken text-ink hover:bg-surface-soft">
+        <button onClick={onClose} aria-label="Close" className="absolute right-4 top-4 z-20 grid size-[34px] place-items-center rounded-full bg-surface-sunken text-ink hover:bg-surface-soft">
           <Icon name="x" size={16} />
         </button>
-        {title && <h2 className="m-0 pr-9 text-[21px] font-bold tracking-[-0.03em]">{title}</h2>}
-        {sub && <p className="mb-[18px] mt-1 text-[13.5px] leading-normal text-text-tertiary">{sub}</p>}
-        {children}
-        {footer && <div className="mt-5 flex justify-end gap-2.5 max-sm:sticky max-sm:bottom-0 max-sm:-mx-1 max-sm:bg-surface max-sm:px-1 max-sm:pt-3 max-sm:[&>*]:flex-1">{footer}</div>}
+
+        {(title || sub) && (
+          <div className="flex-none px-6 pt-6 max-sm:px-[18px] max-sm:pt-5">
+            {title && <h2 className="m-0 pr-9 text-[21px] font-bold tracking-[-0.03em]">{title}</h2>}
+            {sub && <p className="mb-0 mt-1 text-[13.5px] leading-normal text-text-tertiary">{sub}</p>}
+          </div>
+        )}
+
+        {/* The one scroll region. min-h-0 is required for a flex child to be
+            allowed to shrink and scroll rather than pushing the footer out. */}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-1 pt-[18px] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden max-sm:px-[18px]">
+          {children}
+        </div>
+
+        {footer && (
+          <div
+            className={cx(
+              "flex flex-none justify-end gap-2.5 border-t border-border-hair px-6 py-4",
+              "max-sm:flex-wrap max-sm:px-[18px] max-sm:pb-[calc(14px+env(safe-area-inset-bottom))] max-sm:pt-3.5",
+              "max-sm:[&>*]:min-w-0 max-sm:[&>*]:flex-1"
+            )}
+          >
+            {footer}
+          </div>
+        )}
+        {!footer && <div className="flex-none pb-6 max-sm:pb-[calc(18px+env(safe-area-inset-bottom))]" />}
       </motion.div>
     </motion.div>,
     document.body

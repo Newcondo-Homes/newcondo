@@ -155,6 +155,38 @@ export async function createProperty(
 }
 
 /* ============================================================
+   Properties this user can see in My Properties.
+
+   Everything they own OR are listing agent for, DRAFT included — a
+   listing must be visible in the dashboard the moment it's created,
+   long before it's marked or approved.
+   ============================================================ */
+export async function listMyProperties(userId: string) {
+  const rows = await prisma.property.findMany({
+    where: { OR: [{ ownerId: userId }, { agentId: userId }] },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true, title: true, address: true, status: true, price: true,
+      boundaryVerified: true, adminApprovalStatus: true, createdAt: true,
+      images: { where: { isPrimary: true }, take: 1, select: { url: true } },
+      units: { select: { id: true, unitNumber: true, status: true } },
+    },
+  });
+  return rows.map((p) => ({
+    id: p.id,
+    title: p.title,
+    location: p.address,
+    status: p.status,
+    price: Number(p.price ?? 0),
+    marked: p.boundaryVerified,
+    approval: p.adminApprovalStatus,
+    coverKey: p.images[0]?.url ?? null,
+    units: p.units.map((u) => ({ n: u.unitNumber, status: u.status })),
+    createdAt: p.createdAt,
+  }));
+}
+
+/* ============================================================
    Properties this user can request marking for.
 
    Feeds the "Property" dropdown in the Request-marking wizard: their own

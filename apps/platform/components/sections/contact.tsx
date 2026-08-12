@@ -317,7 +317,6 @@ export function Contact() {
         </Group>
       </Section>
 
-      <Footer />
       <ChatButton />
     </div>
   );

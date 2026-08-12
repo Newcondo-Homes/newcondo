@@ -11,7 +11,13 @@ import {
   validateTenantInvite,
   acceptTenantInvite,
   createProperty,
-  listUnmarkedProperties
+  listUnmarkedProperties,
+  listMyProperties,
+  requestPromotion,
+  presignPropertyPhotos,
+  attachPropertyPhotos,
+  listPropertyPhotos,
+  deletePropertyPhoto,
 } from "@newcondo/property-service";
 import { publishNotification } from "@newcondo/backend-shared";
 
@@ -69,7 +75,8 @@ router.post("/tenant-invites/accept", authMiddleware, async (req, res, next) => 
 });
 
 
-// create lising
+// Create a listing. Always lands as DRAFT + boundaryVerified:false, so it
+// cannot appear in Browse until it's marked AND admin-approved.
 router.post("/properties", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     const data = await createProperty(req.user!.id, req.body ?? {});
@@ -84,5 +91,62 @@ router.get("/properties/unmarked", authMiddleware, requireRole(["OWNER", "AGENT"
     res.json({ success: true, data: await listUnmarkedProperties(req.user!.id) });
   } catch (e) { next(e); }
 });
+
+// Every listing this user owns or is the listing agent for, DRAFT included.
+// This is what My Properties reads — without it a freshly-created listing
+// never appears in the dashboard even though the row exists in the DB.
+router.get("/properties/mine", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await listMyProperties(req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+
+/* ---------------- property photos (S3 direct upload) ----------------
+   The browser PUTs straight to S3 with a presigned url, then tells us the
+   keys. Bytes never touch Express, so there's no body-size limit to tune
+   and a slow mobile upload can't hold a Node socket open. */
+
+router.post("/properties/:id/photos/presign", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    const data = await presignPropertyPhotos(req.params.id, req.user!.id, req.body?.files ?? []);
+    res.json({ success: true, data });
+  } catch (e) { next(e); }
+});
+
+router.post("/properties/:id/photos", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    const photos = await attachPropertyPhotos(req.params.id, req.user!.id, req.body?.keys ?? []);
+    res.json({ success: true, data: { photos } });
+  } catch (e) { next(e); }
+});
+
+// Signed, time-limited GET urls — the bucket itself stays private.
+router.get("/properties/:id/photos", authMiddleware, async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await listPropertyPhotos(req.params.id) });
+  } catch (e) { next(e); }
+});
+
+router.delete("/properties/:id/photos/:photoId", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    const photos = await deletePropertyPhoto(req.params.id, req.user!.id, req.params.photoId);
+    res.json({ success: true, data: { photos } });
+  } catch (e) { next(e); }
+});
+
+// Sub-agent taps "Promote" on a Browse property.
+//   PUBLIC / autoApproveAgents → 200 { status: "APPROVED", promoUrl, splitPct }
+//   PERMISSION_BASED / REQUEST_BASED → 200 { status: "PENDING" }
+//   RESTRICTED → 403 (surfaced in the UI as "the listing agent has restricted…")
+//   already promoting / pending / at sub-agent cap → 409
+// Import from property-service: `requestPromotion`.
+router.post("/properties/:id/promote", authMiddleware, requireRole(["AGENT"]), async (req, res, next) => {
+  try {
+    const data = await requestPromotion({ propertyId: req.params.id, subAgentId: req.user!.id });
+    res.json({ success: true, data });
+  } catch (e) { next(e); }
+});
+
 
 export { router as propertyRouter };

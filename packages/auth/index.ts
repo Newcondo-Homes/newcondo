@@ -10,8 +10,17 @@ import { prisma, Role, UserType, VerificationStatus } from "@newcondo/db";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
   callbacks: {
-    async signIn({ account }) {
-      if (account?.provider !== "credentials") return true;
+    async signIn({ account, profile }) {
+      if (account?.provider !== "credentials") {
+        // Facebook can omit email (phone-only accounts, or if the user
+        // unticks email on the consent screen). Prisma's User.email is
+        // required, so without this guard sign-in throws a raw adapter
+        // error instead of a readable one.
+        if (account?.provider === "facebook" && !profile?.email) {
+          return "/login?error=NoEmailFromFacebook";
+        }
+        return true;
+      }
       return true;
     },
     async jwt({ token, user, account, trigger, session }) {

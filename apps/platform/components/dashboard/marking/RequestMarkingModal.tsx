@@ -60,7 +60,11 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (!needsPay || !api.isLiveBackend || card) return;
-    api.getSavedCardApi().then(setCard).catch(() => setCard({ hasSavedCard: false }));
+    api.getSavedCardApi()
+      .then(setCard)
+      // A missing /marking/saved-card route must not block payment — fall
+      // back to "no saved card", which routes through Inline checkout.
+      .catch((e) => { console.warn("[Marking] saved-card lookup failed → Inline checkout", e); setCard({ hasSavedCard: false }); });
   }, [needsPay, card]);
 
   const cardLabel = card?.hasSavedCard
@@ -83,16 +87,35 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
   /* ---- Inline checkout (fallback: no saved card, or "use another card") ---- */
   const payWithInline = () => {
     const pid = propertyId();
-    if (!api.isLiveBackend || !pid || !f.method) { onClose(); return; }
+    // BUGFIX: this used to `onClose()` silently when it couldn't proceed, so
+    // tapping Pay just dismissed the sheet with no modal and no message — the
+    // reported "I click pay and the Flutterwave modal never appears". Each
+    // reason now says what's wrong and leaves the wizard open.
+    if (!pid) {
+      toast.error("Pick a property first", { description: "We couldn't tell which listing this marking job is for." });
+      setStep(0);
+      return;
+    }
+    if (!f.method) { toast.error("Pick a marking method"); setStep(0); return; }
+    if (!api.isLiveBackend) {
+      toast.error("Payments aren't connected yet", { description: "Set NEXT_PUBLIC_API_URL to enable Flutterwave checkout." });
+      return;
+    }
     setOutcome(null);
+    setCharging(true);
+    console.log("[Marking] initiate-payment", { propertyId: pid, method: f.method });
     api.initiateMarkingPaymentApi({ propertyId: pid, method: f.method, contactName: f.contactName, contactPhone: f.contactPhone, accessNotes: f.access })
-      .then(({ checkout }) => flw.open({
-        payload: checkout as never,
-        onSuccess: () => { onClose(); toast.success("Marking job is live", { description: f.method === "BROADCAST" ? "Broadcasting to verified agents near the property — most jobs are picked up within hours." : "A Newcondo agent will be assigned within 24 hours." }); },
-        onClose: () => toast.info("Checkout closed", { description: "No payment was made — your request wasn't sent." }),
-        onError: (e) => toast.error("Payment didn't complete", { description: e.message }),
-      }))
-      .catch((e) => toast.error("Could not start checkout", { description: (e as Error).message }));
+      .then(({ checkout }) => {
+        console.log("[Marking] opening Flutterwave with backend payload", checkout);
+        return flw.open({
+          payload: checkout as never,
+          onSuccess: () => { onClose(); toast.success("Marking job is live", { description: f.method === "BROADCAST" ? "Broadcasting to verified agents near the property — most jobs are picked up within hours." : "A Newcondo agent will be assigned within 24 hours." }); },
+          onClose: () => toast.info("Checkout closed", { description: "No payment was made — your request wasn't sent." }),
+          onError: (e) => toast.error("Payment didn't complete", { description: e.message }),
+        });
+      })
+      .catch((e) => toast.error("Could not start checkout", { description: (e as Error).message }))
+      .finally(() => setCharging(false));
   };
 
   /* ---- Saved-card tokenized charge (preferred) ---- */
@@ -126,6 +149,8 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
     if (f.method === "SELF") { onClose(); router.push("/mark-property/self"); return; }
     if (f.method === "KNOWN_PERSON") { onClose(); toast.success("Marking link created", { description: "Share it with your person — you'll be notified the moment they mark." }); return; }
     if (!api.isLiveBackend) {
+      // Demo mode only — no backend configured, so no real Flutterwave modal
+      // can open. Kept explicit so it's obvious this is the mock path.
       onClose();
       toast.promise(new Promise((res) => setTimeout(res, 2000)), {
         loading: `Processing ${ngn(fee)} payment — Flutterwave secure checkout…`,
@@ -137,7 +162,6 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
     if (card?.hasSavedCard) void payWithSavedCard();
     else payWithInline();
   };
-
   // The result modal replaces the wizard once a charge has been attempted.
   if (outcome) {
     return (

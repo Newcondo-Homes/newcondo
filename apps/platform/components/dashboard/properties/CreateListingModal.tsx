@@ -15,7 +15,8 @@ import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { toast } from "@newcondo/ui";
 import { Modal } from "@/components/dashboard/Modal";
-import { DBtn, KV, Banner, MapPlaceholder, PhotoGrid } from "@/components/dashboard/primitives";
+import { DBtn, KV, Banner, MapPlaceholder } from "@/components/dashboard/primitives";
+import { PropertyPhotos, type LocalPhoto } from "./PropertyPhotos";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { ngn } from "@/lib/dashboard/format";
 import { useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
@@ -43,6 +44,8 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
   const [f, setF] = useState<F>({ title: "", type: "Flat", price: "", flats: "1", desc: "", state: "", lga: "", area: "", amenities: [], ownerName: "", ownerBank: "", ownerAcct: "", undertaking: false, consent: false });
   const [errs, setErrs] = useState<Record<string, string | null>>({});
   const [submitting, setSubmitting] = useState(false);
+  // Photos picked before the property exists — uploaded once we have an id.
+  const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const cache = useCacheUpdate();
   const set = <K extends keyof F>(k: K, v: F[K]) => { setF((x) => ({ ...x, [k]: v })); setErrs((e) => ({ ...e, [k]: null })); };
   const steps = agent ? ["Details", "Address", "Owner & legal", "Review"] : ["Details", "Address", "Legal", "Review"];
@@ -88,7 +91,7 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
     const toastId = toast.loading("Creating listing…");
     try {
       if (api.isLiveBackend) {
-        await api.createPropertyApi({
+        const created = await api.createPropertyApi({
           title: f.title.trim(),
           propertyType: f.type,
           price: Number(f.price),
@@ -106,6 +109,29 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
               }
             : {}),
         });
+
+        // Photos were picked before the property existed, so upload them now
+        // that we have an id. A photo failure must NOT fail the listing —
+        // the property is already created and they can add photos later.
+        if (photos.length && created?.id) {
+          try {
+            toast.loading(`Uploading ${photos.length} photo${photos.length === 1 ? "" : "s"}…`, { id: toastId });
+            const slots = await api.presignPropertyPhotos(
+              created.id,
+              photos.map((p) => ({ name: p.file.name, type: p.file.type, size: p.file.size }))
+            );
+            await Promise.all(
+              slots.map((s, i) =>
+                fetch(s.uploadUrl, { method: "PUT", body: photos[i].file, headers: { "Content-Type": photos[i].file.type } })
+              )
+            );
+            await api.attachPropertyPhotos(created.id, slots.map((s) => s.key));
+          } catch {
+            toast.error("Listing created, but the photos didn't upload", {
+              description: "Add them from the property's Photos tab.",
+            });
+          }
+        }
       } else {
         await new Promise((r) => setTimeout(r, 1200));
       }
@@ -161,6 +187,12 @@ export function CreateListingModal({ agent, onClose }: { agent?: boolean; onClos
               <Check key={a} on={f.amenities.includes(a)} onToggle={() => set("amenities", f.amenities.includes(a) ? f.amenities.filter((x) => x !== a) : [...f.amenities, a])}>{a}</Check>
             ))}
           </div>
+        </Field>
+        {/* Optional at creation — photos can also be added later from the
+           property's Photos tab. Held locally here because the property
+           has no id yet; they're uploaded to S3 right after it's created. */}
+        <Field label="Photos (optional)" hint="You can also add these later from the property page.">
+          <PropertyPhotos files={photos} onFilesChange={setPhotos} cols={4} max={10} />
         </Field>
       </>)}
       {step === 1 && (<>

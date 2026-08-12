@@ -173,12 +173,6 @@ export interface PromoteResult {
 // create property
 export interface CreatePropertyResult { id: string; title: string; status: "DRAFT"; needsMarking: true }
 
-export const createPropertyApi = (body: {
-  title: string; propertyType: string; price: number; unitCount: number;
-  description?: string; amenities?: string[];
-  state: string; lga: string; area: string; address?: string;
-  ownerId?: string; undertaking: boolean; ownerConsent?: boolean;
-}) => apiClient.post<CreatePropertyResult>("/properties", body).then(unwrap);
 
 export const getUnmarkedProperties = () =>
   apiClient.get<{ id: string; title: string; location: string; status: string; price: number; marked: boolean }[]>(
@@ -188,3 +182,71 @@ export const getUnmarkedProperties = () =>
 /** Agent adds a browsed property to their promotions. */
 export const promoteProperty = (propertyId: string) =>
   apiClient.post<PromoteResult>(`/properties/${propertyId}/promote`, {}).then(unwrap);
+
+/* ============================================================
+   lib/api/dashboard.ts — ADDITIONS for the Create-listing wizard,
+   My Properties, and property photos.
+
+   Append these to your existing apps/platform/lib/api/dashboard.ts.
+   ============================================================ */
+
+export interface CreatePropertyResult { id: string; title: string; status: "DRAFT"; needsMarking: true }
+
+export const createPropertyApi = (body: {
+  title: string; propertyType: string; price: number; unitCount: number;
+  description?: string; amenities?: string[];
+  state: string; lga: string; area: string; address?: string;
+  ownerId?: string; undertaking: boolean; ownerConsent?: boolean;
+  /** S3 keys from uploadPropertyPhotos() — optional at creation time. */
+  photoKeys?: string[];
+}) => apiClient.post<CreatePropertyResult>("/properties", body).then(unwrap);
+
+/** Every listing this user owns or is listing agent for (incl. DRAFT). */
+export const getMyProperties = () =>
+  apiClient.get("/properties/mine").then(unwrap);
+
+
+/* ---------------- property photos (S3) ---------------- */
+
+export interface PresignedUpload {
+  /** PUT the file here directly — the bytes never touch our server. */
+  uploadUrl: string;
+  /** Store this on the property; it's what getPropertyPhotos signs for reads. */
+  key: string;
+}
+
+/** Ask the API for one presigned PUT per file (max 10 per call). */
+export const presignPropertyPhotos = (propertyId: string, files: { name: string; type: string; size: number }[]) =>
+  apiClient.post<PresignedUpload[]>(`/properties/${propertyId}/photos/presign`, { files }).then(unwrap);
+
+/** Attach successfully-uploaded S3 keys to the property. */
+export const attachPropertyPhotos = (propertyId: string, keys: string[]) =>
+  apiClient.post<{ photos: PropertyPhoto[] }>(`/properties/${propertyId}/photos`, { keys }).then(unwrap);
+
+export interface PropertyPhoto { id: string; key: string; url: string; isCover: boolean }
+
+/** Signed, time-limited GET urls for display. */
+export const getPropertyPhotos = (propertyId: string) =>
+  apiClient.get<PropertyPhoto[]>(`/properties/${propertyId}/photos`).then(unwrap);
+
+export const deletePropertyPhoto = (propertyId: string, photoId: string) =>
+  apiClient.delete<{ photos: PropertyPhoto[] }>(`/properties/${propertyId}/photos/${photoId}`).then(unwrap);
+
+export interface SavedCardInfo {
+  hasSavedCard: boolean;
+  last4?: string;
+  brand?: string;
+  expiry?: string;
+}
+
+
+export interface MarkingChargeResult {
+  ok: boolean;
+  jobId?: string;
+  reference: string;
+  amount: number;
+  failureCode?: ChargeFailureCode;
+  failureMessage?: string;
+  retryWithInline?: boolean;
+}
+

@@ -74,11 +74,15 @@ function dummyQuery<T>(
   } as UseQueryOptions<T>;
 }
 
-// TODO
 /* -------- properties (owner) --------
-   TODO(backend): GET /api/properties/my-listings */
+   GET /api/v1/properties/mine — every listing the user owns OR is the
+   listing agent for, including DRAFT ones that haven't been marked yet.
+   A property created in the Create-listing wizard shows up here right
+   away because that flow invalidates ["properties","mine"]. */
 export function useMyProperties() {
-  return useQuery<Property[]>(dummyQuery(["properties", "mine"], DUMMY_PROPERTIES));
+  return useQuery<Property[]>(
+    dummyQuery(["properties", "mine"], DUMMY_PROPERTIES, () => api.getMyProperties() as Promise<Property[]>)
+  );
 }
 /* Listings still awaiting GPS marking — feeds the Property dropdown in the
    Request-marking wizard. Marked properties are excluded server-side, since
@@ -98,9 +102,8 @@ export function useFlatUnits(propertyId: string) {
   return useQuery<FlatUnit[]>(dummyQuery(["flats", propertyId], DUMMY_FLAT_UNITS[propertyId] ?? []));
 }
 
-// TODO
 /* -------- agent listings & promotions --------
-   TODO (backend): GET /api/agent/listings · GET /api/agent/promotions · GET /api/agent/sub-agent-requests */
+   TODO(backend): GET /api/agent/listings · GET /api/agent/promotions · GET /api/agent/sub-agent-requests */
 export function useAgentListings() {
   return useQuery<AgentListing[]>(dummyQuery(["agent", "listings"], DUMMY_AGENT_LISTINGS));
 }
@@ -139,7 +142,6 @@ export function useAvailableJobs() {
     )
   );
 }
-
 export function useActiveJob() {
   // Explicit generic: DUMMY_ACTIVE_JOB is non-null, so dummyQuery would infer
   // T = ActiveJob and the options wouldn't match useQuery<ActiveJob | null>.
