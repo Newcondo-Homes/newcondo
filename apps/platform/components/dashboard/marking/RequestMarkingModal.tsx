@@ -174,11 +174,16 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
     );
   }
 
+  // Two labels: the long one reads well on desktop, but "Pay ₦20,000 with
+  // Flutterwave" cannot fit a half-width mobile footer button — it was being
+  // clipped at both ends. On phones the payment method is already stated in
+  // the summary above, so the short label loses nothing.
   const payLabel = charging
     ? "Charging your card…"
     : card?.hasSavedCard
       ? `Pay ${ngn(fee)} with ${cardLabel}`
       : `Pay ${ngn(fee)} with Flutterwave`;
+  const payLabelShort = charging ? "Charging…" : `Pay ${ngn(fee)}`;
 
   return (
     <Modal wide title="Request property marking" sub={steps[step]} onClose={onClose}
@@ -186,9 +191,14 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
         {step > 0 && <DBtn variant="line" onClick={() => setStep(step - 1)}>Back</DBtn>}
         {step < steps.length - 1
           ? <DBtn onClick={next}>Continue<Icon name="arrow-right" size={14} strokeWidth={2.2} /></DBtn>
-          : <DBtn onClick={finish} disabled={charging}>
+          : <DBtn onClick={finish} disabled={charging} className="max-sm:basis-full">
               {charging && <Icon name="loader" size={14} className="animate-spin" />}
-              {needsPay ? payLabel : f.method === "KNOWN_PERSON" ? "Create link" : "Open map"}
+              {needsPay ? (
+                <>
+                  <span className="max-sm:hidden">{payLabel}</span>
+                  <span className="sm:hidden">{payLabelShort}</span>
+                </>
+              ) : f.method === "KNOWN_PERSON" ? "Create link" : "Open map"}
             </DBtn>}
       </>}>
       <div className="mb-[18px] flex items-center gap-1.5">
