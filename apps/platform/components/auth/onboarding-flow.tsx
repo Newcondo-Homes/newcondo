@@ -469,8 +469,8 @@ export default function OnboardingFlow() {
                       onClick={handleChangeAccountType}
                       className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:text-ink hover:underline"
                     >
-                      Not a{" "}
-                      {draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
+                      Not {" "}
+                      {draft.role === UserType.OWNER ? "a property owner" : draft.role === UserType.AGENT ? "an agent" : " renter"}? Change account type
                     </button>
                   </div>
                   <PlanSelector
