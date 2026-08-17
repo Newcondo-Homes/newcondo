@@ -33,3 +33,13 @@ export * from "./lib/marking-geo";
 export { createProperty, listUnmarkedProperties, listMyProperties } from "./services/createPropertyService";
 
 export { presignPropertyPhotos, attachPropertyPhotos, listPropertyPhotos, deletePropertyPhoto } from "./services/propertyPhotoService";
+
+export {
+       presignOwnershipDoc, attachOwnershipDoc, getOwnershipDoc,
+       getOwnershipDocUrl, deleteOwnershipDoc, assertOwnershipProof,
+     } from "./services/ownershipDocService";
+
+
+export {
+  deleteProperty, resignAsListingAgent, takeDownProperty, getDeletePreview
+} from "./services/deletePropertyService"

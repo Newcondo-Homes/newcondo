@@ -21,9 +21,13 @@
    ============================================================ */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "@newcondo/ui";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
+import { errMsg } from "@/lib/errMsg";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import * as api from "@/lib/api/dashboard";
 
 const MAX_BYTES = 8 * 1024 * 1024;
@@ -52,6 +56,9 @@ export function PropertyPhotos({
   const [remote, setRemote] = useState<api.PropertyPhoto[]>([]);
   const [loading, setLoading] = useState(!!propertyId);
   const [busy, setBusy] = useState(0); // count of in-flight uploads
+  // Index of the photo shown full-screen, or null. Lightbox lives here (not
+  // in the card) so arrow-key paging can see the whole list.
+  const [viewing, setViewing] = useState<number | null>(null);
 
   /* ---- live mode: load existing photos ---- */
   useEffect(() => {
@@ -121,7 +128,7 @@ export function PropertyPhotos({
       toast.success(chosen.length === 1 ? "Photo added" : `${chosen.length} photos added`);
     } catch (e) {
       toast.error("Could not upload", {
-        description: (e as Error)?.message ?? "Check your connection and try again.",
+        description: errMsg(e, "Check your connection and try again."),
       });
     } finally {
       setBusy(0);
@@ -156,18 +163,22 @@ export function PropertyPhotos({
   return (
     <div className={className}>
       <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cols},minmax(0,1fr))` }}>
-        {shown.map((p) => (
+        {shown.map((p, i) => (
           <div key={p.key} className="group relative aspect-square overflow-hidden rounded-[14px] bg-surface-sunken">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.url} alt="" className="h-full w-full object-cover" />
+            {/* The tile itself opens the lightbox; the X stops propagation so
+                removing never also opens the viewer. */}
+            <button type="button" onClick={() => setViewing(i)} aria-label="View photo" className="block size-full cursor-zoom-in">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt="" className="h-full w-full object-cover transition-transform duration-[600ms] ease-nc group-hover:scale-[1.04]" />
+            </button>
             {p.isCover && (
-              <span className="absolute left-1.5 top-1.5 rounded-full bg-ink/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-cream">
+              <span className="pointer-events-none absolute left-1.5 top-1.5 rounded-full bg-ink/85 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-cream">
                 Cover
               </span>
             )}
             <button
               type="button"
-              onClick={p.onRemove}
+              onClick={(e) => { e.stopPropagation(); p.onRemove(); }}
               aria-label="Remove photo"
               className="absolute right-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-ink/80 text-cream opacity-0 transition-opacity duration-200 ease-nc hover:bg-ink focus-visible:opacity-100 group-hover:opacity-100 max-sm:opacity-100"
             >
@@ -214,9 +225,162 @@ export function PropertyPhotos({
           : busy > 0
             ? `Uploading ${busy} photo${busy === 1 ? "" : "s"}…`
             : count === 0
-              ? "JPEG, PNG or WebP · up to 8MB each. The first photo becomes the cover."
+              ? `JPEG, PNG or WebP · up to 8MB each · max ${max}. The first photo becomes the cover.`
               : `${count} of ${max} photos · the first is the cover.`}
       </p>
+
+      <PhotoLightbox
+        photos={shown}
+        index={viewing}
+        onClose={() => setViewing(null)}
+        onIndex={setViewing}
+        onDelete={async (i) => {
+          await shown[i].onRemove();
+          // Step back so we land on a photo that still exists; close when the
+          // gallery is now empty.
+          setViewing(shown.length <= 1 ? null : Math.max(0, i - 1));
+        }}
+      />
     </div>
+  );
+}
+
+/* ============================================================
+   PhotoLightbox — full-screen viewer with permanent delete.
+
+   Portaled to <body> so it escapes any transformed/overflow-hidden
+   ancestor (a property page inside a card would otherwise clip it), and
+   scroll-locked with the same hook the modals use.
+
+   Delete here is PERMANENT: it removes the S3 object as well as the row,
+   so the confirm step is not ceremony — there is no undo.
+   ============================================================ */
+function PhotoLightbox({
+  photos,
+  index,
+  onClose,
+  onIndex,
+  onDelete,
+}: {
+  photos: { key: string; url: string; isCover?: boolean }[];
+  index: number | null;
+  onClose: () => void;
+  onIndex: (i: number) => void;
+  onDelete: (i: number) => Promise<void> | void;
+}) {
+  const open = index != null && !!photos[index];
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  useBodyScrollLock(open);
+
+  useEffect(() => { setConfirming(false); }, [index]);
+
+  useEffect(() => {
+    if (!open || index == null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight" && index < photos.length - 1) onIndex(index + 1);
+      if (e.key === "ArrowLeft" && index > 0) onIndex(index - 1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, index, photos.length, onClose, onIndex]);
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && index != null && (
+        <motion.div
+          className="fixed inset-0 z-[200] flex flex-col bg-ink/92 backdrop-blur-sm"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          role="dialog" aria-modal="true" aria-label="Photo viewer"
+        >
+          {/* top bar */}
+          <div className="flex flex-none items-center justify-between gap-3 px-4 pt-[calc(14px+env(safe-area-inset-top))] pb-3">
+            <span className="text-[13px] font-semibold text-cream/80">{index + 1} / {photos.length}</span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirming(true)}
+                disabled={deleting}
+                aria-label="Delete photo"
+                className="grid size-10 place-items-center rounded-full bg-cream/10 text-cream transition-colors hover:cursor-pointer hover:bg-danger disabled:opacity-50"
+              >
+                {deleting ? <Icon name="loader" size={17} className="animate-spin" /> : <Icon name="trash-2" size={17} strokeWidth={2} />}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close"
+                className="grid size-10 place-items-center rounded-full bg-cream/10 text-cream transition-colors hover:cursor-pointer hover:bg-cream/20"
+              >
+                <Icon name="x" size={18} strokeWidth={2.2} />
+              </button>
+            </div>
+          </div>
+
+          {/* image */}
+          <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pb-[calc(16px+env(safe-area-inset-bottom))]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              key={photos[index].key}
+              src={photos[index].url}
+              alt=""
+              className="max-h-full max-w-full rounded-2xl object-contain"
+            />
+
+            {index > 0 && (
+              <button
+                type="button" onClick={() => onIndex(index - 1)} aria-label="Previous photo"
+                className="absolute left-3 grid size-11 place-items-center rounded-full bg-ink/60 text-cream transition-colors hover:cursor-pointer hover:bg-ink"
+              ><Icon name="chevron-left" size={20} strokeWidth={2.2} /></button>
+            )}
+            {index < photos.length - 1 && (
+              <button
+                type="button" onClick={() => onIndex(index + 1)} aria-label="Next photo"
+                className="absolute right-3 grid size-11 place-items-center rounded-full bg-ink/60 text-cream transition-colors hover:cursor-pointer hover:bg-ink"
+              ><Icon name="chevron-right" size={20} strokeWidth={2.2} /></button>
+            )}
+          </div>
+
+          {/* delete confirm — permanent, so it asks once */}
+          <AnimatePresence>
+            {confirming && (
+              <motion.div
+                className="absolute inset-0 z-10 grid place-items-center bg-ink/70 px-5"
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              >
+                <div className="w-full max-w-[380px] rounded-3xl bg-surface p-6 text-center shadow-pop">
+                  <span className="mx-auto grid size-12 place-items-center rounded-full bg-danger/10 text-danger">
+                    <Icon name="trash-2" size={22} strokeWidth={2} />
+                  </span>
+                  <h3 className="mb-0 mt-3.5 text-[17px] font-bold tracking-[-0.02em]">Delete this photo?</h3>
+                  <p className="mb-0 mt-1.5 text-[13px] leading-normal text-text-tertiary">
+                    It will be removed from storage permanently. This can&rsquo;t be undone.
+                  </p>
+                  <div className="mt-5 flex gap-2.5">
+                    <button
+                      type="button" onClick={() => setConfirming(false)}
+                      className="flex-1 rounded-full border border-border-strong py-3 text-[14px] font-semibold text-ink transition-colors hover:cursor-pointer hover:bg-surface-sunken"
+                    >Cancel</button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setDeleting(true);
+                        try { await onDelete(index); } finally { setDeleting(false); setConfirming(false); }
+                      }}
+                      className="flex-1 rounded-full bg-danger py-3 text-[14px] font-semibold text-cream transition-colors hover:cursor-pointer hover:brightness-110"
+                    >Delete</button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body
   );
 }

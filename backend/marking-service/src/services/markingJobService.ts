@@ -31,6 +31,7 @@ import {
 import {
   polygonNormToGps, centroidOf, buildingFingerprint, checkDuplicate,
 } from "@newcondo/property-service"; // marking-geo re-export
+import { assertOwnershipProof } from "@newcondo/property-service";
 import type { MarkingJobStatus, MarkingMethod as PrismaMarkingMethod } from "@newcondo/db";
 
 // All numbers come from constants/business.ts — change them there, not here.
@@ -83,6 +84,23 @@ export async function createMarkingJob(opts: {
   if (!p) throw notFound("Property not found");
   if (p.ownerId !== opts.requesterId && p.agentId !== opts.requesterId) throw forbidden("You do not list this property");
   if (p.boundaryVerified) throw conflict("This property is already marked");
+
+  // OWNERSHIP GATE — only for the FREE methods.
+  //
+  // Two routes reach this function:
+  //   SELF / KNOWN_PERSON  → called directly, nothing checked them yet, so
+  //                          this is their one and only ownership check.
+  //   BROADCAST / NEWCONDO → called by confirmMarkingFeePaid() AFTER the card
+  //                          has been charged. They were already checked in
+  //                          initiateMarkingPayment(), before any money moved.
+  //
+  // Hence `if (!opts.feePaid)`. Checking unconditionally would re-run the test
+  // on a job the user has ALREADY PAID for — and if the document happened to be
+  // deleted between checkout and the webhook, we'd take ₦25,000 and then refuse
+  // to create the job. The check belongs before the charge, never after it.
+  if (!opts.feePaid) {
+    await assertOwnershipProof(opts.propertyId, "MARK");
+  }
 
   const fee = MARKING_FEES[opts.method];
   const job = await prisma.propertyMarkingJob.create({

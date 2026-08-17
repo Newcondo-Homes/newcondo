@@ -8,6 +8,14 @@
 //      → createMarkingJob() broadcasts to nearby agents.
 // SELF / KNOWN_PERSON never come through here (they're free).
 //
+// >>> OWNERSHIP GATE <<<
+// assertOwnershipProof(propertyId, "MARK") runs as the FIRST statement of
+// initiateMarkingPayment — i.e. BEFORE the Payment row is created and long
+// before a card is charged. Placing it here rather than in
+// confirmMarkingFeePaid is deliberate: gating after the webhook would mean
+// taking ₦25,000 and then refusing to create the job, which is the worst
+// possible outcome for the user and a refund we'd have to chase.
+//
 // BUILD NOTES:
 //  • Explicit return types — Prisma 7 payload types aren't nameable across
 //    package boundaries (TS2742).
@@ -17,6 +25,7 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@newcondo/db";
 import { badRequest, notFound, flutterwaveConfig, MARKING, publishNotification } from "@newcondo/backend-shared";
+import { assertOwnershipProof } from "@newcondo/property-service";
 import { createMarkingJob, type MarkingMethod } from "./markingJobService";
 
 type PaidMethod = "BROADCAST" | "NEWCONDO";
@@ -44,6 +53,10 @@ export async function initiateMarkingPayment(opts: {
   contactPhone: string;
   accessNotes?: string;
 }): Promise<MarkingCheckout> {
+  // GATE FIRST — before any Payment row exists and before any money moves.
+  // Throws a 403 whose message the dashboard renders verbatim.
+  await assertOwnershipProof(opts.propertyId, "MARK");
+
   const fee = MARKING.fees[opts.method];
   if (!fee) throw badRequest("This marking method does not require payment");
 
@@ -86,7 +99,12 @@ export async function initiateMarkingPayment(opts: {
   };
 }
 
-/** Webhook-driven (NC-MKFEE-*): fee verified → the job goes live. Idempotent. */
+/** Webhook-driven (NC-MKFEE-*): fee verified → the job goes live. Idempotent.
+ *
+ *  NO GATE HERE ON PURPOSE. The document was already verified at
+ *  initiateMarkingPayment, the card has now been charged, and re-checking
+ *  would let a document deleted mid-checkout strand a paid job. Money has
+ *  moved; the job must be created. */
 export async function confirmMarkingFeePaid(
   flutterwaveRef: string
 ): Promise<{ jobId: string; status: string } | null> {

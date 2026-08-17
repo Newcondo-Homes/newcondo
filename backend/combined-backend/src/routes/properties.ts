@@ -19,10 +19,23 @@ import {
   listPropertyPhotos,
   deletePropertyPhoto,
 } from "@newcondo/property-service";
+
+// Proof of ownership
+import {
+  presignOwnershipDoc, attachOwnershipDoc, getOwnershipDoc,
+  getOwnershipDocUrl, deleteOwnershipDoc, assertOwnershipProof
+} from "@newcondo/property-service"
+
+// Delete property
+import{ 
+  deleteProperty, resignAsListingAgent, takeDownProperty, getDeletePreview
+} from "@newcondo/property-service"
+
 import { publishNotification } from "@newcondo/backend-shared";
 
 const router: ExpressRouter = Router();
 const listerOnly = [authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"])] as const;
+const ownerOrAgent = [authMiddleware, requireRole(["OWNER", "AGENT"])] as const;
 
 // GET /api/v1/properties/browse — PUBLIC search grid (only PUBLISHED +
 // boundaryVerified + admin-APPROVED ever returned; 60s Redis cache inside).
@@ -77,7 +90,7 @@ router.post("/tenant-invites/accept", authMiddleware, async (req, res, next) => 
 
 // Create a listing. Always lands as DRAFT + boundaryVerified:false, so it
 // cannot appear in Browse until it's marked AND admin-approved.
-router.post("/properties", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+router.post("/", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     const data = await createProperty(req.user!.id, req.body ?? {});
     res.status(201).json({ success: true, data });
@@ -86,7 +99,7 @@ router.post("/properties", authMiddleware, requireRole(["OWNER", "AGENT"]), asyn
 
 // Properties this user may still request marking for (unmarked only) —
 // feeds the Property dropdown in the Request-marking wizard.
-router.get("/properties/unmarked", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+router.get("/unmarked", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     res.json({ success: true, data: await listUnmarkedProperties(req.user!.id) });
   } catch (e) { next(e); }
@@ -95,7 +108,7 @@ router.get("/properties/unmarked", authMiddleware, requireRole(["OWNER", "AGENT"
 // Every listing this user owns or is the listing agent for, DRAFT included.
 // This is what My Properties reads — without it a freshly-created listing
 // never appears in the dashboard even though the row exists in the DB.
-router.get("/properties/mine", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+router.get("/mine", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     res.json({ success: true, data: await listMyProperties(req.user!.id) });
   } catch (e) { next(e); }
@@ -107,14 +120,14 @@ router.get("/properties/mine", authMiddleware, requireRole(["OWNER", "AGENT"]), 
    keys. Bytes never touch Express, so there's no body-size limit to tune
    and a slow mobile upload can't hold a Node socket open. */
 
-router.post("/properties/:id/photos/presign", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+router.post("/:id/photos/presign", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     const data = await presignPropertyPhotos(req.params.id, req.user!.id, req.body?.files ?? []);
     res.json({ success: true, data });
   } catch (e) { next(e); }
 });
 
-router.post("/properties/:id/photos", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+router.post("/:id/photos", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     const photos = await attachPropertyPhotos(req.params.id, req.user!.id, req.body?.keys ?? []);
     res.json({ success: true, data: { photos } });
@@ -122,13 +135,13 @@ router.post("/properties/:id/photos", authMiddleware, requireRole(["OWNER", "AGE
 });
 
 // Signed, time-limited GET urls — the bucket itself stays private.
-router.get("/properties/:id/photos", authMiddleware, async (req, res, next) => {
+router.get("/:id/photos", authMiddleware, async (req, res, next) => {
   try {
     res.json({ success: true, data: await listPropertyPhotos(req.params.id) });
   } catch (e) { next(e); }
 });
 
-router.delete("/properties/:id/photos/:photoId", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+router.delete("/:id/photos/:photoId", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     const photos = await deletePropertyPhoto(req.params.id, req.user!.id, req.params.photoId);
     res.json({ success: true, data: { photos } });
@@ -141,12 +154,82 @@ router.delete("/properties/:id/photos/:photoId", authMiddleware, requireRole(["O
 //   RESTRICTED → 403 (surfaced in the UI as "the listing agent has restricted…")
 //   already promoting / pending / at sub-agent cap → 409
 // Import from property-service: `requestPromotion`.
-router.post("/properties/:id/promote", authMiddleware, requireRole(["AGENT"]), async (req, res, next) => {
+router.post("/:id/promote", authMiddleware, requireRole(["AGENT"]), async (req, res, next) => {
   try {
     const data = await requestPromotion({ propertyId: req.params.id, subAgentId: req.user!.id });
     res.json({ success: true, data });
   } catch (e) { next(e); }
 });
 
+
+/* ---------------- proof of ownership ----------------
+   Import from property-service:
+     presignOwnershipDoc, attachOwnershipDoc, getOwnershipDoc,
+     getOwnershipDocUrl, deleteOwnershipDoc, assertOwnershipProof */
+
+router.post("/:id/ownership-doc/presign", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await presignOwnershipDoc(req.params.id, req.user!.id, req.body?.file ?? {}) });
+  } catch (e) { next(e); }
+});
+
+router.post("/:id/ownership-doc", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await attachOwnershipDoc(req.params.id, req.user!.id, req.body ?? {}) });
+  } catch (e) { next(e); }
+});
+
+router.get("/:id/ownership-doc", authMiddleware, async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await getOwnershipDoc(req.params.id) });
+  } catch (e) { next(e); }
+});
+
+// Signed, 5-minute GET. Ownership papers are sensitive — never a stored url.
+router.get("/:id/ownership-doc/url", authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await getOwnershipDocUrl(req.params.id, req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+router.delete("/:id/ownership-doc", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await deleteOwnershipDoc(req.params.id, req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+/* ---------------- delete / take down / resign ----------------
+   Three different exits, deliberately NOT one endpoint:
+     DELETE /:id        permanent — OWNER or ADMIN only, refused when there
+                        are active tenants or payment history.
+     POST   /:id/takedown  hide from renters, keep every record. This is what
+                        most people mean by "delete" and it's always allowed.
+     DELETE /:id/agent  the AGENT's exit — detaches them, listing survives. */
+
+// Preview so the confirm dialog can explain itself before the user commits.
+router.get("/:id/delete-preview", ...listerOnly, async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await getDeletePreview(req.params.id, req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+router.delete("/:id", ...listerOnly, async (req, res, next) => {
+  try {
+    const data = await deleteProperty(req.params.id, req.user!.id, { isAdmin: req.user!.role === "ADMIN" });
+    res.json({ success: true, data });
+  } catch (e) { next(e); }
+});
+
+router.post("/:id/takedown", ...ownerOrAgent, async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await takeDownProperty(req.params.id, req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+router.delete("/:id/agent", authMiddleware, requireRole(["AGENT"]), async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await resignAsListingAgent(req.params.id, req.user!.id) });
+  } catch (e) { next(e); }
+});
 
 export { router as propertyRouter };

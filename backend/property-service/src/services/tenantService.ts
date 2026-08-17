@@ -8,6 +8,18 @@
 // Tokens: sha256-hashed at rest (a DB leak can't mint working links),
 // single-use, 14-day expiry. Lister ownership re-checked on every call.
 //
+// >>> OWNERSHIP GATE <<<
+// assertOwnershipProof(propertyId, "INVITE_TENANT") runs in
+// createTenantInvite, before a token is minted. Inviting a tenant is the
+// highest-stakes exposure of all three gated actions — it moves a real person
+// and their rent money into a property — so an undocumented property must not
+// be able to produce an invite link at all.
+//
+// NOT gated: validateTenantInvite / acceptTenantInvite. Once a renter holds a
+// link, the document check has already happened at creation; blocking the
+// renter mid-onboarding would punish the wrong person for the lister's
+// paperwork. If a document is removed later, revoke the invite.
+//
 // BUILD NOTES:
 //  • Every exported function has an EXPLICIT return type — Prisma 7's inferred
 //    payload types can't be named across package boundaries (TS2742).
@@ -17,6 +29,7 @@
 import { createHash, randomBytes } from "crypto";
 import { prisma } from "@newcondo/db";
 import { forbidden, gone, notFound } from "@newcondo/backend-shared";
+import { assertOwnershipProof } from "./ownershipDocService";
 
 const hashToken = (raw: string) => createHash("sha256").update(raw).digest("hex");
 const INVITE_TTL_MS = 14 * 24 * 3600_000;
@@ -111,6 +124,12 @@ export async function createTenantInvite(opts: {
   propertyId: string; inviterId: string; unitId?: string;
 }): Promise<TenantInviteResult> {
   const property = await assertListerAccess(opts.propertyId, opts.inviterId);
+
+  // GATE — after the lister check (so a stranger hears "you do not list this
+  // property", not a hint about someone else's paperwork), before a token
+  // exists. No invite link can be minted for an undocumented property.
+  await assertOwnershipProof(opts.propertyId, "INVITE_TENANT");
+
   if (opts.unitId) {
     const unit = await prisma.propertyUnit.findFirst({
       where: { id: opts.unitId, propertyId: opts.propertyId }, select: { id: true },

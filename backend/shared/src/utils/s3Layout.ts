@@ -9,8 +9,8 @@
 // ============================================================
 import { randomUUID } from "crypto";
 
-export const PUBLIC_BUCKET = process.env.S3_PUBLIC_BUCKET ?? "newcondo-public-assets";
-export const PRIVATE_BUCKET = process.env.S3_PRIVATE_BUCKET ?? "newcondo-private-documents";
+// export const PUBLIC_BUCKET = process.env.S3_PUBLIC_BUCKET ?? "newcondo-public-assets";
+// export const PRIVATE_BUCKET = process.env.S3_PRIVATE_BUCKET ?? "newcondo-private-documents";
 
 const slug = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 const ext = (contentType: string) => contentType === "application/pdf" ? "pdf" : (contentType.split("/")[1] ?? "jpg");

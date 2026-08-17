@@ -1,48 +1,40 @@
 // backend/property-service/src/services/propertyPhotoService.ts
 // ============================================================
-// Property photos on AWS S3.
+// Property photos on S3.
 //
-// DESIGN: the browser uploads DIRECTLY to S3 with a presigned PUT — the
-// image bytes never pass through Express. That keeps the API cheap and
-// avoids the body-size limits that make multipart uploads painful on a
-// Nigerian mobile connection. Reads are presigned GETs, so the bucket
-// itself stays PRIVATE (no public-read ACL, no CloudFront needed yet).
+// >>> BUCKET BUG FIXED <<<
+// This service used to build its OWN S3Client with process.env.AWS_S3_BUCKET,
+// which doesn't exist in this repo — the env var is S3_BUCKET (see
+// backend/shared/src/utils/s3Upload.ts). An undefined bucket is what produced:
+//     "No value provided for input HTTP label: Bucket."
+// Rather than fix the variable name in two places, this now delegates to the
+// SHARED helpers (presignUpload / presignDownload / deleteObject). They own
+// the client, the env, the key layout, the content-type allow-list and the
+// size cap, so property photos, marking photos and identity documents can
+// never drift apart again.
 //
-// FLOW
-//   1. presignPropertyPhotos() → [{ uploadUrl, key }]  (client PUTs each file)
-//   2. attachPropertyPhotos(keys)  → rows in PropertyImage, first = cover
-//   3. listPropertyPhotos()  → signed GET urls (1h)
-//
-// ENV
-//   AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_S3_BUCKET
-//
-// BUCKET CORS (required, or the browser PUT fails with an opaque error):
-//   [{ "AllowedOrigins": ["https://newcondo.homes","http://localhost:3000"],
-//      "AllowedMethods": ["PUT","GET"],
-//      "AllowedHeaders": ["*"], "ExposeHeaders": ["ETag"] }]
+// FLOW (bytes never touch Express):
+//   1. presignPropertyPhotos() → presigned PUT urls
+//   2. browser PUTs straight to S3
+//   3. attachPropertyPhotos(keys) → rows in PropertyImage
+//   4. listPropertyPhotos() → presigned GET urls (bucket stays private)
 // ============================================================
-import { randomUUID } from "crypto";
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { prisma } from "@newcondo/db";
-import { badRequest, forbidden, notFound } from "@newcondo/backend-shared";
+import {
+  badRequest, forbidden, notFound,
+  presignUpload, presignDownload, deleteObject,
+  PUBLIC_BUCKET,
+} from "@newcondo/backend-shared";
 
-const BUCKET = process.env.AWS_S3_BUCKET!;
-const REGION = process.env.AWS_REGION ?? "eu-west-1";
+const MAX_PHOTOS = 20;
 
-const s3 = new S3Client({
-  region: REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+export interface PropertyPhoto {
+  id: string;
+  key: string;
+  url: string;
+  isCover: boolean;
+}
 
-const ALLOWED = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-const MAX_BYTES = 8 * 1024 * 1024; // 8MB — phone photos are big; resize client-side first
-const MAX_PER_PROPERTY = 20;
-
-/** Only the owner or the listing agent may touch a property's photos. */
 async function assertCanEdit(propertyId: string, userId: string) {
   const p = await prisma.property.findUnique({
     where: { id: propertyId },
@@ -50,7 +42,7 @@ async function assertCanEdit(propertyId: string, userId: string) {
   });
   if (!p) throw notFound("Property not found");
   if (p.ownerId !== userId && p.agentId !== userId) {
-    throw forbidden("You can't edit photos for this property");
+    throw forbidden("You can't manage photos for this property");
   }
   return p;
 }
@@ -58,36 +50,29 @@ async function assertCanEdit(propertyId: string, userId: string) {
 /* ------------------------------------------------------------------ */
 /* 1. Presign uploads                                                  */
 /* ------------------------------------------------------------------ */
-export interface PresignInput { name: string; type: string; size: number }
-
 export async function presignPropertyPhotos(
   propertyId: string,
   userId: string,
-  files: PresignInput[]
+  files: { name?: string; type: string; size: number }[]
 ): Promise<{ uploadUrl: string; key: string }[]> {
   await assertCanEdit(propertyId, userId);
-  if (!files?.length) throw badRequest("No files to upload");
-  if (files.length > 10) throw badRequest("Upload at most 10 photos at a time");
+  if (!Array.isArray(files) || files.length === 0) throw badRequest("No files provided");
 
   const existing = await prisma.propertyImage.count({ where: { propertyId } });
-  if (existing + files.length > MAX_PER_PROPERTY) {
-    throw badRequest(`A property can have up to ${MAX_PER_PROPERTY} photos`);
+  if (existing + files.length > MAX_PHOTOS) {
+    throw badRequest(`A property can have at most ${MAX_PHOTOS} photos (${existing} already uploaded)`);
   }
 
+  // presignUpload validates content-type + size and builds the key, so a
+  // rejected file fails here rather than silently 403-ing at the S3 PUT.
   return Promise.all(
     files.map(async (f) => {
-      if (!ALLOWED.includes(f.type)) throw badRequest(`${f.name}: only JPEG, PNG, WebP or HEIC images`);
-      if (f.size > MAX_BYTES) throw badRequest(`${f.name} is larger than 8MB`);
-
-      // Key includes the property so objects are easy to audit/lifecycle.
-      const ext = (f.name.split(".").pop() ?? "jpg").toLowerCase().slice(0, 5);
-      const key = `properties/${propertyId}/${randomUUID()}.${ext}`;
-
-      const uploadUrl = await getSignedUrl(
-        s3,
-        new PutObjectCommand({ Bucket: BUCKET, Key: key, ContentType: f.type }),
-        { expiresIn: 300 } // 5 min is plenty; short-lived keys limit replay
-      );
+      const { key, uploadUrl } = await presignUpload({
+        ns: "property-images",
+        ownerId: propertyId,
+        contentType: f.type,
+        contentLength: f.size,
+      });
       return { uploadUrl, key };
     })
   );
@@ -96,33 +81,40 @@ export async function presignPropertyPhotos(
 /* ------------------------------------------------------------------ */
 /* 2. Attach uploaded keys                                             */
 /* ------------------------------------------------------------------ */
-export async function attachPropertyPhotos(propertyId: string, userId: string, keys: string[]) {
+export async function attachPropertyPhotos(
+  propertyId: string,
+  userId: string,
+  keys: string[]
+): Promise<PropertyPhoto[]> {
   await assertCanEdit(propertyId, userId);
-  if (!keys?.length) throw badRequest("No photos to attach");
-  // Reject keys that don't belong to this property — a client could otherwise
-  // attach someone else's object by guessing a key.
-  const bad = keys.find((k) => !k.startsWith(`properties/${propertyId}/`));
-  if (bad) throw badRequest("Invalid photo reference");
+  if (!Array.isArray(keys) || keys.length === 0) throw badRequest("No photo keys provided");
+  // Keys are minted by presignUpload under this namespace + property id, so
+  // anything else is a forged reference.
+  const prefix = `property-images/${propertyId}/`;
+  if (keys.some((k) => !k?.startsWith(prefix))) throw badRequest("Invalid photo reference");
 
   const existing = await prisma.propertyImage.count({ where: { propertyId } });
+  if (existing + keys.length > MAX_PHOTOS) {
+    throw badRequest(`A property can have at most ${MAX_PHOTOS} photos`);
+  }
+
   await prisma.propertyImage.createMany({
     data: keys.map((key, i) => ({
       propertyId,
-      url: key,                       // we store the KEY; urls are signed on read
-      isCover: existing === 0 && i === 0,
+      url: key,                       // the S3 KEY — reads are signed per request
+      // First photo ever uploaded becomes the cover.
+      isPrimary: existing === 0 && i === 0,
       order: existing + i,
     })),
-    skipDuplicates: true,
   });
+
   return listPropertyPhotos(propertyId);
 }
 
 /* ------------------------------------------------------------------ */
 /* 3. List (signed GET urls)                                           */
 /* ------------------------------------------------------------------ */
-export interface PropertyPhotoDTO { id: string; key: string; url: string; isCover: boolean }
-
-export async function listPropertyPhotos(propertyId: string): Promise<PropertyPhotoDTO[]> {
+export async function listPropertyPhotos(propertyId: string): Promise<PropertyPhoto[]> {
   const rows = await prisma.propertyImage.findMany({
     where: { propertyId },
     orderBy: [{ isPrimary: "desc" }, { order: "asc" }],
@@ -132,34 +124,46 @@ export async function listPropertyPhotos(propertyId: string): Promise<PropertyPh
     rows.map(async (r) => ({
       id: r.id,
       key: r.url,
-      // Already-absolute urls (legacy/seed rows) are passed through untouched.
-      url: /^https?:\/\//.test(r.url)
-        ? r.url
-        : await getSignedUrl(s3, new GetObjectCommand({ Bucket: BUCKET, Key: r.url }), { expiresIn: 3600 }),
-      // DB column is `isPrimary`; the UI calls it "cover".
+      // PUBLIC_BUCKET must be passed explicitly: presignDownload defaults to
+      // PRIVATE_BUCKET, so signing without it produced a valid url pointing at
+      // newcondo-private-documents — where property photos don't exist. The
+      // <img> then 404'd and the card rendered blank.
+      url: await presignDownload(r.url, 3600, PUBLIC_BUCKET),
       isCover: r.isPrimary,
     }))
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* 4. Delete                                                           */
+/* 4. Delete (row + S3 object)                                         */
 /* ------------------------------------------------------------------ */
-export async function deletePropertyPhoto(propertyId: string, userId: string, photoId: string) {
+export async function deletePropertyPhoto(
+  propertyId: string,
+  userId: string,
+  photoId: string
+): Promise<PropertyPhoto[]> {
   await assertCanEdit(propertyId, userId);
-  const img = await prisma.propertyImage.findUnique({ where: { id: photoId }, select: { id: true, url: true, propertyId: true, isPrimary: true } });
-  if (!img || img.propertyId !== propertyId) throw notFound("Photo not found");
+  const photo = await prisma.propertyImage.findFirst({
+    where: { id: photoId, propertyId },
+    select: { id: true, url: true, isPrimary: true },
+  });
+  if (!photo) throw notFound("Photo not found");
 
-  await prisma.propertyImage.delete({ where: { id: photoId } });
-  if (!/^https?:\/\//.test(img.url)) {
-    // Best-effort: a failed object delete must not fail the request, or the
-    // row is gone while the UI reports an error.
-    await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: img.url })).catch(() => {});
-  }
-  // Promote the next photo to cover so a property is never coverless.
-  if (img.isPrimary) {
-    const next = await prisma.propertyImage.findFirst({ where: { propertyId }, orderBy: { order: "asc" }, select: { id: true } });
+  await prisma.propertyImage.delete({ where: { id: photo.id } });
+  // Best-effort: a failed S3 delete must not leave a row pointing at an object
+  // the user believes is gone. The row is already removed; log and move on.
+  await deleteObject(photo.url).catch(() => {});
+
+  // Deleting the cover promotes the next photo, so a gallery is never
+  // cover-less while still holding images.
+  if (photo.isPrimary) {
+    const next = await prisma.propertyImage.findFirst({
+      where: { propertyId },
+      orderBy: { order: "asc" },
+      select: { id: true },
+    });
     if (next) await prisma.propertyImage.update({ where: { id: next.id }, data: { isPrimary: true } });
   }
+
   return listPropertyPhotos(propertyId);
 }

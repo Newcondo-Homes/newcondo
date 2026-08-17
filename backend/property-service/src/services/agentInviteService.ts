@@ -20,10 +20,11 @@ import { prisma } from "@newcondo/db";
 import {
   forbidden, gone, notFound, paymentRequired, sendEmail,
   publishNotification, sendBrandedEmail, EmailTemplates,
+   AGENT_INVITES
 } from "@newcondo/backend-shared";
 
 const hashToken = (raw: string) => createHash("sha256").update(raw).digest("hex");
-const TTL_MS = 14 * 24 * 3600_000;
+const TTL_MS = AGENT_INVITES.expiryDays * 24 * 3600_000;
 
 export interface AgentInviteResult {
   url: string;
@@ -64,6 +65,7 @@ export async function createAgentInvite(opts: { ownerId: string; agentEmail?: st
     const content = EmailTemplates.agentInvite({
       ownerName: owner.name ?? "A property owner",
       inviteUrl: url,
+      expiresInDays: AGENT_INVITES.expiryDays,
     });
     try {
       const result = await sendEmail({
@@ -83,7 +85,7 @@ export async function createAgentInvite(opts: { ownerId: string; agentEmail?: st
       console.error(`[agentInvite] email transport threw for ${opts.agentEmail}:`, e);
     }
   }
-  return { url, expiresInDays: 14, emailSent };
+  return { url, expiresInDays: AGENT_INVITES.expiryDays, emailSent };
 }
 
 /** PUBLIC: context for the /agent-invite/[token] page. */

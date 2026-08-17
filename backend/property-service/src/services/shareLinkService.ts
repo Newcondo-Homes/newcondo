@@ -8,6 +8,17 @@
 // A PROMO link's creatorId is what pins Payment.subAgentId at checkout —
 // commission can never be credited to the wrong agent.
 //
+// >>> OWNERSHIP GATE <<<
+// A share link is how a property reaches people outside Newcondo, so
+// assertOwnershipProof(propertyId, "SHARE") runs before a code is minted.
+// It applies to BOTH kinds: a sub-agent's PROMO link publishes the property
+// just as widely as the lister's own, so exempting PROMO would leave an
+// undocumented property one approved sub-agent away from being public.
+//
+// It runs AFTER the permission checks below, so an unauthorised caller still
+// gets "you can't share this property" rather than being told about a missing
+// document on a property that isn't theirs.
+//
 // BUILD NOTES:
 //  • The referral-code helper is inlined here (was imported from
 //    @newcondo/referral-service, which property-service does not depend on —
@@ -18,6 +29,7 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@newcondo/db";
 import { forbidden, notFound } from "@newcondo/backend-shared";
+import { assertOwnershipProof } from "./ownershipDocService";
 
 const suffix = () => randomBytes(3).toString("base64url").replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toLowerCase();
 
@@ -61,6 +73,10 @@ export async function getOrCreateShareLink(opts: {
     if (!approved) throw forbidden("You need an approved promotion request for this property");
   }
 
+  // GATE — after the permission checks, before a code exists. Covers SHARE and
+  // PROMO alike: both put the property in front of the public.
+  await assertOwnershipProof(opts.propertyId, "SHARE");
+
   const existing = await prisma.shareLink.findFirst({
     where: { propertyId: opts.propertyId, creatorId: opts.creatorId, kind: opts.kind },
     select: { code: true },
@@ -95,7 +111,11 @@ export interface ResolvedShareLink {
   };
 }
 
-/** PUBLIC: resolve a share code → property payload + attribution. Counts the click. */
+/** PUBLIC: resolve a share code → property payload + attribution. Counts the click.
+ *
+ *  NO GATE HERE. Links already minted stay resolvable; if a document is later
+ *  removed the correct remedy is revoking the link, not 403-ing a renter who
+ *  followed a URL someone sent them. */
 export async function resolveShareLink(code: string): Promise<ResolvedShareLink> {
   const link = await prisma.shareLink.findUnique({
     where: { code },

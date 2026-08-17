@@ -70,28 +70,36 @@ export default function MarkingActionBar({
         {/* ---- MARK: pinned ---- */}
         {step === "mark" && pin && (
           <Swap key="mark-pinned" reduce={reduce}>
-            <div className="flex items-center gap-3">
-              <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-green-wash text-green-dark">
-                <ShieldCheck size={20} strokeWidth={1.9} />
-              </span>
-              <p className="m-0 flex-1 text-[14px] leading-[1.35] text-text-primary">
-                Building pinned. Adjust by tapping again, or continue.
-              </p>
-              <button
-                type="button"
-                onClick={onClear}
-                className="inline-flex flex-none items-center gap-1.5 rounded-full border border-border-strong bg-surface px-3.5 py-2.5 text-[13px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken"
-              >
-                <X size={15} strokeWidth={2.2} /> Clear
-              </button>
-              <button
-                type="button"
-                onClick={onContinue}
-                className="group inline-flex flex-none items-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-[14px] font-semibold text-cream transition-[transform,background] duration-200 ease-nc hover:bg-black active:scale-[0.97]"
-              >
-                Continue
-                <ArrowRight size={16} strokeWidth={2.2} className="transition-transform duration-200 ease-nc group-hover:translate-x-0.5" />
-              </button>
+            {/* Three items in one row squeezed the message column to ~60px on a
+                phone, so it wrapped one word per line. Below 560px the bar
+                becomes two stacked rows — message, then full-width buttons —
+                which is why the buttons group is its own flex child. */}
+            <div className="flex items-center gap-3 max-[560px]:flex-col max-[560px]:items-stretch max-[560px]:gap-2.5">
+              <div className="flex min-w-0 flex-1 items-center gap-3">
+                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-green-wash text-green-dark">
+                  <ShieldCheck size={20} strokeWidth={1.9} />
+                </span>
+                <p className="m-0 min-w-0 flex-1 text-[14px] leading-[1.35] text-text-primary max-[560px]:text-[13.5px]">
+                  Building pinned. Adjust by tapping again, or continue.
+                </p>
+              </div>
+              <div className="flex flex-none items-center gap-2 max-[560px]:w-full">
+                <button
+                  type="button"
+                  onClick={onClear}
+                  className="inline-flex flex-none items-center justify-center gap-1.5 rounded-full border border-border-strong bg-surface px-3.5 py-2.5 text-[13px] font-semibold text-ink transition-colors duration-200 ease-nc hover:bg-surface-sunken max-[560px]:flex-1"
+                >
+                  <X size={15} strokeWidth={2.2} /> Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={onContinue}
+                  className="group inline-flex flex-none items-center justify-center gap-1.5 rounded-full bg-ink px-5 py-2.5 text-[14px] font-semibold text-cream transition-[transform,background] duration-200 ease-nc hover:bg-black active:scale-[0.97] max-[560px]:flex-[1.4]"
+                >
+                  Continue
+                  <ArrowRight size={16} strokeWidth={2.2} className="transition-transform duration-200 ease-nc group-hover:translate-x-0.5" />
+                </button>
+              </div>
             </div>
           </Swap>
         )}

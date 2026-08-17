@@ -299,15 +299,30 @@ export const EmailTemplates = {
     }),
   }),
 
-  agentInvite: (p: { agentName?: string; ownerName: string; inviteUrl: string }): EmailContent => ({
-    subject: `${p.ownerName} invited you to list their property`,
-    html: shell({
-      preheader: "Listing invitation on Newcondo",
-      heading: "You've been invited to list",
-      intro: `${p.ownerName} wants you to be the listing agent for their property on Newcondo. Accepting links their property to your dashboard — rent goes to them, your commission split is automatic.`,
-      body: btn("Accept the invitation", p.inviteUrl) + notice("You need a Newcondo agent account to accept. The link is single-use and expires in 14 days.", "info"),
-    }),
-  }),
+  agentInvite: (p: {
+    agentName?: string;
+    ownerName: string;
+    inviteUrl: string;
+    // Sourced from AGENT_INVITES.expiryDays by the caller. Optional +
+    // defaulted so no existing call site breaks.
+    expiresInDays?: number;
+  }): EmailContent => {
+    const days = p.expiresInDays ?? 2;
+    return {
+      subject: `${p.ownerName} invited you to list their property`,
+      html: shell({
+        preheader: "Listing invitation on Newcondo",
+        heading: "You've been invited to list",
+        intro: `${p.ownerName} wants you to be the listing agent for their property on Newcondo. Accepting links their property to your dashboard — rent goes to them, your commission split is automatic.`,
+        body:
+          btn("Accept the invitation", p.inviteUrl) +
+          notice(
+            `You need a Newcondo agent account to accept. The link is single-use and <b>expires in ${days} day${days === 1 ? "" : "s"}</b> — after that the owner has to send a new one.`,
+            "warn"
+          ),
+      }),
+    };
+  },
 
   agentInviteAccepted: (p: { ownerName: string; agentName: string }): EmailContent => ({
     subject: `${p.agentName} accepted your listing invitation`,

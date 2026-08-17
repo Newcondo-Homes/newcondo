@@ -32,6 +32,14 @@ export {
   VERIFICATION,
   NG_BANKS,
   AMENITIES,
+  // geography + gating (business.geo-addition.ts)
+  GEO,
+  GEO_STATES,
+  lgasIn,
+  areasIn,
+  isGeoSupported,
+  OWNERSHIP_PROOF,
+  AGENT_INVITES,
 } from "@newcondo/backend-shared/constants";
 
-export type { ActiveArea } from "@newcondo/backend-shared/constants";
+export type { ActiveArea, Geo } from "@newcondo/backend-shared/constants";

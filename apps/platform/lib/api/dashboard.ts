@@ -12,7 +12,7 @@
 import apiClient from "@/lib/api/client";
 import type { BankAccount, Tenant, BrowseResult, BrowseFilters, Notification, Tx } from "@/lib/dashboard/data";
 
-export const isLiveBackend = false;
+export const isLiveBackend = true;
 
 const unwrap = <T,>(res: { data?: T }) => { if (res.data === undefined) throw new Error("Empty response"); return res.data; };
 
@@ -206,6 +206,7 @@ export const getMyProperties = () =>
   apiClient.get("/properties/mine").then(unwrap);
 
 
+
 /* ---------------- property photos (S3) ---------------- */
 
 export interface PresignedUpload {
@@ -250,3 +251,61 @@ export interface MarkingChargeResult {
   retryWithInline?: boolean;
 }
 
+/* ---------------- proof of ownership (S3, private) ----------------
+   One document per property. It does NOT block creating a listing, but
+   the backend's assertOwnershipProof() gates marking, sharing and tenant
+   invites on it — see ownershipDocService.ts. */
+
+export interface OwnershipDoc {
+  id: string;
+  name: string;
+  docType: string;
+  mime?: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  rejectionReason?: string | null;
+  uploadedAt?: string;
+}
+
+export const presignOwnershipDoc = (propertyId: string, file: { name: string; type: string; size: number }) =>
+  apiClient.post<{ uploadUrl: string; key: string }[]>(`/properties/${propertyId}/ownership-doc/presign`, { file }).then(unwrap);
+
+export const attachOwnershipDoc = (propertyId: string, body: { key: string; docType: string }) =>
+  apiClient.post<OwnershipDoc>(`/properties/${propertyId}/ownership-doc`, body).then(unwrap);
+
+export const getOwnershipDoc = (propertyId: string) =>
+  apiClient.get<OwnershipDoc | null>(`/properties/${propertyId}/ownership-doc`).then(unwrap);
+
+/** Short-lived signed GET — minted per download, never stored. */
+export const getOwnershipDocUrl = (propertyId: string) =>
+  apiClient.get<{ url: string }>(`/properties/${propertyId}/ownership-doc/url`).then(unwrap);
+
+export const deleteOwnershipDoc = (propertyId: string) =>
+  apiClient.delete<{ ok: true }>(`/properties/${propertyId}/ownership-doc`).then(unwrap);
+
+
+/* ---------------- delete / take down / resign ----------------
+   Three separate calls on purpose — see deletePropertyService.ts. */
+
+export interface DeletePreview {
+  canDelete: boolean;
+  isOwner: boolean;
+  /** Why delete is unavailable, in words the dialog shows verbatim. */
+  reason: string | null;
+  photos: number;
+  units: number;
+}
+
+export const getDeletePreview = (propertyId: string) =>
+  apiClient.get<DeletePreview>(`/properties/${propertyId}/delete-preview`).then(unwrap);
+
+/** Permanent. OWNER/ADMIN only; refused with a 409 when records must survive. */
+export const deletePropertyApi = (propertyId: string) =>
+  apiClient.delete<{ deleted: true; title: string; removedPhotos: number }>(`/properties/${propertyId}`).then(unwrap);
+
+/** Hide from renters, keep everything. Always available to owner or agent. */
+export const takeDownPropertyApi = (propertyId: string) =>
+  apiClient.post<{ ok: true; status: string }>(`/properties/${propertyId}/takedown`, {}).then(unwrap);
+
+/** The agent's exit: detach from the listing, which survives with its owner. */
+export const resignAsListingAgentApi = (propertyId: string) =>
+  apiClient.delete<{ ok: true; title: string }>(`/properties/${propertyId}/agent`).then(unwrap);

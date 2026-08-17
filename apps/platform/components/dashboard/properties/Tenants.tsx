@@ -4,11 +4,18 @@
    listing agent), tenant detail modal, and the invite-link modal.
    API: GET /api/v1/properties/:id/tenants · POST .../tenant-invites
    (property-service tenantService — each link is single-use and specific
-   to this lister + property [+ flat]; renters can ONLY onboard through one). */
+   to this lister + property [+ flat]; renters can ONLY onboard through one).
+
+   OWNERSHIP GATE: `canInvite` is false until the property has an ownership
+   document on file. The invite affordances then read as LOCKED and call
+   onBlockedInvite() instead of opening the modal — the user finds out before
+   filling anything in, not after. The real rule is server-side in
+   createTenantInvite(); this is the courteous half of it. */
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
 import { toast } from "@newcondo/ui";
+import { errMsg } from "@/lib/errMsg";
 import { Modal } from "@/components/dashboard/Modal";
 import { DBtn, Card, CardH, Row, StatusBadge, KV, Banner, EmptyState, SkeletonRows, CopyField } from "@/components/dashboard/primitives";
 import { NCSelect, Field } from "@/components/dashboard/NCSelect";
@@ -17,18 +24,39 @@ import * as api from "@/lib/api/dashboard";
 import { ngn, initials } from "@/lib/dashboard/format";
 import type { FlatUnit, Tenant } from "@/lib/dashboard/data";
 
-export function TenantsCard({ propertyId, propertyTitle, flats }: { propertyId: string; propertyTitle: string; flats: FlatUnit[] }) {
+export function TenantsCard({
+  propertyId,
+  propertyTitle,
+  flats,
+  canInvite = true,
+  onBlockedInvite,
+}: {
+  propertyId: string;
+  propertyTitle: string;
+  flats: FlatUnit[];
+  /** False when the property has no proof of ownership on file. */
+  canInvite?: boolean;
+  /** Called instead of opening the modal when canInvite is false. */
+  onBlockedInvite?: () => void;
+}) {
   const { data, isLoading } = useTenants(propertyId);
   const [detail, setDetail] = useState<Tenant | null>(null);
   const [inviting, setInviting] = useState(false);
   const tenants = data ?? [];
   const active = tenants.filter((t) => t.status === "ACTIVE");
+
+  // One handler for both entry points, so the gate can't be half-applied.
+  const startInvite = () => {
+    if (!canInvite) { onBlockedInvite?.(); return; }
+    setInviting(true);
+  };
+
   return (
     <Card tight>
       <CardH pad title="Tenants"
-        right={<button className="flex items-center gap-1 text-[13px] font-semibold text-green-dark hover:text-ink" onClick={() => setInviting(true)}><Icon name="link" size={13} />Invite tenant</button>} />
+        right={<button className="flex items-center gap-1 text-[13px] font-semibold text-green-dark hover:text-ink" onClick={startInvite}><Icon name={canInvite ? "link" : "lock"} size={13} />Invite tenant</button>} />
       {isLoading ? <div className="px-4 pb-4"><SkeletonRows n={2} h={56} /></div>
-      : tenants.length === 0 ? <EmptyState icon="users" title="No tenants onboarded yet" sub="Share an invite link with the occupants — once they onboard, they appear here and pay rent through Newcondo." action={<DBtn sm onClick={() => setInviting(true)}><Icon name="link" size={13} />Create invite link</DBtn>} />
+      : tenants.length === 0 ? <EmptyState icon="users" title="No tenants onboarded yet" sub={canInvite ? "Share an invite link with the occupants — once they onboard, they appear here and pay rent through Newcondo." : "Upload proof of ownership to unlock tenant invites — then share a link with the occupants."} action={<DBtn sm onClick={startInvite}><Icon name={canInvite ? "link" : "lock"} size={13} />{canInvite ? "Create invite link" : "Locked — add ownership proof"}</DBtn>} />
       : tenants.map((t) => (
         <Row key={t.id} onClick={() => setDetail(t)}>
           <div className="grid size-10 flex-none place-items-center rounded-full bg-ink text-[12px] font-bold text-cream">{initials(t.name)}</div>
@@ -88,7 +116,9 @@ function InviteTenantModal({ propertyId, propertyTitle, flats, onClose }: { prop
     toast.promise(doCreate.then((url) => { setLink(url); return url; }), {
       loading: "Creating secure invite link…",
       success: "Invite link ready — share it with your tenant.",
-      error: "Could not create the link — try again",
+      // The server gate can still refuse (e.g. the document was removed in
+      // another tab), so surface its message rather than a generic failure.
+      error: (e: unknown) => errMsg(e, "Could not create the link — try again"),
     });
   };
   return (

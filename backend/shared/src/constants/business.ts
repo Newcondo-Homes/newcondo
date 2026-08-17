@@ -103,3 +103,70 @@ export const NG_BANKS: { name: string; code: string }[] = [
 
 /* ---------- listing amenities vocabulary ---------- */
 export const AMENITIES = ["Water (borehole)", "Prepaid meter", "Gated compound", "Parking", "POP ceiling", "Fenced", "Security", "Tiled floors", "Wardrobes", "Kitchen cabinets"];
+
+/* ---------- structured Nigerian geography for listings ----------
+   Shape: { State: { LGA: [area, ...] } }
+   Used by: the create-listing address step, marking broadcasts, search. */
+export type Geo = Record<string, Record<string, string[]>>;
+
+export const GEO: Geo = {
+  Imo: {
+    "Owerri Municipal": ["New Owerri", "Ikenegbu", "Aladinma", "Douglas", "Wetheral"],
+    "Owerri North": ["Orji", "Egbu", "Emekuku", "Uratta"],
+    "Owerri West": ["Umuguma", "Avu", "Irete", "Nekede"],
+    Okigwe: ["Okigwe Town", "Umulolo"],
+    Mbaitoli: ["Nwaorieubi", "Ogwa"],
+  },
+  Rivers: {
+    "Port Harcourt": ["GRA Phase 1", "GRA Phase 2", "GRA Phase 3", "D-Line", "Old Township", "Amadi Flats"],
+    "Obio-Akpor": ["Trans Amadi", "Rumuola", "Woji", "Rumuokoro", "Rumuokwuta", "Ada George", "Eliozu"],
+    Eleme: ["Akpajo", "Onne"],
+    Ikwerre: ["Igwuruta", "Isiokpo"],
+  },
+};
+
+/** States open for listing, in display order. */
+export const GEO_STATES = Object.keys(GEO);
+
+/** LGAs in a state (empty array for an unknown/closed state). */
+export const lgasIn = (state: string): string[] => Object.keys(GEO[state] ?? {});
+
+/** Areas in an LGA. */
+export const areasIn = (state: string, lga: string): string[] => GEO[state]?.[lga] ?? [];
+
+/** Guard used server-side so a crafted request can't list outside coverage. */
+export const isGeoSupported = (state: string, lga?: string, area?: string): boolean => {
+  const l = GEO[state];
+  if (!l) return false;
+  if (!lga) return true;
+  const a = l[lga];
+  if (!a) return false;
+  return !area || a.includes(area);
+};
+
+/* ---------- proof of ownership ----------
+   A listing can be CREATED without it — owners rarely have the document to
+   hand at 11pm — but it gates every action that exposes the property to
+   other people: marking, sharing, and inviting a tenant. */
+export const OWNERSHIP_PROOF = {
+  /** Actions blocked until an ownership document is uploaded. */
+  gatedActions: ["MARK", "SHARE", "INVITE_TENANT", "PUBLISH"],
+  acceptedDocs: [
+    "Certificate of Occupancy (C of O)",
+    "Deed of Assignment",
+    "Governor's Consent",
+    "Survey Plan",
+    "Purchase Receipt + Deed",
+    "Letter of Administration",
+  ],
+  maxSizeMb: 15,
+  acceptedMime: ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"],
+} as const;
+
+/* ---------- agent invites ---------- */
+export const AGENT_INVITES = {
+  /** Invite links die after this many days (founder: 2). */
+  expiryDays: 2,
+  /** Single-use: the first agent to accept consumes the link. */
+  singleUse: true,
+} as const;

@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "@newcondo/ui";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
+import { errMsg } from "@/lib/errMsg";
 import { useRole } from "@/components/providers/role-provider";
 import { useBrowse, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
 import { EmptyState, SkeletonRows } from "@/components/dashboard/primitives";
@@ -98,7 +99,7 @@ export function BrowseGrid() {
         description: "Copy your promo link from My Listings → Promoting as sub-agent.",
       });
     } catch (e) {
-      const msg = (e as { message?: string })?.message ?? "";
+      const msg = errMsg(e, "");
       toast.error("Couldn't promote this property", {
         description: /403|permission|restricted/i.test(msg)
           ? "The listing agent has restricted promotion, or needs to approve you first."

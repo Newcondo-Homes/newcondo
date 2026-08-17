@@ -201,7 +201,7 @@ model Document {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([userId, documentType, documentSide, pageNumber], name: "unique_document_variant")
+  @@unique([userId, documentType, documentSide, pageNumber, propertyId], name: "unique_document_variant")
   @@index([userId])
   @@index([propertyId])
   @@index([documentType])

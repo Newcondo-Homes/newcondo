@@ -17,6 +17,7 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
+import { errMsg } from "@/lib/errMsg";
 import { toast } from "@newcondo/ui";
 import { Modal } from "@/components/dashboard/Modal";
 import { DBtn, KV, Banner, CopyField, PhotoGrid } from "@/components/dashboard/primitives";
@@ -114,7 +115,7 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
           onError: (e) => toast.error("Payment didn't complete", { description: e.message }),
         });
       })
-      .catch((e) => toast.error("Could not start checkout", { description: (e as Error).message }))
+      .catch((e) => toast.error("Could not start checkout", { description: errMsg(e) }))
       .finally(() => setCharging(false));
   };
 
@@ -138,7 +139,7 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
     } catch (e) {
       setOutcome({
         ok: false, amount: fee, reference: "", method: f.method as "BROADCAST" | "NEWCONDO",
-        cardLabel, failureCode: "NETWORK", failureMessage: (e as Error).message,
+        cardLabel, failureCode: "NETWORK", failureMessage: errMsg(e),
       });
     } finally {
       setCharging(false);
