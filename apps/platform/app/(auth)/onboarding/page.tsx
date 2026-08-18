@@ -54,12 +54,7 @@ export default async function OnboardingPage() {
   );
 }
 
-/**
- * TODO: wire to your backend. Suggested implementation calls the same source
- * of truth as getOnboardingState — e.g. GET /payments/subscriptions/onboarding-state
- * with the server session token, or a direct Prisma read if this app shares the
- * DB. Returns true when the user already has an active/free/trial subscription.
- */
+
 async function userHasActiveSubscription(userId: string): Promise<boolean> {
   try {
     const base = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL;

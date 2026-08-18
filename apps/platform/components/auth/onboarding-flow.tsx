@@ -47,6 +47,10 @@ import PaymentSuccess from "./payment-success";
 import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
 import { getOnboardingState, changeAccountType, checkEmailRegistered } from "@/lib/api/onboarding";
+import {
+  loadOnboarding, saveOnboarding, clearOnboarding, loadPassword, savePassword, otpStillFresh,
+  type SavedPhase,
+} from "@/lib/onboarding-storage";
 import { updateProfile, getSubscriptionStatus } from "@/lib/api/profile";
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
@@ -114,6 +118,13 @@ export default function OnboardingFlow() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [payment, setPayment] = useState<PaymentResult | null>(null);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  // Set when we rehydrated straight into the verify step. The OTP in their
+  // inbox is still live, so OTPVerificationPanel must NOT auto-send a new one —
+  // that would invalidate the very code they left the browser to fetch.
+  const [resumedOtpFresh, setResumedOtpFresh] = useState(false);
+  // Non-null once we've read storage, so the first paint can be gated instead
+  // of flashing an empty register form before the saved step appears.
+  const [hydrated, setHydrated] = useState(false);
   // True once we resolved a returning user via GET /onboarding/state — they
   // have an abandoned PENDING checkout (Q1) and we dropped them back on the
   // plan step with a "resume" banner.
@@ -121,6 +132,58 @@ export default function OnboardingFlow() {
   // Blocks a flash of the register form while we resolve backend state for an
   // authenticated arrival (the Q3 "already paid → dashboard" check).
   const [checkingState, setCheckingState] = useState(false);
+
+  /* ── Rehydrate an interrupted onboarding ──
+     Reading the email is part of this flow, so backgrounding the tab is
+     expected — and on mobile the tab is frequently discarded outright. We
+     restore the step, the details and the chosen plan on mount.
+
+     Runs BEFORE the authenticated-entry effect below and only for anonymous
+     visitors: a signed-in arrival is resolved from the backend, which is
+     authoritative and must win over anything cached locally. */
+  useEffect(() => {
+    if (hydrated) return;
+    if (status === "loading") return;
+    if (status === "authenticated") { setHydrated(true); return; }
+
+    const saved = loadOnboarding();
+    if (!saved) { setHydrated(true); return; }
+
+    const role = saved.role ?? initialRole ?? UserType.OWNER;
+    if (saved.name || saved.email) {
+      setDraft({
+        name: saved.name ?? "",
+        email: saved.email ?? "",
+        phone: saved.phone ?? "",
+        // sessionStorage-scoped: present after app-switching, absent after a
+        // full browser quit. An empty value sends them back to the form with
+        // every other field prefilled, so only the password is re-typed.
+        password: loadPassword(),
+        role,
+      });
+    }
+
+    // A saved phase past the form needs a complete draft to render. Without a
+    // password we cannot register later, so fall back to the form rather than
+    // stranding them on a step that can't complete.
+    const hasUsableDraft = !!(saved.email && loadPassword());
+    const target: SavedPhase = saved.phase && saved.phase !== "register" && !hasUsableDraft
+      ? "register"
+      : (saved.phase ?? "register");
+
+    if (target === "verify" && otpStillFresh(saved.otpSentAt)) setResumedOtpFresh(true);
+    setPhase(target as Phase);
+    setHydrated(true);
+  }, [hydrated, status, initialRole]);
+
+  /* Persist the step on every change so a discarded tab resumes where it was.
+     `payment` and `success` are never written: loadOnboarding() would rewrite
+     payment to `plan` anyway, and a finished onboarding must not resurrect. */
+  useEffect(() => {
+    if (!hydrated || alreadyRegistered) return;
+    if (phase === "payment" || phase === "success") return;
+    saveOnboarding({ phase: phase as SavedPhase });
+  }, [phase, hydrated, alreadyRegistered]);
 
   /* ── Q4 — returning SUBSCRIBER whose session expired ──
      Requirement: a user who already has a subscription and tries to onboard
@@ -224,6 +287,9 @@ export default function OnboardingFlow() {
   }, [status, session, phase, draft, initialRole, router, update]);
 
   const goToDashboard = useCallback(async () => {
+    // Onboarding is finished — drop the saved state so a later visit starts
+    // clean instead of resurrecting a completed flow.
+    clearOnboarding();
     // Flutterwave's client-side success callback can fire BEFORE your
     // server-to-server webhook has run activateSubscription() (which sets
     // isPremium: true). Read the authoritative DB value directly (never
@@ -273,6 +339,13 @@ export default function OnboardingFlow() {
           return;
         }
         setDraft(d);
+        // Save the details AND stamp the OTP send time, so returning to this
+        // step doesn't fire a second code.
+        saveOnboarding({
+          phase: "verify", role: d.role, name: d.name, email: d.email, phone: d.phone,
+          otpSentAt: Date.now(),
+        });
+        savePassword(d.password);
         setPhase("verify");
       } finally {
         setSubmittingDetails(false);
@@ -332,7 +405,7 @@ export default function OnboardingFlow() {
 
   // Brief gate while we resolve an authenticated arrival's backend state, so
   // the register form / plan step never flashes before the Q3 redirect.
-  if (checkingState) {
+  if (checkingState || !hydrated) {
     return (
       <main className="flex h-dvh items-center justify-center bg-background">
         <Loader2 className="h-7 w-7 animate-spin text-ink" strokeWidth={2} />
@@ -410,6 +483,10 @@ export default function OnboardingFlow() {
               {phase === "register" && (
                 <OnboardingForm
                   initialRole={draft?.role ?? initialRole}
+                  // Prefills every field on resume. After a full browser quit
+                  // the password is gone (sessionStorage) and only that one
+                  // field is empty.
+                  initialDraft={draft ?? undefined}
                   // Returning user changing account type: account already
                   // exists, so re-submitting only changes the role (Q2). A
                   // fresh user goes through verify as normal.
@@ -427,7 +504,9 @@ export default function OnboardingFlow() {
                 <OTPVerificationPanel
                   email={draft.email}
                   type="EMAIL_VERIFICATION"
-                  sendOnMount
+                  // Suppressed when we resumed with a still-valid code in their
+                  // inbox — auto-sending would invalidate it.
+                  sendOnMount={!resumedOtpFresh}
                   disableBackUntilExpired
                   onVerified={() => setPhase("plan")}
                   onBack={() => setPhase("register")}
@@ -469,8 +548,8 @@ export default function OnboardingFlow() {
                       onClick={handleChangeAccountType}
                       className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:text-ink hover:underline"
                     >
-                      Not {" "}
-                      {draft.role === UserType.OWNER ? "a property owner" : draft.role === UserType.AGENT ? "an agent" : " renter"}? Change account type
+                      Not a{" "}
+                      {draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
                     </button>
                   </div>
                   <PlanSelector
@@ -480,6 +559,7 @@ export default function OnboardingFlow() {
                     onBack={alreadyRegistered ? undefined : () => setPhase("verify")}
                     onChoose={(chosen) => {
                       setPlan(chosen);
+                      saveOnboarding({ planId: chosen.id });
                       setPhase("payment");
                     }}
                   />
