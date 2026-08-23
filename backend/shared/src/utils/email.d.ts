@@ -23,87 +23,87 @@ export interface AccountLockedEmail {
 export declare const sendEmail: (template: EmailTemplate) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendWelcomeEmail: (email: string, name: string) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendPasswordResetEmail: (data: PasswordResetEmail) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendPasswordChangeConfirmation: (data: PasswordResetEmail) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendAccountLockedEmail: (data: AccountLockedEmail) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendAccountUnlockedEmail: (data: AccountUnlockedEmail) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendBulkEmail: (templates: EmailTemplate[]) => Promise<{
     success: boolean;
     sent: number;
     failed: number;
     total: number;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    sent?: never;
-    failed?: never;
-    total?: never;
+    sent?: undefined;
+    failed?: undefined;
+    total?: undefined;
 }>;
 export declare const sendTemplatedEmail: (to: string, templateName: string, variables: Record<string, string>) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const sendVerificationEmail: (email: string, otpCode: string, name: string) => Promise<{
     success: boolean;
     data: import("mailgun.js/Types").MessagesSendResult;
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    data?: never;
+    data?: undefined;
 }>;
 export declare const generateOTPEmailHTML: (otp: string, type: string, expire: number) => string;
 export declare const generateOTPEmailText: (otp: string, type: string, expire: number) => string;
@@ -111,10 +111,10 @@ export declare const isValidEmail: (email: string) => boolean;
 export declare const getEmailStatus: (messageId: string) => Promise<{
     success: boolean;
     events: import("mailgun.js/Types").DomainEvent[];
-    error?: never;
+    error?: undefined;
 } | {
     success: boolean;
     error: unknown;
-    events?: never;
+    events?: undefined;
 }>;
 //# sourceMappingURL=email.d.ts.map

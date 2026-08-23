@@ -20,9 +20,8 @@ const mg = mailgun.client({
 const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || "";
 const sendEmail = async (template) => {
     try {
-        //TODO: Email service url
         const messageData = {
-            from: process.env.FROM_EMAIL || "NewCondo <noreply@newcondo.com>",
+            from: process.env.FROM_EMAIL || "Newcondo <noreply@Newcondo.com>",
             to: template.to,
             subject: template.subject,
             html: template.html,
@@ -54,7 +53,7 @@ exports.sendEmail = sendEmail;
 //   });
 // };
 const sendWelcomeEmail = async (email, name) => {
-    const subject = "Welcome to NewCondo!";
+    const subject = "Welcome to Newcondo!";
     const html = generateWelcomeEmailHTML(name);
     const text = generateWelcomeEmailText(name);
     return (0, exports.sendEmail)({
@@ -67,7 +66,7 @@ const sendWelcomeEmail = async (email, name) => {
 exports.sendWelcomeEmail = sendWelcomeEmail;
 const sendPasswordResetEmail = async (data) => {
     const email = data.to;
-    const subject = "Reset Your NewCondo Password";
+    const subject = "Reset Your Newcondo Password";
     const html = generatePasswordResetEmailHTML(data.resetUrl);
     const text = generatePasswordResetEmailText(data.resetUrl);
     return (0, exports.sendEmail)({
@@ -79,7 +78,7 @@ const sendPasswordResetEmail = async (data) => {
 };
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
 const sendPasswordChangeConfirmation = async (data) => {
-    const subject = "Your NewCondo Password Has Been Changed";
+    const subject = "Your Newcondo Password Has Been Changed";
     const html = generatePasswordChangeConfirmationHTML(data.name || "User");
     const text = generatePasswordChangeConfirmationText(data.name || "User");
     return (0, exports.sendEmail)({
@@ -91,7 +90,7 @@ const sendPasswordChangeConfirmation = async (data) => {
 };
 exports.sendPasswordChangeConfirmation = sendPasswordChangeConfirmation;
 const sendAccountLockedEmail = async (data) => {
-    const subject = "Account Temporarily Locked - NewCondo";
+    const subject = "Account Temporarily Locked - Newcondo";
     const html = generateAccountLockedEmailHTML(data.name, data.lockedUntil, data.unlockTime);
     const text = generateAccountLockedEmailText(data.name, data.lockedUntil, data.unlockTime);
     return (0, exports.sendEmail)({
@@ -103,7 +102,7 @@ const sendAccountLockedEmail = async (data) => {
 };
 exports.sendAccountLockedEmail = sendAccountLockedEmail;
 const sendAccountUnlockedEmail = async (data) => {
-    const subject = "Account Unlocked - NewCondo";
+    const subject = "Account Unlocked - Newcondo";
     const html = generateAccountUnlockedEmailHTML(data.name, data.unlockedBy);
     const text = generateAccountUnlockedEmailText(data.name, data.unlockedBy);
     return (0, exports.sendEmail)({
@@ -136,7 +135,7 @@ exports.sendBulkEmail = sendBulkEmail;
 const sendTemplatedEmail = async (to, templateName, variables) => {
     try {
         const messageData = {
-            from: process.env.FROM_EMAIL || "NewCondo <noreply@newcondo.com>",
+            from: process.env.FROM_EMAIL || "Newcondo <noreply@Newcondo.com>",
             to: to,
             template: templateName,
             "h:X-Mailgun-Variables": JSON.stringify(variables),
@@ -155,18 +154,18 @@ exports.sendTemplatedEmail = sendTemplatedEmail;
 const getOTPEmailSubject = (type) => {
     switch (type) {
         case "EMAIL_VERIFICATION":
-            return "Verify Your NewCondo Account";
+            return "Verify Your Newcondo Account";
         case "LOGIN":
-            return "Your NewCondo Login Code";
+            return "Your Newcondo Login Code";
         case "PASSWORD_RESET":
-            return "Reset Your NewCondo Password";
+            return "Reset Your Newcondo Password";
         default:
-            return "Your NewCondo Verification Code";
+            return "Your Newcondo Verification Code";
     }
 };
 // Add this function to your email service
 const sendVerificationEmail = async (email, otpCode, name) => {
-    const subject = "Verify Your NewCondo Account";
+    const subject = "Verify Your Newcondo Account";
     const html = generateVerificationEmailHTML(otpCode, name);
     const text = generateVerificationEmailText(otpCode, name);
     return (0, exports.sendEmail)({
@@ -194,7 +193,7 @@ const generateVerificationEmailHTML = (otpCode, name) => {
         <!-- Header -->
         <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 40px 20px; text-align: center;">
           <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">
-            NewCondo
+            Newcondo
           </h1>
         </div>
 
@@ -210,7 +209,7 @@ const generateVerificationEmailHTML = (otpCode, name) => {
           </p>
           
           <p style="color: #4b5563; margin: 16px 0; font-size: 16px;">
-            Welcome to NewCondo! To complete your account setup and start exploring Nigeria's premier property rental platform, please verify your email address using the code below:
+            Welcome to Newcondo! To complete your account setup and start exploring Nigeria's premier property rental platform, please verify your email address using the code below:
           </p>
           
           <div style="text-align: center; margin: 32px 0;">
@@ -230,7 +229,7 @@ const generateVerificationEmailHTML = (otpCode, name) => {
               How to verify:
             </h3>
             <ol style="margin: 0; padding-left: 20px; color: #1e40af;">
-              <li style="margin: 6px 0;">Return to the NewCondo verification page</li>
+              <li style="margin: 6px 0;">Return to the Newcondo verification page</li>
               <li style="margin: 6px 0;">Enter the 6-digit code above</li>
               <li style="margin: 6px 0;">Click "Verify" to activate your account</li>
             </ol>
@@ -257,7 +256,7 @@ const generateVerificationEmailHTML = (otpCode, name) => {
 
           <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 6px;">
             <p style="color: #92400e; margin: 0; font-size: 14px;">
-              🛡️ Security Notice: If you didn't create a NewCondo account, please ignore this email or contact our support team if you have concerns.
+              🛡️ Security Notice: If you didn't create a Newcondo account, please ignore this email or contact our support team if you have concerns.
             </p>
           </div>
 
@@ -268,11 +267,11 @@ const generateVerificationEmailHTML = (otpCode, name) => {
           <div style="text-align: center; margin: 32px 0 0 0; padding: 20px 0; border-top: 1px solid #e5e7eb;">
             <p style="color: #6b7280; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
               Best regards,<br>
-              The NewCondo Team
+              The Newcondo Team
             </p>
             
             <p style="color: #9ca3af; margin: 8px 0 0 0; font-size: 14px;">
-              <a href="${process.env.FRONTEND_URL}" style="color: #3b82f6; text-decoration: none;">Visit NewCondo</a> | 
+              <a href="${process.env.FRONTEND_URL}" style="color: #3b82f6; text-decoration: none;">Visit Newcondo</a> | 
               <a href="${process.env.FRONTEND_URL}/support" style="color: #3b82f6; text-decoration: none;">Support</a>
             </p>
           </div>
@@ -288,18 +287,18 @@ const generateVerificationEmailHTML = (otpCode, name) => {
 const generateVerificationEmailText = (otpCode, name) => {
     const expireMinutes = 15; // Adjust based on your OTP expiration time
     return `
-NewCondo - Verify Your Account
+Newcondo - Verify Your Account
 
 Hi ${name}!
 
-Welcome to NewCondo! To complete your account setup and start exploring Nigeria's premier property rental platform, please verify your email address using the code below:
+Welcome to Newcondo! To complete your account setup and start exploring Nigeria's premier property rental platform, please verify your email address using the code below:
 
 VERIFICATION CODE: ${otpCode}
 
 This code will expire in ${expireMinutes} minutes for security reasons.
 
 HOW TO VERIFY:
-1. Return to the NewCondo verification page
+1. Return to the Newcondo verification page
 2. Enter the 6-digit code above  
 3. Click "Verify" to activate your account
 
@@ -312,16 +311,16 @@ After verification, you can:
 
 Verify your account: ${process.env.FRONTEND_URL}/verify-email
 
-SECURITY NOTICE: If you didn't create a NewCondo account, please ignore this email or contact our support team if you have concerns.
+SECURITY NOTICE: If you didn't create a Newcondo account, please ignore this email or contact our support team if you have concerns.
 
 Having trouble? You can request a new verification code from the verification page, or contact our support team for assistance.
 
 Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Team
+The Newcondo Team
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
   `;
 };
 const generateAccountUnlockedEmailHTML = (name, unlockedBy) => {
@@ -354,7 +353,7 @@ const generateAccountUnlockedEmailHTML = (name, unlockedBy) => {
           
           <div style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 16px; margin: 24px 0; border-radius: 6px;">
             <p style="color: #065f46; margin: 0; font-weight: 600; font-size: 16px;">
-              ✅ Good news! Your NewCondo account has been successfully unlocked ${unlockedByText}.
+              ✅ Good news! Your Newcondo account has been successfully unlocked ${unlockedByText}.
             </p>
           </div>
 
@@ -382,7 +381,7 @@ const generateAccountUnlockedEmailHTML = (name, unlockedBy) => {
               <li style="margin: 8px 0;">🏠 Access your dashboard and browse properties</li>
               <li style="margin: 8px 0;">💰 Make payments and manage bookings</li>
               <li style="margin: 8px 0;">📋 List properties (for owners and agents)</li>
-              <li style="margin: 8px 0;">🔧 Use all NewCondo features normally</li>
+              <li style="margin: 8px 0;">🔧 Use all Newcondo features normally</li>
             </ul>
           </div>
 
@@ -401,11 +400,11 @@ const generateAccountUnlockedEmailHTML = (name, unlockedBy) => {
           <div style="text-align: center; margin: 32px 0 0 0; padding: 20px 0; border-top: 1px solid #e5e7eb;">
             <p style="color: #6b7280; margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
               Best regards,<br>
-              The NewCondo Security Team
+              The Newcondo Security Team
             </p>
             
             <p style="color: #9ca3af; margin: 8px 0 0 0; font-size: 14px;">
-              <a href="${process.env.FRONTEND_URL}" style="color: #3b82f6; text-decoration: none;">Visit NewCondo</a> | 
+              <a href="${process.env.FRONTEND_URL}" style="color: #3b82f6; text-decoration: none;">Visit Newcondo</a> | 
               <a href="${process.env.FRONTEND_URL}/support" style="color: #3b82f6; text-decoration: none;">Support</a>
             </p>
           </div>
@@ -421,11 +420,11 @@ const generateAccountUnlockedEmailHTML = (name, unlockedBy) => {
 const generateAccountUnlockedEmailText = (name, unlockedBy) => {
     const unlockedByText = unlockedBy === "administrator" ? "by an administrator" : "automatically";
     return `
-NewCondo - Account Unlocked
+Newcondo - Account Unlocked
 
 Hello ${name}!
 
-✅ GOOD NEWS: Your NewCondo account has been successfully unlocked ${unlockedByText}.
+✅ GOOD NEWS: Your Newcondo account has been successfully unlocked ${unlockedByText}.
 
 Account Status:
 - Status: Active and accessible
@@ -436,7 +435,7 @@ You can now:
 - Access your dashboard and browse properties
 - Make payments and manage bookings
 - List properties (for owners and agents)
-- Use all NewCondo features normally
+- Use all Newcondo features normally
 
 Login to your account: ${process.env.FRONTEND_URL}/login
 
@@ -445,9 +444,9 @@ SECURITY REMINDER: To keep your account secure, please use a strong password and
 Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Security Team
+The Newcondo Security Team
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
   `;
 };
 const generateOTPEmailHTML = (otp, type, expire) => {
@@ -462,11 +461,11 @@ const generateOTPEmailHTML = (otp, type, expire) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>NewCondo - Verification Code</title>
+      <title>Newcondo - Verification Code</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">NewCondo</h1>
+        <h1 style="color: white; margin: 0; font-size: 28px;">Newcondo</h1>
       </div>
       
       <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
@@ -485,9 +484,9 @@ const generateOTPEmailHTML = (otp, type, expire) => {
         <p>If you didn't request this code, please ignore this email or contact our support team.</p>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-          <p>Best regards,<br>The NewCondo Team</p>
+          <p>Best regards,<br>The Newcondo Team</p>
           <p style="margin-top: 10px;">
-            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit Newcondo</a> | 
             <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a>
           </p>
         </div>
@@ -504,7 +503,7 @@ const generateOTPEmailText = (otp, type, expire) => {
             ? "complete your login"
             : "reset your password";
     return `
-NewCondo - Verification Code
+Newcondo - Verification Code
 
 Hi there!
 
@@ -514,11 +513,11 @@ This code will expire in ${expire} minutes for security reasons.
 
 If you didn't request this code, please ignore this email or contact our support team.
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
 Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Team
+The Newcondo Team
   `;
 };
 exports.generateOTPEmailText = generateOTPEmailText;
@@ -529,17 +528,17 @@ const generateWelcomeEmailHTML = (name) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Welcome to NewCondo!</title>
+      <title>Welcome to Newcondo!</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-        <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to NewCondo!</h1>
+        <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Newcondo!</h1>
       </div>
       
       <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd;">
         <h2 style="color: #333; margin-top: 0;">Hello ${name}!</h2>
         
-        <p>Welcome to NewCondo - Nigeria's premier property rental platform!</p>
+        <p>Welcome to Newcondo - Nigeria's premier property rental platform!</p>
         
         <p>Your account has been successfully created. You can now:</p>
         
@@ -558,9 +557,9 @@ const generateWelcomeEmailHTML = (name) => {
         <p>Need help getting started? Check out our <a href="${process.env.FRONTEND_URL}/help" style="color: #667eea;">help center</a> or contact our support team.</p>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-          <p>Best regards,<br>The NewCondo Team</p>
+          <p>Best regards,<br>The Newcondo Team</p>
           <p style="margin-top: 10px;">
-            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit Newcondo</a> | 
             <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a> | 
             <a href="${process.env.FRONTEND_URL}/unsubscribe" style="color: #999; text-decoration: none;">Unsubscribe</a>
           </p>
@@ -588,7 +587,7 @@ const generatePasswordChangeConfirmationHTML = (name) => {
         <h2 style="color: #333; margin-top: 0;">Hello ${name}!</h2>
 
         <div style="background: #d4edda; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin: 20px 0;">
-          <p style="margin: 0; color: #155724;"><strong>✓ Success!</strong> Your NewCondo account password has been successfully changed.</p>
+          <p style="margin: 0; color: #155724;"><strong>✓ Success!</strong> Your Newcondo account password has been successfully changed.</p>
         </div>
 
         <p>This email confirms that your password was changed on ${new Date().toLocaleString("en-US", {
@@ -609,9 +608,9 @@ const generatePasswordChangeConfirmationHTML = (name) => {
         </div>
 
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-          <p>Best regards,<br>The NewCondo Team</p>
+          <p>Best regards,<br>The Newcondo Team</p>
           <p style="margin-top: 10px;">
-            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit Newcondo</a> | 
             <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a>
           </p>
         </div>
@@ -622,11 +621,11 @@ const generatePasswordChangeConfirmationHTML = (name) => {
 };
 const generatePasswordChangeConfirmationText = (name) => {
     return `
-NewCondo - Password Changed Successfully
+Newcondo - Password Changed Successfully
 
 Hello ${name}!
 
-✓ SUCCESS: Your NewCondo account password has been successfully changed.
+✓ SUCCESS: Your Newcondo account password has been successfully changed.
 
 This email confirms that your password was changed on ${new Date().toLocaleString()}.
 
@@ -636,18 +635,18 @@ Login to your account: ${process.env.FRONTEND_URL}/login
 Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Team
+The Newcondo Team
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
   `;
 };
 const generateWelcomeEmailText = (name) => {
     return `
-Welcome to NewCondo!
+Welcome to Newcondo!
 
 Hello ${name}!
 
-Welcome to NewCondo - Nigeria's premier property rental platform!
+Welcome to Newcondo - Nigeria's premier property rental platform!
 
 Your account has been successfully created. You can now:
 - Browse and search for properties across Nigeria
@@ -662,9 +661,9 @@ Need help getting started? Check out our help center: ${process.env.FRONTEND_URL
 Or contact our support team: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Team
+The Newcondo Team
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
   `;
 };
 const generatePasswordResetEmailHTML = (resetUrl) => {
@@ -674,7 +673,7 @@ const generatePasswordResetEmailHTML = (resetUrl) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Reset Your NewCondo Password</title>
+      <title>Reset Your Newcondo Password</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -686,7 +685,7 @@ const generatePasswordResetEmailHTML = (resetUrl) => {
         
         <p>Hi there!</p>
         
-        <p>We received a request to reset your NewCondo account password. Click the button below to reset it:</p>
+        <p>We received a request to reset your Newcondo account password. Click the button below to reset it:</p>
         
         <div style="text-align: center; margin: 30px 0;">
           <a href="${resetUrl}" style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">Reset Password</a>
@@ -699,9 +698,9 @@ const generatePasswordResetEmailHTML = (resetUrl) => {
         </p>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-          <p>Best regards,<br>The NewCondo Team</p>
+          <p>Best regards,<br>The Newcondo Team</p>
           <p style="margin-top: 10px;">
-            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit Newcondo</a> | 
             <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a>
           </p>
         </div>
@@ -712,11 +711,11 @@ const generatePasswordResetEmailHTML = (resetUrl) => {
 };
 const generatePasswordResetEmailText = (resetUrl) => {
     return `
-NewCondo - Password Reset
+Newcondo - Password Reset
 
 Hi there!
 
-We received a request to reset your NewCondo account password. 
+We received a request to reset your Newcondo account password. 
 
 Reset your password: ${resetUrl}
 
@@ -727,9 +726,9 @@ SECURITY TIP: If you didn't request this password reset, please ignore this emai
 Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Team
+The Newcondo Team
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
   `;
 };
 const generateAccountLockedEmailHTML = (name, lockedUntil, unlockTime) => {
@@ -739,7 +738,7 @@ const generateAccountLockedEmailHTML = (name, lockedUntil, unlockTime) => {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Account Temporarily Locked - NewCondo</title>
+      <title>Account Temporarily Locked - Newcondo</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -750,7 +749,7 @@ const generateAccountLockedEmailHTML = (name, lockedUntil, unlockTime) => {
         <h2 style="color: #333; margin-top: 0;">Hello ${name}!</h2>
         
         <div style="background: #f8d7da; padding: 15px; border-radius: 6px; border-left: 4px solid #dc3545; margin: 20px 0;">
-          <p style="margin: 0; color: #721c24;"><strong>🔒 Security Alert:</strong> Your NewCondo account has been temporarily locked due to multiple failed login attempts.</p>
+          <p style="margin: 0; color: #721c24;"><strong>🔒 Security Alert:</strong> Your Newcondo account has been temporarily locked due to multiple failed login attempts.</p>
         </div>
         
         <p><strong>Account Details:</strong></p>
@@ -778,9 +777,9 @@ const generateAccountLockedEmailHTML = (name, lockedUntil, unlockTime) => {
         </div>
         
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-          <p>Best regards,<br>The NewCondo Security Team</p>
+          <p>Best regards,<br>The Newcondo Security Team</p>
           <p style="margin-top: 10px;">
-            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit NewCondo</a> | 
+            <a href="${process.env.FRONTEND_URL}" style="color: #667eea; text-decoration: none;">Visit Newcondo</a> | 
             <a href="${process.env.FRONTEND_URL}/support" style="color: #667eea; text-decoration: none;">Support</a>
           </p>
         </div>
@@ -791,11 +790,11 @@ const generateAccountLockedEmailHTML = (name, lockedUntil, unlockTime) => {
 };
 const generateAccountLockedEmailText = (name, lockedUntil, unlockTime) => {
     return `
-NewCondo - Account Temporarily Locked
+Newcondo - Account Temporarily Locked
 
 Hello ${name}!
 
-⚠️ SECURITY ALERT: Your NewCondo account has been temporarily locked due to multiple failed login attempts.
+⚠️ SECURITY ALERT: Your Newcondo account has been temporarily locked due to multiple failed login attempts.
 
 Account Details:
 - Locked at: ${new Date().toLocaleString()}
@@ -812,9 +811,9 @@ SECURITY TIP: This lockout is a security measure to protect your account from un
 Contact Support: ${process.env.FRONTEND_URL}/support
 
 Best regards,
-The NewCondo Security Team
+The Newcondo Security Team
 
-Visit NewCondo: ${process.env.FRONTEND_URL}
+Visit Newcondo: ${process.env.FRONTEND_URL}
   `;
 };
 // Email validation utility
