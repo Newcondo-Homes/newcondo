@@ -13,7 +13,7 @@ import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { toast } from "@newcondo/ui";
 import { useRole } from "@/components/providers/role-provider";
-import { PageHead, DBtn, StatusBadge, Card, CardH, Row, Thumb, KV, EmptyState, SkeletonRows, PhotoGrid } from "@/components/dashboard/primitives";
+import { PageHead, DBtn, StatusBadge, Card, CardH, Row, Thumb, KV, Banner, EmptyState, SkeletonRows, PhotoGrid } from "@/components/dashboard/primitives";
 import { Modal } from "@/components/dashboard/Modal";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { useServices } from "@/hooks/dashboard/useDashboardData";
@@ -46,20 +46,41 @@ export default function ServicesPage() {
       <PageHead title="Services" sub="Vetted third-party vendors working on your properties — every visit scheduled, documented and reviewable."
         actions={<DBtn onClick={() => setModal("request")}><Icon name="plus" size={15} strokeWidth={2.2} />Request a service</DBtn>} />
       <Card className="mb-4">
-        <CardH title={`Your plan — ${data.plan.name}`}
-          right={<div className="flex items-center gap-2.5">
-            <span className="text-[12px] text-text-tertiary max-sm:hidden">{ngn(data.plan.price)}/{data.plan.per} · renews {data.plan.renews}</span>
-            <button className="text-[13px] font-semibold text-green-dark hover:text-ink" onClick={() => setModal("plan")}>Change plan</button>
-          </div>} />
-        <div className="grid grid-cols-4 gap-3 max-[1060px]:grid-cols-2 max-sm:grid-cols-1">
-          {data.plan.entitlements.map(([name, freq, vendor]) => (
-            <div key={name} className="rounded-2xl bg-surface-sunken px-4 py-3.5">
-              <div className="text-[12.5px] font-semibold text-text-tertiary">{name}</div>
-              <div className="mt-1.5 text-[15.5px] font-bold tracking-[-0.02em]">{freq}</div>
-              <div className="mt-1 text-[12px] text-text-tertiary">{vendor}</div>
+        {/* `data.plan` is null for anyone without a ServiceSubscription row — the
+           common case now that real accounts reach this page (the dummy data
+           always carried a plan, which is why it never surfaced in preview).
+           The old code read data.plan.name directly and crashed the route. */}
+        {data.plan ? (<>
+          <CardH title={`Your plan — ${data.plan.name}`}
+            right={<div className="flex items-center gap-2.5">
+              <span className="text-[12px] text-text-tertiary max-sm:hidden">{ngn(data.plan.price)}/{data.plan.per} · renews {data.plan.renews}</span>
+              <button className="text-[13px] font-semibold text-green-dark hover:cursor-pointer hover:text-ink" onClick={() => setModal("plan")}>Change plan</button>
+            </div>} />
+          <div className="grid grid-cols-4 gap-3 max-[1060px]:grid-cols-2 max-sm:grid-cols-1">
+            {(data.plan.entitlements ?? []).map(([name, freq, vendor]) => (
+              <div key={name} className="rounded-2xl bg-surface-sunken px-4 py-3.5">
+                <div className="text-[12.5px] font-semibold text-text-tertiary">{name}</div>
+                <div className="mt-1.5 text-[15.5px] font-bold tracking-[-0.02em]">{freq}</div>
+                <div className="mt-1 text-[12px] text-text-tertiary">{vendor}</div>
             </div>
           ))}
-        </div>
+          </div>
+        </>) : (
+          /* No ServiceSubscription — offer the plan instead of showing an empty
+             shell. This is the normal state for a brand-new owner or agent. */
+          <>
+            <CardH title="Service plan" right={
+              <button className="text-[13px] font-semibold text-green-dark hover:cursor-pointer hover:text-ink" onClick={() => setModal("plan")}>See plans</button>
+            } />
+            <Banner icon="briefcase" action={<DBtn sm onClick={() => setModal("plan")}>Choose a plan</DBtn>}>
+              <b className="font-semibold">You&rsquo;re not on a service plan yet.</b>
+              <div className="mt-0.5">
+                Fumigation, waste collection and inspection visits are handled by vetted vendors on a
+                schedule — every visit documented and reviewable. You can still request one-off jobs without a plan.
+              </div>
+            </Banner>
+          </>
+        )}
       </Card>
       <Card tight className="mb-4">
         <CardH pad title="Upcoming & active" right={<StatusBadge s="PENDING">{upcoming.length}</StatusBadge>} />

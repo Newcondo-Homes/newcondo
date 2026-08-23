@@ -12,12 +12,20 @@ import type { UserType } from "@/types/api";
 export interface ProfilePatchResult {
   success: boolean;
   error?: string;
-  data?: { id: string; userType: UserType; phone: string | null };
+  /**
+   * STALE_SESSION means the JWT is valid but its user row is gone (deleted by
+   * an admin, or swept by the stub-cleanup job). Nothing the user does can make
+   * the write succeed, so callers must sign out and restart rather than retry.
+   */
+  code?: "STALE_SESSION" | string;
+  data?: { id: string; userType: UserType; phone: string | null; email?: string | null };
 }
 
 export async function updateProfile(patch: {
   userType?: UserType;
   phone?: string;
+  /** Facebook often returns no email, so SocialAccountDetails collects one. */
+  email?: string;
 }): Promise<ProfilePatchResult> {
   try {
     const res = await fetch("/api/user/profile", {
@@ -28,7 +36,13 @@ export async function updateProfile(patch: {
     });
     const json = (await res.json().catch(() => null)) as ProfilePatchResult | null;
     if (!res.ok || !json?.success) {
-      return { success: false, error: json?.error ?? "Could not update your profile" };
+      return {
+        success: false,
+        error: json?.error ?? "Could not update your profile",
+        // Preserve the code so the caller can distinguish a dead session from a
+        // validation failure — they need opposite handling.
+        code: json?.code,
+      };
     }
     return json;
   } catch {

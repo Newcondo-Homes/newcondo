@@ -35,8 +35,9 @@ declare module "next-auth" {
       // Add any other specific fields you need on the client-side session.
       // E.g., if you want the referralCode or companyName directly
       referralCode?: string;
+      emailVerified?: Date | null;
       companyName?: string | null;
-    };
+    } & DefaultSession["user"];
   }
 }
 
@@ -60,6 +61,7 @@ declare module "@auth/core/jwt" {
     // Any other data you want to carry through the token lifecycle
     referralCode?: string;
     companyName?: string | null;
+    emailVerified?: Date | null;
   }
 }
 

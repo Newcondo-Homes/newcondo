@@ -15,6 +15,7 @@
    ============================================================ */
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { DUMMY_USERS, type DashboardUser, type Role } from "@/lib/dashboard/data";
+import { initialsOf, displayName } from "@/lib/dashboard/format";
 
 /** Shape of the fields we need off `session.user`. */
 export interface SessionUserInput {
@@ -39,23 +40,22 @@ const VALID: Role[] = ["OWNER", "AGENT", "RENTER"];
 const asRole = (v: unknown, fallback: Role): Role =>
   VALID.includes(v as Role) ? (v as Role) : fallback;
 
-/** "Adaeze Okafor" → "AO"; falls back to the email's first letter. */
-function initialsOf(name?: string | null, email?: string | null): string {
-  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
-  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (email ?? "?").slice(0, 1).toUpperCase();
-}
+/* Name handling lives in lib/dashboard/format — see the long note there on why
+   Nigerian names are never split into first/last or reordered. */
 
 /** Merge the real session user over the dummy profile, so any field the
     session doesn't carry yet (plan copy, counters) still renders. */
 function toDashboardUser(su: SessionUserInput | undefined, role: Role): DashboardUser {
   const base = DUMMY_USERS[role];
   if (!su) return base;
+  // NEVER fall back to the dummy NAME or EMAIL. Those are identity fields, and
+  // showing a stranger's name in the sidebar is worse than showing a plain
+  // handle — it reads as "you are signed in as someone else". displayName()
+  // falls back to the email's local part instead.
   return {
     ...base,
-    name: su.name ?? base.name,
-    email: su.email ?? base.email,
+    name: displayName(su.name, su.email),
+    email: su.email ?? "",
     initials: initialsOf(su.name, su.email),
     ...(su.phone ? { phone: su.phone } : {}),
     ...(su.verificationStatus ? { verificationStatus: su.verificationStatus } : {}),

@@ -6,10 +6,12 @@ import { authController } from "@newcondo/auth-service";
 import { otpController } from "@newcondo/auth-service";
 import { profileController } from "@newcondo/auth-service";
 import { verificationController } from "@newcondo/auth-service";
+import { authMiddleware } from "@newcondo/backend-shared";
 
 // Import auth validation middleware
 import { authValidation } from "@newcondo/auth-service";
 import { verificationValidation } from "@newcondo/auth-service";
+import { getOnboardingState } from "@newcondo/auth-service";
 
 // Import shared middleware
 import { auth } from "@newcondo/backend-shared";
@@ -49,6 +51,16 @@ router.post(
 router.post("/send-otp", authValidation.sendOtp, otpController.sendOTP);
 router.post("/verify-otp", authValidation.verifyOtp, otpController.verifyOTP);
 router.post("/resend-otp", authValidation.resendOtp, otpController.resendOTP);
+
+// onboarding state
+router.get("/onboarding-state", authMiddleware, async (req, res, next) => {
+  try {
+    res.json({ success: true, data: await getOnboardingState(req.user!.id) });
+  } catch (e) { next(e); }
+});
+
+// change email
+router.patch("/change-email", authMiddleware, authController.changeEmail.bind(authController));
 
 // Profile routes
 router.get("/profile", auth, profileController.getProfile);

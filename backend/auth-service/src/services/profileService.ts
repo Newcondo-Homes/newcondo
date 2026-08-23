@@ -152,7 +152,7 @@ class ProfileService {
       // });
 
       // Clean up temp file
-      await fs.unlink(tempFilePath).catch(() => {}); // Ignore cleanup errors
+      await fs.unlink(tempFilePath).catch(() => { }); // Ignore cleanup errors
 
       if (!uploadResult[0]?.data?.url) {
         throw new Error("Upload failed - no URL returned");
@@ -165,26 +165,6 @@ class ProfileService {
     }
   }
 
-  /**
-   * Store metadata of file uploaded on uploadthing in database
-   */
-
-  // private async storeFileMetadata(fileKey: string, metadata: {
-  //   userId: string;
-  //   type: string;
-  //   originalSize: string;
-  // }) {
-
-  //   await prisma.fileMetadata.create({
-  //     data: {
-  //       fileKey,
-  //       userId: metadata.userId,
-  //       type: metadata.type,
-  //       originalSize: parseInt(metadata.originalSize),
-  //       createdAt: new Date()
-  //     }
-  //   });
-  // }
 
   /**
    * Upload and optimize profile image
@@ -486,8 +466,11 @@ class ProfileService {
     }
   }
 
-  async updateEmail(userId: string, newEmail: string, otpCode: string) {
+  async updateEmail(userId: string, newEmail: string, otpCode: string, password?: string) {
     try {
+      const auth = await this.verifyPasswordOrSocial(userId, password);
+      if (!auth.ok) return { success: false, message: auth.message };
+
       // Verify OTP for new email
       const isOtpValid = await otpService.verifyOTP(
         newEmail,
@@ -536,8 +519,11 @@ class ProfileService {
     }
   }
 
-  async updatePhone(userId: string, newPhone: string, otpCode: string) {
+  async updatePhone(userId: string, newPhone: string, otpCode: string, password?: string) {
     try {
+      const auth = await this.verifyPasswordOrSocial(userId, password);
+      if (!auth.ok) return { success: false, message: auth.message };
+
       // Verify OTP for new phone
       const isOtpValid = await otpService.verifyOTP(
         newPhone,
@@ -669,6 +655,27 @@ class ProfileService {
       console.error("Delete account error:", error);
       throw error;
     }
+  }
+
+  private async verifyPasswordOrSocial(
+    userId: string,
+    password?: string
+  ): Promise<{ ok: boolean; message?: string }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!user) return { ok: false, message: "User not found" };
+
+    // No password set → social-only account.
+    if (!user.passwordHash) return { ok: true };
+
+    if (!password) {
+      return { ok: false, message: "Enter your password to confirm this change" };
+    }
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) return { ok: false, message: "That password is incorrect" };
+    return { ok: true };
   }
 
   private async logActivity(userId: string, type: string, metadata: any) {

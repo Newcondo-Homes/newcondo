@@ -44,11 +44,11 @@ model User {
   verifiedBy                  String?
 
   // Profile fields
-  dateOfBirth DateTime?
-  address     String?
-  city        String?
-  state       String?
-  country     String?   @default("Nigeria")
+  dateOfBirth          DateTime?
+  address              String?
+  city                 String?
+  state                String?
+  country              String?               @default("Nigeria")
 
   // ++ ADDED — BVN powers Flutterwave permanent virtual-account creation for
   // renters at checkout (escrow safety + compliance). Encrypt at rest.
@@ -108,24 +108,24 @@ model User {
   // ++ ADDED relations
   notifications        Notification[]
   bankAccounts         BankAccount[]
-  shareLinks           ShareLink[]           @relation("ShareLinkCreator")
-  sentTenantInvites    TenantInvite[]        @relation("TenantInviteSender")
-  usedTenantInvites    TenantInvite[]        @relation("TenantInviteRenter")
-  sentAgentInvites     AgentInvite[]         @relation("AgentInviteOwner")
-  linksAsOwner         OwnerAgentLink[]      @relation("OwnerAgentLinkOwner")
-  linksAsAgent         OwnerAgentLink[]      @relation("OwnerAgentLinkAgent")
-  markingQueueEntries  MarkingQueueEntry[]   @relation("MarkingQueueAgent")
-  subAgentPayments     Payment[]             @relation("PaymentSubAgent")
-  invitedRentals       Rental[]              @relation("RentalInviter")
+  shareLinks           ShareLink[]          @relation("ShareLinkCreator")
+  sentTenantInvites    TenantInvite[]       @relation("TenantInviteSender")
+  usedTenantInvites    TenantInvite[]       @relation("TenantInviteRenter")
+  sentAgentInvites     AgentInvite[]        @relation("AgentInviteOwner")
+  linksAsOwner         OwnerAgentLink[]     @relation("OwnerAgentLinkOwner")
+  linksAsAgent         OwnerAgentLink[]     @relation("OwnerAgentLinkAgent")
+  markingQueueEntries  MarkingQueueEntry[]  @relation("MarkingQueueAgent")
+  subAgentPayments     Payment[]            @relation("PaymentSubAgent")
+  invitedRentals       Rental[]             @relation("RentalInviter")
   serviceSubscription  ServiceSubscription?
-  requestedServiceJobs ServiceJob[]          @relation("ServiceJobRequester")
+  requestedServiceJobs ServiceJob[]         @relation("ServiceJobRequester")
 
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  disputes           Dispute[]
-  disputeComments    DisputeComment[]
-  disputeEvidences   DisputeEvidence[]
-  paymentAttemptLogs PaymentAttemptLog[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  disputes             Dispute[]
+  disputeComments      DisputeComment[]
+  disputeEvidences     DisputeEvidence[]
+  paymentAttemptLogs   PaymentAttemptLog[]
 
   @@index([email])
   @@index([phone])
@@ -254,6 +254,7 @@ model Authenticator {
 
   @@id([userId, credentialID])
 }
+
 
 model Property {
   id          String @id @default(cuid())
@@ -641,7 +642,7 @@ enum MarkingJobStatus {
   CANCELLED
   EXPIRED
   AWAITING_CONFIRMATION // ++ ADDED — marked, waiting on the owner (72h)
-  DISPUTED              // ++ ADDED — owner disputed the boundary
+  DISPUTED // ++ ADDED — owner disputed the boundary
 }
 
 enum UrgencyLevel {
@@ -670,11 +671,11 @@ model Rental {
   // the tenant in the inviting owner's/agent's dashboard.
   invitedById String?
 
-  property Property      @relation(fields: [propertyId], references: [id])
-  unit     PropertyUnit? @relation(fields: [unitId], references: [id])
-  renter   User          @relation(fields: [renterId], references: [id])
-  invitedBy User?        @relation("RentalInviter", fields: [invitedById], references: [id]) // ++ ADDED
-  payments Payment[]
+  property  Property      @relation(fields: [propertyId], references: [id])
+  unit      PropertyUnit? @relation(fields: [unitId], references: [id])
+  renter    User          @relation(fields: [renterId], references: [id])
+  invitedBy User?         @relation("RentalInviter", fields: [invitedById], references: [id]) // ++ ADDED
+  payments  Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -730,9 +731,9 @@ model Payment {
   // carries { propertyId, method, contactName, contactPhone, accessNotes })
   meta Json?
 
-  user     User  @relation(fields: [userId], references: [id])
+  user     User    @relation(fields: [userId], references: [id])
   rental   Rental? @relation(fields: [rentalId], references: [id])
-  subAgent User? @relation("PaymentSubAgent", fields: [subAgentId], references: [id]) // ++ ADDED
+  subAgent User?   @relation("PaymentSubAgent", fields: [subAgentId], references: [id]) // ++ ADDED
 
   agentReferralConversion AgentReferralConversion?
 
@@ -758,9 +759,9 @@ enum PaymentType {
   AGENT_COMMISSION
   PREMIUM_UPGRADE
   PROPERTY_MARKING
-  RENT_RELEASE  // ++ ADDED — owner's net payout row at escrow release
-  WITHDRAWAL    // ++ ADDED — wallet → bank transfer
-  SERVICE_FEE   // ++ ADDED — vendor repair charged to the owner
+  RENT_RELEASE // ++ ADDED — owner's net payout row at escrow release
+  WITHDRAWAL // ++ ADDED — wallet → bank transfer
+  SERVICE_FEE // ++ ADDED — vendor repair charged to the owner
 }
 
 enum PaymentStatus {
@@ -902,12 +903,12 @@ model OwnerAgentLink {
 // ++ ADDED — third-party vendor services (fumigation, waste, inspection, repairs)
 // ---------------------------------------------------------------------------
 model Vendor {
-  id       String   @id @default(cuid())
-  name     String
-  category String // FUMIGATION | WASTE | INSPECTION | REPAIRS
-  rating   Float    @default(0)
-  phone    String?
-  isActive Boolean  @default(true)
+  id        String   @id @default(cuid())
+  name      String
+  category  String // FUMIGATION | WASTE | INSPECTION | REPAIRS
+  rating    Float    @default(0)
+  phone     String?
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
   jobs ServiceJob[]

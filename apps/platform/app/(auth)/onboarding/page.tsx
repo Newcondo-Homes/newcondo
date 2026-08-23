@@ -13,38 +13,28 @@ export const metadata: Metadata = {
 /**
  * Server entry for /onboarding.
  *
- * Requirement (Q4): a user who ALREADY has a subscription and re-enters
- * onboarding must go to the DASHBOARD if their session is active, or the LOGIN
- * page if it has expired.
+ * CRITICAL with register-first: an authenticated user is NOT necessarily
+ * finished. The account is created at form submit now, so from the OTP step
+ * onward every user is signed in and still mid-onboarding. A blanket
+ * "session → /dashboard" redirect here would break the flow on its very first
+ * attempt, and would also break social sign-in and resume-after-abandon.
  *
- *   • Active session + active subscription → redirect to /dashboard here
- *     (server-side, before any flow renders).
- *   • Active session + NO/ PENDING subscription → render the flow so social /
- *     returning users can finish (the client resolves Q1/Q3 via the backend).
- *   • Expired / no session → render the flow; the client checks the
- *     "returning subscriber" marker and routes lapsed subscribers to /login.
+ * Only an actual customer is redirected:
+ *   active subscription → /dashboard (server-side, before anything renders)
+ *   anything else       → render the flow; the client asks the backend which
+ *                         step to show (GET /auth/onboarding-state)
  *
- * NOTE: do NOT blanket-redirect every session to /dashboard — that breaks
- * social-login and resume-after-abandon onboarding, where the user is
- * authenticated but not yet subscribed.
- *
- * <Suspense> here is REQUIRED — OnboardingFlow reads the URL via
- * useSearchParams() (?role=agent, ?social=1). Next.js needs a Suspense
- * boundary around any component using that hook, or the first client render
- * can resolve before the search params are attached to the route tree.
+ * <Suspense> is REQUIRED — OnboardingFlow reads ?role= and ?social= via
+ * useSearchParams(), and without a boundary the first client render can resolve
+ * before those params are attached to the route tree.
  */
 export default async function OnboardingPage() {
   const session = await auth();
 
   if (session?.user) {
-    // Replace this with your real subscription lookup (e.g. a server helper that
-    // reads the single Subscription row for the user). It must return true for
-    // ACTIVE / FREE_ACTIVE / TRIAL — i.e. "already a customer".
-    const hasActiveSubscription = await userHasActiveSubscription(session.user.id);
-    if (hasActiveSubscription) {
-      redirect("/dashboard");
-    }
-    // Authenticated but not subscribed → let the flow resume (Q1/Q3 client-side).
+    const settled = await hasActiveSubscription(session as { accessToken?: string });
+    if (settled) redirect("/dashboard");
+    // Authenticated but not subscribed → let the flow resume.
   }
 
   return (
@@ -54,14 +44,22 @@ export default async function OnboardingPage() {
   );
 }
 
-
-async function userHasActiveSubscription(userId: string): Promise<boolean> {
+/**
+ * True when the user is already a customer (ACTIVE / FREE_ACTIVE / TRIAL).
+ *
+ * Fails OPEN — on any error we render the flow rather than redirecting. The
+ * client re-resolves state and forwards a real subscriber to the dashboard
+ * anyway, so a failed check costs one hop; a wrong redirect would lock a
+ * half-onboarded user out of the only page that can finish their signup.
+ * (Note this is the opposite default to the dashboard gate, on purpose: each
+ * fails toward the page that can still make progress.)
+ */
+async function hasActiveSubscription(session: { accessToken?: string }): Promise<boolean> {
   try {
     const base = process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL;
     if (!base) return false;
-    const session = await auth();
-    const token = (session as { accessToken?: string } | null)?.accessToken;
-    const res = await fetch(`${base.replace(/\/$/, "")}/payments/subscriptions/onboarding-state`, {
+    const token = session?.accessToken;
+    const res = await fetch(`${base.replace(/\/$/, "")}/auth/onboarding-state`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       cache: "no-store",
     });
@@ -69,8 +67,6 @@ async function userHasActiveSubscription(userId: string): Promise<boolean> {
     const json = (await res.json()) as { data?: { redirectTo?: string; step?: string } };
     return json?.data?.redirectTo === "dashboard" || json?.data?.step === "done";
   } catch {
-    // On any failure, fall through to rendering the flow (the client will still
-    // guard Q3 via getOnboardingState). Never hard-fail the page on this check.
     return false;
   }
 }

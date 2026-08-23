@@ -15,7 +15,17 @@ import { Topbar } from "@/components/dashboard/Topbar";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import type { Role } from "@/lib/dashboard/data";
 
-interface SessionUserLike { role?: string | null; userType?: string | null; }
+interface SessionUserLike {
+  id?: string | null;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string | null;
+  userType?: string | null;
+  phone?: string | null;
+  isPremium?: boolean | null;
+  verificationStatus?: string | null;
+}
 
 export default function DashboardLayout({ user, children }: { user?: SessionUserLike; children: ReactNode }) {
   const [mobileNav, setMobileNav] = useState(false);
@@ -25,7 +35,11 @@ export default function DashboardLayout({ user, children }: { user?: SessionUser
   useBodyScrollLock(mobileNav);
   return (
     <QueryProvider>
-      <RoleProvider initialRole={initialRole}>
+      {/* sessionUser is what makes the sidebar/topbar show the REAL person.
+          Passing only initialRole (as this did before) left RoleProvider with
+          no identity fields, so it fell through to DUMMY_USERS and every screen
+          showed the placeholder name and email. */}
+      <RoleProvider initialRole={initialRole} sessionUser={user ?? undefined}>
         <div className="flex min-h-screen bg-nc-background text-text-primary font-sans">
           {/* mobile scrim + drawer */}
           <AnimatePresence>

@@ -246,7 +246,7 @@ export const updateEmail = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { newEmail, otpCode } = req.body;
+    const { newEmail, otpCode, password } = req.body;
 
     if (!userId) {
       sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });
@@ -258,12 +258,13 @@ export const updateEmail = async (
       return;
     }
 
-    const result = await profileService.updateEmail(userId, newEmail, otpCode);
+    const result = await profileService.updateEmail(userId, newEmail, otpCode, password);
 
     if (!result.success) {
-      sendResponse(res, 400, result.message, null);
-      return;
-    }
+       const status = /password/i.test(result.message ?? "") ? 401 : 400;
+       sendResponse(res, status, result.message!, null);
+       return
+     }
 
     sendResponse(res, 200, "Password changed successfully");
   } catch (error) {
@@ -278,7 +279,7 @@ export const updatePhone = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const { newPhone, otpCode } = req.body;
+    const { newPhone, otpCode, password } = req.body;
 
     if (!userId) {
       sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });
@@ -290,12 +291,13 @@ export const updatePhone = async (
       return;
     }
 
-    const result = await profileService.updatePhone(userId, newPhone, otpCode);
+    const result = await profileService.updatePhone(userId, newPhone, otpCode, password);
 
     if (!result.success) {
-      sendResponse(res, 400, result.message, null);
-      return;
-    }
+       const status = /password/i.test(result.message ?? "") ? 401 : 400;
+       sendResponse(res, status, result.message!, null);
+       return
+     }
 
     sendResponse(res, 200, "Password changed successfully");
   } catch (error) {
@@ -613,101 +615,3 @@ export const getUploadLimits = async (
     sendInternalError(res, "Failed to retrieve upload limits", error as Error);
   }
 };
-
-// TODO: See if you'll need to create a new table in the database called "userProfile" to save
-// user's preferences and settings. findout if it makes sense
-// if it does then uncomment out the 'getPreferences' and 'updatePreferences' code below to
-// and continue developing the feature from their
-
-/**
- * Get user preferences
- */
-
-// export const getPreferences = async (
-//   req: Request,
-//   res: Response
-// ): Promise<void> => {
-//   try {
-//     const userId = req.user?.id;
-
-//     if (!userId) {
-//       sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });
-//       return;
-//     }
-
-//     const profile = await prisma.userProfile.findUnique({
-//       where: { userId },
-//       select: {
-//         preferences: true,
-//         notificationSettings: true,
-//         privacySettings: true,
-//       },
-//     });
-
-//     const preferences = profile?.preferences
-//       ? JSON.parse(profile.preferences)
-//       : {};
-
-//     sendResponse(res, 200, "Preferences retrieved successfully", {
-//       preferences,
-//       notificationSettings: profile?.notificationSettings,
-//       privacySettings: profile?.privacySettings,
-//     });
-//   } catch (error) {
-//     console.error("Get preferences error:", error);
-//     sendInternalError(res, "Failed to retrieve preferences", error as Error);
-//   }
-// };
-
-// /**
-//  * Update user preferences
-//  */
-// export const updatePreferences = async (
-//   req: Request,
-//   res: Response
-// ): Promise<void> => {
-//   try {
-//     const userId = req.user?.id;
-
-//     if (!userId) {
-//       sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });
-//       return;
-//     }
-
-//     const { preferences, notificationSettings, privacySettings } = req.body;
-
-//     const updatedProfile = await prisma.userProfile.upsert({
-//       where: { userId },
-//       update: {
-//         preferences: preferences ? JSON.stringify(preferences) : undefined,
-//         notificationSettings: notificationSettings || undefined,
-//         privacySettings: privacySettings || undefined,
-//       },
-//       create: {
-//         userId,
-//         preferences: preferences ? JSON.stringify(preferences) : null,
-//         notificationSettings: notificationSettings || null,
-//         privacySettings: privacySettings || null,
-//       },
-//     });
-
-//     // Log preferences update
-//     await prisma.eventLog.create({
-//       data: {
-//         userId,
-//         type: "PREFERENCES_UPDATED",
-//       },
-//     });
-
-//     sendResponse(res, 200, "Preferences updated successfully", {
-//       preferences: updatedProfile.preferences
-//         ? JSON.parse(updatedProfile.preferences)
-//         : {},
-//       notificationSettings: updatedProfile.notificationSettings,
-//       privacySettings: updatedProfile.privacySettings,
-//     });
-//   } catch (error) {
-//     console.error("Update preferences error:", error);
-//     sendInternalError(res, "Failed to update preferences", error as Error);
-//   }
-// };

@@ -1,7 +1,7 @@
 import { prisma, SubscriptionPlan, SubscriptionStatus, BillingCycle, Role, SubscriptionEvent } from "@newcondo/db";
 import axios from "axios";
 import type { Subscription } from "@newcondo/db";
-
+import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
 
 const FLUTTERWAVE_SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY!;
 const APP_URL = process.env.APP_URL!; // e.g. https://newcondo.homes
@@ -192,6 +192,23 @@ export async function createFreeRenterSubscription(userId: string): Promise<Subs
     },
   });
 
+ 
+  const user = await prisma.user.findUnique({
+    where: { id: subscription.userId },
+    select: { email: true, name: true, role: true },
+  });
+  if (user?.email) {
+    await sendBrandedEmail(
+      user.email,
+      EmailTemplates.welcome({
+        name: user.name ?? "there",
+        // ADMIN never reaches this path, but the template's union is narrow —
+        // narrow it here rather than casting the check away.
+        role: (user.role === "ADMIN" ? "OWNER" : user.role) as "OWNER" | "AGENT" | "RENTER",
+      })
+    );
+  }
+  
   // If founding member on Premium Plus — create virtual account
   if (isFoundingMember) {
     await triggerVirtualAccountCreation(userId, subscription.id);
@@ -424,6 +441,25 @@ export async function activateSubscription(
       premiumExpiresAt: periodEnd,
     },
   });
+
+
+  // Fetched rather than passed in so this works from both the first-charge
+  // path and the webhook path without changing either signature.
+  const user = await prisma.user.findUnique({
+    where: { id: subscription.userId },
+    select: { email: true, name: true, role: true },
+  });
+  if (user?.email) {
+    await sendBrandedEmail(
+      user.email,
+      EmailTemplates.welcome({
+        name: user.name ?? "there",
+        // ADMIN never reaches this path, but the template's union is narrow —
+        // narrow it here rather than casting the check away.
+        role: (user.role === "ADMIN" ? "OWNER" : user.role) as "OWNER" | "AGENT" | "RENTER",
+      })
+    );
+  }
 
   // Trigger virtual account if needed
   if (!subscription.virtualAccountCreated) {

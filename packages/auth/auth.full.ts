@@ -2,8 +2,9 @@
 // Full auth config with Prisma — Node.js only, never used in middleware
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import Facebook from "next-auth/providers/facebook";
 import type { NextAuthConfig } from "next-auth";
-import { prisma } from "@newcondo/db";
+import { prisma, Role, VerificationStatus } from "@newcondo/db";
 import bcrypt from "bcryptjs";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 
@@ -25,7 +26,50 @@ const authFullConfig: NextAuthConfig = {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      // Google asserts whether it has verified the address. Honour that instead
+      // of making Google users sit through our own OTP: the whole point of the
+      // OTP is to prove the address is reachable and theirs, which Google has
+      // already done. Without this, PrismaAdapter.createUser leaves
+      // emailVerified null and getOnboardingState would push every Google user
+      // into an email-verification step they can never satisfy — no OTP was ever
+      // issued for their address, so even Resend would refuse them.
+      allowDangerousEmailAccountLinking: false,
+      profile(profile) {
+        return {
+           id: profile.sub,
+           name: profile.name,
+           email: profile.email,
+           image: profile.picture,
+           emailVerified: profile.email_verified ? new Date() : null,
+           role: "RENTER" as Role,
+           verificationStatus: "PENDING" as VerificationStatus,
+        };
+      },
     }),
+
+    Facebook({
+      clientId: process.env.AUTH_FACEBOOK_ID,
+      clientSecret: process.env.AUTH_FACEBOOK_SECRET,
+      // Facebook returns nothing but id+name unless the fields are requested
+      // explicitly, which is why email is so often missing. Ask for it.
+      authorization: { params: { scope: "email public_profile" } },
+      userinfo: {
+        url: "https://graph.facebook.com/me",
+        params: { fields: "id,name,email,picture.type(large)" },
+      },
+      profile(profile) {
+        return {
+          id: profile.id,
+           name: profile.name,
+           email: profile.email ?? null,
+           image: profile.picture?.data?.url ?? null,
+           emailVerified: null,
+           role: "RENTER" as Role,
+           verificationStatus: "PENDING" as VerificationStatus,
+        };
+      },
+    }),
+
     Credentials({
       // Referenced by GoogleOneTap.tsx as signIn("googleOneTap", { credential, role, redirect:false }).
       // This provider was MISSING — signIn() targeting a nonexistent provider ID

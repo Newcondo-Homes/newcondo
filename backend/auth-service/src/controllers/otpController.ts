@@ -6,7 +6,7 @@ import { generateOTP } from "@newcondo/backend-shared";
 
 // note: this new brandedemail( sendBrandedEmail ) does not throw an error, in the future see if
 // you can make it throw an error in events of failure
-import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
+import { sendBrandedEmail, EmailTemplates, OTP } from "@newcondo/backend-shared";
 import type { AuthenticatedRequest } from "../types/auth";
 import { OTPType } from "@newcondo/db";
 
@@ -43,7 +43,7 @@ class OTPController {
         where: {
           identifier,
           type,
-          createdAt: { gt: new Date(Date.now() - 60 * 1000) },
+          createdAt: { gt: new Date(Date.now() - OTP.resendCooldownSeconds * 1000) },
         },
       });
 
@@ -57,7 +57,7 @@ class OTPController {
       }
 
       const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000); // 10 minutes
 
       // Delete any existing OTP for this identifier+type before creating a new one
       await prisma.oTPCode.deleteMany({

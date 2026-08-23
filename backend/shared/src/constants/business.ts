@@ -170,3 +170,36 @@ export const AGENT_INVITES = {
   /** Single-use: the first agent to accept consumes the link. */
   singleUse: true,
 } as const;
+
+// TEN minutes, not five: the whole point of the register-before-OTP change is
+// that the user leaves the browser to fetch the code from a mail app. Five
+// minutes does not reliably survive that round trip on a phone.
+// ============================================================
+
+export const OTP = {
+  /** Code lifetime. Used by register, sendOTP and resendOTP — all three. */
+  expiryMinutes: 10,
+  /** Digits in the code (generateOTP default). */
+  length: 6,
+  /** Minimum gap between sends for the same identifier+type. */
+  resendCooldownSeconds: 60,
+  /** Wrong-code attempts before the code is burned. */
+  maxAttempts: 5,
+} as const;
+
+/** Convenience — the value every caller actually needs. */
+export const OTP_EXPIRY_MS = OTP.expiryMinutes * 60 * 1000;
+
+/* ============================================================
+   STUB ACCOUNT CLEANUP
+
+   Registering before the OTP means an abandoned form leaves a real User row
+   that is unverified and unsubscribed. checkEmailExists already treats those
+   as ghosts (exists: false) so the address is never blocked — but the rows
+   still need sweeping, or they accumulate forever and hold the unique email
+   index hostage against a future verified signup.
+   ============================================================ */
+export const ACCOUNT_STUBS = {
+  /** Delete unverified, unsubscribed, password-only accounts older than this. */
+  expiryDays: 7,
+} as const;

@@ -1,109 +1,104 @@
 /* ============================================================
-   Onboarding resume / state — client API
+   lib/api/onboarding.ts
 
-   Talks to the Express onboarding routes (mounted on your paymentRouter,
-   backed by @newcondo/payment-service onboardingResume functions):
-
-     GET  /payments/subscriptions/onboarding-state      → where to resume
-     POST /payments/subscriptions/onboarding/account-type → change role (Q2)
-     POST /payments/subscriptions/onboarding/reset       → abandon PENDING
-
-   All routed through the shared apiClient so they carry the Bearer token —
-   so they only work once the user is authenticated. A brand-new (not yet
-   registered) visitor has no state; callers treat a failure as "fresh start".
+   The server is authoritative about where a user is in onboarding. The client
+   used to infer it from session fields (`u.phone ? "plan" : "details"`), which
+   could not express a rule spanning the User row, its linked OAuth accounts and
+   its subscription — and which, once registration moved before the OTP, pushed
+   signed-in-but-unverified users straight past verification.
    ============================================================ */
 
-import apiClient, { isApiError } from "@/lib/api/client";
+import { apiClient } from "./client";
 import type { UserType } from "@/types/api";
 
-export type OnboardingStep = "account" | "plan" | "payment" | "done";
+const unwrap = <T,>(r: { data?: T }) => r.data as T;
+
+export type OnboardingStep = "details" | "verify" | "plan" | "done";
 
 export interface OnboardingState {
   step: OnboardingStep;
-  redirectTo?: "dashboard";
-  /** Backend plan code of an abandoned PENDING checkout (Q1). */
-  pendingPlan?: string;
-  message?: string;
+  redirectTo: "dashboard" | null;
+  needsEmailVerification: boolean;
+  hasEmail: boolean;
+  hasPhone: boolean;
+  authProviders: string[];
+  pendingPlan: string | null;
+  subscriptionStatus: string | null;
+  role: string;
+  email: string | null;
+  name: string | null;
+}
+
+/** GET /auth/onboarding-state — requires a session. */
+export const getOnboardingState = () =>
+  apiClient.get<OnboardingState>("/auth/onboarding-state").then(unwrap);
+
+export interface RegisterResult {
+  user: { id: string; email: string; name: string | null; role: string };
+  requiresVerification: boolean;
+  /** False when the transport failed — the OTP panel warns instead of leaving them waiting. */
+  emailSent: boolean;
+  /** True when an abandoned unverified stub was reused rather than a new row created. */
+  resumed: boolean;
+  expiresIn: number;
 }
 
 /**
- * Ask the backend where this (authenticated) user should resume. Returns
- * null if we can't tell (not signed in yet, network error) — caller then
- * runs the normal flow from the top.
+ * POST /auth/register — creates the account AND issues the verification code in
+ * one call. No separate sendOTP: register writes the OTP row itself, so calling
+ * sendOTP as well would mint a second code and invalidate the one already on
+ * its way to the user's inbox.
  */
-export async function getOnboardingState(): Promise<OnboardingState | null> {
-  if (!process.env.NEXT_PUBLIC_API_URL) return null;
-  try {
-    const res = await apiClient.get<{ success: boolean; data: OnboardingState }>(
-      "/payments/subscriptions/onboarding-state"
-    );
-    return res?.data?.data ?? null;
-  } catch (err) {
-    // 401 (not signed in) or any transient error → treat as "no state".
-    if (isApiError(err) && err.status !== 401) {
-      console.warn("[onboarding] getOnboardingState failed:", err.message);
-    }
-    return null;
-  }
-}
+export const registerAccount = (body: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  userType: UserType;
+}) => apiClient.post<RegisterResult>("/auth/register", body).then(unwrap);
 
 /**
- * Q2 — returning user wants a different account type. Allowed only while the
- * subscription is still PENDING (nothing paid). Resolves { ok, reason }.
- */
-export async function changeAccountType(role: UserType): Promise<{ ok: boolean; reason?: string }> {
-  if (!process.env.NEXT_PUBLIC_API_URL) return { ok: true }; // no backend → local-only change
-  try {
-    await apiClient.post("/payments/subscriptions/onboarding/account-type", { role });
-    return { ok: true };
-  } catch (err) {
-    const reason = isApiError(err)
-      ? err.message
-      : "Couldn't change your account type. Please try again.";
-    return { ok: false, reason };
-  }
-}
-
-/** Abandon a PENDING checkout so the user can pick a different plan/role. */
-export async function resetPendingOnboarding(): Promise<{ ok: boolean }> {
-  if (!process.env.NEXT_PUBLIC_API_URL) return { ok: true };
-  try {
-    await apiClient.post("/payments/subscriptions/onboarding/reset", {});
-    return { ok: true };
-  } catch {
-    return { ok: false };
-  }
-}
-
-/**
- * Q4 — server-truth check used at the register step: does this email already
- * have an account? Used to route a returning subscriber (whose session
- * expired) to /login instead of a fresh sign-up. This is a PUBLIC, unauthed
- * lookup (the user isn't signed in), so it does NOT go through the
- * Bearer-authed apiClient — it hits a small public endpoint directly.
+ * Does this address belong to a real, finished account?
  *
- * Backend: add a public route, e.g.
- *   GET /auth/email-exists?email=...  → { exists: boolean }
- * It must NOT leak anything beyond existence (no names, no status) and should
- * be rate-limited to avoid email enumeration abuse.
- *
- * Fails OPEN (returns false → onboard normally) on any error, so a flaky check
- * never blocks a genuine new signup.
+ * The backend deliberately answers `false` for an unverified row with no
+ * subscription — an abandoned registration is a ghost, and its address must
+ * stay available. So `true` means "verified, or already a customer": send them
+ * to /login. `false` means "safe to register", including the resume case where
+ * register will reuse their own stub.
  */
-export async function checkEmailRegistered(email: string): Promise<boolean> {
-  const base = process.env.NEXT_PUBLIC_API_URL;
-  if (!base) return false;
-  const trimmed = email.trim().toLowerCase();
-  if (!trimmed) return false;
+export const checkEmailRegistered = async (email: string): Promise<boolean> => {
   try {
-    const res = await fetch(
-      `${base.replace(/\/$/, "")}/auth/email-exists?email=${encodeURIComponent(trimmed)}`,
-      { method: "GET", headers: { "Content-Type": "application/json" } }
+    // Route is /auth/email-exists (authController.checkEmailExists) — NOT
+    // /auth/check-email. Worth being careful here: this helper fails open, so a
+    // wrong path 404s silently and the "You already have an account" panel just
+    // never appears, with no error anywhere to explain why.
+    const res = await apiClient.get<{ exists: boolean }>(
+      `/auth/email-exists?email=${encodeURIComponent(email.trim().toLowerCase())}`
     );
-    if (!res.ok) return false;
-    const json = (await res.json()) as { exists?: boolean; data?: { exists?: boolean } };
-    return Boolean(json?.exists ?? json?.data?.exists);
+    return !!(res as { exists?: boolean; data?: { exists?: boolean } }).exists
+      || !!res.data?.exists;
   } catch {
+    // Fail open: never block a genuine signup because a lookup failed.
     return false;
   }
-}
+};
+
+/** PATCH the signed-in user's email: resets verification and re-issues the OTP. */
+export const changeOnboardingEmail = (email: string) =>
+  apiClient
+    .patch<{ email: string; emailSent: boolean }>("/auth/change-email", {
+      email: email.trim().toLowerCase(),
+    })
+    .then(unwrap);
+
+/** Q2 — change account type while the subscription is still PENDING. */
+export const changeAccountType = async (
+  role: UserType
+): Promise<{ ok: boolean; reason?: string }> => {
+  try {
+    await apiClient.patch("/payments/subscriptions/account-type", { userType: role });
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: (e as { message?: string })?.message };
+  }
+};

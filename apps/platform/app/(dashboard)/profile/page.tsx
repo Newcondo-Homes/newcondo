@@ -14,6 +14,7 @@ import { PageHead, DBtn, StatusBadge, Card, CardH, Row, Thumb, Tabs, KV, Banner 
 import { ConfirmDialog } from "@/components/dashboard/Modal";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { usePersistedTab } from "@/hooks/dashboard/usePersistedTab";
+import { YourDetailsCard } from "@/components/dashboard/profile/YourDetailsCard";
 
 const LEGAL_DOCS = [
   ["Personal undertaking", "Signed 12 Feb 2026", "VERIFIED"],
@@ -33,26 +34,21 @@ export default function ProfilePage() {
       <Tabs value={tab} onChange={setTab} items={[["profile", "Profile"], ["verify", "Verification"], ["plan", "Plan"], ["legal", "Legal documents"]]} />
       {tab === "profile" && (
         <div className="grid grid-cols-2 gap-4 max-[860px]:grid-cols-1">
-          <Card>
-            <CardH title="Your details" />
-            <div className="mb-4 flex items-center gap-3.5">
-              <div className="grid size-14 place-items-center rounded-full bg-ink text-lg font-bold text-cream">{user.initials}</div>
-              <div>
-                <div className="text-[16px] font-bold">{user.name}</div>
-                <div className="text-[13px] text-text-tertiary">{ROLE_LABEL[role]} · joined Feb 2026</div>
-              </div>
-            </div>
-            <Field label="Full name"><input className={inputCls()} defaultValue={user.name} /></Field>
-            <div className="grid grid-cols-2 gap-3 max-sm:grid-cols-1">
-              <Field label="Email"><input className={inputCls()} defaultValue={user.email} /></Field>
-              <Field label="Phone"><input className={inputCls()} defaultValue="0803 555 0134" /></Field>
-            </div>
-            <DBtn onClick={() => toast.promise(new Promise((res) => setTimeout(res, 1200)), { loading: "Saving profile…", success: "Profile updated. TODO(backend): PATCH /api/user/profile", error: "Could not save" })}>Save changes</DBtn>
-          </Card>
+          {/* Reads GET /auth/profile — the session's JWT claims go stale, so a
+             settings page driven by them can show a name the user changed
+             minutes ago on another device. Name saves in place; email and phone
+             go through password + OTP (they're password-reset channels). */}
+          <YourDetailsCard role={role} fallback={{ name: user.name, email: user.email }} />
           <Card>
             <CardH title="Notifications" />
             <p className="mb-3 mt-0 text-[13px] text-text-tertiary">Where should we reach you? Critical alerts (escrow, marking confirmations) always go to all channels.</p>
-            {(["In-app", "Email", "SMS"] as const).map((c, i) => <NotifToggle key={c} label={c} initial={i < 2} />)}
+            <NotifToggle label="In-app" initial />
+            <NotifToggle label="Email" initial />
+            {/* SMS has no provider wired yet — shown disabled rather than
+               hidden, so the channel is discoverable and the state is honest.
+               A toggle that flips but does nothing is worse than one that says
+               it isn't ready. */}
+            <NotifToggle label="SMS" initial={false} comingSoon />
           </Card>
         </div>
       )}
@@ -133,8 +129,32 @@ export default function ProfilePage() {
   );
 }
 
-function NotifToggle({ label, initial }: { label: string; initial: boolean }) {
+function NotifToggle({ label, initial, comingSoon }: { label: string; initial: boolean; comingSoon?: boolean }) {
   const [on, setOn] = useState(initial);
+  if (comingSoon) {
+    return (
+      <div className="flex items-center justify-between border-b border-border-hair py-[9px] text-[13.5px] last:border-b-0">
+        <span className="flex items-center gap-2">
+          <span className="font-semibold text-text-tertiary">{label}</span>
+          <span className="rounded-full bg-surface-sunken px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-[0.06em] text-text-tertiary">
+            Coming soon
+          </span>
+        </span>
+        {/* Non-interactive on purpose: aria-disabled + no handler, so it can't
+            be toggled by keyboard either. The blur is the visual cue; the
+            missing handler is the actual guarantee. */}
+        <span
+          role="switch"
+          aria-checked={false}
+          aria-disabled
+          title="SMS notifications aren't available yet"
+          className="relative h-6 w-[42px] cursor-not-allowed rounded-full bg-nc-border opacity-45 blur-[1.2px]"
+        >
+          <span className="absolute left-[3px] top-[3px] size-[18px] rounded-full bg-white shadow" />
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="flex items-center justify-between border-b border-border-hair py-[9px] text-[13.5px] last:border-b-0">
       <span className="font-semibold">{label}</span>

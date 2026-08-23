@@ -1,41 +1,44 @@
 "use client";
 
 /* ============================================================
-   OnboardingFlow
+   OnboardingFlow — register-first
 
-   Phases: register → verify → (details) → plan → payment(finalize) → success
+   THE CHANGE: the account is created at FORM SUBMIT, not after payment.
+   Registration transmits the password once and we never hold it again, so a
+   user who backgrounds or quits the browser to fetch their emailed code comes
+   back to a live session and the OTP step — not an empty form. That was the
+   original problem: reading the code REQUIRES leaving the browser, and on
+   mobile the tab is frequently discarded outright.
 
-   Key behaviours:
-   • Deep-link role: /onboarding?role=agent|renter|owner pre-selects the
-     role (so /agents and /renters can drop users straight in).
-   • Deferred registration: the details form only COLLECTS data; the
-     account is created in the payment(finalize) step after a plan is
-     chosen — free → register; paid → charge then register.
-   • OTP verify sits between details and plan; its Back button is locked
-     until the code expires (then a fresh code is issued on return).
-   • Social sign-in (Google/Facebook button, or Google One Tap for
-     existing Gmail users) creates the account via OAuth and RETURNS here
-     authenticated → we skip register/verify and resume at the plan step.
-   • Social sign-ups get one cohesive gap-fill screen before the plan step
-     (SocialAccountDetails): phone number + terms-of-service acceptance in
-     a single card, since Google/Facebook never carry the role picked in
-     step 1 nor a phone number, and social users haven't seen our terms
-     checkbox (email users already accept it inline in OnboardingForm).
-       1. If the account's userType differs from ?role=, we PATCH it
-          server-side via /api/user/profile and push it into the session.
-       2. If session.user.phone is empty, we route to the "details" phase
-          to collect phone + terms before plan.
+   THE SERVER OWNS THE STEP. GET /auth/onboarding-state resolves it from the
+   User row, its linked OAuth accounts and its subscription. The client no
+   longer infers anything from session fields — that inference is what made
+   OAuth fragile, and once registration moved earlier it would have pushed
+   every signed-in-but-unverified user straight past verification.
+
+   Both paths converge on the same resolver:
+
+     email form   register → verify → plan → payment → success
+     Google       (email already proven by Google) → details → plan → …
+     Facebook     details (collect email + phone) → verify → plan → …
+
+   details comes BEFORE verify on purpose: Facebook often returns no email at
+   all, and an address we do not yet have cannot be verified.
+
+   PAYMENT IS NEVER RESUMED INTO. A restored `payment` phase would remount
+   PaymentProcessing, which charges immediately — so someone who merely reopened
+   a tab could be billed twice. The resolver returns `plan`; one extra tap makes
+   a duplicate charge impossible.
    ============================================================ */
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Loader2, RotateCcw } from "lucide-react";
-// NOTE: useSession comes from your NextAuth client; adjust the import if your
-// auth package exposes it elsewhere. Requires a SessionProvider above this tree.
-import { useSession } from "@newcondo/auth/client";
+import { Check, Loader2, RotateCcw, AlertCircle } from "lucide-react";
+import { useSession, signOut } from "@newcondo/auth/client";
 import { cx } from "@/lib/cx";
+import { errMsg } from "@/lib/errMsg";
 import { EASE } from "@/components/motion";
 import { UserType } from "@/types/api";
 import type { Plan, PaymentResult } from "@/types/api";
@@ -46,21 +49,20 @@ import PaymentProcessing from "./payment-processing";
 import PaymentSuccess from "./payment-success";
 import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
-import { getOnboardingState, changeAccountType, checkEmailRegistered } from "@/lib/api/onboarding";
 import {
-  loadOnboarding, saveOnboarding, clearOnboarding, loadPassword, savePassword, otpStillFresh,
-  type SavedPhase,
-} from "@/lib/onboarding-storage";
-import { updateProfile, getSubscriptionStatus } from "@/lib/api/profile";
+  getOnboardingState, registerAccount, checkEmailRegistered, changeAccountType,
+  changeOnboardingEmail,
+  type OnboardingState,
+} from "@/lib/api/onboarding";
+import { updateProfile } from "@/lib/api/profile";
+import { useAuth } from "@/hooks/useAuth";
+import { loadOnboarding, saveOnboarding, clearOnboarding } from "@/lib/onboarding-storage";
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
 
-/* ------------------------------------------------------------------ */
-/* Flow phases                                                         */
-/* ------------------------------------------------------------------ */
 type Phase = "register" | "verify" | "details" | "plan" | "payment" | "success";
 
-const STEPS: { key: Phase | "done"; label: string }[] = [
+const STEPS: { key: string; label: string }[] = [
   { key: "register", label: "Account" },
   { key: "verify", label: "Verify" },
   { key: "plan", label: "Plan" },
@@ -68,14 +70,7 @@ const STEPS: { key: Phase | "done"; label: string }[] = [
 ];
 
 const PHASE_INDEX: Record<Phase, number> = {
-  register: 0,
-  verify: 1,
-  // Grouped visually with "Verify" in the stepper — it's a one-off gap-fill
-  // step for social sign-ups (phone + terms), not a whole extra stage.
-  details: 1,
-  plan: 2,
-  payment: 3,
-  success: 4,
+  register: 0, verify: 1, details: 1, plan: 2, payment: 3, success: 4,
 };
 
 const PHASE_MAXW: Record<Phase, string> = {
@@ -87,22 +82,12 @@ const PHASE_MAXW: Record<Phase, string> = {
   success: "max-w-[560px]",
 };
 
-/** Map a ?role= slug (from /agents, /renters, OAuth callback) to a UserType. */
 function roleFromParam(p: string | null): UserType | undefined {
   switch ((p ?? "").toLowerCase()) {
-    case "agent":
-    case "agents":
-      return UserType.AGENT;
-    case "renter":
-    case "renters":
-      return UserType.RENTER;
-    case "owner":
-    case "owners":
-    case "property-owner":
-    case "property_owner":
-      return UserType.OWNER;
-    default:
-      return undefined;
+    case "agent": case "agents": return UserType.AGENT;
+    case "renter": case "renters": return UserType.RENTER;
+    case "owner": case "owners": case "property-owner": case "property_owner": return UserType.OWNER;
+    default: return undefined;
   }
 }
 
@@ -110,6 +95,7 @@ export default function OnboardingFlow() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status, update } = useSession();
+  const { signInAfterRegister } = useAuth();
 
   const initialRole = roleFromParam(searchParams.get("role"));
 
@@ -117,295 +103,220 @@ export default function OnboardingFlow() {
   const [draft, setDraft] = useState<OnboardingDraft | null>(null);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [payment, setPayment] = useState<PaymentResult | null>(null);
-  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
-  // Set when we rehydrated straight into the verify step. The OTP in their
-  // inbox is still live, so OTPVerificationPanel must NOT auto-send a new one —
-  // that would invalidate the very code they left the browser to fetch.
-  const [resumedOtpFresh, setResumedOtpFresh] = useState(false);
-  // Non-null once we've read storage, so the first paint can be gated instead
-  // of flashing an empty register form before the saved step appears.
-  const [hydrated, setHydrated] = useState(false);
-  // True once we resolved a returning user via GET /onboarding/state — they
-  // have an abandoned PENDING checkout (Q1) and we dropped them back on the
-  // plan step with a "resume" banner.
+  const [serverState, setServerState] = useState<OnboardingState | null>(null);
   const [resuming, setResuming] = useState(false);
-  // Blocks a flash of the register form while we resolve backend state for an
-  // authenticated arrival (the Q3 "already paid → dashboard" check).
-  const [checkingState, setCheckingState] = useState(false);
+  const [emailSendFailed, setEmailSendFailed] = useState(false);
+  // Gates the first paint so an empty register form never flashes before the
+  // resolved step appears.
+  const [ready, setReady] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  /* ── Rehydrate an interrupted onboarding ──
-     Reading the email is part of this flow, so backgrounding the tab is
-     expected — and on mobile the tab is frequently discarded outright. We
-     restore the step, the details and the chosen plan on mount.
+  // Every user reaching the payment step now already has an account, so
+  // PaymentProcessing never registers — it only charges.
+  const registered = !!serverState || status === "authenticated";
 
-     Runs BEFORE the authenticated-entry effect below and only for anonymous
-     visitors: a signed-in arrival is resolved from the backend, which is
-     authoritative and must win over anything cached locally. */
-  useEffect(() => {
-    if (hydrated) return;
-    if (status === "loading") return;
-    if (status === "authenticated") { setHydrated(true); return; }
+  /* ── Resolve the step from the server ──
+     Runs for any authenticated arrival: a fresh OAuth return, a resumed
+     registration, or a reopened tab. The local cache is only consulted for the
+     pre-registration form, below. */
+  const resolvedOnce = useRef(false);
+  const resolve = useCallback(async (opts: { patchRole?: UserType } = {}) => {
+    try {
+      // Google/Facebook never carry the role picked in step 1 — persist it
+      // before reading state, so the resolved answer already reflects it.
+      if (opts.patchRole) {
+        const res = await updateProfile({ userType: opts.patchRole });
+        // STALE_SESSION: the JWT is valid but its user row is gone (deleted by
+        // an admin, or swept by the stub-cleanup job). The 30-day token outlives
+        // the record, so the browser keeps presenting a session that can read
+        // but never write — every PATCH fails with Prisma P2025. Sign out and
+        // restart as an anonymous registration rather than looping on a write
+        // that cannot succeed.
+        if (!res.success && res.code === "STALE_SESSION") {
+          clearOnboarding();
+          await signOut({ redirect: false });
+          setServerState(null);
+          setPhase("register");
+          setFormError("Your previous session expired. Please create your account again.");
+          setReady(true);
+          return;
+        }
+        if (res.success) await update({ userType: opts.patchRole });
+      }
 
-    const saved = loadOnboarding();
-    if (!saved) { setHydrated(true); return; }
+      const state = await getOnboardingState();
+      setServerState(state);
 
-    const role = saved.role ?? initialRole ?? UserType.OWNER;
-    if (saved.name || saved.email) {
-      setDraft({
-        name: saved.name ?? "",
-        email: saved.email ?? "",
-        phone: saved.phone ?? "",
-        // sessionStorage-scoped: present after app-switching, absent after a
-        // full browser quit. An empty value sends them back to the form with
-        // every other field prefilled, so only the password is re-typed.
-        password: loadPassword(),
-        role,
-      });
+      if (state.redirectTo === "dashboard") {
+        clearOnboarding();
+        router.replace("/dashboard");
+        return;
+      }
+
+      setDraft((d) => ({
+        name: state.name ?? d?.name ?? "",
+        email: state.email ?? d?.email ?? "",
+        phone: d?.phone ?? "",
+        password: "", // never held after registration
+        role: (state.role as UserType) ?? opts.patchRole ?? initialRole ?? UserType.OWNER,
+      }));
+      if (state.pendingPlan) setResuming(true);
+      setPhase(state.step === "done" ? "plan" : (state.step as Phase));
+    } catch (e) {
+      // A failed resolve must not strand them on a blank screen. The register
+      // step is always safe: register reuses an unverified stub, so resubmitting
+      // is idempotent for the same person.
+      console.error("[onboarding] state resolve failed", e);
+      setPhase("register");
+    } finally {
+      setReady(true);
     }
+  }, [router, update, initialRole]);
 
-    // A saved phase past the form needs a complete draft to render. Without a
-    // password we cannot register later, so fall back to the form rather than
-    // stranding them on a step that can't complete.
-    const hasUsableDraft = !!(saved.email && loadPassword());
-    const target: SavedPhase = saved.phase && saved.phase !== "register" && !hasUsableDraft
-      ? "register"
-      : (saved.phase ?? "register");
-
-    if (target === "verify" && otpStillFresh(saved.otpSentAt)) setResumedOtpFresh(true);
-    setPhase(target as Phase);
-    setHydrated(true);
-  }, [hydrated, status, initialRole]);
-
-  /* Persist the step on every change so a discarded tab resumes where it was.
-     `payment` and `success` are never written: loadOnboarding() would rewrite
-     payment to `plan` anyway, and a finished onboarding must not resurrect. */
   useEffect(() => {
-    if (!hydrated || alreadyRegistered) return;
-    if (phase === "payment" || phase === "success") return;
-    saveOnboarding({ phase: phase as SavedPhase });
-  }, [phase, hydrated, alreadyRegistered]);
-
-  /* ── Q4 — returning SUBSCRIBER whose session expired ──
-     Requirement: a user who already has a subscription and tries to onboard
-     again should land on the DASHBOARD (active session) or the LOGIN page
-     (expired session).
-
-     • Active session  → handled below by getOnboardingState (ACTIVE → dashboard).
-     • Expired session → we do NOT guess from a localStorage marker (it goes
-       stale — a deleted/cancelled user would be wrongly bounced to login
-       forever). Instead the truth is checked at the real decision point: when
-       the user submits the register step, the backend reports whether that
-       email already exists. An existing account → send to /login; a fresh (or
-       deleted) email → onboard normally. See handleDetailsSubmit below. */
-
-  /* ── Authenticated entry: resume / guard via the backend ──
-     When we arrive already authenticated at the START of the flow (returning
-     from Google/Facebook or One Tap, OR a user who registered earlier, paid
-     or abandoned, and came back), ask the backend where they stand BEFORE
-     showing any step. This is what makes the three edge cases correct:
-
-       • Q3 — already ACTIVE/FREE_ACTIVE  → straight to /dashboard, never the
-         payment step again. No double-charge possible.
-       • Q1 — abandoned PENDING checkout  → resume on the plan step with a
-         banner; re-picking reuses the same subscription row server-side.
-       • Social / fresh authed user       → resume at plan (via "details" first
-         if they have no phone on file).
-
-     The `phase === "register"` guard stops this firing later, when our own
-     deferred register() in the finalize step makes the session authenticated. */
-  const initializedFromSession = useRef(false);
-  useEffect(() => {
-    if (initializedFromSession.current) return;
+    if (resolvedOnce.current) return;
     if (status === "loading") return;
-    if (status !== "authenticated" || !session?.user) return;
-    if (phase !== "register" || draft) {
-      initializedFromSession.current = true;
+
+    if (status === "authenticated") {
+      resolvedOnce.current = true;
+      const sessionRole = (session?.user as { userType?: UserType } | undefined)?.userType;
+      void resolve({
+        patchRole: initialRole && initialRole !== sessionRole ? initialRole : undefined,
+      });
       return;
     }
 
-    initializedFromSession.current = true;
-    const u = session.user as {
-      name?: string | null;
-      email?: string | null;
-      phone?: string | null;
-      userType?: UserType;
-      role?: UserType;
-    };
-
-    const resolvedRole = initialRole ?? u.role ?? UserType.OWNER;
-    setDraft({
-      name: u.name ?? "",
-      email: u.email ?? "",
-      phone: u.phone ?? "",
-      password: "", // unused — account already exists
-      role: resolvedRole,
-    });
-    setAlreadyRegistered(true);
-
-    // Resolve their canonical onboarding state, then route accordingly.
-    setCheckingState(true);
-    (async () => {
-      try {
-        // Google/Facebook sign-up never carries the role the user picked in
-        // step 1 — persist it now if it differs from what's on file. This
-        // runs before the state check so a Q3 redirect (if any) already has
-        // the right role recorded.
-        // NOTE: compare against `u.role` — the actual Prisma `role` column that
-        // authMiddleware/initiateSubscription read. `u.userType` is a separate,
-        // always-null legacy field; checking it here meant this patch NEVER
-        // fired, so a fresh Google sign-up kept the OAuth-adapter default
-        // (RENTER) forever regardless of the role chosen in step 1.
-        if (initialRole && u.role && initialRole !== u.role) {
-          const res = await updateProfile({ userType: initialRole });
-          if (res.success) await update({ userType: initialRole });
-        }
-
-        const state = await getOnboardingState();
-        if (state?.redirectTo === "dashboard" || state?.step === "done") {
-          // Q3 — they're already subscribed. Leave onboarding entirely.
-          router.replace("/dashboard");
-          return;
-        }
-        if (state?.pendingPlan) {
-          // Q1 — they had a checkout in progress. Resume on the plan step.
-          setResuming(true);
-        }
-
-        // Social sign-ups have no phone from OAuth and haven't seen our terms
-        // checkbox — collect both once, here, before letting them into the
-        // plan step (email users already gave phone + accepted terms in
-        // OnboardingForm). Facebook may also return no EMAIL, which we need
-        // for receipts and password resets, so a missing email routes here too.
-        const needsGapFill = !u.phone || !u.email;
-        setPhase(needsGapFill ? "details" : "plan");
-      } catch {
-        setPhase(!u.phone || !u.email ? "details" : "plan");
-      } finally {
-        setCheckingState(false);
-      }
-    })();
-  }, [status, session, phase, draft, initialRole, router, update]);
+    // Anonymous: prefill the form from whatever they typed before. Nothing here
+    // is a credential — the password is not stored, by design.
+    resolvedOnce.current = true;
+    const saved = loadOnboarding();
+    if (saved?.email || saved?.name) {
+      setDraft({
+        name: saved.name ?? "", email: saved.email ?? "", phone: saved.phone ?? "",
+        password: "", role: saved.role ?? initialRole ?? UserType.OWNER,
+      });
+    }
+    setReady(true);
+  }, [status, session, initialRole, resolve]);
 
   const goToDashboard = useCallback(async () => {
-    // Onboarding is finished — drop the saved state so a later visit starts
-    // clean instead of resurrecting a completed flow.
     clearOnboarding();
-    // Flutterwave's client-side success callback can fire BEFORE your
-    // server-to-server webhook has run activateSubscription() (which sets
-    // isPremium: true). Read the authoritative DB value directly (never
-    // trust a bare update() to silently refetch it) and push it into the
-    // session explicitly once it lands, so the dashboard's server-side gate
-    // sees it immediately instead of bouncing back into onboarding.
-    for (let attempt = 0; attempt < 6; attempt++) {
-      const status = await getSubscriptionStatus();
-      if (status.success && status.isPremium) {
-        await update({ isPremium: true });
-        break;
-      }
+    // Flutterwave's client callback can fire before the webhook has flipped
+    // isPremium, so poll rather than navigating into the dashboard's gate and
+    // bouncing back out again.
+    for (let i = 0; i < 6; i++) {
+      const fresh = await update();
+      if ((fresh?.user as { isPremium?: boolean } | undefined)?.isPremium) break;
       await new Promise((r) => setTimeout(r, 1200));
     }
     router.push("/dashboard");
   }, [router, update]);
 
-  /* Q2 — returning user wants a different account type. Their account already
-     exists, so we change the role server-side (allowed only while their
-     subscription is still PENDING; the backend refuses once ACTIVE) and send
-     them back to the role/details step to re-pick a plan for the new role. */
-  const handleChangeAccountType = useCallback(async () => {
+  /* ── Form submit: REGISTER, then sign in ──
+     This is the whole point of the change. After this returns, the password is
+     gone from the client for good. */
+  const handleDetailsSubmit = useCallback(async (d: OnboardingDraft) => {
+    setSubmitting(true);
+    setFormError(null);
+    try {
+      // A verified account (or an existing customer) belongs on /login. The
+      // backend answers false for an unverified, unsubscribed ghost, so a
+      // returning abandoner is registered again against their own stub.
+      if (await checkEmailRegistered(d.email)) {
+        router.replace(
+          `/login?callbackUrl=${encodeURIComponent("/dashboard")}&email=${encodeURIComponent(d.email.trim().toLowerCase())}`
+        );
+        return;
+      }
+
+      const result = await registerAccount({
+        name: d.name, email: d.email, phone: d.phone,
+        password: d.password, userType: d.role,
+      });
+
+      // Sign in NOW, not at payment: initiateSubscription is behind
+      // authMiddleware and needs the Bearer token from a live session.
+      const signedIn = await signInAfterRegister(d.email, d.password);
+      if (!signedIn?.success) {
+        console.warn("[onboarding] auto sign-in failed", signedIn?.error);
+      }
+
+      // register issues the OTP itself. Calling sendOTP as well would mint a
+      // second code and invalidate the one already in flight — so the panel
+      // mounts WITHOUT sendOnMount below.
+      setEmailSendFailed(result.emailSent === false);
+      setDraft({ ...d, password: "" });
+      saveOnboarding({ name: d.name, email: d.email, phone: d.phone, role: d.role });
+      setPhase("verify");
+    } catch (e) {
+      setFormError(errMsg(e, "We couldn't create your account. Please try again."));
+    } finally {
+      setSubmitting(false);
+    }
+  }, [router, signInAfterRegister]);
+
+  /* A mistyped email used to be a dead end: from the verify step, Back only
+     edits the ROLE once the account exists, so there was no way to fix the
+     address short of abandoning and starting a new account. This patches it,
+     resets emailVerified and re-issues the code server-side, all without
+     leaving the flow. */
+  const handleChangeEmail = useCallback(async (nextEmail: string) => {
+    try {
+      const res = await changeOnboardingEmail(nextEmail);
+      setDraft((d) => (d ? { ...d, email: res.email ?? nextEmail } : d));
+      saveOnboarding({ email: res.email ?? nextEmail });
+      // The session carries the address, so refresh it or the panel keeps
+      // rendering the old one after the patch succeeds.
+      await update({ email: res.email ?? nextEmail });
+      setEmailSendFailed(res.emailSent === false);
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: errMsg(e, "Couldn't update your email address.") };
+    }
+  }, [update]);
+
+  /* Q2 — returning user wants a different account type. */
+  const handleChangeAccountType = useCallback(() => {
     setPhase("register");
     setResuming(false);
     setPlan(null);
   }, []);
 
-  /* Fresh register submit (Q4 server-truth check). Before sending an OTP, ask
-     the backend whether this email already has an account:
-       • exists  → a real returning user whose session expired → /login (with a
-         callback to the dashboard). Their subscription state is resolved there.
-       • free    → brand-new OR a previously-deleted email → onboard normally.
-     This replaces the unreliable localStorage marker: it's server truth, so a
-     deleted user is correctly treated as new, and a real user is sent to login. */
-  const [submittingDetails, setSubmittingDetails] = useState(false);
-  const handleDetailsSubmit = useCallback(
-    async (d: OnboardingDraft) => {
-      setSubmittingDetails(true);
-      try {
-        const exists = await checkEmailRegistered(d.email);
-        if (exists) {
-          router.replace(
-            `/login?callbackUrl=${encodeURIComponent("/dashboard")}&email=${encodeURIComponent(
-              d.email.trim().toLowerCase()
-            )}`
-          );
-          return;
-        }
-        setDraft(d);
-        // Save the details AND stamp the OTP send time, so returning to this
-        // step doesn't fire a second code.
-        saveOnboarding({
-          phase: "verify", role: d.role, name: d.name, email: d.email, phone: d.phone,
-          otpSentAt: Date.now(),
-        });
-        savePassword(d.password);
-        setPhase("verify");
-      } finally {
-        setSubmittingDetails(false);
-      }
-    },
-    [router]
-  );
+  /* Already-registered user re-submitting the role step (Q2). No OTP: the
+     account exists, so this only changes the role. */
+  const handleReturningRoleSubmit = useCallback(async (d: OnboardingDraft) => {
+    if (draft && d.role !== draft.role) {
+      // No subscription row exists yet for email users at this point, so patch
+      // the profile directly; changeAccountType is for a PENDING subscription.
+      const res = serverState?.subscriptionStatus === "PENDING"
+        ? await changeAccountType(d.role)
+        : await updateProfile({ userType: d.role }).then((r) => ({ ok: r.success, reason: r.error }));
+      if (!res.ok) { setFormError(res.reason ?? "Couldn't change your account type."); return; }
+      await update({ userType: d.role });
+    }
+    setDraft(d);
+    setPhase(serverState?.needsEmailVerification ? "verify" : "plan");
+  }, [draft, serverState, update]);
 
-  /* Called when a returning (already-registered) user re-submits the role/
-     details step with a possibly-different role. Persists the role change,
-     then jumps straight to plan (no OTP — the account is already verified). */
-  const handleReturningRoleSubmit = useCallback(
-    async (d: OnboardingDraft) => {
-      if (draft && d.role !== draft.role) {
-        const res = await changeAccountType(d.role);
-        if (!res.ok) {
-          // Backend refused (e.g. already ACTIVE) — keep them on the old role.
-          alert(res.reason ?? "Couldn't change your account type.");
-          return;
-        }
-      }
-      setDraft(d);
-      setPhase("plan");
-    },
-    [draft]
-  );
-
-  /* Social sign-up gap-fill: persist phone (and email, when the provider
-     gave us none) server-side, push into the session + local draft, then
-     continue to plan. Terms acceptance is enforced client-side by
-     SocialAccountDetails (Continue is disabled until checked) — record
-     termsAcceptedAt here too if your /api/user/profile route supports it.
-
-     EMAIL: Facebook does not guarantee an email (the user may have signed
-     up with a phone number or declined the permission), so an account can
-     land here with session.user.email empty. Without it we can't send
-     receipts, marking updates or password resets — hence we collect and
-     persist it before letting them reach the plan step. */
-  const handleSocialDetailsSubmit = useCallback(
-    async ({ phone, email }: SocialDetailsPayload) => {
-      const patch: { phone: string; email?: string } = { phone };
-      if (email) patch.email = email;
-
-      const res = await updateProfile(patch);
-      if (!res.success) {
-        alert(res.error ?? "Couldn't save your details. Please try again.");
-        return;
-      }
-      await update(patch);
-      setDraft((d) => (d ? { ...d, phone, ...(email ? { email } : {}) } : d));
-      setPhase("plan");
-    },
-    [update]
-  );
+  /* Social gap-fill: phone (+ email for Facebook) + terms, then re-resolve so
+     the server decides whether the new address still needs verifying. */
+  const handleSocialDetailsSubmit = useCallback(async (payload: SocialDetailsPayload) => {
+    const res = await updateProfile({
+      phone: payload.phone,
+      ...(payload.email ? { email: payload.email } : {}),
+    });
+    if (!res.success) { setFormError(res.error ?? "Couldn't save your details."); return; }
+    await update({ phone: payload.phone });
+    setDraft((d) => (d ? { ...d, phone: payload.phone, email: payload.email ?? d.email } : d));
+    // Changing the email resets emailVerified server-side, so ask again rather
+    // than assuming: a Facebook user who just typed their address needs the OTP.
+    await resolve();
+  }, [update, resolve]);
 
   const activeIndex = PHASE_INDEX[phase];
 
-  // Brief gate while we resolve an authenticated arrival's backend state, so
-  // the register form / plan step never flashes before the Q3 redirect.
-  if (checkingState || !hydrated) {
+  if (!ready) {
     return (
       <main className="flex h-dvh items-center justify-center bg-background">
         <Loader2 className="h-7 w-7 animate-spin text-ink" strokeWidth={2} />
@@ -418,7 +329,6 @@ export default function OnboardingFlow() {
       data-screen-label="Onboarding"
       className="flex h-dvh flex-col overflow-hidden bg-background px-[clamp(20px,5vw,48px)] pb-[clamp(14px,2.4vh,26px)] pt-[clamp(14px,2.4vh,28px)]"
     >
-      {/* ── brand + progress (pinned, never scaled) ── */}
       <header className="mx-auto flex w-full max-w-4xl flex-none flex-col items-center gap-[clamp(10px,1.8vh,18px)]">
         <Link href="/" className="flex items-center gap-[11px] text-[22px] font-bold tracking-[-0.04em] text-ink no-underline">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -433,33 +343,25 @@ export default function OnboardingFlow() {
             return (
               <li key={step.key} className="flex flex-1 items-center gap-2 last:flex-none">
                 <span className="flex items-center gap-2">
-                  <span
-                    className={cx(
-                      "grid h-7 w-7 flex-none place-items-center rounded-full border text-[13px] font-semibold transition-colors duration-300 ease-nc",
-                      done
-                        ? "border-ink bg-ink text-cream"
-                        : current
-                          ? "border-ink bg-surface text-ink"
-                          : "border-border bg-surface text-text-tertiary"
-                    )}
-                  >
+                  <span className={cx(
+                    "grid h-7 w-7 flex-none place-items-center rounded-full border text-[13px] font-semibold transition-colors duration-300 ease-nc",
+                    done ? "border-ink bg-ink text-cream"
+                      : current ? "border-ink bg-surface text-ink"
+                        : "border-border bg-surface text-text-tertiary"
+                  )}>
                     {done ? <Check size={15} strokeWidth={2.6} /> : i + 1}
                   </span>
-                  <span
-                    className={cx(
-                      "text-[13.5px] font-semibold transition-colors duration-300 ease-nc max-[520px]:hidden",
-                      done || current ? "text-text-primary" : "text-text-tertiary"
-                    )}
-                  >
+                  <span className={cx(
+                    "text-[13.5px] font-semibold transition-colors duration-300 ease-nc max-[520px]:hidden",
+                    done || current ? "text-text-primary" : "text-text-tertiary"
+                  )}>
                     {step.label}
                   </span>
                 </span>
                 {i < STEPS.length - 1 && (
                   <span className="h-px flex-1 bg-border">
-                    <span
-                      className="block h-full bg-ink transition-[width] duration-500 ease-nc"
-                      style={{ width: i < activeIndex ? "100%" : "0%" }}
-                    />
+                    <span className="block h-full bg-ink transition-[width] duration-500 ease-nc"
+                      style={{ width: i < activeIndex ? "100%" : "0%" }} />
                   </span>
                 )}
               </li>
@@ -468,7 +370,6 @@ export default function OnboardingFlow() {
         </ol>
       </header>
 
-      {/* ── step content (scales to fit the remaining height) ── */}
       <div className="flex min-h-0 w-full flex-1 justify-center pt-[clamp(12px,2.4vh,30px)]">
         <AnimatePresence mode="wait">
           <motion.div
@@ -481,45 +382,55 @@ export default function OnboardingFlow() {
           >
             <FitToViewport className={cx("mx-auto", PHASE_MAXW[phase])}>
               {phase === "register" && (
-                <OnboardingForm
-                  initialRole={draft?.role ?? initialRole}
-                  // Prefills every field on resume. After a full browser quit
-                  // the password is gone (sessionStorage) and only that one
-                  // field is empty.
-                  initialDraft={draft ?? undefined}
-                  // Returning user changing account type: account already
-                  // exists, so re-submitting only changes the role (Q2). A
-                  // fresh user goes through verify as normal.
-                  onDetailsSubmit={(d) => {
-                    if (alreadyRegistered) {
-                      void handleReturningRoleSubmit(d);
-                    } else {
-                      void handleDetailsSubmit(d);
-                    }
-                  }}
-                />
+                <>
+                  {formError && (
+                    <div className="mx-auto mb-3 flex max-w-[560px] items-start gap-2.5 rounded-2xl border border-danger/25 bg-danger/[0.06] px-4 py-3 text-[13.5px] leading-snug text-danger">
+                      <AlertCircle size={16} strokeWidth={2} className="mt-px flex-none" />
+                      {formError}
+                    </div>
+                  )}
+                  <OnboardingForm
+                    initialRole={draft?.role ?? initialRole}
+                    initialDraft={draft ?? undefined}
+                    submitting={submitting}
+                    onDetailsSubmit={(d) => {
+                      if (registered) void handleReturningRoleSubmit(d);
+                      else void handleDetailsSubmit(d);
+                    }}
+                  />
+                </>
               )}
 
-              {phase === "verify" && draft && (
-                <OTPVerificationPanel
-                  email={draft.email}
-                  type="EMAIL_VERIFICATION"
-                  // Suppressed when we resumed with a still-valid code in their
-                  // inbox — auto-sending would invalidate it.
-                  sendOnMount={!resumedOtpFresh}
-                  disableBackUntilExpired
-                  onVerified={() => setPhase("plan")}
-                  onBack={() => setPhase("register")}
-                  backLabel="Back to details"
-                />
+              {phase === "verify" && draft?.email && (
+                <>
+                  {emailSendFailed && (
+                    <div className="mx-auto mb-3 flex max-w-[460px] items-start gap-2.5 rounded-2xl border border-warn-line/40 bg-warn-wash px-4 py-3 text-[13px] leading-snug text-text-primary">
+                      <AlertCircle size={16} strokeWidth={2} className="mt-px flex-none text-warn-line" />
+                      We couldn&rsquo;t send the code just now. Tap <b className="font-semibold">Resend</b> in a moment.
+                    </div>
+                  )}
+                  <OTPVerificationPanel
+                    email={draft.email}
+                    type="EMAIL_VERIFICATION"
+                    // NOT sendOnMount: register (or the profile email change)
+                    // already issued the code. Auto-sending here would mint a
+                    // second one and kill the code already in their inbox — the
+                    // exact failure this whole change exists to prevent.
+                    disableBackUntilExpired
+                    onChangeEmail={handleChangeEmail}
+                    onVerified={() => { void resolve(); }}
+                    onBack={() => setPhase("register")}
+                    backLabel="Back to details"
+                  />
+                </>
               )}
 
               {phase === "details" && draft && (
                 <SocialAccountDetails
                   name={draft.name}
                   role={draft.role}
-                  // Facebook may return no email at all — ask for one here.
-                  needsEmail={!draft.email}
+                  // Facebook can omit the email entirely; ask for it here.
+                  needsEmail={serverState ? !serverState.hasEmail : false}
                   onSubmit={handleSocialDetailsSubmit}
                   onBack={handleChangeAccountType}
                 />
@@ -542,21 +453,18 @@ export default function OnboardingFlow() {
                         ? "Every plan includes escrow rent, verified tenants, and your dashboard."
                         : "Start free or unlock priority access. Change this anytime from your dashboard."}
                     </p>
-                    {/* Q2 — always offer a way to switch account type from the plan step. */}
                     <button
                       type="button"
                       onClick={handleChangeAccountType}
-                      className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:text-ink hover:underline"
+                      className="mt-2.5 text-[13px] font-semibold text-text-tertiary underline-offset-4 transition-colors duration-200 ease-nc hover:cursor-pointer hover:text-ink hover:underline"
                     >
-                      Not a{" "}
-                      {draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
+                      Not a{draft.role === UserType.OWNER ? " property owner" : draft.role === UserType.AGENT ? "n agent" : " renter"}? Change account type
                     </button>
                   </div>
                   <PlanSelector
                     role={draft.role}
-                    // Social/returning users have no details/OTP to return to;
-                    // their "back" is the Change-account-type link above.
-                    onBack={alreadyRegistered ? undefined : () => setPhase("verify")}
+                    initialPlanId={serverState?.pendingPlan ?? loadOnboarding()?.planId}
+                    onBack={undefined}
                     onChoose={(chosen) => {
                       setPlan(chosen);
                       saveOnboarding({ planId: chosen.id });
@@ -570,7 +478,9 @@ export default function OnboardingFlow() {
                 <PaymentProcessing
                   plan={plan}
                   draft={draft}
-                  alreadyRegistered={alreadyRegistered}
+                  // Always true now — the account was created at form submit,
+                  // so this step only charges.
+                  alreadyRegistered
                   onBack={() => setPhase("plan")}
                   onComplete={({ payment: result }) => {
                     setPayment(result ?? null);

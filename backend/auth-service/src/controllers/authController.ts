@@ -9,7 +9,7 @@ import { sendEmail } from "@newcondo/backend-shared";
 
 // note: this new brandedemail( sendBrandedEmail ) does not throw an error, in the future see if
 // you can make it throw an error in events of failure
-import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
+import { sendBrandedEmail, EmailTemplates, OTP } from "@newcondo/backend-shared";
 import { AuthService } from "../services/authService";
 import type { AuthenticatedRequest } from "../types/auth";
 
@@ -18,110 +18,98 @@ class AuthController {
 
   async register(req: Request, res: Response): Promise<any> {
     try {
-      console.log("📥 RAW BACKEND BODY:", JSON.stringify(req.body, null, 2));
-      const { email, password, name, userType, phone } = req.body;
+      const { email: rawEmail, password, name, userType, phone } = req.body;
+      const email = String(rawEmail ?? "").trim().toLowerCase();
 
-      // Check if user already exists
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          OR: [{ email }, ...(phone ? [{ phone }] : [])],
-        },
-      });
-
-      if (existingUser) {
-        if (existingUser.emailVerified) {
-          console.log("User already exists and is registered and verified")
-          return res.status(400).json({ error: "Email is already registered and verified." });
-        }
+      if (!email || !password) {
+        return sendResponse(res, 400, "Email and password are required", null);
       }
 
+      // Look up by email and phone separately: we can safely reuse an unverified
+      // row that matches on EMAIL, but a phone collision with a different email
+      // is someone else's account and must be refused.
+      const [byEmail, byPhone] = await Promise.all([
+        prisma.user.findUnique({ where: { email } }),
+        phone ? prisma.user.findFirst({ where: { phone } }) : Promise.resolve(null),
+      ]);
 
-      console.error("🚨 CRITICAL DEBUG - USER ROLE IS:", userType);
+      if (byEmail?.emailVerified) {
+        // A real, verified account. The onboarding flow reads this and sends them
+        // to /login rather than trying to register again.
+        return res.status(400).json({
+          error: "Email is already registered and verified.",
+          code: "EMAIL_VERIFIED_EXISTS",
+        });
+      }
+
+      if (byPhone && byPhone.email !== email) {
+        return res.status(400).json({
+          error: "That phone number is already on another account.",
+          code: "PHONE_TAKEN",
+        });
+      }
+
       const assignedRole = userType ? (userType as Role) : "RENTER";
-      // Hash password
-      const saltRounds = 12;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
+      const passwordHash = await bcrypt.hash(password, 12);
 
-      // Create user
-      const user = await prisma.user.create({
-        data: {
-          email,
-          passwordHash,
-          name: name || null,
-          phone: phone || null,
-          role: assignedRole,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          emailVerified: true,
-          phoneVerified: true,
-          verificationStatus: true,
-          createdAt: true,
-        },
-      });
+      // Reuse the unverified stub instead of creating a duplicate. This is the
+      // resume path: same person, same email, possibly a different role or phone
+      // than their first abandoned attempt — so all three are refreshed.
+      const user = byEmail
+        ? await prisma.user.update({
+          where: { id: byEmail.id },
+          data: {
+            passwordHash,
+            name: name || byEmail.name,
+            phone: phone || byEmail.phone,
+            role: assignedRole,
+          },
+          select: {
+            id: true, email: true, name: true, role: true, phone: true,
+            emailVerified: true, phoneVerified: true, verificationStatus: true, createdAt: true,
+          },
+        })
+        : await prisma.user.create({
+          data: {
+            email,
+            passwordHash,
+            name: name || null,
+            phone: phone || null,
+            role: assignedRole,
+          },
+          select: {
+            id: true, email: true, name: true, role: true, phone: true,
+            emailVerified: true, phoneVerified: true, verificationStatus: true, createdAt: true,
+          },
+        });
 
-      // Generate and send email verification OTP
-      // TODO: find where otp values are used, in calculations and in emails.
-      // have otp values imported from backend-shared, one single source of truth and 
-      // be where they are needed
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+      // Issue the verification code. upsert on identifier_type refreshes an
+      // existing code and resets attempts, so a returning user isn't locked out
+      // by failed tries from a previous attempt.
+      const otp = generateOTP(OTP.length);
+      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000);
 
       await prisma.oTPCode.upsert({
-        where: {
-          identifier_type: {
-            identifier: email,
-            type: "EMAIL_VERIFICATION",
-          },
-        },
-        update: {
-          code: otp,
-          expiresAt,
-          verified: false,
-          attempts: 0, // Reset attempts for a fresh resend/retry
-        },
-        create: {
-          identifier: email,
-          code: otp,
-          type: "EMAIL_VERIFICATION",
-          expiresAt,
-        },
+        where: { identifier_type: { identifier: email, type: "EMAIL_VERIFICATION" } },
+        update: { code: otp, expiresAt, verified: false, attempts: 0 },
+        create: { identifier: email, code: otp, type: "EMAIL_VERIFICATION", expiresAt },
       });
 
-      // Send verification email
-      await sendEmail({
-        to: email,
-        subject: "Verify your NewCondo account",
-        html: `
-          <h2>Welcome to NewCondo!</h2>
-          <p>Your verification code is: <strong>${otp}</strong></p>
-          <p>This code will expire in 5 minutes.</p>
-        `,
-      });
-
-      // If this send is the post-registration verification CODE, use the otp
-      //  template exactly as in 1b. If it is the "welcome aboard" mail, use:
-
-      await sendBrandedEmail(
-        user.email,
-        EmailTemplates.welcome({
-          name: user.name ?? "there",
-          // Admins are created internally and never see this mail; narrow so the
-          // template's union is satisfied without casting away the check.
-          role: (user.role === "ADMIN" ? "OWNER" : user.role) as "OWNER" | "AGENT" | "RENTER",
+      // ONE email, branded, and it is the newest thing in their inbox.
+      // No welcome mail here — that now fires on subscription activation.
+      const sent = (await sendBrandedEmail(
+        email,
+        EmailTemplates.otp({
+          code: otp,
+          purpose: "verify your email",
+          expiresMinutes: OTP.expiryMinutes,
         })
-      );
+      ))as { success?: boolean } | void;
 
-      //  Send BOTH if registration currently does both — welcome first, then the
-      //  verification code, so the code is the newest mail in their inbox.
-      // Log user registration event
       await prisma.eventLog.create({
         data: {
           userId: user.id,
-          type: "USER_REGISTERED",
+          type: byEmail ? "USER_REGISTRATION_RESUMED" : "USER_REGISTERED",
           metadata: { role: user.role },
         },
       });
@@ -129,17 +117,23 @@ class AuthController {
       return sendResponse(
         res,
         201,
-        "User registered successfully. Please check your email for verification code.",
+        "Account created. Check your email for the verification code.",
         {
           user,
           requiresVerification: true,
+          // False when the transport failed. The client surfaces this instead of
+          // leaving the user waiting for a code that was never sent.
+          emailSent: sent?.success !== false,
+          resumed: !!byEmail,
+          expiresIn: OTP.expiryMinutes * 60,
         }
       );
     } catch (error) {
       console.error("Registration error:", error);
-      sendResponse(res, 500, "Internal server error", null);
+      return sendResponse(res, 500, "Internal server error", null);
     }
   }
+
 
   async login(req: Request, res: Response) {
     try {
@@ -417,6 +411,106 @@ class AuthController {
       console.error("checkEmailExists error:", error);
       // Fail open — never block a signup due to a lookup error
       return res.status(200).json({ exists: false });
+    }
+  }
+
+  async changeEmail(req: Request, res: Response): Promise<any> {
+    try {
+      const userId = req.user!.id;
+      const email = String(req.body?.email ?? "").trim().toLowerCase();
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return sendResponse(res, 400, "Enter a valid email address", null);
+      }
+
+      const me = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, emailVerified: true, subscription: { select: { status: true } } },
+      });
+      if (!me) return sendResponse(res, 404, "Account not found", null);
+
+      // Once the address is verified it is an identity, not a form field: it is
+      // what password reset and payment receipts key off. Changing it then is a
+      // settings-page operation with re-verification of the CURRENT address
+      // first, not a mid-onboarding correction. Refuse here.
+      if (me.emailVerified) {
+        return sendResponse(
+          res,
+          409,
+          "Your email is already verified. Change it from your account settings.",
+          null
+        );
+      }
+
+      if (email === me.email) {
+        // Nothing to change — but re-issue so a "Save & send code" tap that was
+        // really just a resend still does the useful thing.
+        const otp = generateOTP(OTP.length);
+        await prisma.oTPCode.upsert({
+          where: { identifier_type: { identifier: email, type: "EMAIL_VERIFICATION" } },
+          update: { code: otp, expiresAt: new Date(Date.now() + OTP.expiryMinutes * 60 * 1000), verified: false, attempts: 0 },
+          create: { identifier: email, code: otp, type: "EMAIL_VERIFICATION", expiresAt: new Date(Date.now() + OTP.expiryMinutes * 60 * 1000) },
+        });
+        const resent = (await sendBrandedEmail(
+          email,
+          EmailTemplates.otp({ code: otp, purpose: "verify your email", expiresMinutes: OTP.expiryMinutes })
+        )) as { success?: boolean } | void;
+        return sendResponse(res, 200, "Verification code sent", { email, emailSent: resent?.success !== false });
+      }
+
+      // Is the new address already someone's real account?
+      const taken = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, emailVerified: true, subscription: { select: { status: true } } },
+      });
+      if (taken && taken.id !== userId && (taken.emailVerified || taken.subscription)) {
+        return sendResponse(res, 409, "That email is already registered. Sign in instead.", null);
+      }
+      // An unverified, unsubscribed row on the target address is a ghost (the same
+      // rule checkEmailExists applies). Remove it so the unique index is free —
+      // it represents an abandoned attempt, not a person with an account.
+      if (taken && taken.id !== userId) {
+        await prisma.$transaction([
+          prisma.oTPCode.deleteMany({ where: { identifier: email } }),
+          prisma.user.delete({ where: { id: taken.id } }),
+        ]);
+      }
+
+      const otp = generateOTP(OTP.length);
+      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000);
+      const oldEmail = me.email;
+
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: userId },
+          // emailVerified is already null (guarded above), but set it explicitly:
+          // this is the line that must never be dropped in a future refactor.
+          data: { email, emailVerified: null },
+        }),
+        // Invalidate anything still redeemable against the old address.
+        prisma.oTPCode.deleteMany({ where: { identifier: oldEmail } }),
+        prisma.oTPCode.upsert({
+          where: { identifier_type: { identifier: email, type: "EMAIL_VERIFICATION" } },
+          update: { code: otp, expiresAt, verified: false, attempts: 0 },
+          create: { identifier: email, code: otp, type: "EMAIL_VERIFICATION", expiresAt },
+        }),
+        prisma.eventLog.create({
+          data: { userId, type: "ONBOARDING_EMAIL_CHANGED", metadata: { from: oldEmail, to: email } },
+        }),
+      ]);
+
+      const sent = (await sendBrandedEmail(
+        email,
+        EmailTemplates.otp({ code: otp, purpose: "verify your email", expiresMinutes: OTP.expiryMinutes })
+      )) as { success?: boolean } | void;
+
+      return sendResponse(res, 200, "Email updated. Check your inbox for the new code.", {
+        email,
+        emailSent: sent?.success !== false,
+      });
+    } catch (error) {
+      console.error("changeEmail error:", error);
+      return sendResponse(res, 500, "Internal server error", null);
     }
   }
 

@@ -12,3 +12,8 @@ authValidation,
 verificationValidation,
 } from './validations'
 
+export { 
+    getOnboardingState, 
+    type OnboardingState, 
+    type OnboardingStep,
+} from "./services/onboardingStateService";

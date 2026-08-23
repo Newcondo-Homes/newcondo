@@ -32,14 +32,15 @@
    size below 16px, which is what stops iOS Safari zooming on focus.
    ============================================================ */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "@newcondo/auth/client";
 import { toast } from "@newcondo/ui";
-import { Mail, Phone, Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, AlertCircle } from "lucide-react";
+import { Mail, Phone, Eye, EyeOff, Loader2, Check, ArrowLeft, ArrowRight, AlertCircle, UserCheck } from "lucide-react";
 import { cx } from "@/lib/cx";
-import { saveOnboarding, savePassword, loadOnboarding } from "@/lib/onboarding-storage";
+import { saveOnboarding, loadOnboarding } from "@/lib/onboarding-storage";
+import { checkEmailRegistered } from "@/lib/api/onboarding";
 import UserTypeSelector from "./UserTypeSelector";
 import GoogleOneTap from "./GoogleOneTap";
 import { UserType } from "@/types/api";
@@ -127,13 +128,21 @@ function FacebookGlyph() {
 export default function OnboardingForm({
   initialRole,
   initialDraft,
+  submitting = false,
   onDetailsSubmit,
 }: {
   /** Pre-select a role (e.g. OWNER, or AGENT when arriving from /agents). */
   initialRole?: UserType;
   /** Rehydrated details from an interrupted onboarding — see lib/onboarding-storage. */
   initialDraft?: OnboardingDraft;
-  /** Hands the validated details (incl. password) up to the flow. Registration is deferred. */
+  /** True while the flow is registering + signing in. */
+  submitting?: boolean;
+  /**
+   * Hands the validated details up to the flow, which REGISTERS immediately.
+   * The password is transmitted once here and never held on the client again —
+   * that is what lets a user quit the browser to fetch their emailed code and
+   * come back to the OTP step instead of an empty form.
+   */
   onDetailsSubmit?: (draft: OnboardingDraft) => void;
 } = {}) {
   const router = useRouter();
@@ -149,9 +158,9 @@ export default function OnboardingForm({
     name: initialDraft?.name ?? saved?.name ?? "",
     email: initialDraft?.email ?? saved?.email ?? "",
     phone: initialDraft?.phone ?? saved?.phone ?? "",
-    // Restored only within the same tab; empty after a browser quit.
-    password: initialDraft?.password ?? "",
-    confirmPassword: initialDraft?.password ?? "",
+    // Never restored — see the note on onDetailsSubmit.
+    password: "",
+    confirmPassword: "",
     agreeToTerms: saved?.agreeToTerms ?? false,
     role: initialDraft?.role ?? initialRole ?? saved?.role ?? initialFormData.role,
   });
@@ -159,6 +168,33 @@ export default function OnboardingForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({});
   const [socialLoading, setSocialLoading] = useState<null | "google" | "facebook">(null);
+  /* A returning subscriber whose session expired used to fill in the WHOLE form
+     — name, email, phone, password, terms — only to be redirected to /login at
+     submit. Checking on blur, as soon as the address is well-formed, turns a
+     30-second dead end into an instant answer. */
+  const [existingAccount, setExistingAccount] = useState<string | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const lastCheckedRef = useRef<string>("");
+
+  const checkEmailOnBlur = async () => {
+    const value = formData.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return;
+    if (value === lastCheckedRef.current) return;
+    lastCheckedRef.current = value;
+    setCheckingEmail(true);
+    try {
+      // True only for a VERIFIED or already-subscribed account. An unverified,
+      // unsubscribed row is a ghost, and register reuses it — so those users
+      // must NOT be diverted here.
+      if (await checkEmailRegistered(value)) setExistingAccount(value);
+      else setExistingAccount(null);
+    } catch {
+      // Never block a genuine signup because a lookup failed.
+      setExistingAccount(null);
+    } finally {
+      setCheckingEmail(false);
+    }
+  };
 
   const handleUserTypeSelect = (type: UserType) => {
     setFormData((prev) => ({ ...prev, role: type }));
@@ -171,10 +207,10 @@ export default function OnboardingForm({
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
-    // Persist per keystroke so even a mid-typing interruption survives. The
-    // password goes to sessionStorage; everything else to localStorage.
-    if (field === "password") savePassword(String(value));
-    else if (field === "name" || field === "email" || field === "phone") {
+    // Persist per keystroke so a mid-typing interruption survives. The password
+    // is deliberately NOT persisted — registration happens on submit, so it is
+    // never needed again and storing it would be a durable liability for no gain.
+    if (field === "name" || field === "email" || field === "phone") {
       saveOnboarding({ [field]: String(value) });
     } else if (field === "agreeToTerms") {
       saveOnboarding({ agreeToTerms: Boolean(value) });
@@ -283,6 +319,47 @@ export default function OnboardingForm({
   /* ============================================================
      STEP 2 — details form
      ============================================================ */
+
+  /* Detected an existing, finished account: registering again is impossible, so
+     replace the form outright rather than letting them keep typing into it. */
+  if (existingAccount) {
+    return (
+      <div className="mx-auto w-full max-w-[480px]">
+        <div className="rounded-card border border-border-hair bg-surface p-[clamp(24px,3vw,34px)] text-center shadow-card">
+          <span className="mx-auto mb-4 grid h-[54px] w-[54px] place-items-center rounded-full bg-green-wash text-green-dark">
+            <UserCheck size={25} strokeWidth={1.85} />
+          </span>
+          <h1 className="m-0 text-[clamp(22px,2.7vw,28px)] font-bold leading-[1.05] tracking-[-0.04em] text-text-primary">
+            You already have an account
+          </h1>
+          <p className="mx-auto mt-2.5 max-w-[40ch] text-[14.5px] leading-[1.5] text-text-secondary">
+            <span className="font-semibold text-text-primary">{existingAccount}</span> is already set up on
+            Newcondo. Sign in and you&apos;ll go straight to your dashboard.
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              router.push(
+                `/login?callbackUrl=${encodeURIComponent("/dashboard")}&email=${encodeURIComponent(existingAccount)}`
+              )
+            }
+            className="group mt-6 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-4 text-[16px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:cursor-pointer hover:bg-black hover:shadow-card active:scale-[0.97]"
+          >
+            Sign in
+            <ArrowRight size={18} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:translate-x-1" />
+          </button>
+          <button
+            type="button"
+            onClick={() => { setExistingAccount(null); lastCheckedRef.current = ""; handleInputChange("email", ""); }}
+            className="mt-2.5 inline-flex w-full items-center justify-center rounded-full px-7 py-3 text-[14px] font-semibold text-text-secondary transition-colors duration-200 ease-nc hover:cursor-pointer hover:text-ink"
+          >
+            Use a different email
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-[560px]">
       {/* Auto Google One Tap — backend signs in ONLY users already registered with this Gmail. */}
@@ -361,11 +438,15 @@ export default function OnboardingForm({
                   id="email"
                   type="email"
                   autoComplete="email"
+                  onBlur={checkEmailOnBlur}
                   placeholder="you@example.com"
                   value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  onChange={(e) => { setExistingAccount(null); handleInputChange("email", e.target.value); }}
                   className={cx(INPUT_BASE, "pl-[42px]", errors.email ? "border-danger" : "border-nc-border focus:border-ink")}
                 />
+                {checkingEmail && (
+                  <Loader2 size={16} strokeWidth={2} className="pointer-events-none absolute right-[14px] top-1/2 -translate-y-1/2 animate-spin text-text-tertiary" />
+                )}
               </div>
               {errors.email && <ErrMsg>{errors.email}</ErrMsg>}
             </div>
@@ -470,15 +551,20 @@ export default function OnboardingForm({
 
           <button
             type="submit"
-            className="group mt-2.5 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-[15px] text-[15.5px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:cursor-pointer hover:bg-black hover:shadow-card active:scale-[0.97] sm:py-4 sm:text-[16px]"
+            disabled={submitting}
+            className="group mt-2.5 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-ink px-7 py-[15px] text-[15.5px] font-semibold leading-none text-cream transition-[transform,background,box-shadow] duration-200 ease-nc hover:cursor-pointer hover:bg-black hover:shadow-card active:scale-[0.97] disabled:cursor-default disabled:opacity-70 sm:py-4 sm:text-[16px]"
           >
-            Continue
-            <ArrowRight size={18} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:translate-x-1" />
+            {submitting ? (
+              <><Loader2 size={18} strokeWidth={2} className="animate-spin" />Creating your account…</>
+            ) : (
+              <>Continue<ArrowRight size={18} strokeWidth={2} className="transition-transform duration-200 ease-nc group-hover:translate-x-1" /></>
+            )}
           </button>
         </form>
 
         <p className="mt-2.5 text-center text-[12px] leading-[1.5] text-text-tertiary sm:text-[12.5px]">
-          We&apos;ll verify your email next. Your account is only created after you choose a plan.
+          We&apos;ll email you a code to verify your address. You can close this page — your
+          progress is saved.
         </p>
       </div>
     </div>
