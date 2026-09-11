@@ -35,6 +35,7 @@ export const publicRoutes = [
   "/unauthorized", // Unauthorized access page
   "/email-verification",
   "/reset-password",
+  "data-handling",
   "/password-reset-email-redirect",
   "/mark-property/*",
   "/r/*",

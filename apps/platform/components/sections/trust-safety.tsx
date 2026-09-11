@@ -81,15 +81,16 @@ export function TrustSafety() {
       </DocSection>
 
       {/* 03 */}
-      <DocSection id="escrow" label="03 Escrow">
-        <SecHead n="03">Your money stays in escrow</SecHead>
+      <DocSection id="escrow" label="03 Rent">
+        <SecHead n="03">Your money is held securely</SecHead>
         <P>
-          On Newcondo, rent is never paid to an agent in cash. It is collected into a secure virtual account and held in
-          escrow until the deal is protected — so your money is safe even if something goes wrong.
+          On Newcondo, rent is never paid to an agent in cash. It is collected into a secure virtual account operated by our
+          licensed, PCI-DSS-compliant payment partner and held until the deal is protected — so your money is safe even if
+          something goes wrong.
         </P>
         <Bullets
           items={[
-            <><B>Held, not handed over —</B> funds sit with our PCI-DSS-compliant payment partner, not with an individual.</>,
+            <><B>Held, not handed over —</B> funds sit with our regulated payment partner, not with an individual. Newcondo is not a bank and does not itself hold your funds.</>,
             <><B>A dispute window —</B> payouts are held for 72 hours so a cancellation or refund claim can be raised.</>,
             <><B>Released fairly —</B> the balance is released to the owner only once the window closes with no valid dispute.</>,
           ]}
@@ -161,6 +162,7 @@ export function TrustSafety() {
           items={[
             <><B>Encryption —</B> data is protected with AES-256 at rest and TLS 1.3 in transit.</>,
             <><B>Sensitive data minimised —</B> IDs are hashed and bank details tokenized after processing.</>,
+            <><B>Card details never touch our servers —</B> card numbers and CVVs are captured directly by our PCI-DSS-compliant payment partner. Newcondo does not collect or store full cardholder data, and we undertake never to violate the privacy of any cardholder who transacts through the platform.</>,
             <><B>Your part —</B> never share your password or one-time code — Newcondo will never ask for them.</>,
           ]}
         />

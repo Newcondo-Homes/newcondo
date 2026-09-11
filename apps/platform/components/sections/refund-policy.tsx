@@ -27,6 +27,7 @@ import {
   NON_REFUNDABLE,
   RENTER_REFUND_ROWS,
   TIMELINE_ROWS,
+  CHARGEBACK_ROWS,
   FRAUD_ROWS,
   REFUND_CONTACT,
 } from "@/lib/refund-data";
@@ -160,11 +161,28 @@ export function RefundPolicy() {
         <Callout tone="green" icon="undo-2">
           Approved refunds are always returned to your <B>original payment method</B> — we never redirect funds to a different account.
         </Callout>
+        <Callout tone="note" icon="clock">
+          Timelines above are the periods within which we <B>initiate</B> a refund. The time for funds to appear in your account also depends on your bank, card issuer, and our payment partner&apos;s processing times, which are outside our control.
+        </Callout>
       </DocSection>
 
-      {/* 06 */}
-      <DocSection id="force-majeure" label="06 Force majeure">
-        <SecHead n="06">Force majeure exceptions</SecHead>
+      {/* 06 — Chargebacks */}
+      <DocSection id="chargebacks" label="06 Chargebacks">
+        <SecHead n="06">Chargebacks</SecHead>
+        <P>
+          A chargeback is a reversal of a card payment initiated through your bank or card issuer. If something has gone
+          wrong with a payment, please <B>raise it with us first</B> — we respond within <B>one business day</B> and can
+          usually resolve it faster than a bank dispute.
+        </P>
+        <DocTable head={["Stage", "What happens"]} rows={CHARGEBACK_ROWS.map(([a, b]) => [a, b])} />
+        <Callout tone="warn" icon="triangle-alert">
+          Chargeback decisions are made by your card issuer or the payment scheme, not by Newcondo, and their determination is final. Please do not file a chargeback for a transaction you authorised and received the benefit of, or where a refund is available under this Policy.
+        </Callout>
+      </DocSection>
+
+      {/* 07 */}
+      <DocSection id="force-majeure" label="07 Force majeure">
+        <SecHead n="07">Force majeure exceptions</SecHead>
         <P>Refunds outside the standard window may be granted only for genuinely uncontrollable events:</P>
         <Bullets
           items={[
@@ -177,9 +195,9 @@ export function RefundPolicy() {
         </Callout>
       </DocSection>
 
-      {/* 07 */}
-      <DocSection id="fraud" label="07 Fraud">
-        <SecHead n="07">Fraudulent disputes &amp; consequences</SecHead>
+      {/* 08 */}
+      <DocSection id="fraud" label="08 Fraud">
+        <SecHead n="08">Fraudulent disputes &amp; consequences</SecHead>
         <P>Attempts to abuse the refund system carry strict, enforceable consequences:</P>
         <DocTable head={["Violation", "Consequence"]} rows={FRAUD_ROWS.map(([v, c]) => [v, html(c)])} />
         <Callout tone="warn" icon="gavel">
@@ -187,9 +205,9 @@ export function RefundPolicy() {
         </Callout>
       </DocSection>
 
-      {/* 08 */}
-      <DocSection id="arbitration" label="08 Arbitration">
-        <SecHead n="08">Dispute resolution &amp; arbitration</SecHead>
+      {/* 09 */}
+      <DocSection id="arbitration" label="09 Arbitration">
+        <SecHead n="09">Dispute resolution &amp; arbitration</SecHead>
         <P>All disputes arising from this Policy are resolved through binding arbitration under the Nigerian Arbitration and Conciliation Act.</P>
         <Bullets
           items={[
@@ -200,9 +218,9 @@ export function RefundPolicy() {
         />
       </DocSection>
 
-      {/* 09 */}
-      <DocSection id="updates" label="09 Updates">
-        <SecHead n="09">Policy updates &amp; amendments</SecHead>
+      {/* 10 */}
+      <DocSection id="updates" label="10 Updates">
+        <SecHead n="10">Policy updates &amp; amendments</SecHead>
         <P>Newcondo reserves the right to modify this Policy at any time. Changes are communicated via:</P>
         <Bullets
           items={[
@@ -214,9 +232,9 @@ export function RefundPolicy() {
         <P>Continued use of the platform after an update takes effect constitutes acceptance of the revised terms.</P>
       </DocSection>
 
-      {/* 10 */}
-      <DocSection id="contact" label="10 Contact">
-        <SecHead n="10">Contact &amp; legal protection</SecHead>
+      {/* 11 */}
+      <DocSection id="contact" label="11 Contact">
+        <SecHead n="11">Contact &amp; legal protection</SecHead>
         <P>Questions about a charge, cancellation, or refund? Reach our payments team.</P>
         <ContactCard items={REFUND_CONTACT} />
         <Callout tone="note" icon="copyright" className="mt-6">

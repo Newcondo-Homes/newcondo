@@ -11,11 +11,12 @@ export const REFUND_TOC: TocItem[] = [
   { id: "refundable", n: "03", label: "Refundable transactions" },
   { id: "cancellation", n: "04", label: "Cancellation protocols" },
   { id: "workflow", n: "05", label: "Refund request workflow" },
-  { id: "force-majeure", n: "06", label: "Force majeure" },
-  { id: "fraud", n: "07", label: "Fraudulent disputes" },
-  { id: "arbitration", n: "08", label: "Dispute resolution" },
-  { id: "updates", n: "09", label: "Policy updates" },
-  { id: "contact", n: "10", label: "Contact & legal" },
+  { id: "chargebacks", n: "06", label: "Chargebacks" },
+  { id: "force-majeure", n: "07", label: "Force majeure" },
+  { id: "fraud", n: "08", label: "Fraudulent disputes" },
+  { id: "arbitration", n: "09", label: "Dispute resolution" },
+  { id: "updates", n: "10", label: "Policy updates" },
+  { id: "contact", n: "11", label: "Contact & legal" },
 ];
 
 export const REFUND_META: MetaChip[] = [
@@ -42,8 +43,17 @@ export const RENTER_REFUND_ROWS: [type: string, window: string, amount: string, 
 
 /* ---- 05 Resolution timelines ---- */
 export const TIMELINE_ROWS: [type: string, time: string, method: string][] = [
-  ["Standard", "3–5 business days", "Original payment method"],
-  ["Force majeure", "7–10 business days", "Original payment method"],
+  ["Enquiry acknowledgement", "1 business day", "Email or in-app"],
+  ["Standard refund", "3–5 business days", "Original payment method"],
+  ["Force majeure refund", "7–10 business days", "Original payment method"],
+];
+
+/* ---- 06 Chargeback process ---- */
+export const CHARGEBACK_ROWS: [stage: string, what: string][] = [
+  ["Talk to us first", "Raise any payment problem with Newcondo before contacting your bank — we respond within 1 business day and can usually resolve it faster."],
+  ["If you file a chargeback", "Your card issuer or payment scheme investigates and decides. Newcondo cannot overturn their decision, and their determination is final."],
+  ["Owners & Agents", "Where a chargeback relates to funds already settled to you, that amount plus any related costs may be recovered by deduction or set-off from your future payouts."],
+  ["Timing", "Chargebacks can be raised long after a transaction. These obligations continue to apply even after an account is closed."],
 ];
 
 /* ---- 07 Fraudulent disputes & consequences ---- */
@@ -53,10 +63,13 @@ export const FRAUD_ROWS: [violation: string, consequence: string][] = [
   ["Account deletion to evade a dispute", "Permanent ban from the platform"],
 ];
 
-/* ---- 10 Contact ---- */
+/* ---- 10 Contact ----
+   ⚠️ FLUTTERWAVE REQUIREMENT (cl. 6.1.15): display a support PHONE NUMBER too.
+// { label: "Phone", value: "+234 ...", href: "tel:+234..." },
+   ---- */
 export const REFUND_CONTACT: { label: string; value: string; href?: string; mono?: boolean }[] = [
   { label: "Email", value: "info@newcondo.homes", href: "mailto:info@newcondo.homes" },
+  { label: "Response time", value: "Within 1 business day" },
   { label: "Registered office", value: "6 Blessing Val Street, Umuagu Umuguma, Owerri-West, Imo State, Nigeria" },
   { label: "Registration", value: "RC8445849 (CAC)", mono: true },
-  { label: "Resolution venue", value: "Owerri, Imo State, Nigeria" },
 ];

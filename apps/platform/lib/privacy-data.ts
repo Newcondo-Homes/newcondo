@@ -12,17 +12,22 @@ export const PRIVACY_TOC: TocItem[] = [
   { id: "use", n: "03", label: "How we use your information" },
   { id: "ai", n: "04", label: "AI & automated systems" },
   { id: "share", n: "05", label: "How we share information" },
-  { id: "location", n: "06", label: "Location & mapping data" },
-  { id: "cookies", n: "07", label: "Cookies & tracking" },
-  { id: "security", n: "08", label: "Security & breach response" },
-  { id: "retention", n: "09", label: "Retention & deletion" },
-  { id: "transfers", n: "10", label: "International transfers" },
-  { id: "rights", n: "11", label: "Your rights & choices" },
-  { id: "children", n: "12", label: "Children's privacy" },
-  { id: "safeguards", n: "13", label: "Risk & safeguards" },
-  { id: "governance", n: "14", label: "Governance & updates" },
-  { id: "acknowledgments", n: "15", label: "Your acknowledgments" },
-  { id: "contact", n: "16", label: "Contact us" },
+  { id: "processors", n: "06", label: "Service providers & processors" },
+  { id: "social-login", n: "07", label: "Facebook & social login" },
+  { id: "payments", n: "08", label: "Payment & cardholder data" },
+  { id: "location", n: "09", label: "Location & mapping data" },
+  { id: "cookies", n: "10", label: "Cookies & tracking" },
+  { id: "security", n: "11", label: "Security & breach response" },
+  { id: "retention", n: "12", label: "Retention & deletion" },
+  { id: "deletion", n: "13", label: "Delete your data" },
+  { id: "transfers", n: "14", label: "International transfers" },
+  { id: "rights", n: "15", label: "Your rights & choices" },
+  { id: "authorities", n: "16", label: "Government & legal requests" },
+  { id: "children", n: "17", label: "Children's privacy" },
+  { id: "safeguards", n: "18", label: "Risk & safeguards" },
+  { id: "governance", n: "19", label: "Governance & updates" },
+  { id: "acknowledgments", n: "20", label: "Your acknowledgments" },
+  { id: "contact", n: "21", label: "Contact us" },
 ];
 
 export const META_CHIPS: { icon: string; label: string; value: string; green?: boolean }[] = [
@@ -43,6 +48,7 @@ export const CLAUSES: { icon: string; title: string; body: string }[] = [
 /* ---- 02 Collect — “nutrition label” of data categories ---- */
 export const NUTRITION_ROWS: [category: string, examples: string, purpose: string][] = [
   ["Identity data", "Name, email, phone, date of birth", "Account creation"],
+  ["Social login data", "Platform user ID, name, email, profile picture, access token", "Sign-in via Facebook or Google"],
   ["Verification data", "NIN, BVN, ID card, ownership documents", "Identity & ownership verification"],
   ["Financial data", "Bank account and payout details", "Payments, payouts & refunds"],
   ["Property data", "Address, GPS coordinates, boundaries / polygons", "Property verification & duplicate-listing prevention"],
@@ -61,6 +67,34 @@ export const COLLECT_ROWS: [userClass: string, collected: string][] = [
   ["Renters", "Bank account details (for processing refunds)."],
 ];
 
+/* ---- 06 Sub-processors. Keep in sync with DATA-HANDLING.md §3. ---- */
+export const SUBPROCESSOR_ROWS: [name: string, role: string, location: string][] = [
+  ["Vercel Inc.", "Frontend application hosting & content delivery", "United States"],
+  ["Render Services, Inc.", "Backend API and database hosting", "United States"],
+  ["Amazon Web Services, Inc.", "Cloud infrastructure, storage and backups", "United States"],
+  ["Flutterwave Technology Solutions Limited", "Payment processing, virtual accounts, payouts and refunds", "Nigeria"],
+  ["Google LLC", "Maps Platform — geocoding, mapping, property boundaries", "United States"],
+  ["Meta Platforms, Inc.", "Facebook Login authentication", "United States"],
+  ["OpenAI, L.L.C.", "AI-assisted support, moderation and document review", "United States"],
+];
+
+/* ---- 07 Meta Platform Data received via Facebook Login ---- */
+export const META_PLATFORM_ROWS: [data: string, purpose: string][] = [
+  ["Meta user ID", "Link your Facebook account to your Newcondo account"],
+  ["Name", "Create and populate your Newcondo profile"],
+  ["Email address", "Account creation, sign-in, and service notifications"],
+  ["Profile picture", "Display your profile photo, if you choose to use it"],
+  ["Access token", "Authenticate your sign-in session — stored encrypted, never shared"],
+];
+
+/* ---- 16 Standing policy for public-authority requests ---- */
+export const AUTHORITY_POLICIES: { icon: string; title: string; body: string }[] = [
+  { icon: "scale", title: "Legality review", body: "Every request is reviewed for legal validity, proper authority, and correct jurisdiction before any data is released. Informal requests — calls, messages, unsigned letters — are refused." },
+  { icon: "shield-alert", title: "Challenging unlawful requests", body: "Requests that are overbroad, improperly issued, or unlawful are challenged or refused, with legal counsel engaged where necessary." },
+  { icon: "filter", title: "Data minimisation", body: "We disclose only the minimum data strictly responsive to a valid request. Bulk or exploratory access is refused." },
+  { icon: "file-text", title: "Documentation", body: "Every request is logged with the requesting authority, legal instrument, date, decision-maker, legal reasoning, and exactly what was disclosed." },
+];
+
 /* ---- 05 Cookies ---- */
 export const COOKIE_ROWS: [category: string, purpose: string][] = [
   ["Strictly necessary", "Authentication, security, fraud prevention, and load balancing. These cannot be switched off."],
@@ -73,6 +107,7 @@ export const COOKIE_ROWS: [category: string, purpose: string][] = [
 export const RETENTION_ROWS: [dataType: string, retention: string, after: string][] = [
   ["Government ID", "24 months", "Converted to an irreversible SHA-256 hash."],
   ["Bank details", "45 days", "Tokenized and decoupled from user identity."],
+  ["Social login data", "Life of account", "Deleted within 30 days of a verified account-deletion request."],
   ["Property location", "12 months", "Generalized to a 1\u00A0km grid."],
   ["Activity logs", "12 months", "Summarized into de-identified statistical data."],
 ];

@@ -31,6 +31,8 @@ export const COOKIE_TYPE_ROWS: [category: string, purpose: string, duration: str
 /* ---- 04 Third-party providers ---- */
 export const COOKIE_THIRD_PARTY: [provider: string, role: string][] = [
   ["Payment processors", "PCI-DSS-compliant providers (e.g. Flutterwave) set cookies to secure checkout and prevent payment fraud."],
+  ["Social login", "Where you sign in with Facebook or Google, that provider may set cookies to authenticate you and keep the session secure."],
+  ["Maps & location", "Google Maps Platform may set cookies to deliver map tiles, navigation, and address lookup."],
   ["Analytics", "De-identified usage measurement to help us understand and improve platform performance."],
   ["Verification APIs", "Government and identity verification partners may set cookies during the verification flow."],
 ];

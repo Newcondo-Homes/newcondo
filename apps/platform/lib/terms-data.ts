@@ -7,22 +7,58 @@ import type { TocItem, MetaChip } from "@/components/ui/legal-doc";
 
 export const TERMS_TOC: TocItem[] = [
   { id: "acceptance", n: "01", label: "Acceptance & eligibility" },
-  { id: "accounts", n: "02", label: "Registration & verification" },
-  { id: "roles", n: "03", label: "Roles & responsibilities" },
-  { id: "rent", n: "04", label: "Secure rent collection" },
-  { id: "fees", n: "05", label: "Fees & billing" },
-  { id: "acceptable-use", n: "06", label: "Acceptable use" },
-  { id: "content", n: "07", label: "Listings, content & IP" },
-  { id: "ai", n: "08", label: "AI & automated systems" },
-  { id: "maps", n: "09", label: "Maps & location" },
-  { id: "no-advice", n: "10", label: "No professional advice" },
-  { id: "property", n: "11", label: "Property disclaimer" },
-  { id: "fraud", n: "12", label: "Fraud & enforcement" },
-  { id: "termination", n: "13", label: "Termination & suspension" },
-  { id: "indemnity", n: "14", label: "Indemnification" },
-  { id: "liability", n: "15", label: "Disclaimers & liability" },
-  { id: "arbitration", n: "16", label: "Dispute resolution" },
-  { id: "changes", n: "17", label: "Changes & contact" },
+  { id: "service", n: "02", label: "Service & delivery" },
+  { id: "accounts", n: "03", label: "Registration & verification" },
+  { id: "roles", n: "04", label: "Roles & responsibilities" },
+  { id: "rent", n: "05", label: "Secure rent collection" },
+  { id: "fees", n: "06", label: "Fees & billing" },
+  { id: "chargebacks", n: "07", label: "Chargebacks & disputes" },
+  { id: "acceptable-use", n: "08", label: "Acceptable use" },
+  { id: "aml", n: "09", label: "AML & restricted activity" },
+  { id: "content", n: "10", label: "Listings, content & IP" },
+  { id: "ai", n: "11", label: "AI & automated systems" },
+  { id: "maps", n: "12", label: "Maps & location" },
+  { id: "no-advice", n: "13", label: "No professional advice" },
+  { id: "property", n: "14", label: "Property disclaimer" },
+  { id: "fraud", n: "15", label: "Fraud & enforcement" },
+  { id: "termination", n: "16", label: "Termination & suspension" },
+  { id: "indemnity", n: "17", label: "Indemnification" },
+  { id: "liability", n: "18", label: "Disclaimers & liability" },
+  { id: "arbitration", n: "19", label: "Dispute resolution" },
+  { id: "changes", n: "20", label: "Changes & contact" },
+];
+
+/* ---- 02 Service description (Flutterwave merchant requirement 6.1.15) ---- */
+export const SERVICE_DESCRIPTION: { icon: string; title: string; body: string }[] = [
+  { icon: "list-checks", title: "Property listing & management", body: "Digital tools for Owners and Agents to list properties, manage tenants, track rent, and store property documents." },
+  { icon: "badge-check", title: "Identity & ownership verification", body: "Verification of user identity and property ownership through authorized government and identity verification services." },
+  { icon: "credit-card", title: "Rent collection & payouts", body: "Collection of rent and related payments through a licensed payment partner, and settlement of funds to Owners and Agents." },
+  { icon: "calendar-clock", title: "Inspection booking", body: "Scheduling and record-keeping for property inspections between Renters and Owners or Agents." },
+];
+
+/* ---- 02 Delivery timelines (Flutterwave merchant requirement 6.1.15) ---- */
+export const DELIVERY_ROWS: [service: string, activation: string][] = [
+  ["Subscription & platform access", "Immediately on successful payment"],
+  ["Listing activation", "Within 1\u20133 business days of document verification"],
+  ["Inspection booking confirmation", "Immediately on successful payment"],
+  ["Rent settlement to Owner / Agent", "After the 72-hour dispute window, subject to payment-partner processing"],
+  ["Customer enquiry response", "Within 1 business day"],
+];
+
+/* ---- 07 Chargeback process ---- */
+export const CHARGEBACK_STEPS: { n: string; title: string; body: string }[] = [
+  { n: "1", title: "Contact us first", body: "Raise the issue with Newcondo through your dashboard or by email. Most payment problems are resolved faster with us than through your bank." },
+  { n: "2", title: "We investigate", body: "We review the transaction, request evidence where needed, and respond within one business day of your enquiry." },
+  { n: "3", title: "Resolution or refund", body: "If your claim is valid under our Refund Policy, we process the refund to your original payment method." },
+];
+
+/* ---- 09 AML & restricted activity ---- */
+export const RESTRICTED: string[] = [
+  "Money laundering, terrorist financing, or moving the proceeds of crime.",
+  "Transactions using a card or bank account you are not authorised to use.",
+  "Structuring payments to disguise their source, purpose, or beneficiary.",
+  "Transactions for any purpose prohibited by Nigerian law or applicable payment scheme rules.",
+  "Offering or accepting a bribe or any improper advantage in connection with a transaction.",
 ];
 
 export const TERMS_META: MetaChip[] = [
@@ -66,7 +102,12 @@ export const ENFORCEMENT_ROWS: [breach: string, consequence: string][] = [
   ["Cancelling a paid renter (Owner / Agent)", "Permanent ban and property delisting"],
 ];
 
-/* ---- 12 Contact ---- */
+/* ---- 12 Contact ----
+   ⚠️ FLUTTERWAVE REQUIREMENT (Merchant Agreement cl. 6.1.15):
+   the site must display a customer-service PHONE NUMBER as well as an email.
+   Uncomment and fill in the line below once you have a support line.
+// { label: "Phone", value: "+234 ...", href: "tel:+234..." },
+   ---- */
 export const TERMS_CONTACT: { label: string; value: string; href?: string; mono?: boolean }[] = [
   { label: "Email", value: "info@newcondo.homes", href: "mailto:info@newcondo.homes" },
   { label: "Registered office", value: "6 Blessing Val Street, Umuagu Umuguma, Owerri-West, Imo State, Nigeria" },
