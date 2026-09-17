@@ -7,8 +7,24 @@ import { Icon } from "@/components/ui/icon";
 import { Group, Item, Reveal, vFade } from "@/components/motion";
 import Link from "next/link";
 import { PLAN_ESSENTIAL, PLAN_ELITE } from "@/lib/data";
+import { SUBSCRIPTION_PLANS, formatNaira } from "@/lib/constants/business";
 
-function PlanList({ items, elite = false }: { items: string[]; elite?: boolean }) {
+/* Prices, taglines and commission rates come from the shared single source of
+   truth (backend/shared/src/constants/subscriptionPlans.ts) — the same file
+   the backend charges from. The feature bullets stay in @/lib/data because
+   this page's marketing copy is longer than the in-product feature list. */
+const essential = SUBSCRIPTION_PLANS.OWNER_ESSENTIAL;
+const elite = SUBSCRIPTION_PLANS.OWNER_ELITE;
+
+/* "Why Elite pays for itself" — derived, so the arithmetic can never contradict
+   the prices above it. At 20% → 15% on ₦200,000 of rent: saves ₦10,000/month
+   against an ₦18,500 subscription, i.e. a net ₦8,500. */
+const SAMPLE_RENT = 200_000;
+const pct = (rate: number) => `${Math.round(rate * 100)}%`;
+const monthlySaving = SAMPLE_RENT * (essential.commissionRate - elite.commissionRate);
+const netCost = elite.amountNaira - monthlySaving;
+
+function PlanList({ items, elite: isElite = false }: { items: string[]; elite?: boolean }) {
   return (
     <ul className="list-none p-0 m-0 mt-[26px] flex flex-col gap-[13px]">
       {items.map((it) => (
@@ -16,10 +32,10 @@ function PlanList({ items, elite = false }: { items: string[]; elite?: boolean }
           key={it}
           className={cx(
             "flex items-start gap-[11px] text-[15px] leading-[1.4]",
-            elite ? "text-text-on-dark" : "text-text-secondary"
+            isElite ? "text-text-on-dark" : "text-text-secondary"
           )}
         >
-          <Icon name="check" size={18} className={cx("flex-none mt-px", elite ? "text-green-bright" : "text-green-dark")} />
+          <Icon name="check" size={18} className={cx("flex-none mt-px", isElite ? "text-green-bright" : "text-green-dark")} />
           {it}
         </li>
       ))}
@@ -41,16 +57,16 @@ export function Pricing() {
         {/* Essential */}
         <Item as="article" variants={vFade} className="js-plan bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
           <div>
-            <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-text-primary">Essential</h3>
-            <p className="text-[14.5px] text-text-secondary m-0">Landlords with 1–2 properties</p>
+            <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-text-primary">{essential.name}</h3>
+            <p className="text-[14.5px] text-text-secondary m-0">{essential.tagline}</p>
           </div>
           <div className="flex items-baseline gap-1.5 mt-[26px] mb-6">
-            <span className="text-[46px] font-bold tracking-[-0.04em] text-text-primary">₦7,500</span>
+            <span className="text-[46px] font-bold tracking-[-0.04em] text-text-primary">{formatNaira(essential.amountNaira)}</span>
             <span className="text-[16px] text-text-tertiary">/month</span>
           </div>
           <Link href="/onboarding">
             <Button as="button" variant="dark" size="block" icon="arrow-right">
-              Start with Essential
+              Start with {essential.name}
             </Button>
           </Link>
           <PlanList items={PLAN_ESSENTIAL} />
@@ -58,23 +74,25 @@ export function Pricing() {
 
         {/* Elite */}
         <Item as="article" variants={vFade} className="js-plan bg-ink text-cream border border-transparent rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
-          <span className="absolute top-[30px] right-[34px]">
-            <Badge tone="bright">Most popular</Badge>
-          </span>
+          {elite.badge && (
+            <span className="absolute top-[30px] right-[34px]">
+              <Badge tone="bright">{elite.badge}</Badge>
+            </span>
+          )}
           <div>
-            <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-cream">Elite</h3>
-            <p className="text-[14.5px] text-text-on-dark-2 m-0">3+ properties, diaspora owners, serious investors</p>
+            <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-cream">{elite.name}</h3>
+            <p className="text-[14.5px] text-text-on-dark-2 m-0">{elite.tagline}</p>
           </div>
           <div className="flex items-baseline gap-1.5 mt-[26px] mb-6">
-            <span className="text-[46px] font-bold tracking-[-0.04em] text-cream">₦18,500</span>
+            <span className="text-[46px] font-bold tracking-[-0.04em] text-cream">{formatNaira(elite.amountNaira)}</span>
             <span className="text-[16px] text-text-on-dark-2">/month</span>
           </div>
-          <Link href="/onboarding" >
+          <Link href="/onboarding">
             <Button as="button" variant="light" size="block" icon="arrow-right">
-              Start with Elite
+              Start with {elite.name}
             </Button>
           </Link>
-          <p className="text-[14px] font-semibold text-text-on-dark-2 mt-7 mb-1.5">Everything in Essential, plus:</p>
+          <p className="text-[14px] font-semibold text-text-on-dark-2 mt-7 mb-1.5">Everything in {essential.name}, plus:</p>
           <PlanList items={PLAN_ELITE} elite />
         </Item>
       </Group>
@@ -86,12 +104,15 @@ export function Pricing() {
           <Icon name="calculator" size={26} />
         </div>
         <div>
-          <h4 className="nc-h4 m-0 mb-2.5">Why Elite pays for itself</h4>
+          <h4 className="nc-h4 m-0 mb-2.5">Why {elite.name} pays for itself</h4>
           <p className="text-[15.5px] leading-[1.6] text-text-secondary m-0 max-w-[70ch]">
-            On Elite, commission drops from 20% to 15%. Collect ₦200,000/month in rent and that 5% saves you{" "}
-            <strong className="text-text-primary">₦10,000 every month</strong>. Your subscription is ₦18,500 — so you&apos;re
-            essentially paying ₦8,500/month for an account manager, rent default insurance, emergency maintenance, unlimited
-            listings, and every other Elite benefit. Most Elite subscribers are cash-positive from their commission saving alone.
+            On {elite.name}, commission drops from {pct(essential.commissionRate)} to {pct(elite.commissionRate)}. Collect{" "}
+            {formatNaira(SAMPLE_RENT)}/month in rent and that{" "}
+            {pct(essential.commissionRate - elite.commissionRate)} saves you{" "}
+            <strong className="text-text-primary">{formatNaira(monthlySaving)} every month</strong>. Your subscription is{" "}
+            {formatNaira(elite.amountNaira)} — so you&apos;re essentially paying {formatNaira(netCost)}/month for an account
+            manager, rent default insurance, emergency maintenance, unlimited listings, and every other {elite.name} benefit.
+            Most {elite.name} subscribers are cash-positive from their commission saving alone.
           </p>
           <p className="inline-flex items-center gap-[9px] mt-3.5 font-semibold text-green-dark">
             <Icon name="gift" size={18} /> Pay annually and get 2 months free on either plan.

@@ -8,12 +8,19 @@ export {
 } from './controllers'
 
 export {
-authValidation,
-verificationValidation,
+    authValidation,
+    verificationValidation,
 } from './validations'
 
-export { 
-    getOnboardingState, 
-    type OnboardingState, 
+export {
+    getOnboardingState,
+    type OnboardingState,
     type OnboardingStep,
 } from "./services/onboardingStateService";
+
+export {
+    getDeletionPreview,
+    requestAccountDeletion,
+    cancelAccountDeletion,
+    getDeletionStatusByCode,
+} from './services'

@@ -11,19 +11,20 @@ export function FinalCTA() {
         >
           The property is already yours. The income should be too.
         </Reveal>
-        <Reveal as="p" className="nc-leadd text-text-on-dark-2 mt-[26px] mx-auto max-w-[640px]">
+        <Reveal as="p" className="nc-lead text-text-on-dark-2 mt-[26px] mx-auto max-w-[640px]">
           Stop managing a ₦50 million asset with an old phone and a prayer. Newcondo handles your rent, your tenants, your
           maintenance, your documents, and your peace of mind — for less than ₦625 a day.
         </Reveal>
         <Reveal className="flex flex-col items-center gap-[18px] mt-10">
           <SplitButton
-            href="/onboarding"
+            href="#pricing"
             variant="light"
             ariaLabel="List your property"
-            label="List your property — start with Elite"
+            label="List your property — start with Premium"
             className="max-[620px]:w-full"
           />
           <a
+            href="#pricing"
             className="text-text-on-dark text-[15.5px] font-semibold no-underline border-b border-[rgba(249,249,239,0.4)] pb-[3px] transition-colors duration-200 ease-nc hover:border-cream"
           >
             Start with Essential

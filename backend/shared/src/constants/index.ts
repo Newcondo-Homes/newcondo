@@ -19,6 +19,7 @@ export * from './reports';
 export * from './rewardTiers';
 export * from './timeSlots';
 export * from './virtualAccount';
+export * from './subscriptionPlans'
 
 export {
   COMPANY,

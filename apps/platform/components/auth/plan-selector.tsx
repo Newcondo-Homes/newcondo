@@ -1,116 +1,57 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ArrowRight, ArrowLeft, ChevronDown, Loader2 } from "lucide-react";
 import { cx } from "@/lib/cx";
 import { UserType } from "@/types/api";
-import type { Plan } from "@/types/api";
+import type { Plan, BillingCycle } from "@/types/api";
+import { plansFor, formatNaira, type SubscriptionPlanSpec } from "@/lib/constants/business";
 
 /* ============================================================
-   Role-aware monthly subscription plans.
-   Property-owner pricing mirrors the marketing site (Essential /
-   Elite). Renter + Agent sets are defined for completeness.
-   ============================================================ */
-const PLANS_BY_ROLE: Partial<Record<UserType, Plan[]>> = {
-  [UserType.OWNER]: [
-    {
-      id: "essential",
-      name: "Essential",
-      tagline: "Landlords with 1–2 properties",
-      price: 7500,
-      features: [
-        "List up to 2 properties",
-        "Escrow rent collection",
-        "Identity-verified tenants",
-        "Auto tenancy agreements",
-        "1× annual fumigation",
-        "20% platform commission",
-      ],
-    },
-    {
-      id: "elite",
-      name: "Elite",
-      tagline: "3+ properties · diaspora owners",
-      price: 18500,
-      highlight: true,
-      badge: "Most popular",
-      features: [
-        "Everything in Essential",
-        "Unlimited listings",
-        "Commission drops to 15%",
-        "24-hour emergency maintenance",
-        "Dedicated account manager",
-        "Rent default insurance",
-      ],
-    },
-  ],
-  // Renter plans — kept for when renter onboarding re-opens (UserTypeSelector).
-  [UserType.RENTER]: [
-    {
-      id: "renter-plus",
-      name: "Premium Plus",
-      tagline: "Everything renters get on Newcondo",
-      price: 0,
-      strikePrice: 3500,
-      priceNote: "Free for the first 300 founding renters",
-      highlight: true,
-      badge: "Founding offer",
-      features: [
-        "Browse & search verified listings",
-        "24-hour confirmation & refund window",
-        "Verified-listings-only view",
-        "Early access to new listings",
-        "Boosted referral bonus credits",
-        "Priority customer support",
-      ],
-    },
-  ],
-  [UserType.AGENT]: [
-     {
-      id: "agent-essential",
-      name: "Essential",
-      tagline: "Agents getting started — up to 5 listings",
-      price: 2000,
-      features: [
-        "Up to 5 active listings",
-        "GPS property marking",
-        "Commission through the platform",
-        "Standard verified-agent badge",
-      ],
-    },
-    {
-      id: "agent-premium",
-      name: "Premium",
-      tagline: "Full-time agents · every income stream",
-      price: 3500,
-      highlight: true,
-      badge: "Founding: free for life",
-      features: [
-        "Everything in Essential",
-        "Unlimited listings",
-        "Marking-job queue access",
-        "Referral income access",
-        "Priority search placement",
-      ],
-    },
-  ],
-};
+   Role-aware subscription plans.
 
-const naira = (n: number) => `₦${n.toLocaleString("en-NG")}`;
+   Plans are NOT defined here any more. Price, features, badges and
+   entitlements all come from the single source of truth in
+   backend/shared/src/constants/subscriptionPlans.ts, reached through the
+   frontend shim (@/lib/constants/business). The backend's PLAN_CONFIG and
+   the Flutterwave plan sync script read the same file, so the price on this
+   card is the price that gets charged — by construction.
+   ============================================================ */
+
+/** Shared plan spec → the `Plan` shape these cards render. */
+const toUiPlan = (p: SubscriptionPlanSpec): Plan => ({
+  id: p.uiId,
+  name: p.name,
+  tagline: p.tagline,
+  price: p.amountNaira,
+  strikePrice: p.strikeAmountNaira,
+  priceNote: p.priceNote,
+  highlight: p.highlight,
+  badge: p.badge,
+  features: p.features,
+  // Hand the backend code through so the checkout never re-derives it.
+  subscriptionPlan: p.code,
+});
 
 export default function PlanSelector({
   role,
   onChoose,
   onBack,
   initialPlanId,
+  cycle = "MONTHLY",
 }: {
   role: UserType;
   onChoose: (plan: Plan) => void;
   onBack?: () => void;
   /** Preselect a plan id (resumed PENDING checkout, or the last one tapped). */
   initialPlanId?: string;
+  /** Billing cycle to price — wire to a monthly/annual toggle when you add one. */
+  cycle?: BillingCycle;
 }) {
-  const plans = PLANS_BY_ROLE[role] ?? PLANS_BY_ROLE[UserType.OWNER] ?? [];
+  // plansFor() maps UserType → PlanRole internally (PROPERTY_MANAGER/ADMIN
+  // fall back to owner plans, as the old PLANS_BY_ROLE[OWNER] default did).
+  const plans = useMemo(() => plansFor(role, cycle).map(toUiPlan), [role, cycle]);
+
   // Preselect a resumed plan when one exists (an abandoned PENDING checkout, or
   // the last plan tapped before the tab was discarded) so a returning user sees
   // their own choice already highlighted rather than our default.
@@ -179,14 +120,16 @@ export default function PlanSelector({
 
               <div className="mt-4 flex flex-wrap items-baseline gap-x-2.5 gap-y-1 max-[560px]:mt-3.5">
                 <span className={cx("text-[32px] font-bold tracking-[-0.04em] max-[560px]:text-[28px]", isElite ? "text-cream" : "text-text-primary")}>
-                  {plan.price === 0 ? "Free" : naira(plan.price)}
+                  {plan.price === 0 ? "Free" : formatNaira(plan.price)}
                 </span>
                 {plan.price > 0 && (
-                  <span className={cx("text-[15px]", isElite ? "text-text-on-dark-2" : "text-text-tertiary")}>/month</span>
+                  <span className={cx("text-[15px]", isElite ? "text-text-on-dark-2" : "text-text-tertiary")}>
+                    {cycle === "ANNUAL" ? "/year" : "/month"}
+                  </span>
                 )}
                 {plan.strikePrice && (
                   <span className={cx("text-[17px] font-medium line-through", isElite ? "text-text-on-dark-2" : "text-text-tertiary")}>
-                    {naira(plan.strikePrice)}/mo
+                    {formatNaira(plan.strikePrice)}/mo
                   </span>
                 )}
               </div>
@@ -275,7 +218,9 @@ export default function PlanSelector({
             ) : (
               <>
                 {active.price === 0 ? "Continue with " : "Subscribe — "}
-                {active.price === 0 ? active.name : `${naira(active.price)}/mo`}
+                {active.price === 0
+                  ? active.name
+                  : `${formatNaira(active.price)}/${cycle === "ANNUAL" ? "yr" : "mo"}`}
                 <ArrowRight size={18} strokeWidth={2} className="onb-sub-arrow" />
               </>
             )}
@@ -286,7 +231,9 @@ export default function PlanSelector({
       <p className="mt-3.5 text-center text-[12.5px] leading-[1.5] text-text-tertiary">
         {active.price === 0
           ? "No card required. You can upgrade anytime from your dashboard."
-          : "Billed monthly · cancel anytime · secured by Flutterwave. Pay annually and get 2 months free."}
+          : cycle === "ANNUAL"
+            ? "Billed yearly · cancel anytime · secured by Flutterwave."
+            : "Billed monthly · cancel anytime · secured by Flutterwave. Pay annually and get 2 months free."}
       </p>
     </div>
   );

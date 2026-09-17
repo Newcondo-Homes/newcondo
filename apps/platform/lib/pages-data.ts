@@ -2,6 +2,24 @@
    Content for the audience-aware sub-pages:
    Pricing, How it works, Features. Single source of truth.
    ============================================================ */
+import { SUBSCRIPTION_PLANS, withCycle } from "@/lib/constants/business";
+import {
+  SUBSCRIPTION_PLANS as P,
+  RENTER_LAUNCH_PRICING,
+  formatNaira,
+  MARKING,
+} from "@/lib/constants/business";
+
+/* Derived numbers used in the owner footnote. At 20% → 15% on ₦200,000 of
+   rent: saves ₦10,000/month against an ₦18,500 subscription → net ₦8,500.
+   Change a price or a commission rate and this sentence follows. */
+const SAMPLE_RENT = 200_000;
+const pct = (r: number) => `${Math.round(r * 100)}%`;
+const eliteSaving = SAMPLE_RENT * (P.OWNER_ESSENTIAL.commissionRate - P.OWNER_ELITE.commissionRate);
+const eliteNet = P.OWNER_ELITE.amountNaira - eliteSaving;
+/** Marking-job earnings range quoted to agents (payout → admin-job payout). */
+const markingJobRange = `${formatNaira(MARKING.markerPayout)}–${formatNaira(MARKING.markerPayout * 2)}`;
+// const P = SUBSCRIPTION_PLANS;
 
 export type Audience = "renter" | "agent" | "owner";
 
@@ -28,6 +46,7 @@ export interface Plan {
   unit?: string;
   /** Optional struck-through "was" price shown beside the live price. */
   strike?: string;
+  annual?: number;
   note?: string;
   badge?: string;
   popular: boolean;
@@ -59,12 +78,12 @@ export const PRICING: Record<Audience, PricingModel> = {
     lead: "Every plan includes escrow rent collection, identity-verified tenants, legal agreements, fumigation, waste management and the full Newcondo platform. Elite adds the features that make it pay for itself.",
     billing: true,
     plans: [
-      { id: "essential", name: "Essential", tagline: "Landlords with 1–2 properties", monthly: 7500, popular: false, variant: "light", cta: "Start with Essential", href: "/onboarding" },
-      { id: "elite", name: "Elite", tagline: "3+ properties · diaspora owners · serious investors", monthly: 18500, popular: true, variant: "dark", cta: "Start with Elite", href: "/onboarding" },
+      { id: P.OWNER_ESSENTIAL.uiId, name: P.OWNER_ESSENTIAL.name, tagline: "Landlords with 1–2 properties", monthly: P.OWNER_ESSENTIAL.amountNaira, annual: P.OWNER_ESSENTIAL_ANNUAL.amountNaira, popular: false, variant: "light", cta: `Start with ${P.OWNER_ESSENTIAL.name}`, href: "/onboarding" },
+      { id: P.OWNER_ELITE.uiId, name: P.OWNER_ELITE.name, tagline: "3+ properties · diaspora owners · serious investors", monthly: P.OWNER_ELITE.amountNaira, annual: P.OWNER_ELITE_ANNUAL.amountNaira, popular: true, variant: "dark", cta: `Start with ${P.OWNER_ELITE.name}`, href: "/onboarding" },
     ],
     groups: [
       { name: "Listings & marking", rows: [
-        ["Active property listings", "Up to 2", "Unlimited"],
+        ["Active property listings", `Up to ${P.OWNER_ESSENTIAL.propertyListingCap}`, "Unlimited"],
         ["GPS property marking", true, true],
         ["Professional photography", "First listing free", "First listing free"],
         ["Priority marking agents", false, true],
@@ -72,7 +91,7 @@ export const PRICING: Record<Audience, PricingModel> = {
       ]},
       { name: "Rent & payments", rows: [
         ["Escrow rent collection", true, true],
-        ["Platform commission on rents", "20%", "15%"],
+        ["Platform commission on rents", pct(P.OWNER_ESSENTIAL.commissionRate), pct(P.OWNER_ELITE.commissionRate)],
         ["Dedicated virtual account", true, true],
         ["Automatic payout scheduling", true, true],
         ["Rent default insurance — 1 month covered", false, true],
@@ -97,8 +116,8 @@ export const PRICING: Record<Audience, PricingModel> = {
       ]},
     ],
     footnote: {
-      icon: "calculator", title: "Why Elite pays for itself",
-      body: "On Elite, commission drops from 20% to 15%. Collect ₦200,000/month in rent and that 5% saves you <strong>₦10,000 every month</strong> — more than half the subscription. You're essentially paying ₦8,500/month for an account manager, rent default insurance, emergency maintenance and unlimited listings. Most Elite subscribers are cash-positive from the commission saving alone.",
+      icon: "calculator", title: `Why ${P.OWNER_ELITE.name} pays for itself`,
+      body: `On ${P.OWNER_ELITE.name}, commission drops from ${pct(P.OWNER_ESSENTIAL.commissionRate)} to ${pct(P.OWNER_ELITE.commissionRate)}. Collect ${formatNaira(SAMPLE_RENT)}/month in rent and that ${pct(P.OWNER_ESSENTIAL.commissionRate - P.OWNER_ELITE.commissionRate)} saves you <strong>${formatNaira(eliteSaving)} every month</strong> — more than half the subscription. You're essentially paying ${formatNaira(eliteNet)}/month for an account manager, rent default insurance, emergency maintenance and unlimited listings. Most ${P.OWNER_ELITE.name} subscribers are cash-positive from the commission saving alone.`,
       tag: "Pay annually and get 2 months free on either plan.",
     },
   },
@@ -108,12 +127,15 @@ export const PRICING: Record<Audience, PricingModel> = {
     lead: "Every agent on Newcondo is a paying, verified agent — which keeps listing quality high and noise low. Both tiers collect commission through the platform. Premium unlocks the income streams that pay for themselves.",
     billing: true,
     plans: [
-      { id: "essential", name: "Essential", tagline: "Agents getting started — up to 5 active listings", monthly: 2000, popular: false, variant: "light", cta: "Join as an agent", href: "/onboarding" },
-      { id: "premium", name: "Premium", tagline: "Full-time agents who want every income stream", badge: "Founding: free for life", monthly: 3500, popular: true, variant: "dark", cta: "Claim founding spot", href: "/onboarding" },
+      // ids stay "essential" / "premium" — they're registered as uiAliases on
+      // the agent specs, so resolvePlanCode maps them without breaking any
+      // /pricing?plan= link already in the wild.
+      { id: "essential", name: P.AGENT_ESSENTIAL.name, tagline: `Agents getting started — up to ${P.AGENT_ESSENTIAL.propertyListingCap} active listings`, monthly: P.AGENT_ESSENTIAL.amountNaira, annual: P.AGENT_ESSENTIAL_ANNUAL.amountNaira, popular: false, variant: "light", cta: "Join as an agent", href: "/onboarding" },
+      { id: "premium", name: P.AGENT_PREMIUM.name, tagline: "Full-time agents who want every income stream", badge: P.AGENT_PREMIUM.badge, monthly: P.AGENT_PREMIUM.amountNaira, annual: P.AGENT_PREMIUM_ANNUAL.amountNaira, popular: true, variant: "dark", cta: "Claim founding spot", href: "/onboarding" },
     ],
     groups: [
       { name: "Listings", rows: [
-        ["Active property listings", "Up to 5", "Unlimited"],
+        ["Active property listings", `Up to ${P.AGENT_ESSENTIAL.propertyListingCap}`, "Unlimited"],
         ["GPS property marking", true, true],
         ["Verified agent badge", "Standard", "Verified Premium"],
         ["Priority listing placement in search", false, true],
@@ -121,7 +143,7 @@ export const PRICING: Record<Audience, PricingModel> = {
       { name: "Earnings", rows: [
         ["Commission collection through platform", true, true],
         ["Listing-agent commission (50% of platform fee)", true, true],
-        ["Marking job queue access", false, "₦5,000–₦10,000 / job"],
+        ["Marking job queue access", false, `${markingJobRange} / job`],
         ["Referral income access", false, true],
         ["Automatic payout scheduling", false, true],
       ]},
@@ -137,8 +159,8 @@ export const PRICING: Record<Audience, PricingModel> = {
       ]},
     ],
     footnote: {
-      icon: "trending-up", title: "Premium pays for itself",
-      body: "One marking job (₦5,000–₦10,000) covers two to three months of Premium. One commission on a ₦400,000/year rental pays for years. The subscription isn't a cost — <strong>your first deal covers it permanently.</strong>",
+      icon: "trending-up", title: `${P.AGENT_PREMIUM.name} pays for itself`,
+      body: `One marking job (${markingJobRange}) covers two to three months of ${P.AGENT_PREMIUM.name}. One commission on a ₦400,000/year rental pays for years. The subscription isn't a cost — <strong>your first deal covers it permanently.</strong>`,
       tag: "First 100 founding agents get Premium free for life.",
     },
   },
@@ -148,7 +170,7 @@ export const PRICING: Record<Audience, PricingModel> = {
     lead: "Right now, renting on Newcondo is free for renters — verified listings, secure payment, the 24-hour refund window and the double-booking lock, all included. Paid plans come later; the first 300 founding renters keep their perks when they do.",
     billing: false,
     plans: [
-      { id: "plus", name: "Premium Plus", tagline: "Everything renters get — free while we grow", priceLabel: "Free", unit: "", strike: "₦3,500/mo", note: "Free for the first 300 founding renters · ₦3,500/mo after launch", badge: "Founding offer — free for life", popular: true, variant: "dark", cta: "Claim founding access", href: "/onboarding" },
+      { id: "plus", name: P.RENTER_PREMIUM_PLUS.name, tagline: "Everything renters get — free while we grow", priceLabel: "Free", unit: "", strike: `${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}/mo`, note: `Free for the first 300 founding renters · ${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}/mo after launch`, badge: "Founding offer — free for life", popular: true, variant: "dark", cta: "Claim founding access", href: "/onboarding" },
     ],
     groups: [
       { name: "Search & discovery", rows: [
@@ -173,12 +195,11 @@ export const PRICING: Record<Audience, PricingModel> = {
     ],
     footnote: {
       icon: "gift", title: "Free for renters, right now",
-      body: "While we build our launch base, renters use Newcondo for free — including the full Premium Plus protection stack for the first 300 founding renters. Paid plans (Basic Premium ₦1,500/mo and Premium Plus ₦3,500/mo, billed monthly with ~2 months free yearly) arrive later, and <strong>founding renters keep their founding perks.</strong>",
+      body: `While we build our launch base, renters use Newcondo for free — including the full ${P.RENTER_PREMIUM_PLUS.name} protection stack for the first 300 founding renters. Paid plans (Basic Premium ${formatNaira(RENTER_LAUNCH_PRICING.basicPremium)}/mo and ${P.RENTER_PREMIUM_PLUS.name} ${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}/mo, billed monthly with ~2 months free yearly) arrive later, and <strong>founding renters keep their founding perks.</strong>`,
       tag: "No card required. Takes 2 minutes to create your account.",
     },
   },
 };
-
 /* ===================== HOW IT WORKS ===================== */
 export type StepVariant = "coral" | "lilac" | "teal" | "sunset";
 export interface HowStep { n: string; variant: StepVariant; label: string; anim: string; title: string; text: string; }

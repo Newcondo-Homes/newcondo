@@ -14,6 +14,7 @@ import { collabRouter } from "./collab";                        // share links, 
 import { markingRouter } from "./marking";                      // jobs, queue, photos, confirm
 import { referralRouter } from "./referrals";                   // stats, invite
 import { servicesRouter } from "./services";                    // vendor services
+import { accountDeletionRouter, metaDataDeletionRouter } from "./auth.account-deletion"; // delete account
 
 const router: ExpressRouter = Router();
 
@@ -40,6 +41,15 @@ mountRoute("/", collabRouter, "Collaboration (share/promote/invite)");
 mountRoute("/marking", markingRouter, "Marking Service");
 mountRoute("/referrals", referralRouter, "Referral Service");
 mountRoute("/services", servicesRouter, "Vendor Service");
+// Account deletion. Mounted under /auth so the paths are
+// /api/v1/auth/account/deletion* — matching lib/api/account-deletion.ts.
+mountRoute("/auth", accountDeletionRouter, "Account Deletion");
+// Public status lookup: /api/v1/data-deletion/:code (no auth — Meta opens it).
+// NOTE the Meta CALLBACK itself (POST /facebook/data-deletion) is NOT under
+// /api/v1 — it must be mounted at the app root in index.ts:
+//   app.use("/", metaDataDeletionRouter);
+mountRoute("/", metaDataDeletionRouter, "Meta data-deletion callback");
+
 // Still to wire as their barrels fill out:
 // mountRoute('/bookings', bookingRouter, 'Booking Service');
 // mountRoute('/admin', adminRouter, 'Admin Service');

@@ -37,6 +37,10 @@
       "types": "./dist/i18n/index.d.ts",
       "require": "./dist/i18n/index.js",
       "import": "./dist/i18n/index.js"
+    },
+    "./subscriptions":{
+      "types": "./dist/constants/subscriptionPlans.d.ts",
+      "default": "./dist/constants/subscriptionPlans.js"
     }
   },
   "scripts": {

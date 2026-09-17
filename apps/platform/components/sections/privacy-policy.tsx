@@ -340,18 +340,22 @@ export function PrivacyPolicy() {
         </P>
         <Bullets
           items={[
-            <><B>In the app —</B> open your account settings and choose to delete your account.</>,
-            <><B>By email —</B> write to <DocLink href="mailto:info@newcondo.homes">info@newcondo.homes</DocLink> from the address on your account, with the subject &quot;Data deletion request&quot;.</>,
+            <><B>In the app —</B> open your account settings and choose to delete your account.</>,            <><B>By email —</B> write to <DocLink href="mailto:info@newcondo.homes">info@newcondo.homes</DocLink> from the address on your account, with the subject &quot;Data deletion request&quot;.</>,
           ]}
         />
         <H3>What happens next</H3>
         <Bullets
           items={[
-            "We verify the request came from you, to protect your account.",
-            <>We delete or de-identify your personal data within <B>30 days</B>, including any data received through social login.</>,
+            "We verify the request came from you, to protect your account.",            <>We delete or de-identify your personal data within <B>30 days</B> — in most cases within <B>21 days</B> — including any data received through social login.</>,
             "We confirm completion by email.",
           ]}
         />
+        <Callout tone="note" icon="clock">
+          <B>A short recovery window.</B> Your account is closed and signed out immediately, and your listings stop being
+          shown the same day — but nothing is erased for <B>21 days</B>. If the request was not made by you (for example,
+          someone else had access to your account), signing in during that window restores everything. We email you three
+          times before the window closes. After erasure, nothing can be restored.
+        </Callout>
         <Callout tone="note" icon="archive">
           Some records must be retained after deletion where law, tax, accounting, anti-money-laundering, or fraud-prevention obligations require it — including transaction records our payment partner is legally required to keep. These are isolated from active systems and deleted at the end of their statutory period.
         </Callout>

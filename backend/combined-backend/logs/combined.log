@@ -2962,3 +2962,319 @@
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 17:43:02:432"}
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 17:57:02:572"}
 {"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 18:11:02:112"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 18:25:04:254"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 18:39:02:392"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-11 18:47:43:4743"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-11 18:49:07:497"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-11 18:49:41:4941"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-11 18:49:59:4959"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-11 18:50:43:5043"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 19:04:45:445"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 19:18:47:1847"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 19:32:45:3245"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-11 19:46:45:4645"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-11 19:57:49:5749"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-12 17:56:23:5623"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-12 17:56:24:5624"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-12 17:56:24:5624"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-12 17:56:24:5624"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-12 17:56:24:5624"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-12 17:56:24:5624"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-12 17:56:24:5624"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-12 18:10:25:1025"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-12 18:21:12:2112"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-12 18:21:31:2131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-12 18:35:32:3532"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-12 18:47:48:4748"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 07:57:05:575"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 08:22:28:2228"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 08:36:28:3628"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 08:50:28:5028"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-13 08:56:57:5657"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-13 08:59:48:5948"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 09:13:49:1349"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 09:27:49:2749"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 09:41:49:4149"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 09:55:49:5549"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 10:09:49:949"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 10:26:19:2619"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 10:40:08:408"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 10:54:08:548"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 11:12:41:1241"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 11:12:54:1254"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 11:32:27:3227"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 11:32:27:3227"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 13:53:12:5312"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 14:07:13:713"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 14:21:13:2113"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 14:35:13:3513"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 14:49:13:4913"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 15:03:14:314"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 15:22:26:2226"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 15:22:26:2226"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 17:22:15:2215"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 17:36:19:3619"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 17:50:18:5018"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 18:04:18:418"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 18:18:18:1818"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 18:32:18:3218"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 18:46:18:4618"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 18:59:19:5919"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 19:00:17:017"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 19:14:18:1418"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 19:28:18:2818"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 19:42:18:4218"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 20:56:38:5638"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 21:10:39:1039"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 21:24:39:2439"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 21:38:39:3839"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-13 21:42:32:4232"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 21:56:34:5634"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 22:10:34:1034"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 22:24:34:2434"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-13 22:30:27:3027"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-13 22:31:58:3158"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-13 22:33:29:3329"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-13 22:33:30:3330"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-13 22:33:30:3330"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-13 22:33:30:3330"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-13 22:33:30:3330"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-13 22:33:30:3330"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-13 22:33:30:3330"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 22:47:31:4731"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 23:01:31:131"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-13 23:15:31:1531"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-13 23:38:21:3821"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 08:36:29:3629"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 09:38:53:3853"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 10:01:40:140"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 10:15:40:1540"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 10:29:40:2940"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Account Deletion routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Meta data-deletion callback routes mounted on /\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-14 10:33:09:339"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Account Deletion routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Meta data-deletion callback routes mounted on /\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-14 10:35:43:3543"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-14 10:48:28:4828"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Account Deletion routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Meta data-deletion callback routes mounted on /\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-14 10:48:37:4837"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 11:02:38:238"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 11:16:38:1638"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32mReceived SIGINT. Starting graceful shutdown...\u001b[39m","timestamp":"2026-09-14 11:21:45:2145"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Account Deletion routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Meta data-deletion callback routes mounted on /\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-14 11:21:57:2157"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 11:35:58:3558"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 12:05:57:557"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 12:55:39:5539"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31mUnhandled Rejection at:\u001b[39m","timestamp":"2026-09-14 12:55:46:5546"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Auth Service routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Payment Service (dashboard) routes mounted on /payments\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Property Service routes mounted on /properties\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Notification Service routes mounted on /notifications\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Collaboration (share/promote/invite) routes mounted on /\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Marking Service routes mounted on /marking\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Referral Service routes mounted on /referrals\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Vendor Service routes mounted on /services\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Account Deletion routes mounted on /auth\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Meta data-deletion callback routes mounted on /\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m✅ Combined NewCondo Backend initialized successfully\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🚀 Combined NewCondo Backend running on port 5000\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m📡 Health check available at: http://localhost:5000/health\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🔗 API Documentation: http://localhost:5000/api/docs\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m🌍 Environment: development\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m⏰ Self-pinger initialized. Will ping https://newcondo-combined-backend.onrender.com/health every 14 minutes.\u001b[39m","timestamp":"2026-09-14 14:03:32:332"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 14:17:34:1734"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 14:31:32:3132"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 14:45:34:4534"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 14:59:34:5934"}
+{"level":"\u001b[32minfo\u001b[39m","message":"\u001b[32m💓 Self-ping successful. Keeping the instance awake.\u001b[39m","timestamp":"2026-09-14 15:13:34:1334"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 15:28:30:2830"}
+{"level":"\u001b[31merror\u001b[39m","message":"\u001b[31m❌ Error during self-ping:\u001b[39m","timestamp":"2026-09-14 16:31:14:3114"}

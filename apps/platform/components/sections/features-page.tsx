@@ -17,9 +17,11 @@ import { Reveal, Group, Item, vFade, EASE } from "@/components/motion";
 import { useAudience } from "@/hooks/useAudience";
 import { FEATURES_PAGE, type Feature, type FeatureGroupT } from "@/lib/pages-data";
 
-/** split a trailing "(Elite)" / "(Premium)" off a title into a badge */
+/** Split a trailing tier marker — "(Plus)" / "(Premium)" — off a title into
+ *  a badge. "Elite" was the pre-Sept-2026 name of the top tier; it is gone
+ *  from the copy, so it is gone from here too. */
 function splitTitle(t: string): { title: string; tag: string | null } {
-  const m = t.match(/\s*\((Elite|Premium)\)\s*$/);
+  const m = t.match(/\s*\((Plus|Premium)\)\s*$/);
   return m ? { title: t.replace(m[0], ""), tag: m[1] } : { title: t, tag: null };
 }
 
@@ -31,7 +33,7 @@ function FeatureCard({ f }: { f: Feature }) {
         <div className="feat-ico">
           <Icon name={f.icon} size={24} />
         </div>
-        {tag && <Badge tone={tag === "Elite" ? "ink" : "green"}>{tag}</Badge>}
+        {tag && <Badge tone={tag === "Premium" ? "ink" : "green"}>{tag}</Badge>}
       </div>
       <h3 className="text-[19px] font-bold tracking-[-0.02em] leading-[1.15] m-0 mt-[22px] mb-[11px] text-text-primary max-w-[24ch]">
         {title}
@@ -119,6 +121,7 @@ export function FeaturesPage() {
         </div>
       </section>
 
+      <Footer />
       <ChatButton />
     </div>
   );

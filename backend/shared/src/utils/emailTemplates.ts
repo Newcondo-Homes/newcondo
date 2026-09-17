@@ -16,6 +16,79 @@ import { COMPANY } from "../constants/business";
 
 export interface EmailContent { subject: string; html: string; }
 
+
+const ngnDate = (d: Date) =>
+  d.toLocaleDateString("en-NG", { day: "numeric", month: "long", year: "numeric" });
+
+/* The role-specific line about what survives. Vague reassurance is what makes a
+   deletion notice feel like a lie — name the records.
+
+   And name only the records that EXIST. Telling a renter who never rented that
+   "rent receipts held by your landlord remain" is both false and alarming; the
+   same for an owner with no listings. `counts` comes from the request snapshot,
+   so each email describes that account and no other. */
+export interface DeletionCounts {
+  properties?: number;
+  listingsAsAgent?: number;
+  documents?: number;
+  payments?: number;
+  rentals?: number;
+  photos?: number;
+}
+
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+function retainedItems(role: string, c: DeletionCounts = {}): string[] {
+  const out: string[] = [];
+  const payments = c.payments ?? 0;
+  const rentals = c.rentals ?? 0;
+
+  if (role === "OWNER") {
+    const props = c.properties ?? 0;
+    if (props > 0) {
+      out.push(
+        `Your ${plural(props, "property", "properties")} stay in our records as closed listings with their rent and marking history, but your name, contact details, ownership documents and property photos are removed, and the address is generalized to the city.`
+      );
+    }
+    if (rentals > 0) {
+      out.push(
+        `Tenancy records for the ${plural(rentals, "person", "people")} who rented from you, showing you only as a former owner.`
+      );
+    }
+  } else if (role === "AGENT") {
+    const listings = c.listingsAsAgent ?? 0;
+    if (listings > 0) {
+      out.push(`The ${plural(listings, "listing")} you managed stay with their owners, without your name on them.`);
+    }
+    out.push(
+      "Marking jobs you completed and commissions you were paid remain as anonymous financial records."
+    );
+  } else if (rentals > 0) {
+    out.push(`Rent receipts for your ${plural(rentals, "tenancy", "tenancies")}, held by your landlord, with your name removed.`);
+  }
+
+  if (payments > 0) {
+    out.push(
+      `Your ${plural(payments, "payment record")}, without your name attached — tax, anti-money-laundering and chargeback rules require them.`
+    );
+  }
+
+  // Nothing to name: a signup that never listed, paid or rented. Say so — it is
+  // the most reassuring version of this paragraph, and it is true.
+  if (out.length === 0) {
+    out.push(
+      "You never listed, rented or paid through Newcondo, so there is no financial history to keep. Once erasure runs, all we retain is a dated record that this account was deleted."
+    );
+  }
+  return out;
+}
+
+/** Single-sentence form, for the shorter emails. */
+function retainedLine(role: string, c: DeletionCounts = {}): string {
+  return retainedItems(role, c).join(" ");
+}
+
+
 /* ---------- palette (inlined; email clients ignore stylesheets) ---------- */
 const C = {
   page: "#F7F6EF", card: "#FFFFFF", ink: "#131313", cream: "#F9F9EF",
@@ -364,5 +437,148 @@ export const EmailTemplates = {
     }),
   }),
 } as const;
+
+export function accountDeletionScheduledEmail(o: {
+  name: string;
+  role: string;
+  erasureDate: Date;
+  graceDays: number;
+  retentionMonths: number;
+  confirmationCode: string;
+  counts?: DeletionCounts;
+}) {
+  const roleWord = o.role === "OWNER" ? "property owner" : o.role === "AGENT" ? "agent" : "renter";
+  const c = o.counts ?? {};
+
+  /* What GOES — also specific. An agent has no ownership documents; a renter
+     has no property photos. Listing them anyway reads as boilerplate. */
+  const erasedLine = (() => {
+    const base = "your name, email, phone number, date of birth, address and BVN";
+    const docs = (c.documents ?? 0) > 0 ? `, and ${plural(c.documents!, "identity document")} you uploaded` : "";
+    if (o.role === "OWNER" && (c.photos ?? 0) > 0)
+      return `${base}${docs}, together with ${plural(c.photos!, "property photo")} and every ownership document on your listings`;
+    if (o.role === "AGENT")
+      return `${base}${docs}, together with your promotion links, service areas and marking availability`;
+    return `${base}${docs}`;
+  })();
+
+  const kept = retainedItems(o.role, c);
+
+  const body = `
+${kvRows([
+  ["Requested", ngnDate(new Date())],
+  ["Account type", roleWord[0].toUpperCase() + roleWord.slice(1)],
+  ["Signed out everywhere", "Now"],
+  ["Permanent erasure", ngnDate(o.erasureDate)],
+  ["Reference", o.confirmationCode],
+])}
+<p style="margin:18px 0 0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
+Your account is closed as of today. You're signed out on every device${
+    o.role === "RENTER" ? "" : ", your listings are hidden"
+  }, and your subscription will not renew.
+For the next <b style="color:${C.text}">${o.graceDays} days</b> nothing is erased — sign in again and everything comes back exactly as it was.
+</p>
+<p style="margin:14px 0 0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
+On <b style="color:${C.text}">${ngnDate(o.erasureDate)}</b> we permanently erase ${erasedLine}. That step cannot be undone.
+</p>
+${notice(
+    `<b>What stays, and why.</b><br>${kept
+      .map((k) => `• ${k}`)
+      .join("<br>")}${
+      (c.payments ?? 0) > 0
+        ? `<br><br>Those records are destroyed after ${o.retentionMonths} months, except where tax or anti-money-laundering law requires longer.`
+        : ""
+    }`
+  )}
+${btn("I didn't ask for this — restore my account", `https://${COMPANY.domain}/login?restore=1`)}
+`;
+  return {
+    subject: `Your Newcondo account closes on ${ngnDate(o.erasureDate)}`,
+    html: shell({
+      preheader: `Reversible until ${ngnDate(o.erasureDate)}.`,
+      heading: "Your account is scheduled for deletion",
+      intro: `${o.name}, we've received your request to delete your Newcondo ${roleWord} account.`,
+      body,
+      footNote: `If you did not request this, sign in now to cancel it — and change your password. Questions: info@${COMPANY.domain}.`,
+    }),
+  };
+}
+
+export function accountDeletionReminderEmail(o: {
+  name: string;
+  daysLeft: number;
+  erasureDate: Date;
+  role: string;
+  counts?: DeletionCounts;
+}) {
+  const unit = o.daysLeft === 1 ? "tomorrow" : `in ${o.daysLeft} days`;
+  const body = `
+<p style="margin:0 0 0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
+Your Newcondo account is erased <b style="color:${C.text}">${unit}</b>, on ${ngnDate(o.erasureDate)}.
+Until then it can still be restored in full — just sign in.
+</p>
+${notice(`After that we can't bring anything back. ${retainedLine(o.role, o.counts)}`, "warn")}
+${btn("Restore my account", `https://${COMPANY.domain}/login?restore=1`)}
+`;
+  return {
+    subject: o.daysLeft === 1 ? "Last day to restore your Newcondo account" : `Your Newcondo account is erased in ${o.daysLeft} days`,
+    html: shell({
+      preheader: `Erased ${unit}. Sign in to keep it.`,
+      heading: o.daysLeft === 1 ? "Last chance to restore your account" : "Your account is erased soon",
+      intro: `${o.name} — this is a reminder, not a new request.`,
+      body,
+    }),
+  };
+}
+
+export function accountDeletionCompletedEmail(o: {
+  name: string;
+  role: string;
+  retentionMonths: number;
+  purgeDate: Date;
+  counts?: DeletionCounts;
+}) {
+  const kept = retainedItems(o.role, o.counts);
+  const body = `
+<p style="margin:0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
+We've permanently erased the personal data in your Newcondo account: your name, email address, phone number, date of birth, home address, BVN, profile photo and every identity document you uploaded. Your Facebook and Google sign-in links have been disconnected. This is the confirmation our Privacy Policy promises.
+</p>
+${notice(
+    `<b>What we kept, and why.</b><br>${kept.map((k) => `• ${k}`).join("<br>")}<br><br>These records carry no information that identifies you, and the last of them is destroyed on ${ngnDate(o.purgeDate)} — ${o.retentionMonths} months from today — except where tax or anti-money-laundering law requires a longer period.`
+  )}
+<p style="margin:16px 0 0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
+This email address is no longer attached to any Newcondo account. You're welcome to sign up again with it whenever you like.
+</p>
+`;
+  return {
+    subject: "Your Newcondo data has been deleted",
+    html: shell({
+      preheader: "Erasure complete.",
+      heading: "Your data has been deleted",
+      intro: `${o.name}, this is confirmation that your deletion request is complete.`,
+      body,
+      footNote: `Questions about what was kept: info@${COMPANY.domain}. Full detail: https://${COMPANY.domain}/privacy#deletion`,
+    }),
+  };
+}
+
+export function accountDeletionCancelledEmail(o: { name: string }) {
+  const body = `
+<p style="margin:0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
+Your account is active again and nothing was erased. Your listings are still hidden — switch them back on from My Properties when you're ready.
+</p>
+${notice("If you didn't do this, someone else has access to your account. Change your password now and email us immediately.", "warn")}
+${btn("Go to my dashboard", `https://${COMPANY.domain}/dashboard`)}
+`;
+  return {
+    subject: "Your Newcondo account is active again",
+    html: shell({
+      preheader: "Deletion cancelled.",
+      heading: "Welcome back",
+      intro: `${o.name}, we've cancelled the deletion of your account.`,
+      body,
+    }),
+  };
+}
 
 export type EmailTemplateName = keyof typeof EmailTemplates;

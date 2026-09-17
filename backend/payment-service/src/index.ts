@@ -42,3 +42,6 @@ export { ensureRenterVirtualAccount } from "./services/renterVA.service";
 
 // ---- wallet: balances, withdraw, auto-payout ----
 export { getWallet, withdraw, setAutoPayout, settleWithdrawal } from "./services/wallet.service";
+
+// ---- platform app review: comped subscription code (Meta / Google / Apple) ----
+export { redeemReviewAccess, revokeReviewAccessGrants } from "./services/reviewAccess.service";

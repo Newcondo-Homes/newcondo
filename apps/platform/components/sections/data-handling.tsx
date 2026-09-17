@@ -153,10 +153,11 @@ export function DataHandling() {
         <H3>Deletion requests</H3>
         <P>
           You may request deletion of your account and associated personal data from your account settings, or by writing to{" "}
-          <DocLink href="mailto:info@newcondo.homes">info@newcondo.homes</DocLink>. We action verified requests within{" "}
-          <B>30 days</B>. Certain records must be retained where law, tax, accounting, anti-money-laundering, or
-          fraud-prevention obligations require it — including transaction records our payment partner is required to keep.
-          Full detail is in <DocLink href="/privacy#deletion">Delete your data</DocLink>.
+          <DocLink href="mailto:info@newcondo.homes">info@newcondo.homes</DocLink>. Your account is closed and signed out
+          immediately; personal data is erased after a <B>21-day</B> recovery window, and in every case within{" "}
+          <B>30 days</B> of a verified request. Certain records must be retained where law, tax, accounting,
+          anti-money-laundering, or fraud-prevention obligations require it — including transaction records our payment
+          partner is required to keep. Full detail is in <DocLink href="/privacy#deletion">Delete your data</DocLink>.
         </P>
       </DocSection>
 

@@ -107,7 +107,7 @@ export const COOKIE_ROWS: [category: string, purpose: string][] = [
 export const RETENTION_ROWS: [dataType: string, retention: string, after: string][] = [
   ["Government ID", "24 months", "Converted to an irreversible SHA-256 hash."],
   ["Bank details", "45 days", "Tokenized and decoupled from user identity."],
-  ["Social login data", "Life of account", "Deleted within 30 days of a verified account-deletion request."],
+  ["Social login data", "Life of account", "Deleted within 30 days of a verified account-deletion request \u2014 in most cases within 21."],
   ["Property location", "12 months", "Generalized to a 1\u00A0km grid."],
   ["Activity logs", "12 months", "Summarized into de-identified statistical data."],
 ];

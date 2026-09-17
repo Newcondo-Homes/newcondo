@@ -6,8 +6,19 @@ import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
 const FLUTTERWAVE_SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY!;
 const APP_URL = process.env.APP_URL!; // e.g. https://newcondo.homes
 
-// ─── Plan config — single source of truth ────────────────────────────────────
-// Maps each plan to its constraints and pricing
+import {
+  SUBSCRIPTION_PLANS,
+  type SubscriptionPlanCode,
+} from "@newcondo/backend-shared";
+
+// ─── Plan config — DERIVED from the single source of truth ───────────────────
+// Prices, caps and commission rates live in
+// backend/shared/src/constants/subscriptionPlans.ts (shared with the frontend).
+// This map only adapts them to the Prisma enums.
+//
+// The `Record<SubscriptionPlan, …>` annotation is the guard that keeps the two
+// in lockstep: add a plan to the Prisma enum without adding it to the shared
+// constant (or misspell a code) and THIS FILE fails to compile.
 export const PLAN_CONFIG: Record<
   SubscriptionPlan,
   {
@@ -19,98 +30,68 @@ export const PLAN_CONFIG: Record<
     isFreeRenterPlan: boolean;
     commissionRate: number; // as decimal e.g. 0.15
   }
-> = {
-  [SubscriptionPlan.OWNER_ESSENTIAL]: {
-    userRole: Role.OWNER,
-    amountNaira: 7500,
-    billingCycle: BillingCycle.MONTHLY,
-    propertyListingCap: 2,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: false,
-    commissionRate: 0.20,
-  },
-  [SubscriptionPlan.OWNER_ELITE]: {
-    userRole: Role.OWNER,
-    amountNaira: 18500,
-    billingCycle: BillingCycle.MONTHLY,
-    propertyListingCap: null,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: false,
-    commissionRate: 0.15,
-  },
-  [SubscriptionPlan.OWNER_ESSENTIAL_ANNUAL]: {
-    userRole: Role.OWNER,
-    amountNaira: 75000,
-    billingCycle: BillingCycle.ANNUAL,
-    propertyListingCap: 2,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: false,
-    commissionRate: 0.20,
-  },
-  [SubscriptionPlan.OWNER_ELITE_ANNUAL]: {
-    userRole: Role.OWNER,
-    amountNaira: 185000,
-    billingCycle: BillingCycle.ANNUAL,
-    propertyListingCap: null,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: false,
-    commissionRate: 0.15,
-  },
-  [SubscriptionPlan.AGENT_ESSENTIAL]: {
-    userRole: Role.AGENT,
-    amountNaira: 2000,
-    billingCycle: BillingCycle.MONTHLY,
-    propertyListingCap: 5,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: false,
-    commissionRate: 0.20,
-  },
-  [SubscriptionPlan.AGENT_PREMIUM]: {
-    userRole: Role.AGENT,
-    amountNaira: 3500,
-    billingCycle: BillingCycle.MONTHLY,
-    propertyListingCap: null,
-    canAccessMarkingJobs: true,
-    isFreeRenterPlan: false,
-    commissionRate: 0.20,
-  },
-  [SubscriptionPlan.AGENT_ESSENTIAL_ANNUAL]: {
-    userRole: Role.AGENT,
-    amountNaira: 20000,
-    billingCycle: BillingCycle.ANNUAL,
-    propertyListingCap: 5,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: false,
-    commissionRate: 0.20,
-  },
-  [SubscriptionPlan.AGENT_PREMIUM_ANNUAL]: {
-    userRole: Role.AGENT,
-    amountNaira: 35000,
-    billingCycle: BillingCycle.ANNUAL,
-    propertyListingCap: null,
-    canAccessMarkingJobs: true,
-    isFreeRenterPlan: false,
-    commissionRate: 0.20,
-  },
-  [SubscriptionPlan.RENTER_FREE]: {
-    userRole: Role.RENTER,
-    amountNaira: 0,
-    billingCycle: BillingCycle.MONTHLY,
-    propertyListingCap: null,
-    canAccessMarkingJobs: false,
-    isFreeRenterPlan: true,
-    commissionRate: 0,
-  },
-  [SubscriptionPlan.RENTER_PREMIUM_PLUS]: {
-    userRole: Role.RENTER,
-    amountNaira: 0, // Free right now — renterPaidPlanUnlockedAt gates this
-    billingCycle: BillingCycle.MONTHLY,
-    propertyListingCap: null,
-    canAccessMarkingJobs: false, // Activates when paid billing launches
-    isFreeRenterPlan: true,
-    commissionRate: 0,
-  },
-};
+> = Object.fromEntries(
+  (Object.keys(SUBSCRIPTION_PLANS) as SubscriptionPlanCode[]).map((code) => {
+    const p = SUBSCRIPTION_PLANS[code];
+    return [
+      code,
+      {
+        userRole: Role[p.role],
+        amountNaira: p.amountNaira,
+        billingCycle: BillingCycle[p.cycle],
+        propertyListingCap: p.propertyListingCap,
+        canAccessMarkingJobs: p.canAccessMarkingJobs,
+        isFreeRenterPlan: p.isFreeRenterPlan,
+        commissionRate: p.commissionRate,
+      },
+    ];
+  })
+) as Record<SubscriptionPlan, {
+  userRole: Role;
+  amountNaira: number;
+  billingCycle: BillingCycle;
+  propertyListingCap: number | null;
+  canAccessMarkingJobs: boolean;
+  isFreeRenterPlan: boolean;
+  commissionRate: number;
+}>;
+
+// Runtime belt-and-braces: Object.fromEntries can't prove completeness to the
+// type checker, so assert it once at module load. Fails fast on boot rather
+// than at a customer's checkout.
+for (const code of Object.values(SubscriptionPlan)) {
+  if (!PLAN_CONFIG[code]) {
+    throw new Error(
+      `[subscription] SubscriptionPlan.${code} has no entry in SUBSCRIPTION_PLANS ` +
+      `(backend/shared/src/constants/subscriptionPlans.ts). Add it before deploying.`
+    );
+  }
+}
+
+// ─── Safety net: the FLW plan amount must equal what we charge ───────────────
+// With payment_plan attached, Flutterwave rejects the charge unless the amount
+// matches the plan amount exactly. A price edited in the shared constant but
+// not synced to Flutterwave is the #1 cause of "the modal flashes and never
+// opens". Call this inside initiateSubscription, right after the
+// findUniqueOrThrow on flutterwavePlan:
+//
+//   const flwPlan = await prisma.flutterwavePlan.findUniqueOrThrow({ where: { planType } });
+//   assertPlanAmountInSync(planType, config.amountNaira, Number(flwPlan.amountNaira));
+//
+export function assertPlanAmountInSync(
+  planType: SubscriptionPlan,
+  configAmount: number,
+  flwPlanAmount: number
+): void {
+  if (configAmount !== flwPlanAmount) {
+    throw new Error(
+      `[subscription] Price drift on ${planType}: code says ₦${configAmount.toLocaleString("en-NG")}, ` +
+      `FlutterwavePlan row says ₦${flwPlanAmount.toLocaleString("en-NG")}. ` +
+      `Run the plan sync script (create-flw-plans) before taking payments.`
+    );
+  }
+}
+
 
 // ─── Get period end date from start ──────────────────────────────────────────
 function getPeriodEnd(start: Date, cycle: BillingCycle): Date {

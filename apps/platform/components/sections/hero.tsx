@@ -6,6 +6,11 @@ import { Icon } from "@/components/ui/icon";
 import { SplitButton } from "@/components/ui/split-button";
 import { container, mount, EASE, EXPO } from "@/components/motion";
 import { makePerlin } from "@/lib/perlin";
+import { plansFor, formatNaira } from "@/lib/constants/business";
+
+/** Entry owner price, from the single source of truth — the CTA can never
+ *  quote a price the checkout won't charge. */
+const OWNER_ENTRY_PRICE = Math.min(...plansFor("OWNER").map((p) => p.amountNaira));
 
 /** Procedural "ethereal shadows" — domain-warped fractal Perlin noise. */
 function useEtherealShadows(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
@@ -179,7 +184,7 @@ export function Hero() {
             href="#pricing"
             variant="light"
             ariaLabel="List your property"
-            label="List your property — plans from ₦7,500/month"
+            label={`List your property — plans from ${formatNaira(OWNER_ENTRY_PRICE)}/property/month`}
             className="max-[620px]:w-full"
           />
           <a

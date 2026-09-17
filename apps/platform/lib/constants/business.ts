@@ -1,23 +1,8 @@
 // apps/platform/lib/constants/business.ts
 // ============================================================
 // FRONTEND SHIM — the frontend's ONLY entry point for business constants.
-// Re-exports the backend-shared single source of truth, so a price/area/
-// window changed in backend/shared/src/constants/business.ts reflects in
-// both backend and frontend at the next build.
-//
-// TWO RULES that keep Next.js 16 / Turbopack happy:
-//  1. Import the "./constants" SUBPATH, never the package root — the root
-//     barrel pulls in Prisma, ioredis and the AWS SDK, which must never
-//     reach a client bundle.
-//  2. Use EXPLICIT NAMED re-exports, never `export *`. Turbopack cannot
-//     statically analyse `export *` from a CommonJS build and throws
-//     "unexpected export *". Listing names also tree-shakes better.
-//
-// Requires (one-time monorepo wiring):
-//   • backend/shared/package.json → "exports" map with an ESM build for
-//     ./constants (see backend/shared/package.constants-exports.json)
-//   • apps/platform/next.config.ts → transpilePackages: ["@newcondo/backend-shared"]
-//   • apps/platform/package.json → "@newcondo/backend-shared": "workspace:*"
+// (Existing header comment kept — the two rules still apply: import the
+// ./constants SUBPATH, and use explicit named re-exports, never `export *`.)
 // ============================================================
 export {
   COMPANY,
@@ -40,6 +25,48 @@ export {
   isGeoSupported,
   OWNERSHIP_PROOF,
   AGENT_INVITES,
+
 } from "@newcondo/backend-shared/constants";
 
-export type { ActiveArea, Geo } from "@newcondo/backend-shared/constants";
+export {
+  // ++ subscription plans — single source of truth (subscriptionPlans.ts)
+  SUBSCRIPTION_PLANS,
+  OWNER_TIER_ORDER,
+  ALL_PLAN_CODES,
+  planByCode,
+  plansFor,
+  sellablePlans,
+  planRoleFrom,
+  resolvePlanCode,
+  withCycle,
+  formatNairaa as formatNaira,
+  formatRate,
+  commissionRateFor,
+  monthlyEquivalent,
+  annualSaving,
+  RENTER_LAUNCH_PRICING,
+  marginFor,
+  costBasisFor,
+  // per-property billing + property size
+  MAX_PLOTS_SELF_SERVE,
+  requiresCustomQuote,
+  amountForProperty,
+  totalForProperties,
+} from "@newcondo/backend-shared/subscriptions"
+
+export type {
+  // ++ plan types
+  SubscriptionPlanCode,
+  SubscriptionPlanSpec,
+  PlanRole,
+  PlanCycle,
+  PricingUnit,
+  PropertyLineItem,
+} from "@newcondo/backend-shared/subscriptions"
+
+
+export type {
+  ActiveArea,
+  Geo,
+} from "@newcondo/backend-shared/constants";
+

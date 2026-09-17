@@ -9,6 +9,7 @@ import {
 import {
     initiateSubscription,
     createFreeRenterSubscription,
+    redeemReviewAccess,
 } from "@newcondo/payment-service"
 
 // onboarding services
@@ -163,6 +164,38 @@ router.post("/subscriptions/renter-signup", authMiddleware, async (req, res) => 
 // No auth — Flutterwave is not logged in. Self-verifies via verif-hash header.
 // The flutterwaveWebhook handler contains all the logic.
 router.post('/webhooks/flutterwave', flutterwaveWebhook);
+
+
+
+// POST /api/v1/payments/subscriptions/review-access
+// Platform app review (Meta / Google / Apple). Newcondo has no free tier, so a
+// reviewer signing in with their own account dead-ends at the Flutterwave step
+// and can never exercise the OAuth permission under review. This exchanges a
+// backend-env code for a comped ACTIVE subscription at ₦0 — Flutterwave is
+// never called, so live payments keep working for real customers throughout.
+// Entirely disabled unless REVIEW_ACCESS_CODE is set. See reviewAccess.service.ts.
+router.post("/subscriptions/review-access", authMiddleware, async (req, res) => {
+    try {
+        const userId = req.user!.id;
+
+        if (!userId) {
+            sendResponse(res, 401, "Unauthorized", null, { code: "AUTH_REQUIRED" });
+            return;
+        }
+
+        const { code } = req.body as { code?: string };
+        const result = await redeemReviewAccess(userId, String(code ?? ""));
+
+        return res.status(200).json({ success: true, data: result });
+    } catch (err: any) {
+        // ServiceError from @newcondo/backend-shared carries a statusCode
+        // (403 wrong code, 409 already subscribed, 429 throttled); anything
+        // else falls back to 400 like the handlers around it.
+        const status = err.statusCode ?? err.status ?? 400;
+        return res.status(status).json({ success: false, error: err.message });
+    }
+});
+
 
 // Payment initialization routes
 // router.post('/initialize',

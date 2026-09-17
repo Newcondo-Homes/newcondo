@@ -2,7 +2,13 @@
 
 /* Profile & Settings — identity, verification, plan, legal documents.
    TODO(backend): PATCH /api/user/profile · POST /api/verification/upload
-   (UploadThing) · GET /api/legal-documents · subscription via Flutterwave. */
+   (UploadThing) · GET /api/legal-documents · subscription via Flutterwave.
+
+   PLAN TAB: prices, caps and commission rates are read from the shared single
+   source of truth (subscriptionPlans.ts) via planByCode — NOT typed into the
+   markup. The plan code itself should come from the user's subscription
+   (Subscription.planType); until that field is on the session/profile payload,
+   DEFAULT_PLAN_BY_ROLE stands in. */
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Icon } from "@/components/ui/icon";
@@ -15,6 +21,14 @@ import { ConfirmDialog } from "@/components/dashboard/Modal";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { usePersistedTab } from "@/hooks/dashboard/usePersistedTab";
 import { YourDetailsCard } from "@/components/dashboard/profile/YourDetailsCard";
+import {
+  planByCode,
+  formatNaira,
+  SUBSCRIPTION_PLANS,
+  MARKING,
+  VERIFICATION,
+  type SubscriptionPlanCode,
+} from "@/lib/constants/business";
 
 const LEGAL_DOCS = [
   ["Personal undertaking", "Signed 12 Feb 2026", "VERIFIED"],
@@ -23,11 +37,33 @@ const LEGAL_DOCS = [
   ["Tenancy agreement — Trans Amadi Flat 1", "Auto-generated 3 Mar 2026", "CONFIRMED"],
 ] as const;
 
+/** Fallback while Subscription.planType isn't on the profile payload. */
+const DEFAULT_PLAN_BY_ROLE: Record<string, SubscriptionPlanCode> = {
+  OWNER: "OWNER_ELITE",
+  AGENT: "AGENT_PREMIUM",
+  RENTER: "RENTER_PREMIUM_PLUS",
+};
+
+const pct = (r: number) => `${Math.round(r * 100)}%`;
+const per = (cycle: string) => (cycle === "ANNUAL" ? "year" : "month");
+
 export default function ProfilePage() {
   const { role, user } = useRole();
   const [tab, setTab] = usePersistedTab("nc-profile-tab", "profile");
   const [doc, setDoc] = useState("NIN");
   const [cancel, setCancel] = useState(false);
+
+  /* TODO(backend): GET /payments/subscriptions/me → planType, currentPeriodEnd.
+     `user.planCode` is read first so wiring it is a one-line change. */
+  const planCode =
+    ((user as { planCode?: SubscriptionPlanCode }).planCode ??
+      DEFAULT_PLAN_BY_ROLE[role] ??
+      "OWNER_ESSENTIAL") as SubscriptionPlanCode;
+  const plan = planByCode(planCode);
+  /* The other owner tier, for the "(Essential pays 20%)" comparison. */
+  const otherOwnerTier =
+    SUBSCRIPTION_PLANS[plan.code === "OWNER_ELITE" ? "OWNER_ESSENTIAL" : "OWNER_ELITE"];
+
   return (
     <>
       <PageHead title="Profile & Settings" sub="Identity, verification, plan and legal documents." />
@@ -58,38 +94,38 @@ export default function ProfilePage() {
           {user.verificationStatus === "VERIFIED" ? (
             <Banner icon="shield-check"><b className="font-semibold">You&rsquo;re verified.</b> NIN verified on 12 Feb 2026. Your verified badge shows on all your listings and marking jobs.</Banner>
           ) : (<>
-            <p className="mb-3.5 mt-0 text-[13.5px] leading-relaxed text-text-secondary">Upload one government-issued ID. Verification unlocks payments{role !== "RENTER" ? ", listing and marking" : ""} and usually completes within 24 hours.</p>
-            <Field label="Document type"><NCSelect value={doc} onChange={setDoc} options={["NIN", "BVN", "Driver's licence", "Voter's card", "International passport"]} /></Field>
+            <p className="mb-3.5 mt-0 text-[13.5px] leading-relaxed text-text-secondary">Upload one government-issued ID. Verification unlocks payments{role !== "RENTER" ? ", listing and marking" : ""} and usually completes within {VERIFICATION.reviewHours} hours.</p>
+            <Field label="Document type"><NCSelect value={doc} onChange={setDoc} options={[...VERIFICATION.acceptedIds]} /></Field>
             <button onClick={() => toast.info("File picker opens", { description: "TODO(backend): UploadThing → /api/verification/upload" })}
               className="grid h-[110px] w-full place-items-center rounded-[14px] border-[1.5px] border-dashed border-border-strong bg-surface text-text-tertiary">
               <span className="text-center"><Icon name="camera" size={20} className="mx-auto" /><span className="mt-1.5 block text-[12.5px]">Upload ID + a selfie</span></span>
             </button>
             <div className="mt-3.5">
-              <DBtn onClick={() => toast.promise(new Promise((res) => setTimeout(res, 1400)), { loading: "Submitting documents…", success: "Verification submitted — an admin reviews within 24 hours.", error: "Upload failed" })}>Submit for verification</DBtn>
+              <DBtn onClick={() => toast.promise(new Promise((res) => setTimeout(res, 1400)), { loading: "Submitting documents…", success: `Verification submitted — an admin reviews within ${VERIFICATION.reviewHours} hours.`, error: "Upload failed" })}>Submit for verification</DBtn>
             </div>
           </>)}
         </Card>
       )}
       {tab === "plan" && (
         <Card className="max-w-[640px]">
-          <CardH title="Your plan" right={<StatusBadge s="RENTED">{user.plan}</StatusBadge>} />
+          <CardH title="Your plan" right={<StatusBadge s="RENTED">{plan.name}</StatusBadge>} />
           {role === "OWNER" && (<>
-            <KV k="Plan" v="Elite — ₦18,500/month" />
-            <KV k="Commission rate" v="15% (Essential pays 20%)" />
-            <KV k="Listings" v="Unlimited" />
+            <KV k="Plan" v={`${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
+            <KV k="Commission rate" v={`${pct(plan.commissionRate)} (${otherOwnerTier.name} pays ${pct(otherOwnerTier.commissionRate)})`} />
+            <KV k="Listings" v={plan.propertyListingCap === null ? "Unlimited" : `Up to ${plan.propertyListingCap}`} />
             <KV k="Next billing" v="1 Aug 2026 · Flutterwave" />
           </>)}
           {role === "AGENT" && (<>
-            <KV k="Plan" v="Premium — ₦3,500/month" />
-            <KV k="Marking queue" v="Included — ₦5,000 per job" />
-            <KV k="Listings" v="Unlimited · priority placement" />
+            <KV k="Plan" v={`${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
+            <KV k="Marking queue" v={plan.canAccessMarkingJobs ? `Included — ${formatNaira(MARKING.markerPayout)} per job` : "Not included on this plan"} />
+            <KV k="Listings" v={plan.propertyListingCap === null ? "Unlimited · priority placement" : `Up to ${plan.propertyListingCap}`} />
             <KV k="Next billing" v="1 Aug 2026 · Flutterwave" />
           </>)}
           {role === "RENTER" && (<>
-            <KV k="Plan" v="Free" />
+            <KV k="Plan" v={plan.amountNaira === 0 ? "Free" : `${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
             <div className="mt-3">
               <Banner icon="zap" action={<DBtn sm onClick={() => toast.info("Premium checkout", { description: "Flutterwave subscription flow — see onboarding plan selector." })}>Upgrade</DBtn>}>
-                <b className="font-semibold">Premium unlocks marking-job income and your wallet.</b> One marking job (₦5,000) covers more than a month.
+                <b className="font-semibold">Premium unlocks marking-job income and your wallet.</b> One marking job ({formatNaira(MARKING.markerPayout)}) covers more than a month.
               </Banner>
             </div>
           </>)}

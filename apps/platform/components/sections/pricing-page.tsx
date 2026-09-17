@@ -2,6 +2,10 @@
 
 /* ============================================================
    Pricing — audience-aware plans + comparison table.
+
+   Generalised from two plans to N (owners now have three tiers: Essential /
+   Plus / Premium, priced per property). The comparison table reads its column
+   count from model.plans, and each CmpRow carries one cell per plan.
    ============================================================ */
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
@@ -20,11 +24,18 @@ import { cx } from "@/lib/cx";
 function priceView(plan: Plan, annual: boolean): { big: string; unit: string; note: string } {
   if (plan.priceLabel) return { big: plan.priceLabel, unit: plan.unit ?? "", note: plan.note ?? "" };
   const m = plan.monthly ?? 0;
+  // "/property/month" → "/property/mo" in the compact card unit slot.
+  const per = (plan.unitLabel ?? "/month").replace("/month", "/mo").replace("/year", "/yr");
   if (annual) {
-    const yr = m * 10;
-    return { big: "₦" + Math.round(yr / 12).toLocaleString(), unit: "/mo", note: "₦" + yr.toLocaleString() + " billed yearly" };
+    // Prefer the tier's real annual price; fall back to 10× (2 months free).
+    const yr = plan.annual ?? m * 10;
+    return {
+      big: "₦" + Math.round(yr / 12).toLocaleString(),
+      unit: per,
+      note: "₦" + yr.toLocaleString() + " billed yearly",
+    };
   }
-  return { big: "₦" + m.toLocaleString(), unit: "/mo", note: "Billed monthly" };
+  return { big: "₦" + m.toLocaleString(), unit: per, note: "Billed monthly" };
 }
 
 function BillingToggle({ annual, onToggle }: { annual: boolean; onToggle: (v: boolean) => void }) {
@@ -61,8 +72,8 @@ function PlanCard({ plan, annual, solo }: { plan: Plan; annual: boolean; solo?: 
 
       <div className="mt-7 mb-1 min-h-[58px] flex items-end overflow-hidden">
         <motion.div key={pv.big + pv.unit} className="flex flex-wrap items-baseline gap-x-2 gap-y-1" initial={{ y: 18, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.32, ease: EASE }}>
-          <span className={cx("text-[46px] font-bold tracking-[-0.04em] leading-none", dark ? "text-cream" : "text-text-primary")}>{pv.big}</span>
-          {pv.unit && <span className={cx("text-[16px]", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{pv.unit}</span>}
+          <span className={cx("text-[42px] font-bold tracking-[-0.04em] leading-none", dark ? "text-cream" : "text-text-primary")}>{pv.big}</span>
+          {pv.unit && <span className={cx("text-[15px]", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{pv.unit}</span>}
           {plan.strike && (
             <span className={cx("text-[18px] font-medium line-through", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{plan.strike}</span>
           )}
@@ -106,24 +117,29 @@ function ComparisonTable({ model, annual }: { model: PricingModel; annual: boole
     return () => window.removeEventListener("resize", measure);
   }, [model]);
 
-  const [a, b] = model.plans;
-  const pa = priceView(a, annual), pb = priceView(b, annual);
+  // The highlighted column is the popular tier — the middle one for owners,
+  // the last for agents. Falls back to the final column.
+  const featuredIndex = Math.max(0, model.plans.findIndex((p) => p.popular));
+  const cols = model.plans.length;
 
   return (
-    <div className="cmp2">
+    <div className={cx("cmp2", `cmp2--${cols}`)}>
       <div className="cmp2-head">
         <div className="cmp2-row cmp2-grid">
           <div className="text-[13px] font-semibold tracking-[0.04em] uppercase text-text-tertiary">Compare plans</div>
-          <div className="text-center">
-            <div className="text-[17px] font-bold tracking-[-0.02em] text-text-primary">{a.name}</div>
-            <div className="text-[13px] text-text-tertiary mt-0.5">{pa.big}{pa.unit}</div>
-          </div>
-          <div className="text-center" ref={headCellRef}>
-            <div className="inline-flex items-center gap-1.5 text-[17px] font-bold tracking-[-0.02em] text-ink">
-              {b.name}{b.popular && <Icon name="star" size={14} className="text-green-dark" />}
-            </div>
-            <div className="text-[13px] text-text-tertiary mt-0.5">{pb.big}{pb.unit}</div>
-          </div>
+          {model.plans.map((p, i) => {
+            const pv = priceView(p, annual);
+            const featured = i === featuredIndex;
+            return (
+              <div key={p.id} className="text-center" ref={featured ? headCellRef : undefined}>
+                <div className={cx("inline-flex items-center gap-1.5 text-[17px] font-bold tracking-[-0.02em]", featured ? "text-ink" : "text-text-primary")}>
+                  {p.name}
+                  {p.popular && <Icon name="star" size={14} className="text-green-dark" />}
+                </div>
+                <div className="text-[13px] text-text-tertiary mt-0.5">{pv.big}{pv.unit}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -133,13 +149,20 @@ function ComparisonTable({ model, annual }: { model: PricingModel; annual: boole
           {model.groups.map((g) => (
             <Reveal key={g.name} variants={vFade} className="block cmp2-grid">
               <div className="cmp2-grouphead">{g.name}</div>
-              {g.rows.map(([label, av, bv]) => (
-                <div key={label} className="cmp2-row cmp2-grid cmp2-feat">
-                  <div className="cmp2-label">{label}</div>
-                  <Cell v={av} />
-                  <Cell v={bv} featured />
-                </div>
-              ))}
+              {g.rows.map((row) => {
+                const [label, ...cells] = row;
+                return (
+                  <div key={label} className="cmp2-row cmp2-grid cmp2-feat">
+                    <div className="cmp2-label">{label}</div>
+                    {/* One cell per plan. Rows are authored to match
+                        model.plans.length; a short row renders a dash so a
+                        content slip degrades instead of breaking the grid. */}
+                    {model.plans.map((p, i) => (
+                      <Cell key={p.id} v={cells[i] ?? false} featured={i === featuredIndex} />
+                    ))}
+                  </div>
+                );
+              })}
             </Reveal>
           ))}
         </div>
@@ -149,7 +172,7 @@ function ComparisonTable({ model, annual }: { model: PricingModel; annual: boole
 }
 
 /* Single-card audiences (renters): one plan + a founding-aware feature list
-   instead of a two-column comparison. Every listed feature is included with
+   instead of a multi-column comparison. Every listed feature is included with
    the card; the founding-only perks carry a "First 300" badge so it's clear
    what the first 300 renters get for free. */
 function FoundingFeatures({ model }: { model: PricingModel }) {
@@ -168,7 +191,8 @@ function FoundingFeatures({ model }: { model: PricingModel }) {
       {model.groups.map((g) => (
         <Reveal key={g.name} variants={vFade} className="block">
           <div className="text-[13px] font-semibold tracking-[0.04em] uppercase text-text-tertiary px-1 pt-7 pb-1.5">{g.name}</div>
-          {g.rows.map(([label, a, b]) => {
+          {g.rows.map((row) => {
+            const [label, a, b] = row as [string, CmpCell, CmpCell];
             const founding = a !== b;
             const has = b !== false;
             return (
@@ -203,6 +227,8 @@ export function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const model = PRICING[audience];
   const fn = model.footnote;
+  const bfn = model.belowFootnote;
+  const perProperty = model.plans.some((p) => p.unitLabel?.includes("/property"));
 
   const onAudience = (a: typeof audience) => {
     setAudience(a);
@@ -235,9 +261,22 @@ export function PricingPage() {
               <p className="nc-lead mt-5 mx-auto max-w-[680px]">{model.lead}</p>
             </div>
 
-            <Group className={cx(model.plans.length === 1 ? "flex justify-center" : "plan-grid")} stagger={0.12}>
+            <Group
+              className={cx(
+                model.plans.length === 1 ? "flex justify-center" : "plan-grid",
+                model.plans.length === 3 && "plan-grid--3"
+              )}
+              stagger={0.12}
+            >
               {model.plans.map((p) => <PlanCard key={p.id} plan={p} annual={annual} solo={model.plans.length === 1} />)}
             </Group>
+
+            {perProperty && (
+              <p className="mx-auto mt-6 max-w-[620px] text-center text-[14px] leading-[1.55] text-text-secondary">
+                Prices are per property. Each property gets its own fumigation, inspection and waste schedule — and its own
+                tier, so you can mix Essential and Premium across your portfolio. Your bill is the sum.
+              </p>
+            )}
 
             <div className="mt-[clamp(56px,7vw,96px)]">
               {model.plans.length === 1 ? (
@@ -259,6 +298,28 @@ export function PricingPage() {
                 </p>
               </div>
             </Reveal>
+
+            {/* Owner-only: properties above the self-serve plot cap, and
+                estates, are quoted by sales rather than priced here. Neutral
+                surface rather than the green wash — it's a routing note, not
+                a benefit. */}
+            {bfn && (
+              <Reveal className="flex gap-[22px] items-start max-w-[1080px] mx-auto mt-4 bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] py-8 shadow-card max-[680px]:flex-col">
+                <div className="w-[52px] h-[52px] rounded-[14px] bg-surface-sunken text-ink flex items-center justify-center flex-none">
+                  <Icon name={bfn.icon} size={26} />
+                </div>
+                <div>
+                  <h4 className="nc-h4 m-0 mb-2.5">{bfn.title}</h4>
+                  <p className="text-[15.5px] leading-[1.6] text-text-secondary m-0 max-w-[72ch]">{bfn.body}</p>
+                  <a
+                    href={bfn.href}
+                    className="mt-3.5 inline-flex items-center gap-2 border-b border-[rgba(19,19,19,0.25)] pb-0.5 font-semibold text-ink no-underline transition-colors duration-200 ease-nc hover:border-ink"
+                  >
+                    {bfn.cta} <Icon name="arrow-right" size={17} />
+                  </a>
+                </div>
+              </Reveal>
+            )}
           </motion.div>
         </div>
       </section>

@@ -44,10 +44,15 @@ export const MARKING = {
   inviteLinkExpiryDays: 14,    // known-person marking link validity
 } as const;
 
+
 /* ---------- payments, escrow & commission ---------- */
 export const PAYMENTS = {
-  platformCommissionRate: 0.20,      // standard owner commission on rent
-  eliteCommissionRate: 0.15,         // Elite-plan owners
+  /** Standard owner rate — Essential and Plus. Authority: commissionRateFor(). */
+  platformCommissionRate: 0.20,
+  /** Owner Premium rate — the only tier that reduces commission. */
+  premiumCommissionRate: 0.15,
+  /** @deprecated renamed to premiumCommissionRate (Elite → Premium, Sept 2026). */
+  eliteCommissionRate: 0.15,
   agentShareOfCommission: 0.50,      // listing agent's share of the commission
   subAgentSplitOfAgentShare: 0.50,   // sub-agent's cut when a tracked link converts
   renterServiceFeeRate: 0.02,        // renter-side fee on top of rent
@@ -203,3 +208,89 @@ export const ACCOUNT_STUBS = {
   /** Delete unverified, unsubscribed, password-only accounts older than this. */
   expiryDays: 7,
 } as const;
+
+
+export const ACCOUNT_DELETION = {
+  /** Reversible lock-out window, in days, and the day erasure actually runs.
+   *
+   *  WHY 21, AND WHY 21 IS THE CEILING.
+   *
+   *  The NDPA requires a data subject request to be answered within 30 days
+   *  (GDPR Art. 12(3) is the same shape: one month). That is a maximum, and
+   *  neither law sets a minimum waiting period, so acting sooner is always
+   *  compliant. Storage limitation pushes the same direction.
+   *
+   *  The grace window has to fit INSIDE those 30 days, not sit alongside them:
+   *  a regulator reading "you asked on the 1st, we erased on the 30th" sees a
+   *  30-day response, whatever we call the delay internally. So the real
+   *  ceiling on this number is 30 minus operational margin.
+   *
+   *  21 days is that ceiling. It leaves 9 days of margin — ample for a cron
+   *  that alerts at a 3-day lag — and gives someone three weeks and three
+   *  reminder emails to change their mind. Going to 30 would buy nine more
+   *  days of reversibility and spend ALL the margin: two failed runs and the
+   *  published promise in /privacy §13 is breached, which is exactly the kind
+   *  of provable claim this work exists to remove.
+   *
+   *  Do not raise this above 21 without also re-drafting /privacy §13, and
+   *  note that §13 cannot be re-drafted past 30 days anyway — that is statute,
+   *  not preference. */
+  graceDays: 21,
+  /** The outer commitment published in /privacy §13. Never raise graceDays to
+   *  meet this number — the gap between them IS the safety margin. */
+  policyMaxDays: 30,
+  /** Days before erasure that we email a reminder. Must all be < graceDays.
+   *  Three, not two: window LENGTH is a weak lever on whether someone changes
+   *  their mind — being TOLD is the strong one. Most regret surfaces in the
+   *  first 72 hours (angry or accidental click) or months later (when they need
+   *  the service again), and no grace window covers the second case. */
+  reminderDaysBefore: [14, 7, 1],
+
+  /** How long the anonymous financial shell survives after erasure.
+   *  18 months — long enough for chargebacks, Flutterwave's 180-day rolling
+   *  reserve (merchant agreement cl. 13) and a full tax year of queries. */
+  retentionMonths: 18,
+
+  /** Records that outlive even the purge, held in isolated archive storage,
+   *  not in the live database. Tax and AML record-keeping. */
+  statutoryYears: 6,
+
+  /** Re-authentication must be this fresh for the request to be accepted. */
+  reauthMaxAgeMinutes: 10,
+  /** Typed exactly, case-sensitive, before the button enables. */
+  confirmPhrase: "DELETE MY ACCOUNT",
+
+  /** A request is refused while a dispute or chargeback is open, and for this
+   *  long after it closes — deleting to escape a dispute is already a
+   *  permanent-ban offence under /refund §06. */
+  disputeHoldDays: 90,
+
+  /** Tombstone shapes. The real email/phone/referral code are freed on
+   *  anonymization so the person can sign up again with them. */
+  tombstone: {
+    emailDomain: "deleted.newcondo.invalid",
+    name: "Deleted user",
+  },
+
+  /** Reasons offered in the dialog. Free text goes in reasonNote. */
+  reasons: [
+    "I found a place / I no longer rent out property",
+    "I'm not getting enough out of it",
+    "It costs too much",
+    "I had a bad experience",
+    "Privacy concerns",
+    "I have another account",
+    "Other",
+  ],
+} as const;
+
+/** Day 0 → the date erasure runs (day 14). */
+export const anonymizeDateFor = (from: Date = new Date()) =>
+  new Date(from.getTime() + ACCOUNT_DELETION.graceDays * 24 * 60 * 60 * 1000);
+
+/** Erasure date → the date the residual shell may be destroyed. */
+export const purgeDateFor = (anonymizedAt: Date) => {
+  const d = new Date(anonymizedAt);
+  d.setMonth(d.getMonth() + ACCOUNT_DELETION.retentionMonths);
+  return d;
+};

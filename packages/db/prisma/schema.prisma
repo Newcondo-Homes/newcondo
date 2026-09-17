@@ -1,16 +1,67 @@
 // ============================================================================
-// packages/db/prisma/schema.prisma — MERGED (your schema + dashboard features)
+// packages/db/prisma/schema.prisma — CANONICAL SCHEMA
 // ============================================================================
-// Nothing was removed from your schema. Additions are marked  // ++ ADDED
-// Reused instead of duplicated:
-//   • Referral / ReferralReward   → user referral credits (no new Referral model)
-//   • AgentReferral (+Click/Conversion) → sub-agent promo tracking analytics
-//   • PromotionRequest / PropertyPromotionSettings → sub-agent approval flow
-//   • PropertyMarkingJob          → marking jobs (extended, not replaced)
-//   • Property.boundary*          → the verified mark (no separate PropertyMark)
-//   • VirtualAccount              → escrow accounts (user + per-property)
-//   • Document                    → S3 identity/ownership docs
-// Then run: npx prisma migrate dev --name dashboard_features
+// Base: your merged schema (original + dashboard features).
+// This revision folds in ACCOUNT DELETION and makes every referential policy
+// on User explicit. Changes are marked  // ++ DELETION
+//
+// Then run: npx prisma migrate dev --name account_deletion
+//
+// ----------------------------------------------------------------------------
+// ACCOUNT DELETION — the model, in one place
+// ----------------------------------------------------------------------------
+// We never hard-delete a user on request. A rental, a payment, a commission
+// split and a marking payout are records ABOUT A SECOND PERSON too — the
+// landlord's tenancy history, the agent's earnings, Flutterwave's settlement
+// trail. Destroying the User row would orphan every one of them and break the
+// retention carve-out we publish at /privacy §12–13.
+//
+// Three states, in order:
+//
+//   1. DEACTIVATED   deletedAt      day 0   — locked out, listings hidden,
+//                                             auto-renew off. REVERSIBLE.
+//   2. ANONYMIZED    anonymizedAt   day 21  — name, email, phone, image, bvn,
+//                                             dateOfBirth, address erased;
+//                                             Document rows + S3 objects
+//                                             destroyed; Account rows (Facebook
+//                                             /Google) severed. IRREVERSIBLE.
+//                                             This is NDPA erasure. /privacy §13
+//                                             promises 30 days; running on day
+//                                             21 leaves a 9-day margin, and 21
+//                                             is the ceiling (see the constant).
+//   3. PURGED        purgedAt       +18 mo  — residual anonymous shell removed.
+//                                             purgeAfter = anonymizedAt + 18mo.
+//
+// Statutory records (Payment, PlatformRevenue, SubscriptionInvoice) outlive
+// even the purge on their own tax/AML clock, in isolated archive storage.
+//
+// ----------------------------------------------------------------------------
+// REFERENTIAL POLICY on User — why each relation is what it is
+// ----------------------------------------------------------------------------
+// These rules are NOT the deletion mechanism (the app anonymizes in place).
+// They are the safety net underneath it, and they matter at two moments:
+// the 18-month purge, and any admin force-delete or bad migration.
+//
+//   CASCADE   pure artifacts of the account — meaningless without the user and
+//             nobody else's record: Account, Session, Authenticator,
+//             RefreshToken, FeatureFlag, Document, BankAccount, Notification,
+//             Subscription, SubscriptionHistory, ServiceSubscription,
+//             AgentInvite, AccountDeletionRequest.
+//
+//   SET NULL  the record is worth keeping, the identity is not. Requires an
+//             optional FK: EventLog.user, Property.agent, Rental.invitedBy,
+//             Payment.subAgent, PropertyMarkingJob.assignedAgent,
+//             TenantInvite.renter, SubscriptionInvoice.user.
+//
+//   RESTRICT  financial, legal, or someone else's record — a delete here must
+//             fail loudly. Declared explicitly below even where Prisma would
+//             default to it, because the 18-month purge counts every Restrict
+//             relation before attempting a row delete. Miss one and the purge
+//             throws nightly forever.
+//
+// PaymentAttemptLog is deliberately Restrict: it is the evidence that the
+// Flutterwave fraud rate stays under 0.10% of monthly turnover (cl. 12.2).
+// Losing it to a cascade would delete the proof that the rate is fine.
 // ============================================================================
 
 generator client {
@@ -44,11 +95,11 @@ model User {
   verifiedBy                  String?
 
   // Profile fields
-  dateOfBirth          DateTime?
-  address              String?
-  city                 String?
-  state                String?
-  country              String?               @default("Nigeria")
+  dateOfBirth DateTime?
+  address     String?
+  city        String?
+  state       String?
+  country     String?   @default("Nigeria")
 
   // ++ ADDED — BVN powers Flutterwave permanent virtual-account creation for
   // renters at checkout (escrow safety + compliance). Encrypt at rest.
@@ -75,6 +126,24 @@ model User {
   agentReliabilityScore Decimal? @db.Decimal(3, 2)
   totalMarkingJobs      Int      @default(0)
   completedMarkingJobs  Int      @default(0)
+
+  // ++ DELETION — account lifecycle. See the header for the full model.
+  //
+  // deletedAt     set the moment deletion is requested. The user cannot sign
+  //               in, the profile stops resolving publicly, listings are
+  //               hidden. Reversible until anonymizedAt is set (21 days).
+  // anonymizedAt  identity erasure completed. Once set, nothing on this row
+  //               identifies a person and there is nothing to restore.
+  // purgeAfter    anonymizedAt + 18 months — when the residual shell may go.
+  // purgedAt      the shell was stripped or the row deleted.
+  //
+  // EVERY query that serves a user-facing surface must filter deletedAt: null.
+  // A deactivated owner's listings, an agent's public profile and a renter's
+  // enquiries all have to disappear on day 0, not day 21.
+  deletedAt    DateTime?
+  anonymizedAt DateTime?
+  purgeAfter   DateTime?
+  purgedAt     DateTime?
 
   // Relations
   accounts      Account[]
@@ -120,12 +189,15 @@ model User {
   serviceSubscription  ServiceSubscription?
   requestedServiceJobs ServiceJob[]         @relation("ServiceJobRequester")
 
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  disputes             Dispute[]
-  disputeComments      DisputeComment[]
-  disputeEvidences     DisputeEvidence[]
-  paymentAttemptLogs   PaymentAttemptLog[]
+  // ++ DELETION
+  deletionRequests AccountDeletionRequest[]
+
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  disputes           Dispute[]
+  disputeComments    DisputeComment[]
+  disputeEvidences   DisputeEvidence[]
+  paymentAttemptLogs PaymentAttemptLog[]
 
   @@index([email])
   @@index([phone])
@@ -134,6 +206,12 @@ model User {
   @@index([userType])
   @@index([isAvailableForMarking])
   @@index([referralCode])
+  // ++ DELETION — deletedAt is read on every authenticated request and on every
+  // public listing query, so it is indexed both alone and with role.
+  @@index([deletedAt])
+  @@index([anonymizedAt])
+  @@index([purgeAfter])
+  @@index([role, deletedAt])
 }
 
 enum Role {
@@ -149,6 +227,80 @@ enum IdDocumentType {
   PASSPORT
   VOTERS_CARD
   DRIVERS_LICENSE
+}
+
+// ============================================================================
+// ++ DELETION — the deletion request itself
+// ============================================================================
+// One row per request, including refused ones: a user who asked and was told
+// to settle an obligation first has still exercised an NDPA right, and we must
+// be able to show the date and the reason we gave.
+//
+// confirmationCode doubles as the Meta data-deletion confirmation code and the
+// path segment of the public status URL handed back to Facebook, which is why
+// this model carries no personal data of its own.
+// ============================================================================
+model AccountDeletionRequest {
+  id     String @id @default(cuid())
+  userId String
+
+  /// Role at the time of the request. The erasure procedure DIFFERS by role,
+  /// and User.role may itself be scrubbed later, so it is snapshotted here.
+  roleAtRequest Role
+  status        AccountDeletionStatus @default(PENDING)
+  source        AccountDeletionSource @default(IN_APP)
+
+  /// Public lookup code — Meta's confirmation_code and our status URL segment.
+  confirmationCode String @unique @default(cuid())
+
+  reason     String?
+  reasonNote String? @db.Text
+
+  /// What existed at request time — the evidence that we deleted what we said
+  /// we deleted, kept after the records themselves are gone.
+  snapshot Json?
+
+  requestedAt    DateTime  @default(now())
+  anonymizeAfter DateTime // requestedAt + grace window (21 days)
+  anonymizedAt   DateTime?
+  purgeAfter     DateTime?
+  purgedAt       DateTime?
+  cancelledAt    DateTime?
+  cancelledBy    String?
+
+  /// Counters written by the erasure run, for the completion email and audit.
+  documentsDeleted Int @default(0)
+  s3ObjectsDeleted Int @default(0)
+  photosDeleted    Int @default(0)
+  propertiesClosed Int @default(0)
+
+  /// Why it was refused, verbatim, when status is BLOCKED.
+  blockedReason String? @db.Text
+
+  requestIp String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([anonymizeAfter])
+  @@index([purgeAfter])
+}
+
+enum AccountDeletionStatus {
+  PENDING // deactivated, inside the reversible grace window
+  CANCELLED // user came back before the window closed
+  ANONYMIZED // identity erased; pseudonymous financial shell retained
+  PURGED // residual data destroyed
+  BLOCKED // requested but refused — an obligation is still open
+}
+
+enum AccountDeletionSource {
+  IN_APP // settings → Delete account  (Meta requires this route to exist)
+  EMAIL // info@newcondo.homes, identity verified by hand
+  META_CALLBACK // Facebook "Remove app" data-deletion callback
+  ADMIN // enforcement / ban with erasure
 }
 
 model Account {
@@ -167,6 +319,8 @@ model Account {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
+  // Cascade: severing the Facebook/Google link IS part of erasure — /privacy
+  // §13 promises we delete data received through social login.
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
@@ -195,8 +349,12 @@ model Document {
   isRequired Boolean   @default(true)
   expiresAt  DateTime?
 
+  // Cascade on BOTH sides. Identity documents (NIN, BVN, ID scans) and
+  // ownership documents are the most sensitive thing we hold and nothing
+  // justifies keeping them past erasure. The rows go here; the S3 objects are
+  // deleted by accountAnonymization.service.ts, which reads s3Key first.
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property Property? @relation(fields: [propertyId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade) // ++ DELETION
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -254,7 +412,6 @@ model Authenticator {
 
   @@id([userId, credentialID])
 }
-
 
 model Property {
   id          String @id @default(cuid())
@@ -322,8 +479,16 @@ model Property {
   viewCount     Int     @default(0)
   favoriteCount Int     @default(0)
 
-  owner User  @relation("PropertyOwner", fields: [ownerId], references: [id])
-  agent User? @relation("PropertyAgent", fields: [agentId], references: [id])
+  // ++ DELETION
+  // owner  Restrict — a listing must never silently vanish with its owner. On
+  //        erasure, a property with no payment/marking/rental history is
+  //        deleted explicitly; one with history survives de-identified (photos
+  //        and ownership docs destroyed, address generalized to "City, State",
+  //        GPS coarsened to a ~1 km grid per /privacy §12).
+  // agent  SetNull — the listing survives and reverts to an owner listing;
+  //        the owner can invite another agent. Same effect as resigning.
+  owner User  @relation("PropertyOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  agent User? @relation("PropertyAgent", fields: [agentId], references: [id], onDelete: SetNull)
 
   units PropertyUnit[]
 
@@ -418,9 +583,12 @@ model PaymentAttemptLog {
   userAgent     String?
   createdAt     DateTime @default(now())
 
-  user     User          @relation(fields: [userId], references: [id])
-  property Property      @relation(fields: [propertyId], references: [id])
-  unit     PropertyUnit? @relation(fields: [unitId], references: [id])
+  // ++ DELETION — Restrict. This table is the raw material for the monthly
+  // Flutterwave fraud-rate check (cl. 12.2: termination above 0.10% of
+  // turnover). Erasure nulls ipAddress and userAgent; the row itself stays.
+  user     User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  property Property      @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  unit     PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([propertyId])
@@ -532,7 +700,7 @@ model PropertyDuplicate {
   resolvedBy          String?
   resolvedAt          DateTime?
 
-  originalProperty Property @relation(fields: [originalPropertyId], references: [id])
+  originalProperty Property @relation(fields: [originalPropertyId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
 
@@ -590,9 +758,16 @@ model PropertyMarkingJob {
   snapshotImageKey String?
   maskImageKey     String?
 
-  property       Property @relation(fields: [propertyId], references: [id])
-  requestingUser User     @relation("RequestingUser", fields: [requestedBy], references: [id])
-  assignedAgent  User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id])
+  // ++ DELETION
+  // requestingUser Restrict — the owner paid for this job; it is a financial
+  //                record and the agent's proof of work.
+  // assignedAgent  SetNull — a COMPLETED job keeps the (anonymized) agent id
+  //                because the payout hangs off it. An unstarted job is
+  //                returned to QUEUED by the erasure service so the owner
+  //                isn't left waiting on someone who has gone.
+  property       Property @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  requestingUser User     @relation("RequestingUser", fields: [requestedBy], references: [id], onDelete: Restrict)
+  assignedAgent  User?    @relation("AssignedAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
 
   // ++ ADDED — FCFS queue rows (3-hour slot per agent)
   queueEntries MarkingQueueEntry[]
@@ -618,8 +793,10 @@ model MarkingQueueEntry {
   abandonedAt   DateTime?
   createdAt     DateTime  @default(now())
 
-  job   PropertyMarkingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  agent User               @relation("MarkingQueueAgent", fields: [agentId], references: [id])
+  job PropertyMarkingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  // ++ DELETION — Cascade. A queue slot is pure plumbing; an unstarted slot is
+  // released at day 0 so the next agent can take it today, not in two weeks.
+  agent User @relation("MarkingQueueAgent", fields: [agentId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, agentId])
   @@index([jobId, position])
@@ -671,10 +848,15 @@ model Rental {
   // the tenant in the inviting owner's/agent's dashboard.
   invitedById String?
 
-  property  Property      @relation(fields: [propertyId], references: [id])
-  unit      PropertyUnit? @relation(fields: [unitId], references: [id])
-  renter    User          @relation(fields: [renterId], references: [id])
-  invitedBy User?         @relation("RentalInviter", fields: [invitedById], references: [id]) // ++ ADDED
+  // ++ DELETION
+  // renter    Restrict — a tenancy is the LANDLORD's record as much as the
+  //           renter's. It survives erasure with the renter reduced to an
+  //           anonymous key. An ACTIVE tenancy blocks the request outright.
+  // invitedBy SetNull — attribution only.
+  property  Property      @relation(fields: [propertyId], references: [id], onDelete: Restrict)
+  unit      PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  renter    User          @relation(fields: [renterId], references: [id], onDelete: Restrict)
+  invitedBy User?         @relation("RentalInviter", fields: [invitedById], references: [id], onDelete: SetNull)
   payments  Payment[]
 
   createdAt DateTime @default(now())
@@ -731,9 +913,17 @@ model Payment {
   // carries { propertyId, method, contactName, contactPhone, accessNotes })
   meta Json?
 
-  user     User    @relation(fields: [userId], references: [id])
-  rental   Rental? @relation(fields: [rentalId], references: [id])
-  subAgent User?   @relation("PaymentSubAgent", fields: [subAgentId], references: [id]) // ++ ADDED
+  // ++ DELETION
+  // user     Restrict — tax, AML and chargeback obligations. This is the single
+  //          most important Restrict in the schema: a payment row is the
+  //          retention carve-out /privacy §12–13 discloses, and it survives
+  //          erasure attached to the anonymous shell. Payments PENDING or HELD
+  //          block a deletion request.
+  // subAgent SetNull — commission attribution can be dropped if the sub-agent
+  //          is gone; an unsettled split blocks their request anyway.
+  user     User    @relation(fields: [userId], references: [id], onDelete: Restrict)
+  rental   Rental? @relation(fields: [rentalId], references: [id], onDelete: SetNull)
+  subAgent User?   @relation("PaymentSubAgent", fields: [subAgentId], references: [id], onDelete: SetNull)
 
   agentReferralConversion AgentReferralConversion?
 
@@ -751,6 +941,9 @@ model Payment {
   @@index([paymentType])
   @@index([confirmationPeriodEnd])
   @@index([subAgentId])
+  // ++ DELETION — the agent payout blocker queries (subAgentId, status,
+  // commissionSettledAt) on every deletion preview.
+  @@index([subAgentId, commissionSettledAt])
 }
 
 enum PaymentType {
@@ -782,7 +975,8 @@ model PlatformRevenue {
   source    String // RENT_COMMISSION | MARKING_FEE_MARGIN | SUBSCRIPTION
   createdAt DateTime @default(now())
 
-  payment Payment @relation(fields: [paymentId], references: [id])
+  // Restrict — our own revenue record. Never cascades from anything.
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
 
   @@index([source, createdAt])
 }
@@ -801,6 +995,8 @@ model BankAccount {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Cascade — a withdrawal destination is meaningless without its owner, and
+  // account name + number are personal data that must go at erasure.
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, accountNumber])
@@ -840,7 +1036,12 @@ model ShareLink {
   createdAt  DateTime @default(now())
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  creator  User     @relation("ShareLinkCreator", fields: [creatorId], references: [id])
+  // ++ DELETION — Cascade. There is no isActive column, so a link can only be
+  // deleted; the creator's referralCode is IN the URL, so a surviving link
+  // would still carry their code. Deleted at erasure, not at deactivation
+  // (the properties behind them are already UNAVAILABLE, and day 0 must stay
+  // reversible).
+  creator User @relation("ShareLinkCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([propertyId, creatorId, kind])
   @@index([creatorId])
@@ -859,9 +1060,11 @@ model TenantInvite {
   createdAt  DateTime  @default(now())
 
   property Property      @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  unit     PropertyUnit? @relation(fields: [unitId], references: [id])
-  inviter  User          @relation("TenantInviteSender", fields: [inviterId], references: [id])
-  renter   User?         @relation("TenantInviteRenter", fields: [renterId], references: [id])
+  unit     PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  // ++ DELETION — inviter Cascade (plumbing), renter SetNull (a USED invite is
+  // part of the tenancy trail and outlives the renter's identity).
+  inviter User  @relation("TenantInviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
+  renter  User? @relation("TenantInviteRenter", fields: [renterId], references: [id], onDelete: SetNull)
 
   @@index([propertyId])
   @@index([inviterId])
@@ -878,9 +1081,12 @@ model AgentInvite {
   usedAt     DateTime?
   createdAt  DateTime  @default(now())
 
-  owner User @relation("AgentInviteOwner", fields: [ownerId], references: [id])
+  // NOTE: agentEmail is personal data about a THIRD party (the invited agent),
+  // held before they have an account. Unused invites are deleted at erasure.
+  owner User @relation("AgentInviteOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
+  @@index([agentId]) // ++ DELETION — the erasure service sweeps by agentId
 }
 
 // ++ ADDED — the accepted relationship; powers the compulsory "property owner"
@@ -892,8 +1098,9 @@ model OwnerAgentLink {
   status    String   @default("ACTIVE") // ACTIVE | REVOKED
   createdAt DateTime @default(now())
 
-  owner User @relation("OwnerAgentLinkOwner", fields: [ownerId], references: [id])
-  agent User @relation("OwnerAgentLinkAgent", fields: [agentId], references: [id])
+  // Cascade both sides — a relationship row with one party missing is noise.
+  owner User @relation("OwnerAgentLinkOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  agent User @relation("OwnerAgentLinkAgent", fields: [agentId], references: [id], onDelete: Cascade)
 
   @@unique([ownerId, agentId])
   @@index([agentId, status])
@@ -934,8 +1141,11 @@ model ServiceSubscription {
   status   String   @default("ACTIVE") // ACTIVE | CANCELLED | EXPIRED
   renewsAt DateTime
 
+  // Cascade — the plan is meaningless without the owner. Set to CANCELLED at
+  // day 0 (reversible), deleted at erasure. The quarterly fee already paid is
+  // not refunded — /refund §03, and the deletion dialog says so up front.
   owner User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  plan  ServicePlan @relation(fields: [planId], references: [id])
+  plan  ServicePlan @relation(fields: [planId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -958,9 +1168,12 @@ model ServiceJob {
   photoKeys     String[]
   completedAt   DateTime?
 
+  // ++ DELETION — requestedBy Restrict: a vendor was dispatched and paid. An
+  // OPEN service visit blocks the owner's deletion request outright — we
+  // cannot send a technician to a property with no owner on record.
   property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
-  requestedBy User     @relation("ServiceJobRequester", fields: [requestedById], references: [id])
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  requestedBy User     @relation("ServiceJobRequester", fields: [requestedById], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -968,6 +1181,7 @@ model ServiceJob {
   @@index([propertyId, status])
   @@index([vendorId])
   @@index([scheduledFor])
+  @@index([requestedById]) // ++ DELETION
 }
 
 // ---------------------------------------------------------------------------
@@ -987,8 +1201,12 @@ model VirtualAccount {
 
   flutterwaveAccountId String? @unique
 
-  user     User      @relation(fields: [userId], references: [id])
-  property Property? @relation(fields: [propertyId], references: [id])
+  // ++ DELETION — Restrict. A VA can hold a balance; deleting the user out from
+  // under one would strand money. Any balance > 0 blocks the request; at
+  // erasure the account is set isActive: false, and zero-balance rows are
+  // deleted at the 18-month purge.
+  user     User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1024,8 +1242,11 @@ model Referral {
   clickCount   Int     @default(0)
   shareChannel String?
 
-  referrer User             @relation("Referrer", fields: [referrerId], references: [id])
-  referred User             @relation("Referred", fields: [referredId], references: [id])
+  // ++ DELETION — Restrict on both sides so paid-out reward history is never
+  // silently destroyed. Cleared explicitly at the 18-month purge, and only for
+  // an account that touched nothing else.
+  referrer User             @relation("Referrer", fields: [referrerId], references: [id], onDelete: Restrict)
+  referred User             @relation("Referred", fields: [referredId], references: [id], onDelete: Restrict)
   rewards  ReferralReward[]
 
   createdAt DateTime @default(now())
@@ -1047,7 +1268,10 @@ model EventLog {
   ipAddress String?
   userAgent String?
 
-  user User? @relation("UserEvents", fields: [userId], references: [id])
+  // ++ DELETION — SetNull. /privacy §12 promises activity logs are "summarized
+  // into de-identified statistical data", not destroyed. Erasure nulls userId,
+  // ipAddress and userAgent, keeping the analytics and dropping the person.
+  user User? @relation("UserEvents", fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([type])
@@ -1093,6 +1317,8 @@ model OTPCode {
 
   createdAt DateTime @default(now())
 
+  // NOTE: keyed by identifier (email/phone), NOT userId — so there is no FK to
+  // cascade. Erasure deletes by identifier before the email is tombstoned.
   @@unique([identifier, type], name: "identifier_type")
   @@index([expiresAt])
 }
@@ -1118,7 +1344,10 @@ model SupportTicket {
   resolvedBy    String?
   resolvedAt    DateTime?
 
-  user User @relation(fields: [userId], references: [id])
+  // ++ DELETION — Restrict. Support history can be evidence in a dispute. The
+  // row survives; because there is no email/phone column, the personal data
+  // lives in the free-text title and description, which erasure REDACTS.
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1159,7 +1388,9 @@ model AdminAction {
   description String?
   metadata    Json?
 
-  admin User @relation(fields: [adminId], references: [id])
+  // ++ DELETION — Restrict, and admin accounts are excluded from self-service
+  // deletion entirely. This is the audit trail; it must never be lost.
+  admin User @relation(fields: [adminId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
@@ -1181,8 +1412,11 @@ model AgentReferral {
 
   isActive Boolean @default(true)
 
-  agent       User                      @relation("AgentReferrals", fields: [agentId], references: [id])
-  property    Property                  @relation("PropertyReferrals", fields: [propertyId], references: [id])
+  // ++ DELETION — Restrict: totalEarnings ties to real commission. Deleted
+  // explicitly at erasure (the click/conversion children cascade from here);
+  // the agent's actual earnings live on Payment, not on this row.
+  agent       User                      @relation("AgentReferrals", fields: [agentId], references: [id], onDelete: Restrict)
+  property    Property                  @relation("PropertyReferrals", fields: [propertyId], references: [id], onDelete: Cascade)
   clicks      AgentReferralClick[]
   conversions AgentReferralConversion[]
 
@@ -1230,7 +1464,7 @@ model AgentReferralConversion {
   paidAt DateTime?
 
   referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  payment  Payment       @relation(fields: [paymentId], references: [id])
+  payment  Payment       @relation(fields: [paymentId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
@@ -1292,8 +1526,11 @@ model ReferralReward {
 
   metadata Json?
 
-  user     User      @relation("UserRewards", fields: [userId], references: [id])
-  referral Referral? @relation(fields: [referralId], references: [id])
+  // ++ DELETION — Restrict (financial-adjacent: payoutReference is a real
+  // transfer). Unredeemed credits are forfeited on deletion and the dialog
+  // says so before the user confirms — credits are not transferable.
+  user     User      @relation("UserRewards", fields: [userId], references: [id], onDelete: Restrict)
+  referral Referral? @relation(fields: [referralId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1318,7 +1555,7 @@ model ReferralConversion {
   paidAt DateTime?
 
   referral AgentReferral @relation(fields: [referralId], references: [id], onDelete: Cascade)
-  payment  Payment       @relation(fields: [paymentId], references: [id])
+  payment  Payment       @relation(fields: [paymentId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
@@ -1340,9 +1577,13 @@ model PromotionRequest {
   respondedAt     DateTime?
   respondedBy     String?
 
-  agent    User     @relation("PromotionRequester", fields: [agentId], references: [id])
-  property Property @relation("PromotionRequests", fields: [propertyId], references: [id])
-  owner    User     @relation("PromotionOwner", fields: [ownerId], references: [id])
+  // ++ DELETION — Cascade both user sides. Approval only ever grants a promo
+  // ShareLink, and that link dies with the agent, so the request row has no
+  // value once either party is gone. NOTE the requester field is `agentId`,
+  // not `requesterId`.
+  agent    User     @relation("PromotionRequester", fields: [agentId], references: [id], onDelete: Cascade)
+  property Property @relation("PromotionRequests", fields: [propertyId], references: [id], onDelete: Cascade)
+  owner    User     @relation("PromotionOwner", fields: [ownerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1384,6 +1625,8 @@ enum AdminActionType {
   BOUNDARY_DISPUTE_RESOLVED
   TICKET_RESOLVED
   AGENT_SUSPENDED
+  ACCOUNT_DELETION_BLOCKED // ++ DELETION
+  ACCOUNT_ANONYMIZED // ++ DELETION
 }
 
 model Dispute {
@@ -1403,9 +1646,14 @@ model Dispute {
   resolvedAt        DateTime?
   assignedAdminId   String?
 
-  rental   Rental            @relation(fields: [rentalId], references: [id])
-  payment  Payment           @relation(fields: [paymentId], references: [id])
-  renter   User              @relation(fields: [renterId], references: [id])
+  // ++ DELETION — Restrict, legal record.
+  // NOTE for anyone writing deletion code: a dispute is filed BY the renter,
+  // so the only direct user FK is renterId. An owner or agent is a party only
+  // through rental.property.ownerId / .agentId — the blocker check has to be
+  // role-shaped, and DisputeStatus has no OPEN or ESCALATED value.
+  rental   Rental            @relation(fields: [rentalId], references: [id], onDelete: Restrict)
+  payment  Payment           @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  renter   User              @relation(fields: [renterId], references: [id], onDelete: Restrict)
   comments DisputeComment[]
   evidence DisputeEvidence[]
 
@@ -1426,11 +1674,13 @@ model DisputeComment {
   comment    String
 
   dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
-  author  User    @relation(fields: [authorId], references: [id])
+  // Restrict — attribution on a legal record.
+  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
   @@index([disputeId])
+  @@index([authorId]) // ++ DELETION — counted by the purge
 }
 
 model DisputeEvidence {
@@ -1440,12 +1690,14 @@ model DisputeEvidence {
   fileUrl    String
   fileType   String
 
-  dispute  Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
-  uploader User    @relation(fields: [uploadedBy], references: [id])
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  // Restrict — chain of custody.
+  uploader User @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
   @@index([disputeId])
+  @@index([uploadedBy]) // ++ DELETION — counted by the purge
 }
 
 enum DisputeStatus {
@@ -1594,6 +1846,10 @@ model Subscription {
 
   canAccessMarkingJobs Boolean @default(false)
 
+  // ++ DELETION — deletion sets autoRenew: false at day 0 (there is no
+  // cancelAtPeriodEnd column). The current period is NOT refunded — /refund
+  // §03 — and the dialog states that before the user confirms. Cancelling
+  // reactivation turns autoRenew back on only if the sub is still live.
   autoRenew            Boolean   @default(true)
   nextRenewalAttempt   DateTime?
   renewalFailureCount  Int       @default(0)
@@ -1601,6 +1857,9 @@ model Subscription {
 
   virtualAccountCreated Boolean @default(false)
 
+  // Cascade — cardLast4/cardBrand and the Flutterwave customer token are
+  // personal data. The billing HISTORY lives on SubscriptionInvoice, which
+  // survives (SetNull) as a tax record.
   user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   history  SubscriptionHistory[]
   invoices SubscriptionInvoice[]
@@ -1650,7 +1909,11 @@ model SubscriptionHistory {
 model SubscriptionInvoice {
   id             String @id @default(cuid())
   subscriptionId String
-  userId         String
+
+  // ++ DELETION — was `String` + Cascade, which is a contradiction: an invoice
+  // is a TAX record and must outlive the user, but Cascade destroyed it with
+  // them. Now optional + SetNull: the invoice survives, the identity does not.
+  userId String?
 
   invoiceNumber String   @unique
   periodStart   DateTime
@@ -1666,8 +1929,8 @@ model SubscriptionInvoice {
   retryCount        Int           @default(0)
   nextRetryAt       DateTime?
 
-  subscription Subscription @relation(fields: [subscriptionId], references: [id])
-  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1751,6 +2014,7 @@ enum SubscriptionEvent {
   PLAN_CHANGED
   FREE_PLAN_CONVERTED
   FREE_ACCESS_GRANTED
+  ACCOUNT_DELETED // ++ DELETION
 }
 
 enum InvoiceStatus {

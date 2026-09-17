@@ -30,7 +30,8 @@
          already-registered/social), so it's a no-op/no-friction safety net
          whenever the roles already match, and the actual fix when they don't.
      4a. FREE renter  → POST /subscriptions/renter-signup
-     4b. PAID         → POST /subscriptions/initiate → backend returns the
+     4b. CODE         → POST /subscriptions/review-access  (see below)
+     4c. PAID         → POST /subscriptions/initiate → backend returns the
          authoritative Flutterwave payload (amount + payment_plan + tx_ref)
          → open Flutterwave Inline with THAT payload → success
      5. onComplete
@@ -40,17 +41,25 @@
    when payment_plan is attached, Flutterwave rejects the call unless the
    amount matches the plan amount exactly — letting the server supply both
    guarantees they match.
+
+   REVIEW ACCESS CODE (4b): Newcondo has no free tier, so a Meta/Google/Apple
+   reviewer signing in with their own account dead-ends here and can never
+   exercise the OAuth permission under review. A code entered in the collapsed
+   "Have an access code?" disclosure is redeemed server-side for a comped
+   ACTIVE subscription — Flutterwave is never called, so live payments keep
+   working for real customers throughout the review window.
    ============================================================ */
 
 import { useEffect, useRef, useState } from "react";
 import { getSession } from "@newcondo/auth/client";
-import { Loader2, ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft, Check, CreditCard } from "lucide-react";
+import { Loader2, ShieldCheck, Lock, AlertCircle, RefreshCw, ArrowLeft, Check, CreditCard, Ticket } from "lucide-react";
 import { useRegister, useAuth } from "@/hooks/useAuth";
 import { useFlutterwaveInline } from "@/hooks/useFlutterwaveInline";
 import {
   initiateSubscription,
   createFreeRenterSubscription,
   resolveSubscriptionPlanCode,
+  redeemReviewAccess,
 } from "@/lib/api/subscriptions";
 import { updateProfile } from "@/lib/api/profile";
 import { UserType } from "@/types/api";
@@ -132,6 +141,16 @@ export default function PaymentProcessing({
   // (no register, no charge) until the user taps Pay/Activate. This is the
   // modal the user expects before the Flutterwave card sheet appears.
   const [started, setStarted] = useState(false);
+
+  // ---- Review access code (platform app review) ----
+  // Kept behind a disclosure so a paying customer is never prompted for a
+  // code they don't have. The code itself only ever exists in the backend
+  // env (REVIEW_ACCESS_CODE) — nothing here validates or stores it.
+  const [showCodeField, setShowCodeField] = useState(false);
+  const [accessCode, setAccessCode] = useState("");
+  const [redeemingCode, setRedeemingCode] = useState(false);
+  // Set once a code is submitted — the run effect then skips the charge entirely.
+  const codeRedeemed = useRef(false);
 
   // Guards StrictMode double-invoke — never runs the same attempt twice.
   const ranFor = useRef(-1);
@@ -232,7 +251,16 @@ export default function PaymentProcessing({
         // 4) Create the subscription on the backend (authed via apiClient).
         let paymentResult: PaymentResult | undefined;
 
-        if (free) {
+        if (codeRedeemed.current) {
+          // Review access: comped subscription, no Flutterwave call at all.
+          // Runs HERE rather than at the button press because the endpoint is
+          // behind authMiddleware and needs the live session the steps above
+          // guarantee — same reason initiateSubscription can't run earlier.
+          setStep("payment");
+          console.log("[PaymentProcessing] Redeeming review access code\u2026");
+          const granted = await redeemReviewAccess(accessCode);
+          console.log("[PaymentProcessing] Review access granted:", granted);
+        } else if (free) {
           // Free renter → record the free subscription server-side.
           if (draft.role === UserType.RENTER) {
             console.log("[PaymentProcessing] Creating free renter subscription...");
@@ -260,6 +288,10 @@ export default function PaymentProcessing({
         console.error("[PaymentProcessing] Error:", e);
         const message =
           e instanceof Error ? e.message : "Something went wrong while finishing up. Please try again.";
+        setRedeemingCode(false);
+        // A rejected code must not silently re-run as a code attempt when the
+        // user taps "Try again" — that would loop on the same bad code.
+        codeRedeemed.current = false;
         if (!completed) {
           completed = true;
           setError(message);
@@ -271,6 +303,18 @@ export default function PaymentProcessing({
 
   const beginCheckout = () => {
     setError(null);
+    codeRedeemed.current = false;
+    setStarted(true);
+    setAttempt((a) => a + 1);
+  };
+
+  /* Apply an access code instead of paying. The redemption itself happens in
+     the run effect above, after register + signIn — the endpoint is authed. */
+  const applyAccessCode = () => {
+    if (!accessCode.trim()) return;
+    setError(null);
+    setRedeemingCode(true);
+    codeRedeemed.current = true;
     setStarted(true);
     setAttempt((a) => a + 1);
   };
@@ -331,6 +375,62 @@ export default function PaymentProcessing({
           >
             Choose a different plan
           </button>
+        )}
+
+        {/* ---- Access code (platform app review) ----
+            Collapsed by default: a paying customer should never be prompted
+            for a code they don't have. Reviewers are told to open it. */}
+        {!free && (
+          <div className="mt-4 border-t border-divider pt-4">
+            {!showCodeField ? (
+              <button
+                type="button"
+                onClick={() => setShowCodeField(true)}
+                className="inline-flex items-center gap-2 text-[13px] font-semibold text-text-tertiary transition-colors duration-200 ease-nc hover:text-ink cursor-pointer"
+              >
+                <Ticket size={15} strokeWidth={2} />
+                Have an access code?
+              </button>
+            ) : (
+              <div>
+                <label
+                  htmlFor="nc-access-code"
+                  className="block text-[12px] font-semibold uppercase tracking-[0.12em] text-text-tertiary"
+                >
+                  Access code
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    id="nc-access-code"
+                    type="text"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value.toUpperCase())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyAccessCode();
+                      }
+                    }}
+                    placeholder="Enter your code"
+                    className="min-w-0 flex-1 rounded-2xl border border-border-strong bg-surface px-4 py-3 font-mono text-[14px] tracking-[0.06em] text-text-primary outline-none transition-colors duration-200 ease-nc placeholder:font-sans placeholder:tracking-normal placeholder:text-text-tertiary focus:border-ink"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyAccessCode}
+                    disabled={!accessCode.trim() || redeemingCode}
+                    className="inline-flex flex-none items-center justify-center rounded-full bg-ink px-5 py-3 text-[14px] font-semibold leading-none text-cream transition-[transform,background] duration-200 ease-nc hover:bg-black active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                  >
+                    {redeemingCode ? <Loader2 size={16} strokeWidth={2} className="animate-spin" /> : "Apply"}
+                  </button>
+                </div>
+                <p className="mt-2 text-[12px] leading-[1.5] text-text-tertiary">
+                  For platform reviewers and invited testers. Applies a complimentary subscription — no card needed.
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
         {!free && (
@@ -394,11 +494,14 @@ export default function PaymentProcessing({
   }
 
   /* ---- Processing state ---- */
-  const heading = free
-    ? "Setting up your account\u2026"
-    : step === "account"
-      ? "Creating your account\u2026"
-      : "Processing your payment\u2026";
+  const usingCode = codeRedeemed.current;
+  const heading = usingCode
+    ? "Applying your access code\u2026"
+    : free
+      ? "Setting up your account\u2026"
+      : step === "account"
+        ? "Creating your account\u2026"
+        : "Processing your payment\u2026";
 
   return (
     <div className="flex flex-col items-center text-center">
@@ -411,12 +514,14 @@ export default function PaymentProcessing({
         {heading}
       </h2>
       <p className="mt-2.5 max-w-[44ch] text-[15.5px] leading-[1.55] text-text-secondary">
-        {free
-          ? "Just a moment while we create your account and get your dashboard ready."
-          : `Securely charging ${naira(plan.price)} for your ${plan.name} plan. Please don't close this window.`}
+        {usingCode
+          ? "Setting up your complimentary subscription. This only takes a moment."
+          : free
+            ? "Just a moment while we create your account and get your dashboard ready."
+            : `Securely charging ${naira(plan.price)} for your ${plan.name} plan. Please don't close this window.`}
       </p>
 
-      {!free && (
+      {!free && !usingCode && (
         <div className="mt-7 flex items-center gap-5 text-[13px] font-medium text-text-tertiary">
           <span className="inline-flex items-center gap-2">
             <ShieldCheck size={16} strokeWidth={1.9} className="text-green-dark" />
