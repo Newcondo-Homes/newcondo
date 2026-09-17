@@ -6,36 +6,49 @@ import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Group, Item, Reveal, vFade } from "@/components/motion";
 import Link from "next/link";
-import { PLAN_ESSENTIAL, PLAN_ELITE } from "@/lib/data";
-import { SUBSCRIPTION_PLANS, formatNaira } from "@/lib/constants/business";
+import { PLANS as PLAN_COPY } from "@/lib/data";
+import {
+  SUBSCRIPTION_PLANS,
+  OWNER_TIER_ORDER,
+  MAX_PLOTS_SELF_SERVE,
+  formatNaira,
+  formatRate,
+  type SubscriptionPlanSpec,
+} from "@/lib/constants/business";
 
-/* Prices, taglines and commission rates come from the shared single source of
-   truth (backend/shared/src/constants/subscriptionPlans.ts) — the same file
-   the backend charges from. The feature bullets stay in @/lib/data because
-   this page's marketing copy is longer than the in-product feature list. */
+/* Three owner tiers. Prices, taglines, badges, service level and commission
+   rates come from the shared single source of truth (backend/shared/src/
+   constants/subscriptionPlans.ts) — the same file billing computes from. The
+   longer marketing bullet lists come from @/lib/data's PLANS array, matched
+   by plan code.
+
+   The tier is per PROPERTY: an owner can run one property on Premium and
+   another on Essential. Nothing here is account-level. */
+const featuresFor = (code: string): string[] =>
+  PLAN_COPY.find((p) => p.code === code)?.features ?? SUBSCRIPTION_PLANS[code as never].features;
+
 const essential = SUBSCRIPTION_PLANS.OWNER_ESSENTIAL;
-const elite = SUBSCRIPTION_PLANS.OWNER_ELITE;
+const premium = SUBSCRIPTION_PLANS.OWNER_PREMIUM;
 
-/* "Why Elite pays for itself" — derived, so the arithmetic can never contradict
-   the prices above it. At 20% → 15% on ₦200,000 of rent: saves ₦10,000/month
-   against an ₦18,500 subscription, i.e. a net ₦8,500. */
+/* "Why Premium pays for itself" — derived, so the arithmetic can never
+   contradict the prices above it. At 20% → 15% on ₦200,000 of rent: saves
+   ₦10,000/month against an ₦18,250 subscription. */
 const SAMPLE_RENT = 200_000;
-const pct = (rate: number) => `${Math.round(rate * 100)}%`;
-const monthlySaving = SAMPLE_RENT * (essential.commissionRate - elite.commissionRate);
-const netCost = elite.amountNaira - monthlySaving;
+const monthlySaving = SAMPLE_RENT * (essential.commissionRate - premium.commissionRate);
+const netCost = premium.amountNaira - monthlySaving;
 
-function PlanList({ items, elite: isElite = false }: { items: string[]; elite?: boolean }) {
+function PlanList({ items, dark = false }: { items: string[]; dark?: boolean }) {
   return (
     <ul className="list-none p-0 m-0 mt-[26px] flex flex-col gap-[13px]">
       {items.map((it) => (
         <li
           key={it}
           className={cx(
-            "flex items-start gap-[11px] text-[15px] leading-[1.4]",
-            isElite ? "text-text-on-dark" : "text-text-secondary"
+            "flex items-start gap-[11px] text-[14.5px] leading-[1.4]",
+            dark ? "text-text-on-dark" : "text-text-secondary"
           )}
         >
-          <Icon name="check" size={18} className={cx("flex-none mt-px", isElite ? "text-green-bright" : "text-green-dark")} />
+          <Icon name="check" size={17} className={cx("flex-none mt-px", dark ? "text-green-bright" : "text-green-dark")} />
           {it}
         </li>
       ))}
@@ -43,80 +56,109 @@ function PlanList({ items, elite: isElite = false }: { items: string[]; elite?: 
   );
 }
 
+function PlanCard({ plan }: { plan: SubscriptionPlanSpec }) {
+  const dark = !!plan.highlight;
+  return (
+    <Item
+      as="article"
+      variants={vFade}
+      className={cx(
+        "js-plan relative rounded-card px-8 pt-9 pb-10 flex flex-col",
+        dark ? "bg-ink text-cream border border-transparent" : "bg-surface border border-[rgba(0,0,0,0.06)]"
+      )}
+    >
+      {plan.badge && (
+        <span className="absolute top-[28px] right-[30px]">
+          <Badge tone={dark ? "bright" : "green"}>{plan.badge}</Badge>
+        </span>
+      )}
+      <div>
+        <h3 className={cx("text-[26px] font-bold tracking-[-0.03em] m-0 mb-1.5", dark ? "text-cream" : "text-text-primary")}>
+          {plan.name}
+        </h3>
+        <p className={cx("text-[14px] leading-[1.45] m-0 min-h-[40px]", dark ? "text-text-on-dark-2" : "text-text-secondary")}>
+          {plan.tagline}
+        </p>
+      </div>
+      <div className="flex items-baseline gap-1.5 mt-[22px] flex-wrap">
+        <span className={cx("text-[40px] font-bold tracking-[-0.04em]", dark ? "text-cream" : "text-text-primary")}>
+          {formatNaira(plan.amountNaira)}
+        </span>
+        <span className={cx("text-[15px]", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{plan.unitLabel}</span>
+      </div>
+      <p className={cx("text-[13px] m-0 mt-1.5 mb-6", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>
+        {formatRate(plan.commissionRate)} commission on rent
+      </p>
+      <Link href="/onboarding">
+        <Button as="button" variant={dark ? "light" : "dark"} size="block" icon="arrow-right">
+          Start with {plan.name}
+        </Button>
+      </Link>
+      <PlanList items={featuresFor(plan.code)} dark={dark} />
+    </Item>
+  );
+}
+
 export function Pricing() {
+  const tiers = OWNER_TIER_ORDER.map((code) => SUBSCRIPTION_PLANS[code]);
   return (
     <Section id="pricing" label="Pricing" cream>
       <SectionHead
         center
         eyebrow="Simple, honest pricing"
-        title="Pick the plan that makes owning property feel like owning property — not a second job."
-        lead="Both plans include escrow rent collection, tenant verification, legal agreements, fumigation, waste management, photography, blacklist access, and the full Newcondo platform. Elite adds the features that make it pay for itself."
+        title="Pick the service level that makes owning property feel like owning property — not a second job."
+        lead="Every tier includes escrow rent collection, tenant verification, legal agreements, monthly waste management, photography, blacklist access and the full Newcondo platform. The tiers differ in how often we show up: exterior fumigation and inspection reports. Priced per property, per month — and you pick the tier for each property separately."
       />
 
-      <Group stagger={0.12} className="grid grid-cols-2 gap-6 max-w-[1040px] mx-auto max-[860px]:grid-cols-1">
-        {/* Essential */}
-        <Item as="article" variants={vFade} className="js-plan bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
-          <div>
-            <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-text-primary">{essential.name}</h3>
-            <p className="text-[14.5px] text-text-secondary m-0">{essential.tagline}</p>
-          </div>
-          <div className="flex items-baseline gap-1.5 mt-[26px] mb-6">
-            <span className="text-[46px] font-bold tracking-[-0.04em] text-text-primary">{formatNaira(essential.amountNaira)}</span>
-            <span className="text-[16px] text-text-tertiary">/month</span>
-          </div>
-          <Link href="/onboarding">
-            <Button as="button" variant="dark" size="block" icon="arrow-right">
-              Start with {essential.name}
-            </Button>
-          </Link>
-          <PlanList items={PLAN_ESSENTIAL} />
-        </Item>
-
-        {/* Elite */}
-        <Item as="article" variants={vFade} className="js-plan bg-ink text-cream border border-transparent rounded-card px-[38px] pt-10 pb-11 relative flex flex-col">
-          {elite.badge && (
-            <span className="absolute top-[30px] right-[34px]">
-              <Badge tone="bright">{elite.badge}</Badge>
-            </span>
-          )}
-          <div>
-            <h3 className="text-[28px] font-bold tracking-[-0.03em] m-0 mb-1.5 text-cream">{elite.name}</h3>
-            <p className="text-[14.5px] text-text-on-dark-2 m-0">{elite.tagline}</p>
-          </div>
-          <div className="flex items-baseline gap-1.5 mt-[26px] mb-6">
-            <span className="text-[46px] font-bold tracking-[-0.04em] text-cream">{formatNaira(elite.amountNaira)}</span>
-            <span className="text-[16px] text-text-on-dark-2">/month</span>
-          </div>
-          <Link href="/onboarding">
-            <Button as="button" variant="light" size="block" icon="arrow-right">
-              Start with {elite.name}
-            </Button>
-          </Link>
-          <p className="text-[14px] font-semibold text-text-on-dark-2 mt-7 mb-1.5">Everything in {essential.name}, plus:</p>
-          <PlanList items={PLAN_ELITE} elite />
-        </Item>
+      <Group stagger={0.1} className="grid grid-cols-3 gap-5 max-w-[1200px] mx-auto max-[1080px]:grid-cols-1 max-[1080px]:max-w-[520px]">
+        {tiers.map((plan) => (
+          <PlanCard key={plan.code} plan={plan} />
+        ))}
       </Group>
 
+      <Reveal className="max-w-[1200px] mx-auto mt-5 flex items-center justify-center gap-2.5 text-[14px] text-text-secondary text-center flex-wrap">
+        <Icon name="layers" size={17} className="text-green-dark flex-none" />
+        Mix tiers freely — one property on {premium.name}, another on {essential.name}. Your bill is the sum.
+      </Reveal>
+
       <Reveal
-        className="flex gap-[22px] items-start max-w-[1040px] mx-auto mt-[30px] bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] py-8 max-[860px]:flex-col"
+        className="flex gap-[22px] items-start max-w-[1200px] mx-auto mt-[30px] bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] py-8 max-[860px]:flex-col"
       >
         <div className="w-[52px] h-[52px] rounded-[14px] bg-green-wash text-green-dark flex items-center justify-center flex-none">
           <Icon name="calculator" size={26} />
         </div>
         <div>
-          <h4 className="nc-h4 m-0 mb-2.5">Why {elite.name} pays for itself</h4>
+          <h4 className="nc-h4 m-0 mb-2.5">Why {premium.name} pays for itself</h4>
           <p className="text-[15.5px] leading-[1.6] text-text-secondary m-0 max-w-[70ch]">
-            On {elite.name}, commission drops from {pct(essential.commissionRate)} to {pct(elite.commissionRate)}. Collect{" "}
-            {formatNaira(SAMPLE_RENT)}/month in rent and that{" "}
-            {pct(essential.commissionRate - elite.commissionRate)} saves you{" "}
-            <strong className="text-text-primary">{formatNaira(monthlySaving)} every month</strong>. Your subscription is{" "}
-            {formatNaira(elite.amountNaira)} — so you&apos;re essentially paying {formatNaira(netCost)}/month for an account
-            manager, rent default insurance, emergency maintenance, unlimited listings, and every other {elite.name} benefit.
-            Most {elite.name} subscribers are cash-positive from their commission saving alone.
+            On {premium.name}, commission drops from {formatRate(essential.commissionRate)} to{" "}
+            {formatRate(premium.commissionRate)}. Collect {formatNaira(SAMPLE_RENT)}/month in rent on a property and that
+            difference saves you <strong className="text-text-primary">{formatNaira(monthlySaving)} every month</strong>. The
+            subscription is {formatNaira(premium.amountNaira)} — so you&apos;re effectively paying {formatNaira(netCost)}/month
+            for twice the fumigation, two inspection reports a year, an account manager, rent default insurance and 24-hour
+            emergency maintenance.
           </p>
           <p className="inline-flex items-center gap-[9px] mt-3.5 font-semibold text-green-dark">
-            <Icon name="gift" size={18} /> Pay annually and get 2 months free on either plan.
+            <Icon name="gift" size={18} /> Pay annually and get 2 months free on any tier.
           </p>
+        </div>
+      </Reveal>
+
+      <Reveal className="flex gap-[22px] items-start max-w-[1200px] mx-auto mt-4 bg-surface border border-[rgba(0,0,0,0.06)] rounded-card px-[34px] py-8 max-[860px]:flex-col">
+        <div className="w-[52px] h-[52px] rounded-[14px] bg-surface-sunken text-ink flex items-center justify-center flex-none">
+          <Icon name="building-2" size={26} />
+        </div>
+        <div>
+          <h4 className="nc-h4 m-0 mb-2.5">Property bigger than {MAX_PLOTS_SELF_SERVE} plots, or an estate?</h4>
+          <p className="text-[15.5px] leading-[1.6] text-text-secondary m-0 max-w-[70ch]">
+            These tiers are priced for properties up to {MAX_PLOTS_SELF_SERVE} plots of land — 1 to 3 buildings, one fence, one
+            owner. Larger single properties and estates get a custom quote built on the same cost model, scaled to size.
+          </p>
+          <Link
+            href="/contact-sales"
+            className="inline-flex items-center gap-2 mt-3.5 font-semibold text-ink border-b border-[rgba(19,19,19,0.25)] pb-0.5 no-underline transition-colors duration-200 ease-nc hover:border-ink"
+          >
+            Talk to sales <Icon name="arrow-right" size={17} />
+          </Link>
         </div>
       </Reveal>
     </Section>

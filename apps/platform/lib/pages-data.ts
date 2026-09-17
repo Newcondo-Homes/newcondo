@@ -1,25 +1,23 @@
 /* ============================================================
    Content for the audience-aware sub-pages:
-   Pricing, How it works, Features. Single source of truth.
+   Pricing, How it works, Features.
+
+   PRICING IS DERIVED, NOT AUTHORED. Every price, commission rate and service
+   level in the PRICING block below comes from the single source of truth at
+   backend/shared/src/constants/subscriptionPlans.ts — the same file the
+   backend bills from. Never type a naira figure or a percentage into this
+   file; if a number is wrong, fix it there.
    ============================================================ */
-import { SUBSCRIPTION_PLANS, withCycle } from "@/lib/constants/business";
+
 import {
   SUBSCRIPTION_PLANS as P,
+  OWNER_TIER_ORDER,
   RENTER_LAUNCH_PRICING,
   formatNaira,
+  formatRate as pct,
   MARKING,
+  MAX_PLOTS_SELF_SERVE,
 } from "@/lib/constants/business";
-
-/* Derived numbers used in the owner footnote. At 20% → 15% on ₦200,000 of
-   rent: saves ₦10,000/month against an ₦18,500 subscription → net ₦8,500.
-   Change a price or a commission rate and this sentence follows. */
-const SAMPLE_RENT = 200_000;
-const pct = (r: number) => `${Math.round(r * 100)}%`;
-const eliteSaving = SAMPLE_RENT * (P.OWNER_ESSENTIAL.commissionRate - P.OWNER_ELITE.commissionRate);
-const eliteNet = P.OWNER_ELITE.amountNaira - eliteSaving;
-/** Marking-job earnings range quoted to agents (payout → admin-job payout). */
-const markingJobRange = `${formatNaira(MARKING.markerPayout)}–${formatNaira(MARKING.markerPayout * 2)}`;
-// const P = SUBSCRIPTION_PLANS;
 
 export type Audience = "renter" | "agent" | "owner";
 
@@ -42,11 +40,14 @@ export interface Plan {
   name: string;
   tagline: string;
   monthly?: number;
+  /** Annual price for this tier, when it has an annual twin. */
+  annual?: number;
+  /** "/property/month" — owner tiers are priced per property. */
+  unitLabel?: string;
   priceLabel?: string;
   unit?: string;
   /** Optional struck-through "was" price shown beside the live price. */
   strike?: string;
-  annual?: number;
   note?: string;
   badge?: string;
   popular: boolean;
@@ -56,7 +57,10 @@ export interface Plan {
 }
 /** comparison cell: true → check · false → dash · string → text */
 export type CmpCell = boolean | string;
-export type CmpRow = [label: string, a: CmpCell, b: CmpCell];
+/** One row: a label plus ONE CELL PER PLAN, in model.plans order. Owner has
+ *  three plans, agent two — the table renders model.plans.length columns, so
+ *  a row's cell count must match. */
+export type CmpRow = [label: string, ...cells: CmpCell[]];
 export interface CmpGroup {
   name: string;
   rows: CmpRow[];
@@ -69,56 +73,95 @@ export interface PricingModel {
   plans: Plan[];
   groups: CmpGroup[];
   footnote: { icon: string; title: string; body: string; tag: string };
+  /** Optional secondary note below the footnote card — the owner audience
+   *  uses it for the "over 3 plots / estates get a custom quote" notice. */
+  belowFootnote?: { icon: string; title: string; body: string; cta: string; href: string };
 }
+
+/* Derived numbers for the owner footnote. At 20% → 15% on ₦200,000 of rent:
+   saves ₦10,000/month against an ₦18,250 subscription. */
+const SAMPLE_RENT = 200_000;
+const premiumSaving = SAMPLE_RENT * (P.OWNER_ESSENTIAL.commissionRate - P.OWNER_PREMIUM.commissionRate);
+const premiumNet = P.OWNER_PREMIUM.amountNaira - premiumSaving;
+/** Marking-job earnings range quoted to agents (payout → admin-job payout). */
+const markingJobRange = `${formatNaira(MARKING.markerPayout)}–${formatNaira(MARKING.markerPayout * 2)}`;
+/** "1× per year", or false (renders a dash) when a tier doesn't include it. */
+const times = (n: number) => (n > 0 ? `${n}× per year` : false);
 
 export const PRICING: Record<Audience, PricingModel> = {
   owner: {
     eyebrow: "For property owners",
     title: "Own the building. Finally own the income too.",
-    lead: "Every plan includes escrow rent collection, identity-verified tenants, legal agreements, fumigation, waste management and the full Newcondo platform. Elite adds the features that make it pay for itself.",
+    lead: "Every tier includes escrow rent collection, identity-verified tenants, legal agreements, monthly waste management and the full Newcondo platform. Tiers differ in how often we show up — fumigation and inspections. Priced per property, per month, and you choose a tier separately for each property — mix tiers freely across your portfolio. Covers properties up to 3 plots of land; larger properties and estates get a custom quote.",
     billing: true,
-    plans: [
-      { id: P.OWNER_ESSENTIAL.uiId, name: P.OWNER_ESSENTIAL.name, tagline: "Landlords with 1–2 properties", monthly: P.OWNER_ESSENTIAL.amountNaira, annual: P.OWNER_ESSENTIAL_ANNUAL.amountNaira, popular: false, variant: "light", cta: `Start with ${P.OWNER_ESSENTIAL.name}`, href: "/onboarding" },
-      { id: P.OWNER_ELITE.uiId, name: P.OWNER_ELITE.name, tagline: "3+ properties · diaspora owners · serious investors", monthly: P.OWNER_ELITE.amountNaira, annual: P.OWNER_ELITE_ANNUAL.amountNaira, popular: true, variant: "dark", cta: `Start with ${P.OWNER_ELITE.name}`, href: "/onboarding" },
-    ],
+    plans: OWNER_TIER_ORDER.map((code) => {
+      const p = P[code];
+      const annualCode = p.annualCode;
+      return {
+        id: p.uiId,
+        name: p.name,
+        tagline: p.tagline,
+        monthly: p.amountNaira,
+        annual: annualCode ? P[annualCode].amountNaira : undefined,
+        unitLabel: p.unitLabel,
+        popular: !!p.highlight,
+        variant: (p.highlight ? "dark" : "light") as "dark" | "light",
+        cta: `Start with ${p.name}`,
+        href: "/onboarding",
+      };
+    }),
     groups: [
+      { name: "Service level — per property", rows: [
+        ["Fumigation (exterior / compound)", times(P.OWNER_ESSENTIAL.fumigationsPerYear), times(P.OWNER_PLUS.fumigationsPerYear), times(P.OWNER_PREMIUM.fumigationsPerYear)],
+        // Inspection availability is defined ONCE, here, from
+        // inspectionsPerYear. Do not add a second inspection row elsewhere
+        // hardcoded to `true` — that contradiction shipped once already.
+        ["Move-in / move-out inspection reports", times(P.OWNER_ESSENTIAL.inspectionsPerYear), times(P.OWNER_PLUS.inspectionsPerYear), times(P.OWNER_PREMIUM.inspectionsPerYear)],
+        ["Monthly waste management", true, true, true],
+        ["24-hour emergency maintenance", false, false, true],
+      ]},
       { name: "Listings & marking", rows: [
-        ["Active property listings", `Up to ${P.OWNER_ESSENTIAL.propertyListingCap}`, "Unlimited"],
-        ["GPS property marking", true, true],
-        ["Professional photography", "First listing free", "First listing free"],
-        ["Priority marking agents", false, true],
-        ["Free re-listing when a tenant vacates", false, true],
+        ["Active property listings", "Unlimited", "Unlimited", "Unlimited"],
+        ["GPS property marking", true, true, true],
+        ["Professional photography", "First listing free", "First listing free", "First listing free"],
+        ["Priority marking agents", false, true, true],
+        ["Free re-listing when a tenant vacates", false, true, true],
       ]},
       { name: "Rent & payments", rows: [
-        ["Escrow rent collection", true, true],
-        ["Platform commission on rents", pct(P.OWNER_ESSENTIAL.commissionRate), pct(P.OWNER_ELITE.commissionRate)],
-        ["Dedicated virtual account", true, true],
-        ["Automatic payout scheduling", true, true],
-        ["Rent default insurance — 1 month covered", false, true],
+        ["Escrow rent collection", true, true, true],
+        ["Platform commission on rents", pct(P.OWNER_ESSENTIAL.commissionRate), pct(P.OWNER_PLUS.commissionRate), pct(P.OWNER_PREMIUM.commissionRate)],
+        ["Dedicated virtual account", true, true, true],
+        ["Automatic payout scheduling", true, true, true],
+        ["Rent default insurance — 1 month covered", false, false, true],
       ]},
       { name: "Tenants & legal", rows: [
-        ["Identity-verified tenants only", true, true],
-        ["Auto-generated tenancy agreements", true, true],
-        ["Tenant blacklist access", true, true],
-        ["Move-in / move-out inspection reports", true, true],
-      ]},
-      { name: "Property care", rows: [
-        ["Annual fumigation", "1× per year", "2× per year"],
-        ["Monthly waste management", true, true],
-        ["24-hour emergency maintenance", false, true],
+        ["Identity-verified tenants only", true, true, true],
+        ["Auto-generated tenancy agreements", true, true, true],
+        ["Tenant blacklist access", true, true, true],
       ]},
       { name: "Intelligence & support", rows: [
-        ["Rent pricing intelligence — quarterly", true, true],
-        ["Annual rental income statement", true, true],
-        ["Owner dashboard & activity logs", true, true],
-        ["Annual property valuation report", false, true],
-        ["Dedicated account manager", false, true],
+        ["Rent pricing intelligence — quarterly", true, true, true],
+        ["Annual rental income statement", true, true, true],
+        ["Owner dashboard & activity logs", true, true, true],
+        ["Annual property valuation report", false, false, true],
+        ["Dedicated account manager", false, false, true],
+      ]},
+      { name: "Eligibility", rows: [
+        ["Maximum property size (self-serve)", `Up to ${MAX_PLOTS_SELF_SERVE} plots`, `Up to ${MAX_PLOTS_SELF_SERVE} plots`, `Up to ${MAX_PLOTS_SELF_SERVE} plots`],
+        ["Mix tiers across your properties", true, true, true],
       ]},
     ],
     footnote: {
-      icon: "calculator", title: `Why ${P.OWNER_ELITE.name} pays for itself`,
-      body: `On ${P.OWNER_ELITE.name}, commission drops from ${pct(P.OWNER_ESSENTIAL.commissionRate)} to ${pct(P.OWNER_ELITE.commissionRate)}. Collect ${formatNaira(SAMPLE_RENT)}/month in rent and that ${pct(P.OWNER_ESSENTIAL.commissionRate - P.OWNER_ELITE.commissionRate)} saves you <strong>${formatNaira(eliteSaving)} every month</strong> — more than half the subscription. You're essentially paying ${formatNaira(eliteNet)}/month for an account manager, rent default insurance, emergency maintenance and unlimited listings. Most ${P.OWNER_ELITE.name} subscribers are cash-positive from the commission saving alone.`,
-      tag: "Pay annually and get 2 months free on either plan.",
+      icon: "calculator", title: `Why ${P.OWNER_PREMIUM.name} pays for itself`,
+      body: `On ${P.OWNER_PREMIUM.name}, commission drops from ${pct(P.OWNER_ESSENTIAL.commissionRate)} to ${pct(P.OWNER_PREMIUM.commissionRate)}. Collect ${formatNaira(SAMPLE_RENT)}/month in rent on a property and that difference saves you <strong>${formatNaira(premiumSaving)} every month</strong> — more than half the subscription. You're effectively paying ${formatNaira(premiumNet)}/month for twice the fumigation, two inspection reports a year, an account manager, rent default insurance and 24-hour emergency maintenance. And because the tier is set per property, you can put the one you rent out from abroad on ${P.OWNER_PREMIUM.name} and leave the rest on ${P.OWNER_ESSENTIAL.name}.`,
+      tag: "Pay annually and get 2 months free on any tier.",
+    },
+    belowFootnote: {
+      icon: "building-2",
+      title: `Property bigger than ${MAX_PLOTS_SELF_SERVE} plots, or an estate?`,
+      body: `${P.OWNER_ESSENTIAL.name}, ${P.OWNER_PLUS.name} and ${P.OWNER_PREMIUM.name} are priced for properties up to ${MAX_PLOTS_SELF_SERVE} plots of land (1–3 buildings, one fence, one owner) — that's the size our fumigation and waste-management partner pricing is built around. Larger single properties and estates are priced with a custom quote built on the same underlying cost model, scaled to size.`,
+      cta: "Talk to sales",
+      href: "/contact",
     },
   },
   agent: {
@@ -127,11 +170,11 @@ export const PRICING: Record<Audience, PricingModel> = {
     lead: "Every agent on Newcondo is a paying, verified agent — which keeps listing quality high and noise low. Both tiers collect commission through the platform. Premium unlocks the income streams that pay for themselves.",
     billing: true,
     plans: [
-      // ids stay "essential" / "premium" — they're registered as uiAliases on
-      // the agent specs, so resolvePlanCode maps them without breaking any
+      // ids stay "essential" / "premium" — registered as uiAliases on the
+      // agent specs, so resolvePlanCode maps them without breaking any
       // /pricing?plan= link already in the wild.
-      { id: "essential", name: P.AGENT_ESSENTIAL.name, tagline: `Agents getting started — up to ${P.AGENT_ESSENTIAL.propertyListingCap} active listings`, monthly: P.AGENT_ESSENTIAL.amountNaira, annual: P.AGENT_ESSENTIAL_ANNUAL.amountNaira, popular: false, variant: "light", cta: "Join as an agent", href: "/onboarding" },
-      { id: "premium", name: P.AGENT_PREMIUM.name, tagline: "Full-time agents who want every income stream", badge: P.AGENT_PREMIUM.badge, monthly: P.AGENT_PREMIUM.amountNaira, annual: P.AGENT_PREMIUM_ANNUAL.amountNaira, popular: true, variant: "dark", cta: "Claim founding spot", href: "/onboarding" },
+      { id: "essential", name: P.AGENT_ESSENTIAL.name, tagline: `Agents getting started — up to ${P.AGENT_ESSENTIAL.propertyListingCap} active listings`, monthly: P.AGENT_ESSENTIAL.amountNaira, annual: P.AGENT_ESSENTIAL_ANNUAL.amountNaira, unitLabel: P.AGENT_ESSENTIAL.unitLabel, popular: false, variant: "light", cta: "Join as an agent", href: "/onboarding" },
+      { id: "premium", name: P.AGENT_PREMIUM.name, tagline: "Full-time agents who want every income stream", badge: P.AGENT_PREMIUM.badge, monthly: P.AGENT_PREMIUM.amountNaira, annual: P.AGENT_PREMIUM_ANNUAL.amountNaira, unitLabel: P.AGENT_PREMIUM.unitLabel, popular: true, variant: "dark", cta: "Claim founding spot", href: "/onboarding" },
     ],
     groups: [
       { name: "Listings", rows: [
@@ -200,6 +243,7 @@ export const PRICING: Record<Audience, PricingModel> = {
     },
   },
 };
+
 /* ===================== HOW IT WORKS ===================== */
 export type StepVariant = "coral" | "lilac" | "teal" | "sunset";
 export interface HowStep { n: string; variant: StepVariant; label: string; anim: string; title: string; text: string; }
@@ -257,24 +301,24 @@ export const FEATURES_PAGE: Record<Audience, FeaturesModel> = {
       { name: "Money & protection", sub: "Your rent arrives, in full, every time.", items: [
         { icon: "shield-check", title: "Escrow rent collection", body: "Rent is collected and held by Newcondo in a secure virtual account, then released straight to your bank after the confirmation window. Your agents coordinate tenants — they never hold a kobo of your money." },
         { icon: "wallet", title: "Dedicated virtual account", body: "Every owner gets a virtual account where rent is held and tracked. Set automatic transfers to your personal bank — as soon as funds clear, or on a schedule you choose." },
-        { icon: "umbrella", title: "Rent default insurance (Elite)", body: "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform in Nigeria offers this." },
+        { icon: "umbrella", title: "Rent default insurance (Premium)", body: "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform in Nigeria offers this." },
       ]},
       { name: "Tenants & legal", sub: "Know exactly who you're handing your keys to.", items: [
         { icon: "badge-check", title: "Identity-verified tenants only", body: "Every renter submits NIN, BVN, passport or driver's licence before they can pay. You'll never unknowingly hand your keys to an anonymous stranger again." },
         { icon: "scroll-text", title: "Auto-generated tenancy agreements", body: "The moment payment clears, a legally structured tenancy agreement is generated, signed digitally by both parties, and stored permanently — retrievable anytime, including in court." },
         { icon: "user-x", title: "Tenant blacklist access", body: "Before accepting a tenant, check their Newcondo history: evictions, defaults, reported damage and disputes. The database grows with every landlord on the platform." },
-        { icon: "clipboard-check", title: "Move-in & move-out inspection reports", body: "When a tenant vacates, Newcondo documents an inspection with photos comparing condition. If there's damage, you have evidence — no more “that crack was already there.”" },
+        { icon: "clipboard-check", title: "Move-in & move-out inspection reports (Plus)", body: "When a tenant moves in or out, Newcondo documents an inspection with photos comparing condition. If there's damage, you have evidence — no more “that crack was already there.” Once a year on Plus, twice on Premium." },
       ]},
       { name: "Property care", sub: "The chores that lose you tenants — handled on a schedule.", items: [
-        { icon: "bug", title: "Scheduled fumigation", body: "Professional fumigation coordinated by Newcondo — once a year on Essential, twice on Elite. No contractors to call, nothing to remember." },
+        { icon: "bug", title: "Scheduled fumigation", body: "Professional exterior fumigation of the compound, coordinated by Newcondo — once a year on Essential and Plus, twice on Premium. No contractors to call, nothing to remember." },
         { icon: "trash-2", title: "Monthly waste management", body: "Waste collection for your compound, coordinated and tracked every month. No compound disputes, no LAWMA fines, no refuse sitting for three weeks." },
-        { icon: "wrench", title: "24-hour emergency maintenance (Elite)", body: "Burst pipe, electrical fault, broken gate — the tenant raises it in the app and Newcondo dispatches a vetted contractor within 24 hours. You approve the quote from your phone." },
+        { icon: "wrench", title: "24-hour emergency maintenance (Premium)", body: "Burst pipe, electrical fault, broken gate — the tenant raises it in the app and Newcondo dispatches a vetted contractor within 24 hours. You approve the quote from your phone." },
       ]},
       { name: "Intelligence & support", sub: "Run your property like the asset it is.", items: [
         { icon: "trending-up", title: "Rent pricing intelligence", body: "A quarterly report on what comparable properties on your street and LGA are actually renting for today — so you stop leaving money on the table." },
         { icon: "file-text", title: "Annual rental income statement", body: "A formatted, signed statement of all rent collected through Newcondo in the year — for tax, loans, mortgages and proof of income. Most landlords can't prove this. Now you can." },
         { icon: "camera", title: "Professional photography", body: "Newcondo sends a photographer before your listing goes live (first listing free). Better photos mean faster tenants and less vacancy." },
-        { icon: "headphones", title: "Dedicated account manager (Elite)", body: "A named Newcondo staff member handles your account with monthly performance updates and agent coordination on your behalf — built for diaspora owners especially." },
+        { icon: "headphones", title: "Dedicated account manager (Premium)", body: "A named Newcondo staff member handles your account with monthly performance updates and agent coordination on your behalf — built for diaspora owners especially." },
       ]},
     ],
     cta: ["Compare owner plans", "/pricing?type=owner"],

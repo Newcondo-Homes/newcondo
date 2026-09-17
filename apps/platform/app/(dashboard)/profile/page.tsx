@@ -24,7 +24,9 @@ import { YourDetailsCard } from "@/components/dashboard/profile/YourDetailsCard"
 import {
   planByCode,
   formatNaira,
-  SUBSCRIPTION_PLANS,
+  formatRate,
+  totalForProperties,
+  MAX_PLOTS_SELF_SERVE,
   MARKING,
   VERIFICATION,
   type SubscriptionPlanCode,
@@ -37,15 +39,25 @@ const LEGAL_DOCS = [
   ["Tenancy agreement — Trans Amadi Flat 1", "Auto-generated 3 Mar 2026", "CONFIRMED"],
 ] as const;
 
-/** Fallback while Subscription.planType isn't on the profile payload. */
+/** Fallback while the per-property lines aren't on the profile payload. */
 const DEFAULT_PLAN_BY_ROLE: Record<string, SubscriptionPlanCode> = {
-  OWNER: "OWNER_ELITE",
+  OWNER: "OWNER_PLUS",
   AGENT: "AGENT_PREMIUM",
   RENTER: "RENTER_PREMIUM_PLUS",
 };
 
-const pct = (r: number) => `${Math.round(r * 100)}%`;
+/* An owner's tier is per PROPERTY, so the plan tab is a list of lines with a
+   total — not one plan. Placeholder shape until
+   GET /payments/subscriptions/me returns `lines`. */
+const DEMO_OWNER_LINES: { propertyId: string; label: string; planCode: SubscriptionPlanCode }[] = [
+  { propertyId: "p1", label: "Trans Amadi — 2 flats", planCode: "OWNER_PREMIUM" },
+  { propertyId: "p2", label: "New Owerri — bungalow", planCode: "OWNER_ESSENTIAL" },
+];
+
 const per = (cycle: string) => (cycle === "ANNUAL" ? "year" : "month");
+const times = (n: number) => `${n}× per year`;
+const serviceLine = (p: { fumigationsPerYear: number; inspectionsPerYear: number }) =>
+  `${times(p.fumigationsPerYear)} fumigation · ${p.inspectionsPerYear > 0 ? `${times(p.inspectionsPerYear)} inspection` : "no inspection"} · monthly waste`;
 
 export default function ProfilePage() {
   const { role, user } = useRole();
@@ -60,9 +72,10 @@ export default function ProfilePage() {
       DEFAULT_PLAN_BY_ROLE[role] ??
       "OWNER_ESSENTIAL") as SubscriptionPlanCode;
   const plan = planByCode(planCode);
-  /* The other owner tier, for the "(Essential pays 20%)" comparison. */
-  const otherOwnerTier =
-    SUBSCRIPTION_PLANS[plan.code === "OWNER_ELITE" ? "OWNER_ESSENTIAL" : "OWNER_ELITE"];
+  /* TODO(backend): lines come from the subscription's PropertySubscription
+     rows. The total is the sum — never a single tier price. */
+  const ownerLines = DEMO_OWNER_LINES;
+  const ownerTotal = totalForProperties(ownerLines.map((l) => ({ planCode: l.planCode })));
 
   return (
     <>
@@ -108,18 +121,57 @@ export default function ProfilePage() {
       )}
       {tab === "plan" && (
         <Card className="max-w-[640px]">
-          <CardH title="Your plan" right={<StatusBadge s="RENTED">{plan.name}</StatusBadge>} />
+          <CardH
+            title={role === "OWNER" ? "Your properties & plans" : "Your plan"}
+            right={role === "OWNER"
+              ? <StatusBadge s="RENTED">{`${formatNaira(ownerTotal)}/mo`}</StatusBadge>
+              : <StatusBadge s="RENTED">{plan.name}</StatusBadge>}
+          />
           {role === "OWNER" && (<>
-            <KV k="Plan" v={`${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
-            <KV k="Commission rate" v={`${pct(plan.commissionRate)} (${otherOwnerTier.name} pays ${pct(otherOwnerTier.commissionRate)})`} />
-            <KV k="Listings" v={plan.propertyListingCap === null ? "Unlimited" : `Up to ${plan.propertyListingCap}`} />
-            <KV k="Next billing" v="1 Aug 2026 · Flutterwave" />
+            {/* One line per property — each on its own tier. The total is the
+                sum, which is what the card is charged each cycle. */}
+            <p className="mb-3 mt-0 text-[13px] text-text-tertiary">
+              Each property has its own service tier. Your monthly total is the sum.
+            </p>
+            {ownerLines.map((line) => {
+              const p = planByCode(line.planCode);
+              return (
+                <div key={line.propertyId} className="border-b border-border-hair py-3 last:border-b-0">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate text-[14px] font-semibold tracking-[-0.01em]">{line.label}</div>
+                      <div className="mt-1 text-[12.5px] text-text-tertiary">
+                        {p.name} · {serviceLine(p)} · {formatRate(p.commissionRate)} commission
+                      </div>
+                    </div>
+                    <div className="flex flex-none items-center gap-3">
+                      <span className="text-[14px] font-semibold">{formatNaira(p.amountNaira)}</span>
+                      <button
+                        className="text-[13px] font-semibold text-green-dark hover:text-ink"
+                        onClick={() => toast.info(`Change tier — ${line.label}`, { description: "Tier is set per property; the change applies from your next billing cycle." })}
+                      >
+                        Change
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="mt-3 flex items-baseline justify-between border-t border-border-strong pt-3">
+              <span className="text-[14px] font-semibold">Monthly total</span>
+              <span className="text-[18px] font-bold tracking-[-0.02em]">{formatNaira(ownerTotal)}</span>
+            </div>
+            <KV k="Next billing" v="1 Aug 2026 · card ending 4242" />
+            <p className="mt-2 text-[12.5px] leading-[1.5] text-text-tertiary">
+              Properties larger than {MAX_PLOTS_SELF_SERVE} plots are quoted individually — once quoted, they appear here and
+              bill like any other property.
+            </p>
           </>)}
           {role === "AGENT" && (<>
             <KV k="Plan" v={`${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
             <KV k="Marking queue" v={plan.canAccessMarkingJobs ? `Included — ${formatNaira(MARKING.markerPayout)} per job` : "Not included on this plan"} />
             <KV k="Listings" v={plan.propertyListingCap === null ? "Unlimited · priority placement" : `Up to ${plan.propertyListingCap}`} />
-            <KV k="Next billing" v="1 Aug 2026 · Flutterwave" />
+            <KV k="Next billing" v="1 Aug 2026 · card ending 4242" />
           </>)}
           {role === "RENTER" && (<>
             <KV k="Plan" v={plan.amountNaira === 0 ? "Free" : `${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
@@ -131,7 +183,7 @@ export default function ProfilePage() {
           </>)}
           <div className="mt-4 flex flex-wrap gap-2.5">
             <DBtn variant="line" sm onClick={() => toast.info("Billing history", { description: "Opens payments filtered to subscription charges." })}>Billing history</DBtn>
-            {role !== "RENTER" && <DBtn variant="ghost" sm className="!text-danger" onClick={() => setCancel(true)}>Cancel subscription</DBtn>}
+            {role !== "RENTER" && <DBtn variant="ghost" sm className="!text-danger" onClick={() => setCancel(true)}>{role === "OWNER" ? "Cancel a property's plan" : "Cancel subscription"}</DBtn>}
           </div>
         </Card>
       )}

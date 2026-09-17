@@ -11,6 +11,8 @@ import {
   type SubscriptionPlanCode,
 } from "@newcondo/backend-shared";
 
+import { PLAN_CONFIG, chargeAmountForUser } from "./planConfig";
+
 // ─── Plan config — DERIVED from the single source of truth ───────────────────
 // Prices, caps and commission rates live in
 // backend/shared/src/constants/subscriptionPlans.ts (shared with the frontend).
