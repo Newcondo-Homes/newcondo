@@ -1,26 +1,44 @@
-import { prisma, SubscriptionPlan, SubscriptionStatus, BillingCycle, Role, SubscriptionEvent } from "@newcondo/db";
+import { prisma, SubscriptionPlan, SubscriptionStatus, BillingCycle, Role, SubscriptionEvent, PropertyStatus } from "@newcondo/db";
 import axios from "axios";
 import type { Subscription } from "@newcondo/db";
-import { sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
+import {
+  sendBrandedEmail,
+  EmailTemplates,
+  // ++ plan data — the single source of truth (backend/shared/src/constants/
+  // subscriptionPlans.ts). The frontend renders from the same file.
+  SUBSCRIPTION_PLANS,
+  planByCode,
+  planRoleFrom,
+  amountForProperty,
+  totalForProperties,
+  requiresCustomQuote,
+  formatNaira,
+  RENTER_LAUNCH_PRICING,
+  type PropertyLineItem,
+} from "@newcondo/backend-shared";
 
 const FLUTTERWAVE_SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY!;
 const APP_URL = process.env.APP_URL!; // e.g. https://newcondo.homes
 
-import {
-  SUBSCRIPTION_PLANS,
-  type SubscriptionPlanCode,
-} from "@newcondo/backend-shared";
-
-import { PLAN_CONFIG, chargeAmountForUser } from "./planConfig";
-
-// ─── Plan config — DERIVED from the single source of truth ───────────────────
-// Prices, caps and commission rates live in
-// backend/shared/src/constants/subscriptionPlans.ts (shared with the frontend).
-// This map only adapts them to the Prisma enums.
+// ─── Plan config — DERIVED from the shared constant ──────────────────────────
+// The shape is unchanged: every existing consumer (renewSubscriptions.ts,
+// reviewAccess.service.ts) keeps reading PLAN_CONFIG[planType].amountNaira /
+// .isFreeRenterPlan / .propertyListingCap / .canAccessMarkingJobs / .userRole /
+// .billingCycle / .commissionRate exactly as before.
 //
-// The `Record<SubscriptionPlan, …>` annotation is the guard that keeps the two
-// in lockstep: add a plan to the Prisma enum without adding it to the shared
-// constant (or misspell a code) and THIS FILE fails to compile.
+// What changed is where the NUMBERS come from. They were typed out here, and
+// also in apps/platform (plan-selector, pages-data, pricing) — so a price
+// change meant editing four files and the marketing page quietly drifted from
+// the charge. Now: one file, both sides.
+//
+// The `Record<SubscriptionPlan, …>` annotation is the guard that makes this
+// safe: the shared constant mirrors the Prisma enum as string literals, and if
+// the two drift (a member added to one and not the other) this file fails to
+// compile instead of failing at runtime on a customer's checkout.
+//
+// Owner tiers are PER PROPERTY as of Sept 2026 — amountNaira here is one
+// property's price. The account total is the sum over PropertySubscription
+// lines; see resolveChargeAmount below.
 export const PLAN_CONFIG: Record<
   SubscriptionPlan,
   {
@@ -31,20 +49,29 @@ export const PLAN_CONFIG: Record<
     canAccessMarkingJobs: boolean;
     isFreeRenterPlan: boolean;
     commissionRate: number; // as decimal e.g. 0.15
+    /** true → price is per property, not per account. Owner tiers only. */
+    perProperty: boolean;
+    /** true → amount lives on the subscription record (quoted by sales). */
+    customPriced: boolean;
+    /** Display name, for Flutterwave customisations and emails. */
+    name: string;
   }
 > = Object.fromEntries(
-  (Object.keys(SUBSCRIPTION_PLANS) as SubscriptionPlanCode[]).map((code) => {
-    const p = SUBSCRIPTION_PLANS[code];
+  (Object.keys(SUBSCRIPTION_PLANS) as SubscriptionPlan[]).map((code) => {
+    const p = planByCode(code);
     return [
       code,
       {
-        userRole: Role[p.role],
+        userRole: Role[p.role as keyof typeof Role],
         amountNaira: p.amountNaira,
-        billingCycle: BillingCycle[p.cycle],
+        billingCycle: p.cycle === "ANNUAL" ? BillingCycle.ANNUAL : BillingCycle.MONTHLY,
         propertyListingCap: p.propertyListingCap,
         canAccessMarkingJobs: p.canAccessMarkingJobs,
         isFreeRenterPlan: p.isFreeRenterPlan,
         commissionRate: p.commissionRate,
+        perProperty: p.pricingUnit === "PER_PROPERTY",
+        customPriced: !!p.customPriced,
+        name: p.name,
       },
     ];
   })
@@ -56,44 +83,10 @@ export const PLAN_CONFIG: Record<
   canAccessMarkingJobs: boolean;
   isFreeRenterPlan: boolean;
   commissionRate: number;
+  perProperty: boolean;
+  customPriced: boolean;
+  name: string;
 }>;
-
-// Runtime belt-and-braces: Object.fromEntries can't prove completeness to the
-// type checker, so assert it once at module load. Fails fast on boot rather
-// than at a customer's checkout.
-for (const code of Object.values(SubscriptionPlan)) {
-  if (!PLAN_CONFIG[code]) {
-    throw new Error(
-      `[subscription] SubscriptionPlan.${code} has no entry in SUBSCRIPTION_PLANS ` +
-      `(backend/shared/src/constants/subscriptionPlans.ts). Add it before deploying.`
-    );
-  }
-}
-
-// ─── Safety net: the FLW plan amount must equal what we charge ───────────────
-// With payment_plan attached, Flutterwave rejects the charge unless the amount
-// matches the plan amount exactly. A price edited in the shared constant but
-// not synced to Flutterwave is the #1 cause of "the modal flashes and never
-// opens". Call this inside initiateSubscription, right after the
-// findUniqueOrThrow on flutterwavePlan:
-//
-//   const flwPlan = await prisma.flutterwavePlan.findUniqueOrThrow({ where: { planType } });
-//   assertPlanAmountInSync(planType, config.amountNaira, Number(flwPlan.amountNaira));
-//
-export function assertPlanAmountInSync(
-  planType: SubscriptionPlan,
-  configAmount: number,
-  flwPlanAmount: number
-): void {
-  if (configAmount !== flwPlanAmount) {
-    throw new Error(
-      `[subscription] Price drift on ${planType}: code says ₦${configAmount.toLocaleString("en-NG")}, ` +
-      `FlutterwavePlan row says ₦${flwPlanAmount.toLocaleString("en-NG")}. ` +
-      `Run the plan sync script (create-flw-plans) before taking payments.`
-    );
-  }
-}
-
 
 // ─── Get period end date from start ──────────────────────────────────────────
 function getPeriodEnd(start: Date, cycle: BillingCycle): Date {
@@ -115,6 +108,44 @@ async function getNextFoundingNumber(field: "foundingAgentNumber" | "foundingMem
       : { isFoundingMember: true },
   });
   return count + 1; // e.g. if 47 exist, this person is #48
+}
+
+// ─── THE BILL ────────────────────────────────────────────────────────────────
+// An owner's tier belongs to a PROPERTY, not the account: each property is
+// independently on Essential, Plus, Premium or a quoted custom rate, and the
+// amount owed is the SUM over their active lines. A landlord can run the flat
+// they rent out from abroad on Premium and leave the rest on Essential.
+//
+// On a first subscribe there is one line (or none yet), so this returns the
+// same figure the old code did — which is why it is safe to ship before the
+// per-property UI exists.
+//
+// Agent and renter plans are per-account: one price, no summing.
+export async function resolveChargeAmount(
+  userId: string,
+  planType: SubscriptionPlan,
+  customAmountNaira?: number | null
+): Promise<number> {
+  const config = PLAN_CONFIG[planType];
+
+  if (config.customPriced && !customAmountNaira) {
+    // OWNER_CUSTOM has no price in the constant (amountNaira is a 0 sentinel).
+    // Charging it would take a property live for free.
+    throw new Error("This property is on a custom rate that has not been quoted yet.");
+  }
+
+  if (!config.perProperty) {
+    return amountForProperty({ planCode: planType, customAmountNaira });
+  }
+
+  const lines = (await prisma.propertySubscription.findMany({
+    where: { subscription: { userId }, cancelledAt: null },
+    select: { planType: true, customAmountNaira: true },
+  })) as unknown as PropertyLineItem[];
+
+  return lines.length
+    ? totalForProperties(lines)
+    : amountForProperty({ planCode: planType, customAmountNaira });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +185,10 @@ export async function createFreeRenterSubscription(userId: string): Promise<Subs
       currentPeriodEnd: null, // Free plans never expire
       isFoundingMember,
       foundingMemberNumber,
-      lockedRateNaira: isFoundingMember ? 3500 : null,
+      // The locked rate the founding cohort keeps when renter billing launches.
+      // Reads from the shared constant so this and the "₦3,500/mo after launch"
+      // line on the pricing page cannot disagree.
+      lockedRateNaira: isFoundingMember ? RENTER_LAUNCH_PRICING.premiumPlus : null,
       canAccessMarkingJobs: false,
       autoRenew: false, // No auto-renewal for free plans
     },
@@ -170,12 +204,12 @@ export async function createFreeRenterSubscription(userId: string): Promise<Subs
       toPlan: planType,
       triggeredBy: "system",
       notes: isFoundingMember
-        ? `Founding member #${foundingMemberNumber} — Premium Plus locked rate ₦3,500`
+        ? `Founding member #${foundingMemberNumber} — Premium Plus locked rate ${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}`
         : "Free plan assigned on registration",
     },
   });
 
- 
+
   const user = await prisma.user.findUnique({
     where: { id: subscription.userId },
     select: { email: true, name: true, role: true },
@@ -191,7 +225,7 @@ export async function createFreeRenterSubscription(userId: string): Promise<Subs
       })
     );
   }
-  
+
   // If founding member on Premium Plus — create virtual account
   if (isFoundingMember) {
     await triggerVirtualAccountCreation(userId, subscription.id);
@@ -202,11 +236,32 @@ export async function createFreeRenterSubscription(userId: string): Promise<Subs
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. INITIATE PAID SUBSCRIPTION — owners and agents only for now
-//    Returns a Flutterwave payment link to open in the Inline modal
+//    Returns a Flutterwave payload to open in the Inline modal
+//
+//    ⚠️ NO `payment_plan` ANY MORE. A Flutterwave payment plan is ONE FIXED
+//    AMOUNT on a fixed interval, and it PINS the charge server-side — FLW
+//    rejects a charge whose amount differs. That cannot express per-property
+//    owner pricing, where the bill changes whenever a property is added,
+//    re-tiered or re-quoted. So we charge once with tokenization, keep the
+//    card token (activateSubscription, below), and bill that token each cycle
+//    for an amount recomputed from the DB — renewSubscriptions.ts with
+//    RENEWAL_MODE=charge.
+//
+//    This also removes the `flutterwavePlan.findUniqueOrThrow` that 500'd
+//    every paid checkout after the db:reset emptied that table.
+//
+//    THE TRADE, stated plainly: Flutterwave's plan machinery owned retry
+//    schedules and "payment failed" emails. It doesn't now — dunning lives in
+//    renewSubscriptions.ts and is yours to tune.
 // ─────────────────────────────────────────────────────────────────────────────
 export async function initiateSubscription(
   userId: string,
-  planType: SubscriptionPlan
+  planType: SubscriptionPlan,
+  /** Optional per-property context. Owner tiers are per property; omit for
+   *  agent plans. `plots` gates self-serve, `customAmountNaira` is the sales
+   *  quote for OWNER_CUSTOM. Backwards-compatible: existing callers
+   *  (subscription.routes.ts) pass two arguments and behave as before. */
+  opts?: { propertyId?: string; plots?: number | null; customAmountNaira?: number | null }
 ) {
   const config = PLAN_CONFIG[planType];
 
@@ -226,10 +281,17 @@ export async function initiateSubscription(
     throw new Error(`Plan ${planType} is not available for ${user.role} accounts.`);
   }
 
-  // Get the Flutterwave plan
-  const flwPlan = await prisma.flutterwavePlan.findUniqueOrThrow({
-    where: { planType },
-  });
+  // A property above the self-serve plot cap has no price in the constant —
+  // fumigation and waste vendor pricing is built around a compound of up to
+  // MAX_PLOTS_SELF_SERVE plots. Route it to sales rather than charging a rate
+  // we cannot honour. An UNKNOWN plot count is treated as within the cap: the
+  // listing form does not collect it yet, and blocking a checkout on data we
+  // never asked for is worse than billing the standard tier.
+  if (requiresCustomQuote(opts?.plots) && !config.customPriced) {
+    throw new Error(
+      "This property is larger than our self-serve plans cover. Request a quote and we'll price it."
+    );
+  }
 
   // Check founding agent cohort
   const foundingAgentCount = await prisma.subscription.count({
@@ -243,6 +305,9 @@ export async function initiateSubscription(
   const foundingAgentNumber = isFoundingAgent
     ? await getNextFoundingNumber("foundingAgentNumber")
     : null;
+
+  // THE AMOUNT — sum over the owner's property lines, or this plan's price.
+  const amountNaira = await resolveChargeAmount(userId, planType, opts?.customAmountNaira);
 
   // Upsert subscription to PENDING — cancel any previous pending attempt
   const existing = await prisma.subscription.findUnique({ where: { userId } });
@@ -259,11 +324,10 @@ export async function initiateSubscription(
         planType,
         billingCycle: config.billingCycle,
         userRole: config.userRole,
-        amountNaira: config.amountNaira,
-        finalAmountNaira: config.amountNaira,
+        amountNaira,
+        finalAmountNaira: amountNaira,
         propertyListingCap: config.propertyListingCap,
         canAccessMarkingJobs: config.canAccessMarkingJobs,
-        flwPlanId: flwPlan.flwPlanId,
         isFoundingAgent,
         foundingAgentNumber,
         flwTransactionRef: txRef,
@@ -276,13 +340,12 @@ export async function initiateSubscription(
         planType,
         billingCycle: config.billingCycle,
         userRole: config.userRole,
-        amountNaira: config.amountNaira,
-        finalAmountNaira: config.amountNaira,
+        amountNaira,
+        finalAmountNaira: amountNaira,
         status: SubscriptionStatus.PENDING,
         isFreeRenterPlan: false,
         propertyListingCap: config.propertyListingCap,
         canAccessMarkingJobs: config.canAccessMarkingJobs,
-        flwPlanId: flwPlan.flwPlanId,
         isFoundingAgent,
         foundingAgentNumber,
         currentPeriodStart: now,
@@ -297,14 +360,38 @@ export async function initiateSubscription(
     subscription = existing;
   }
 
-  // Build Flutterwave payment payload
-  // We use the payment plan ID so Flutterwave handles recurring billing
+  // Attach the property line up front, so the tier lands on the right property
+  // even if the user abandons checkout. It only starts billing on activation.
+  if (opts?.propertyId && config.perProperty) {
+    await prisma.propertySubscription.upsert({
+      where: { propertyId: opts.propertyId },
+      create: {
+        subscriptionId: subscription.id,
+        propertyId: opts.propertyId,
+        planType,
+        plots: opts.plots ?? null,
+        customAmountNaira: opts.customAmountNaira ?? null,
+      },
+      update: {
+        subscriptionId: subscription.id,
+        planType,
+        plots: opts.plots ?? null,
+        customAmountNaira: opts.customAmountNaira ?? null,
+        cancelledAt: null,
+      },
+    });
+  }
+
+  // Build Flutterwave payment payload.
+  // No payment_plan — see the note above this function. `payment_options` is
+  // card-only ON PURPOSE: the model depends on getting a reusable token back,
+  // and bank transfer / USSD cannot be tokenized, so accepting them here would
+  // create subscriptions that can never renew.
   const flwPayload = {
     tx_ref: txRef,
-    amount: config.amountNaira,
+    amount: amountNaira,
     currency: "NGN",
     payment_options: "card",
-    payment_plan: flwPlan.flwPlanId, // This is what enables recurring billing
     customer: {
       email: user.email,
       name: user.name || user.email,
@@ -317,7 +404,7 @@ export async function initiateSubscription(
     },
     customizations: {
       title: "NewCondo Subscription",
-      description: `${flwPlan.name}`,
+      description: `${config.name} — ${formatNaira(amountNaira)}`,
       logo: `${APP_URL}/images/logos/newcondo-logo.png`,
     },
     redirect_url: `${APP_URL}/dashboard/subscription/callback`,
@@ -327,8 +414,8 @@ export async function initiateSubscription(
     txRef,
     subscriptionId: subscription.id,
     flwPayload, // Returned to frontend to pass into Inline modal
-    planName: flwPlan.name,
-    amountNaira: config.amountNaira,
+    planName: config.name,
+    amountNaira,
     isFoundingAgent,
     foundingAgentNumber,
   };
@@ -336,6 +423,16 @@ export async function initiateSubscription(
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3. ACTIVATE SUBSCRIPTION — called by webhook after successful payment
+//
+//    Signature unchanged. `flwSubscriptionId` will now be empty for new
+//    subscriptions (there is no Flutterwave subscription object without a
+//    payment plan) — the column is kept for historical rows and the webhook
+//    passes whatever it has.
+//
+//    `flwCustomerToken` was always stored here; it is now LOAD-BEARING. It is
+//    the only thing that makes the next cycle chargeable, so a missing token
+//    is logged loudly rather than quietly producing a subscription that looks
+//    healthy today and cannot renew in a month.
 // ─────────────────────────────────────────────────────────────────────────────
 export interface SavedCardMeta {
   last4?: string;
@@ -367,11 +464,19 @@ export async function activateSubscription(
   const now = new Date();
   const periodEnd = getPeriodEnd(now, subscription.billingCycle);
 
+  if (!flwCustomerToken) {
+    console.error(
+      `[subscription] ACTIVATED WITHOUT A CARD TOKEN — sub=${subscription.id} tx_ref=${txRef}. ` +
+      `Recurring billing charges this token; without it the subscription cannot renew after ` +
+      `${periodEnd.toISOString()} and the user must re-enter a card.`
+    );
+  }
+
   const updated = await prisma.subscription.update({
     where: { id: subscription.id },
     data: {
       status: SubscriptionStatus.ACTIVE,
-      flwSubscriptionId,
+      flwSubscriptionId: flwSubscriptionId || null,
       flwCustomerToken,
       flwCustomerId,
       flwTransactionRef: txRef,
@@ -395,12 +500,19 @@ export async function activateSubscription(
       flwTransactionRef: txRef,
       amountCharged: subscription.finalAmountNaira,
       triggeredBy: "system",
-      notes: `Flutterwave subscription activated. ID: ${flwSubscriptionId}`,
+      notes: flwSubscriptionId
+        ? `Flutterwave subscription activated. ID: ${flwSubscriptionId}`
+        : `Card charge activated; recurring billing via saved token.`,
     },
   });
 
-  // Create invoice record
-  const invoiceNumber = `NC-INV-${Date.now()}`;
+  // Create invoice record.
+  // NOTE the invoiceNumber shape: renewSubscriptions.ts derives
+  // `NC-INV-${subscriptionId}-${periodStart}` as its idempotency anchor, so the
+  // first invoice uses the same shape. A bare `NC-INV-${Date.now()}` (the old
+  // value) can never be found by that lookup, which means the renewal job
+  // cannot tell whether the first period was already paid.
+  const invoiceNumber = `NC-INV-${subscription.id}-${now.toISOString().slice(0, 10)}`;
   await prisma.subscriptionInvoice.create({
     data: {
       subscriptionId: subscription.id,
@@ -423,6 +535,26 @@ export async function activateSubscription(
       isPremium: true,
       premiumExpiresAt: periodEnd,
     },
+  });
+
+  // Any property line attached at checkout starts billing from now.
+  await prisma.propertySubscription.updateMany({
+    where: { subscriptionId: subscription.id, cancelledAt: null },
+    data: { startedAt: now },
+  });
+
+  // Coming back from a lapse: republish whatever the grace sweep hid, and
+  // clear the grace state so a future lapse starts a fresh clock. Ordered
+  // after the status update so a crash here leaves an ACTIVE subscription
+  // with hidden listings — visible and fixable — rather than live listings
+  // on an unpaid account.
+  const restored = await restoreListingsFor(subscription.userId);
+  if (restored > 0) {
+    console.log(`[subscription] restored ${restored} listing(s) for ${subscription.userId} after payment`);
+  }
+  await prisma.subscription.update({
+    where: { id: subscription.id },
+    data: { gracePeriodEndsAt: null, listingsSuspendedAt: null },
   });
 
 
@@ -450,6 +582,157 @@ export async function activateSubscription(
   }
 
   return updated;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3b. PER-PROPERTY TIERS
+//     "Change plan" for an owner means changing ONE property's tier — there is
+//     no account-level tier to change. Takes effect from the next cycle: the
+//     renewal job recomputes the total from these lines.
+// ─────────────────────────────────────────────────────────────────────────────
+export async function setPropertyTier(args: {
+  userId: string;
+  propertyId: string;
+  planType: SubscriptionPlan;
+  plots?: number | null;
+  customAmountNaira?: number | null;
+}): Promise<void> {
+  const config = PLAN_CONFIG[args.planType];
+  if (!config.perProperty) throw new Error("That plan is not a per-property plan.");
+  if (config.customPriced && !args.customAmountNaira) {
+    throw new Error("A custom-rate property needs a quoted amount.");
+  }
+  if (requiresCustomQuote(args.plots) && !config.customPriced) {
+    throw new Error("Properties above our self-serve size need a quote.");
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId: args.userId },
+    select: { id: true },
+  });
+  if (!subscription) throw new Error("No subscription for this account.");
+
+  const property = await prisma.property.findFirst({
+    where: { id: args.propertyId, ownerId: args.userId },
+    select: { id: true },
+  });
+  if (!property) throw new Error("Property not found.");
+
+  await prisma.propertySubscription.upsert({
+    where: { propertyId: args.propertyId },
+    create: {
+      subscriptionId: subscription.id,
+      propertyId: args.propertyId,
+      planType: args.planType,
+      plots: args.plots ?? null,
+      customAmountNaira: args.customAmountNaira ?? null,
+    },
+    update: {
+      planType: args.planType,
+      plots: args.plots ?? null,
+      customAmountNaira: args.customAmountNaira ?? null,
+      cancelledAt: null,
+    },
+  });
+}
+
+/** Stop billing for one property. The account subscription survives — an owner
+ *  with three properties who drops one still owes for two. */
+export async function cancelPropertyTier(userId: string, propertyId: string): Promise<void> {
+  const line = await prisma.propertySubscription.findFirst({
+    where: { propertyId, subscription: { userId }, cancelledAt: null },
+    select: { id: true },
+  });
+  if (!line) throw new Error("That property is not on a plan.");
+  await prisma.propertySubscription.update({
+    where: { id: line.id },
+    data: { cancelledAt: new Date() },
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3c. LISTING SUSPENSION — the enforcement behind the grace period
+//
+//     The dunning email promises "your listings stay live until <date>, then
+//     they're archived". Nothing used to do that: on EXPIRED the subscription
+//     row flipped status and NOTHING else happened — User.isPremium stayed
+//     true forever, and every property stayed PUBLISHED. So a landlord who
+//     stopped paying kept the full product, and the email was a lie in the
+//     other direction.
+//
+//     PropertyStatus has no ARCHIVED member and adding one would mean auditing
+//     every status switch in the codebase. UNAVAILABLE already means "live
+//     listing, not currently takeable", which is exactly right — but it is
+//     lossy on its own, so Property.suspendedBySubscription records that WE
+//     hid it. Restore only ever touches rows carrying that flag, so an owner's
+//     own manual UNAVAILABLE is never silently republished.
+//
+//     Only PUBLISHED properties are suspended. A RENTED one has a tenant in
+//     it and rent flowing through escrow — pulling that listing would be
+//     punishing the tenant for the landlord's card, and escrow is explicitly
+//     not tied to the subscription.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Hide a lapsed owner's live listings. Returns how many were hidden. */
+export async function suspendListingsFor(userId: string): Promise<number> {
+  const { count } = await prisma.property.updateMany({
+    where: {
+      ownerId: userId,
+      status: PropertyStatus.PUBLISHED,
+      suspendedBySubscription: false,
+    },
+    data: { status: PropertyStatus.UNAVAILABLE, suspendedBySubscription: true },
+  });
+  return count;
+}
+
+/**
+ * Put back exactly what we hid, and nothing else.
+ *
+ * Called on every successful activation and renewal — including the first
+ * charge after a lapse, which is the whole point: paying restores the
+ * listings without a support ticket. Safe to call when nothing is suspended.
+ */
+export async function restoreListingsFor(userId: string): Promise<number> {
+  const { count } = await prisma.property.updateMany({
+    where: { ownerId: userId, suspendedBySubscription: true },
+    data: { status: PropertyStatus.PUBLISHED, suspendedBySubscription: false },
+  });
+  return count;
+}
+
+/** What this account will be charged next cycle. Use this for the dashboard's
+ *  "next billing" figure — NOT `subscription.finalAmountNaira`, which is a
+ *  snapshot from checkout and goes stale the moment a property is added. */
+export async function currentMonthlyTotal(userId: string): Promise<number> {
+  const sub = await prisma.subscription.findUnique({
+    where: { userId },
+    select: { planType: true },
+  });
+  if (!sub) return 0;
+  return resolveChargeAmount(userId, sub.planType);
+}
+
+/** Commission rate on rent for an owner, from their plan: 20% on Essential and
+ *  Plus, 15% on Premium.
+ *
+ *  Resolve it through here (or commissionRateFor from the shared constant).
+ *  Never `planType === "OWNER_PREMIUM" ? 0.15 : 0.20` — correct today, and
+ *  silently wrong the next time a tier's rate moves. Unsubscribed owners get
+ *  the standard rate. Round the fee ONCE, in kobo, and derive owner payout as
+ *  `rent - fee` so the two figures reconcile. */
+export async function commissionRateForOwner(ownerId: string): Promise<number> {
+  const sub = await prisma.subscription.findUnique({
+    where: { userId: ownerId },
+    select: { planType: true, status: true },
+  });
+  if (
+    !sub ||
+    (sub.status !== SubscriptionStatus.ACTIVE && sub.status !== SubscriptionStatus.FREE_ACTIVE)
+  ) {
+    return PLAN_CONFIG[SubscriptionPlan.OWNER_ESSENTIAL].commissionRate;
+  }
+  return PLAN_CONFIG[sub.planType].commissionRate;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

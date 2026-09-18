@@ -330,6 +330,66 @@ export const EmailTemplates = {
     }),
   }),
 
+  /* ---- subscriptions ---- */
+  subscriptionLapsed: (p: {
+    name: string;
+    plan: string;
+    amount: number;
+    attempts: number;
+    graceEndsAt?: string;
+  }): EmailContent => ({
+    subject: "Your Newcondo subscription has lapsed",
+    html: shell({
+      preheader: "Renewal failed — update your card to keep your listings live",
+      heading: "Your subscription has lapsed",
+      intro: `${p.name.split(" ")[0]}, we tried ${p.attempts} times to charge your card for your ${p.plan} plan and each attempt was declined.`,
+      body:
+        kvRows([
+          ["Plan", p.plan],
+          ["Amount due", ngn(p.amount)],
+          ...(p.graceEndsAt ? ([["Listings stay live until", p.graceEndsAt]] as [string, string][]) : []),
+        ]) +
+        notice(
+          p.graceEndsAt
+            ? `Update your card before <b>${p.graceEndsAt}</b> and nothing changes. After that your listings are unpublished — your properties, documents, tenants and payment history all stay in your account, and one successful payment puts the listings straight back.`
+            : `Your listings are unpublished until a payment succeeds. Your properties, documents, tenants and payment history are untouched — one successful payment puts the listings back.`,
+          "warn"
+        ) +
+        btn("Update your card", dash("/profile")),
+      footNote: "Rent already collected and held in escrow is unaffected by a subscription lapse.",
+    }),
+  }),
+
+  listingsSuspended: (p: {
+    name: string;
+    plan: string;
+    count: number;
+    amount: number;
+  }): EmailContent => ({
+    subject:
+      p.count === 1
+        ? "Your listing has been unpublished"
+        : `Your ${p.count} listings have been unpublished`,
+    html: shell({
+      preheader: "One payment puts them back — nothing has been deleted",
+      heading: p.count === 1 ? "Your listing is no longer visible" : "Your listings are no longer visible",
+      intro: `${p.name.split(" ")[0]}, the grace period on your ${p.plan} plan has ended, so ${p.count === 1 ? "your listing has" : `your ${p.count} listings have`} been unpublished. Renters can no longer find ${p.count === 1 ? "it" : "them"}.`,
+      body:
+        kvRows([
+          ["Plan", p.plan],
+          [p.count === 1 ? "Listing unpublished" : "Listings unpublished", String(p.count)],
+          ["Amount due", ngn(p.amount)],
+        ]) +
+        notice(
+          `<b>Nothing has been deleted.</b> Your properties, marked boundaries, photos, documents, tenants and payment history are exactly as you left them. One successful payment republishes ${p.count === 1 ? "the listing" : "every listing"} immediately — you don't need to re-create or re-mark anything.`,
+          "info"
+        ) +
+        btn("Update your card and republish", dash("/profile")),
+      footNote:
+        "Tenants already renting from you are unaffected — their tenancy, rent schedule and escrowed payments continue as normal.",
+    }),
+  }),
+
   /* ---- marking ---- */
   markingCompleted: (p: { ownerName: string; property: string; markerName: string; confirmBy: string }): EmailContent => ({
     subject: `Confirm the marking on ${p.property}`,
@@ -466,30 +526,28 @@ export function accountDeletionScheduledEmail(o: {
 
   const body = `
 ${kvRows([
-  ["Requested", ngnDate(new Date())],
-  ["Account type", roleWord[0].toUpperCase() + roleWord.slice(1)],
-  ["Signed out everywhere", "Now"],
-  ["Permanent erasure", ngnDate(o.erasureDate)],
-  ["Reference", o.confirmationCode],
-])}
+    ["Requested", ngnDate(new Date())],
+    ["Account type", roleWord[0].toUpperCase() + roleWord.slice(1)],
+    ["Signed out everywhere", "Now"],
+    ["Permanent erasure", ngnDate(o.erasureDate)],
+    ["Reference", o.confirmationCode],
+  ])}
 <p style="margin:18px 0 0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
-Your account is closed as of today. You're signed out on every device${
-    o.role === "RENTER" ? "" : ", your listings are hidden"
-  }, and your subscription will not renew.
+Your account is closed as of today. You're signed out on every device${o.role === "RENTER" ? "" : ", your listings are hidden"
+    }, and your subscription will not renew.
 For the next <b style="color:${C.text}">${o.graceDays} days</b> nothing is erased — sign in again and everything comes back exactly as it was.
 </p>
 <p style="margin:14px 0 0;font-family:${FONT};font-size:14.5px;line-height:1.6;color:${C.sub}">
 On <b style="color:${C.text}">${ngnDate(o.erasureDate)}</b> we permanently erase ${erasedLine}. That step cannot be undone.
 </p>
 ${notice(
-    `<b>What stays, and why.</b><br>${kept
-      .map((k) => `• ${k}`)
-      .join("<br>")}${
-      (c.payments ?? 0) > 0
+      `<b>What stays, and why.</b><br>${kept
+        .map((k) => `• ${k}`)
+        .join("<br>")}${(c.payments ?? 0) > 0
         ? `<br><br>Those records are destroyed after ${o.retentionMonths} months, except where tax or anti-money-laundering law requires longer.`
         : ""
-    }`
-  )}
+      }`
+    )}
 ${btn("I didn't ask for this — restore my account", `https://${COMPANY.domain}/login?restore=1`)}
 `;
   return {

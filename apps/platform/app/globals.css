@@ -91,6 +91,13 @@
   --font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
 }
 
+/* Tailwind's Preflight resets buttons to `cursor: default` (unlike <a>), so
+   every button needs this explicitly or hovering never looks clickable. One
+   global rule instead of hunting down every button's className. */
+button:not(:disabled) {
+  cursor: pointer;
+}
+
 :root {
   --radius: 0.625rem;
 
@@ -220,9 +227,7 @@ body {
   overflow-x: hidden;
 }
 img { display: block; }
-button:not(:disabled) {
-  cursor: pointer;
-}
+
 /* Add this class to a landing page wrapper if you want the NewCondo page background/font. */
 .newcondo-page {
   background: var(--nc-background);
@@ -247,6 +252,7 @@ button:not(:disabled) {
   --divider: rgba(15, 23, 42, 0.08);
 }
 
+
 /* ---- semantic type classes (from the NewCondo design system) ---- */
 .nc-h2 {
   font-size: var(--fs-h2); line-height: 0.98; letter-spacing: -0.04em;
@@ -259,11 +265,6 @@ button:not(:disabled) {
 .nc-lead {
   font-size: var(--fs-lead); line-height: 1.45; letter-spacing: -0.01em;
   font-weight: 400; color: var(--text-secondary);
-}
-
-.nc-leadd {
-  font-size: var(--fs-lead); line-height: 1.45; letter-spacing: -0.01em;
-  font-weight: 400; color: var(--text-on-dark-2)
 }
 
 
@@ -295,7 +296,6 @@ button:not(:disabled) {
 
 /* Navbar responsive show/hide — self-contained media queries, independent of
    Tailwind's breakpoint variants, so the hamburger reliably appears < 1024px. */
-
 .nav-desktop-links { display: flex; align-items: center; }
 .nav-desktop-cta { display: block; }
 .nav-burger-btn { display: none; }
@@ -549,6 +549,7 @@ button:not(:disabled) {
   .gate-dot { animation: none; }
 }
 
+
 /* ============================================================
    Responsive hardening — explicit media queries keyed off section
    structure, so the layout collapses correctly on tablet/phone even
@@ -594,7 +595,6 @@ button:not(:disabled) {
   .nc-policy-link:hover, .nc-policy-link:focus-visible { text-decoration: underline; }
 }
 
-
 /* ============================================================
    Sub-pages — segmented audience control, billing toggle,
    plan-card / feature-card animations, comparison table.
@@ -618,8 +618,15 @@ button:not(:disabled) {
 .bill-switch.on .bill-knob { transform: translateX(24px); background: var(--cream); }
 .bill-save { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--green-dark); background: var(--green-wash); padding: 5px 11px; border-radius: 999px; }
 
-/* plan cards */
+/* plan cards — two-column is the default (agents); .plan-grid--3 is added by
+   the pricing page when a model has three tiers (owner Essential/Plus/Premium).
+   Three cards need more room than two, hence the wider max-width, and they
+   collapse to one column earlier (1080px, not 720px) because three 1fr tracks
+   squeeze a price + tagline + feature list past readability well before a
+   phone. */
 .plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 22px; max-width: 880px; margin: 0 auto; }
+.plan-grid--3 { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; max-width: 1180px; }
+@media (max-width: 1080px) { .plan-grid--3 { grid-template-columns: 1fr; max-width: 480px; gap: 22px; } }
 @media (max-width: 720px) { .plan-grid { grid-template-columns: 1fr; max-width: 460px; } }
 .plan-card { will-change: transform; }
 .plan-card.is-light:hover { box-shadow: var(--shadow-lift); border-color: var(--nc-border); }
@@ -630,7 +637,12 @@ button:not(:disabled) {
 
 /* comparison table */
 .cmp2 { max-width: 1080px; margin: 0 auto; }
+/* Column count follows the plan count. ComparisonTable puts .cmp2--2 /
+   .cmp2--3 on the table root; the bare .cmp2-grid rule stays as the two-plan
+   default so nothing regresses if the class is ever missing. */
 .cmp2-grid { --col: 1.7fr 1fr 1fr; }
+.cmp2--3 { max-width: 1180px; }
+.cmp2--3 .cmp2-grid { --col: 1.6fr 1fr 1fr 1fr; }
 .cmp2-row { display: grid; grid-template-columns: var(--col); align-items: center; }
 .cmp2-head { position: sticky; top: 64px; z-index: 20; background: var(--nc-background); border-radius: 18px; box-shadow: 0 10px 30px rgba(19,19,19,0.06); border: 1px solid var(--border-hair); padding: 18px 0; margin-bottom: 8px; }
 .cmp2-head .cmp2-row { padding: 0 26px; }
@@ -645,6 +657,15 @@ button:not(:disabled) {
 @media (max-width: 720px) {
   .cmp2-head { top: 58px; }
   .cmp2-grid { --col: 1.4fr 1fr 1fr; }
+  .cmp2--3 .cmp2-grid { --col: 1.25fr 1fr 1fr 1fr; }
+  /* A label column plus three price columns does not fit a phone. Scroll the
+     table sideways instead of crushing cells to unreadable width — the sticky
+     header travels with it. min-width must exceed the viewport or the scroll
+     never engages. */
+  .cmp2--3 { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .cmp2--3 .cmp2-head,
+  .cmp2--3 > div { min-width: 620px; }
+  .cmp2--3 .cmp2-cell { font-size: 12px; }
   .cmp2-head .cmp2-row, .cmp2-grouphead, .cmp2-feat { padding-left: 14px; padding-right: 14px; }
   .cmp2-label { font-size: 14px; padding-right: 10px; }
   .cmp2-cell { font-size: 12.5px; }

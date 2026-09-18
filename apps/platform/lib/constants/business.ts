@@ -25,6 +25,7 @@ export {
   isGeoSupported,
   OWNERSHIP_PROOF,
   AGENT_INVITES,
+  ACCOUNT_DELETION
 
 } from "@newcondo/backend-shared/constants";
 

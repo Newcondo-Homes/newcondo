@@ -14,6 +14,7 @@
  * agent-invite / promotion flow, not self-serve onboarding.
  */
 
+import type { SubscriptionPlanCode } from "@/lib/constants/business";
 
 /** Payload sent to the register endpoint (@newcondo/auth). */
 export interface RegisterPayload {
@@ -95,18 +96,21 @@ export interface OTPResult {
 
 export type BillingCycle = "MONTHLY" | "ANNUAL";
 
-/** Every paid/free plan code the backend accepts (Prisma `SubscriptionPlan`). */
-export type SubscriptionPlanCode =
-  | "OWNER_ESSENTIAL"
-  | "OWNER_ELITE"
-  | "OWNER_ESSENTIAL_ANNUAL"
-  | "OWNER_ELITE_ANNUAL"
-  | "AGENT_ESSENTIAL"
-  | "AGENT_PREMIUM"
-  | "AGENT_ESSENTIAL_ANNUAL"
-  | "AGENT_PREMIUM_ANNUAL"
-  | "RENTER_FREE"
-  | "RENTER_PREMIUM_PLUS";
+/**
+ * Every paid/free plan code the backend accepts.
+ *
+ * RE-EXPORTED, not re-declared. This was a hand-written union listing
+ * OWNER_ELITE / OWNER_ELITE_ANNUAL; the moment owner tiers became
+ * Essential / Plus / Premium it disagreed with the shared constant, and
+ * because both types carry the same NAME the error reads like nonsense:
+ * "Type 'SubscriptionPlanCode' is not assignable to type
+ * 'SubscriptionPlanCode | undefined'".
+ *
+ * The authority is backend/shared/src/constants/subscriptionPlans.ts, which
+ * mirrors the Prisma enum and is checked against it at compile time in
+ * PLAN_CONFIG. Aliasing it here means this file cannot disagree again.
+ */
+export type { SubscriptionPlanCode };
 
 /**
  * Shape returned by POST /payments/subscriptions/initiate.

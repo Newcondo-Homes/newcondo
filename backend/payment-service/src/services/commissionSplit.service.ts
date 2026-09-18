@@ -2,8 +2,9 @@
 // ============================================================
 // THE money-splitting truth for a rent payment. Runs ONCE per payment when
 // escrow releases (renter confirmed, or the 24h window lapsed).
-// Rates come from constants/business.ts — never re-derived here:
-//   platform commission = 20% (15% when the owner is on an ELITE plan)
+//
+// Rates come from the shared plan constant — never re-derived here:
+//   platform commission = the owner's PLAN rate (20% Essential/Plus, 15% Premium)
 //   listing agent       = 50% of the commission
 //   sub-agent           = 50% of the agent share, only when the payment
 //                         carries subAgentId (set from a PROMO ShareLink)
@@ -14,13 +15,38 @@
 // keyed off the SAME record the money went to — no cross-wiring possible.
 // Idempotent via Payment.commissionSettledAt.
 //
+// ── WHY THE RATE LOOKUP CHANGED ────────────────────────────────────────────
+// This file used to read:
+//
+//   const isElite = owner.subscription?.planType === "OWNER_ELITE"
+//                || owner.subscription?.planType === "OWNER_ELITE_ANNUAL";
+//   const rate = isElite ? PAYMENTS.eliteCommissionRate : PAYMENTS.platformCommissionRate;
+//
+// Owner tiers became Essential / Plus / Premium, so those two members no
+// longer exist and TypeScript rejected the comparison (TS2367). That error was
+// the lucky outcome: the same pattern written against a plan code that DOES
+// still exist compiles fine and silently bills the wrong rate. A boolean also
+// can't express three tiers — the moment Plus needed its own rate, an
+// isElite-shaped check would have to be rewritten anyway.
+//
+// commissionRateFor(planType) is the single source of truth: it reads the rate
+// off the same SUBSCRIPTION_PLANS entry the customer was charged from, so the
+// split always matches the plan they actually bought. Never pattern-match on a
+// plan NAME here again — add the rate to the plan spec instead.
+//
 // SCHEMA NOTES (previous compile failures):
 //  • The owner's plan is on Subscription.planType, not User.plan.
 //  • paymentType must be a PaymentType enum member (typed below).
 //  • $transaction uses the callback form for heterogeneous writes.
 // ============================================================
-import { prisma } from "@newcondo/db";
-import { PAYMENTS, publishNotification, sendBrandedEmail, EmailTemplates } from "@newcondo/backend-shared";
+import { prisma, SubscriptionPlan, SubscriptionStatus } from "@newcondo/db";
+import {
+  PAYMENTS,
+  commissionRateFor,
+  publishNotification,
+  sendBrandedEmail,
+  EmailTemplates,
+} from "@newcondo/backend-shared";
 import type { PaymentType } from "@newcondo/db";
 
 const ngn = (n: number) => `₦${Math.abs(n).toLocaleString("en-NG")}`;
@@ -37,7 +63,9 @@ export async function releaseEscrowAndSplit(paymentId: string) {
               owner: {
                 select: {
                   id: true, name: true, email: true,
-                  subscription: { select: { planType: true } }, // plan lives here
+                  // status matters as much as planType: an EXPIRED plan must
+                  // not keep granting the reduced Premium rate.
+                  subscription: { select: { planType: true, status: true } },
                 },
               },
               agent: { select: { id: true, name: true, email: true } },
@@ -55,9 +83,22 @@ export async function releaseEscrowAndSplit(paymentId: string) {
   const subAgentId = payment.subAgentId;
 
   const rent = Number(payment.ownerAmount ?? payment.amount);
-  const isElite = owner.subscription?.planType === "OWNER_ELITE" || owner.subscription?.planType === "OWNER_ELITE_ANNUAL";
-  const rate = isElite ? PAYMENTS.eliteCommissionRate : PAYMENTS.platformCommissionRate;
 
+  // The owner's plan rate. An owner with no subscription, or one that has
+  // lapsed, pays the standard rate — the discount is a benefit of an active
+  // plan, and letting an EXPIRED Premium keep 15% would mean unpaid accounts
+  // get the best terms on the platform.
+  const sub = owner.subscription;
+  const planIsLive =
+    sub?.status === SubscriptionStatus.ACTIVE || sub?.status === SubscriptionStatus.FREE_ACTIVE;
+  const rate = planIsLive
+    ? commissionRateFor(sub!.planType)
+    : commissionRateFor(SubscriptionPlan.OWNER_ESSENTIAL);
+
+  // Round ONCE, here, and derive the owner's share by SUBTRACTION. Computing
+  // ownerNet as rent * (1 - rate) independently leaves the two figures a kobo
+  // apart on most amounts, and the ledger then never reconciles. Same reason
+  // platformCut is commission - agentPool rather than its own multiplication.
   const commission = Math.round(rent * rate);
   const agentPool = agent ? Math.round(commission * PAYMENTS.agentShareOfCommission) : 0;
   const subAgentCut = subAgentId ? Math.round(agentPool * PAYMENTS.subAgentSplitOfAgentShare) : 0;
@@ -130,7 +171,7 @@ export async function releaseEscrowAndSplit(paymentId: string) {
   }
   await Promise.all(tasks);
 
-  return { ownerNet, listingAgentCut, subAgentCut, platformCut };
+  return { ownerNet, listingAgentCut, subAgentCut, platformCut, rate };
 }
 
 /** Cron entry: release every HELD payment whose window lapsed. */

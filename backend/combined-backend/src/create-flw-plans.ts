@@ -177,8 +177,74 @@
 
 // sync();
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// backend/combined-backend/src/create-flw-plans.ts
+// ============================================================================
+// ⚠️ RETIRED — DO NOT RUN. Delete this file once you've read this note, along
+// with the npm scripts that call it ("create-flutterwave-plan",
+// "create-flutterwave-plan:dev") and the `FlutterwavePlan` Prisma model.
+//
+// This script created Flutterwave **payment plan** objects and mirrored them
+// into the `FlutterwavePlan` table so initiateSubscription could attach
+// `payment_plan` to a checkout (Model A: Flutterwave charges the card each
+// cycle and the webhook's renewal branch extends the period).
+//
+// That model cannot express the pricing you settled on:
+//
+//     bill(account) = Σ  tier_price(property) | custom_rate(property)
+//
+// A Flutterwave Plan is ONE FIXED AMOUNT on a fixed interval, and
+// `payment_plan` PINS the charge server-side — Flutterwave rejects a charge
+// whose amount differs from the plan's. The owner bill changes whenever a
+// property is added, removed, re-tiered, re-quoted above 3 plots, or joined to
+// an estate rate card. A Plan per combination is combinatorial, and every
+// portfolio change would need a mid-cycle plan migration.
+//
+// WHAT REPLACES IT
+//   Nothing, at Flutterwave. There is no catalogue to sync. Prices live in
+//   backend/shared/src/constants/subscriptionPlans.ts; the amount owed is
+//   computed per cycle by resolveChargeAmount() in subscription.service.ts
+//   against current DB state. Billing is: charge once with tokenization →
+//   store flwCustomerToken (activateSubscription already did this) → charge
+//   that token each cycle via chargeTokenizedCard (utils/flutterwave.ts,
+//   which you already wrote) from jobs/renewSubscriptions.ts.
+//
+//   Changing a price is now a one-line edit to the shared constant. No script
+//   run, no plan migration, no cancel-and-recreate dance — Flutterwave plan
+//   amounts were immutable, which is why that dance existed.
+//
+// TWO THINGS THIS CHANGE OBLIGES YOU TO DO
+//   1. Set RENEWAL_MODE=charge. jobs/renewSubscriptions.ts still defaults to
+//      "detect" (fail-safe for a stale deploy that might double-bill). In
+//      "detect" mode nothing charges anyone — and Flutterwave no longer does
+//      either — so subscriptions silently stop collecting after month one.
+//   2. Own dunning. Flutterwave's plan machinery sent retry attempts and
+//      "payment failed" emails. flagFailure() in the renewal job now holds
+//      that policy (1-day retry × 3, then EXPIRED); the customer email is
+//      still a TODO there.
+//
+// WHAT TO DELETE ALONGSIDE
+//   • this file, and the two npm scripts
+//   • the `FlutterwavePlan` model + a migration to drop the table
+//   • initiateSubscription's `flutterwavePlan.findUniqueOrThrow` — already
+//     removed in subscription.service.ts. That lookup is what 500'd every
+//     paid checkout after your db:reset emptied the table; with no plan ids to
+//     attach, the failure is impossible by construction rather than fixed.
+//   • any NEXT_PUBLIC_FLW_PLAN_* env vars still in .env* or deploy config
+//
+// THE ONE ARGUMENT FOR KEEPING PLANS
+//   The AGENT_* tiers are genuinely flat per-account amounts (₦2,000 / ₦3,500
+//   monthly), so Plans do fit them, and you would inherit Flutterwave's
+//   dunning for that audience. It is not worth it: two billing mechanisms, two
+//   renewal paths and two sets of failure modes for an audience the tokenized
+//   path already handles. If you disagree, that decision belongs in
+//   subscription-plans/BILLING-MODEL.md, not in a script that quietly keeps a
+//   second source of truth for prices alive.
+// ============================================================================
+
 throw new Error(
   "create-flw-plans.ts is retired: NewCondo no longer uses Flutterwave payment plans. " +
-    "Pricing lives in @newcondo/backend-shared/constants (subscriptionPlans.ts) and is billed " +
-    "via tokenized recurring charges. See subscription-plans/BILLING-MODEL.md."
+    "Prices live in @newcondo/backend-shared/constants (subscriptionPlans.ts) and are billed " +
+    "via tokenized recurring charges in jobs/renewSubscriptions.ts (RENEWAL_MODE=charge). " +
+    "See subscription-plans/BILLING-MODEL.md."
 );

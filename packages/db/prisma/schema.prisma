@@ -474,6 +474,8 @@ model Property {
   isPaymentLocked   Boolean   @default(false)
   paymentLockExpiry DateTime?
 
+  suspendedBySubscription Boolean @default(false)
+
   // Sharing & Marketing
   shareableLink String? @unique
   viewCount     Int     @default(0)
@@ -497,6 +499,8 @@ model Property {
   markingJobs      PropertyMarkingJob[]
   virtualAccount   VirtualAccount?
   documents        Document[]
+
+  subscriptionLine PropertySubscription?
 
   agentReferrals    AgentReferral[]            @relation("PropertyReferrals")
   promotionRequests PromotionRequest[]         @relation("PromotionRequests")
@@ -524,6 +528,7 @@ model Property {
   @@index([structure])
   @@index([totalUnits])
   @@index([availableUnits])
+  @@index([suspendedBySubscription])
 }
 
 model PropertyUnit {
@@ -793,10 +798,10 @@ model MarkingQueueEntry {
   abandonedAt   DateTime?
   createdAt     DateTime  @default(now())
 
-  job PropertyMarkingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job   PropertyMarkingJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
   // ++ DELETION — Cascade. A queue slot is pure plumbing; an unstarted slot is
   // released at day 0 so the next agent can take it today, not in two weeks.
-  agent User @relation("MarkingQueueAgent", fields: [agentId], references: [id], onDelete: Cascade)
+  agent User               @relation("MarkingQueueAgent", fields: [agentId], references: [id], onDelete: Cascade)
 
   @@unique([jobId, agentId])
   @@index([jobId, position])
@@ -1041,7 +1046,7 @@ model ShareLink {
   // would still carry their code. Deleted at erasure, not at deactivation
   // (the properties behind them are already UNAVAILABLE, and day 0 must stay
   // reversible).
-  creator User @relation("ShareLinkCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creator  User     @relation("ShareLinkCreator", fields: [creatorId], references: [id], onDelete: Cascade)
 
   @@unique([propertyId, creatorId, kind])
   @@index([creatorId])
@@ -1063,8 +1068,8 @@ model TenantInvite {
   unit     PropertyUnit? @relation(fields: [unitId], references: [id], onDelete: SetNull)
   // ++ DELETION — inviter Cascade (plumbing), renter SetNull (a USED invite is
   // part of the tenancy trail and outlives the renter's identity).
-  inviter User  @relation("TenantInviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
-  renter  User? @relation("TenantInviteRenter", fields: [renterId], references: [id], onDelete: SetNull)
+  inviter  User          @relation("TenantInviteSender", fields: [inviterId], references: [id], onDelete: Cascade)
+  renter   User?         @relation("TenantInviteRenter", fields: [renterId], references: [id], onDelete: SetNull)
 
   @@index([propertyId])
   @@index([inviterId])
@@ -1675,7 +1680,7 @@ model DisputeComment {
 
   dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
   // Restrict — attribution on a legal record.
-  author User @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  author  User    @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
@@ -1690,9 +1695,9 @@ model DisputeEvidence {
   fileUrl    String
   fileType   String
 
-  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  dispute  Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
   // Restrict — chain of custody.
-  uploader User @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+  uploader User    @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
 
   createdAt DateTime @default(now())
 
@@ -1855,14 +1860,18 @@ model Subscription {
   renewalFailureCount  Int       @default(0)
   lastRenewalAttemptAt DateTime?
 
+  gracePeriodEndsAt DateTime?
+  listingsSuspendedAt DateTime?
+
   virtualAccountCreated Boolean @default(false)
 
   // Cascade — cardLast4/cardBrand and the Flutterwave customer token are
   // personal data. The billing HISTORY lives on SubscriptionInvoice, which
   // survives (SetNull) as a tax record.
-  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   history  SubscriptionHistory[]
   invoices SubscriptionInvoice[]
+  lines    PropertySubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1941,6 +1950,42 @@ model SubscriptionInvoice {
   @@index([createdAt])
 }
 
+model PropertySubscription {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  /// A property has exactly one tier at a time.
+  propertyId String   @unique
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  planType SubscriptionPlan
+
+  /// Set ONLY when planType is OWNER_CUSTOM (a property above
+  /// MAX_PLOTS_SELF_SERVE plots, or one on a negotiated estate rate card).
+  /// Sales enters it once; billing reads it instead of the shared constant.
+  customAmountNaira Int?
+
+  /// Plot count, when captured. Drives requiresCustomQuote() — above the cap,
+  /// self-serve checkout routes to sales. Nullable because the listing form
+  /// does not collect it yet, and an unknown count is treated as within the
+  /// cap rather than blocking a checkout on data we never asked for.
+  plots Int?
+
+  /// Future: estate rate card. Estates change the billing unit from plot to
+  /// housing unit and are deliberately NOT priced yet — see BILLING-MODEL.md.
+  estateId String?
+
+  startedAt   DateTime  @default(now())
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([subscriptionId])
+  @@index([planType])
+}
+
 model FlutterwavePlan {
   id String @id @default(cuid())
 
@@ -1966,15 +2011,18 @@ model FlutterwavePlan {
 
 enum SubscriptionPlan {
   OWNER_ESSENTIAL
-  OWNER_ELITE
+  OWNER_PLUS
+  OWNER_PREMIUM
+  OWNER_ESSENTIAL_ANNUAL
+  OWNER_PLUS_ANNUAL
+  OWNER_PREMIUM_ANNUAL
+  OWNER_CUSTOM
   AGENT_ESSENTIAL
   AGENT_PREMIUM
-  RENTER_FREE
-  RENTER_PREMIUM_PLUS
-  OWNER_ESSENTIAL_ANNUAL
-  OWNER_ELITE_ANNUAL
   AGENT_ESSENTIAL_ANNUAL
   AGENT_PREMIUM_ANNUAL
+  RENTER_FREE
+  RENTER_PREMIUM_PLUS
 }
 
 enum SubscriptionStatus {

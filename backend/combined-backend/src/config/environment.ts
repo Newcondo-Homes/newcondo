@@ -20,6 +20,9 @@ const envSchema = z.object({
     .default("http://localhost:3000,http://localhost:5173,http://localhost:4000")
     .transform((val) => val.split(",").map((origin) => origin.trim())),
 
+  // Subscription billing — "charge" is required for renewals to collect.
+  RENEWAL_MODE: z.enum(["detect", "charge"]).default("detect"),
+  
   // Database configuration
   DATABASE_URL: z.string().min(1, "Database URL is required"),
   REDIS_URL: z.string().optional(),
