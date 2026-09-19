@@ -1,4 +1,5 @@
 import { Icon } from "@/components/ui/icon";
+import { ResetSiteData } from "@/components/ui/reset-site-data";
 import { FOOTER } from "@/lib/data";
 import { CONTACT } from "@/lib/contact-data";
 
@@ -80,7 +81,13 @@ export function Footer() {
 
       <div className="max-w-[1440px] mx-auto px-[var(--gutter)] pt-8 pb-11 flex justify-between gap-4 flex-wrap text-[13px] text-text-on-dark-2 border-t border-[rgba(249,249,239,0.1)] mt-[30px]">
         <span suppressHydrationWarning>© Newcondo LLC {new Date().getFullYear()}</span>
-        <span>Escrow rent collection · Verified tenants · Owner dashboard</span>
+         <span className="flex items-center gap-x-5 gap-y-2 flex-wrap">
+          <span>Escrow rent collection · Verified tenants · Owner dashboard</span>
+          {/* Support escape hatch — see components/ui/reset-site-data.tsx.
+              Last item on the page on purpose: findable when support says
+              "scroll to the very bottom", invisible to everyone else. */}
+          <ResetSiteData />
+        </span>
       </div>
     </footer>
   );
