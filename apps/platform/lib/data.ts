@@ -100,12 +100,12 @@ export const FEATURES: Feature[] = [
   ["bug", "Scheduled fumigation — included", `Professional exterior fumigation of the compound, coordinated by Newcondo. Once a year on ${P.OWNER_ESSENTIAL.name} and ${P.OWNER_PLUS.name}, twice on ${P.OWNER_PREMIUM.name}. No contractors to call. No forgetting.`, "all"],
   ["trash-2", "Monthly waste management", "Bins emptied every month for your compound, arranged and paid for by Newcondo. No compound disputes, no LAWMA fines, no refuse sitting for three weeks.", "all"],
   ["trending-up", "Rent pricing intelligence", "A quarterly report on what similar properties on your street or LGA actually rent for today. Most landlords haven't raised rent in five years.", "all"],
-  ["user-x", "Tenant blacklist access", "Before accepting a tenant, check their Newcondo history: evictions, defaults, reported damage, disputes. It grows with every landlord on the platform.", "all"],
+  // ["user-x", "Tenant blacklist access", "Before accepting a tenant, check their Newcondo history: evictions, defaults, reported damage, disputes. It grows with every landlord on the platform.", "all"],
   ["file-text", "Annual rental income statement", "A formatted, signed statement of all rent collected in the year — for tax, loans, mortgages, and proof of income. Most landlords can't prove this. Now you can.", "all"],
   ["camera", "Professional photography — first free", "Newcondo sends a photographer before your listing goes live. Better photos mean faster tenants and less vacancy. Polished from day one.", "all"],
   ["layers", "One account, many properties — mixed tiers", `List as many properties as you own. Each one carries its own service tier and its own bill, so the flat you live in can sit on ${P.OWNER_ESSENTIAL.name} while the one you rent out from abroad sits on ${P.OWNER_PREMIUM.name}.`, "all"],
   ["clipboard-check", "Move-in / move-out inspection reports", `When a tenant moves in or out, a Newcondo inspector documents the property's condition with photos and files a report to your dashboard — so a damage dispute is a document, not an argument. Once a year on ${P.OWNER_PLUS.name}, twice on ${P.OWNER_PREMIUM.name}.`, "plus"],
-  ["umbrella", "Rent default insurance", "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform offers this.", "premium"],
+  // ["umbrella", "Rent default insurance", "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform offers this.", "premium"],
   ["headphones", "Dedicated account manager", "A named Newcondo staff member handles your account — monthly performance updates and agent coordination on your behalf. For diaspora owners, this is everything.", "premium"],
   ["wrench", "24-hour emergency maintenance", "Burst pipe, electrical fault, broken gate — the tenant raises it in the app, Newcondo dispatches a vetted contractor within 24 hours. You approve from your phone.", "premium"],
 ];
@@ -147,7 +147,7 @@ export interface PlanCopy {
 export const PLAN_ESSENTIAL: PlanCopy = {
   code: "OWNER_ESSENTIAL",
   features: [
-    "Unlimited property listings",
+    // "Unlimited property listings",
     "1× exterior fumigation per year",
     "Monthly waste management",
     "Escrow rent collection",
@@ -182,7 +182,7 @@ export const PLAN_PREMIUM: PlanCopy = {
     `Reduced commission — ${formatRate(P.OWNER_PREMIUM.commissionRate)} instead of ${formatRate(P.OWNER_ESSENTIAL.commissionRate)}`,
     "Emergency maintenance within 24 hours",
     "Dedicated account manager (named, human)",
-    "Rent default insurance — 1 full month covered",
+    // "Rent default insurance — 1 full month covered",
     "Annual property valuation report",
   ],
 };
@@ -208,7 +208,7 @@ export const FAQS: Faq[] = [
 export const FOOTER: Record<string, string[]> = {
   //TODO: uncomment when agents page is readys
   // PRODUCT: ["How it works", "Features", "Pricing", "For Agents", "For Renters"],
-  PRODUCT: ["How it works", "Features", "Pricing", "For Agents", "For Renters"],
+  PRODUCT: ["How it works", "Features", "Pricing"],
   COMPANY: ["About", "Blog", "Support", "Careers", "Contact"],
   LEGAL: ["Privacy Policy", "Refund Policy", "Terms of Service", "Trust & Safety", "Cookie Policy", "Data Handling"],
 };

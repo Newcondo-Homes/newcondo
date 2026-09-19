@@ -5,9 +5,9 @@ import { CONTACT } from "@/lib/contact-data";
 /** Live destinations for footer items that have real pages. Everything else → "#". */
 const FOOTER_HREFS: Record<string, string> = {
   // Product
-  "How it works": "/#how",
-  Features: "/#features",
-  Pricing: "/#pricing",
+  "How it works": "/how",
+  Features: "/features",
+  Pricing: "/pricing",
   // Company
   About: "/about",
   Blog: "/blog",
@@ -79,7 +79,7 @@ export function Footer() {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-[var(--gutter)] pt-8 pb-11 flex justify-between gap-4 flex-wrap text-[13px] text-text-on-dark-2 border-t border-[rgba(249,249,239,0.1)] mt-[30px]">
-        <span>© Newcondo LLC 2026</span>
+        <span suppressHydrationWarning>© Newcondo LLC {new Date().getFullYear()}</span>
         <span>Escrow rent collection · Verified tenants · Owner dashboard</span>
       </div>
     </footer>

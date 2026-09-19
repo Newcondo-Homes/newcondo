@@ -192,10 +192,17 @@ const OWNER_BASE_FEATURES = [
   "Escrow rent collection",
   "Identity-verified tenants",
   "Auto tenancy agreements",
-  "Tenant blacklist access",
   "Monthly waste management",
-  "Unlimited property listings",
 ];
+/* REMOVED (Sept 2026) — do not put these back without shipping them first:
+   • "Unlimited property listings" — actively misleading under per-property
+     pricing. Listings are not capped, but every property carries its own
+     subscription, so "unlimited" reads as "list as many as you like at this
+     price". propertyListingCap stays null; we simply stop advertising it.
+   • "Tenant blacklist access"
+   • "Professional photography"
+   • "Rent default insurance"
+     — none of these are live services yet. */
 
 /* ---------- the plans ---------- */
 export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanCode, SubscriptionPlanSpec> = {
@@ -247,7 +254,6 @@ export const SUBSCRIPTION_PLANS: Record<SubscriptionPlanCode, SubscriptionPlanSp
       "Commission drops to 15%",
       "24-hour emergency maintenance",
       "Dedicated account manager",
-      "Rent default insurance",
     ],
     fumigationsPerYear: 2, inspectionsPerYear: 2, wasteManagement: "MONTHLY",
     propertyListingCap: null, canAccessMarkingJobs: false, isFreeRenterPlan: false,

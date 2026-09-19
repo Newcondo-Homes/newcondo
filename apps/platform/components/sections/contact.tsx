@@ -6,17 +6,17 @@
    and shortcuts to the specialised desks.
    ============================================================ */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { cx } from "@/lib/cx";
 import { Navbar } from "@/components/sections/navbar";
 import { Footer } from "@/components/sections/footer";
 import { ChatButton } from "@/components/chat-button";
-import { Button } from "@/components/ui/nc-button";
 import { Section } from "@/components/ui/section";
 import { SectionHead } from "@/components/ui/section-head";
 import { PageHero } from "@/components/ui/page-hero";
+import { Button } from "@/components/ui/nc-button";
 import { Icon } from "@/components/ui/icon";
 import { Reveal, Group, Item, vCard, vFade } from "@/components/motion";
 import { CONTACT, MAPS_URL, CONTACT_CHANNELS, CONTACT_TOPICS, CONTACT_SHORTCUTS } from "@/lib/contact-data";
@@ -27,6 +27,151 @@ const inputCls = (err?: boolean) =>
     "transition-shadow placeholder:text-text-tertiary focus:border-ink focus:shadow-[0_0_0_4px_rgba(19,19,19,0.08)]",
     err ? "border-danger" : "border-nc-border"
   );
+
+/* ============================================================
+   TopicSelect — the "What is it about?" dropdown.
+
+   A native <select> cannot be styled past its trigger: the option list is
+   drawn by the operating system, so it arrived as grey Chrome/Windows
+   chrome in the middle of a cream, pill-radius, 28px-corner page. Every
+   other control here is on-brand and that one popped out as unfinished.
+
+   So the menu is ours: surface card, hairline border, pop shadow, 22px
+   radius, a green check on the selection and a chevron that rotates —
+   the same vocabulary as NCSelect in the dashboard, sized to the
+   marketing form's larger inputs (15px / py-3.5) rather than the
+   dashboard's compact ones.
+
+   Kept honest about being a form control: it is a real <button> with
+   aria-haspopup/aria-expanded, the list is a listbox with aria-selected
+   rows, Escape closes and returns focus, and Up/Down/Home/End move
+   through options — because a mouse-only dropdown is a regression on
+   the native element it replaced, however good it looks.
+   ============================================================ */
+function TopicSelect({
+  id,
+  value,
+  onChange,
+  options,
+}: {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: readonly string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(() => Math.max(0, options.indexOf(value)));
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  // Keep the highlighted row visible when arrowing past the menu's edge.
+  // scrollTop math rather than scrollIntoView, which would also scroll the page.
+  useEffect(() => {
+    if (!open || !listRef.current) return;
+    const el = listRef.current.children[active] as HTMLElement | undefined;
+    if (!el) return;
+    const { scrollTop, clientHeight } = listRef.current;
+    if (el.offsetTop < scrollTop) listRef.current.scrollTop = el.offsetTop;
+    else if (el.offsetTop + el.offsetHeight > scrollTop + clientHeight) {
+      listRef.current.scrollTop = el.offsetTop + el.offsetHeight - clientHeight;
+    }
+  }, [active, open]);
+
+  const commit = (v: string) => {
+    onChange(v);
+    setOpen(false);
+    btnRef.current?.focus();
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") { setOpen(false); btnRef.current?.focus(); return; }
+    if (!open && (e.key === "ArrowDown" || e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      setActive(Math.max(0, options.indexOf(value)));
+      setOpen(true);
+      return;
+    }
+    if (!open) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => (i + 1) % options.length); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => (i - 1 + options.length) % options.length); }
+    else if (e.key === "Home") { e.preventDefault(); setActive(0); }
+    else if (e.key === "End") { e.preventDefault(); setActive(options.length - 1); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); commit(options[active]); }
+  };
+
+  return (
+    <div ref={wrapRef} className="relative" onKeyDown={onKeyDown}>
+      <button
+        ref={btnRef}
+        id={id}
+        type="button"
+        onClick={() => { setActive(Math.max(0, options.indexOf(value))); setOpen((o) => !o); }}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className={cx(
+          inputCls(),
+          "flex cursor-pointer items-center justify-between gap-3 text-left",
+          open && "border-ink shadow-[0_0_0_4px_rgba(19,19,19,0.08)]"
+        )}
+      >
+        <span className="truncate">{value}</span>
+        <Icon
+          name="chevron-down"
+          size={18}
+          className={cx("flex-none text-text-tertiary transition-transform duration-200 ease-nc", open && "rotate-180")}
+        />
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            ref={listRef}
+            role="listbox"
+            aria-activedescendant={`${id}-opt-${active}`}
+            initial={{ opacity: 0, y: 8, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.985 }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-x-0 top-[calc(100%+8px)] z-50 max-h-[268px] overflow-auto rounded-[22px] border border-border-hair bg-surface p-2 shadow-pop"
+          >
+            {options.map((o, i) => {
+              const isSel = o === value;
+              return (
+                <button
+                  key={o}
+                  id={`${id}-opt-${i}`}
+                  type="button"
+                  role="option"
+                  aria-selected={isSel}
+                  onMouseEnter={() => setActive(i)}
+                  onClick={() => commit(o)}
+                  className={cx(
+                    "flex w-full items-center justify-between gap-3 rounded-2xl px-3.5 py-3 text-left text-[14.5px] transition-colors duration-150",
+                    i === active ? "bg-surface-sunken" : "bg-transparent",
+                    isSel ? "font-semibold text-text-primary" : "font-medium text-text-secondary"
+                  )}
+                >
+                  {o}
+                  {isSel && <Icon name="check" size={16} strokeWidth={2.5} className="flex-none text-green-dark" />}
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 function Label({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -188,18 +333,12 @@ export function Contact() {
 
                 <div className="mt-4">
                   <Label htmlFor="c-topic">What is it about?</Label>
-                  <select
+                  <TopicSelect
                     id="c-topic"
-                    className={cx(inputCls(), "appearance-none cursor-pointer")}
                     value={f.topic}
-                    onChange={(e) => set("topic", e.target.value)}
-                  >
-                    {CONTACT_TOPICS.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(v) => set("topic", v)}
+                    options={CONTACT_TOPICS}
+                  />
                 </div>
 
                 <div className="mt-4">
@@ -317,6 +456,7 @@ export function Contact() {
         </Group>
       </Section>
 
+      <Footer />
       <ChatButton />
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Check, ArrowRight, ArrowLeft, ChevronDown, Loader2, Building2 } from "lucide-react";
 import { cx } from "@/lib/cx";
 import { UserType } from "@/types/api";
@@ -95,8 +95,83 @@ export default function PlanSelector({
      the form didn't collect. */
   const needsQuote = requiresCustomQuote(plots);
 
+  /* ── MOBILE CAROUSEL ───────────────────────────────────────────────────
+     Three per-property tiers do not fit a phone. Stacked vertically they
+     pushed the Subscribe button two screens down and every card had to be
+     scrolled past to reach it; side by side they were unreadable. A
+     scroll-snap carousel keeps one card at a readable width, keeps the CTA
+     in view, and makes comparison a swipe.
+
+     Same DOM at every size — the container is a grid on desktop and a
+     snap scroller below the breakpoint (Tailwind flips `display`), so
+     there is no duplicated markup to drift apart. The dots and the
+     scroll listener are inert on desktop because the element never
+     overflows. ─────────────────────────────────────────────────────────── */
+  const railRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [inView, setInView] = useState(0);
+
+  /** Centre a card in the rail. Not scrollIntoView — that scrolls the whole
+   *  page too, which yanks the checkout out from under the user. */
+  const scrollToCard = useCallback((id: string) => {
+    const rail = railRef.current;
+    const card = cardRefs.current[id];
+    if (!rail || !card) return;
+    if (rail.scrollWidth <= rail.clientWidth + 4) return; // not a carousel
+    rail.scrollTo({
+      left: card.offsetLeft - (rail.clientWidth - card.clientWidth) / 2,
+      behavior: "smooth",
+    });
+  }, []);
+
+  /* Keep the dots in step with a manual swipe. rAF-throttled: a scroll
+     handler that calls setState on every event re-renders three cards per
+     frame on the phones this exists for. */
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const mid = rail.scrollLeft + rail.clientWidth / 2;
+        let best = 0;
+        let bestDist = Infinity;
+        plans.forEach((pl, i) => {
+          const el = cardRefs.current[pl.uiId];
+          if (!el) return;
+          const dist = Math.abs(el.offsetLeft + el.clientWidth / 2 - mid);
+          if (dist < bestDist) { bestDist = dist; best = i; }
+        });
+        setInView(best);
+      });
+    };
+    rail.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      rail.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [plans]);
+
+  /* Open on the recommended tier rather than the leftmost one — on desktop
+     it is visually centred, so the phone should not silently start
+     somewhere else. Runs once per plan set. */
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail || rail.scrollWidth <= rail.clientWidth + 4) return;
+    const idx = plans.findIndex((pl) => pl.uiId === selected);
+    if (idx > 0) {
+      const card = cardRefs.current[plans[idx].uiId];
+      if (card) rail.scrollLeft = card.offsetLeft - (rail.clientWidth - card.clientWidth) / 2;
+      setInView(idx);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plans]);
+
   const pick = (id: string) => {
     setSelected(id);
+    scrollToCard(id);
     // restart the one-shot attention pulse on the Subscribe button
     setPulse(false);
     requestAnimationFrame(() => requestAnimationFrame(() => setPulse(true)));
@@ -149,13 +224,26 @@ export default function PlanSelector({
       )}
 
       <div
+        ref={railRef}
+        role={plans.length > 1 ? "group" : undefined}
+        aria-label={plans.length > 1 ? "Subscription plans — swipe to compare" : undefined}
         className={cx(
           "grid gap-3.5 max-[560px]:gap-3",
           plans.length === 1
             ? "mx-auto max-w-[460px] grid-cols-1"
             : plans.length === 2
               ? "grid-cols-2 max-[680px]:grid-cols-1"
-              : "grid-cols-3 max-[900px]:grid-cols-1 max-[900px]:mx-auto max-[900px]:max-w-[460px]"
+              : // Three tiers: grid down to 900px, then a snap carousel.
+                // -mx-* + px-* lets the first and last card sit centred
+                // while the rail still bleeds to the screen edge, so a
+                // half-visible neighbour signals "there is more".
+                cx(
+                  "grid-cols-3",
+                  "max-[900px]:flex max-[900px]:snap-x max-[900px]:snap-mandatory max-[900px]:overflow-x-auto",
+                  "max-[900px]:-mx-[clamp(16px,5vw,32px)] max-[900px]:px-[clamp(16px,5vw,32px)]",
+                  "max-[900px]:pb-2 max-[900px]:[scrollbar-width:none] max-[900px]:[-ms-overflow-style:none]",
+                  "max-[900px]:[&::-webkit-scrollbar]:hidden"
+                )
         )}
       >
         {plans.map((plan) => {
@@ -164,10 +252,16 @@ export default function PlanSelector({
           return (
             <button
               key={plan.uiId}
+              ref={(el) => { cardRefs.current[plan.uiId] = el; }}
               type="button"
               onClick={() => pick(plan.uiId)}
               className={cx(
                 "group relative flex flex-col rounded-card border p-6 text-left transition-[transform,box-shadow,border-color] duration-200 ease-nc hover:-translate-y-1 max-[560px]:rounded-[20px] max-[560px]:p-[18px]",
+                // Carousel sizing. 78% leaves a deliberate sliver of the next
+                // card visible; the hover lift is dropped because a swipe on
+                // touch fires hover and the card jumps under the finger.
+                plans.length > 2 &&
+                  "max-[900px]:w-[78%] max-[900px]:min-w-[78%] max-[900px]:max-w-[330px] max-[900px]:flex-none max-[900px]:snap-center max-[900px]:hover:translate-y-0",
                 isDark ? "bg-ink text-cream" : "bg-surface text-text-primary",
                 isActive
                   ? isDark

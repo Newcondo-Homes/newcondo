@@ -110,7 +110,7 @@ export function Pricing() {
         center
         eyebrow="Simple, honest pricing"
         title="Pick the service level that makes owning property feel like owning property — not a second job."
-        lead="Every tier includes escrow rent collection, tenant verification, legal agreements, monthly waste management, photography, blacklist access and the full Newcondo platform. The tiers differ in how often we show up: exterior fumigation and inspection reports. Priced per property, per month — and you pick the tier for each property separately."
+        lead="Every tier includes escrow rent collection, tenant verification, legal agreements, monthly waste management and the full Newcondo platform. The tiers differ in how often we show up: exterior fumigation and inspection reports. Priced per property, per month — and you pick the tier for each property separately."
       />
 
       <Group stagger={0.1} className="grid grid-cols-3 gap-5 max-w-[1200px] mx-auto max-[1080px]:grid-cols-1 max-[1080px]:max-w-[520px]">
@@ -133,8 +133,7 @@ export function Pricing() {
             {formatNaira(SAMPLE_RENT)}/month in rent on a property and that difference saves you{" "}
             <strong className="text-text-primary">{formatNaira(monthlySaving)} every month</strong>. The subscription is{" "}
             {formatNaira(premium.amountNaira)} — so you&apos;re effectively paying {formatNaira(netCost)}/month for twice the
-            fumigation, two inspection reports a year, an account manager, rent default insurance and 24-hour emergency
-            maintenance.
+            fumigation, two inspection reports a year, an account manager and 24-hour emergency maintenance.
           </p>
           <p className="inline-flex items-center gap-[9px] mt-3.5 font-semibold text-green-dark">
             <Icon name="gift" size={18} /> Pay annually and get 2 months free on any tier.

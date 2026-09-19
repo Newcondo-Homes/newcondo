@@ -130,14 +130,14 @@ export const PRICING: Record<Audience, PricingModel> = {
       { name: "Rent & payments", rows: [
         ["Escrow rent collection", true, true, true],
         ["Platform commission on rents", pct(P.OWNER_ESSENTIAL.commissionRate), pct(P.OWNER_PLUS.commissionRate), pct(P.OWNER_PREMIUM.commissionRate)],
-        ["Dedicated virtual account", true, true, true],
-        ["Automatic payout scheduling", true, true, true],
-        ["Rent default insurance — 1 month covered", false, false, true],
+        // ["Dedicated virtual account", true, true, true],
+        // ["Automatic payout scheduling", true, true, true],
+        // ["Rent default insurance — 1 month covered", false, false, true],
       ]},
       { name: "Tenants & legal", rows: [
         ["Identity-verified tenants only", true, true, true],
         ["Auto-generated tenancy agreements", true, true, true],
-        ["Tenant blacklist access", true, true, true],
+        // ["Tenant blacklist access", true, true, true],
       ]},
       { name: "Intelligence & support", rows: [
         ["Rent pricing intelligence — quarterly", true, true, true],
@@ -301,12 +301,12 @@ export const FEATURES_PAGE: Record<Audience, FeaturesModel> = {
       { name: "Money & protection", sub: "Your rent arrives, in full, every time.", items: [
         { icon: "shield-check", title: "Escrow rent collection", body: "Rent is collected and held by Newcondo in a secure virtual account, then released straight to your bank after the confirmation window. Your agents coordinate tenants — they never hold a kobo of your money." },
         { icon: "wallet", title: "Dedicated virtual account", body: "Every owner gets a virtual account where rent is held and tracked. Set automatic transfers to your personal bank — as soon as funds clear, or on a schedule you choose." },
-        { icon: "umbrella", title: "Rent default insurance (Premium)", body: "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform in Nigeria offers this." },
+        // { icon: "umbrella", title: "Rent default insurance (Premium)", body: "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform in Nigeria offers this." },
       ]},
       { name: "Tenants & legal", sub: "Know exactly who you're handing your keys to.", items: [
         { icon: "badge-check", title: "Identity-verified tenants only", body: "Every renter submits NIN, BVN, passport or driver's licence before they can pay. You'll never unknowingly hand your keys to an anonymous stranger again." },
         { icon: "scroll-text", title: "Auto-generated tenancy agreements", body: "The moment payment clears, a legally structured tenancy agreement is generated, signed digitally by both parties, and stored permanently — retrievable anytime, including in court." },
-        { icon: "user-x", title: "Tenant blacklist access", body: "Before accepting a tenant, check their Newcondo history: evictions, defaults, reported damage and disputes. The database grows with every landlord on the platform." },
+        // { icon: "user-x", title: "Tenant blacklist access", body: "Before accepting a tenant, check their Newcondo history: evictions, defaults, reported damage and disputes. The database grows with every landlord on the platform." },
         { icon: "clipboard-check", title: "Move-in & move-out inspection reports (Plus)", body: "When a tenant moves in or out, Newcondo documents an inspection with photos comparing condition. If there's damage, you have evidence — no more “that crack was already there.” Once a year on Plus, twice on Premium." },
       ]},
       { name: "Property care", sub: "The chores that lose you tenants — handled on a schedule.", items: [
@@ -317,7 +317,7 @@ export const FEATURES_PAGE: Record<Audience, FeaturesModel> = {
       { name: "Intelligence & support", sub: "Run your property like the asset it is.", items: [
         { icon: "trending-up", title: "Rent pricing intelligence", body: "A quarterly report on what comparable properties on your street and LGA are actually renting for today — so you stop leaving money on the table." },
         { icon: "file-text", title: "Annual rental income statement", body: "A formatted, signed statement of all rent collected through Newcondo in the year — for tax, loans, mortgages and proof of income. Most landlords can't prove this. Now you can." },
-        { icon: "camera", title: "Professional photography", body: "Newcondo sends a photographer before your listing goes live (first listing free). Better photos mean faster tenants and less vacancy." },
+        // { icon: "camera", title: "Professional photography", body: "Newcondo sends a photographer before your listing goes live (first listing free). Better photos mean faster tenants and less vacancy." },
         { icon: "headphones", title: "Dedicated account manager (Premium)", body: "A named Newcondo staff member handles your account with monthly performance updates and agent coordination on your behalf — built for diaspora owners especially." },
       ]},
     ],
