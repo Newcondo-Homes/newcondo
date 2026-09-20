@@ -99,6 +99,9 @@ export async function PATCH(req: Request) {
     if (!EMAIL_RE.test(email)) {
       return NextResponse.json({ success: false, error: "Enter a valid email address" }, { status: 400 });
     }
+    if (email.endsWith("@placeholder.newcondo")) {
+      return NextResponse.json({ success: false, error: "Enter a valid email address" }, { status: 400 });
+    }
     data.email = email;
     // Changing the address must invalidate the proof of the old one. Without
     // this, someone verifies an address they control, swaps in a victim's, and

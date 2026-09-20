@@ -45,28 +45,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...fullCallbacks,
 
     async signIn({ account, profile }) {
-      if (account?.provider !== "credentials") {
-        // Facebook can omit email — phone-only accounts, or the user unticks
-        // email on the consent screen. Prisma's User.email is required, so
-        // without this guard sign-in throws a raw adapter error.
-        //
-        // This is still a refusal, but now it names the cause so /login can
-        // render something actionable ("Facebook didn't share an email address
-        // — sign up with your email instead, or allow email sharing and try
-        // again") rather than the generic "please sign in to access that page".
-        //
-        // UPGRADE PATH when Facebook signups justify it: accept the sign-in
-        // with a reserved placeholder (`fb_<providerAccountId>@placeholder.newcondo`),
-        // treat it as "no email" in getOnboardingState (hasEmail = !!email &&
-        // !email.endsWith("@placeholder.newcondo")), and let the details step
-        // collect the real address — which the verify step then OTPs. That
-        // touches every place assuming a real email, so it is not a same-day
-        // change.
-        if (account?.provider === "facebook" && !profile?.email) {
-          return "/login?error=FacebookNoEmail";
-        }
-        return true;
-      }
+      // Facebook may return no email — that is NOT a failure, and refusing it
+      // stranded the user on /login with nothing they could do. auth.full.ts's
+      // profile() substitutes `fb_<id>@placeholder.newcondo`, getOnboardingState
+      // reports hasEmail: false for that address, and the onboarding details
+      // step collects the real one (which the verify step then OTPs).
+      // Every provider is allowed through; nothing is gated here any more.
       return true;
     },
 

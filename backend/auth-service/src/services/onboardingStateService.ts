@@ -60,7 +60,7 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
   if (!user) throw new Error("User not found");
 
   const authProviders = user.accounts.map((a) => a.provider);
-  const hasEmail = !!user.email;
+  const hasEmail = !!user.email && !user.email.endsWith("@placeholder.newcondo");
   const hasPhone = !!user.phone;
   const status = user.subscription?.status ? String(user.subscription.status) : null;
 

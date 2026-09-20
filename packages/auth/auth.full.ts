@@ -8,6 +8,11 @@ import { prisma, Role, VerificationStatus } from "@newcondo/db";
 import bcrypt from "bcryptjs";
 import { jwtVerify, createRemoteJWKSet } from "jose";
 
+// for facebook accounts that don't return email during facebook oauth onboarding
+export const PLACEHOLDER_EMAIL_DOMAIN = "placeholder.newcondo";
+export const isPlaceholderEmail = (email?: string | null) =>
+  !!email && email.endsWith(`@${PLACEHOLDER_EMAIL_DOMAIN}`);
+
 // Verifies a Google ID token's signature/issuer/audience without pulling in
 // the extra google-auth-library dependency — jose fetches + caches Google's
 // public keys (JWKS) itself.
@@ -61,7 +66,7 @@ const authFullConfig: NextAuthConfig = {
         return {
           id: profile.id,
            name: profile.name,
-           email: profile.email ?? null,
+           email: profile.email ?? `fb_${profile.id}@${PLACEHOLDER_EMAIL_DOMAIN}`,
            image: profile.picture?.data?.url ?? null,
            emailVerified: null,
            role: "RENTER" as Role,
