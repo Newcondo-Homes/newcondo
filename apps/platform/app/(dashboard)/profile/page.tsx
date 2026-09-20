@@ -21,6 +21,7 @@ import { ConfirmDialog } from "@/components/dashboard/Modal";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { usePersistedTab } from "@/hooks/dashboard/usePersistedTab";
 import { YourDetailsCard } from "@/components/dashboard/profile/YourDetailsCard";
+import { DeleteAccountCard } from "@/components/dashboard/profile/DeleteAccountCard";
 import {
   planByCode,
   formatNaira,
@@ -99,6 +100,15 @@ export default function ProfilePage() {
                it isn't ready. */}
             <NotifToggle label="SMS" initial={false} comingSoon />
           </Card>
+          {/* Full-width, last thing on the tab. Deliberately NOT buried behind
+             another click: Meta requires the in-app deletion route to be
+             findable, and /privacy §13 tells people it is "in your account
+             settings" — so this is where it has to be. It is also not styled
+             as a scare-zone: deleting your account is a right, not a mistake.
+             Becomes the countdown + Restore button once deletion is scheduled. */}
+          <div className="col-span-2 max-[860px]:col-span-1">
+            <DeleteAccountCard email={user.email} />
+          </div>
         </div>
       )}
       {tab === "verify" && (

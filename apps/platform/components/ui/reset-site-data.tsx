@@ -37,6 +37,29 @@ import { Icon } from "@/components/ui/icon";
 
 type Phase = "idle" | "confirm" | "clearing" | "done";
 
+/** Bound a step so one hung API can't strand the whole reset.
+ *
+ *  WHY THIS EXISTS: every step below talks to a browser API that is allowed to
+ *  never settle. On desktop they all resolve in milliseconds; on mobile Chrome
+ *  they do not. The worst offender is step 2 — the clear-session response
+ *  carries `Clear-Site-Data: "cache", "cookies", "storage"`, and while Chrome
+ *  executes that directive it can leave the very fetch that triggered it
+ *  pending. Awaiting it serially then meant the spinner ran forever and the
+ *  reload at the end was never reached. */
+function withTimeout<T>(label: string, ms: number, work: Promise<T>): Promise<T | void> {
+  return Promise.race([
+    work.catch((e) => {
+      console.error(`[ResetSiteData] ${label} failed`, e);
+    }),
+    new Promise<void>((resolve) =>
+      setTimeout(() => {
+        console.warn(`[ResetSiteData] ${label} timed out after ${ms}ms — continuing`);
+        resolve();
+      }, ms)
+    ),
+  ]);
+}
+
 /** Expire one cookie across every path/domain scope it might have been set on. */
 function expireCookie(name: string) {
   const { hostname } = window.location;
@@ -75,11 +98,19 @@ async function clearEverything() {
   }
 
   // 2. The HttpOnly session cookies — only the server can unset these.
-  try {
-    await fetch("/api/user/clear-session", { method: "POST", credentials: "include" });
-  } catch (e) {
-    console.error("[ResetSiteData] server session clear failed", e);
-  }
+  //    Aborted at 3s: the response sets Clear-Site-Data, and mobile Chrome can
+  //    leave this fetch pending while it acts on that header. The cookies are
+  //    already gone by then — we just stop waiting for the acknowledgement.
+  await withTimeout(
+    "server session clear",
+    3000,
+    fetch("/api/user/clear-session", {
+      method: "POST",
+      credentials: "include",
+      keepalive: true, // survives the page teardown that follows
+      signal: AbortSignal.timeout?.(3000),
+    })
+  );
 
   // 3. Web storage — onboarding drafts, persisted tabs, the location gate.
   try {
@@ -91,38 +122,47 @@ async function clearEverything() {
 
   // 4. IndexedDB. databases() is unsupported in Firefox and older Safari, so
   //    fall back to deleting the ones we know we create rather than skipping.
-  try {
-    const idb = window.indexedDB as IDBFactory & { databases?: () => Promise<{ name?: string }[]> };
-    const names = idb.databases
-      ? (await idb.databases()).map((d) => d.name).filter(Boolean)
-      : ["firebase-installations-database", "firebaseLocalStorageDb"];
-    await Promise.all(
-      (names as string[]).map(
-        (n) =>
-          new Promise<void>((resolve) => {
-            const req = indexedDB.deleteDatabase(n);
-            req.onsuccess = req.onerror = req.onblocked = () => resolve();
-          })
-      )
-    );
-  } catch (e) {
-    console.error("[ResetSiteData] indexedDB clear failed", e);
-  }
+  //    deleteDatabase fires onblocked (not onerror) when another tab holds the
+  //    database open, and on mobile that tab is often still alive — hence the
+  //    outer timeout as well as the onblocked handler.
+  await withTimeout(
+    "indexedDB clear",
+    2500,
+    (async () => {
+      const idb = window.indexedDB as IDBFactory & { databases?: () => Promise<{ name?: string }[]> };
+      const names = idb.databases
+        ? (await idb.databases()).map((d) => d.name).filter(Boolean)
+        : ["firebase-installations-database", "firebaseLocalStorageDb"];
+      await Promise.all(
+        (names as string[]).map(
+          (n) =>
+            new Promise<void>((resolve) => {
+              const req = indexedDB.deleteDatabase(n);
+              req.onsuccess = req.onerror = req.onblocked = () => resolve();
+            })
+        )
+      );
+    })()
+  );
 
   // 5. Cache Storage + service workers — otherwise a stale build keeps being
-  //    served and the "fresh start" still shows the old bug.
-  try {
-    if ("caches" in window) {
-      const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
-    }
-    if ("serviceWorker" in navigator) {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map((r) => r.unregister()));
-    }
-  } catch (e) {
-    console.error("[ResetSiteData] cache clear failed", e);
-  }
+  //    served and the "fresh start" still shows the old bug. On a large mobile
+  //    cache this is the slowest step by far, so it is bounded too: an
+  //    unevicted cache entry is a far smaller problem than a stuck spinner.
+  await withTimeout(
+    "cache clear",
+    3000,
+    (async () => {
+      if ("caches" in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map((k) => caches.delete(k)));
+      }
+      if ("serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    })()
+  );
 
   // 6. Stop Google One Tap re-authenticating on the very next load. This is
   //    NOT a Google sign-out — it only clears the auto-select hint on this
@@ -140,14 +180,35 @@ export function ResetSiteData() {
   const [phase, setPhase] = useState<Phase>("idle");
 
   const run = async () => {
+    if (phase === "clearing") return; // double-tap guard — easy to hit on touch
     setPhase("clearing");
-    await clearEverything();
-    setPhase("done");
-    // Full reload, not router.refresh(): the point is to discard every scrap
-    // of in-memory state too — React Query's cache, Zustand stores, the
-    // NextAuth session object. A soft navigation would keep all of it.
-    // replace() so Back can't return to an authenticated screen.
-    setTimeout(() => window.location.replace("/"), 900);
+
+    // Full reload, not router.refresh(): the point is to discard every scrap of
+    // in-memory state too — React Query's cache, Zustand stores, the NextAuth
+    // session object. A soft navigation would keep all of it. replace() so Back
+    // can't return to an authenticated screen.
+    let left = false;
+    const leave = () => {
+      if (left) return;
+      left = true;
+      window.location.replace("/");
+    };
+
+    // The reload is scheduled BEFORE the sweep, not after it. Previously it sat
+    // behind `await clearEverything()`, so a single hung step (see withTimeout)
+    // meant it never ran and the spinner turned forever — the mobile-Chrome bug.
+    // Now the navigation is guaranteed: worst case the page reloads at 6s with
+    // part of the sweep unfinished, and a reload is itself most of the cure.
+    const watchdog = setTimeout(leave, 6000);
+
+    try {
+      await clearEverything();
+    } finally {
+      clearTimeout(watchdog);
+      setPhase("done");
+      // Short beat so "Cleared" is legible before the page goes.
+      setTimeout(leave, 700);
+    }
   };
 
   if (phase === "done" || phase === "clearing") {
@@ -166,7 +227,12 @@ export function ResetSiteData() {
   if (phase === "confirm") {
     return (
       <span className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[13px] text-text-on-dark-2">
-        <span>Sign you out and clear saved data on this device?</span>
+        {/* Says what SURVIVES, not just what goes. Without this line a customer
+            can reasonably read "reset" as "delete my account and my data" —
+            and then act on that belief. Account deletion is a separate,
+            authenticated flow (Profile → Delete account); this only clears
+            this browser. */}
+        <span>Sign you out and clear saved data in this browser? Your account, properties and payments are not affected.</span>
         <button
           type="button"
           onClick={run}
