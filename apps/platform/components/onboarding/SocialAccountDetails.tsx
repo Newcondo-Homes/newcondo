@@ -35,6 +35,7 @@ export default function SocialAccountDetails({
   name,
   role,
   needsEmail = false,
+  error,
   onSubmit,
   onBack,
 }: {
@@ -43,6 +44,10 @@ export default function SocialAccountDetails({
   role?: UserType;
   /** True when the OAuth provider returned no email (Facebook). */
   needsEmail?: boolean;
+  /** Server-side failure to show under the fields — e.g. the 409 from
+   *  PATCH /api/user/profile when the address is on another account. Without
+   *  this the request failed silently and the button span forever. */
+  error?: string | null;
   onSubmit: (payload: SocialDetailsPayload) => void | Promise<void>;
   onBack?: () => void;
 }) {
@@ -159,6 +164,12 @@ export default function SocialAccountDetails({
           .
         </span>
       </label>
+
+      {error && (
+        <p className="mt-4 w-full rounded-2xl border border-danger/30 bg-danger/[0.06] px-4 py-3 text-left text-[13px] font-medium leading-[1.5] text-danger">
+          {error}
+        </p>
+      )}
 
       <div className="mt-6 flex w-full items-center gap-3">
         {onBack && (

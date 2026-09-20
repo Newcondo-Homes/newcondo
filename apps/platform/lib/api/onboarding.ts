@@ -83,6 +83,36 @@ export const checkEmailRegistered = async (email: string): Promise<boolean> => {
   }
 };
 
+/**
+ * POST /auth/send-otp — mint the FIRST EMAIL_VERIFICATION code for an address.
+ *
+ * Needed only by the OAuth path. Email/password sign-ups get their code from
+ * /auth/register (see above), but Facebook/Google users never call register —
+ * the NextAuth Prisma adapter creates the row directly. So when the details
+ * step saves an email there is no OTPCode row for it, and without this call
+ * the verify step shows a code field for a code nobody sent, while
+ * /auth/resend-otp 400s with "No verification was initiated for this email."
+ *
+ * Returns `sent: false` rather than throwing on a 429 (same address inside the
+ * 1-minute cooldown) — the code already in flight is still valid, so that is
+ * not a failure worth blocking the flow for.
+ */
+export const sendOnboardingOtp = async (
+  email: string
+): Promise<{ sent: boolean; reason?: string }> => {
+  try {
+    await apiClient.post("/auth/send-otp", {
+      identifier: email.trim().toLowerCase(),
+      type: "EMAIL_VERIFICATION",
+    });
+    return { sent: true };
+  } catch (e) {
+    const status = (e as { status?: number })?.status;
+    if (status === 429) return { sent: true, reason: "cooldown" };
+    return { sent: false, reason: (e as { message?: string })?.message };
+  }
+};
+
 /** PATCH the signed-in user's email: resets verification and re-issues the OTP. */
 export const changeOnboardingEmail = (email: string) =>
   apiClient

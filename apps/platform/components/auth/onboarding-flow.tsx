@@ -51,7 +51,7 @@ import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
 import {
   getOnboardingState, registerAccount, checkEmailRegistered, changeAccountType,
-  changeOnboardingEmail,
+  changeOnboardingEmail, sendOnboardingOtp,
   type OnboardingState,
 } from "@/lib/api/onboarding";
 import { updateProfile } from "@/lib/api/profile";
@@ -111,6 +111,10 @@ export default function OnboardingFlow() {
   const [ready, setReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  // Separate from formError: that one only renders inside the register phase,
+  // so a failure on the social details step (duplicate email, bad phone) was
+  // set but never displayed — the button just span on.
+  const [detailsError, setDetailsError] = useState<string | null>(null);
 
   // Every user reaching the payment step now already has an account, so
   // PaymentProcessing never registers — it only charges.
@@ -164,15 +168,23 @@ export default function OnboardingFlow() {
       if (state.pendingPlan) setResuming(true);
       setPhase(state.step === "done" ? "plan" : (state.step as Phase));
     } catch (e) {
-      // A failed resolve must not strand them on a blank screen. The register
-      // step is always safe: register reuses an unverified stub, so resubmitting
-      // is idempotent for the same person.
+      // A failed resolve must not strand them on a blank screen — but the right
+      // fallback depends on whether an account already exists.
+      //
+      // Authenticated: they have registered, and may well have just verified.
+      // Sending them back to "register" would undo visible progress and ask for
+      // a password they no longer need. "plan" is the safe landing: it is the
+      // step after verification, and choosing a plan is a deliberate tap, so
+      // nothing is charged by arriving there.
+      //
+      // Anonymous: "register" is correct and idempotent — register reuses an
+      // unverified stub for the same person.
       console.error("[onboarding] state resolve failed", e);
-      setPhase("register");
+      setPhase(status === "authenticated" ? "plan" : "register");
     } finally {
       setReady(true);
     }
-  }, [router, update, initialRole]);
+  }, [router, update, initialRole, status]);
 
   useEffect(() => {
     if (resolvedOnce.current) return;
@@ -302,16 +314,39 @@ export default function OnboardingFlow() {
   /* Social gap-fill: phone (+ email for Facebook) + terms, then re-resolve so
      the server decides whether the new address still needs verifying. */
   const handleSocialDetailsSubmit = useCallback(async (payload: SocialDetailsPayload) => {
-    const res = await updateProfile({
-      phone: payload.phone,
-      ...(payload.email ? { email: payload.email } : {}),
-    });
-    if (!res.success) { setFormError(res.error ?? "Couldn't save your details."); return; }
-    await update({ phone: payload.phone });
-    setDraft((d) => (d ? { ...d, phone: payload.phone, email: payload.email ?? d.email } : d));
-    // Changing the email resets emailVerified server-side, so ask again rather
-    // than assuming: a Facebook user who just typed their address needs the OTP.
-    await resolve();
+    setDetailsError(null);
+    try {
+      const res = await updateProfile({
+        phone: payload.phone,
+        ...(payload.email ? { email: payload.email } : {}),
+      });
+      if (!res.success) {
+        // 409 = the address or number is already on another account, 400 =
+        // malformed. Both are the user's to fix, so stay on this step and say
+        // so instead of advancing into a verify step for an email we never saved.
+        setDetailsError(res.error ?? "Couldn't save your details. Please try again.");
+        return;
+      }
+      await update({ phone: payload.phone });
+      setDraft((d) => (d ? { ...d, phone: payload.phone, email: payload.email ?? d.email } : d));
+
+      // OAuth users never went through /auth/register, which is what normally
+      // writes the OTPCode row — so mint the first code here. Skipping this
+      // left the verify step waiting on a code nobody sent, and made Resend
+      // 400 with "No verification was initiated for this email."
+      if (payload.email) {
+        const { sent } = await sendOnboardingOtp(payload.email);
+        setEmailSendFailed(!sent);
+      }
+
+      // Changing the email resets emailVerified server-side, so ask again rather
+      // than assuming: a Facebook user who just typed their address needs the OTP.
+      await resolve();
+    } catch (e) {
+      // apiClient rejects on non-2xx, so without this catch the rejection
+      // escaped the form's finally and the spinner never stopped.
+      setDetailsError(errMsg(e, "Couldn't save your details. Please try again."));
+    }
   }, [update, resolve]);
 
   const activeIndex = PHASE_INDEX[phase];
@@ -431,6 +466,7 @@ export default function OnboardingFlow() {
                   role={draft.role}
                   // Facebook can omit the email entirely; ask for it here.
                   needsEmail={serverState ? !serverState.hasEmail : false}
+                  error={detailsError}
                   onSubmit={handleSocialDetailsSubmit}
                   onBack={handleChangeAccountType}
                 />
