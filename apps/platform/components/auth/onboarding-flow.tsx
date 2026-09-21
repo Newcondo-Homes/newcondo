@@ -51,7 +51,7 @@ import FitToViewport from "./fit-to-viewport";
 import { OTPVerificationPanel } from "@/components/auth/OTPVerificationPanel";
 import {
   getOnboardingState, registerAccount, checkEmailRegistered, changeAccountType,
-  changeOnboardingEmail, sendOnboardingOtp,
+  changeOnboardingEmail, ensureOnboardingOtp,
   type OnboardingState,
 } from "@/lib/api/onboarding";
 import { updateProfile } from "@/lib/api/profile";
@@ -330,14 +330,16 @@ export default function OnboardingFlow() {
       await update({ phone: payload.phone });
       setDraft((d) => (d ? { ...d, phone: payload.phone, email: payload.email ?? d.email } : d));
 
-      // OAuth users never went through /auth/register, which is what normally
-      // writes the OTPCode row — so mint the first code here. Skipping this
-      // left the verify step waiting on a code nobody sent, and made Resend
-      // 400 with "No verification was initiated for this email."
-      if (payload.email) {
-        const { sent } = await sendOnboardingOtp(payload.email);
-        setEmailSendFailed(!sent);
-      }
+      // No OTP call here. Minting the first code is now handled by the effect
+      // below, which runs on EVERY entry into the verify step.
+      //
+      // It used to be `if (payload.email)` — which only fired when the user had
+      // TYPED an address, i.e. the Facebook-with-no-email case. Google always
+      // returns an email, so `needsEmail` was false, this step collected only a
+      // phone, `payload.email` was undefined, and no code was ever minted: the
+      // verify panel then waited on a code nobody sent, and Resend answered
+      // "No verification was initiated for this email." Tying the mint to the
+      // STEP rather than to this payload covers every path that reaches verify.
 
       // Changing the email resets emailVerified server-side, so ask again rather
       // than assuming: a Facebook user who just typed their address needs the OTP.
@@ -350,6 +352,29 @@ export default function OnboardingFlow() {
   }, [update, resolve]);
 
   const activeIndex = PHASE_INDEX[phase];
+
+  /* ── Guarantee a code exists whenever we land on the verify step ──
+     The panel never auto-sends (a remount would clobber a live code), and only
+     /auth/register mints one — which OAuth users never call, since the NextAuth
+     Prisma adapter creates their row directly. So Google and Facebook users hit
+     a code field for a code nobody had sent.
+
+     /auth/ensure-otp is idempotent: it mints only when no unexpired code exists
+     and leaves a live one untouched. That makes this safe for the email path
+     too — it will find register's code still valid and do nothing.
+
+     Keyed by address so correcting a typo re-issues, but a rerender does not. */
+  const ensuredFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (phase !== "verify") return;
+    const email = draft?.email?.trim().toLowerCase();
+    if (!email || ensuredFor.current === email) return;
+    ensuredFor.current = email;
+    void (async () => {
+      const { sent } = await ensureOnboardingOtp(email);
+      setEmailSendFailed(!sent);
+    })();
+  }, [phase, draft?.email]);
 
   if (!ready) {
     return (

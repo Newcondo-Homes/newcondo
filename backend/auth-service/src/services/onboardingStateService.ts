@@ -25,6 +25,19 @@
 // ============================================================
 import { prisma } from "@newcondo/db";
 
+/**
+ * Facebook may return no email at all. Prisma requires User.email, so the
+ * provider writes fb_<id>@placeholder.newcondo to let the row be created; the
+ * details step then collects a real address.
+ *
+ * MUST match PLACEHOLDER_EMAIL_DOMAIN in packages/auth/auth.full.ts. Duplicated
+ * rather than imported because that module is Next.js-only (it pulls in
+ * next-auth providers) and this Express service cannot load it.
+ */
+const PLACEHOLDER_EMAIL_DOMAIN = "placeholder.newcondo";
+export const isPlaceholderEmail = (email?: string | null): boolean =>
+  !!email && email.endsWith(`@${PLACEHOLDER_EMAIL_DOMAIN}`);
+
 export type OnboardingStep = "details" | "verify" | "plan" | "done";
 
 export interface OnboardingState {
@@ -60,16 +73,28 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
   if (!user) throw new Error("User not found");
 
   const authProviders = user.accounts.map((a) => a.provider);
-  const hasEmail = !!user.email && !user.email.endsWith("@placeholder.newcondo");
+  // A placeholder is NOT an email. Facebook can decline to return one (the user
+  // unticks email on the consent screen, or holds a phone-only account), and
+  // because Prisma requires User.email the provider writes
+  // fb_<id>@placeholder.newcondo so the row can be created at all.
+  //
+  // Counting that as a real address broke the Facebook path twice over: the
+  // details step never asked for an email (hasEmail was true), and the verify
+  // step then tried to mail a verification code to a domain that does not
+  // exist. Treating it as absent sends them to `details` first, where they type
+  // a real address, and only then to `verify`.
+  const hasEmail = !!user.email && !isPlaceholderEmail(user.email);
   const hasPhone = !!user.phone;
   const status = user.subscription?.status ? String(user.subscription.status) : null;
 
-  // Uniform rule — no provider special-casing here. Google users arrive with
-  // emailVerified already set (see the Google provider's profile mapping in
-  // packages/auth: Google asserts email_verified, so we honour it at sign-in).
-  // Credentials users prove it with the OTP from register. Facebook users typed
-  // their address by hand, so it is unproven and gets the same OTP — that
-  // address receives receipts and password resets, so it has to be real.
+  // EVERY account proves its address with OUR OTP — no provider exemption.
+  //
+  // Google previously skipped this entirely: its profile() mapping set
+  // emailVerified from Google's own email_verified assertion, so
+  // needsEmailVerification was false at creation and the user went straight to
+  // `plan`. That is why Google signups never received a code. emailVerified now
+  // starts null for both providers and is set only by otpController.verifyOTP,
+  // when the user enters the code we actually sent.
   const needsEmailVerification = hasEmail && !user.emailVerified;
 
   const base = {
@@ -80,7 +105,10 @@ export async function getOnboardingState(userId: string): Promise<OnboardingStat
     pendingPlan: status === "PENDING" ? (user.subscription?.planType ?? null) : null,
     subscriptionStatus: status,
     role: String(user.role),
-    email: user.email,
+    // Never surface the placeholder to the client — the flow prefills the draft
+    // from this, and showing fb_1234@placeholder.newcondo in the email field
+    // would read as a real address the user is expected to keep.
+    email: hasEmail ? user.email : null,
     name: user.name,
   };
 

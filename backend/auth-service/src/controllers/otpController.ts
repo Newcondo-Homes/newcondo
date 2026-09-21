@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "@newcondo/db";
 import { sendResponse } from "@newcondo/backend-shared";
 import { generateOTP } from "@newcondo/backend-shared";
-// import { sendEmail } from "@newcondo/backend-shared";
 
 // note: this new brandedemail( sendBrandedEmail ) does not throw an error, in the future see if
 // you can make it throw an error in events of failure
@@ -22,6 +21,52 @@ function parseOTPType(type: unknown): OTPType | null {
     return type as OTPType;
   }
   return null;
+}
+
+/**
+ * Facebook may return no email. Prisma requires User.email, so the provider
+ * writes fb_<id>@placeholder.newcondo to let the row be created at all; the
+ * onboarding details step then collects a real address.
+ *
+ * MUST match PLACEHOLDER_EMAIL_DOMAIN in packages/auth/auth.full.ts.
+ */
+const PLACEHOLDER_EMAIL_DOMAIN = "placeholder.newcondo";
+const isPlaceholderEmail = (email?: string | null): boolean =>
+  !!email && email.endsWith(`@${PLACEHOLDER_EMAIL_DOMAIN}`);
+
+/**
+ * Mint + send an EMAIL_VERIFICATION code. Shared by ensureOtp and the
+ * resendOTP fallback so the two cannot drift apart.
+ *
+ * Uses deleteMany + create (not upsert) to match the proven pattern in this
+ * file — it does not depend on a compound unique index existing on
+ * (identifier, type).
+ *
+ * Returns whether the transport actually accepted the mail: sendBrandedEmail
+ * swallows failures, so without checking this we would claim success while the
+ * user stares at an empty inbox.
+ */
+async function issueEmailVerificationCode(identifier: string): Promise<boolean> {
+  const otp = generateOTP(OTP.length);
+  const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000);
+
+  await prisma.oTPCode.deleteMany({
+    where: { identifier, type: OTPType.EMAIL_VERIFICATION },
+  });
+  await prisma.oTPCode.create({
+    data: { identifier, code: otp, type: OTPType.EMAIL_VERIFICATION, expiresAt },
+  });
+
+  const sent = (await sendBrandedEmail(
+    identifier,
+    EmailTemplates.otp({
+      code: otp,
+      purpose: "verify your email",
+      expiresMinutes: OTP.expiryMinutes,
+    })
+  )) as { success?: boolean } | void;
+
+  return sent?.success !== false;
 }
 
 class OTPController {
@@ -56,8 +101,8 @@ class OTPController {
         );
       }
 
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000); // 10 minutes
+      const otp = generateOTP(OTP.length);
+      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000);
 
       // Delete any existing OTP for this identifier+type before creating a new one
       await prisma.oTPCode.deleteMany({
@@ -73,20 +118,6 @@ class OTPController {
         },
       });
 
-      // if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
-      //   await sendEmail({
-      //     to: identifier,
-      //     subject: "Your NewCondo verification code",
-      //     html: `
-      //       <h2>Verification Code</h2>
-      //       <p>Your verification code is: <strong>${otp}</strong></p>
-      //       <p>This code will expire in 10 minutes.</p>
-      //       <p>If you did not request this code, please ignore this email.</p>
-      //     `,
-      //   });
-      // }
-
-
       if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
         await sendBrandedEmail(
           identifier,
@@ -95,18 +126,128 @@ class OTPController {
             // Shows in the email as "…to verify your email" / "…to sign in",
             // so one template serves both flows.
             purpose: type === "LOGIN" ? "sign in" : "verify your email",
-            expiresMinutes: 10,
+            expiresMinutes: OTP.expiryMinutes,
           })
         );
       }
 
       sendResponse(res, 200, "OTP sent successfully", {
         message: "Please check your email for the verification code",
-        expiresIn: 600, // 10 minutes in seconds
+        expiresIn: OTP.expiryMinutes * 60,
       });
     } catch (error) {
       console.error("Send OTP error:", error);
       sendResponse(res, 500, "Failed to send OTP", null);
+    }
+  }
+
+  /**
+   * POST /api/v1/auth/ensure-otp   (authMiddleware)
+   *
+   * Guarantees a live EMAIL_VERIFICATION code exists for the CALLER'S OWN
+   * address, without disturbing one already in flight.
+   *
+   * WHY THIS EXISTS: only /auth/register writes the OTPCode row, and OAuth
+   * users never call it — the NextAuth Prisma adapter creates their User row
+   * directly. So a Google/Facebook signup reached the verify step with no code
+   * ever minted: the panel showed a code field for a code nobody sent, and
+   * resendOTP refused because it required an existing row.
+   *
+   * WHY IDEMPOTENT RATHER THAN A PLAIN SEND: the client calls this on every
+   * entry into the verify step, and that step remounts for reasons the user
+   * never intended (refresh, tab restore, returning to a backgrounded tab). A
+   * plain send would mint a new code each time and invalidate the one already
+   * in the inbox — the exact failure the register-before-OTP design exists to
+   * prevent. So:
+   *
+   *   live unexpired, unredeemed code → touch nothing, { minted: false }
+   *   missing / expired / spent       → mint, send, { minted: true }
+   *
+   * Scoped to req.user's own email on purpose. Taking the address from the body
+   * would make this a way to spray verification mail at arbitrary addresses.
+   *
+   * Typed as `Request`, not `AuthenticatedRequest`: Express's RequestHandler
+   * passes a Request whose `user` is OPTIONAL, so a handler demanding the
+   * required-`user` shape is not assignable and the route call fails to
+   * compile. The `if (!user)` guard below narrows it instead — which is also
+   * the honest shape, since nothing at the type level proves authMiddleware ran.
+   */
+  async ensureOtp(req: Request, res: Response) {
+    try {
+      const user = req.user;
+      if (!user) {
+        return sendResponse(res, 401, "User not authenticated", null);
+      }
+
+      const me = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { email: true, emailVerified: true },
+      });
+      if (!me?.email) {
+        return sendResponse(res, 400, "No email address on this account", null);
+      }
+
+      // A Facebook signup that returned no email carries a synthetic address.
+      // Mailing it would bounce (the domain does not exist) and, worse, the
+      // failure would look like a transport problem rather than what it is:
+      // we have not asked this person for their email yet. The onboarding
+      // details step collects one first.
+      if (isPlaceholderEmail(me.email)) {
+        return sendResponse(
+          res,
+          400,
+          "Add your email address before we can verify it.",
+          { minted: false, needsEmail: true }
+        );
+      }
+
+      // Already proven — nothing to verify. 200 keeps the client simple: a race
+      // between verifying and this call is not an error.
+      if (me.emailVerified) {
+        return sendResponse(res, 200, "Email already verified", {
+          minted: false,
+          verified: true,
+        });
+      }
+
+      const identifier = me.email.toLowerCase();
+
+      // A code only counts as live if it exists, has not expired, AND has not
+      // already been redeemed — `verified: true` rows are spent and must not
+      // block a fresh mint.
+      const live = await prisma.oTPCode.findFirst({
+        where: {
+          identifier,
+          type: OTPType.EMAIL_VERIFICATION,
+          verified: false,
+          expiresAt: { gt: new Date() },
+        },
+        select: { id: true },
+      });
+
+      if (live) {
+        return sendResponse(res, 200, "A code is already on its way", {
+          minted: false,
+        });
+      }
+
+      const sent = await issueEmailVerificationCode(identifier);
+
+      if (!sent) {
+        return sendResponse(res, 502, "We couldn't send the code. Please try again.", {
+          minted: true,
+          sent: false,
+        });
+      }
+
+      return sendResponse(res, 200, "Verification code sent", {
+        minted: true,
+        sent: true,
+        expiresIn: OTP.expiryMinutes * 60,
+      });
+    } catch (error) {
+      console.error("Ensure OTP error:", error);
+      return sendResponse(res, 500, "Failed to send verification code", null);
     }
   }
 
@@ -224,7 +365,7 @@ class OTPController {
   }
 
   /**
-   * Resend OTP — requires a prior sendOTP call to have been made.
+   * Resend OTP — normally requires a prior sendOTP call.
    * Works for both pre-registration and post-registration flows.
    * No user existence check for the same reason as sendOTP.
    */
@@ -236,26 +377,51 @@ class OTPController {
         return sendResponse(res, 400, "identifier and type are required", null);
       }
 
-      // Ensure sendOTP was called first — prevents resend without initial send
       const existingOTP = await prisma.oTPCode.findFirst({
         where: { identifier, type },
       });
 
       if (!existingOTP) {
-        return sendResponse(
-          res,
-          400,
-          "No verification was initiated for this email. Please start again.",
-          null
+        // No row yet. For EMAIL_VERIFICATION this is the NORMAL state of an
+        // OAuth signup — Google/Facebook users never call /auth/register, which
+        // is what writes the row — so issue the first code instead of refusing.
+        //
+        // The old response ("No verification was initiated for this email.
+        // Please start again.") was impossible advice for those users: no
+        // earlier step would ever mint the code, so Resend could never succeed
+        // and the account was permanently stuck. This also self-heals accounts
+        // created before the ensure-otp fix landed.
+        //
+        // Other types still require an initiated flow. PASSWORD_RESET
+        // especially must NOT be mintable here, or this becomes an
+        // unauthenticated way to send reset codes to arbitrary addresses.
+        if (type !== "EMAIL_VERIFICATION") {
+          return sendResponse(
+            res,
+            400,
+            "No verification was initiated for this email. Please start again.",
+            null
+          );
+        }
+
+        const firstSent = await issueEmailVerificationCode(identifier);
+        return sendResponse(res, firstSent ? 200 : 502,
+          firstSent
+            ? "Verification code sent"
+            : "We couldn't send the code. Please try again.",
+          { emailSent: firstSent, expiresIn: OTP.expiryMinutes * 60 }
         );
       }
 
-      // Rate limit — prevent resend spam within 1 minute
+      // Rate limit — prevent resend spam within the cooldown window.
+      // NOTE: /auth/register writes its OTP row directly, so a user who taps
+      // Resend within 60s of registering correctly lands here. The panel shows
+      // that as a countdown rather than an error — working as intended.
       const recentOTP = await prisma.oTPCode.findFirst({
         where: {
           identifier,
           type,
-          createdAt: { gt: new Date(Date.now() - 60 * 1000) },
+          createdAt: { gt: new Date(Date.now() - OTP.resendCooldownSeconds * 1000) },
         },
       });
 
@@ -268,8 +434,8 @@ class OTPController {
         );
       }
 
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const otp = generateOTP(OTP.length);
+      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000);
 
       // Delete old OTP and create fresh one
       await prisma.oTPCode.deleteMany({
@@ -285,33 +451,20 @@ class OTPController {
         },
       });
 
-      // if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
-      //   await sendEmail({
-      //     to: identifier,
-      //     subject: "Your NewCondo verification code (Resent)",
-      //     html: `
-      //       <h2>New Verification Code</h2>
-      //       <p>Your new verification code is: <strong>${otp}</strong></p>
-      //       <p>This code will expire in 10 minutes.</p>
-      //       <p>If you did not request this code, please ignore this email.</p>
-      //     `,
-      //   });
-      // }
-
       if (type === "EMAIL_VERIFICATION" || type === "LOGIN") {
         await sendBrandedEmail(
           identifier,
           EmailTemplates.otp({
             code: otp,
             purpose: type === "LOGIN" ? "sign in" : "verify your email",
-            expiresMinutes: 10,
+            expiresMinutes: OTP.expiryMinutes,
           })
         );
       }
 
       sendResponse(res, 200, "New OTP sent successfully", {
         message: "Please check your email for the new verification code",
-        expiresIn: 600,
+        expiresIn: OTP.expiryMinutes * 60,
       });
     } catch (error) {
       console.error("Resend OTP error:", error);
@@ -331,7 +484,7 @@ class OTPController {
       }
 
       const type = parseOTPType(rawType);
-      
+
       if (!type) {
         return sendResponse(res, 400, `Invalid OTP type. Must be one of: ${Object.values(OTPType).join(", ")}`, null);
       }
@@ -419,7 +572,7 @@ class OTPController {
         where: {
           identifier: phone,
           type: "PHONE_VERIFICATION",
-          createdAt: { gt: new Date(Date.now() - 60 * 1000) },
+          createdAt: { gt: new Date(Date.now() - OTP.resendCooldownSeconds * 1000) },
         },
       });
 
@@ -431,8 +584,8 @@ class OTPController {
         });
       }
 
-      const otp = generateOTP();
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      const otp = generateOTP(OTP.length);
+      const expiresAt = new Date(Date.now() + OTP.expiryMinutes * 60 * 1000);
 
       await prisma.oTPCode.deleteMany({
         where: { identifier: phone, type: "PHONE_VERIFICATION" },
@@ -455,7 +608,7 @@ class OTPController {
         message: "Phone OTP sent successfully",
         data: {
           sentTo: phone,
-          expiresIn: 600,
+          expiresIn: OTP.expiryMinutes * 60,
         },
       });
     } catch (error) {

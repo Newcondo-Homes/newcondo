@@ -84,28 +84,34 @@ export const checkEmailRegistered = async (email: string): Promise<boolean> => {
 };
 
 /**
- * POST /auth/send-otp — mint the FIRST EMAIL_VERIFICATION code for an address.
+ * POST /auth/ensure-otp — guarantee a live EMAIL_VERIFICATION code exists.
  *
- * Needed only by the OAuth path. Email/password sign-ups get their code from
- * /auth/register (see above), but Facebook/Google users never call register —
- * the NextAuth Prisma adapter creates the row directly. So when the details
- * step saves an email there is no OTPCode row for it, and without this call
- * the verify step shows a code field for a code nobody sent, while
- * /auth/resend-otp 400s with "No verification was initiated for this email."
+ * WHY "ENSURE" AND NOT "SEND": the verify panel deliberately does NOT auto-send
+ * on mount, because it remounts for reasons the user never intended (refresh,
+ * tab restore) and each remount would mint a fresh code — invalidating the one
+ * already in their inbox. But OAuth users need SOMETHING to mint the first
+ * code: Google and Facebook accounts are created by the NextAuth Prisma
+ * adapter, so they never call /auth/register, which is what writes the OTPCode
+ * row for email sign-ups.
  *
- * Returns `sent: false` rather than throwing on a 429 (same address inside the
- * 1-minute cooldown) — the code already in flight is still valid, so that is
- * not a failure worth blocking the flow for.
+ * Making the endpoint IDEMPOTENT resolves both needs. The server only mints
+ * when no unexpired code exists; a live code is left untouched. That makes this
+ * safe to call on every entry into the verify step, for every path, without
+ * ever clobbering a code in flight.
+ *
+ * Returns `sent: false` only on a real failure. A 429 (inside the 1-minute
+ * cooldown) reports `sent: true` — a code is in flight, which is the outcome
+ * the caller actually cares about.
  */
-export const sendOnboardingOtp = async (
+export const ensureOnboardingOtp = async (
   email: string
 ): Promise<{ sent: boolean; reason?: string }> => {
   try {
-    await apiClient.post("/auth/send-otp", {
+    const res = await apiClient.post<{ minted?: boolean }>("/auth/ensure-otp", {
       identifier: email.trim().toLowerCase(),
       type: "EMAIL_VERIFICATION",
     });
-    return { sent: true };
+    return { sent: true, reason: res.data?.minted ? "minted" : "existing" };
   } catch (e) {
     const status = (e as { status?: number })?.status;
     if (status === 429) return { sent: true, reason: "cooldown" };

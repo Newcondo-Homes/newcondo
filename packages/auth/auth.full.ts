@@ -45,7 +45,7 @@ const authFullConfig: NextAuthConfig = {
            name: profile.name,
            email: profile.email,
            image: profile.picture,
-           emailVerified: profile.email_verified ? new Date() : null,
+           emailVerified: null,
            role: "RENTER" as Role,
            verificationStatus: "PENDING" as VerificationStatus,
         };

@@ -51,7 +51,7 @@ router.post(
 router.post("/send-otp", authValidation.sendOtp, otpController.sendOTP);
 router.post("/verify-otp", authValidation.verifyOtp, otpController.verifyOTP);
 router.post("/resend-otp", authValidation.resendOtp, otpController.resendOTP);
-
+ router.post("/ensure-otp", authMiddleware, otpController.ensureOtp.bind(otpController));
 // onboarding state
 router.get("/onboarding-state", authMiddleware, async (req, res, next) => {
   try {
