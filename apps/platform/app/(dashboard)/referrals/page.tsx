@@ -13,13 +13,16 @@ import { useRole } from "@/components/providers/role-provider";
 import { PageHead, StatCard, StatusBadge, Card, CardH, Row, CopyField, SkeletonRows } from "@/components/dashboard/primitives";
 import { useReferrals } from "@/hooks/dashboard/useDashboardData";
 import { LeaderboardCard, ActiveAreasCard, CopiedLinkModal } from "@/components/dashboard/referrals/Leaderboard";
+import { ReferralCreditPanel, ReferralProgramsPanel } from "@/components/dashboard/referrals/ProgramsPanel";
 import { ngn, initials } from "@/lib/dashboard/format";
 import type { Role } from "@/lib/dashboard/data";
 
+// v2: reward copy comes from the backend's rules.ts (GET /referrals/programs) —
+// these lines only frame WHO to invite; no amounts live in the frontend.
 const COPY: Record<Role, string> = {
-  OWNER: "Refer another owner — you both get a free month when they subscribe.",
-  AGENT: "Refer owners or agents — credits land in your wallet after their first transaction.",
-  RENTER: "Refer friends — earn ₦2,000 in credits when they complete a rental.",
+  OWNER: "Refer landlords and agents — you both earn subscription credit when their payments clear.",
+  AGENT: "Refer owners and agents — you both earn credit when their payments clear.",
+  RENTER: "Refer friends — you both earn credit when they complete their first rent.",
 };
 
 export default function ReferralsPage() {
@@ -54,10 +57,14 @@ export default function ReferralsPage() {
         </div>
       </div>
       <div className="mb-4 grid grid-cols-4 gap-4 max-[1060px]:grid-cols-2 max-sm:grid-cols-1 max-sm:gap-2.5">
-        <StatCard label="Invited" value={data.invited} icon="send" />
+        <StatCard label="Link clicks" value={data.invited} icon="send" />
         <StatCard label="Signed up" value={data.signedUp} icon="users" />
-        <StatCard label="Converted (paid)" value={data.converted} icon="check" sub="rewards released" />
-        <StatCard label="Credits earned" value={ngn(data.credits)} icon="gift" mono sub="redeemable against fees" />
+        <StatCard label="Active (paid)" value={data.converted} icon="check" sub="first payment cleared" />
+        <StatCard label="Credit available" value={ngn(data.credits)} icon="gift" mono sub="applies to your next subscription charge" />
+      </div>
+      <div className="mb-4 grid grid-cols-[1.5fr_1fr] gap-4 max-[960px]:grid-cols-1">
+        <div className="flex min-w-0 flex-col gap-4"><ReferralProgramsPanel /></div>
+        <div className="min-w-0 self-start"><ReferralCreditPanel /></div>
       </div>
       {/* Agents are the primary affiliates — leaderboard sits beside activity */}
       <div className="mb-4 grid grid-cols-[1.5fr_1fr] gap-4 max-[960px]:grid-cols-1">

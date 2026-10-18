@@ -1,5 +1,18 @@
 // backend/referral-service/src/services/referralService.ts
 // ============================================================
+// REFERRALS v2 (Oct 2026): the reward engine moved to
+// backend/shared/src/referrals (config-driven, margin-funded — rules.ts is the
+// one file to edit). This service keeps its public functions so auth-service
+// and combined-backend keep compiling, and delegates to the engine:
+//   getOrCreateReferralCode / attachReferral → Referrals attribution
+//   rewardOnFirstTransaction                 → no-op (rewards now fire from
+//                                              settled money events only)
+//   getReferralStats                         → legacy shape, engine data
+//   getLeaderboard                           → ranks by ACTIVATED referrals,
+//                                              credits from the reward ledger
+// The flat ₦10k/₦5k/₦2k REFERRALS.rewardByInviteeRole is no longer paid.
+// ------------------------------------------------------------
+// (original header follows)
 // Referrals — dual-sided, pay-on-success.
 // A referrer's code lives on User.referralCode; a Referral row is created when
 // an invitee registers with that code, and rewards are only granted after the
@@ -25,12 +38,7 @@
 import { randomBytes } from "crypto";
 import { prisma } from "@newcondo/db";
 import type { ReferralStatus, Role } from "@newcondo/db";
-import {
-  badGateway, notFound,
-  publishNotification, sendBrandedEmail, EmailTemplates, REFERRALS, redis,
-} from "@newcondo/backend-shared";
-
-const REWARD_BY_ROLE: Record<string, number> = REFERRALS.rewardByInviteeRole;
+import { REFERRALS, redis, Referrals } from "@newcondo/backend-shared";
 
 /** DB status → the label the dashboard/leaderboard shows. */
 const UI_STATUS: Record<string, "INVITED" | "SIGNED_UP" | "CONVERTED"> = {
@@ -42,23 +50,9 @@ const UI_STATUS: Record<string, "INVITED" | "SIGNED_UP" | "CONVERTED"> = {
 };
 
 /* ---------- code ---------- */
-export async function getOrCreateReferralCode(userId: string): Promise<string> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { referralCode: true, name: true } });
-  if (!user) throw notFound("User not found");
-  if (user.referralCode) return user.referralCode;
+export const getOrCreateReferralCode = (userId: string): Promise<string> => Referrals.getOrCreateReferralCode(userId);
 
-  const base = (user.name ?? "NC").replace(/[^a-zA-Z]/g, "").slice(0, 3).toUpperCase() || "NC";
-  for (let i = 0; i < 5; i++) {
-    const code = `${base}-${randomBytes(2).toString("hex").toUpperCase()}`;
-    try {
-      await prisma.user.update({ where: { id: userId }, data: { referralCode: code } });
-      return code;
-    } catch { /* unique collision — retry */ }
-  }
-  throw badGateway("Could not allocate a referral code");
-}
-
-/* ---------- stats (referral page) ---------- */
+/* ---------- stats (legacy shape for the existing referral page) ---------- */
 export interface ReferralHistoryRow {
   id: string;
   name: string;
@@ -77,67 +71,40 @@ export interface ReferralStats {
 }
 
 export async function getReferralStats(userId: string): Promise<ReferralStats> {
-  const code = await getOrCreateReferralCode(userId);
-  const [referrals, creditAgg] = await Promise.all([
-    prisma.referral.findMany({
-      where: { referrerId: userId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true, status: true, referrerReward: true, reward: true, createdAt: true,
-        referred: { select: { name: true, role: true } },
-      },
-    }),
-    // Credits are ReferralReward rows, not a ReferralCredit table.
-    prisma.referralReward.aggregate({ where: { userId }, _sum: { amount: true } }),
+  const [o, list, earned] = await Promise.all([
+    Referrals.referralOverview(userId),
+    Referrals.referralList(userId, { pageSize: 50 }),
+    prisma.referralLedgerEntry.groupBy({ by: ["referralId"], where: { userId, status: { notIn: ["VOIDED", "PENDING_FUNDING"] }, kind: { not: "CLAWBACK" } }, _sum: { amountKobo: true } }),
   ]);
-
+  const byRef = new Map(earned.map((e) => [e.referralId, Number(e._sum.amountKobo ?? 0n) / 100]));
   return {
-    link: `newcondo.homes/r/${code}`,
-    invited: referrals.length,
-    signedUp: referrals.filter((r) => r.status !== "PENDING").length,
-    converted: referrals.filter((r) => r.status === "REWARDED").length,
-    credits: Number(creditAgg._sum?.amount ?? 0),
-    history: referrals.map((r): ReferralHistoryRow => ({
+    link: o.link,
+    invited: o.stats.clicks,
+    signedUp: o.stats.signups,
+    converted: o.stats.activated,
+    credits: o.credit.available,
+    history: list.rows.map((r) => ({
       id: r.id,
-      name: `${r.referred?.name ?? "Invitee"}${r.referred?.role ? ` (${titleCase(String(r.referred.role))})` : ""}`,
-      status: UI_STATUS[String(r.status)] ?? "INVITED",
-      reward: Number(r.referrerReward ?? r.reward ?? 0),
-      date: r.createdAt,
-      note: r.status === "QUALIFIED" ? "Reward pending first transaction" : undefined,
+      name: r.name,
+      status: r.status === "ACTIVE" ? "CONVERTED" : "SIGNED_UP",
+      reward: byRef.get(r.id) ?? 0,
+      date: r.date,
+      note: r.status === "UNDER_REVIEW" ? "Under review" : r.status !== "ACTIVE" ? "You earn when their first payment clears" : undefined,
     })),
   };
 }
-const titleCase = (s: string) => s.charAt(0) + s.slice(1).toLowerCase();
 
 /* ---------- signup: link the invitee to the referrer ---------- */
-export async function attachReferral(code: string, inviteeId: string): Promise<{ id: string } | null> {
-  const referrer = await prisma.user.findFirst({ where: { referralCode: code }, select: { id: true } });
-  if (!referrer || referrer.id === inviteeId) return null;
-
-  // referredId is @unique — a user can only ever be referred once.
-  const existing = await prisma.referral.findUnique({ where: { referredId: inviteeId }, select: { id: true } });
-  if (existing) return existing;
-
-  return prisma.referral.create({
-    data: {
-      referrerId: referrer.id,
-      referredId: inviteeId,
-      referralCode: code,
-      status: "QUALIFIED", // registered + linked; reward waits on first payment
-      qualificationMet: true,
-      qualifiedAt: new Date(),
-    },
-    select: { id: true },
-  });
+export async function attachReferral(code: string, inviteeId: string, ctx: { ip?: string; device?: string; source?: "LINK" | "CODE_ENTRY" | "INVITE" } = {}): Promise<{ id: string } | null> {
+  const r = await Referrals.attributeReferral(inviteeId, { queryCode: code, ip: ctx.ip, device: ctx.device, source: ctx.source ?? "LINK" });
+  return r ? { id: r.referralId } : null;
 }
 
-/* ---------- "Invite by email" — no Referral row yet (referredId is required),
-   so the pending invite is tracked in Redis until they register. ---------- */
+/* ---------- "Invite by email" — tracked in Redis until they register ---------- */
 export async function recordInvite(referrerId: string, inviteeEmail: string): Promise<{ email: string; code: string }> {
   const code = await getOrCreateReferralCode(referrerId);
   const email = inviteeEmail.trim().toLowerCase();
   await redis.setex(`referral:invite:${email}`, 60 * 60 * 24 * 30, code).catch(() => {});
-  // TODO(email): send the branded invitation once an inviteReferral template exists.
   return { email, code };
 }
 
@@ -146,71 +113,11 @@ export async function resolvePendingInvite(email: string): Promise<string | null
   return redis.get(`referral:invite:${email.trim().toLowerCase()}`).catch(() => null);
 }
 
-/* ---------- pay-on-success: called from the Flutterwave webhook ---------- */
-export async function rewardOnFirstTransaction(payerId: string): Promise<{ amount: number } | null> {
-  const referral = await prisma.referral.findUnique({
-    where: { referredId: payerId },
-    select: {
-      id: true, status: true, referrerId: true,
-      referred: { select: { role: true, name: true } },
-      referrer: { select: { email: true, name: true } },
-    },
-  });
-  // Idempotent: only a linked, not-yet-rewarded referral converts.
-  if (!referral || referral.status !== "QUALIFIED") return null;
-
-  const role = String(referral.referred?.role ?? "RENTER") as Role;
-  const amount = REWARD_BY_ROLE[role] ?? 2000;
-  const inviteeShare = Math.round(amount * REFERRALS.inviteeWelcomeShare);
-
-  await prisma.$transaction(async (tx) => {
-    await tx.referral.update({
-      where: { id: referral.id },
-      data: {
-        status: "REWARDED",
-        reward: amount,
-        referrerReward: amount,
-        referredReward: inviteeShare,
-        rewardType: "SERVICE_CREDIT",
-        rewardPaid: true,
-        referrerRewardPaid: true,
-        referredRewardPaid: true,
-        referrerRewardPaidAt: new Date(),
-        referredRewardPaidAt: new Date(),
-      },
-    });
-    await tx.referralReward.create({
-      data: {
-        userId: referral.referrerId, referralId: referral.id, rewardType: "SERVICE_CREDIT",
-        amount, description: "Referral converted — invitee completed their first transaction",
-      },
-    });
-    await tx.referralReward.create({
-      data: {
-        userId: payerId, referralId: referral.id, rewardType: "SERVICE_CREDIT",
-        amount: inviteeShare, description: "Welcome credit — thanks for joining through a referral",
-      },
-    });
-  });
-
-  await publishNotification({
-    userId: referral.referrerId,
-    kind: "referral",
-    title: "Referral converted",
-    body: `${referral.referred?.name ?? "Your invitee"} completed their first transaction — ₦${amount.toLocaleString("en-NG")} in credits added.`,
-    to: "/referrals",
-    entityType: "referral",
-    entityId: referral.id,
-  });
-  if (referral.referrer?.email) {
-    await sendBrandedEmail(referral.referrer.email, EmailTemplates.commissionReceived({
-      agentName: referral.referrer.name ?? "there",
-      amount,
-      property: "your referral",
-      kind: "SUB_AGENT",
-    }));
-  }
-  return { amount };
+/** @deprecated v2 — rewards are created by the engine from settled money
+ *  events (subscription cleared / rent commission distributed). Kept so old
+ *  call sites compile; it pays nothing, which is what prevents double rewards. */
+export async function rewardOnFirstTransaction(_payerId: string): Promise<{ amount: number } | null> {
+  return null;
 }
 
 /* ============================================================
@@ -229,14 +136,14 @@ export interface Leaderboard {
 }
 interface RankedRow { userId: string; name: string; role: string; converted: number; signedUp: number; credits: number }
 
-const QUALIFIED_OR_REWARDED: ReferralStatus[] = ["QUALIFIED", "REWARDED"];
+const QUALIFIED_OR_REWARDED: ReferralStatus[] = ["PENDING", "QUALIFIED", "ACTIVE", "REWARDED"];
 
 export async function getLeaderboard(opts: {
   page?: number; pageSize?: number; requesterId?: string;
 } = {}): Promise<Leaderboard> {
   const pageSize = Math.min(50, opts.pageSize ?? REFERRALS.leaderboardPageSize);
   const page = Math.max(1, opts.page ?? 1);
-  const cacheKey = "referrals:leaderboard:v1";
+  const cacheKey = "referrals:leaderboard:v2";
 
   let rows: RankedRow[] | null = null;
   const cached = await redis.get(cacheKey).catch(() => null);
@@ -255,16 +162,16 @@ export async function getLeaderboard(opts: {
       prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, role: true } }),
       prisma.referral.groupBy({
         by: ["referrerId"], _count: { _all: true },
-        where: { referrerId: { in: ids }, status: "REWARDED" },
+        where: { referrerId: { in: ids }, status: { in: ["ACTIVE", "REWARDED"] } },
       }),
-      prisma.referralReward.groupBy({
-        by: ["userId"], _sum: { amount: true },
-        where: { userId: { in: ids } },
+      prisma.referralLedgerEntry.groupBy({
+        by: ["userId"], _sum: { amountKobo: true },
+        where: { userId: { in: ids }, status: { notIn: ["VOIDED", "PENDING_FUNDING"] }, kind: { not: "CLAWBACK" } },
       }),
     ]);
 
     const convMap = new Map<string, number>(converted.map((c) => [c.referrerId, c._count?._all ?? 0]));
-    const credMap = new Map<string, number>(credits.map((c) => [c.userId, Number(c._sum?.amount ?? 0)]));
+    const credMap = new Map<string, number>(credits.map((c) => [c.userId, Number(c._sum?.amountKobo ?? 0n) / 100]));
 
     rows = users
       .map((u): RankedRow => ({

@@ -24,7 +24,8 @@
 // ============================================================
 import { randomBytes } from "crypto";
 import { prisma } from "@newcondo/db";
-import { badRequest, notFound, flutterwaveConfig, MARKING, publishNotification } from "@newcondo/backend-shared";
+import { badRequest, notFound, flutterwaveConfig, MARKING, publishNotification, markInboundMatched, getAccountProvider, withProcessingFee, FLW_FEES, type FundingSource } from "@newcondo/backend-shared";
+import { bookMarkingFee } from "./markingLedger.service";
 import { assertOwnershipProof } from "@newcondo/property-service";
 import { createMarkingJob, type MarkingMethod } from "./markingJobService";
 
@@ -34,6 +35,10 @@ type PaidMethod = "BROADCAST" | "NEWCONDO";
    webhook can route it to confirmMarkingFeePaid(). */
 export interface MarkingCheckout {
   paymentId: string;
+  /** Pay-by-transfer alternative (central account + reference). */
+  bankTransfer: { accountNumber: string; accountName: string; bankName: string; reference: string | null; amountNaira: number | null; note: string };
+  /** ++ FLW FEES — what the owner sees before paying */
+  breakdown: { feeNaira: number; processingFeeNaira: number; totalNaira: number; processingFeeLabel: string };
   checkout: {
     public_key: string;
     tx_ref: string;
@@ -63,6 +68,8 @@ export async function initiateMarkingPayment(opts: {
   const property = await prisma.property.findUnique({ where: { id: opts.propertyId }, select: { title: true } });
   if (!property) throw notFound("Property not found");
 
+  // ++ FLW FEES — Flutterwave's cost on top of the marking fee, rounded up.
+  const charge = withProcessingFee(fee);
   const reference = `NC-MKFEE-${Date.now()}-${randomBytes(4).toString("hex")}`;
   const description = `Marking service — ${property.title}`;
   const payment = await prisma.payment.create({
@@ -71,7 +78,8 @@ export async function initiateMarkingPayment(opts: {
       // PaymentType enum member for marking fees is PROPERTY_MARKING
       paymentType: "PROPERTY_MARKING",
       status: "PENDING",
-      amount: fee,
+      amount: charge.totalNaira,
+      processingFee: charge.processingFeeNaira,
       flutterwaveRef: reference,
       description,
       // Job params ride along so the webhook can create the job verbatim.
@@ -88,10 +96,12 @@ export async function initiateMarkingPayment(opts: {
 
   return {
     paymentId: payment.id,
+    bankTransfer: await getAccountProvider().fundingInstructions(opts.requesterId, { reference, amountNaira: charge.totalNaira }),
+    breakdown: { feeNaira: fee, processingFeeNaira: charge.processingFeeNaira, totalNaira: charge.totalNaira, processingFeeLabel: FLW_FEES.label },
     checkout: {
       public_key: flutterwaveConfig.FLUTTERWAVE_PUBLIC_KEY,
       tx_ref: reference,
-      amount: fee,
+      amount: charge.totalNaira,
       currency: "NGN",
       customer: { email: opts.requesterEmail },
       customizations: { title: "Newcondo", description },
@@ -106,18 +116,41 @@ export async function initiateMarkingPayment(opts: {
  *  would let a document deleted mid-checkout strand a paid job. Money has
  *  moved; the job must be created. */
 export async function confirmMarkingFeePaid(
-  flutterwaveRef: string
+  flutterwaveRef: string,
+  /** MONEY CORE — the VERIFIED amount and how it arrived (registered as the
+   *  NC-MKFEE- charge handler in combined-backend/src/server.ts). */
+  paid?: { amountNaira: number; settledNaira?: number | null; via: FundingSource; inboundTransferId?: string; transactionId?: string | null }
 ): Promise<{ jobId: string; status: string } | null> {
   const payment = await prisma.payment.findUnique({
     where: { flutterwaveRef },
-    select: { id: true, status: true, userId: true, meta: true },
+    select: { id: true, status: true, userId: true, meta: true, amount: true, processingFee: true },
   });
   if (!payment || payment.status !== "PENDING") return null; // idempotent — webhooks retry
+  const due = Number(payment.amount);
+  if (paid && paid.amountNaira + 0.001 < due) {
+    console.error(`[marking] underpaid ${flutterwaveRef}: ₦${paid.amountNaira} < ₦${due}`);
+    return null;
+  }
 
-  await prisma.payment.update({
-    where: { flutterwaveRef },
-    data: { status: "SUCCESS", paidAt: new Date() },
+  const claimed = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.payment.updateMany({
+      where: { flutterwaveRef, status: "PENDING" },
+      data: { status: "SUCCESS", paidAt: new Date(), ...(paid?.transactionId ? { transactionId: paid.transactionId } : {}) },
+    });
+    if (!count) return false;
+    await bookMarkingFee(tx, {
+      paymentId: payment.id,
+      payerId: payment.userId,
+      dueNaira: due,
+      feeNaira: due - Number(payment.processingFee ?? 0),
+      receivedNaira: paid?.amountNaira ?? due,
+      settledNaira: paid?.settledNaira ?? null,
+      via: paid?.via ?? "CHECKOUT",
+    });
+    if (paid?.inboundTransferId) await markInboundMatched(tx, paid.inboundTransferId, payment.id);
+    return true;
   });
+  if (!claimed) return null;
 
   const m = (payment.meta ?? {}) as {
     propertyId?: string; method?: PaidMethod;

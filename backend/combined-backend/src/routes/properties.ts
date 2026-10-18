@@ -32,6 +32,8 @@ import{
 } from "@newcondo/property-service"
 
 import { publishNotification } from "@newcondo/backend-shared";
+// MONEY CORE — attach the owner's onboarding seat (or flag NEEDS_PLAN)
+import { allocatePropertyPlan } from "@newcondo/payment-service";
 
 const router: ExpressRouter = Router();
 const listerOnly = [authMiddleware, requireRole(["OWNER", "AGENT", "ADMIN"])] as const;
@@ -93,7 +95,13 @@ router.post("/tenant-invites/accept", authMiddleware, async (req, res, next) => 
 router.post("/", authMiddleware, requireRole(["OWNER", "AGENT"]), async (req, res, next) => {
   try {
     const data = await createProperty(req.user!.id, req.body ?? {});
-    res.status(201).json({ success: true, data });
+    // The listing belongs to the OWNER even when an invited agent creates it,
+    // so the plan comes from the owner's subscription. First property → the
+    // seat they paid for at onboarding (no charge); later ones → NEEDS_PLAN,
+    // and the property page asks the owner to pick a tier.
+    const ownerId = req.user!.role === "AGENT" ? String(req.body?.ownerId ?? "") : req.user!.id;
+    const plan = ownerId ? await allocatePropertyPlan(ownerId, data.id) : { status: "NO_SUBSCRIPTION" as const };
+    res.status(201).json({ success: true, data: { ...data, plan } });
   } catch (e) { next(e); }
 });
 

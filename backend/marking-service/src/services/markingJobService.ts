@@ -32,6 +32,7 @@ import {
   polygonNormToGps, centroidOf, buildingFingerprint, checkDuplicate,
 } from "@newcondo/property-service"; // marking-geo re-export
 import { assertOwnershipProof } from "@newcondo/property-service";
+import { holdMarkerPayout, settleMarkingJob } from "./markingLedger.service";
 import type { MarkingJobStatus, MarkingMethod as PrismaMarkingMethod } from "@newcondo/db";
 
 // All numbers come from constants/business.ts — change them there, not here.
@@ -342,9 +343,12 @@ export async function completeMarking(opts: {
     await tx.markingQueueEntry.updateMany({
       where: { jobId: job.id, agentId: opts.agentId }, data: { completedAt: new Date() },
     });
+    // MONEY CORE — ₦1,000 moves escrow → the marker's PENDING wallet now
+    // (visible, not withdrawable); the rest on owner confirmation.
+    const paid = await tx.propertyMarkingJob.findUnique({ where: { id: job.id }, select: { method: true, paymentStatus: true } });
+    if (paid) await holdMarkerPayout(tx, { id: job.id, method: paid.method, feePaid: paid.paymentStatus === "SUCCESS" }, opts.agentId);
   });
 
-  // ₦1,000 hold now; balance on owner confirmation. TODO: wallet ledger credit.
   await publishNotification({
     userId: job.property.ownerId, kind: "marking",
     title: `Confirm marking — ${job.property.title}`,
@@ -359,11 +363,12 @@ export async function confirmMarking(jobId: string, ownerId: string): Promise<vo
   const job = await prisma.propertyMarkingJob.findUnique({
     where: { id: jobId },
     select: {
-      id: true, status: true, propertyId: true, assignedAgentId: true,
+      id: true, status: true, propertyId: true, assignedAgentId: true, method: true, markingFee: true, paymentStatus: true,
       property: { select: { ownerId: true, title: true } },
     },
   });
   if (!job || job.status !== "AWAITING_CONFIRMATION") throw notFound("Nothing to confirm");
+  let released = 0;
   if (job.property.ownerId !== ownerId) throw forbidden("Not your property");
 
   await prisma.$transaction(async (tx) => {
@@ -376,13 +381,17 @@ export async function confirmMarking(jobId: string, ownerId: string): Promise<vo
       // boundaryVerifiedAt column — the job's confirmedAt is the timestamp.
       data: { boundaryVerified: true },
     });
+    // MONEY CORE — pay the marker in full (hold + balance), fee margin → revenue.
+    if (job.paymentStatus === "SUCCESS") {
+      const marker = job.assignedAgentId && job.assignedAgentId !== ownerId ? job.assignedAgentId : null;
+      released = await settleMarkingJob(tx, job, marker, "CONFIRMED");
+    }
   });
 
-  if (job.assignedAgentId && job.assignedAgentId !== ownerId) {
-    // release the remaining ₦4,000. TODO: wallet ledger credit + auto-payout hook
+  if (job.assignedAgentId && job.assignedAgentId !== ownerId && released > 0) {
     await publishNotification({
       userId: job.assignedAgentId, kind: "wallet", title: "Marking payout released",
-      body: `₦${(MARKER_PAYOUT - PAYOUT_HOLD).toLocaleString("en-NG")} released — ${job.property.title} confirmed by the owner.`,
+      body: `₦${(released + PAYOUT_HOLD).toLocaleString("en-NG")} is now withdrawable — ${job.property.title} confirmed by the owner.`,
       to: "/wallet", entityType: "markingJob", entityId: jobId,
     });
   }

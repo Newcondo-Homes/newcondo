@@ -119,6 +119,9 @@ model User {
 
   // Referral tracking — also used as the unique code inside share/promo URLs
   referralCode String @unique @default(cuid())
+  // ++ MONEY CORE / REFERRALS v2 — a disabled code stops new attributions but
+  // keeps existing Referral rows (and their rewards) intact.
+  referralCodeDisabledAt DateTime?
 
   // Agent specific fields
   isAvailableForMarking Boolean  @default(false)
@@ -177,6 +180,9 @@ model User {
   // ++ ADDED relations
   notifications        Notification[]
   bankAccounts         BankAccount[]
+  // ++ MONEY CORE — the user's ledger wallets (available + pending). Balances
+  // are DERIVED from LedgerEntry rows; there is no balance column to trust.
+  ledgerAccounts       LedgerAccount[]
   shareLinks           ShareLink[]          @relation("ShareLinkCreator")
   sentTenantInvites    TenantInvite[]       @relation("TenantInviteSender")
   usedTenantInvites    TenantInvite[]       @relation("TenantInviteRenter")
@@ -475,6 +481,13 @@ model Property {
   paymentLockExpiry DateTime?
 
   suspendedBySubscription Boolean @default(false)
+
+  // ++ MONEY CORE — set when the owner discontinued this property's monthly
+  // service. The property survives (only DELETE removes it); it is simply off
+  // the market until a plan is chosen again. Distinct from
+  // suspendedBySubscription, which is the ACCOUNT-level lapse and is restored
+  // in bulk on payment — a discontinued property must never come back that way.
+  offPlanAt DateTime?
 
   // Sharing & Marketing
   shareableLink String? @unique
@@ -894,6 +907,11 @@ model Payment {
   agentCommission Decimal? @db.Decimal(10, 2)
   platformFee     Decimal? @db.Decimal(10, 2)
   ownerAmount     Decimal? @db.Decimal(10, 2)
+  /// ++ FLW FEES — Flutterwave cost passed to the user (constants/fees.ts),
+  /// whole naira, rounded up. Collections: included in `amount`. Withdrawals:
+  /// deducted from `amount` (bank receives amount − processingFee).
+  /// Non-refundable — Flutterwave keeps its fee on refunds.
+  processingFee   Decimal? @db.Decimal(10, 2)
 
   confirmationPeriodEnd DateTime?
   isReleased            Boolean   @default(false)
@@ -960,6 +978,8 @@ enum PaymentType {
   RENT_RELEASE // ++ ADDED — owner's net payout row at escrow release
   WITHDRAWAL // ++ ADDED — wallet → bank transfer
   SERVICE_FEE // ++ ADDED — vendor repair charged to the owner
+  VENDOR_PAYOUT // ++ MONEY CORE — vendor paid from the central account
+  REFERRAL_OVERRIDE // ++ MONEY CORE — founding-agent override credit
 }
 
 enum PaymentStatus {
@@ -1123,6 +1143,14 @@ model Vendor {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
+  // ++ MONEY CORE — payout destination, verified by Flutterwave name enquiry
+  // when an admin onboards the vendor. Vendors are paid from platform:revenue
+  // MONEY.vendors.releaseHours after a job completes without an issue.
+  bankName      String?
+  bankCode      String?
+  accountNumber String?
+  accountName   String?
+
   jobs ServiceJob[]
 
   @@index([category, isActive])
@@ -1172,6 +1200,9 @@ model ServiceJob {
   cost          Decimal   @default(0) @db.Decimal(10, 2)
   photoKeys     String[]
   completedAt   DateTime?
+  // ++ MONEY CORE — vendor payout (idempotency anchor = payoutRef)
+  payoutRef     String?   @unique
+  paidOutAt     DateTime?
 
   // ++ DELETION — requestedBy Restrict: a vendor was dispatched and paid. An
   // OPEN service visit blocks the owner's deletion request outright — we
@@ -1246,6 +1277,16 @@ model Referral {
 
   clickCount   Int     @default(0)
   shareChannel String?
+
+  // ++ REFERRALS v2 (spec §9). Column names kept (referredId, referralCode) so
+  // account-deletion and existing readers keep compiling; the engine maps
+  // referredId → refereeId.
+  source       String? // LINK | CODE_ENTRY | INVITE
+  activatedAt  DateTime?
+  fraudHold    Boolean   @default(false)
+  fraudReason  String?
+  signupIpHash String?
+  deviceHash   String?
 
   // ++ DELETION — Restrict on both sides so paid-out reward history is never
   // silently destroyed. Cleared explicitly at the 18-month purge, and only for
@@ -1764,6 +1805,8 @@ enum ReferralType {
 
 enum ReferralStatus {
   PENDING
+  ACTIVE // ++ v2 — first settled paying transaction
+  VOID // ++ v2 — fraud / admin void
   QUALIFIED
   REWARDED
   EXPIRED
@@ -1865,6 +1908,13 @@ model Subscription {
 
   virtualAccountCreated Boolean @default(false)
 
+  // ++ MONEY CORE — the onboarding checkout pays for ONE property seat before
+  // any property exists. true = that seat is still unclaimed, so the owner's
+  // FIRST property attaches to it at no charge and renewal keeps billing it.
+  // Flipped false the moment a property claims it; from then on the bill is
+  // purely the sum of PropertySubscription lines (0 lines = ₦0).
+  reservedSeat Boolean @default(true)
+
   // Cascade — cardLast4/cardBrand and the Flutterwave customer token are
   // personal data. The billing HISTORY lives on SubscriptionInvoice, which
   // survives (SetNull) as a tax record.
@@ -1929,6 +1979,9 @@ model SubscriptionInvoice {
   periodEnd     DateTime
   amountNaira   Decimal  @db.Decimal(10, 2)
   currency      String   @default("NGN")
+  /// ++ FLW FEES — charged on top of amountNaira (amount minus referral credit
+  /// is what the fee is computed on). Card charged = amountNaira − credit + fee.
+  processingFeeNaira Decimal? @db.Decimal(10, 2)
 
   status            InvoiceStatus @default(PENDING)
   flwTransactionRef String?       @unique
@@ -1978,6 +2031,20 @@ model PropertySubscription {
 
   startedAt   DateTime  @default(now())
   cancelledAt DateTime?
+
+  // ++ MONEY CORE — per-property lifecycle
+  status            PropertyPlanStatus @default(ACTIVE)
+  /// true = this line consumed the onboarding seat (no extra charge).
+  included          Boolean            @default(false)
+  /// "Discontinue monthly service": service runs to the end of the paid
+  /// period, then the next renewal excludes this line and closes it.
+  cancelAtPeriodEnd Boolean            @default(false)
+  /// Tier change scheduled for the next renewal (never mid-period).
+  nextPlanType      SubscriptionPlan?
+  /// Inline-checkout reference while status = PENDING_PAYMENT.
+  pendingTxRef      String?            @unique
+  /// Prorated amount charged when this line was added mid-period.
+  proratedNaira     Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -2071,4 +2138,262 @@ enum InvoiceStatus {
   FAILED
   REFUNDED
   VOID
+}
+
+
+// ============================================================================
+// MONEY CORE — one central account, an internal double-entry ledger.
+//
+// Every naira that enters Newcondo lands in ONE place: Flutterwave settles card
+// / transfer charges into the merchant balance, and the business static account
+// (MONEY.centralAccount) receives direct bank transfers into the same balance.
+// "Who owns what" inside that pool is answered by this ledger, never by
+// Flutterwave. When per-user virtual accounts are enabled, they become extra
+// COLLECTION rails that post into the same ledger — nothing here changes.
+//
+// Invariants (enforced in backend/shared/src/money/ledger.ts):
+//   • every LedgerTransaction's entries sum to exactly 0 kobo
+//   • idempotencyKey is unique — a retried webhook/cron posts nothing twice
+//   • non-WORLD accounts can never go negative (conditional update in-txn)
+//   • Σ(all non-WORLD balances) = −balance(world:flutterwave) = cash we hold
+// ============================================================================
+
+enum LedgerAccountKind {
+  WORLD // the outside world via Flutterwave (cash in / cash out)
+  PLATFORM // Newcondo's own earned money
+  ESCROW // held for a confirmation window (rent 24h, marking fees)
+  TRANSIT // payouts initiated, not yet confirmed by the bank
+  SUSPENSE // inbound transfers we could not match to anything yet
+  USER_AVAILABLE // withdrawable
+  USER_PENDING // credited but locked (e.g. marking hold until owner confirms)
+}
+
+model LedgerAccount {
+  id            String            @id @default(cuid())
+  /// "user:{id}:available", "platform:revenue", "escrow:rent", …
+  code          String            @unique
+  kind          LedgerAccountKind
+  userId        String?
+  currency      String            @default("NGN")
+  /// Running balance maintained in the SAME transaction as each entry, so a
+  /// debit can be made conditional (balance >= amount) without a race.
+  /// The nightly reconciler recomputes it from entries and alerts on drift.
+  balanceKobo   BigInt            @default(0)
+  allowNegative Boolean           @default(false)
+
+  // Restrict — an account with history is a financial record.
+  user    User?         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  entries LedgerEntry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([kind])
+}
+
+enum LedgerTxnType {
+  OPENING_BALANCE
+  RENT_COLLECTED
+  RENT_RELEASED
+  RENT_REFUNDED
+  SUBSCRIPTION_COLLECTED
+  PROPERTY_PLAN_COLLECTED
+  MARKING_FEE_COLLECTED
+  MARKING_HOLD
+  MARKING_RELEASED
+  MARKING_REFUNDED
+  VENDOR_PAYOUT
+  WITHDRAWAL_INITIATED
+  WITHDRAWAL_SETTLED
+  WITHDRAWAL_REVERSED
+  REFERRAL_OVERRIDE
+  INBOUND_TRANSFER
+  INBOUND_MATCHED
+  ADJUSTMENT
+}
+
+model LedgerTransaction {
+  id             String        @id @default(cuid())
+  idempotencyKey String        @unique
+  type           LedgerTxnType
+  sourceType     String // PAYMENT | INVOICE | MARKING_JOB | SERVICE_JOB | INBOUND | REFERRAL | ADMIN
+  sourceId       String
+  paymentId      String?
+  memo           String?
+  metadata       Json?
+  createdBy      String? // "system" | admin user id
+  entries        LedgerEntry[]
+  createdAt      DateTime      @default(now())
+
+  @@index([sourceType, sourceId])
+  @@index([type, createdAt])
+  @@index([paymentId])
+}
+
+model LedgerEntry {
+  id            String @id @default(cuid())
+  transactionId String
+  accountId     String
+  /// Signed. +credit to the account, −debit. Σ per transaction = 0.
+  amountKobo    BigInt
+
+  transaction LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  account     LedgerAccount     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([transactionId])
+}
+
+enum InboundTransferStatus {
+  UNMATCHED
+  MATCHED
+  REFUNDED
+  IGNORED
+}
+
+/// A bank transfer INTO the central account (or, later, a per-user VA).
+/// Matched by the NC-… reference the payer was told to put in the narration;
+/// anything unmatched sits in suspense until an admin resolves it.
+model InboundTransfer {
+  id               String                @id @default(cuid())
+  flwTransactionId String                @unique
+  accountNumber    String
+  amountKobo       BigInt
+  senderName       String?
+  senderAccount    String?
+  senderBank       String?
+  narration        String?
+  reference        String?
+  status           InboundTransferStatus @default(UNMATCHED)
+  matchedPaymentId String?
+  matchedAt        DateTime?
+  resolvedBy       String?
+  raw              Json?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  @@index([status, createdAt])
+  @@index([reference])
+}
+
+enum PropertyPlanStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  CANCELLED
+}
+
+// ============================================================================
+// REFERRALS v2 — config-driven, margin-funded (spec §9).
+// Existing Referral is extended in place (see above); ReferralReward is kept
+// for history only — the engine writes ReferralLedgerEntry.
+// No User relations on these on purpose: they are audit rows keyed by id, and
+// account deletion must not cascade into them.
+// ============================================================================
+
+enum ReferralLedgerKind {
+  SUBSCRIPTION_CREDIT
+  SERVICE_CREDIT
+  COMMISSION_OVERRIDE
+  CLAWBACK
+}
+
+enum ReferralLedgerStatus {
+  SCHEDULED
+  AVAILABLE
+  PENDING_FUNDING
+  REDEEMED
+  PARTIALLY_REDEEMED
+  PAID_OUT
+  EXPIRED
+  VOIDED
+}
+
+enum ReferralEventOutcome {
+  REWARDED
+  SKIPPED
+}
+
+model ReferralLinkClick {
+  id         String   @id @default(cuid())
+  referrerId String
+  code       String
+  ipHash     String?
+  deviceHash String?
+  createdAt  DateTime @default(now())
+
+  @@index([referrerId, createdAt])
+  @@index([code, createdAt])
+}
+
+model ReferralCohortMember {
+  id       String   @id @default(cuid())
+  cohort   String // CohortId
+  userId   String
+  joinedAt DateTime @default(now())
+
+  @@unique([cohort, userId])
+  @@index([cohort, joinedAt])
+}
+
+model ReferralEvent {
+  id            String               @id @default(cuid())
+  sourceType    String
+  sourceId      String
+  ruleId        String
+  referralId    String
+  beneficiaryId String?
+  outcome       ReferralEventOutcome
+  skipReason    String?
+  marginKobo    BigInt?
+  /// The normalised BusinessEvent. Lets an admin "clear fraud hold" replay
+  /// exactly what was skipped instead of guessing.
+  payload       Json?
+  createdAt     DateTime             @default(now())
+
+  @@unique([sourceType, sourceId, ruleId, referralId])
+  @@index([ruleId, createdAt])
+  @@index([referralId])
+}
+
+model ReferralLedgerEntry {
+  id           String               @id @default(cuid())
+  userId       String
+  referralId   String
+  ruleId       String
+  sourceType   String
+  sourceId     String
+  kind         ReferralLedgerKind
+  status       ReferralLedgerStatus
+  amountKobo   BigInt
+  redeemedKobo BigInt               @default(0)
+  serviceType  String?
+  serviceRef   String?
+  availableAt  DateTime
+  expiresAt    DateTime?
+  voidedAt     DateTime?
+  voidReason   String?
+  redemptions  ReferralRedemption[]
+  createdAt    DateTime             @default(now())
+
+  @@unique([sourceType, sourceId, ruleId, userId])
+  @@index([userId, status, expiresAt])
+  @@index([ruleId, createdAt])
+  @@index([referralId])
+  @@index([status, availableAt])
+}
+
+model ReferralRedemption {
+  id            String              @id @default(cuid())
+  ledgerEntryId String
+  invoiceId     String?
+  amountKobo    BigInt
+  status        String // RESERVED | CONFIRMED | RELEASED
+  ledgerEntry   ReferralLedgerEntry @relation(fields: [ledgerEntryId], references: [id], onDelete: Restrict)
+  createdAt     DateTime            @default(now())
+
+  @@index([invoiceId])
+  @@index([ledgerEntryId])
 }

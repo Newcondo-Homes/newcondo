@@ -41,7 +41,7 @@ export const DELIVERY_ROWS: [service: string, activation: string][] = [
   ["Subscription & platform access", "Immediately on successful payment"],
   ["Listing activation", "Within 1\u20133 business days of document verification"],
   ["Inspection booking confirmation", "Immediately on successful payment"],
-  ["Rent settlement to Owner / Agent", "After the 72-hour dispute window, subject to payment-partner processing"],
+  ["Rent settlement to Owner / Agent", "After the 24-hour confirmation window closes with no upheld dispute, subject to payment-partner processing"],
   ["Customer enquiry response", "Within 1 business day"],
 ];
 
@@ -49,7 +49,7 @@ export const DELIVERY_ROWS: [service: string, activation: string][] = [
 export const CHARGEBACK_STEPS: { n: string; title: string; body: string }[] = [
   { n: "1", title: "Contact us first", body: "Raise the issue with Newcondo through your dashboard or by email. Most payment problems are resolved faster with us than through your bank." },
   { n: "2", title: "We investigate", body: "We review the transaction, request evidence where needed, and respond within one business day of your enquiry." },
-  { n: "3", title: "Resolution or refund", body: "If your claim is valid under our Refund Policy, we process the refund to your original payment method." },
+  { n: "3", title: "Resolution", body: "If the issue is a valid rent dispute raised inside the confirmation window, we refund the rent to your original payment method under our Refund Policy. Fees are not refunded." },
 ];
 
 /* ---- 09 AML & restricted activity ---- */
@@ -78,7 +78,7 @@ export const ROLE_CARDS: { icon: string; role: string; body: string }[] = [
 /* ---- 04 Secure rent collection flow ---- */
 export const ESCROW_STEPS: { n: string; title: string; body: string }[] = [
   { n: "1", title: "Renter pays into a secure account", body: "Rent is collected into a secure virtual account operated by our licensed, PCI-DSS-compliant payment partner — never paid to an agent in cash." },
-  { n: "2", title: "Dispute window opens", body: "Funds are held for a 72-hour review window during which a cancellation or refund claim can be raised under the Refund Policy." },
+  { n: "2", title: "Confirmation window opens", body: "Rent is held in escrow for a 24-hour confirmation window. A renter who finds a genuine problem can raise a dispute before it closes; if Newcondo upholds it, the rent is refunded less the refund cost. No other payment is refundable." },
   { n: "3", title: "Released to the owner", body: "Once the window closes with no valid dispute, the balance (net of platform and transaction fees) is released directly to the owner or agent's account." },
 ];
 

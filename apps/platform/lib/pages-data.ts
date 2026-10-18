@@ -13,7 +13,7 @@ import {
   SUBSCRIPTION_PLANS as P,
   OWNER_TIER_ORDER,
   RENTER_LAUNCH_PRICING,
-  formatNaira,
+  formatNairaa,
   formatRate as pct,
   MARKING,
   MAX_PLOTS_SELF_SERVE,
@@ -84,7 +84,7 @@ const SAMPLE_RENT = 200_000;
 const premiumSaving = SAMPLE_RENT * (P.OWNER_ESSENTIAL.commissionRate - P.OWNER_PREMIUM.commissionRate);
 const premiumNet = P.OWNER_PREMIUM.amountNaira - premiumSaving;
 /** Marking-job earnings range quoted to agents (payout → admin-job payout). */
-const markingJobRange = `${formatNaira(MARKING.markerPayout)}–${formatNaira(MARKING.markerPayout * 2)}`;
+const markingJobRange = `${formatNairaa(MARKING.markerPayout)}–${formatNairaa(MARKING.markerPayout * 2)}`;
 /** "1× per year", or false (renders a dash) when a tier doesn't include it. */
 const times = (n: number) => (n > 0 ? `${n}× per year` : false);
 
@@ -121,23 +121,19 @@ export const PRICING: Record<Audience, PricingModel> = {
         ["24-hour emergency maintenance", false, false, true],
       ]},
       { name: "Listings & marking", rows: [
-        ["Active property listings", "Unlimited", "Unlimited", "Unlimited"],
         ["GPS property marking", true, true, true],
-        ["Professional photography", "First listing free", "First listing free", "First listing free"],
         ["Priority marking agents", false, true, true],
         ["Free re-listing when a tenant vacates", false, true, true],
       ]},
       { name: "Rent & payments", rows: [
         ["Escrow rent collection", true, true, true],
         ["Platform commission on rents", pct(P.OWNER_ESSENTIAL.commissionRate), pct(P.OWNER_PLUS.commissionRate), pct(P.OWNER_PREMIUM.commissionRate)],
-        // ["Dedicated virtual account", true, true, true],
-        // ["Automatic payout scheduling", true, true, true],
-        // ["Rent default insurance — 1 month covered", false, false, true],
+        ["Dedicated virtual account", true, true, true],
+        ["Automatic payout scheduling", true, true, true],
       ]},
       { name: "Tenants & legal", rows: [
         ["Identity-verified tenants only", true, true, true],
         ["Auto-generated tenancy agreements", true, true, true],
-        // ["Tenant blacklist access", true, true, true],
       ]},
       { name: "Intelligence & support", rows: [
         ["Rent pricing intelligence — quarterly", true, true, true],
@@ -153,7 +149,7 @@ export const PRICING: Record<Audience, PricingModel> = {
     ],
     footnote: {
       icon: "calculator", title: `Why ${P.OWNER_PREMIUM.name} pays for itself`,
-      body: `On ${P.OWNER_PREMIUM.name}, commission drops from ${pct(P.OWNER_ESSENTIAL.commissionRate)} to ${pct(P.OWNER_PREMIUM.commissionRate)}. Collect ${formatNaira(SAMPLE_RENT)}/month in rent on a property and that difference saves you <strong>${formatNaira(premiumSaving)} every month</strong> — more than half the subscription. You're effectively paying ${formatNaira(premiumNet)}/month for twice the fumigation, two inspection reports a year, an account manager, rent default insurance and 24-hour emergency maintenance. And because the tier is set per property, you can put the one you rent out from abroad on ${P.OWNER_PREMIUM.name} and leave the rest on ${P.OWNER_ESSENTIAL.name}.`,
+      body: `On ${P.OWNER_PREMIUM.name}, commission drops from ${pct(P.OWNER_ESSENTIAL.commissionRate)} to ${pct(P.OWNER_PREMIUM.commissionRate)}. Collect ${formatNairaa(SAMPLE_RENT)}/month in rent on a property and that difference saves you <strong>${formatNairaa(premiumSaving)} every month</strong> — more than half the subscription. You're effectively paying ${formatNairaa(premiumNet)}/month for twice the fumigation, two inspection reports a year, an account manager and 24-hour emergency maintenance. And because the tier is set per property, you can put the one you rent out from abroad on ${P.OWNER_PREMIUM.name} and leave the rest on ${P.OWNER_ESSENTIAL.name}.`,
       tag: "Pay annually and get 2 months free on any tier.",
     },
     belowFootnote: {
@@ -213,7 +209,7 @@ export const PRICING: Record<Audience, PricingModel> = {
     lead: "Right now, renting on Newcondo is free for renters — verified listings, secure payment, the 24-hour refund window and the double-booking lock, all included. Paid plans come later; the first 300 founding renters keep their perks when they do.",
     billing: false,
     plans: [
-      { id: "plus", name: P.RENTER_PREMIUM_PLUS.name, tagline: "Everything renters get — free while we grow", priceLabel: "Free", unit: "", strike: `${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}/mo`, note: `Free for the first 300 founding renters · ${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}/mo after launch`, badge: "Founding offer — free for life", popular: true, variant: "dark", cta: "Claim founding access", href: "/onboarding" },
+      { id: "plus", name: P.RENTER_PREMIUM_PLUS.name, tagline: "Everything renters get — free while we grow", priceLabel: "Free", unit: "", strike: `${formatNairaa(RENTER_LAUNCH_PRICING.premiumPlus)}/mo`, note: `Free for the first 300 founding renters · ${formatNairaa(RENTER_LAUNCH_PRICING.premiumPlus)}/mo after launch`, badge: "Founding offer — free for life", popular: true, variant: "dark", cta: "Claim founding access", href: "/onboarding" },
     ],
     groups: [
       { name: "Search & discovery", rows: [
@@ -238,7 +234,7 @@ export const PRICING: Record<Audience, PricingModel> = {
     ],
     footnote: {
       icon: "gift", title: "Free for renters, right now",
-      body: `While we build our launch base, renters use Newcondo for free — including the full ${P.RENTER_PREMIUM_PLUS.name} protection stack for the first 300 founding renters. Paid plans (Basic Premium ${formatNaira(RENTER_LAUNCH_PRICING.basicPremium)}/mo and ${P.RENTER_PREMIUM_PLUS.name} ${formatNaira(RENTER_LAUNCH_PRICING.premiumPlus)}/mo, billed monthly with ~2 months free yearly) arrive later, and <strong>founding renters keep their founding perks.</strong>`,
+      body: `While we build our launch base, renters use Newcondo for free — including the full ${P.RENTER_PREMIUM_PLUS.name} protection stack for the first 300 founding renters. Paid plans (Basic Premium ${formatNairaa(RENTER_LAUNCH_PRICING.basicPremium)}/mo and ${P.RENTER_PREMIUM_PLUS.name} ${formatNairaa(RENTER_LAUNCH_PRICING.premiumPlus)}/mo, billed monthly with ~2 months free yearly) arrive later, and <strong>founding renters keep their founding perks.</strong>`,
       tag: "No card required. Takes 2 minutes to create your account.",
     },
   },
@@ -281,7 +277,7 @@ export const HOW: Record<Audience, HowModel> = {
       { n: "01", variant: "teal", label: "Create account", anim: "Create your account", title: "Sign up free in two minutes", text: "Create your account with your email or phone and choose renter. It's free for now — no card required, and the first 300 founding renters keep their perks when paid plans arrive." },
       { n: "02", variant: "sunset", label: "Browse verified", anim: "Browse verified listings", title: "Browse only verified, GPS-marked properties", text: "Every property is geo-verified before it's listed, so if you see it, it's real. Filter by city, price and type; save and compare from your phone." },
       { n: "03", variant: "coral", label: "Pay securely", anim: "Pay securely", title: "Pay through the platform — the flat locks to you", text: "The moment you start payment, that property is locked. No one else can pay for it at the same time, so double-booking simply can't happen." },
-      { n: "04", variant: "lilac", label: "Confirm in 24h", anim: "Confirm within 24 hours", title: "Inspect, then confirm within 24 hours", text: "Your money is held — not released — for 24 hours. Visit the property and confirm it matches the listing. If it doesn't, request a refund automatically from your dashboard." },
+      { n: "04", variant: "lilac", label: "Confirm in 24h", anim: "Confirm within 24 hours", title: "Inspect, then confirm within 24 hours", text: "Your rent is held — not released — for 24 hours. Visit the property and confirm it matches the listing. If it doesn't, raise a dispute from your dashboard before the window closes." },
       { n: "05", variant: "teal", label: "Move in", anim: "Move in", title: "Confirm and move in", text: "Once you confirm, payment releases to the verified parties and your details are documented. No agent fee ambush, no stories — just your keys." },
     ],
     cta: ["See renter plan", "/pricing?type=renter"],
@@ -301,12 +297,10 @@ export const FEATURES_PAGE: Record<Audience, FeaturesModel> = {
       { name: "Money & protection", sub: "Your rent arrives, in full, every time.", items: [
         { icon: "shield-check", title: "Escrow rent collection", body: "Rent is collected and held by Newcondo in a secure virtual account, then released straight to your bank after the confirmation window. Your agents coordinate tenants — they never hold a kobo of your money." },
         { icon: "wallet", title: "Dedicated virtual account", body: "Every owner gets a virtual account where rent is held and tracked. Set automatic transfers to your personal bank — as soon as funds clear, or on a schedule you choose." },
-        // { icon: "umbrella", title: "Rent default insurance (Premium)", body: "If a verified tenant stops paying and won't vacate, Newcondo covers one full month of lost rent while the dispute is resolved. No other platform in Nigeria offers this." },
       ]},
       { name: "Tenants & legal", sub: "Know exactly who you're handing your keys to.", items: [
         { icon: "badge-check", title: "Identity-verified tenants only", body: "Every renter submits NIN, BVN, passport or driver's licence before they can pay. You'll never unknowingly hand your keys to an anonymous stranger again." },
         { icon: "scroll-text", title: "Auto-generated tenancy agreements", body: "The moment payment clears, a legally structured tenancy agreement is generated, signed digitally by both parties, and stored permanently — retrievable anytime, including in court." },
-        // { icon: "user-x", title: "Tenant blacklist access", body: "Before accepting a tenant, check their Newcondo history: evictions, defaults, reported damage and disputes. The database grows with every landlord on the platform." },
         { icon: "clipboard-check", title: "Move-in & move-out inspection reports (Plus)", body: "When a tenant moves in or out, Newcondo documents an inspection with photos comparing condition. If there's damage, you have evidence — no more “that crack was already there.” Once a year on Plus, twice on Premium." },
       ]},
       { name: "Property care", sub: "The chores that lose you tenants — handled on a schedule.", items: [
@@ -317,7 +311,6 @@ export const FEATURES_PAGE: Record<Audience, FeaturesModel> = {
       { name: "Intelligence & support", sub: "Run your property like the asset it is.", items: [
         { icon: "trending-up", title: "Rent pricing intelligence", body: "A quarterly report on what comparable properties on your street and LGA are actually renting for today — so you stop leaving money on the table." },
         { icon: "file-text", title: "Annual rental income statement", body: "A formatted, signed statement of all rent collected through Newcondo in the year — for tax, loans, mortgages and proof of income. Most landlords can't prove this. Now you can." },
-        // { icon: "camera", title: "Professional photography", body: "Newcondo sends a photographer before your listing goes live (first listing free). Better photos mean faster tenants and less vacancy." },
         { icon: "headphones", title: "Dedicated account manager (Premium)", body: "A named Newcondo staff member handles your account with monthly performance updates and agent coordination on your behalf — built for diaspora owners especially." },
       ]},
     ],
@@ -360,7 +353,7 @@ export const FEATURES_PAGE: Record<Audience, FeaturesModel> = {
       ]},
       { name: "Pay with protection", sub: "Your money is never just gone.", items: [
         { icon: "lock", title: "Anti-double-booking lock", body: "The moment you start payment, the property locks to you. No one else can pay for the same flat at the same time — the nightmare of two families on moving day simply can't happen." },
-        { icon: "rotate-ccw", title: "24-hour confirmation & refund window", body: "After you pay, your money is held — not released — for 24 hours. Visit, confirm it matches the listing, and if it doesn't, get a full refund automatically. No begging, no negotiation." },
+        { icon: "rotate-ccw", title: "24-hour confirmation & refund window", body: "After you pay, your rent is held — not released — for 24 hours. Visit, confirm it matches the listing, and if it doesn't, raise a dispute before the window closes. If we uphold it, your rent comes back, less Flutterwave's cost to send it. Fees aren't refundable." },
         { icon: "circle-dollar-sign", title: "No exploitative agent fees", body: "One transparent platform fee, shown before you commit. No 10% agency fee on top, no “connection” or “introduction” charge. What you see is what you pay." },
       ]},
       { name: "Search smarter & earn", sub: "Less hassle, a little reward.", items: [

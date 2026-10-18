@@ -48,6 +48,9 @@ export interface TokenizedChargeResult {
   txRef: string;
   flwRef?: string;
   transactionId?: number;
+  /** ++ FLW FEES — what Flutterwave settled to us after its fee (amount_settled,
+   *  or amount − app_fee). null when the response doesn't say. */
+  settledNaira?: number | null;
   raw: unknown;
 }
 
@@ -84,6 +87,7 @@ export async function chargeTokenizedCard(args: TokenizedChargeArgs): Promise<To
       txRef: d?.tx_ref ?? args.txRef,
       flwRef: d?.flw_ref,
       transactionId: d?.id,
+      settledNaira: d?.amount_settled != null ? Number(d.amount_settled) : d?.app_fee != null && d?.amount != null ? Number(d.amount) - Number(d.app_fee) : null,
       raw: data,
     };
   } catch (err: unknown) {

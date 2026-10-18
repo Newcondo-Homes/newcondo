@@ -7,10 +7,11 @@ import { UserType } from "@/types/api";
 import type { Plan, BillingCycle } from "@/types/api";
 import {
   plansFor,
-  formatNaira,
+  formatNairaa,
   formatRate,
   requiresCustomQuote,
   MAX_PLOTS_SELF_SERVE,
+  withProcessingFee,
   type SubscriptionPlanSpec,
 } from "@/lib/constants/business";
 
@@ -292,7 +293,7 @@ export default function PlanSelector({
 
               <div className="mt-4 flex flex-wrap items-baseline gap-x-2 gap-y-1 max-[560px]:mt-3.5">
                 <span className={cx("text-[30px] font-bold tracking-[-0.04em] max-[560px]:text-[27px]", isDark ? "text-cream" : "text-text-primary")}>
-                  {plan.amountNaira === 0 ? "Free" : formatNaira(plan.amountNaira)}
+                  {plan.amountNaira === 0 ? "Free" : formatNairaa(plan.amountNaira)}
                 </span>
                 {plan.amountNaira > 0 && plan.unitLabel && (
                   <span className={cx("text-[13.5px]", isDark ? "text-text-on-dark-2" : "text-text-tertiary")}>
@@ -301,7 +302,7 @@ export default function PlanSelector({
                 )}
                 {plan.strikeAmountNaira && (
                   <span className={cx("text-[16px] font-medium line-through", isDark ? "text-text-on-dark-2" : "text-text-tertiary")}>
-                    {formatNaira(plan.strikeAmountNaira)}/mo
+                    {formatNairaa(plan.strikeAmountNaira)}/mo
                   </span>
                 )}
               </div>
@@ -397,7 +398,7 @@ export default function PlanSelector({
                 {active.amountNaira === 0 ? "Continue with " : "Subscribe — "}
                 {active.amountNaira === 0
                   ? active.name
-                  : `${formatNaira(active.amountNaira)}/${cycle === "ANNUAL" ? "yr" : "mo"}`}
+                  : `${formatNairaa(active.amountNaira)}/${cycle === "ANNUAL" ? "yr" : "mo"}`}
                 <ArrowRight size={18} strokeWidth={2} className="onb-sub-arrow" />
               </>
             )}
@@ -405,6 +406,11 @@ export default function PlanSelector({
         </div>
       </div>
 
+      {active.amountNaira > 0 && (
+        <p className="mt-2.5 text-center text-[12.5px] leading-[1.5] text-text-tertiary">
+          + {formatNairaa(withProcessingFee(active.amountNaira).processingFeeNaira)} payment processing (Flutterwave) per charge · subscriptions are non-refundable
+        </p>
+      )}
       <p className="mt-3.5 text-center text-[12.5px] leading-[1.5] text-text-tertiary">
         {active.amountNaira === 0
           ? "No card required. You can upgrade anytime from your dashboard."

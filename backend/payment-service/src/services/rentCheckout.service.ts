@@ -21,6 +21,10 @@ import { prisma } from "@newcondo/db";
 import {
   conflict, notFound,
   PAYMENTS, publishNotification, sendBrandedEmail, EmailTemplates, flutterwaveConfig,
+  // ++ MONEY CORE
+  ACC, postLedger, toKobo, markInboundMatched, getAccountProvider, MONEY,
+  withProcessingFee, collectionLegs, FLW_FEES,
+  type FundingSource,
 } from "@newcondo/backend-shared";
 import { acquireUnitLock, releaseUnitLock } from "../lib/unitlock";
 
@@ -57,10 +61,17 @@ export async function quoteRent(propertyId: string, unitNumber: string) {
   const { property, unit } = await findUnit(propertyId, unitNumber);
   const rent = Number(unit?.price ?? property.price ?? 0);
   const serviceFee = Math.round(rent * FEE_RATE);
+  // ++ FLW FEES — Flutterwave's collection cost (2% + VAT + ₦50 stamp duty)
+  // is passed to the renter, rounded up to the naira, so the owner's rent and
+  // Newcondo's service fee arrive whole. Same figure the share page shows.
+  const charge = withProcessingFee(rent + serviceFee);
   return {
     propertyTitle: property.title,
     unitNumber: unit?.unitNumber ?? "Main unit",
-    rent, serviceFee, total: rent + serviceFee,
+    rent, serviceFee,
+    processingFee: charge.processingFeeNaira,
+    processingFeeLabel: FLW_FEES.label,
+    total: charge.totalNaira,
     escrowWindowHours: PAYMENTS.escrowWindowHours,
   };
 }
@@ -106,7 +117,7 @@ export async function initiateRent(opts: {
         data: {
           userId: opts.renterId, rentalId: rental.id,
           paymentType: "RENT", status: "PENDING",
-          amount: quote.total, platformFee: quote.serviceFee, ownerAmount: quote.rent,
+          amount: quote.total, platformFee: quote.serviceFee, ownerAmount: quote.rent, processingFee: quote.processingFee,
           flutterwaveRef: reference, subAgentId,
           description: `Rent — ${quote.propertyTitle} (${quote.unitNumber})`,
         },
@@ -115,9 +126,16 @@ export async function initiateRent(opts: {
       return { payment, rentalId: rental.id };
     });
 
+    // Pay-by-transfer alternative: the central account (POOLED) or the
+    // renter's own NUBAN (PER_USER_VA). The reference is what matches it.
+    const bankTransfer = quote.total <= MONEY.perTransactionMaxNaira
+      ? await getAccountProvider().fundingInstructions(opts.renterId, { reference, amountNaira: quote.total })
+      : null;
+
     return {
       paymentId: payment.id,
       rentalId,
+      bankTransfer,
       checkout: {
         public_key: flutterwaveConfig.FLUTTERWAVE_PUBLIC_KEY,
         tx_ref: reference,
@@ -134,8 +152,17 @@ export async function initiateRent(opts: {
   }
 }
 
-/** Webhook (NC-RENT-*): charge verified → HELD escrow, occupy unit, notify. */
-export async function confirmRentPaid(flutterwaveRef: string): Promise<void> {
+/** Webhook (NC-RENT-*) or matched bank transfer: payment verified → HELD
+ *  escrow, occupy unit, notify.
+ *
+ *  MONEY CORE: `paid` carries the VERIFIED amount. The old version never
+ *  compared it to the intent, so a ₦100 charge carrying a valid tx_ref would
+ *  have occupied a ₦1.2M flat. Underpayment now leaves the payment PENDING
+ *  (and, for a transfer, the cash in suspense for an admin). */
+export async function confirmRentPaid(
+  flutterwaveRef: string,
+  paid?: { amountNaira: number; settledNaira?: number | null; via: FundingSource; inboundTransferId?: string; transactionId?: string }
+): Promise<void> {
   const payment = await prisma.payment.findUnique({
     where: { flutterwaveRef },
     include: {
@@ -155,14 +182,54 @@ export async function confirmRentPaid(flutterwaveRef: string): Promise<void> {
   });
   if (!payment || payment.status !== "PENDING" || !payment.rental) return; // idempotent
 
+  const total = Number(payment.amount);
+  if (paid && paid.amountNaira + 0.001 < total) {
+    console.error(`[rent] underpaid ${flutterwaveRef}: received ₦${paid.amountNaira}, due ₦${total} — left PENDING`);
+    return;
+  }
+  const via: FundingSource = paid?.via ?? "CHECKOUT";
+  const rentKobo = toKobo(payment.ownerAmount ?? payment.amount);
+  // Rows created before FLW FEES have no processingFee: the whole gap is the
+  // service fee, exactly as before.
+  const processingKobo = toKobo(payment.processingFee ?? 0);
+  const feeKobo = toKobo(total) - rentKobo - processingKobo;
+
   const r = payment.rental;
   const confirmationEnd = new Date(Date.now() + ESCROW_MS);
 
   await prisma.$transaction(async (tx) => {
     await tx.payment.update({
       where: { flutterwaveRef },
-      data: { status: "HELD", paidAt: new Date(), confirmationPeriodEnd: confirmationEnd },
+      data: {
+        status: "HELD", paidAt: new Date(), confirmationPeriodEnd: confirmationEnd,
+        paymentMethod: via === "TRANSFER" ? "bank_transfer" : payment.paymentMethod ?? "card",
+        ...(paid?.transactionId ? { transactionId: paid.transactionId } : {}),
+      },
     });
+    // Rent waits in escrow for the 24h window; the renter service fee is
+    // Newcondo's at once (it is non-refundable — /refund §04).
+    await postLedger(tx, {
+      idempotencyKey: `rent-collected:${payment.id}`,
+      type: "RENT_COLLECTED",
+      sourceType: "PAYMENT",
+      sourceId: payment.id,
+      paymentId: payment.id,
+      memo: payment.description ?? "Rent",
+      // Rent waits in escrow; the service fee is Newcondo's; the processing
+      // fee repays Flutterwave (platform:processing) — see money/collect.ts.
+      legs: collectionLegs({
+        via,
+        receivedKobo: toKobo(paid?.amountNaira ?? total),
+        settledKobo: paid?.settledNaira != null ? toKobo(paid.settledNaira) : null,
+        dueKobo: toKobo(total),
+        payerId: payment.userId,
+        allocations: [
+          { account: ACC.rentEscrow, amountKobo: rentKobo },
+          ...(feeKobo > 0n ? [{ account: ACC.revenue, amountKobo: feeKobo }] : []),
+        ],
+      }),
+    });
+    if (paid?.inboundTransferId) await markInboundMatched(tx, paid.inboundTransferId, payment.id);
     await tx.rental.update({ where: { id: r.id }, data: { confirmationDeadline: confirmationEnd } });
     if (r.unit) {
       await tx.propertyUnit.update({

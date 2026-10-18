@@ -44,7 +44,17 @@ import {
     sendBrandedEmail,
     EmailTemplates,
     formatNaira,
+    // ++ MONEY CORE
+    ACC,
+    postLedger,
+    toKobo,
+    toNaira,
+    Referrals,
+    // ++ FLW FEES
+    withProcessingFee,
+    collectionLegs,
 } from "@newcondo/backend-shared";
+import { applyScheduledLineChanges } from "../services/propertyPlan.service";
 import {
     PLAN_CONFIG,
     resolveChargeAmount,
@@ -244,6 +254,8 @@ async function notifyRenewalFailure(args: {
     }
 }
 
+export { runRenewals };
+
 export interface RenewalSummary {
     mode: string;
     scanned: number;
@@ -346,105 +358,102 @@ async function chargeOne(
 ): Promise<void> {
     const cfg = PLAN_CONFIG[sub.planType];
 
+    // ── 1. Close discontinued properties and apply scheduled tier changes
+    //       BEFORE pricing, so the bill is for exactly what continues.
+    if (cfg.perProperty) await applyScheduledLineChanges(sub.id, now);
+
+    // ── 2. THE AMOUNT — recomputed from CURRENT data, not read off the
+    //       subscription. Sums the live PropertySubscription lines, so a
+    //       property added, re-tiered or discontinued mid-cycle is billed
+    //       correctly from this cycle with no migration.
+    //       No fallback to the plan price for per-property plans: an owner
+    //       who discontinued every property owes ₦0 (the old `computed ||
+    //       finalAmountNaira` billed them for a property they no longer pay for).
+    const amount = cfg.perProperty
+        ? await resolveChargeAmount(sub.userId, sub.planType)
+        : (await resolveChargeAmount(sub.userId, sub.planType)) || Number(sub.finalAmountNaira ?? cfg.amountNaira);
+    const periodEnd = getPeriodEnd(periodStart, sub.billingCycle);
+
+    // ── 3. Claim the invoice (idempotency anchor) and reserve referral credit
+    //       in the same transaction, FIFO by expiry.
+    const { invoice, reservedKobo } = await prisma.$transaction(async (tx) => {
+        const inv = await tx.subscriptionInvoice.upsert({
+            where: { invoiceNumber },
+            create: {
+                subscriptionId: sub.id, userId: sub.userId, invoiceNumber,
+                periodStart, periodEnd, amountNaira: amount, currency: "NGN", status: "PENDING",
+            },
+            // Re-price a PENDING invoice: a retry must charge what is owed today.
+            update: { amountNaira: amount, periodEnd },
+        });
+        const reserved = inv.status === "PAID" ? 0n : await Referrals.reserveCredits(tx, sub.userId, inv.id, toKobo(amount));
+        return { invoice: inv, reservedKobo: reserved };
+    });
+    if (invoice.status === "PAID") { summary.skipped++; return; }
+
+    const chargeNaira = toNaira(toKobo(amount) - reservedKobo);
+    // ++ FLW FEES — the card pays (bill − referral credit) + Flutterwave's cost,
+    // rounded up to the naira. Credit never pays the processing fee.
+    const charge = withProcessingFee(Math.max(0, chargeNaira));
+
+    // ── 4a. Nothing to charge (no billable properties, or fully covered by
+    //        credit): roll the period forward without touching Flutterwave.
+    if (chargeNaira <= 0) {
+        await markRenewed(sub, invoice.id, { txRef: `NC-NOCHARGE-${invoice.id}`, transactionId: null }, amount, 0, periodStart, periodEnd, now,
+            amount === 0 ? "No billable properties this period" : "Covered by referral credit");
+        await Referrals.confirmRedemptions(invoice.id, sub.userId);
+        summary.renewed++;
+        return;
+    }
+
     if (!sub.flwCustomerToken) {
-        // Nothing to charge against. The user must re-enter a card, so this
-        // goes through the same dunning path rather than failing silently.
+        await Referrals.releaseRedemptions(invoice.id);
         await flagFailure({
             id: sub.id, userId: sub.userId, fromStatus: sub.status,
             prevFailures: sub.renewalFailureCount, now, summary,
             note: "No saved card token",
-            planName: cfg.name, amountNaira: Number(sub.finalAmountNaira ?? cfg.amountNaira),
+            planName: cfg.name, amountNaira: charge.totalNaira,
             email, name,
         });
         return;
     }
 
-    // THE AMOUNT — recomputed from CURRENT data, not read off the subscription.
-    //
-    // This line is the reason per-property pricing works. `finalAmountNaira`
-    // (what this used to charge) is a snapshot taken at checkout: an owner who
-    // added a second property last week would be billed for one property
-    // forever. resolveChargeAmount sums the live PropertySubscription lines, so
-    // a property added, re-tiered or re-quoted mid-cycle is billed correctly
-    // from the next cycle with no migration and no Flutterwave plan to update.
-    //
-    // Falls back to the plan price only if the sum comes back 0 (an owner with
-    // no property lines yet, or an agent/renter per-account plan).
-    const computed = await resolveChargeAmount(sub.userId, sub.planType);
-    const amount = computed || Number(sub.finalAmountNaira ?? cfg.amountNaira);
-
-    const periodEnd = getPeriodEnd(periodStart, sub.billingCycle);
-
-    // Claim the invoice first (idempotency anchor), then charge.
-    const invoice = await prisma.subscriptionInvoice.upsert({
-        where: { invoiceNumber },
-        create: {
-            subscriptionId: sub.id, userId: sub.userId, invoiceNumber,
-            periodStart, periodEnd, amountNaira: amount, currency: "NGN", status: "PENDING",
-        },
-        // Re-price a PENDING invoice: a retry a day later must charge what is
-        // owed today, not what was owed when the first attempt was claimed.
-        update: { amountNaira: amount, periodEnd },
-    });
-    if (invoice.status === "PAID") { summary.skipped++; return; }
+    await prisma.subscriptionInvoice.update({ where: { id: invoice.id }, data: { processingFeeNaira: charge.processingFeeNaira } });
 
     const result = await chargeTokenizedCard({
         token: sub.flwCustomerToken,
         email,
-        amount,
+        amount: charge.totalNaira,
         txRef: `NC-RENEW-${invoice.id}`,
         narration: `NewCondo ${cfg.name} renewal`,
         meta: { subscriptionId: sub.id, invoiceId: invoice.id, kind: "renewal" },
     });
 
     if (result.ok) {
-        await prisma.$transaction([
-            prisma.subscription.update({
-                where: { id: sub.id },
-                data: {
-                    status: SubscriptionStatus.ACTIVE,
-                    currentPeriodStart: periodStart,
-                    currentPeriodEnd: periodEnd,
-                    nextRenewalAttempt: periodEnd,
-                    renewalFailureCount: 0,
-                    lastRenewalAttemptAt: now,
-                    flwTransactionRef: result.txRef,
-                    // Keep the account's amount fields in step with what was
-                    // actually charged, so the dashboard and the ledger agree.
-                    amountNaira: amount,
-                    finalAmountNaira: amount,
-                },
-            }),
-            prisma.subscriptionInvoice.update({
-                where: { id: invoice.id },
-                data: {
-                    status: "PAID",
-                    flwTransactionRef: result.txRef,
-                    flwTransactionId: result.transactionId ? String(result.transactionId) : null,
-                    paidAt: now,
-                },
-            }),
-            prisma.subscriptionHistory.create({
-                data: {
-                    subscriptionId: sub.id, userId: sub.userId,
-                    eventType: SubscriptionEvent.RENEWED,
-                    fromStatus: sub.status, toStatus: SubscriptionStatus.ACTIVE,
-                    flwTransactionRef: result.txRef, amountCharged: amount,
-                    triggeredBy: "system",
-                    notes: `Renewed until ${periodEnd.toISOString().slice(0, 10)}`,
-                },
-            }),
-            prisma.user.update({
-                where: { id: sub.userId },
-                data: { isPremium: true, premiumExpiresAt: periodEnd },
-            }),
-        ]);
+        await markRenewed(sub, invoice.id, { txRef: result.txRef, transactionId: result.transactionId ? String(result.transactionId) : null }, amount, chargeNaira, periodStart, periodEnd, now,
+            `Renewed until ${periodEnd.toISOString().slice(0, 10)}`, { grossNaira: charge.totalNaira, settledNaira: result.settledNaira ?? null });
+        await Referrals.confirmRedemptions(invoice.id, sub.userId);
         summary.renewed++;
 
+        // Referral engine — margin is computed on CASH collected, so a cycle
+        // paid with credit generates no further reward downstream.
+        const lines = cfg.perProperty
+            ? await prisma.propertySubscription.findMany({ where: { subscriptionId: sub.id, status: "ACTIVE", cancelledAt: null }, select: { propertyId: true, planType: true } })
+            : [];
+        Referrals.emitReferralEvent({
+            type: "subscription_payment_cleared",
+            sourceType: "SUBSCRIPTION_PAYMENT",
+            sourceId: invoice.id,
+            occurredAt: now.toISOString(),
+            subjectUserId: sub.userId,
+            cashCollectedKobo: Number(toKobo(chargeNaira)),
+            items: (cfg.perProperty && !lines.length ? [{ propertyId: null, planType: sub.planType }] : lines).map((l) => ({
+                propertyId: l.propertyId, planCode: l.planType, amountKobo: Number(toKobo(PLAN_CONFIG[l.planType].amountNaira)),
+            })),
+        });
+
         // A successful charge on a PAST_DUE account is a recovery: republish
-        // whatever the grace sweep hid. Outside the transaction on purpose —
-        // the money is collected and the period extended; a failure here must
-        // not roll that back, and the next run picks it up anyway.
+        // whatever the grace sweep hid.
         try {
             const restored = await restoreListingsFor(sub.userId);
             if (restored > 0) {
@@ -469,6 +478,7 @@ async function chargeOne(
         return;
     }
 
+    await Referrals.releaseRedemptions(invoice.id);
     await prisma.subscriptionInvoice.update({
         where: { id: invoice.id },
         data: { status: "FAILED", failureReason: `Charge ${result.status}`, retryCount: { increment: 1 }, nextRetryAt: addDays(now, 1) },
@@ -477,8 +487,74 @@ async function chargeOne(
         id: sub.id, userId: sub.userId, fromStatus: sub.status,
         prevFailures: sub.renewalFailureCount, now, summary,
         note: `Renewal charge ${result.status}`,
-        planName: cfg.name, amountNaira: amount,
+        planName: cfg.name, amountNaira: charge.totalNaira,
         email, name,
+    });
+}
+
+/** Period roll-forward + invoice PAID + ledger posting, in one transaction.
+ *  The ledger key is the invoice id, so the webhook for the same charge
+ *  (Flutterwave sends charge.completed for tokenized charges too) can never
+ *  post it a second time. */
+async function markRenewed(
+    sub: { id: string; userId: string; status: SubscriptionStatus; planType: keyof typeof PLAN_CONFIG },
+    invoiceId: string,
+    ref: { txRef: string; transactionId: string | null },
+    billedNaira: number,
+    cashNaira: number,
+    periodStart: Date,
+    periodEnd: Date,
+    now: Date,
+    note: string,
+    /** ++ FLW FEES — what the card was actually charged / what settled */
+    collected?: { grossNaira: number; settledNaira: number | null }
+): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+        await tx.subscription.update({
+            where: { id: sub.id },
+            data: {
+                status: SubscriptionStatus.ACTIVE,
+                currentPeriodStart: periodStart,
+                currentPeriodEnd: periodEnd,
+                nextRenewalAttempt: periodEnd,
+                renewalFailureCount: 0,
+                lastRenewalAttemptAt: now,
+                flwTransactionRef: ref.txRef,
+                amountNaira: billedNaira,
+                finalAmountNaira: billedNaira,
+            },
+        });
+        await tx.subscriptionInvoice.update({
+            where: { id: invoiceId },
+            data: { status: "PAID", flwTransactionRef: ref.txRef, flwTransactionId: ref.transactionId, paidAt: now },
+        });
+        if (cashNaira > 0) {
+            await postLedger(tx, {
+                idempotencyKey: `invoice:${invoiceId}`,
+                type: "SUBSCRIPTION_COLLECTED",
+                sourceType: "INVOICE",
+                sourceId: invoiceId,
+                memo: `${PLAN_CONFIG[sub.planType].name} renewal`,
+                legs: collectionLegs({
+                    via: "CHECKOUT",
+                    receivedKobo: toKobo(collected?.grossNaira ?? withProcessingFee(cashNaira).totalNaira),
+                    settledKobo: collected?.settledNaira != null ? toKobo(collected.settledNaira) : null,
+                    dueKobo: toKobo(collected?.grossNaira ?? withProcessingFee(cashNaira).totalNaira),
+                    allocations: [{ account: ACC.revenue, amountKobo: toKobo(cashNaira) }],
+                }),
+            });
+        }
+        await tx.subscriptionHistory.create({
+            data: {
+                subscriptionId: sub.id, userId: sub.userId,
+                eventType: SubscriptionEvent.RENEWED,
+                fromStatus: sub.status, toStatus: SubscriptionStatus.ACTIVE,
+                flwTransactionRef: ref.txRef, amountCharged: cashNaira,
+                triggeredBy: "system",
+                notes: note,
+            },
+        });
+        await tx.user.update({ where: { id: sub.userId }, data: { isPremium: true, premiumExpiresAt: periodEnd } });
     });
 }
 

@@ -15,12 +15,12 @@ export const SUPPORT_FAQS: [q: string, a: string][] = [
   ["How fast will I get a response?", "We aim to respond to every support request within 24 hours, and to urgent Trust & Safety reports within 24–48 hours. Reports of fraud or safety risks are prioritised."],
   ["My rent payment is stuck or hasn't shown up.", "Rent is collected into a secure escrow account, so funds are never lost. If a payment hasn't reflected within a few minutes, contact us with your transaction reference and we'll trace it immediately."],
   ["How do I report a suspicious listing or user?", "Use the report option on any listing, profile, or message, or email our Trust & Safety team. Every report is reviewed by a real person, and we can freeze funds or listings while we investigate."],
-  ["How do I request a refund?", "Submit a request from your dashboard within the refund window. Eligible rent, deposits, and commission are refundable within 48 hours of payment — full detail is in our Cancellation & Refund Policy."],
+  ["How do I request a refund?", "Only rent is refundable. If something is genuinely wrong with the property, raise a dispute from your dashboard before the 24-hour confirmation window closes. If we uphold it, your rent comes back to your original payment method, less what Flutterwave charges to reverse and send it. Subscriptions, property plans, marking, vendor and service fees, and processing fees are not refundable. Full detail is in our Refund Policy."],
   ["Can I delete my account and data?", "Yes. You can request account closure and a data deletion from your settings. Some data is retained where the law or fraud-prevention requires it, as explained in our Privacy Policy."],
 ];
 
 export const SUPPORT_CHANNELS: { icon: string; label: string; value: string; sub: string; href: string }[] = [
   { icon: "mail", label: "Email us", value: "info@newcondo.homes", sub: "Best for most questions · ~24h reply", href: "mailto:info@newcondo.homes" },
   { icon: "shield-alert", label: "Report a safety issue", value: "Trust & Safety team", sub: "Fraud, scams, or suspicious activity", href: "/trust" },
-  { icon: "message-circle", label: "Live chat", value: "Open the chat bubble", sub: "Chat with us right here — no sign-in needed", href: "#chat" },
+  { icon: "message-circle", label: "Live chat", value: "Open the chat bubble", sub: "Chat with us right here — no sign-in needed", href: "/chat?back=%2Fsupport" },
 ];

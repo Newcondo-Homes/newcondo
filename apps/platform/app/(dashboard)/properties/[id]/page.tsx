@@ -26,6 +26,7 @@ import { SubAgentRequestsCard } from "@/components/dashboard/properties/SubAgent
 import { PropertyPhotos } from "@/components/dashboard/properties/PropertyPhotos";
 import { ProofOfOwnershipSection, useOwnershipGate, OwnershipRequiredModal } from "@/components/dashboard/properties/ProofOfOwnership";
 import { DeletePropertyModal } from "@/components/dashboard/properties/DeletePropertyModal";
+import { PropertyPlanCard } from "@/components/dashboard/billing/PropertyPlanCard";
 import { useMyProperties, useAgentListings, useFlatUnits, useCharts, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
 import { ngn } from "@/lib/dashboard/format";
 import type { AgentListing, Property } from "@/lib/dashboard/data";
@@ -125,6 +126,10 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               the property can't be marked, shared or tenanted, so it's the
               most consequential thing on the page. */}
           <ProofOfOwnershipSection propertyId={id} />
+
+          {/* MONEY CORE — each property has its own service plan. Owner-only:
+              it's the owner's bill, even when an agent manages the listing. */}
+          {!isAgent && <PropertyPlanCard propertyId={id} title={p.title} />}
 
           <Card>
             <CardH title="Details" right={<button className="flex items-center gap-1 text-[13px] font-semibold text-green-dark hover:text-ink" onClick={() => setModal("edit")}><Icon name="settings" size={13} />Edit</button>} />

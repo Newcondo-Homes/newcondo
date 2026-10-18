@@ -13,7 +13,8 @@ import type { Role } from "@/lib/dashboard/data";
 interface NavItem { name: string; href: string; icon: string; countKey?: "marking" | "escrow"; pill?: string; }
 interface NavGroup { group: string; items: NavItem[]; }
 
-const NAV: Record<Role, NavGroup[]> = {
+/** Exported so DashboardPrefetcher warms exactly these routes. */
+export const NAV: Record<Role, NavGroup[]> = {
   OWNER: [
     { group: "Manage", items: [
       { name: "Dashboard", href: "/dashboard", icon: "home" },
@@ -83,7 +84,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <div className="px-2.5 pb-1.5 pt-3.5 text-[10.5px] font-semibold uppercase tracking-[0.13em] text-text-tertiary">{g.group}</div>
           <nav className="flex flex-col gap-0.5">
             {g.items.map((it) => (
-              <Link key={it.href} href={it.href} onClick={onNavigate}
+              <Link key={it.href} href={it.href} onClick={onNavigate} prefetch
                 className={cx(
                   "flex items-center gap-2.5 rounded-xl px-2.5 py-[9.5px] text-[14px] font-medium no-underline transition-colors duration-150 ease-nc",
                   isOn(it.href) ? "bg-ink font-semibold text-cream" : "text-text-secondary hover:bg-surface-sunken hover:text-ink"

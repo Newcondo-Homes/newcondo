@@ -1,21 +1,28 @@
 // backend/payment-service/src/services/receipt.service.ts
 // ============================================================
-// Transaction receipts — ALIGNED TO schema.prisma Payment:
-//   userId (payer) · flutterwaveRef (reference) · paymentType · platformFee ·
-//   ownerAmount (net) · rental → property (title, ownerId, agentId)
-//   NEW field required: Payment.receiptKey String? (schema-additions.prisma)
-// Ownership: the payer, the property owner, or the listing agent on the
-// rental can fetch a receipt.
-// PDF via pdfkit, cached to S3 under receipts/, served by presigned URL.
+// Branded PDF receipts. buildReceiptData() is the canonical payload (the UI
+// renders it inline); generateReceiptPdf() renders with pdfkit, caches the
+// file in S3 under receipts/, and returns a short-lived presigned URL so
+// repeat downloads don't re-render.
+//
+// Ownership: only the payer, the property owner, or the listing agent on the
+// rental may fetch a receipt.
+//
+// BUILD REQUIREMENTS (previous failures were missing deps/exports):
+//   pnpm --filter @newcondo/payment-service add pdfkit @aws-sdk/client-s3
+//   pnpm --filter @newcondo/payment-service add -D @types/pdfkit
+//   backend/shared/src/utils/index.ts must `export * from "./s3Upload"`.
 // ============================================================
 import PDFDocument from "pdfkit";
-import { prisma } from "@newcondo/db";
-import { ForbiddenError, NotFoundError } from "@newcondo/backend-shared";
-import { presignDownload } from "@newcondo/backend-shared"; // s3Upload util
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { prisma } from "@newcondo/db";
+import { forbidden, notFound, presignDownload, PRIVATE_BUCKET } from "@newcondo/backend-shared";
 
-const s3 = new S3Client({ region: process.env.AWS_REGION });
-const BUCKET = process.env.S3_BUCKET!;
+// Lazy client — constructing S3Client at module load throws "Region is
+// missing" before dotenv runs (it crashes the whole combined-backend boot).
+let _s3: S3Client | null = null;
+const s3 = (): S3Client => (_s3 ??= new S3Client({ region: process.env.AWS_REGION || "eu-west-1" }));
+const BUCKET = PRIVATE_BUCKET;
 const ngn = (n: number) => `NGN ${Math.abs(n).toLocaleString("en-NG")}`;
 
 async function getOwnedPayment(paymentId: string, callerId: string) {
@@ -26,14 +33,21 @@ async function getOwnedPayment(paymentId: string, callerId: string) {
       rental: { include: { property: { select: { title: true, ownerId: true, agentId: true } } } },
     },
   });
-  if (!p) throw new NotFoundError("Transaction not found");
+  if (!p) throw notFound("Transaction not found");
   const party = p.userId === callerId || p.rental?.property.ownerId === callerId || p.rental?.property.agentId === callerId;
-  if (!party) throw new ForbiddenError("You are not a party to this transaction");
+  if (!party) throw forbidden("You are not a party to this transaction");
   return p;
 }
 
-/** Canonical receipt payload — single source of truth for PDF + UI. */
-export async function buildReceiptData(paymentId: string, callerId: string) {
+export interface ReceiptData {
+  reference: string; date: Date; type: string; description: string;
+  amount: number; fee: number | null; net: number; status: string;
+  /** ++ FLW FEES — Flutterwave cost passed to the user (separate line on the receipt) */
+  processingFee: number | null;
+  channel: string; payer: string | null; property: string | null; escrowWindow: string | null;
+}
+
+export async function buildReceiptData(paymentId: string, callerId: string): Promise<ReceiptData> {
   const p = await getOwnedPayment(paymentId, callerId);
   return {
     reference: p.flutterwaveRef ?? p.id,
@@ -42,6 +56,7 @@ export async function buildReceiptData(paymentId: string, callerId: string) {
     description: p.description ?? p.paymentType,
     amount: Number(p.amount),
     fee: p.platformFee != null ? Number(p.platformFee) : null,
+    processingFee: p.processingFee != null ? Number(p.processingFee) : null,
     net: Number(p.ownerAmount ?? p.amount),
     status: p.status,
     channel: "Flutterwave · virtual account",
@@ -51,33 +66,41 @@ export async function buildReceiptData(paymentId: string, callerId: string) {
   };
 }
 
-/** Render → cache to S3 → return a 10-min presigned download URL. */
 export async function generateReceiptPdf(paymentId: string, callerId: string): Promise<{ url: string }> {
   const p = await getOwnedPayment(paymentId, callerId);
-  const key = `receipts/${p.userId}/${p.flutterwaveRef ?? p.id}.pdf`;
+  const key = p.receiptKey ?? `receipts/${p.userId}/${p.flutterwaveRef ?? p.id}.pdf`;
+
   if (!p.receiptKey) {
-    const d = await buildReceiptData(paymentId, callerId);
-    const pdf = await renderPdf(d);
-    await s3.send(new PutObjectCommand({ Bucket: BUCKET, Key: key, Body: pdf, ContentType: "application/pdf", ServerSideEncryption: "AES256" }));
+    const data = await buildReceiptData(paymentId, callerId);
+    const pdf = await renderPdf(data);
+    await s3().send(new PutObjectCommand({
+      Bucket: BUCKET, Key: key, Body: pdf, ContentType: "application/pdf", ServerSideEncryption: "AES256",
+    }));
     await prisma.payment.update({ where: { id: paymentId }, data: { receiptKey: key } });
   }
-  return { url: await presignDownload(p.receiptKey ?? key, 600) };
+  return { url: await presignDownload(key, 600) };
 }
 
-function renderPdf(d: Awaited<ReturnType<typeof buildReceiptData>>): Promise<Buffer> {
+function renderPdf(d: ReceiptData): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "A5", margin: 40 });
     const chunks: Buffer[] = [];
-    doc.on("data", (c) => chunks.push(c));
+    doc.on("data", (c: Buffer) => chunks.push(c));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
     doc.on("error", reject);
+
+    // Brand: ink #131313 header, cream wordmark, Helvetica stand-in for Geist
     doc.rect(0, 0, doc.page.width, 70).fill("#131313");
     doc.fill("#F9F9EF").fontSize(18).font("Helvetica-Bold").text("newcondo", 40, 26);
     doc.fill("#131313").moveDown(3);
     doc.fontSize(11).font("Helvetica-Bold").text("Transaction receipt");
     doc.fontSize(9).font("Helvetica").fillColor("#555").text(new Date(d.date).toUTCString());
     doc.moveDown();
-    const row = (k: string, v: string | null) => { if (v == null) return; doc.fillColor("#888").text(k, { continued: true }).fillColor("#131313").text(`  ${v}`, { align: "right" }); };
+
+    const row = (k: string, v: string | null) => {
+      if (v == null) return;
+      doc.fillColor("#888").text(k, { continued: true }).fillColor("#131313").text(`  ${v}`, { align: "right" });
+    };
     row("Reference", d.reference);
     row("Type", d.type);
     row("Description", d.description);
@@ -88,8 +111,10 @@ function renderPdf(d: Awaited<ReturnType<typeof buildReceiptData>>): Promise<Buf
     row("Status", d.status);
     row("Channel", d.channel);
     if (d.escrowWindow) row("Escrow window", d.escrowWindow);
-    doc.moveDown(2).fontSize(8).fillColor("#888")
-      .text("Escrowed by Newcondo. Never settle rent off-platform — protection only applies to payments made through your Newcondo dashboard.");
+
+    doc.moveDown(2).fontSize(8).fillColor("#888").text(
+      "Escrowed by Newcondo. Never settle rent off-platform — protection only applies to payments made through your Newcondo dashboard."
+    );
     doc.end();
   });
 }

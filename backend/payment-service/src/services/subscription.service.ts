@@ -1,5 +1,5 @@
 import { prisma, SubscriptionPlan, SubscriptionStatus, BillingCycle, Role, SubscriptionEvent, PropertyStatus } from "@newcondo/db";
-import axios from "axios";
+import axios from "axios"; // verifyFlutterwaveTransaction
 import type { Subscription } from "@newcondo/db";
 import {
   sendBrandedEmail,
@@ -15,7 +15,23 @@ import {
   formatNaira,
   RENTER_LAUNCH_PRICING,
   type PropertyLineItem,
+  // ++ MONEY CORE — ledger + account provider + referral engine
+  ACC,
+  postLedger,
+  toKobo,
+  getAccountProvider,
+  // ++ FLW FEES
+  withProcessingFee,
+  collectionLegs,
+  FLW_FEES,
+  Referrals,
+  type SubscriptionPlanCode,
 } from "@newcondo/backend-shared";
+import {
+  allocatePropertyPlan,
+  changePropertyTier,
+  discontinuePropertyPlan,
+} from "./propertyPlan.service";
 
 const FLUTTERWAVE_SECRET_KEY = process.env.FLUTTERWAVE_SECRET_KEY!;
 const APP_URL = process.env.APP_URL!; // e.g. https://newcondo.homes
@@ -138,14 +154,28 @@ export async function resolveChargeAmount(
     return amountForProperty({ planCode: planType, customAmountNaira });
   }
 
-  const lines = (await prisma.propertySubscription.findMany({
-    where: { subscription: { userId }, cancelledAt: null },
-    select: { planType: true, customAmountNaira: true },
-  })) as unknown as PropertyLineItem[];
-
-  return lines.length
-    ? totalForProperties(lines)
-    : amountForProperty({ planCode: planType, customAmountNaira });
+  // Per-property owner billing (MONEY CORE):
+  //  • bill every ACTIVE line that is NOT set to stop at period end, at its
+  //    scheduled tier if one is queued (applyScheduledLineChanges has already
+  //    closed/re-tiered lines by the time renewal calls this);
+  //  • the onboarding seat (reservedSeat, no property yet) bills one unit of
+  //    the plan they chose;
+  //  • NO lines and no seat = ₦0. The old `lines.length ? … : plan price`
+  //    fallback billed an owner who had discontinued every property for one
+  //    property forever.
+  const sub = await prisma.subscription.findUnique({ where: { userId }, select: { id: true, reservedSeat: true } });
+  const lines = sub
+    ? await prisma.propertySubscription.findMany({
+        where: { subscriptionId: sub.id, status: "ACTIVE", cancelledAt: null, cancelAtPeriodEnd: false },
+        select: { planType: true, nextPlanType: true, customAmountNaira: true },
+      })
+    : [];
+  if (!sub || (sub.reservedSeat && lines.length === 0)) {
+    return amountForProperty({ planCode: planType, customAmountNaira });
+  }
+  return totalForProperties(
+    lines.map((l) => ({ planCode: (l.nextPlanType ?? l.planType) as SubscriptionPlanCode, customAmountNaira: l.customAmountNaira }))
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -380,7 +410,15 @@ export async function initiateSubscription(
         cancelledAt: null,
       },
     });
+    // The checkout pays for THIS property, so there is no separate seat.
+    await prisma.subscription.update({ where: { id: subscription.id }, data: { reservedSeat: false } });
+    await prisma.propertySubscription.update({ where: { propertyId: opts.propertyId }, data: { included: true } });
   }
+
+  // ++ FLW FEES — the card is charged plan price + Flutterwave's cost (2% +
+  // VAT + ₦50 stamp duty ≥ ₦10k), rounded up to the naira. The subscription
+  // keeps the PLAN price (finalAmountNaira); the fee is per charge.
+  const charge = withProcessingFee(amountNaira);
 
   // Build Flutterwave payment payload.
   // No payment_plan — see the note above this function. `payment_options` is
@@ -389,7 +427,7 @@ export async function initiateSubscription(
   // create subscriptions that can never renew.
   const flwPayload = {
     tx_ref: txRef,
-    amount: amountNaira,
+    amount: charge.totalNaira,
     currency: "NGN",
     payment_options: "card",
     customer: {
@@ -404,7 +442,9 @@ export async function initiateSubscription(
     },
     customizations: {
       title: "NewCondo Subscription",
-      description: `${config.name} — ${formatNaira(amountNaira)}`,
+      description: charge.processingFeeNaira
+        ? `${config.name} — ${formatNaira(amountNaira)} + ${formatNaira(charge.processingFeeNaira)} payment processing`
+        : `${config.name} — ${formatNaira(amountNaira)}`,
       logo: `${APP_URL}/images/logos/newcondo-logo.png`,
     },
     redirect_url: `${APP_URL}/dashboard/subscription/callback`,
@@ -416,6 +456,9 @@ export async function initiateSubscription(
     flwPayload, // Returned to frontend to pass into Inline modal
     planName: config.name,
     amountNaira,
+    processingFeeNaira: charge.processingFeeNaira,
+    processingFeeLabel: FLW_FEES.label,
+    totalNaira: charge.totalNaira,
     isFoundingAgent,
     foundingAgentNumber,
   };
@@ -447,6 +490,9 @@ export async function activateSubscription(
   flwCustomerToken: string,
   flwCustomerId: string,
   card?: SavedCardMeta,
+  /** ++ FLW FEES — the verified charge. Omitted by legacy callers: the
+   *  ledger then assumes plan price + the standard processing fee. */
+  paid?: { grossNaira: number; settledNaira?: number | null },
 ): Promise<Subscription> {
   const subscription = await prisma.subscription.findFirst({
     where: { flwTransactionRef: txRef },
@@ -513,19 +559,44 @@ export async function activateSubscription(
   // value) can never be found by that lookup, which means the renewal job
   // cannot tell whether the first period was already paid.
   const invoiceNumber = `NC-INV-${subscription.id}-${now.toISOString().slice(0, 10)}`;
-  await prisma.subscriptionInvoice.create({
-    data: {
-      subscriptionId: subscription.id,
-      userId: subscription.userId,
-      invoiceNumber,
-      periodStart: now,
-      periodEnd,
-      amountNaira: subscription.finalAmountNaira,
-      status: "PAID",
-      flwTransactionRef: txRef,
-      flwTransactionId,
-      paidAt: now,
-    },
+  const paidNaira = Number(subscription.finalAmountNaira);
+  const gross = paid?.grossNaira ?? withProcessingFee(paidNaira).totalNaira;
+  // Invoice + ledger in ONE transaction: the money is on the books exactly
+  // when the invoice says PAID. world → platform:revenue (subscriptions are
+  // Newcondo's own income; vendors are paid from revenue when jobs complete).
+  const invoice = await prisma.$transaction(async (tx) => {
+    const inv = await tx.subscriptionInvoice.create({
+      data: {
+        subscriptionId: subscription.id,
+        userId: subscription.userId,
+        invoiceNumber,
+        periodStart: now,
+        periodEnd,
+        amountNaira: subscription.finalAmountNaira,
+        processingFeeNaira: Math.max(0, gross - paidNaira),
+        status: "PAID",
+        flwTransactionRef: txRef,
+        flwTransactionId,
+        paidAt: now,
+      },
+    });
+    if (paidNaira > 0) {
+      await postLedger(tx, {
+        idempotencyKey: `invoice:${inv.id}`,
+        type: "SUBSCRIPTION_COLLECTED",
+        sourceType: "INVOICE",
+        sourceId: inv.id,
+        memo: `${PLAN_CONFIG[subscription.planType].name} subscription — first payment`,
+        legs: collectionLegs({
+          via: "CHECKOUT",
+          receivedKobo: toKobo(gross),
+          settledKobo: paid?.settledNaira != null ? toKobo(paid.settledNaira) : null,
+          dueKobo: toKobo(gross),
+          allocations: [{ account: ACC.revenue, amountKobo: toKobo(paidNaira) }],
+        }),
+      });
+    }
+    return inv;
   });
 
   // Update User.isPremium
@@ -581,6 +652,29 @@ export async function activateSubscription(
     await triggerVirtualAccountCreation(subscription.userId, subscription.id);
   }
 
+  // Referral engine: first settled subscription payment. Fire-and-forget —
+  // a referral failure must never undo an activation; retries are idempotent.
+  if (paidNaira > 0) {
+    const lines = await prisma.propertySubscription.findMany({
+      where: { subscriptionId: subscription.id, status: "ACTIVE", cancelledAt: null },
+      select: { propertyId: true, planType: true },
+    });
+    const items = PLAN_CONFIG[subscription.planType].perProperty
+      ? (lines.length ? lines : [{ propertyId: null, planType: subscription.planType }]).map((l) => ({
+          propertyId: l.propertyId, planCode: l.planType, amountKobo: Number(toKobo(PLAN_CONFIG[l.planType].amountNaira)),
+        }))
+      : [];
+    Referrals.emitReferralEvent({
+      type: "subscription_payment_cleared",
+      sourceType: "SUBSCRIPTION_PAYMENT",
+      sourceId: invoice.id,
+      occurredAt: now.toISOString(),
+      subjectUserId: subscription.userId,
+      cashCollectedKobo: Number(toKobo(paidNaira)),
+      items,
+    });
+  }
+
   return updated;
 }
 
@@ -597,58 +691,25 @@ export async function setPropertyTier(args: {
   plots?: number | null;
   customAmountNaira?: number | null;
 }): Promise<void> {
-  const config = PLAN_CONFIG[args.planType];
-  if (!config.perProperty) throw new Error("That plan is not a per-property plan.");
-  if (config.customPriced && !args.customAmountNaira) {
-    throw new Error("A custom-rate property needs a quoted amount.");
+  // MONEY CORE: this used to upsert a line with no payment, which let any
+  // caller put a property on a paid tier for free. A property WITHOUT a plan
+  // now goes through startPropertyPlan() (prorated charge); one that already
+  // has a plan gets a tier change scheduled for the next renewal.
+  const line = await prisma.propertySubscription.findUnique({ where: { propertyId: args.propertyId }, select: { status: true, cancelledAt: true } });
+  if (!line || line.status !== "ACTIVE" || line.cancelledAt) {
+    throw new Error("This property has no plan yet — choose one from the property page to pay for it.");
   }
-  if (requiresCustomQuote(args.plots) && !config.customPriced) {
-    throw new Error("Properties above our self-serve size need a quote.");
-  }
-
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId: args.userId },
-    select: { id: true },
-  });
-  if (!subscription) throw new Error("No subscription for this account.");
-
-  const property = await prisma.property.findFirst({
-    where: { id: args.propertyId, ownerId: args.userId },
-    select: { id: true },
-  });
-  if (!property) throw new Error("Property not found.");
-
-  await prisma.propertySubscription.upsert({
-    where: { propertyId: args.propertyId },
-    create: {
-      subscriptionId: subscription.id,
-      propertyId: args.propertyId,
-      planType: args.planType,
-      plots: args.plots ?? null,
-      customAmountNaira: args.customAmountNaira ?? null,
-    },
-    update: {
-      planType: args.planType,
-      plots: args.plots ?? null,
-      customAmountNaira: args.customAmountNaira ?? null,
-      cancelledAt: null,
-    },
-  });
+  await changePropertyTier(args.userId, args.propertyId, args.planType);
 }
 
-/** Stop billing for one property. The account subscription survives — an owner
- *  with three properties who drops one still owes for two. */
+/** Stop billing for one property at the end of the paid period. The account
+ *  subscription and the PROPERTY both survive. */
 export async function cancelPropertyTier(userId: string, propertyId: string): Promise<void> {
-  const line = await prisma.propertySubscription.findFirst({
-    where: { propertyId, subscription: { userId }, cancelledAt: null },
-    select: { id: true },
-  });
-  if (!line) throw new Error("That property is not on a plan.");
-  await prisma.propertySubscription.update({
-    where: { id: line.id },
-    data: { cancelledAt: new Date() },
-  });
+  await discontinuePropertyPlan(userId, propertyId);
 }
+
+/** Re-exported so createProperty can attach the onboarding seat. */
+export { allocatePropertyPlan };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 3c. LISTING SUSPENSION — the enforcement behind the grace period
@@ -739,65 +800,29 @@ export async function commissionRateForOwner(ownerId: string): Promise<number> {
 // 4. VIRTUAL ACCOUNT TRIGGER
 // ─────────────────────────────────────────────────────────────────────────────
 async function triggerVirtualAccountCreation(userId: string, subscriptionId: string) {
-  // Check if virtual account already exists
-  const existingVA = await prisma.virtualAccount.findFirst({ where: { userId } });
-  if (existingVA) return;
-
-  const user = await prisma.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { name: true, email: true },
-  });
-
+  // MONEY CORE: the account provider decides. POOLED (today) opens the user's
+  // ledger wallet only — no Flutterwave call, because per-customer static
+  // accounts aren't enabled on our merchant account. PER_USER_VA also mints a
+  // real NUBAN (and needs a real BVN — the old code sent "00000000000").
+  // virtualAccountCreated is set ONLY when a NUBAN exists, so flipping the
+  // mode later and running jobs/provisionVirtualAccounts.ts backfills exactly
+  // the accounts that need one.
   try {
-    // Call Flutterwave to create a virtual account
-    const response = await axios.post(
-      "https://api.flutterwave.com/v3/virtual-account-numbers",
-      {
-        email: user.email,
-        is_permanent: true,
-        bvn: "00000000000", // NOTE: In production, you'll collect real BVN
-        tx_ref: `NC-VA-${userId}-${Date.now()}`,
-        phonenumber: "08000000000", // Replace with user.phone in production
-        firstname: user.name?.split(" ")[0] || "NewCondo",
-        lastname: user.name?.split(" ")[1] || "User",
-        narration: `NewCondo - ${user.name}`,
-      },
-      { headers: { Authorization: `Bearer ${FLUTTERWAVE_SECRET_KEY}` } }
-    );
-
-    const va = response.data.data;
-
-    await prisma.virtualAccount.create({
-      data: {
-        userId,
-        accountNumber: va.account_number,
-        accountName: va.account_name,
-        bankCode: va.bank_name,
-        flutterwaveAccountId: va.order_ref,
-        balance: 0,
-        isActive: true,
-      },
-    });
-
-    // Mark VA as created on subscription
-    await prisma.subscription.update({
-      where: { id: subscriptionId },
-      data: { virtualAccountCreated: true },
-    });
-
-    // Log event
+    const result = await getAccountProvider().provisionWallet(userId);
+    if (!result.virtualAccountCreated) return;
+    await prisma.subscription.update({ where: { id: subscriptionId }, data: { virtualAccountCreated: true } });
     await prisma.subscriptionHistory.create({
       data: {
         subscriptionId,
         userId,
         eventType: SubscriptionEvent.VIRTUAL_ACCOUNT_CREATED,
         triggeredBy: "system",
-        notes: `Virtual account created: ${va.account_number}`,
+        notes: `Virtual account created: ${result.accountNumber}`,
       },
     });
   } catch (err: any) {
-    console.error("Virtual account creation failed:", err.response?.data || err.message);
-    // Non-fatal — log but don't throw. Can be retried.
+    console.error("Wallet provisioning failed:", err.response?.data || err.message);
+    // Non-fatal — the wallet opens lazily on first ledger posting anyway.
   }
 }
 

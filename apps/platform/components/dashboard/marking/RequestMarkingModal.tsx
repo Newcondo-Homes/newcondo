@@ -23,6 +23,7 @@ import { Modal } from "@/components/dashboard/Modal";
 import { DBtn, KV, Banner, CopyField, PhotoGrid } from "@/components/dashboard/primitives";
 import { NCSelect, Field, inputCls } from "@/components/dashboard/NCSelect";
 import { ngn } from "@/lib/dashboard/format";
+import { FLW_FEES, withProcessingFee } from "@/lib/constants/business";
 import { useRouter } from "next/navigation";
 import * as api from "@/lib/api/dashboard";
 import { useFlutterwaveInline } from "@/hooks/useFlutterwaveInline";
@@ -45,6 +46,9 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
   const needsPay = f.method === "BROADCAST" || f.method === "NEWCONDO";
   const fee = f.method === "BROADCAST" ? 20000 : 25000;
+  // ++ Flutterwave's processing cost on top, rounded up (matches the backend).
+  const charge = withProcessingFee(fee);
+  const total = charge.totalNaira;
   const steps = needsPay ? ["Method", "Access details", "Pay"] : ["Method", "Next steps"];
 
   // Real listings awaiting marking. A property the user just created in the
@@ -131,14 +135,14 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
       // No card on file after all → go straight to checkout, no error modal.
       if (!r.ok && r.failureCode === "NO_SAVED_CARD") { payWithInline(); return; }
       setOutcome({
-        ok: r.ok, amount: r.amount || fee, reference: r.reference,
+        ok: r.ok, amount: r.amount || total, reference: r.reference,
         method: f.method as "BROADCAST" | "NEWCONDO",
         cardLabel, failureCode: r.failureCode, failureMessage: r.failureMessage,
         retryWithInline: r.retryWithInline,
       });
     } catch (e) {
       setOutcome({
-        ok: false, amount: fee, reference: "", method: f.method as "BROADCAST" | "NEWCONDO",
+        ok: false, amount: total, reference: "", method: f.method as "BROADCAST" | "NEWCONDO",
         cardLabel, failureCode: "NETWORK", failureMessage: errMsg(e),
       });
     } finally {
@@ -154,7 +158,7 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
       // can open. Kept explicit so it's obvious this is the mock path.
       onClose();
       toast.promise(new Promise((res) => setTimeout(res, 2000)), {
-        loading: `Processing ${ngn(fee)} payment — Flutterwave secure checkout…`,
+        loading: `Processing ${ngn(total)} payment — Flutterwave secure checkout…`,
         success: f.method === "BROADCAST" ? "Marking job is live — broadcasting to verified agents near the property." : "Marking job is live — a Newcondo agent will be assigned within 24 hours.",
         error: "Payment failed — you were not charged",
       });
@@ -182,9 +186,9 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
   const payLabel = charging
     ? "Charging your card…"
     : card?.hasSavedCard
-      ? `Pay ${ngn(fee)} with ${cardLabel}`
-      : `Pay ${ngn(fee)} with Flutterwave`;
-  const payLabelShort = charging ? "Charging…" : `Pay ${ngn(fee)}`;
+      ? `Pay ${ngn(total)} with ${cardLabel}`
+      : `Pay ${ngn(total)} with Flutterwave`;
+  const payLabelShort = charging ? "Charging…" : `Pay ${ngn(total)}`;
 
   return (
     <Modal wide title="Request property marking" sub={steps[step]} onClose={onClose}
@@ -247,9 +251,12 @@ export function RequestMarkingModal({ onClose }: { onClose: () => void }) {
       )}
       {step === 2 && needsPay && (<>
         <div className="mb-1.5 flex items-center justify-between rounded-[14px] bg-surface-sunken px-4 py-[13px] text-[13.5px]"><span>Marking service fee</span><b className="font-mono text-[15px]">{ngn(fee)}</b></div>
+        <div className="mb-1.5 flex items-center justify-between rounded-[14px] bg-surface-sunken px-4 py-[13px] text-[13.5px]"><span>{FLW_FEES.label}</span><b className="font-mono text-[15px]">{ngn(charge.processingFeeNaira)}</b></div>
+        <div className="mb-1.5 flex items-center justify-between px-4 py-[11px] text-[14px] font-bold"><span>Total</span><b className="font-mono text-[15px]">{ngn(total)}</b></div>
         {f.method === "BROADCAST" && <div className="mb-1.5 flex items-center justify-between rounded-[14px] bg-green-wash px-4 py-[13px] text-[13.5px]"><span>Goes to the marking agent (25%)</span><b className="font-mono text-[15px]">{ngn(5000)}</b></div>}
         <KV k="Contact person" v={`${f.contactName} · ${f.contactPhone}`} />
         <KV k="Owner confirm window" v="72 hours after marking" />
+        <KV k="Refunds" v="Marking fees are non-refundable once paid" />
         <KV k="Payment" v={card?.hasSavedCard ? `${cardLabel} — charged instantly` : "Flutterwave — card, transfer or USSD"} />
         <div className="mt-3">
           {card?.hasSavedCard

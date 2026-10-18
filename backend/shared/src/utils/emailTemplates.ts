@@ -640,3 +640,4 @@ ${btn("Go to my dashboard", `https://${COMPANY.domain}/dashboard`)}
 }
 
 export type EmailTemplateName = keyof typeof EmailTemplates;
+export const EmailParts = { shell, btn, kvRows, amountBlock, notice, dash, ngn };

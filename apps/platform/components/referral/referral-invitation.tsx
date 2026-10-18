@@ -16,7 +16,8 @@ import { Reveal, Group, Item, vFade, vCard, vRow, EASE } from "@/components/moti
 import { RButton } from "@/components/ui/button";
 
 /* ============================================================
-   Shape returned by GET /api/referrals/public/:code
+   Shape returned by GET /referrals/public/:code (Referrals.publicInvitation).
+   reward.amount is an "up to" figure computed from the live rules.ts.
    ============================================================ */
 export interface ReferralData {
   valid: boolean;
@@ -65,7 +66,7 @@ const STEPS: { t: string; d: string }[] = [
   },
   {
     t: "Unlock your reward",
-    d: "Subscribe or complete your first transaction, and your welcome credit is released automatically.",
+    d: "Subscribe or complete your first rent payment. Your credit is added once that payment clears, and applies to your subscription automatically.",
   },
 ];
 
@@ -145,7 +146,7 @@ export function ReferralInvitation({ data, code }: { data: ReferralData; code: s
                 Your welcome reward
               </span>
               <span className="font-mono text-[32px] font-semibold leading-[1.05] tracking-[-0.03em] text-green-dark">
-                ₦{reward.amount.toLocaleString()}
+                <span className="mr-1.5 font-sans text-[15px] font-semibold tracking-normal">up to</span>₦{reward.amount.toLocaleString()}
               </span>
               <span className="text-[13.5px] leading-[1.4] text-text-secondary">
                 {reward.description}
@@ -199,8 +200,8 @@ export function ReferralInvitation({ data, code }: { data: ReferralData; code: s
           Ready to get started?
         </h2>
         <p className="mx-auto mt-3.5 max-w-[42ch] text-[15.5px] leading-[1.5] text-text-on-dark-2">
-          Create your account today, get set up in minutes, and your welcome credit unlocks on your
-          first transaction.
+          Create your account today, get set up in minutes, and your credit is added once your first
+          payment clears.
         </p>
         <div className="mt-7 flex flex-col items-center gap-3.5">
           <RButton as="a" href={`/onboarding?ref=${code}`} variant="light" size="md" icon="arrow-right">

@@ -1,27 +1,30 @@
 "use client";
 
 /* ============================================================
-   Dashboard data hooks — TanStack Query.
-   Each hook maps 1:1 to a backend endpoint (named in the TODO above its
-   queryFn). Until the endpoint exists, the hook serves dummy data.
+   Dashboard data — TanStack Query.
 
-   MOBILE FIX — why dummy data sometimes never appeared on phones:
-   the old helper resolved every dummy payload through
-   `new Promise(res => setTimeout(res, 550))`. Mobile browsers
-   aggressively throttle (and in backgrounded tabs, effectively suspend)
-   timers, so that promise could stay pending indefinitely — the query
-   sat in `isLoading` forever and the skeletons never resolved, no
-   matter how many times the page was refreshed.
+   WHY PAGES FELT LIKE THEY RELOADED (and what fixes it):
+   1. Each page fetched its data only when it mounted, so the FIRST visit to
+      every page waited on the network. → Every query is now defined once as
+      an option factory in `dashboardQueries` below, and <DashboardPrefetcher>
+      (components/providers/dashboard-prefetch.tsx) warms the whole role's set
+      the moment the dashboard opens. By the time you click a sidebar link the
+      data is already in the cache: the page paints instantly, no skeleton.
+   2. Revisits are served from cache: staleTime 5 min / gcTime 30 min in
+      QueryProvider, refetchOnWindowFocus off. Stale data refreshes silently in
+      the background — it never blanks the screen.
+   3. Route payloads (RSC) are kept by the Next router cache for 5 min
+      (next.config.ts → experimental.staleTimes), so loading.tsx doesn't flash
+      on a page you've already opened, and sidebar links prefetch fully.
+   4. template.tsx no longer replays a slide-in on every navigation.
 
-   Dummy payloads are static, so they no longer go through a timer at
-   all: `dummyQuery()` hands them to TanStack as `initialData` with
-   `staleTime: Infinity`. Data is present on first render, survives
-   navigation, and can never hang. The artificial delay only remains in
-   live mode, where a real network promise settles on its own.
+   Hooks keep their names, keys and shapes — nothing that imports them
+   changes. Hooks and the prefetcher share the SAME factories, so a
+   prefetched entry is exactly what the page's hook reads.
 
-   HOW TO WIRE THE BACKEND: replace each queryFn body with the real call,
-   e.g. `() => api.get('/properties/my-listings')` using lib/api/client,
-   and delete the DUMMY_* import. Keys and shapes stay the same.
+   MOBILE NOTE (kept): dummy payloads never go through a timer. In dummy mode
+   they are `initialData` with `staleTime: Infinity`; in live mode they are
+   `placeholderData`, so the layout never collapses on a slow connection.
    ============================================================ */
 import { useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import {
@@ -35,25 +38,15 @@ import {
   type Notification, type FlatUnit, type Tenant, type BankAccount, type BrowseFilters, type BrowseResult,
 } from "@/lib/dashboard/data";
 import * as api from "@/lib/api/dashboard";
+import * as money from "@/lib/api/money";
 
-/**
- * Dummy-or-live query.
- *
- * DUMMY MODE (no NEXT_PUBLIC_API_URL): the payload is supplied as
- * `initialData`, so it's on screen the moment the component mounts —
- * no timer, no pending promise, nothing for a mobile browser to throttle.
- * `staleTime: Infinity` stops TanStack re-running the queryFn on every
- * navigation, which is what made pages re-skeleton on each visit.
- *
- * LIVE MODE: normal fetch, with the dummy payload kept as a fallback so
- * the dashboard never blanks while endpoints are still rolling out.
- */
+/** Dummy-or-live query options (see header). */
 function dummyQuery<T>(
   key: readonly unknown[],
   dummy: T,
   call?: () => Promise<T>,
   extra?: Partial<UseQueryOptions<T>>
-) {
+): UseQueryOptions<T> {
   const live = api.isLiveBackend && !!call;
   return {
     queryKey: key,
@@ -66,160 +59,23 @@ function dummyQuery<T>(
         return dummy;
       }
     },
-    // Present immediately in dummy mode; in live mode we let the real
-    // request populate but still show dummy as placeholder so the layout
-    // never collapses to an empty state on a slow mobile connection.
     ...(live ? { placeholderData: dummy } : { initialData: dummy, staleTime: Infinity }),
     ...extra,
   } as UseQueryOptions<T>;
 }
 
-/* -------- properties (owner) --------
-   GET /api/v1/properties/mine — every listing the user owns OR is the
-   listing agent for, including DRAFT ones that haven't been marked yet.
-   A property created in the Create-listing wizard shows up here right
-   away because that flow invalidates ["properties","mine"]. */
-export function useMyProperties() {
-  return useQuery<Property[]>(
-    dummyQuery(["properties", "mine"], DUMMY_PROPERTIES, () => api.getMyProperties() as Promise<Property[]>)
-  );
-}
-/* Listings still awaiting GPS marking — feeds the Property dropdown in the
-   Request-marking wizard. Marked properties are excluded server-side, since
-   re-marking is what double-listing protection prevents.
-   GET /api/v1/properties/unmarked */
-export function useUnmarkedProperties() {
-  return useQuery<Property[]>(
-    dummyQuery(
-      ["properties", "unmarked"],
-      DUMMY_PROPERTIES.filter((p) => !p.marked),
-      () => api.getUnmarkedProperties() as Promise<Property[]>
-    )
-  );
-}
-/* TODO(backend): GET /api/properties/:id/flats */
-export function useFlatUnits(propertyId: string) {
-  return useQuery<FlatUnit[]>(dummyQuery(["flats", propertyId], DUMMY_FLAT_UNITS[propertyId] ?? []));
-}
+/* Agent geolocation for nearby marking jobs. Not part of the prefetch set:
+   it can trigger a permission prompt, which must come from the page. */
+const nearbyJobs = () =>
+  new Promise<AvailableJob[]>((res, rej) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) { rej(new Error("Geolocation unavailable (needs HTTPS)")); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => (api.getAvailableMarkingJobs(pos.coords.latitude, pos.coords.longitude) as Promise<AvailableJob[]>).then(res, rej),
+      () => rej(new Error("Location permission needed for nearby jobs")),
+      { timeout: 8000 }
+    );
+  });
 
-/* -------- agent listings & promotions --------
-   TODO(backend): GET /api/agent/listings · GET /api/agent/promotions · GET /api/agent/sub-agent-requests */
-export function useAgentListings() {
-  return useQuery<AgentListing[]>(dummyQuery(["agent", "listings"], DUMMY_AGENT_LISTINGS));
-}
-export function usePromotions() {
-  return useQuery(dummyQuery(["agent", "promotions"], DUMMY_PROMOTIONS));
-}
-export function useSubAgentRequests() {
-  return useQuery(dummyQuery(["agent", "sub-agent-requests"], DUMMY_SUBAGENT_REQUESTS));
-}
-
-/* -------- marking --------
-   Live: /api/v1/marking/* (marking-service via combined backend). */
-export function useOwnerMarkingJobs() {
-  return useQuery<MarkingJob[]>(
-    dummyQuery(["marking", "owner"], DUMMY_MARKING_JOBS_OWNER, () => api.getOwnerMarkingJobs() as Promise<MarkingJob[]>)
-  );
-}
-export function useAvailableJobs() {
-  // live mode: agent's geolocation → GET /marking/available-jobs?lat&lng.
-  // NOTE: navigator.geolocation is unavailable on insecure origins, so when
-  // testing on a phone over http://<lan-ip>:3000 this always rejects — the
-  // dummy fallback below is what keeps the page populated in that case.
-  return useQuery<AvailableJob[]>(
-    dummyQuery(["marking", "available"], DUMMY_AVAILABLE_JOBS, () =>
-      new Promise<AvailableJob[]>((res, rej) => {
-        if (typeof navigator === "undefined" || !navigator.geolocation) {
-          rej(new Error("Geolocation unavailable (needs HTTPS)"));
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => (api.getAvailableMarkingJobs(pos.coords.latitude, pos.coords.longitude) as Promise<AvailableJob[]>).then(res, rej),
-          () => rej(new Error("Location permission needed for nearby jobs")),
-          { timeout: 8000 }
-        );
-      })
-    )
-  );
-}
-export function useActiveJob() {
-  // Explicit generic: DUMMY_ACTIVE_JOB is non-null, so dummyQuery would infer
-  // T = ActiveJob and the options wouldn't match useQuery<ActiveJob | null>.
-  return useQuery<ActiveJob | null>(dummyQuery<ActiveJob | null>(["marking", "active"], DUMMY_ACTIVE_JOB));
-}
-export function useJobHistory() {
-  return useQuery<JobHistoryItem[]>(dummyQuery(["marking", "history"], DUMMY_JOB_HISTORY));
-}
-
-/* -------- money --------
-   TODO(backend): GET /api/payments/history?role= · /pending-confirmations ·
-   GET /api/wallet · GET /api/virtual-accounts */
-export function usePayments(role: Role) {
-  return useQuery<Tx[]>(dummyQuery(["payments", role], DUMMY_PAYMENTS[role]));
-}
-export function usePendingEscrow(role: Role) {
-  return useQuery(dummyQuery(["escrow", role], role === "OWNER" ? DUMMY_ESCROW : []));
-}
-export function useWallet(role: Role) {
-  // GET /api/v1/payments/wallet — available (RELEASED − withdrawn), locked (HELD), autoPayout
-  return useQuery<Wallet>(dummyQuery(["wallet", role], DUMMY_WALLETS[role], () => api.getWalletApi() as Promise<Wallet>));
-}
-export function useVirtualAccounts(role: Role) {
-  return useQuery<VirtualAccount[]>(dummyQuery(["virtual-accounts", role], DUMMY_VIRTUAL_ACCOUNTS[role]));
-}
-/* TODO(backend): GET /api/rentals/mine (renter) */
-export function useRenterRental() {
-  return useQuery(dummyQuery(["rental", "mine"], DUMMY_RENTER_RENTAL));
-}
-
-/* -------- services / referrals / notifications / analytics -------- */
-export function useServices() {
-  // GET /api/v1/services/overview (vendor-service) — plan + jobs.
-  return useQuery<typeof DUMMY_SERVICES>(
-    dummyQuery(["services"], DUMMY_SERVICES, api.getServicesOverview as () => Promise<typeof DUMMY_SERVICES>)
-  );
-}
-export function useReferrals() {
-  // GET /api/v1/referrals/stats (referral-service)
-  return useQuery<typeof DUMMY_REFERRALS>(
-    dummyQuery(["referrals"], DUMMY_REFERRALS, api.getReferralStats as () => Promise<typeof DUMMY_REFERRALS>)
-  );
-}
-export function useNotifications(role: Role) {
-  // list from GET /api/v1/notifications; real-time arrivals come through
-  // useNotificationStream (SSE) which prepends into this same cache key.
-  // staleTime is finite here (even in dummy mode the bell should reflect
-  // optimistic mark-all-read writes) — handled via setQueryData, so the
-  // Infinity staleTime from dummyQuery is fine and intentional.
-  return useQuery<Notification[]>(dummyQuery(["notifications", role], DUMMY_NOTIFICATIONS[role], api.getNotifications));
-}
-export function useCharts() {
-  return useQuery(dummyQuery(["analytics", "charts"], DUMMY_CHARTS));
-}
-
-/* -------- tenants (owner + listing agent) --------
-   GET /api/v1/properties/:id/tenants — lister-only, ownership enforced
-   server-side in property-service tenantService. */
-export function useTenants(propertyId: string) {
-  return useQuery<Tenant[]>(
-    dummyQuery(["tenants", propertyId], DUMMY_TENANTS[propertyId] ?? [], () => api.getTenants(propertyId))
-  );
-}
-
-/* -------- bank accounts (payout destinations) -------- */
-export function useBankAccounts(role: Role) {
-  return useQuery<BankAccount[]>(dummyQuery(["bank-accounts", role], DUMMY_BANK_ACCOUNTS[role], api.getBankAccounts));
-}
-
-/* -------- public browse grid --------
-   GET /api/v1/properties/browse — PUBLISHED+marked only, Redis-cached 60s. */
-export function useBrowse(f: BrowseFilters) {
-  return useQuery<BrowseResult>(
-    dummyQuery(["browse", f], filterDummyBrowse(f), () => api.browseProperties(f), {
-      placeholderData: (prev: BrowseResult | undefined) => prev,
-    } as Partial<UseQueryOptions<BrowseResult>>)
-  );
-}
 function filterDummyBrowse(f: BrowseFilters): BrowseResult {
   let items = DUMMY_BROWSE;
   if (f.q) { const q = f.q.toLowerCase(); items = items.filter((p) => p.title.toLowerCase().includes(q) || p.area.toLowerCase().includes(q)); }
@@ -229,6 +85,118 @@ function filterDummyBrowse(f: BrowseFilters): BrowseResult {
   if (f.maxPrice != null) items = items.filter((p) => p.price <= f.maxPrice!);
   return { total: items.length, page: 1, pageSize: 24, items };
 }
+
+/* ============================================================
+   THE FACTORIES — one per backend endpoint. Hooks AND the prefetcher use
+   these, so keys and fetchers can never drift apart.
+   ============================================================ */
+export const dashboardQueries = {
+  // GET /properties/mine — owned OR listing-agent, DRAFT included
+  myProperties: () => dummyQuery<Property[]>(["properties", "mine"], DUMMY_PROPERTIES, () => api.getMyProperties() as Promise<Property[]>),
+  // GET /properties/unmarked — feeds the Request-marking dropdown
+  unmarkedProperties: () => dummyQuery<Property[]>(["properties", "unmarked"], DUMMY_PROPERTIES.filter((p) => !p.marked), () => api.getUnmarkedProperties() as Promise<Property[]>),
+  // TODO(backend): GET /properties/:id/flats
+  flatUnits: (propertyId: string) => dummyQuery<FlatUnit[]>(["flats", propertyId], DUMMY_FLAT_UNITS[propertyId] ?? []),
+  // TODO(backend): GET /agent/listings · /agent/promotions · /agent/sub-agent-requests
+  agentListings: () => dummyQuery<AgentListing[]>(["agent", "listings"], DUMMY_AGENT_LISTINGS),
+  promotions: () => dummyQuery(["agent", "promotions"], DUMMY_PROMOTIONS),
+  subAgentRequests: () => dummyQuery(["agent", "sub-agent-requests"], DUMMY_SUBAGENT_REQUESTS),
+  // /marking/* (marking-service)
+  ownerMarkingJobs: () => dummyQuery<MarkingJob[]>(["marking", "owner"], DUMMY_MARKING_JOBS_OWNER, () => api.getOwnerMarkingJobs() as Promise<MarkingJob[]>),
+  availableJobs: () => dummyQuery<AvailableJob[]>(["marking", "available"], DUMMY_AVAILABLE_JOBS, nearbyJobs),
+  activeJob: () => dummyQuery<ActiveJob | null>(["marking", "active"], DUMMY_ACTIVE_JOB),
+  jobHistory: () => dummyQuery<JobHistoryItem[]>(["marking", "history"], DUMMY_JOB_HISTORY),
+  // money — TODO(backend): GET /payments/history?role= · /pending-confirmations
+  payments: (role: Role) => dummyQuery<Tx[]>(["payments", role], DUMMY_PAYMENTS[role]),
+  pendingEscrow: (role: Role) => dummyQuery(["escrow", role], role === "OWNER" ? DUMMY_ESCROW : []),
+  // GET /payments/wallet — ledger balances (available · pending · locked)
+  wallet: (role: Role) => dummyQuery<Wallet>(["wallet", role], DUMMY_WALLETS[role], () => api.getWalletApi() as Promise<Wallet>),
+  virtualAccounts: (role: Role) => dummyQuery<VirtualAccount[]>(["virtual-accounts", role], DUMMY_VIRTUAL_ACCOUNTS[role]),
+  // MONEY CORE — GET /payments/wallet/ledger · /wallet/funding-account
+  walletStatement: (page = 1) => dummyQuery<money.Paged<money.LedgerLine>>(["wallet", "ledger", page], money.DUMMY_STATEMENT, () => money.getWalletStatement(page)),
+  fundingAccount: () => dummyQuery<money.FundingAccount>(["wallet", "funding-account"], money.DUMMY_FUNDING, () => money.getFundingAccount()),
+  // MONEY CORE — GET /payments/billing/summary · /billing/properties/:id
+  billingSummary: () => dummyQuery<money.BillingSummary>(["billing", "summary"], money.DUMMY_BILLING, money.getBillingSummary),
+  propertyPlan: (propertyId: string) =>
+    dummyQuery<money.PropertyPlanState>(["billing", "property", propertyId], { propertyId, periodEnd: null, canUseSeat: false, offPlan: false, line: null }, () => money.getPropertyPlan(propertyId)),
+  // TODO(backend): GET /rentals/mine (renter)
+  renterRental: () => dummyQuery(["rental", "mine"], DUMMY_RENTER_RENTAL),
+  // GET /services/overview (vendor-service)
+  services: () => dummyQuery<typeof DUMMY_SERVICES>(["services"], DUMMY_SERVICES, api.getServicesOverview as () => Promise<typeof DUMMY_SERVICES>),
+  // GET /referrals/stats (legacy page shape) · /referrals/me · /referrals/programs (v2 engine)
+  referrals: () => dummyQuery<typeof DUMMY_REFERRALS>(["referrals"], DUMMY_REFERRALS, api.getReferralStats as () => Promise<typeof DUMMY_REFERRALS>),
+  referralOverview: () => dummyQuery<money.ReferralOverview>(["referrals", "me"], money.DUMMY_REFERRAL_OVERVIEW, money.getReferralOverview),
+  referralPrograms: () => dummyQuery<money.ReferralPrograms>(["referrals", "programs"], money.DUMMY_REFERRAL_PROGRAMS, money.getReferralPrograms),
+  // GET /notifications — SSE (useNotificationStream) prepends into this key
+  notifications: (role: Role) => dummyQuery<Notification[]>(["notifications", role], DUMMY_NOTIFICATIONS[role], api.getNotifications),
+  charts: () => dummyQuery(["analytics", "charts"], DUMMY_CHARTS),
+  // GET /properties/:id/tenants — lister-only, enforced server-side
+  tenants: (propertyId: string) => dummyQuery<Tenant[]>(["tenants", propertyId], DUMMY_TENANTS[propertyId] ?? [], () => api.getTenants(propertyId)),
+  bankAccounts: (role: Role) => dummyQuery<BankAccount[]>(["bank-accounts", role], DUMMY_BANK_ACCOUNTS[role], api.getBankAccounts),
+  // GET /properties/browse — PUBLISHED + marked only, Redis-cached 60s
+  browse: (f: BrowseFilters) =>
+    dummyQuery<BrowseResult>(["browse", f], filterDummyBrowse(f), () => api.browseProperties(f), {
+      placeholderData: (prev: BrowseResult | undefined) => prev,
+    } as Partial<UseQueryOptions<BrowseResult>>),
+};
+
+/** Any factory's options, type-erased. TanStack's option types are invariant
+ *  in their data type (`enabled`/`queryFn` take a typed Query), so
+ *  UseQueryOptions<Property[]> can't widen to UseQueryOptions<unknown>. The
+ *  prefetcher only hands these back to queryClient.prefetchQuery, which
+ *  doesn't care about the data type. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyQueryOptions = UseQueryOptions<any, any, any, any>;
+
+/** What each role's dashboard needs, warmed on entry (dashboard-prefetch.tsx).
+ *  Per-property queries (flats, tenants, plan) are warmed from the property
+ *  list once it lands. Geolocation-backed queries are deliberately excluded. */
+export function prefetchSetFor(role: Role): AnyQueryOptions[] {
+  const q = dashboardQueries;
+  const shared: AnyQueryOptions[] = [q.wallet(role), q.bankAccounts(role), q.payments(role), q.notifications(role), q.referrals(), q.referralOverview(), q.referralPrograms(), q.walletStatement(), q.fundingAccount()];
+  const byRole: Record<Role, AnyQueryOptions[]> = {
+    OWNER: [q.myProperties(), q.unmarkedProperties(), q.ownerMarkingJobs(), q.pendingEscrow(role), q.services(), q.charts(), q.billingSummary(), q.virtualAccounts(role)],
+    AGENT: [q.agentListings(), q.promotions(), q.subAgentRequests(), q.myProperties(), q.unmarkedProperties(), q.ownerMarkingJobs(), q.activeJob(), q.jobHistory(), q.services(), q.charts(), q.virtualAccounts(role)],
+    RENTER: [q.renterRental(), q.browse({})],
+  };
+  return [...byRole[role], ...shared];
+}
+
+/* ============================================================
+   HOOKS — unchanged names, keys and shapes.
+   ============================================================ */
+export const useMyProperties = () => useQuery<Property[]>(dashboardQueries.myProperties());
+export const useUnmarkedProperties = () => useQuery<Property[]>(dashboardQueries.unmarkedProperties());
+export const useFlatUnits = (propertyId: string) => useQuery<FlatUnit[]>(dashboardQueries.flatUnits(propertyId));
+export const useAgentListings = () => useQuery<AgentListing[]>(dashboardQueries.agentListings());
+export const usePromotions = () => useQuery(dashboardQueries.promotions());
+export const useSubAgentRequests = () => useQuery(dashboardQueries.subAgentRequests());
+export const useOwnerMarkingJobs = () => useQuery<MarkingJob[]>(dashboardQueries.ownerMarkingJobs());
+// NOTE: navigator.geolocation is unavailable on insecure origins (http://<lan-ip>:3000),
+// so on a phone over LAN this rejects and the dummy fallback keeps the page populated.
+export const useAvailableJobs = () => useQuery<AvailableJob[]>(dashboardQueries.availableJobs());
+export const useActiveJob = () => useQuery<ActiveJob | null>(dashboardQueries.activeJob());
+export const useJobHistory = () => useQuery<JobHistoryItem[]>(dashboardQueries.jobHistory());
+export const usePayments = (role: Role) => useQuery<Tx[]>(dashboardQueries.payments(role));
+export const usePendingEscrow = (role: Role) => useQuery(dashboardQueries.pendingEscrow(role));
+export const useWallet = (role: Role) => useQuery<Wallet>(dashboardQueries.wallet(role));
+export const useVirtualAccounts = (role: Role) => useQuery<VirtualAccount[]>(dashboardQueries.virtualAccounts(role));
+export const useRenterRental = () => useQuery(dashboardQueries.renterRental());
+export const useServices = () => useQuery<typeof DUMMY_SERVICES>(dashboardQueries.services());
+export const useReferrals = () => useQuery<typeof DUMMY_REFERRALS>(dashboardQueries.referrals());
+export const useNotifications = (role: Role) => useQuery<Notification[]>(dashboardQueries.notifications(role));
+export const useCharts = () => useQuery(dashboardQueries.charts());
+export const useTenants = (propertyId: string) => useQuery<Tenant[]>(dashboardQueries.tenants(propertyId));
+export const useBankAccounts = (role: Role) => useQuery<BankAccount[]>(dashboardQueries.bankAccounts(role));
+export const useBrowse = (f: BrowseFilters) => useQuery<BrowseResult>(dashboardQueries.browse(f));
+
+/* ---- MONEY CORE + referrals v2 ---- */
+export const useWalletStatement = (page = 1) => useQuery(dashboardQueries.walletStatement(page));
+export const useFundingAccount = () => useQuery(dashboardQueries.fundingAccount());
+export const useBillingSummary = () => useQuery(dashboardQueries.billingSummary());
+export const usePropertyPlan = (propertyId: string) => useQuery(dashboardQueries.propertyPlan(propertyId));
+export const useReferralOverview = () => useQuery(dashboardQueries.referralOverview());
+export const useReferralPrograms = () => useQuery(dashboardQueries.referralPrograms());
 
 /* -------- optimistic cache updates -------- */
 export function useCacheUpdate() {

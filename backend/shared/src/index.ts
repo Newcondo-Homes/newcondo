@@ -39,8 +39,19 @@ export * from './constants/index';
 // Utils exports
 export * from './utils/index';
 
+// ++ MONEY CORE — ledger, account providers (POOLED ↔ PER_USER_VA), inbound
+// transfers, reconciliation. See src/money/index.ts.
+export * from './money/index';
+
+// ++ REFERRALS v2 — config-driven, margin-funded engine (namespace to avoid
+// colliding with legacy constants/referralConstants.ts names).
+export * as Referrals from './referrals/index';
+export { ReferralEmailTemplates } from './utils/emailTemplates.referrals';
+
 // i18n exports
 export * from './i18n/index';
+
+
 
 // Version info
 export const SHARED_VERSION = '1.0.0';

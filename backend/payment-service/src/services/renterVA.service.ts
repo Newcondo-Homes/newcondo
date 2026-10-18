@@ -1,43 +1,26 @@
 // backend/payment-service/src/services/renterVA.service.ts
 // ============================================================
-// Renter virtual accounts — the escrow safety layer.
-// Flutterwave needs a BVN to mint a PERMANENT virtual account, which is why
-// the share-link signup form asks for one (compliance + safety).
+// Renter wallet — the escrow safety layer at share-link signup.
 //
-// SCHEMA NOTE: VirtualAccount has no `kind` column. The "main" account is the
-// one with propertyId = null; per-property accounts carry a propertyId.
-// Fields are accountNumber / accountName / bankCode / flutterwaveAccountId.
-//
-// Idempotent: returns the existing account when one is already provisioned.
-// The explicit return type keeps tsc from trying to name Prisma's internal
-// runtime types (TS2742).
+// MONEY CORE: delegates to the account provider.
+//   POOLED      opens the renter's ledger wallet; the "account" returned is
+//               Newcondo's central account (renters pay rent into escrow
+//               through it — the per-payment reference ties it to them).
+//   PER_USER_VA mints the renter's own Flutterwave NUBAN from their BVN.
+// The BVN is still collected and stored in both modes — it is KYC, and it is
+// what PER_USER_VA will need the day the switch flips.
+// Signature and return shape unchanged, so the signup flow needs no edits.
 // ============================================================
-import axios from "axios";
 import { prisma } from "@newcondo/db";
-import { badRequest, notFound, unprocessable, flutterwaveConfig } from "@newcondo/backend-shared";
-
-const FLW_BASE = flutterwaveConfig.FLUTTERWAVE_BASE_URL || "https://api.flutterwave.com/v3";
+import { badRequest, notFound, getAccountProvider, MONEY } from "@newcondo/backend-shared";
 
 export interface EnsuredVirtualAccount {
   created: boolean;
   account: { id: string; accountNumber: string; accountName: string; bankCode: string };
 }
 
-export async function ensureRenterVirtualAccount(opts: {
-  userId: string;
-  bvn?: string;
-}): Promise<EnsuredVirtualAccount> {
-  // main account = the one not tied to a property
-  const existing = await prisma.virtualAccount.findFirst({
-    where: { userId: opts.userId, propertyId: null },
-    select: { id: true, accountNumber: true, accountName: true, bankCode: true },
-  });
-  if (existing) return { created: false, account: existing };
-
-  const user = await prisma.user.findUnique({
-    where: { id: opts.userId },
-    select: { id: true, name: true, email: true, phone: true, bvn: true },
-  });
+export async function ensureRenterVirtualAccount(opts: { userId: string; bvn?: string }): Promise<EnsuredVirtualAccount> {
+  const user = await prisma.user.findUnique({ where: { id: opts.userId }, select: { id: true, bvn: true } });
   if (!user) throw notFound("User not found");
 
   const bvn = opts.bvn ?? user.bvn;
@@ -47,23 +30,14 @@ export async function ensureRenterVirtualAccount(opts: {
   // TODO(security): encrypt BVN at rest (pgcrypto or app-level KMS envelope).
   if (opts.bvn && !user.bvn) await prisma.user.update({ where: { id: user.id }, data: { bvn: opts.bvn } });
 
-  const res = await axios.post(
-    `${FLW_BASE}/virtual-account-numbers`,
-    { email: user.email, bvn, is_permanent: true, tx_ref: `NC-VA-${user.id}`, narration: `${user.name ?? "Newcondo user"} — Newcondo` },
-    { headers: { Authorization: `Bearer ${flutterwaveConfig.FLUTTERWAVE_SECRET_KEY}` }, timeout: 20_000 }
-  );
-  if (res.data?.status !== "success") throw unprocessable("Could not create your secure payment account — check your BVN");
-
-  const d = res.data.data as { account_number: string; bank_name: string; flw_ref?: string; order_ref?: string };
-  const account = await prisma.virtualAccount.create({
-    data: {
-      userId: user.id,
-      accountNumber: d.account_number,
-      accountName: user.name ?? user.email,
-      bankCode: d.bank_name, // Flutterwave returns the bank name here; store as the code/label
-      flutterwaveAccountId: d.flw_ref ?? d.order_ref ?? null,
-    },
-    select: { id: true, accountNumber: true, accountName: true, bankCode: true },
-  });
-  return { created: true, account };
+  const result = await getAccountProvider().provisionWallet(opts.userId, { bvn });
+  if (result.mode === "PER_USER_VA" && result.accountNumber) {
+    const va = await prisma.virtualAccount.findUnique({
+      where: { accountNumber: result.accountNumber },
+      select: { id: true, accountNumber: true, accountName: true, bankCode: true },
+    });
+    if (va) return { created: result.virtualAccountCreated, account: va };
+  }
+  const c = MONEY.centralAccount;
+  return { created: false, account: { id: "central", accountNumber: c.accountNumber, accountName: c.accountName, bankCode: c.bankName } };
 }

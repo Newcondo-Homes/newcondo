@@ -24,7 +24,7 @@
 import { randomBytes } from "crypto";
 import axios from "axios";
 import { prisma } from "@newcondo/db";
-import { badRequest, notFound, flutterwaveConfig, MARKING } from "@newcondo/backend-shared";
+import { badRequest, notFound, flutterwaveConfig, MARKING, withProcessingFee, settledFromFlutterwave } from "@newcondo/backend-shared";
 import { confirmMarkingFeePaid } from "./markingPayment.service";
 
 type PaidMethod = "BROADCAST" | "NEWCONDO";
@@ -139,11 +139,15 @@ export async function chargeMarkingWithSavedCard(opts: {
     where: { userId: opts.requesterId },
     select: { flwCustomerToken: true },
   });
+  // ++ FLW FEES — same gross-up as the Inline path: fee + Flutterwave's cost,
+  // rounded up to the naira. `amount` in every result is what the card pays.
+  const charge = withProcessingFee(fee);
+
   if (!sub?.flwCustomerToken) {
     return {
       ok: false,
       reference: "",
-      amount: fee,
+      amount: charge.totalNaira,
       failureCode: "NO_SAVED_CARD",
       failureMessage: "No saved card on file.",
       retryWithInline: true,
@@ -160,7 +164,8 @@ export async function chargeMarkingWithSavedCard(opts: {
       userId: opts.requesterId,
       paymentType: "PROPERTY_MARKING",
       status: "PENDING",
-      amount: fee,
+      amount: charge.totalNaira,
+      processingFee: charge.processingFeeNaira,
       flutterwaveRef: reference,
       description,
       meta: {
@@ -182,7 +187,7 @@ export async function chargeMarkingWithSavedCard(opts: {
       {
         token: sub.flwCustomerToken,
         email: opts.requesterEmail,
-        amount: fee,
+        amount: charge.totalNaira,
         currency: "NGN",
         tx_ref: reference,
         narration: description,
@@ -206,7 +211,7 @@ export async function chargeMarkingWithSavedCard(opts: {
     return {
       ok: false,
       reference,
-      amount: fee,
+      amount: charge.totalNaira,
       failureCode: code,
       failureMessage: message,
       // A declined/expired card is worth retrying with a DIFFERENT card via
@@ -217,6 +222,13 @@ export async function chargeMarkingWithSavedCard(opts: {
 
   // Success — go live now rather than waiting on the webhook. Idempotent, so
   // the webhook's later call is a harmless no-op.
-  const confirmed = await confirmMarkingFeePaid(reference);
-  return { ok: true, reference, amount: fee, jobId: confirmed?.jobId };
+  const d = (raw as { data?: Record<string, unknown> })?.data;
+  const settled = settledFromFlutterwave(d);
+  const confirmed = await confirmMarkingFeePaid(reference, {
+    amountNaira: Number(d?.amount ?? charge.totalNaira),
+    settledNaira: settled != null ? Number(settled) / 100 : null,
+    via: "CHECKOUT",
+    transactionId: d?.id != null ? String(d.id) : null,
+  });
+  return { ok: true, reference, amount: charge.totalNaira, jobId: confirmed?.jobId };
 }

@@ -21,31 +21,34 @@ export const REFUND_TOC: TocItem[] = [
 
 export const REFUND_META: MetaChip[] = [
   { icon: "calendar-check", label: "Effective", value: "22 July 2025" },
-  { icon: "history", label: "Last updated", value: "22 July 2025" },
+  { icon: "history", label: "Last updated", value: "10 October 2026" },
   { icon: "shield-check", label: "", value: "NDPA 2023 compliant", green: true },
   { icon: "clock", label: "", value: "~8 min read" },
 ];
 
 /* ---- 02 Non-refundable fees ---- */
 export const NON_REFUNDABLE: { who: string; title: string; body: string }[] = [
-  { who: "Owners / Agents", title: "Subscription fees", body: "Cover advanced tools — rent tracking, property promotion, listing highlights, and analytics." },
-  { who: "All users", title: "Platform service fees", body: "Charged per transaction for platform maintenance and security." },
-  { who: "All users", title: "Transaction charges", body: "Reflect the payment gateway's processing cost on each transaction." },
+  { who: "Owners / Agents / Renters", title: "Subscription fees", body: "Every subscription charge — first payment and each renewal, monthly or annual, including Premium renter plans. Cancelling stops the next renewal; the current period is not refunded or prorated." },
+  { who: "Owners", title: "Property plan fees", body: "The service plan on each property, including prorated charges when a property is added mid-period. Stopping a property's monthly service takes effect at the end of the paid period; nothing already paid is refunded." },
+  { who: "Owners / Agents", title: "Marking fees", body: "Broadcast and Newcondo-managed marking service fees, once paid — including where a job is closed unconfirmed after the confirmation windows lapse." },
+  { who: "Owners", title: "Vendor & service fees", body: "Fumigation, waste management, inspection, repair and other vendor services booked or charged through the platform." },
+  { who: "Renters", title: "Renter service fee", body: "The Newcondo service fee charged on top of rent." },
+  { who: "All users", title: "Payment processing fees", body: "The Flutterwave processing cost passed on at checkout (shown as its own line). Flutterwave does not return it on a refund." },
+  { who: "All users", title: "Transfer fees", body: "The Flutterwave fee deducted from withdrawals and payouts to your bank." },
+  { who: "Renters", title: "Refund cost", body: "Where rent is refunded, the cost Flutterwave charges Newcondo to reverse and send it back (see section 03)." },
   { who: "Renters", title: "Inspection fees", body: "Paid directly to Owners / Agents and non-refundable once paid." },
 ];
 
 /* ---- 03 Renter refundable transactions ---- */
 export const RENTER_REFUND_ROWS: [type: string, window: string, amount: string, conditions: string][] = [
-  ["Rent", "48h post-payment", "100%", "Excludes service & transaction fees"],
-  ["Advance notice deposit", "48h post-payment", "100%", "Must be cancelled via the platform"],
-  ["Commission", "48h post-payment", "100%", "Linked to the cancelled rent"],
+  ["Rent", "Within the 24-hour confirmation window", "Rent less the refund cost", "A reasonable dispute, raised before the window closes, that Newcondo upholds after review. The rent must still be held in escrow."],
 ];
 
 /* ---- 05 Resolution timelines ---- */
 export const TIMELINE_ROWS: [type: string, time: string, method: string][] = [
-  ["Enquiry acknowledgement", "1 business day", "Email or in-app"],
-  ["Standard refund", "3–5 business days", "Original payment method"],
-  ["Force majeure refund", "7–10 business days", "Original payment method"],
+  ["Dispute acknowledgement", "1 business day", "Email or in-app"],
+  ["Dispute decision", "Within 3 business days", "Email or in-app"],
+  ["Rent refund (dispute upheld)", "Initiated within 3–5 business days of the decision", "Original payment method"],
 ];
 
 /* ---- 06 Chargeback process ---- */

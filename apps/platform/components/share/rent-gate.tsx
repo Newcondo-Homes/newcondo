@@ -22,7 +22,7 @@ import { toast } from "@newcondo/ui";
 import { useFlutterwaveInline } from "@/hooks/useFlutterwaveInline";
 import * as api from "@/lib/api/dashboard";
 import { ngn } from "@/lib/dashboard/format";
-import { PAYMENTS } from "@/lib/constants/business";
+import { PAYMENTS, FLW_FEES, withProcessingFee } from "@/lib/constants/business";
 
 export interface RentGateProperty {
   id: string; title: string; price: number; shareCode: string;
@@ -41,6 +41,9 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
   const flw = useFlutterwaveInline();
   const rent = vacant.find((u) => u.label === unit)?.price ?? property.price;
   const fee = Math.round(rent * PAYMENTS.renterServiceFeeRate);
+  // Flutterwave's cost, passed through and rounded up — same maths the
+  // backend quote uses (constants/fees.ts), so the totals always agree.
+  const charge = withProcessingFee(rent + fee);
   const afterAuth = () => setStep(vacant.length > 1 && !unit ? "flat" : "review");
 
   const doSignin = async () => {
@@ -48,7 +51,7 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
     setBusy(true);
     try {
       if (api.isLiveBackend) {
-        const { signIn } = await import("@newcondo/auth/client");
+        const { signIn } = await import("@newcondo/auth");
         const res = await signIn("credentials", { ...login, redirect: false });
         if (res?.error) throw new Error("Email or password is not correct");
         // Existing accounts may predate virtual accounts — ensure one exists
@@ -70,7 +73,7 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
         // account from the BVN (payment-service ensureRenterVirtualAccount).
         const apiClient = (await import("@/lib/api/client")).default;
         await apiClient.post("/auth/register", { name: f.name, email: f.email, phone: f.phone, password: f.password, bvn: f.bvn, role: "RENTER", viaShareCode: property.shareCode });
-        const { signIn } = await import("@newcondo/auth/client");
+        const { signIn } = await import("@newcondo/auth");
         await signIn("credentials", { email: f.email, password: f.password, redirect: false });
       } else await new Promise((r) => setTimeout(r, 1400));
       toast.success("Account ready", { description: "Your secure escrow account has been created." });
@@ -157,7 +160,7 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
               <button disabled={!unit} onClick={() => setStep("review")} className={cx("mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-ink py-3.5 text-[14.5px] font-semibold text-cream hover:bg-black", !unit && "opacity-50")}>Continue<Icon name="arrow-right" size={15} strokeWidth={2.2} /></button>
             </>)}
             {(step === "review" || step === "paying") && (<>
-              {[["Flat", unit || "Main unit"], ["Rent (1 year)", ngn(rent)], [`Newcondo service fee (${PAYMENTS.renterServiceFeeRate * 100}%)`, ngn(fee)], ["Total", ngn(rent + fee)]].map(([k, v], i, a) => (
+              {[["Flat", unit || "Main unit"], ["Rent (1 year)", ngn(rent)], [`Newcondo service fee (${PAYMENTS.renterServiceFeeRate * 100}%)`, ngn(fee)], [FLW_FEES.label, ngn(charge.processingFeeNaira)], ["Total", ngn(charge.totalNaira)]].map(([k, v], i, a) => (
                 <div key={k} className={cx("flex items-center justify-between gap-4 border-b border-border-hair py-2.5 text-[13.5px]", i === a.length - 1 && "border-b-0 font-bold")}>
                   <span className="text-text-tertiary">{k}</span><span className="font-mono font-semibold">{v}</span>
                 </div>
@@ -167,7 +170,7 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
                 <div className="rounded-xl bg-green-wash px-3.5 py-2.5 text-green-dark"><Icon name="shield-check" size={13} className="mr-1.5 inline" />Paying locks this flat instantly — no one can double-book it while your window runs.</div>
               </div>
               <button disabled={step === "paying"} onClick={pay} className={cx("mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-green py-3.5 text-[14.5px] font-semibold text-white hover:bg-green-dark", step === "paying" && "opacity-60")}>
-                {step === "paying" ? "Opening secure checkout…" : `Pay ${ngn(rent + fee)} with Flutterwave`}
+                {step === "paying" ? "Opening secure checkout…" : `Pay ${ngn(charge.totalNaira)} with Flutterwave`}
               </button>
             </>)}
           </motion.div>

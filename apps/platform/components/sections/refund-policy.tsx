@@ -31,11 +31,17 @@ import {
   FRAUD_ROWS,
   REFUND_CONTACT,
 } from "@/lib/refund-data";
+import { refundBreakdown } from "@/lib/constants/business";
+import { ngn } from "@/lib/dashboard/format";
+
+/* Worked example — computed from the same function the backend refunds with,
+   so the policy can never quote a different figure. */
+const EXAMPLE = refundBreakdown(1_000_000);
 
 const CLAUSES = [
   { icon: "scale", title: "Binding arbitration", body: "All cancellation and refund disputes are resolved by confidential individual arbitration — in lieu of class-action litigation — under the Nigerian Arbitration and Conciliation Act." },
   { icon: "file-pen", title: "Statutory waiver", body: "You waive statutory rights to the extent permitted under Nigerian law, in exchange for the platform-managed refund protections set out here." },
-  { icon: "timer", title: "Cancellation deadlines", body: "You agree to adhere to platform-specific cancellation deadlines and refund conditions. Requests outside these windows are honoured only in documented force-majeure cases." },
+  { icon: "timer", title: "Cancellation deadlines", body: "You agree that rent is refundable only through a dispute raised inside the 24-hour confirmation window, and that every other fee is final. Requests outside the window are not honoured." },
 ];
 
 export function RefundPolicy() {
@@ -48,8 +54,9 @@ export function RefundPolicy() {
       toc={REFUND_TOC}
       lead={
         <>
-          This policy governs every monetary transaction on Newcondo — rent, commission, third-party service payments,
-          subscriptions, listing fees, and processing costs — and sets out exactly what is refundable, when, and how.
+          This policy governs every monetary transaction on Newcondo — rent, subscriptions, property plans, marking, vendor
+          services, and processing costs. In short: the only thing Newcondo refunds is rent, after a valid dispute inside the
+          24-hour confirmation window. Every fee is final.
         </>
       }
     >
@@ -62,8 +69,9 @@ export function RefundPolicy() {
           transaction processing costs.
         </P>
         <Callout tone="green" icon="circle-check">
-          <B>At a glance.</B> Rent, deposits, and commission are fully refundable within <B>48 hours</B> of payment (excluding service and
-          transaction fees). After that window, refunds apply only in documented force-majeure cases.
+          <B>At a glance.</B> Newcondo refunds <B>rent only</B>. A renter who raises a reasonable dispute within the <B>24-hour confirmation
+          window</B>, and has it upheld, gets their rent back less what Flutterwave charges to reverse and send it. <B>Subscriptions, property
+          plans, marking fees, vendor and service fees, the renter service fee, and payment-processing and transfer fees are never refunded.</B>
         </Callout>
         <P>
           By using the platform, all users — Renters, Property Owners, Agents, and Third-Party Service Providers — expressly agree to the
@@ -91,13 +99,13 @@ export function RefundPolicy() {
       {/* 02 */}
       <DocSection id="non-refundable" label="02 Non-refundable">
         <SecHead n="02">Non-refundable fees</SecHead>
-        <P>The following fees are non-refundable under any circumstances unless a refund is required by law:</P>
+        <P>The following are non-refundable in all circumstances, including cancellation, account closure, or a change of mind, unless a refund is required by law:</P>
         <DocTable
           head={["Fee", "Applies to", "What it covers"]}
           rows={NON_REFUNDABLE.map((f) => [f.title, f.who, f.body])}
         />
         <Callout tone="note" icon="info">
-          All fees are considered final except in cases of a proven VAT calculation error or another mandatory legal adjustment.
+          All fees are final. The only exceptions are a proven billing error by Newcondo (for example, charging you twice for the same thing), which we correct, or a refund that Nigerian law requires.
         </Callout>
       </DocSection>
 
@@ -109,14 +117,36 @@ export function RefundPolicy() {
           head={["Transaction", "Refund window", "Amount", "Conditions"]}
           rows={RENTER_REFUND_ROWS.map(([t, w, a, c]) => [t, w, <B>{a}</B>, c])}
         />
+        <H3>How a rent refund is calculated</H3>
+        <P>
+          Flutterwave does not return its transaction fee when a payment is refunded, and charges Newcondo again to reverse and
+          send the money back. That cost is deducted from the refund and rounded up to the next naira:
+        </P>
+        <Bullets
+          items={[
+            <><B>Reversal fee —</B> Flutterwave&apos;s transaction cost on the refunded rent (2% plus 7.5% VAT, plus ₦50 stamp duty on ₦10,000 or more).</>,
+            <><B>Transfer fee —</B> Flutterwave&apos;s fee for sending money out of Newcondo (₦11, ₦27 or ₦54 depending on the amount, VAT included).</>,
+          ]}
+        />
+        <DocTable
+          head={["Example", "Amount"]}
+          rows={[
+            ["Rent paid", ngn(EXAMPLE.rentNaira)],
+            ["Reversal fee", `− ${ngn(EXAMPLE.reversalFeeNaira)}`],
+            ["Transfer fee", `− ${ngn(EXAMPLE.transferFeeNaira)}`],
+            [<B key="r">Refunded to you</B>, <B key="v">{ngn(EXAMPLE.refundNaira)}</B>],
+          ]}
+        />
         <Callout tone="note" icon="clock">
-          Refunds requested outside this window may only be honoured in documented <DocLink href="#force-majeure">force-majeure</DocLink> cases.
+          The service fee and payment-processing fee you paid with the rent are not refunded. Once the confirmation window closes, rent is
+          released to the owner and cannot be refunded through Newcondo.
         </Callout>
         <H3>Owners &amp; Agents</H3>
         <Bullets
           items={[
-            <><B>Payout hold —</B> the platform holds rent and commission payouts for <B>72 hours</B> after the renter pays, to allow a dispute window.</>,
-            <><B>If a renter cancels within 48 hours —</B> the Owner / Agent forfeits the payout, and the platform retains its service and transaction fees.</>,
+            <><B>Payout hold —</B> rent is held in escrow for the <B>24-hour</B> confirmation window after the renter pays, so a dispute can be raised.</>,
+            <><B>If a renter&apos;s dispute is upheld —</B> the rent is refunded to the renter and the Owner, listing agent and sub-agent receive no payout or commission on it. Newcondo keeps its service and processing fees.</>,
+            <><B>Your own fees are final —</B> subscriptions, property plans, marking and vendor fees you have paid are not refunded, whatever happens to a tenancy.</>,
           ]}
         />
       </DocSection>
@@ -134,8 +164,9 @@ export function RefundPolicy() {
         <H3>Owners &amp; Agents</H3>
         <Bullets
           items={[
-            <><B>Cancelling a renter post-payment —</B> the renter receives a full refund (rent + commission) within <B>24 hours</B> of payout receipt.</>,
-            <><B>Subscription cancellation —</B> non-prorated; access continues until the end of the current billing cycle.</>,
+            <><B>Cancelling a renter post-payment —</B> if it happens inside the confirmation window, the renter&apos;s rent is refunded on the same basis as an upheld dispute (rent less the refund cost).</>,
+            <><B>Subscription cancellation —</B> stops the next renewal. Nothing already paid is refunded or prorated, and access continues until the end of the current billing period.</>,
+            <><B>Stopping a property&apos;s monthly service —</B> takes effect at the end of the paid period. The property stays in your account; nothing already paid is refunded.</>,
           ]}
         />
         <Callout tone="warn" icon="triangle-alert">
@@ -147,13 +178,14 @@ export function RefundPolicy() {
       <DocSection id="workflow" label="05 Workflow">
         <SecHead n="05">Refund request workflow</SecHead>
         <P>
-          Submit requests through your user dashboard within <B>48 hours</B> of payment (<B>72 hours</B> for force-majeure cases).
+          Raise a dispute from your dashboard <B>before the 24-hour confirmation window closes</B>. Tell us what is wrong (for example, the
+          property doesn&apos;t match the listing, or you were denied access) and attach evidence. Disputes raised after the window closes are not accepted.
         </P>
         <H3>Required documentation</H3>
         <Bullets
           items={[
             "Payment receipts for the transaction in question.",
-            <>Official proof of force majeure where applicable (e.g. NEMA orders, government lockdown directives).</>,
+            <>Evidence for the dispute — photos, videos, messages, or anything showing the problem.</>,
           ]}
         />
         <H3>Resolution timelines</H3>
@@ -183,15 +215,13 @@ export function RefundPolicy() {
       {/* 07 */}
       <DocSection id="force-majeure" label="07 Force majeure">
         <SecHead n="07">Force majeure exceptions</SecHead>
-        <P>Refunds outside the standard window may be granted only for genuinely uncontrollable events:</P>
-        <Bullets
-          items={[
-            <><B>Natural disasters —</B> such as floods or earthquakes.</>,
-            <><B>Government actions —</B> such as lockdowns or evacuations. Proof must be provided from a credible source (e.g. NEMA or the State Government).</>,
-          ]}
-        />
+        <P>
+          Events outside anyone&apos;s control — such as floods, other natural disasters, or government lockdowns and evacuations — do not
+          create a right to a refund. They do not extend the confirmation window, and they do not make any fee refundable.
+        </P>
         <Callout tone="warn" icon="circle-x">
-          <B>Non-qualifying.</B> Transport strikes, poor weather forecasts, and similar foreseeable disruptions do not qualify for an out-of-window refund.
+          <B>Rent still in escrow.</B> If such an event stops you inspecting the property, raise a dispute inside the window as usual. It is
+          reviewed and, if upheld, refunded on the same basis as any other dispute.
         </Callout>
       </DocSection>
 

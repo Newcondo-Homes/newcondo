@@ -17,3 +17,5 @@ export {
   type MarkingChargeResult,
   type ChargeFailureCode,
 } from "./services/markingTokenizedCharge.service";
+// ++ MONEY CORE — marking-fee ledger (hold / settle / lapse drip)
+export { dripLapsedMarkingPayouts, settleMarkingJob, holdMarkerPayout, bookMarkingFee } from "./services/markingLedger.service";

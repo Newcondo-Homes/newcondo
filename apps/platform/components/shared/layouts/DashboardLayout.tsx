@@ -3,12 +3,15 @@
 /* ============================================================
    DashboardLayout — the client shell rendered by app/(dashboard)/layout.tsx
    after the server-side auth gate. Wires: TanStack QueryProvider,
-   RoleProvider (seeded from the session user), Sidebar, Topbar, Toaster.
+   RoleProvider (seeded from the session user), DashboardPrefetcher, Sidebar,
+   Topbar, Toaster. This layout PERSISTS across dashboard navigation, so the
+   QueryClient (and its cache) lives for the whole session.
    ============================================================ */
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { RoleProvider } from "@/components/providers/role-provider";
+import { DashboardPrefetcher } from "@/components/providers/dashboard-prefetch";
 import { Toaster } from "@newcondo/ui";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { Topbar } from "@/components/dashboard/Topbar";
@@ -40,6 +43,9 @@ export default function DashboardLayout({ user, children }: { user?: SessionUser
           no identity fields, so it fell through to DUMMY_USERS and every screen
           showed the placeholder name and email. */}
       <RoleProvider initialRole={initialRole} sessionUser={user ?? undefined}>
+        {/* Loads every page's data + route once, on entry — page switches
+            then paint straight from cache. */}
+        <DashboardPrefetcher />
         <div className="flex min-h-screen bg-nc-background text-text-primary font-sans">
           {/* mobile scrim + drawer */}
           <AnimatePresence>

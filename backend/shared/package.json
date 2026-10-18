@@ -30,8 +30,8 @@
       "import": "./dist/config/index.js"
     },
     "./constants": {
-      "types": "./dist/constants/business.d.ts",
-      "default": "./dist/constants/business.js"
+      "types": "./dist/constants/frontend.d.ts",
+      "default": "./dist/constants/frontend.js"
     },
     "./i18n": {
       "types": "./dist/i18n/index.d.ts",
@@ -41,12 +41,17 @@
     "./subscriptions":{
       "types": "./dist/constants/subscriptionPlans.d.ts",
       "default": "./dist/constants/subscriptionPlans.js"
+    },
+    "./constants/money": {
+      "types": "./dist/constants/money.d.ts",
+      "default": "./dist/constants/money.js"
     }
   },
   "scripts": {
     "build": "tsc",
     "dev": "nodemon --exec ts-node src/index.ts",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "tsx --test src/referrals/__tests__/*.test.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1094.0",
@@ -101,7 +106,8 @@
     "@types/sharp": "^0.32.0",
     "@types/speakeasy": "^2.0.10",
     "@types/uuid": "^9.0.7",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.2",
+    "tsx": "^4.19.2"
   },
   "engines": {
     "node": ">=18.0.0",

@@ -20,6 +20,8 @@ export * from './rewardTiers';
 export * from './timeSlots';
 export * from './virtualAccount';
 export * from './subscriptionPlans'
+export * from './money'
+export * from './fees'
 
 export {
   COMPANY,

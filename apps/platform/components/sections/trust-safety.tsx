@@ -91,7 +91,7 @@ export function TrustSafety() {
         <Bullets
           items={[
             <><B>Held, not handed over —</B> funds sit with our regulated payment partner, not with an individual. Newcondo is not a bank and does not itself hold your funds.</>,
-            <><B>A dispute window —</B> payouts are held for 72 hours so a cancellation or refund claim can be raised.</>,
+            <><B>A confirmation window —</B> rent is held for 24 hours so a renter can raise a dispute. Rent is the only payment ever refunded; fees are final.</>,
             <><B>Released fairly —</B> the balance is released to the owner only once the window closes with no valid dispute.</>,
           ]}
         />

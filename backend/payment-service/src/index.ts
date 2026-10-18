@@ -17,7 +17,7 @@ export {
   changeAccountType,
   resetPendingOnboarding,
 } from "./services/onboarding.service";
-export { flutterwaveWebhook } from "./webhooks";
+export { flutterwaveWebhook, registerChargeHandler, type VerifiedPayment } from "./webhooks";
 
 // ---- dashboard: payout bank accounts (user-managed; VAs are auto-created) ----
 export {
@@ -34,14 +34,26 @@ export { buildReceiptData, generateReceiptPdf } from "./services/receipt.service
 export { quoteRent, initiateRent, confirmRentPaid } from "./services/rentCheckout.service";
 
 // ---- escrow release + commission split (single money-splitting truth) ----
-export { releaseEscrowAndSplit, releaseExpiredEscrows } from "./services/commissionSplit.service";
+export { releaseEscrowAndSplit, releaseExpiredEscrows, refundHeldRent } from "./services/commissionSplit.service";
 
 // ---- bank-change OTP gate + renter escrow virtual account ----
 export { requestBankOtp, verifyBankOtp } from "./services/bankAccount.service";
 export { ensureRenterVirtualAccount } from "./services/renterVA.service";
 
 // ---- wallet: balances, withdraw, auto-payout ----
-export { getWallet, withdraw, setAutoPayout, settleWithdrawal } from "./services/wallet.service";
+export { getWallet, withdraw, setAutoPayout, settleWithdrawal, getWalletStatement, getFundingAccount, runAutoPayouts, quoteWithdrawal } from "./services/wallet.service";
 
 // ---- platform app review: comped subscription code (Meta / Google / Apple) ----
 export { redeemReviewAccess, revokeReviewAccessGrants } from "./services/reviewAccess.service";
+// ---- MONEY CORE: per-property plans (first listing on the onboarding seat,
+//      prorated add-ons, discontinue/resume, scheduled tier changes) ----
+export {
+  allocatePropertyPlan, quotePropertyPlan, startPropertyPlan, activatePropertyPlan,
+  discontinuePropertyPlan, resumePropertyPlan, changePropertyTier,
+  applyScheduledLineChanges, assertPropertyHasPlan, commissionRateForProperty,
+  billingSummary, propertyPlanFor,
+} from "./services/propertyPlan.service";
+
+// ---- MONEY CORE: vendor payouts + scheduled jobs ----
+export { payVendorForJob, settleVendorPayout, payDueVendorJobs } from "./services/vendorPayout.service";
+export { startMoneyCron } from "./jobs/moneyCron";

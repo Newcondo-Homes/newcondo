@@ -8,6 +8,7 @@ import type { Router as ExpressRouter } from "express";
 import { authRouter } from "./auth";
 import { paymentRouter } from "./payments";
 import { paymentsDashboardRouter } from "./payments.dashboard"; // bank accounts, receipts, rent checkout
+import { paymentsBillingRouter } from "./payments.billing";     // MONEY CORE: property plans, ledger, admin money
 import { propertyRouter } from "./properties";                  // browse, tenants, invite links
 import { notificationRouter } from "./notifications";           // list, mark-read, SSE stream
 import { collabRouter } from "./collab";                        // share links, promotions, agent invites
@@ -35,6 +36,10 @@ const mountRoute = (path: string, routerInstance: Router, serviceName: string) =
 mountRoute("/auth", authRouter, "Auth Service");
 mountRoute("/payments", paymentRouter, "Payment Service");
 mountRoute("/payments", paymentsDashboardRouter, "Payment Service (dashboard)");
+mountRoute("/payments", paymentsBillingRouter, "Payment Service (billing + ledger)");
+// Webhooks: /api/v1/webhooks/* is mounted in app.ts (before the JSON parser);
+// /payments/webhooks/flutterwave lives in payments.ts. Both run the same
+// dispatcher (payment-service flutterwave.webhook.ts).
 mountRoute("/properties", propertyRouter, "Property Service");
 mountRoute("/notifications", notificationRouter, "Notification Service");
 mountRoute("/", collabRouter, "Collaboration (share/promote/invite)");
@@ -58,7 +63,7 @@ mountRoute("/", metaDataDeletionRouter, "Meta data-deletion callback");
 router.get("/status", (req, res) => {
   res.json({
     success: true,
-    services: { auth: "active", properties: "active", payments: "active", notifications: "active", bookings: "active", marking: "active", admin: "pending", referrals: "pending", analytics: "pending" },
+    services: { auth: "active", properties: "active", payments: "active", notifications: "active", bookings: "active", marking: "active", admin: "pending", referrals: "active", analytics: "pending" },
     timestamp: new Date().toISOString(),
   });
 });

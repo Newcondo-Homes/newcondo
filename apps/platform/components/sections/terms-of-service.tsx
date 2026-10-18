@@ -199,14 +199,15 @@ export function TermsOfService() {
         <Bullets
           items={[
             <><B>Platform service fees —</B> charged per transaction for maintenance, security, and secure-payment handling.</>,
-            <><B>Transaction charges —</B> reflect the payment gateway&apos;s processing cost on each transaction.</>,
-            <><B>Subscriptions —</B> Owners and Agents may subscribe for advanced tools; subscriptions renew until cancelled and are billed per cycle.</>,
+            <><B>Payment processing &amp; transfer fees —</B> our payment partner Flutterwave&apos;s cost is passed on to you: added to payments at checkout (shown as its own line, rounded up to the naira) and deducted from withdrawals and payouts.</>,
+            <><B>Subscriptions &amp; property plans —</B> Owners and Agents subscribe for advanced tools; Owners choose a plan for each property. Both renew until cancelled and are billed per cycle.</>,
+            <><B>Marking &amp; vendor fees —</B> paid marking methods and vendor services (fumigation, waste, inspection, repairs) are charged when booked.</>,
             <><B>Inspection fees —</B> where applicable, paid by Renters directly to Owners or Agents.</>,
             <><B>Fee changes —</B> our payment partner may adjust its processing fees from time to time; we will reflect any change in the fees shown at checkout.</>,
           ]}
         />
         <Callout tone="note" icon="receipt">
-          Which fees are refundable, and the windows that apply, are defined in full in our <DocLink href="/refund">Cancellation &amp; Refund Policy</DocLink>. Service and transaction fees are non-refundable except where required by law.
+          <B>No fee is refundable.</B> Subscriptions, property plans, marking fees, vendor and service fees, the renter service fee, and payment-processing and transfer fees are final. The only refund Newcondo makes is <B>rent</B>, to a renter who raises a reasonable dispute within the 24-hour confirmation window and has it upheld, less the cost Flutterwave charges to reverse and send it. Full detail is in our <DocLink href="/refund">Cancellation &amp; Refund Policy</DocLink>.
         </Callout>
       </DocSection>
 

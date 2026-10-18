@@ -3,51 +3,34 @@
 // THE money-splitting truth for a rent payment. Runs ONCE per payment when
 // escrow releases (renter confirmed, or the 24h window lapsed).
 //
-// Rates come from the shared plan constant — never re-derived here:
-//   platform commission = the owner's PLAN rate (20% Essential/Plus, 15% Premium)
-//   listing agent       = 50% of the commission
-//   sub-agent           = 50% of the agent share, only when the payment
-//                         carries subAgentId (set from a PROMO ShareLink)
+//   platform commission = the PROPERTY's plan rate (Premium 15%, else 20%)
+//   listing agent       = 50% of the commission (PAYMENTS.agentShareOfCommission)
+//   sub-agent           = 50% of the agent share, only when the payment carries
+//                         subAgentId (pinned from a PROMO ShareLink at checkout)
 //   owner               = rent − commission
-//   Newcondo            = commission − agent pool  → PlatformRevenue
+//   Newcondo            = commission − agent pool
 //
-// Each party gets its own ledger row + SSE notification + branded email, all
-// keyed off the SAME record the money went to — no cross-wiring possible.
-// Idempotent via Payment.commissionSettledAt.
+// MONEY CORE: all maths in integer kobo. The split is ONE ledger transaction
+// out of escrow:rent, inside the same DB transaction that flips the payment
+// to RELEASED — so the wallets, the history rows and the escrow balance can
+// never disagree. Shares are floored; the remainder stays with Newcondo.
+// The per-party Payment rows are kept: they are what history, receipts and
+// statements display. Balances come from the ledger.
 //
-// ── WHY THE RATE LOOKUP CHANGED ────────────────────────────────────────────
-// This file used to read:
-//
-//   const isElite = owner.subscription?.planType === "OWNER_ELITE"
-//                || owner.subscription?.planType === "OWNER_ELITE_ANNUAL";
-//   const rate = isElite ? PAYMENTS.eliteCommissionRate : PAYMENTS.platformCommissionRate;
-//
-// Owner tiers became Essential / Plus / Premium, so those two members no
-// longer exist and TypeScript rejected the comparison (TS2367). That error was
-// the lucky outcome: the same pattern written against a plan code that DOES
-// still exist compiles fine and silently bills the wrong rate. A boolean also
-// can't express three tiers — the moment Plus needed its own rate, an
-// isElite-shaped check would have to be rewritten anyway.
-//
-// commissionRateFor(planType) is the single source of truth: it reads the rate
-// off the same SUBSCRIPTION_PLANS entry the customer was charged from, so the
-// split always matches the plan they actually bought. Never pattern-match on a
-// plan NAME here again — add the rate to the plan spec instead.
-//
-// SCHEMA NOTES (previous compile failures):
-//  • The owner's plan is on Subscription.planType, not User.plan.
-//  • paymentType must be a PaymentType enum member (typed below).
-//  • $transaction uses the callback form for heterogeneous writes.
+// After commit: notifications + branded emails to each party (keyed off the
+// SAME ids the money went to — no cross-wiring), then the referral engine's
+// rent_commission_distributed event (renter referrals, founding-agent override).
+// Idempotent via Payment.commissionSettledAt AND the ledger key.
 // ============================================================
-import { prisma, SubscriptionPlan, SubscriptionStatus } from "@newcondo/db";
-import {
-  PAYMENTS,
-  commissionRateFor,
-  publishNotification,
-  sendBrandedEmail,
-  EmailTemplates,
-} from "@newcondo/backend-shared";
+import axios from "axios";
+import { prisma } from "@newcondo/db";
 import type { PaymentType } from "@newcondo/db";
+import {
+  PAYMENTS, publishNotification, sendBrandedEmail, EmailTemplates, flutterwaveConfig,
+  ACC, postLedger, toKobo, toNaira, mulRate, floorTo, Referrals, badGateway, conflict, notFound,
+  refundBreakdown,
+} from "@newcondo/backend-shared";
+import { commissionRateForProperty } from "./propertyPlan.service";
 
 const ngn = (n: number) => `₦${Math.abs(n).toLocaleString("en-NG")}`;
 
@@ -60,14 +43,7 @@ export async function releaseEscrowAndSplit(paymentId: string) {
           property: {
             select: {
               id: true, title: true, ownerId: true, agentId: true,
-              owner: {
-                select: {
-                  id: true, name: true, email: true,
-                  // status matters as much as planType: an EXPIRED plan must
-                  // not keep granting the reduced Premium rate.
-                  subscription: { select: { planType: true, status: true } },
-                },
-              },
+              owner: { select: { id: true, name: true, email: true } },
               agent: { select: { id: true, name: true, email: true } },
             },
           },
@@ -80,108 +56,187 @@ export async function releaseEscrowAndSplit(paymentId: string) {
   const property = payment.rental.property;
   const owner = property.owner;
   const agent = property.agent;
-  const subAgentId = payment.subAgentId;
+  // A sub-agent link only counts when there IS a listing agent to share with,
+  // and never when the "sub-agent" is the listing agent themself.
+  const subAgentId = agent && payment.subAgentId && payment.subAgentId !== agent.id ? payment.subAgentId : null;
 
-  const rent = Number(payment.ownerAmount ?? payment.amount);
-
-  // The owner's plan rate. An owner with no subscription, or one that has
-  // lapsed, pays the standard rate — the discount is a benefit of an active
-  // plan, and letting an EXPIRED Premium keep 15% would mean unpaid accounts
-  // get the best terms on the platform.
-  const sub = owner.subscription;
-  const planIsLive =
-    sub?.status === SubscriptionStatus.ACTIVE || sub?.status === SubscriptionStatus.FREE_ACTIVE;
-  const rate = planIsLive
-    ? commissionRateFor(sub!.planType)
-    : commissionRateFor(SubscriptionPlan.OWNER_ESSENTIAL);
-
-  // Round ONCE, here, and derive the owner's share by SUBTRACTION. Computing
-  // ownerNet as rent * (1 - rate) independently leaves the two figures a kobo
-  // apart on most amounts, and the ledger then never reconciles. Same reason
-  // platformCut is commission - agentPool rather than its own multiplication.
-  const commission = Math.round(rent * rate);
-  const agentPool = agent ? Math.round(commission * PAYMENTS.agentShareOfCommission) : 0;
-  const subAgentCut = subAgentId ? Math.round(agentPool * PAYMENTS.subAgentSplitOfAgentShare) : 0;
+  const rate = await commissionRateForProperty(property.id);
+  const rentKobo = toKobo(payment.ownerAmount ?? payment.amount);
+  const commission = floorTo(mulRate(rentKobo, rate), 1n);
+  const agentPool = agent ? floorTo(mulRate(commission, PAYMENTS.agentShareOfCommission), 100n) : 0n;
+  const subAgentCut = subAgentId ? floorTo(mulRate(agentPool, PAYMENTS.subAgentSplitOfAgentShare), 100n) : 0n;
   const listingAgentCut = agentPool - subAgentCut;
-  const ownerNet = rent - commission;
+  const ownerNet = rentKobo - commission;
   const platformCut = commission - agentPool;
 
   const subAgent = subAgentId
     ? await prisma.user.findUnique({ where: { id: subAgentId }, select: { id: true, name: true, email: true } })
     : null;
 
-  await prisma.$transaction(async (tx) => {
-    await tx.payment.update({
-      where: { id: paymentId },
-      data: { status: "RELEASED", isReleased: true, releasedAt: new Date(), commissionSettledAt: new Date() },
+  const settled = await prisma.$transaction(async (tx) => {
+    // Conditional claim — two release paths (renter confirm + cron) racing
+    // for the same payment: exactly one wins.
+    const { count } = await tx.payment.updateMany({
+      where: { id: paymentId, status: "HELD", commissionSettledAt: null },
+      data: { status: "RELEASED", isReleased: true, releasedAt: new Date(), commissionSettledAt: new Date(), agentCommission: toNaira(agentPool), platformFee: payment.platformFee },
+    });
+    if (!count) return false;
+
+    await postLedger(tx, {
+      idempotencyKey: `rent-release:${paymentId}`,
+      type: "RENT_RELEASED",
+      sourceType: "PAYMENT",
+      sourceId: paymentId,
+      paymentId,
+      memo: `Escrow release — ${property.title}`,
+      metadata: { rate, rentKobo: rentKobo.toString(), commissionKobo: commission.toString() },
+      legs: [
+        { account: ACC.rentEscrow, amountKobo: -rentKobo },
+        { account: ACC.userAvailable(owner.id), amountKobo: ownerNet },
+        ...(agent && listingAgentCut > 0n ? [{ account: ACC.userAvailable(agent.id), amountKobo: listingAgentCut }] : []),
+        ...(subAgent && subAgentCut > 0n ? [{ account: ACC.userAvailable(subAgent.id), amountKobo: subAgentCut }] : []),
+        ...(platformCut > 0n ? [{ account: ACC.revenue, amountKobo: platformCut }] : []),
+      ],
     });
 
-    const credit = (userId: string, amount: number, description: string, paymentType: PaymentType) =>
+    const history = (userId: string, kobo: bigint, description: string, paymentType: PaymentType) =>
       tx.payment.create({
         data: {
-          userId, amount, ownerAmount: amount, paymentType, status: "RELEASED",
+          userId, amount: toNaira(kobo), ownerAmount: toNaira(kobo), paymentType, status: "RELEASED",
           description, rentalId: payment.rentalId,
-          flutterwaveRef: `${payment.flutterwaveRef}-${paymentType}-${userId.slice(-4)}`,
+          flutterwaveRef: `${payment.flutterwaveRef}-${paymentType}-${userId.slice(-6)}`,
           isReleased: true, releasedAt: new Date(),
         },
       });
-
-    await credit(owner.id, ownerNet, `Rent released — ${property.title}`, "RENT_RELEASE");
-    if (agent && listingAgentCut > 0) await credit(agent.id, listingAgentCut, `Listing commission — ${property.title}`, "AGENT_COMMISSION");
-    if (subAgent && subAgentCut > 0) await credit(subAgent.id, subAgentCut, `Sub-agent commission — ${property.title}`, "AGENT_COMMISSION");
-
-    if (platformCut > 0) {
-      await tx.platformRevenue.create({ data: { paymentId, amount: platformCut, source: "RENT_COMMISSION" } });
-    }
+    await history(owner.id, ownerNet, `Rent released — ${property.title}`, "RENT_RELEASE");
+    if (agent && listingAgentCut > 0n) await history(agent.id, listingAgentCut, `Listing commission — ${property.title}`, "AGENT_COMMISSION");
+    if (subAgent && subAgentCut > 0n) await history(subAgent.id, subAgentCut, `Sub-agent commission — ${property.title}`, "AGENT_COMMISSION");
+    if (platformCut > 0n) await tx.platformRevenue.create({ data: { paymentId, amount: toNaira(platformCut), source: "RENT_COMMISSION" } });
+    await tx.rental.update({ where: { id: payment.rentalId! }, data: { status: "ACTIVE", isConfirmed: true, confirmedAt: new Date() } });
+    return true;
   });
+  if (!settled) return null;
 
   const tasks: Promise<unknown>[] = [
     publishNotification({
-      userId: owner.id, kind: "wallet", title: "Rent released to your account",
-      body: `${ngn(ownerNet)} from ${property.title} is now available.`,
+      userId: owner.id, kind: "wallet", title: "Rent released to your wallet",
+      body: `${ngn(toNaira(ownerNet))} from ${property.title} is now available.`,
       to: "/wallet", entityType: "payment", entityId: paymentId,
     }),
-    sendBrandedEmail(owner.email, EmailTemplates.escrowReleased({
-      ownerName: owner.name ?? "there", amount: ownerNet, property: property.title,
-    })),
+    sendBrandedEmail(owner.email, EmailTemplates.escrowReleased({ ownerName: owner.name ?? "there", amount: toNaira(ownerNet), property: property.title })),
   ];
-  if (agent && listingAgentCut > 0) {
+  if (agent && listingAgentCut > 0n) {
     tasks.push(
-      publishNotification({
-        userId: agent.id, kind: "wallet", title: "Listing commission credited",
-        body: `${ngn(listingAgentCut)} — ${property.title}`,
-        to: "/payments", entityType: "payment", entityId: paymentId,
-      }),
-      sendBrandedEmail(agent.email, EmailTemplates.commissionReceived({
-        agentName: agent.name ?? "there", amount: listingAgentCut, property: property.title, kind: "LISTING",
-      }))
+      publishNotification({ userId: agent.id, kind: "wallet", title: "Listing commission credited", body: `${ngn(toNaira(listingAgentCut))} — ${property.title}`, to: "/payments", entityType: "payment", entityId: paymentId }),
+      sendBrandedEmail(agent.email, EmailTemplates.commissionReceived({ agentName: agent.name ?? "there", amount: toNaira(listingAgentCut), property: property.title, kind: "LISTING" }))
     );
   }
-  if (subAgent && subAgentCut > 0) {
+  if (subAgent && subAgentCut > 0n) {
     tasks.push(
-      publishNotification({
-        userId: subAgent.id, kind: "wallet", title: "Sub-agent commission credited",
-        body: `${ngn(subAgentCut)} — ${property.title} (via your promo link)`,
-        to: "/payments", entityType: "payment", entityId: paymentId,
-      }),
-      sendBrandedEmail(subAgent.email, EmailTemplates.commissionReceived({
-        agentName: subAgent.name ?? "there", amount: subAgentCut, property: property.title, kind: "SUB_AGENT",
-      }))
+      publishNotification({ userId: subAgent.id, kind: "wallet", title: "Sub-agent commission credited", body: `${ngn(toNaira(subAgentCut))} — ${property.title} (via your promo link)`, to: "/payments", entityType: "payment", entityId: paymentId }),
+      sendBrandedEmail(subAgent.email, EmailTemplates.commissionReceived({ agentName: subAgent.name ?? "there", amount: toNaira(subAgentCut), property: property.title, kind: "SUB_AGENT" }))
     );
   }
-  await Promise.all(tasks);
+  await Promise.allSettled(tasks);
 
-  return { ownerNet, listingAgentCut, subAgentCut, platformCut, rate };
+  // Referral engine — renter referrals + Founding Agent Override. The margin
+  // is Newcondo's NET share, i.e. what platform:revenue just received.
+  Referrals.emitReferralEvent({
+    type: "rent_commission_distributed",
+    sourceType: "RENT_COMMISSION",
+    sourceId: paymentId,
+    occurredAt: new Date().toISOString(),
+    subjectUserId: payment.userId,
+    subjectOwnerId: owner.id,
+    breakdown: {
+      grossCommissionKobo: Number(commission),
+      listingAgentShareKobo: Number(listingAgentCut),
+      subAgentShareKobo: Number(subAgentCut),
+      newcondoNetKobo: Number(platformCut),
+    },
+  });
+
+  return { ownerNet: toNaira(ownerNet), listingAgentCut: toNaira(listingAgentCut), subAgentCut: toNaira(subAgentCut), platformCut: toNaira(platformCut), rate };
 }
 
 /** Cron entry: release every HELD payment whose window lapsed. */
 export async function releaseExpiredEscrows(): Promise<number> {
   const due = await prisma.payment.findMany({
-    where: { status: "HELD", confirmationPeriodEnd: { lt: new Date() }, commissionSettledAt: null },
+    where: { status: "HELD", paymentType: "RENT", confirmationPeriodEnd: { lt: new Date() }, commissionSettledAt: null, dispute: { is: null } },
     select: { id: true },
   });
   for (const p of due) {
     await releaseEscrowAndSplit(p.id).catch((e) => console.error("escrow release failed", p.id, e));
   }
   return due.length;
+}
+
+/** Refund a rent payment still in escrow (renter disputed inside the window
+ *  and the dispute was upheld). The rent goes back through Flutterwave; the
+ *  renter service fee is NOT refunded, nor is the processing fee —
+ *  Flutterwave does not return its transaction fee on a refund.
+ *
+ *  ++ REFUND COST — the refund itself costs Newcondo again, so the renter
+ *  bears it (constants/fees.ts refundBreakdown, /refund §03):
+ *    refund = rent − reversal fee (Flutterwave's transaction cost on the
+ *             rent, rounded up) − transfer fee (₦11/₦27/₦54, rounded up)
+ *  This is the ONLY refund Newcondo makes: rent, still in escrow, after a
+ *  valid dispute inside the confirmation window. Every other fee is final. */
+export async function refundHeldRent(paymentId: string, reason: string, by = "admin") {
+  const payment = await prisma.payment.findUnique({
+    where: { id: paymentId },
+    select: { id: true, status: true, amount: true, ownerAmount: true, transactionId: true, flutterwaveRef: true, rentalId: true, userId: true, description: true,
+      rental: { select: { unitId: true, propertyId: true } } },
+  });
+  if (!payment) throw notFound("Payment not found");
+  if (payment.status !== "HELD") throw conflict("Only a payment still in escrow can be refunded here");
+  const rentKobo = toKobo(payment.ownerAmount ?? payment.amount);
+  const refund = refundBreakdown(toNaira(rentKobo));
+  const refundKobo = toKobo(refund.refundNaira);
+  const costKobo = rentKobo - refundKobo;
+
+  // Ask Flutterwave first; book it only once they accept.
+  try {
+    const base = flutterwaveConfig.FLUTTERWAVE_BASE_URL || "https://api.flutterwave.com/v3";
+    const id = payment.transactionId;
+    if (!id) throw new Error("No Flutterwave transaction id on this payment");
+    const res = await axios.post(`${base}/transactions/${id}/refund`, { amount: refund.refundNaira, comments: reason }, {
+      headers: { Authorization: `Bearer ${flutterwaveConfig.FLUTTERWAVE_SECRET_KEY}` }, timeout: 20_000,
+    });
+    if (res.data?.status !== "success") throw new Error(res.data?.message ?? "Refund rejected");
+  } catch (e) {
+    throw badGateway(`Refund could not be started: ${(e as Error).message}`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.update({ where: { id: paymentId }, data: { status: "REFUNDED", failureReason: `${reason} · refunded ₦${refund.refundNaira.toLocaleString("en-NG")} (rent ₦${refund.rentNaira.toLocaleString("en-NG")} − refund cost ₦${refund.refundCostNaira.toLocaleString("en-NG")})` } });
+    await postLedger(tx, {
+      idempotencyKey: `rent-refund:${paymentId}`,
+      type: "RENT_REFUNDED",
+      sourceType: "PAYMENT",
+      sourceId: paymentId,
+      paymentId,
+      createdBy: by,
+      memo: `Refund — ${reason}`,
+      metadata: { rentNaira: refund.rentNaira, reversalFeeNaira: refund.reversalFeeNaira, transferFeeNaira: refund.transferFeeNaira, refundNaira: refund.refundNaira },
+      // Rent leaves escrow: the refund goes back out through Flutterwave; the
+      // refund cost the renter bore pays Flutterwave's refund charges
+      // (platform:processing absorbs any difference from the real figure).
+      legs: [
+        { account: ACC.rentEscrow, amountKobo: -rentKobo },
+        { account: ACC.world, amountKobo: refundKobo },
+        ...(costKobo > 0n ? [{ account: ACC.processing, amountKobo: costKobo }] : []),
+      ],
+    });
+    if (payment.rentalId) await tx.rental.update({ where: { id: payment.rentalId }, data: { status: "TERMINATED" } });
+    if (payment.rental?.unitId) await tx.propertyUnit.update({ where: { id: payment.rental.unitId }, data: { status: "AVAILABLE", isAvailable: true } });
+    else if (payment.rental) await tx.property.update({ where: { id: payment.rental.propertyId }, data: { isAvailable: true } });
+  });
+  // I5 — any referral reward created from this payment is reversed.
+  await Referrals.voidBySource("RENT_COMMISSION", paymentId, `rent refunded: ${reason}`);
+  await publishNotification({
+    userId: payment.userId, kind: "payment", title: "Refund on its way",
+    body: `${ngn(refund.refundNaira)} is on its way back: your rent of ${ngn(refund.rentNaira)} less ${ngn(refund.refundCostNaira)} that Flutterwave charges to reverse and send it. The service fee and payment-processing fee are non-refundable.`,
+    to: "/payments", entityType: "payment", entityId: paymentId,
+  });
 }

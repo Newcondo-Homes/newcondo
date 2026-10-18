@@ -239,6 +239,12 @@ export function PrivacyPolicy() {
           facilitate payments, virtual account creation, refunds, payouts, fraud prevention, transaction verification, and
           compliance obligations. Information necessary to complete a transaction may be shared with such providers.
         </P>
+        <P>
+          Refunds are limited. Newcondo refunds only rent, to a renter who raises a reasonable dispute within the 24-hour confirmation
+          window and has it upheld. Subscriptions, property plans, marking fees, vendor and service fees, and payment-processing and
+          transfer fees are not refunded. Where a refund is made, we share the details needed to process it with Flutterwave. See our{" "}
+          <DocLink href="/refund">Cancellation &amp; Refund Policy</DocLink>.
+        </P>
         <Callout tone="green" icon="credit-card">
           Newcondo does <B>not</B> collect, process, or store card numbers, CVVs, or full cardholder data on its own systems. Card details are captured directly by our PCI-DSS-compliant payment partner.
         </Callout>

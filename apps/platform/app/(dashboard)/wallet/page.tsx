@@ -1,16 +1,14 @@
 "use client";
 
 /* Wallet & Accounts.
-   Layout: stats → virtual accounts (AUTO-created — read-only) + bank
-   accounts (user-managed payout destinations) → auto-payout.
-   Virtual-account model (confirmed against the codebase's
-   propertyVirtualAccounts + markingVirtualAccountService): one MAIN VA per
-   user created when their subscription activates (renters: on Premium
-   upgrade), plus ONE PER MARKED PROPERTY — per-property VAs make rent
-   reconciliation and escrow isolation automatic. There is deliberately no
-   create-VA UI.
-   API: GET /payments/wallet · POST /payments/wallet/withdraw ·
-   PATCH /payments/wallet/auto-payout (payment-service wallet.service). */
+   MONEY CORE (Oct 2026): Newcondo runs ONE central account. A user's balance
+   is their ledger wallet inside it (available · pending · locked), not a
+   Flutterwave virtual account. Layout: stats → [owner] plans & billing →
+   wallet activity (ledger) + bank accounts → pay-by-transfer + auto-payout.
+   When per-user virtual accounts are enabled server-side, the funding card
+   shows the user's own NUBAN instead — no change here.
+   API: GET /payments/wallet · /wallet/ledger · /wallet/funding-account ·
+   POST /payments/wallet/withdraw · PATCH /payments/wallet/auto-payout. */
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence } from "framer-motion";
@@ -18,13 +16,17 @@ import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { toast } from "@newcondo/ui";
 import { useRole } from "@/components/providers/role-provider";
-import { PageHead, DBtn, StatCard, Card, CardH, Row, Thumb, KV, Banner, EmptyState, SkeletonRows } from "@/components/dashboard/primitives";
+import { PageHead, DBtn, StatCard, Card, CardH, KV, Banner, EmptyState, SkeletonRows } from "@/components/dashboard/primitives";
 import { Modal } from "@/components/dashboard/Modal";
 import { Field, inputCls } from "@/components/dashboard/NCSelect";
 import * as api from "@/lib/api/dashboard";
-import { useWallet, useVirtualAccounts, useBankAccounts, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
+import { useWallet, useBankAccounts, useCacheUpdate } from "@/hooks/dashboard/useDashboardData";
+import { FundingAccountCard, WalletStatementCard } from "@/components/dashboard/wallet/WalletLedger";
+import { BillingSummaryCard } from "@/components/dashboard/billing/BillingSummaryCard";
+import type { WalletV2 } from "@/lib/api/money";
 import { BankAccountsCard, ChangeBankFlow } from "@/components/dashboard/wallet/BankAccounts";
 import { ngn } from "@/lib/dashboard/format";
+import { payoutBreakdown, minWithdrawalNaira, transferFeeFor } from "@/lib/constants/business";
 import type { BankAccount, Wallet } from "@/lib/dashboard/data";
 
 const MODES = [["OFF", "Manual only"], ["INSTANT", "As soon as funds unlock"], ["WEEKLY", "Every Friday"], ["MONTHLY", "Last day of the month"]] as const;
@@ -33,7 +35,6 @@ export default function WalletPage() {
   const router = useRouter();
   const { role } = useRole();
   const wallet = useWallet(role);
-  const vAccounts = useVirtualAccounts(role);
   const bankAccounts = useBankAccounts(role);
   const cache = useCacheUpdate();
   const [modal, setModal] = useState<null | "withdraw" | "changeBank">(null);
@@ -41,8 +42,8 @@ export default function WalletPage() {
     return <EmptyState icon="wallet" title="Your wallet unlocks with Premium" sub="Premium renters get a virtual wallet — created automatically on upgrade — for referral credits and marking-job earnings."
       action={<DBtn onClick={() => router.push("/profile")}>Upgrade to Premium</DBtn>} />;
   }
-  if (wallet.isLoading || vAccounts.isLoading || bankAccounts.isLoading) return (<><PageHead title="Wallet & Accounts" sub="Loading…" /><SkeletonRows n={3} h={100} /></>);
-  const w = wallet.data!;
+  if (wallet.isLoading || bankAccounts.isLoading) return (<><PageHead title="Wallet & Accounts" sub="Loading…" /><SkeletonRows n={3} h={100} /></>);
+  const w = wallet.data! as Wallet & Partial<WalletV2>;
   const banks = bankAccounts.data ?? [];
   const defaultBank = banks.find((b) => b.isDefault);
   const bankLabel = defaultBank ? `${defaultBank.bankName} ••${defaultBank.accountNumber.slice(-4)}` : "no payout account";
@@ -55,39 +56,23 @@ export default function WalletPage() {
   };
   return (
     <>
-      <PageHead title="Wallet & Accounts" sub="Escrowed funds unlock after each confirmation window, then move to your bank account — manually or automatically."
+      <PageHead title="Wallet & Accounts" sub={w.note ?? "Escrowed funds unlock after each confirmation window, then move to your bank account — manually or automatically."}
         actions={<DBtn disabled={w.available <= 0} onClick={() => setModal("withdraw")}><Icon name="landmark" size={15} />Withdraw</DBtn>} />
       <div className="mb-4 grid grid-cols-4 gap-4 max-[1060px]:grid-cols-2 max-sm:grid-cols-1 max-sm:gap-2.5">
         <StatCard label="Available to withdraw" value={ngn(w.available)} icon="wallet" mono sub={"to " + bankLabel} />
         <StatCard label="Locked (in escrow / holds)" value={ngn(w.locked)} icon="lock" mono sub="releases after confirmation windows" />
-        <StatCard label="Auto-payout" value={w.autoPayout === "OFF" ? "Off" : w.autoPayout.toLowerCase()} icon="refresh-cw" sub="change below" />
+        <StatCard label="Pending" value={ngn(w.pending ?? 0)} icon="clock" mono sub="credited, unlocks on confirmation" />
         <StatCard label="Bank accounts" value={banks.length} icon="landmark" sub={defaultBank ? `default: ${defaultBank.bankName}` : "add one to withdraw"} />
       </div>
       <div className="grid grid-cols-[1.6fr_1fr] gap-4 max-[860px]:grid-cols-1">
         <div className="flex flex-col gap-4">
-          <Card tight>
-            <CardH pad title="Virtual accounts" right={<span className="text-[12px] text-text-tertiary">auto-created by Newcondo · funds held here during windows</span>} />
-            {(vAccounts.data ?? []).map((a) => (
-              <Row key={a.id} onClick={() => toast.info("Account statement", { description: "Opens virtual-accounts/[id]/statements" })}>
-                <Thumb icon="shield-check" />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-mono text-[13px] font-semibold">{a.name}</div>
-                  <div className="mt-1 text-[12.5px] text-text-tertiary"><span className="font-mono">{a.number}</span> · {a.bank}{a.property ? ` · ${a.property}` : " · main account"}</div>
-                </div>
-                <div className="flex-none text-right">
-                  <div className={cx("font-mono text-[13px] font-semibold", a.available > 0 && "text-green-dark")}>{ngn(a.available)}</div>
-                  {a.locked > 0 && <div className="mt-0.5 flex items-center justify-end gap-1 text-[11.5px] text-[#8a6508]"><Icon name="lock" size={11} />{ngn(a.locked)} locked</div>}
-                </div>
-                <Icon name="chevron-right" size={14} className="text-text-tertiary" />
-              </Row>
-            ))}
-            <div className="border-t border-border-hair px-4 py-3 text-[12px] text-text-tertiary">
-              Created for you automatically: your <b className="text-text-primary">main account</b> when your subscription activated, and <b className="text-text-primary">one per marked property</b> so each house&rsquo;s rent and escrow reconcile on their own.
-            </div>
-          </Card>
+          {role === "OWNER" && <BillingSummaryCard />}
+          <WalletStatementCard />
           <BankAccountsCard role={role} accounts={banks} update={updateBanks} />
         </div>
-        <Card className="self-start">
+        <div className="flex flex-col gap-4 self-start">
+        <FundingAccountCard />
+        <Card>
           <CardH title="Auto-payout" />
           <p className="mb-3.5 mt-0 text-[13px] leading-normal text-text-tertiary">Move available funds to your bank automatically — as soon as they unlock, or on a schedule.</p>
           {MODES.map(([m, label]) => (
@@ -104,6 +89,7 @@ export default function WalletPage() {
             Change payout account
           </button>
         </Card>
+        </div>
       </div>
       <AnimatePresence>
         {modal === "withdraw" && <WithdrawModal key="w" wallet={w} bankLabel={bankLabel} onClose={() => setModal(null)}
@@ -117,9 +103,14 @@ export default function WalletPage() {
 function WithdrawModal({ wallet, bankLabel, onClose, onDone }: { wallet: Wallet; bankLabel: string; onClose: () => void; onDone: (amt: number) => void }) {
   const [amt, setAmt] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  // Flutterwave's transfer fee comes out of the payout (constants/fees.ts) —
+  // the same breakdown the backend applies when it sends the transfer.
+  const min = minWithdrawalNaira();
+  const breakdown = +amt > 0 ? payoutBreakdown(+amt) : null;
   const submit = () => {
     const n = +amt;
     if (!n || n <= 0) { setErr("Enter an amount"); return; }
+    if (n < min) { setErr(`The minimum withdrawal is ${ngn(min)}`); return; }
     if (n > wallet.available) { setErr(`You can withdraw up to ${ngn(wallet.available)}`); toast.error("Amount exceeds available balance"); return; }
     onClose(); onDone(n);
     // POST /api/v1/payments/wallet/withdraw { amount } — backend re-checks the
@@ -127,7 +118,7 @@ function WithdrawModal({ wallet, bankLabel, onClose, onDone }: { wallet: Wallet;
     // transfer to the DEFAULT bank account; the transfer webhook settles it.
     const doWithdraw = api.isLiveBackend ? api.withdrawApi(n) : new Promise((res) => setTimeout(res, 2000));
     toast.promise(doWithdraw, {
-      loading: `Sending ${ngn(n)} to ${bankLabel} — Flutterwave transfer initiated…`,
+      loading: `Sending ${ngn(payoutBreakdown(n).receiveNaira)} to ${bankLabel} — Flutterwave transfer initiated…`,
       success: "Withdrawal on its way — transfers usually land within minutes. You'll get an email receipt.",
       error: "Transfer failed — your balance was not touched",
     });
@@ -143,7 +134,14 @@ function WithdrawModal({ wallet, bankLabel, onClose, onDone }: { wallet: Wallet;
           <DBtn key={f} variant="line" sm onClick={() => { setAmt(String(Math.floor(wallet.available * f))); setErr(null); }}>{f === 1 ? "All" : f * 100 + "%"}</DBtn>
         ))}
       </div>
-      <div className="mt-4"><Banner icon="info">Withdrawals are free and always go to your default bank account. Locked funds can&rsquo;t be withdrawn until their confirmation window closes.</Banner></div>
+      {breakdown && (
+        <div className="mt-4 rounded-2xl bg-surface-sunken px-4 py-1">
+          <KV k="From your wallet" v={ngn(breakdown.requestedNaira)} mono />
+          <KV k="Flutterwave transfer fee" v={`− ${ngn(breakdown.feeNaira)}`} mono />
+          <KV k="Arrives in your bank" v={ngn(breakdown.receiveNaira)} mono />
+        </div>
+      )}
+      <div className="mt-4"><Banner icon="info">Flutterwave charges {ngn(transferFeeFor(5_000))}, {ngn(transferFeeFor(50_000))} or {ngn(transferFeeFor(50_001))} per transfer depending on the amount (VAT included). It&rsquo;s taken from the amount you withdraw. Withdrawals always go to your default bank account; locked funds can&rsquo;t be withdrawn until their confirmation window closes.</Banner></div>
     </Modal>
   );
 }

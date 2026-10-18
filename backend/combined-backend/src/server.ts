@@ -9,6 +9,13 @@ import https from 'https';
 import app from './app';
 import { logger } from './utils/logger';
 import { config } from './config/environment';
+import { registerChargeHandler, startMoneyCron, type VerifiedPayment } from '@newcondo/payment-service';
+import { confirmMarkingFeePaid, dripLapsedMarkingPayouts, advanceExpiredSlots } from '@newcondo/marking-service';
+
+// MONEY CORE — packages that settle their own payments register here, so
+// payment-service never imports them (that would make the graph circular).
+registerChargeHandler('NC-MKFEE-', (ref: string, paid: VerifiedPayment) =>
+  confirmMarkingFeePaid(ref, { amountNaira: paid.amountNaira, settledNaira: paid.settledNaira, via: paid.via, inboundTransferId: paid.inboundTransferId, transactionId: paid.transactionId }));
 
 const PORT = config.PORT || 5000;
 const HOST = '0.0.0.0';
@@ -42,6 +49,18 @@ app.listen(PORT, HOST, () => {
   logger.info(`📡 Health check available at: http://localhost:${PORT}/health`);
   logger.info(`🔗 API Documentation: http://localhost:${PORT}/api/docs`);
   logger.info(`🌍 Environment: ${config.NODE_ENV}`);
+
+  // Scheduled money tasks (escrow release was never scheduled before — HELD
+  // rent only released when a renter tapped "confirm"). Set RUN_CRONS=false
+  // on any extra instance so jobs run once.
+  if (process.env.RUN_CRONS !== 'false') {
+    startMoneyCron({
+      extra: [
+        { name: 'marking-lapse-drip', schedule: '20 * * * *', run: () => dripLapsedMarkingPayouts() },
+        { name: 'marking-slot-advance', schedule: '*/10 * * * *', run: () => advanceExpiredSlots() },
+      ],
+    });
+  }
 
   if (config.NODE_ENV === 'development') {
     const PING_URL = 'https://newcondo-combined-backend.onrender.com/health';

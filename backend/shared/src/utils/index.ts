@@ -52,3 +52,5 @@ export * from "./emailService";
 export * from "./notificationBus";
 export * from "./s3Upload";
 export * from "./s3Layout";
+
+export * from "./emailTemplates.referrals";

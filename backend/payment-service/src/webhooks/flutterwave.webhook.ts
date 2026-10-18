@@ -1,231 +1,141 @@
-/* ============================================================
-   POST /api/v1/payments/webhooks/flutterwave
-
-   UPDATED: now persists display-only card metadata (last4 / brand / expiry)
-   alongside the card token, so the dashboard can say "Visa •••• 4242" when
-   charging the saved card for a marking fee instead of "Your saved card".
-
-   Everything else is unchanged from your version:
-     • verif-hash auth   → rejects forgeries.
-     • verify-then-act   → never trusts the body for money.
-     • idempotent        → dedupes on flwTransactionId (Flutterwave RETRIES).
-     • always 200        → so Flutterwave stops retrying; 500 only on transient
-                           errors we WANT retried (DB down, verify timeout).
-
-   Because you attach `payment_plan` to the initial charge (Model A),
-   Flutterwave bills the card every cycle itself and sends charge.completed
-   each time, so this handler covers BOTH:
-     1. FIRST charge  (subscription PENDING) → activateSubscription(...)
-     2. RENEWAL charge (subscription ACTIVE) → extend period + invoice + history
-
-   PREREQUISITES
-     • Migration `subscription_card_metadata` (Subscription.cardLast4 /
-       cardBrand / cardExpiry).
-     • activateSubscription() accepts an optional 6th `card` argument.
-     • services/flutterwave.types.ts provides extractSavedCardMeta().
-   ============================================================ */
-
+// backend/payment-service/src/webhooks/flutterwave.webhook.ts
+// ============================================================
+// POST /api/v1/payments/webhooks/flutterwave  (and /api/v1/webhooks/flutterwave)
+//
+// THE single entry point for money arriving or leaving through Flutterwave.
+//
+//   verif-hash   timing-safe compare → forgeries get 401
+//   verify       every charge/transfer is re-fetched from Flutterwave; the
+//                body is never trusted for amounts or status
+//   route        charge.completed  → by tx_ref prefix (chargeHandlers.ts)
+//                                    or, for a bank transfer into the central
+//                                    account, record → match by narration ref
+//                transfer.completed → withdrawals (NC-WD-) / vendors (NC-VP-)
+//   idempotent   every handler is; Flutterwave retries
+//   status       200 when handled or irrelevant (stop retrying);
+//                500 only on transient errors we WANT retried
+//
+// BUG THIS FIXES: the previous handler only understood subscriptions. Rent
+// (NC-RENT-), marking fees (NC-MKFEE-) and withdrawals (NC-WD-) were never
+// routed, so paid rent never reached escrow, paid marking jobs never went
+// live and withdrawals stayed PENDING forever.
+// ============================================================
 import type { Request, Response } from "express";
-import {
-  prisma,
-  SubscriptionStatus,
-  SubscriptionEvent,
-  BillingCycle,
-} from "@newcondo/db";
-import {
-  verifyFlutterwaveTransaction,
-  activateSubscription,
-} from "../services";
-import { extractSavedCardMeta } from "../services/flutterwave.types";
+import { timingSafeEqual } from "crypto";
+import axios from "axios";
+import { flutterwaveConfig, parseInboundCredit, recordInboundTransfer, settledFromFlutterwave, FLW_FEES } from "@newcondo/backend-shared";
+import { verifyFlutterwaveTransaction } from "../services";
+import { confirmRentPaid } from "../services/rentCheckout.service";
+import { activatePropertyPlan } from "../services/propertyPlan.service";
+import { settleWithdrawal } from "../services/wallet.service";
+import { settleVendorPayout } from "../services/vendorPayout.service";
+import { handleSubscriptionCharge } from "./subscriptionCharge";
+import { registerChargeHandler, handlerFor, type VerifiedPayment } from "./chargeHandlers";
 
-function getPeriodEnd(start: Date, cycle: BillingCycle): Date {
-  const end = new Date(start);
-  if (cycle === BillingCycle.ANNUAL) end.setFullYear(end.getFullYear() + 1);
-  else end.setMonth(end.getMonth() + 1);
-  return end;
+/* ---- built-in handlers ---- */
+registerChargeHandler("NC-SUB-", handleSubscriptionCharge);
+registerChargeHandler("NC-RENT-", (ref, p) =>
+  confirmRentPaid(ref, { amountNaira: p.amountNaira, settledNaira: p.settledNaira, via: p.via, inboundTransferId: p.inboundTransferId, transactionId: p.transactionId ?? undefined }));
+registerChargeHandler("NC-PSUB-", (ref, p) =>
+  activatePropertyPlan(ref, { transactionId: p.transactionId, amountNaira: p.amountNaira, settledNaira: p.settledNaira, via: p.via, cardToken: p.cardToken }));
+registerChargeHandler("NC-RENEW-", async () => "settled-by-renewal-cron");
+
+/** Which intents may be paid by plain bank transfer. Subscriptions and
+ *  property plans are card-only: recurring billing needs the card token. */
+const TRANSFER_PAYABLE = ["NC-RENT-", "NC-MKFEE-"];
+
+function signatureOk(header: unknown): boolean {
+  const secret = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
+  if (!secret || typeof header !== "string") return false;
+  const a = Buffer.from(header), b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+async function verifyTransfer(id: string | number): Promise<{ reference: string; status: string; feeNaira: number | null } | null> {
+  const base = flutterwaveConfig.FLUTTERWAVE_BASE_URL || "https://api.flutterwave.com/v3";
+  const res = await axios.get(`${base}/transfers/${id}`, { headers: { Authorization: `Bearer ${flutterwaveConfig.FLUTTERWAVE_SECRET_KEY}` }, timeout: 15_000 });
+  const d = res.data?.data;
+  // `fee` is Flutterwave's transfer fee incl. VAT (e.g. 10.75) — reconciled
+  // against the fee the user had deducted (constants/fees.ts payoutBreakdown).
+  const fee = d?.fee != null ? Number(String(d.fee).replace(/,/g, "")) : null;
+  return d ? { reference: String(d.reference), status: String(d.status).toUpperCase(), feeNaira: Number.isFinite(fee) ? fee : null } : null;
+}
+
+async function handleTransfer(body: Record<string, any>): Promise<string> {
+  const t = await verifyTransfer(body.id);
+  if (!t) return "transfer-not-found";
+  if (t.status !== "SUCCESSFUL" && t.status !== "FAILED") return `transfer-${t.status}`; // NEW / PENDING — wait for the final event
+  const ok = t.status === "SUCCESSFUL";
+  if (t.reference.startsWith("NC-WD-")) { await settleWithdrawal(t.reference, ok, t.feeNaira); return "withdrawal-settled"; }
+  if (t.reference.startsWith("NC-VP-")) { await settleVendorPayout(t.reference, ok, t.feeNaira); return "vendor-payout-settled"; }
+  return "transfer-ignored";
+}
+
+async function handleCharge(body: Record<string, any>): Promise<string> {
+  if (!body?.id) return "no-transaction-id";
+  const tx = await verifyFlutterwaveTransaction(String(body.id));
+  if (tx?.status !== "successful") return `not-successful-${tx?.status}`;
+  if ((tx.currency ?? "NGN") !== "NGN") return "non-ngn-ignored";
+
+  const txRef = String(tx.tx_ref ?? "");
+  // Our gross-up IS the fee pass-through. If Flutterwave's dashboard is still
+  // set to "customer pays fees", it adds its fee on top → user charged twice.
+  if (FLW_FEES.passToUsers && tx.charged_amount != null && Number(tx.charged_amount) > Number(tx.amount) + 1) {
+    console.warn(`[webhook] ⚠️ ${txRef}: charged_amount ₦${tx.charged_amount} > amount ₦${tx.amount}. Flutterwave is ALSO passing fees to the customer — set Fee settings → "Charge me" in the Flutterwave dashboard.`);
+  }
+  const settled = settledFromFlutterwave(tx);
+  const paid: VerifiedPayment = {
+    amountNaira: Number(tx.amount),
+    settledNaira: settled != null ? Number(settled) / 100 : null,
+    currency: tx.currency ?? "NGN",
+    via: "CHECKOUT",
+    transactionId: String(tx.id),
+    cardToken: tx.card?.token ?? undefined,
+    raw: tx,
+  };
+
+  const own = handlerFor(txRef);
+  if (own) { await own(txRef, paid); return `handled-${txRef.split("-").slice(0, 2).join("-")}`; }
+
+  // Not one of our checkouts. A bank transfer into the central account (or a
+  // user's VA) → book the cash, then try to match it by narration reference.
+  const credit = parseInboundCredit(tx);
+  if (credit) {
+    const rec = await recordInboundTransfer(credit);
+    if (rec.duplicate) return "inbound-duplicate";
+    const ref = rec.reference;
+    if (ref && TRANSFER_PAYABLE.some((p) => ref.startsWith(p))) {
+      const h = handlerFor(ref);
+      if (h) {
+        await h(ref, { ...paid, via: "TRANSFER", amountNaira: Number(rec.amountKobo) / 100, settledNaira: null, inboundTransferId: rec.transferId });
+        return "inbound-matched";
+      }
+    }
+    console.warn(`[webhook] inbound transfer ${rec.transferId} unmatched (ref ${ref ?? "none"}) — in suspense for admin review`);
+    return "inbound-suspense";
+  }
+
+  // Legacy: Flutterwave-minted refs from payment-plan subscriptions.
+  return handleSubscriptionCharge(txRef, paid);
 }
 
 export async function flutterwaveWebhook(req: Request, res: Response): Promise<void> {
+  if (!signatureOk(req.headers["verif-hash"])) {
+    console.warn("⚠️ Flutterwave webhook: bad verif-hash — blocked");
+    res.status(401).json({ error: "Unauthorized signature" });
+    return;
+  }
+  const event = String(req.body?.event ?? req.body?.["event.type"] ?? "");
+  const body = (req.body?.data ?? req.body) as Record<string, any>;
   try {
-    // ── 1. Authenticate the caller ─────────────────────────────────────────
-    const secretHash = process.env.FLUTTERWAVE_WEBHOOK_SECRET;
-    const signature = req.headers["verif-hash"];
-    if (!secretHash || !signature || signature !== secretHash) {
-      console.log("⚠️ Unauthorized Flutterwave webhook attempt blocked.");
-      res.status(401).json({ error: "Unauthorized signature" });
-      return;
-    }
-
-    const event = req.body?.event ?? req.body?.["event.type"];
-    const body = req.body?.data ?? req.body;
-    console.log(`📡 Flutterwave webhook: ${event}`);
-
-    // Only completed card charges matter here. ACK everything else with 200.
-    const isCharge =
-      event === "charge.completed" || String(event).toUpperCase().includes("CARD_TRANSACTION");
-    if (!isCharge) {
-      res.status(200).send("Ignored");
-      return;
-    }
-
-    const transactionId = body?.id;
-    const txRef: string | undefined = body?.tx_ref ?? body?.txRef;
-    if (!transactionId) {
-      res.status(200).send("No transaction id");
-      return;
-    }
-
-    // ── 2. Idempotency: already processed this transaction? ────────────────
-    const seen = await prisma.subscriptionInvoice.findFirst({
-      where: { flwTransactionId: String(transactionId) },
-    });
-    if (seen) {
-      console.log(`↩️  Transaction ${transactionId} already processed — skipping.`);
-      res.status(200).send("Already processed");
-      return;
-    }
-
-    // ── 3. Verify with Flutterwave (don't trust the body for money) ────────
-    const tx = await verifyFlutterwaveTransaction(String(transactionId));
-    if (tx?.status !== "successful") {
-      console.log(`Charge ${transactionId} not successful (${tx?.status}) — acknowledging.`);
-      res.status(200).send("Not successful");
-      return;
-    }
-
-    const meta = tx.meta ?? body?.meta ?? {};
-    const customerEmail: string | undefined = tx.customer?.email ?? body?.customer?.email;
-    const cardToken: string = tx.card?.token ?? "";
-    const flwCustomerId = tx.customer?.id ? String(tx.customer.id) : "";
-    // ++ ADDED — display-only card fields (last4 / brand / expiry). Undefined
-    // for non-card charges (transfer, USSD), so we simply skip the write.
-    const card = extractSavedCardMeta(tx);
-    // Flutterwave plan-driven subs return the subscription id on the charge;
-    // fall back to the plan id so activateSubscription always has a value.
-    const flwSubscriptionId = String(
-      tx.subscription_id ?? (meta as { subscriptionId?: string })?.subscriptionId ?? tx.payment_plan ?? ""
-    );
-
-    // ── 4. Resolve the subscription ────────────────────────────────────────
-    // First charge → meta.subscriptionId / tx_ref. Renewal (Flutterwave mints
-    // its own tx_ref) → match by customer email → user → subscription.
-    const metaSubId = (meta as { subscriptionId?: string })?.subscriptionId;
-    let subscription =
-      (metaSubId
-        ? await prisma.subscription.findUnique({ where: { id: String(metaSubId) } })
-        : null) ??
-      (txRef ? await prisma.subscription.findFirst({ where: { flwTransactionRef: txRef } }) : null);
-
-    if (!subscription && customerEmail) {
-      const user = await prisma.user.findUnique({ where: { email: customerEmail } });
-      if (user) subscription = await prisma.subscription.findUnique({ where: { userId: user.id } });
-    }
-
-    if (!subscription) {
-      console.log(`No subscription matched (tx_ref ${txRef}, email ${customerEmail}) — ack.`);
-      res.status(200).send("No matching subscription");
-      return;
-    }
-
-    // ── 5a. FIRST charge → activate via YOUR existing function ─────────────
-    if (subscription.status === SubscriptionStatus.PENDING) {
-      await activateSubscription(
-        subscription.flwTransactionRef ?? txRef ?? `NC-${transactionId}`,
-        String(transactionId),
-        flwSubscriptionId,
-        cardToken,
-        flwCustomerId,
-        card // ++ ADDED — persists cardLast4 / cardBrand / cardExpiry
-      );
-      console.log(`✅ Subscription ${subscription.id} activated (first charge).`);
-      res.status(200).send("Activated");
-      return;
-    }
-
-    // ── 5b. RENEWAL charge → extend period, invoice, history ───────────────
-    if (
-      subscription.status === SubscriptionStatus.ACTIVE ||
-      subscription.status === SubscriptionStatus.PAST_DUE
-    ) {
-      const now = new Date();
-      const periodStart = subscription.currentPeriodEnd ?? now;
-      const periodEnd = getPeriodEnd(periodStart, subscription.billingCycle);
-      const invoiceNumber = `NC-INV-${subscription.id}-${periodStart.toISOString().slice(0, 10)}`;
-
-      await prisma.$transaction([
-        prisma.subscription.update({
-          where: { id: subscription.id },
-          data: {
-            status: SubscriptionStatus.ACTIVE,
-            currentPeriodStart: periodStart,
-            currentPeriodEnd: periodEnd,
-            nextRenewalAttempt: periodEnd,
-            renewalFailureCount: 0,
-            lastRenewalAttemptAt: now,
-            // Refresh the saved card token if Flutterwave sent a new one.
-            ...(cardToken ? { flwCustomerToken: cardToken } : {}),
-            // ++ ADDED — keep the display label in step with the token, so a
-            // card the bank reissued shows its new last4 rather than a stale
-            // one. Each field is written only when present, so a sparse
-            // response never blanks details we already hold.
-            ...(card?.last4 ? { cardLast4: card.last4 } : {}),
-            ...(card?.brand ? { cardBrand: card.brand } : {}),
-            ...(card?.expiry ? { cardExpiry: card.expiry } : {}),
-          },
-        }),
-        prisma.subscriptionInvoice.upsert({
-          where: { invoiceNumber },
-          create: {
-            subscriptionId: subscription.id,
-            userId: subscription.userId,
-            invoiceNumber,
-            periodStart,
-            periodEnd,
-            amountNaira: tx.amount,
-            currency: tx.currency ?? "NGN",
-            status: "PAID",
-            flwTransactionRef: String(txRef ?? transactionId),
-            flwTransactionId: String(transactionId),
-            paidAt: now,
-          },
-          update: {
-            status: "PAID",
-            flwTransactionId: String(transactionId),
-            paidAt: now,
-          },
-        }),
-        prisma.subscriptionHistory.create({
-          data: {
-            subscriptionId: subscription.id,
-            userId: subscription.userId,
-            eventType: SubscriptionEvent.RENEWED,
-            fromStatus: subscription.status,
-            toStatus: SubscriptionStatus.ACTIVE,
-            flwTransactionRef: String(txRef ?? transactionId),
-            amountCharged: tx.amount,
-            triggeredBy: "system",
-            notes: `Auto-renewed (Flutterwave payment plan) until ${periodEnd
-              .toISOString()
-              .slice(0, 10)}`,
-          },
-        }),
-        prisma.user.update({
-          where: { id: subscription.userId },
-          data: { isPremium: true, premiumExpiresAt: periodEnd },
-        }),
-      ]);
-
-      console.log(`✅ Subscription ${subscription.id} renewed until ${periodEnd.toISOString()}.`);
-      res.status(200).send("Renewed");
-      return;
-    }
-
-    // Any other status (CANCELLED/EXPIRED/…) — record but don't reactivate here.
-    console.log(`Charge for subscription ${subscription.id} in status ${subscription.status} — ack.`);
-    res.status(200).send("Acknowledged");
+    let outcome = "ignored";
+    if (event === "transfer.completed" || event.toUpperCase().includes("TRANSFER")) outcome = await handleTransfer(body);
+    else if (event === "charge.completed" || event.toUpperCase().includes("TRANSACTION")) outcome = await handleCharge(body);
+    console.log(`📡 Flutterwave ${event} → ${outcome}`);
+    res.status(200).json({ received: true, outcome });
   } catch (error) {
-    console.error("❌ Webhook handler error:", error);
-    // 500 → Flutterwave retries later; idempotency above makes the retry safe.
+    console.error(`❌ Flutterwave webhook ${event} failed:`, error);
+    // 500 → Flutterwave retries later; every handler is idempotent.
     res.status(500).json({ error: "Internal processing error" });
   }
 }
