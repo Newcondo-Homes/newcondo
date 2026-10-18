@@ -22,7 +22,7 @@
     "db:reset": "prisma migrate reset --config prisma.config.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "prisma generate --config prisma.config.ts",
-    "build": "pnpm clean && tsc ",
+    "build": "pnpm clean && prisma generate --config prisma.config.ts && tsc ",
     "clean": "rimraf dist"
   },
   "keywords": [],
