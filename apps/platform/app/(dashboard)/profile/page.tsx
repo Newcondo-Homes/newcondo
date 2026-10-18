@@ -24,7 +24,7 @@ import { YourDetailsCard } from "@/components/dashboard/profile/YourDetailsCard"
 import { DeleteAccountCard } from "@/components/dashboard/profile/DeleteAccountCard";
 import {
   planByCode,
-  formatNaira,
+  formatNairaa,
   formatRate,
   totalForProperties,
   MAX_PLOTS_SELF_SERVE,
@@ -134,7 +134,7 @@ export default function ProfilePage() {
           <CardH
             title={role === "OWNER" ? "Your properties & plans" : "Your plan"}
             right={role === "OWNER"
-              ? <StatusBadge s="RENTED">{`${formatNaira(ownerTotal)}/mo`}</StatusBadge>
+              ? <StatusBadge s="RENTED">{`${formatNairaa(ownerTotal)}/mo`}</StatusBadge>
               : <StatusBadge s="RENTED">{plan.name}</StatusBadge>}
           />
           {role === "OWNER" && (<>
@@ -155,7 +155,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="flex flex-none items-center gap-3">
-                      <span className="text-[14px] font-semibold">{formatNaira(p.amountNaira)}</span>
+                      <span className="text-[14px] font-semibold">{formatNairaa(p.amountNaira)}</span>
                       <button
                         className="text-[13px] font-semibold text-green-dark hover:text-ink"
                         onClick={() => toast.info(`Change tier — ${line.label}`, { description: "Tier is set per property; the change applies from your next billing cycle." })}
@@ -169,7 +169,7 @@ export default function ProfilePage() {
             })}
             <div className="mt-3 flex items-baseline justify-between border-t border-border-strong pt-3">
               <span className="text-[14px] font-semibold">Monthly total</span>
-              <span className="text-[18px] font-bold tracking-[-0.02em]">{formatNaira(ownerTotal)}</span>
+              <span className="text-[18px] font-bold tracking-[-0.02em]">{formatNairaa(ownerTotal)}</span>
             </div>
             <KV k="Next billing" v="1 Aug 2026 · card ending 4242" />
             <p className="mt-2 text-[12.5px] leading-[1.5] text-text-tertiary">
@@ -178,16 +178,16 @@ export default function ProfilePage() {
             </p>
           </>)}
           {role === "AGENT" && (<>
-            <KV k="Plan" v={`${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
-            <KV k="Marking queue" v={plan.canAccessMarkingJobs ? `Included — ${formatNaira(MARKING.markerPayout)} per job` : "Not included on this plan"} />
+            <KV k="Plan" v={`${plan.name} — ${formatNairaa(plan.amountNaira)}/${per(plan.cycle)}`} />
+            <KV k="Marking queue" v={plan.canAccessMarkingJobs ? `Included — ${formatNairaa(MARKING.markerPayout)} per job` : "Not included on this plan"} />
             <KV k="Listings" v={plan.propertyListingCap === null ? "Unlimited · priority placement" : `Up to ${plan.propertyListingCap}`} />
             <KV k="Next billing" v="1 Aug 2026 · card ending 4242" />
           </>)}
           {role === "RENTER" && (<>
-            <KV k="Plan" v={plan.amountNaira === 0 ? "Free" : `${plan.name} — ${formatNaira(plan.amountNaira)}/${per(plan.cycle)}`} />
+            <KV k="Plan" v={plan.amountNaira === 0 ? "Free" : `${plan.name} — ${formatNairaa(plan.amountNaira)}/${per(plan.cycle)}`} />
             <div className="mt-3">
               <Banner icon="zap" action={<DBtn sm onClick={() => toast.info("Premium checkout", { description: "Flutterwave subscription flow — see onboarding plan selector." })}>Upgrade</DBtn>}>
-                <b className="font-semibold">Premium unlocks marking-job income and your wallet.</b> One marking job ({formatNaira(MARKING.markerPayout)}) covers more than a month.
+                <b className="font-semibold">Premium unlocks marking-job income and your wallet.</b> One marking job ({formatNairaa(MARKING.markerPayout)}) covers more than a month.
               </Banner>
             </div>
           </>)}

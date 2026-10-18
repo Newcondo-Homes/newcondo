@@ -11,7 +11,7 @@ import {
   SUBSCRIPTION_PLANS,
   OWNER_TIER_ORDER,
   MAX_PLOTS_SELF_SERVE,
-  formatNaira,
+  formatNairaa,
   formatRate,
   type SubscriptionPlanSpec,
 } from "@/lib/constants/business";
@@ -78,7 +78,7 @@ function PlanCard({ plan }: { plan: SubscriptionPlanSpec }) {
         <p className={cx("text-[14.5px] leading-[1.45] m-0 min-h-[42px]", dark ? "text-text-on-dark-2" : "text-text-secondary")}>{plan.tagline}</p>
       </div>
       <div className="flex items-baseline gap-1.5 mt-[22px] flex-wrap">
-        <span className={cx("text-[40px] font-bold tracking-[-0.04em]", dark ? "text-cream" : "text-text-primary")}>{formatNaira(plan.amountNaira)}</span>
+        <span className={cx("text-[40px] font-bold tracking-[-0.04em]", dark ? "text-cream" : "text-text-primary")}>{formatNairaa(plan.amountNaira)}</span>
         <span className={cx("text-[15px]", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>{plan.unitLabel}</span>
       </div>
       <p className={cx("text-[13px] m-0 mt-1.5 mb-6", dark ? "text-text-on-dark-2" : "text-text-tertiary")}>
@@ -130,9 +130,9 @@ export function Pricing() {
           <h4 className="nc-h4 m-0 mb-2.5">Why {premium.name} pays for itself</h4>
           <p className="text-[15.5px] leading-[1.6] text-text-secondary m-0 max-w-[70ch]">
             On {premium.name}, commission drops from {formatRate(essential.commissionRate)} to {formatRate(premium.commissionRate)}. Collect{" "}
-            {formatNaira(SAMPLE_RENT)}/month in rent on a property and that difference saves you{" "}
-            <strong className="text-text-primary">{formatNaira(monthlySaving)} every month</strong>. The subscription is{" "}
-            {formatNaira(premium.amountNaira)} — so you&apos;re effectively paying {formatNaira(netCost)}/month for twice the
+            {formatNairaa(SAMPLE_RENT)}/month in rent on a property and that difference saves you{" "}
+            <strong className="text-text-primary">{formatNairaa(monthlySaving)} every month</strong>. The subscription is{" "}
+            {formatNairaa(premium.amountNaira)} — so you&apos;re effectively paying {formatNairaa(netCost)}/month for twice the
             fumigation, two inspection reports a year, an account manager and 24-hour emergency maintenance.
           </p>
           <p className="inline-flex items-center gap-[9px] mt-3.5 font-semibold text-green-dark">

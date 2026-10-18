@@ -5,7 +5,12 @@ services:
     region: frankfurt          # oregon or frankfurt if your users are in Africa/Europe
     plan: free
     # DO NOT set rootDir here — we need repo root for pnpm workspace resolution
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @newcondo/combined-backend build
+    # db:generate is explicit: when only schema.prisma changes, pnpm reports
+    # "Already up to date" and skips @newcondo/db's postinstall, leaving a stale
+    # Prisma client (every new model/field then "does not exist"). The "..."
+    # suffix builds combined-backend's workspace deps (db, backend-shared,
+    # payment-service …) first, in order.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @newcondo/db db:generate && pnpm --filter "@newcondo/combined-backend..." build
     startCommand: node backend/combined-backend/dist/server.js
     healthCheckPath: /health
     envVars:

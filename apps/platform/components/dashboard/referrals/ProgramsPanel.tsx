@@ -37,7 +37,7 @@ export function ReferralCreditPanel() {
       <div className="mb-2 font-mono text-[28px] font-semibold tracking-[-0.02em] text-green-dark">{ngn(c.available)}</div>
       <p className="m-0 mb-3 text-[12.5px] leading-normal text-text-tertiary">Credit applies automatically to your next subscription charge.</p>
       {c.scheduled.map((s, i) => <KV key={`s${i}`} k={`Arrives ${day(s.availableAt)}`} v={`+${ngn(s.amount)}`} mono />)}
-      {c.expiringSoon.map((s, i) => <KV key={`e${i}`} k={<span className="text-[#8a6508]">Expires {day(s.expiresAt)}</span>} v={ngn(s.amount)} mono />)}
+      {c.expiringSoon.map((s, i) => <KV key={`e${i}`} k={`Expires ${day(s.expiresAt)}`} v={ngn(s.amount)} mono />)}
       {data.overrides && <KV k="Founding Agent Override paid" v={`${ngn(data.overrides.total)} · ${data.overrides.count}×`} mono />}
       {data.capUsage.map((u) => (
         <div key={u.ruleId} className="mt-3">

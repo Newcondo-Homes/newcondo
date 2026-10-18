@@ -51,7 +51,7 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
     setBusy(true);
     try {
       if (api.isLiveBackend) {
-        const { signIn } = await import("@newcondo/auth");
+        const { signIn } = await import("@newcondo/auth/client");
         const res = await signIn("credentials", { ...login, redirect: false });
         if (res?.error) throw new Error("Email or password is not correct");
         // Existing accounts may predate virtual accounts — ensure one exists
@@ -73,7 +73,7 @@ export function RentGate({ property, signedIn, onClose }: { property: RentGatePr
         // account from the BVN (payment-service ensureRenterVirtualAccount).
         const apiClient = (await import("@/lib/api/client")).default;
         await apiClient.post("/auth/register", { name: f.name, email: f.email, phone: f.phone, password: f.password, bvn: f.bvn, role: "RENTER", viaShareCode: property.shareCode });
-        const { signIn } = await import("@newcondo/auth");
+        const { signIn } = await import("@newcondo/auth/client");
         await signIn("credentials", { email: f.email, password: f.password, redirect: false });
       } else await new Promise((r) => setTimeout(r, 1400));
       toast.success("Account ready", { description: "Your secure escrow account has been created." });
