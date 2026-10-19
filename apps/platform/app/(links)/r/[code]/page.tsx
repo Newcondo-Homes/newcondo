@@ -7,6 +7,7 @@ import {
   ReferralInvitation,
   type ReferralData,
 } from "@/components/referral/referral-invitation";
+import { ReferralTracker } from "@/components/referral/referral-tracker";
 
 interface Props {
   params: Promise<{ code: string }>;
@@ -14,12 +15,17 @@ interface Props {
 
 const LOGO_DARK = "/assets/logo-mark-dark.png";
 
-/** Public, unauthenticated lookup of a referral code on the API. */
+/** Public, unauthenticated lookup of a referral code on the API.
+    NEXT_PUBLIC_API_URL already ends in /api/v1, so the path is
+    /referrals/public/:code (the old `/api/referrals/public` doubled the prefix).
+    Backend: combined-backend routes/referrals.ts → Referrals.publicInvitation —
+    masked name ("Ada O.") + the most a new user can earn under the live rules.
+    Revalidated every 60s, so generateMetadata and the page share one fetch. */
 async function getReferralData(code: string): Promise<ReferralData | null> {
   try {
     const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/referrals/public/${code}`,
-      { cache: "no-store" }
+      `${process.env.NEXT_PUBLIC_API_URL}/referrals/public/${encodeURIComponent(code)}`,
+      { next: { revalidate: 60 } }
     );
     if (!res.ok) return null;
     return (await res.json()) as ReferralData;
@@ -32,14 +38,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { code } = await params;
   const data = await getReferralData(code);
 
-
   if (!data?.valid) {
     return { title: "Invalid referral | NewCondo" };
   }
 
   const rewardLine = data.reward
-    ? `claim ₦${data.reward.amount.toLocaleString()} in service credit`
-    : "claim your welcome reward";
+    ? `earn up to ₦${data.reward.amount.toLocaleString()} in subscription credit`
+    : "get started";
 
   return {
     title: `Join NewCondo — invited by ${data.referrer.name}`,
@@ -49,20 +54,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ReferralLandingPage({ params }: Props) {
   const { code } = await params;
-  // const data = await getReferralData(code);
-  // const valid = Boolean(data?.valid);
-
-  const data = { valid: true, 
-    referrer: { name: "emeka", role: "AGENT" as "OWNER" | "AGENT" | "RENTER" }, reward: { amount: 7500, description: "pay them" } }
-  const valid = true
-
-  // TODO: the description for the data should be something like "NewCondo service credit, applied after your first subscription or rent payment."
+  const data = await getReferralData(code);
+  const valid = Boolean(data?.valid);
 
   return (
     <div
       className={`bg-background ${valid ? "min-h-dvh" : "h-dvh overflow-hidden"}`}
       data-screen-label="Referral invitation"
     >
+      {/* Counts the click + sets the 30-day nc_ref attribution cookie. */}
+      {valid && <ReferralTracker code={code} />}
+
       {/* ============ NAV — single action: create account ============ */}
       <nav className="sticky top-0 z-50 border-b border-border-hair bg-[rgba(247,246,239,0.8)] backdrop-blur-[18px]">
         <div className="mx-auto flex max-w-[1080px] items-center gap-6 px-[var(--gutter)] py-3.5">
@@ -75,7 +77,7 @@ export default async function ReferralLandingPage({ params }: Props) {
             <span>newcondo</span>
           </Link>
           <div className="ml-auto">
-            <RButton as="a" href={`/onboarding?ref=${code}`} variant="dark" size="sm">
+            <RButton as="a" href={valid ? `/onboarding?ref=${code}` : "/onboarding"} variant="dark" size="sm">
               Create account
             </RButton>
           </div>
@@ -116,3 +118,8 @@ function InvalidInvitation() {
     </div>
   );
 }
+
+
+// const data = { valid: true, 
+//     referrer: { name: "emeka", role: "AGENT" as "OWNER" | "AGENT" | "RENTER" }, reward: { amount: 7500, description: "pay them" } }
+//   const valid = true

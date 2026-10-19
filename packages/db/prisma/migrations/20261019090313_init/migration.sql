@@ -50,7 +50,7 @@ CREATE TYPE "MarkingJobStatus" AS ENUM ('QUEUED', 'ASSIGNED', 'IN_PROGRESS', 'CO
 CREATE TYPE "UrgencyLevel" AS ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT');
 
 -- CreateEnum
-CREATE TYPE "PaymentType" AS ENUM ('RENT', 'DEPOSIT', 'AGENT_COMMISSION', 'PREMIUM_UPGRADE', 'PROPERTY_MARKING', 'RENT_RELEASE', 'WITHDRAWAL', 'SERVICE_FEE');
+CREATE TYPE "PaymentType" AS ENUM ('RENT', 'DEPOSIT', 'AGENT_COMMISSION', 'PREMIUM_UPGRADE', 'PROPERTY_MARKING', 'RENT_RELEASE', 'WITHDRAWAL', 'SERVICE_FEE', 'VENDOR_PAYOUT', 'REFERRAL_OVERRIDE');
 
 -- CreateEnum
 CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCESS', 'FAILED', 'CANCELLED', 'REFUNDED', 'HELD', 'RELEASED');
@@ -92,7 +92,7 @@ CREATE TYPE "PromotionRequestStatus" AS ENUM ('PENDING', 'APPROVED', 'REJECTED')
 CREATE TYPE "ReferralType" AS ENUM ('OWNER_TO_OWNER', 'OWNER_TO_AGENT', 'OWNER_TO_RENTER', 'AGENT_TO_OWNER', 'AGENT_TO_AGENT', 'AGENT_TO_RENTER', 'RENTER_TO_RENTER');
 
 -- CreateEnum
-CREATE TYPE "ReferralStatus" AS ENUM ('PENDING', 'QUALIFIED', 'REWARDED', 'EXPIRED', 'CANCELLED');
+CREATE TYPE "ReferralStatus" AS ENUM ('PENDING', 'ACTIVE', 'VOID', 'QUALIFIED', 'REWARDED', 'EXPIRED', 'CANCELLED');
 
 -- CreateEnum
 CREATE TYPE "RewardType" AS ENUM ('SERVICE_CREDIT', 'SUBSCRIPTION_DISCOUNT', 'RENT_CREDIT', 'COMMISSION_CREDIT', 'MAINTENANCE_VOUCHER', 'CASH_REWARD');
@@ -120,6 +120,27 @@ CREATE TYPE "SubscriptionEvent" AS ENUM ('CREATED', 'ACTIVATED', 'RENEWED', 'REN
 
 -- CreateEnum
 CREATE TYPE "InvoiceStatus" AS ENUM ('PENDING', 'PAID', 'FAILED', 'REFUNDED', 'VOID');
+
+-- CreateEnum
+CREATE TYPE "LedgerAccountKind" AS ENUM ('WORLD', 'PLATFORM', 'ESCROW', 'TRANSIT', 'SUSPENSE', 'USER_AVAILABLE', 'USER_PENDING');
+
+-- CreateEnum
+CREATE TYPE "LedgerTxnType" AS ENUM ('OPENING_BALANCE', 'RENT_COLLECTED', 'RENT_RELEASED', 'RENT_REFUNDED', 'SUBSCRIPTION_COLLECTED', 'PROPERTY_PLAN_COLLECTED', 'MARKING_FEE_COLLECTED', 'MARKING_HOLD', 'MARKING_RELEASED', 'MARKING_REFUNDED', 'VENDOR_PAYOUT', 'WITHDRAWAL_INITIATED', 'WITHDRAWAL_SETTLED', 'WITHDRAWAL_REVERSED', 'REFERRAL_OVERRIDE', 'INBOUND_TRANSFER', 'INBOUND_MATCHED', 'ADJUSTMENT');
+
+-- CreateEnum
+CREATE TYPE "InboundTransferStatus" AS ENUM ('UNMATCHED', 'MATCHED', 'REFUNDED', 'IGNORED');
+
+-- CreateEnum
+CREATE TYPE "PropertyPlanStatus" AS ENUM ('PENDING_PAYMENT', 'ACTIVE', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "ReferralLedgerKind" AS ENUM ('SUBSCRIPTION_CREDIT', 'SERVICE_CREDIT', 'COMMISSION_OVERRIDE', 'CLAWBACK');
+
+-- CreateEnum
+CREATE TYPE "ReferralLedgerStatus" AS ENUM ('SCHEDULED', 'AVAILABLE', 'PENDING_FUNDING', 'REDEEMED', 'PARTIALLY_REDEEMED', 'PAID_OUT', 'EXPIRED', 'VOIDED');
+
+-- CreateEnum
+CREATE TYPE "ReferralEventOutcome" AS ENUM ('REWARDED', 'SKIPPED');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -150,6 +171,7 @@ CREATE TABLE "User" (
     "isPremium" BOOLEAN NOT NULL DEFAULT false,
     "premiumExpiresAt" TIMESTAMP(3),
     "referralCode" TEXT NOT NULL,
+    "referralCodeDisabledAt" TIMESTAMP(3),
     "isAvailableForMarking" BOOLEAN NOT NULL DEFAULT false,
     "agentServiceAreas" TEXT[],
     "agentReliabilityScore" DECIMAL(3,2),
@@ -309,6 +331,8 @@ CREATE TABLE "Property" (
     "availableFrom" TIMESTAMP(3),
     "isPaymentLocked" BOOLEAN NOT NULL DEFAULT false,
     "paymentLockExpiry" TIMESTAMP(3),
+    "suspendedBySubscription" BOOLEAN NOT NULL DEFAULT false,
+    "offPlanAt" TIMESTAMP(3),
     "shareableLink" TEXT,
     "viewCount" INTEGER NOT NULL DEFAULT 0,
     "favoriteCount" INTEGER NOT NULL DEFAULT 0,
@@ -484,6 +508,7 @@ CREATE TABLE "Payment" (
     "agentCommission" DECIMAL(10,2),
     "platformFee" DECIMAL(10,2),
     "ownerAmount" DECIMAL(10,2),
+    "processingFee" DECIMAL(10,2),
     "confirmationPeriodEnd" TIMESTAMP(3),
     "isReleased" BOOLEAN NOT NULL DEFAULT false,
     "releasedAt" TIMESTAMP(3),
@@ -601,6 +626,10 @@ CREATE TABLE "Vendor" (
     "phone" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "bankName" TEXT,
+    "bankCode" TEXT,
+    "accountNumber" TEXT,
+    "accountName" TEXT,
 
     CONSTRAINT "Vendor_pkey" PRIMARY KEY ("id")
 );
@@ -645,6 +674,8 @@ CREATE TABLE "ServiceJob" (
     "cost" DECIMAL(10,2) NOT NULL DEFAULT 0,
     "photoKeys" TEXT[],
     "completedAt" TIMESTAMP(3),
+    "payoutRef" TEXT,
+    "paidOutAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -691,6 +722,12 @@ CREATE TABLE "Referral" (
     "referredRewardPaidAt" TIMESTAMP(3),
     "clickCount" INTEGER NOT NULL DEFAULT 0,
     "shareChannel" TEXT,
+    "source" TEXT,
+    "activatedAt" TIMESTAMP(3),
+    "fraudHold" BOOLEAN NOT NULL DEFAULT false,
+    "fraudReason" TEXT,
+    "signupIpHash" TEXT,
+    "deviceHash" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -997,7 +1034,10 @@ CREATE TABLE "Subscription" (
     "nextRenewalAttempt" TIMESTAMP(3),
     "renewalFailureCount" INTEGER NOT NULL DEFAULT 0,
     "lastRenewalAttemptAt" TIMESTAMP(3),
+    "gracePeriodEndsAt" TIMESTAMP(3),
+    "listingsSuspendedAt" TIMESTAMP(3),
     "virtualAccountCreated" BOOLEAN NOT NULL DEFAULT false,
+    "reservedSeat" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -1034,6 +1074,7 @@ CREATE TABLE "SubscriptionInvoice" (
     "periodEnd" TIMESTAMP(3) NOT NULL,
     "amountNaira" DECIMAL(10,2) NOT NULL,
     "currency" TEXT NOT NULL DEFAULT 'NGN',
+    "processingFeeNaira" DECIMAL(10,2),
     "status" "InvoiceStatus" NOT NULL DEFAULT 'PENDING',
     "flwTransactionRef" TEXT,
     "flwTransactionId" TEXT,
@@ -1058,6 +1099,12 @@ CREATE TABLE "PropertySubscription" (
     "estateId" TEXT,
     "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "cancelledAt" TIMESTAMP(3),
+    "status" "PropertyPlanStatus" NOT NULL DEFAULT 'ACTIVE',
+    "included" BOOLEAN NOT NULL DEFAULT false,
+    "cancelAtPeriodEnd" BOOLEAN NOT NULL DEFAULT false,
+    "nextPlanType" "SubscriptionPlan",
+    "pendingTxRef" TEXT,
+    "proratedNaira" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -1080,6 +1127,144 @@ CREATE TABLE "FlutterwavePlan" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "FlutterwavePlan_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "LedgerAccount" (
+    "id" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "kind" "LedgerAccountKind" NOT NULL,
+    "userId" TEXT,
+    "currency" TEXT NOT NULL DEFAULT 'NGN',
+    "balanceKobo" BIGINT NOT NULL DEFAULT 0,
+    "allowNegative" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "LedgerAccount_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "LedgerTransaction" (
+    "id" TEXT NOT NULL,
+    "idempotencyKey" TEXT NOT NULL,
+    "type" "LedgerTxnType" NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "sourceId" TEXT NOT NULL,
+    "paymentId" TEXT,
+    "memo" TEXT,
+    "metadata" JSONB,
+    "createdBy" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LedgerTransaction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "LedgerEntry" (
+    "id" TEXT NOT NULL,
+    "transactionId" TEXT NOT NULL,
+    "accountId" TEXT NOT NULL,
+    "amountKobo" BIGINT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LedgerEntry_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "InboundTransfer" (
+    "id" TEXT NOT NULL,
+    "flwTransactionId" TEXT NOT NULL,
+    "accountNumber" TEXT NOT NULL,
+    "amountKobo" BIGINT NOT NULL,
+    "senderName" TEXT,
+    "senderAccount" TEXT,
+    "senderBank" TEXT,
+    "narration" TEXT,
+    "reference" TEXT,
+    "status" "InboundTransferStatus" NOT NULL DEFAULT 'UNMATCHED',
+    "matchedPaymentId" TEXT,
+    "matchedAt" TIMESTAMP(3),
+    "resolvedBy" TEXT,
+    "raw" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "InboundTransfer_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReferralLinkClick" (
+    "id" TEXT NOT NULL,
+    "referrerId" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "ipHash" TEXT,
+    "deviceHash" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReferralLinkClick_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReferralCohortMember" (
+    "id" TEXT NOT NULL,
+    "cohort" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReferralCohortMember_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReferralEvent" (
+    "id" TEXT NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "sourceId" TEXT NOT NULL,
+    "ruleId" TEXT NOT NULL,
+    "referralId" TEXT NOT NULL,
+    "beneficiaryId" TEXT,
+    "outcome" "ReferralEventOutcome" NOT NULL,
+    "skipReason" TEXT,
+    "marginKobo" BIGINT,
+    "payload" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReferralEvent_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReferralLedgerEntry" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "referralId" TEXT NOT NULL,
+    "ruleId" TEXT NOT NULL,
+    "sourceType" TEXT NOT NULL,
+    "sourceId" TEXT NOT NULL,
+    "kind" "ReferralLedgerKind" NOT NULL,
+    "status" "ReferralLedgerStatus" NOT NULL,
+    "amountKobo" BIGINT NOT NULL,
+    "redeemedKobo" BIGINT NOT NULL DEFAULT 0,
+    "serviceType" TEXT,
+    "serviceRef" TEXT,
+    "availableAt" TIMESTAMP(3) NOT NULL,
+    "expiresAt" TIMESTAMP(3),
+    "voidedAt" TIMESTAMP(3),
+    "voidReason" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReferralLedgerEntry_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ReferralRedemption" (
+    "id" TEXT NOT NULL,
+    "ledgerEntryId" TEXT NOT NULL,
+    "invoiceId" TEXT,
+    "amountKobo" BIGINT NOT NULL,
+    "status" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReferralRedemption_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -1204,6 +1389,9 @@ CREATE INDEX "Property_totalUnits_idx" ON "Property"("totalUnits");
 
 -- CreateIndex
 CREATE INDEX "Property_availableUnits_idx" ON "Property"("availableUnits");
+
+-- CreateIndex
+CREATE INDEX "Property_suspendedBySubscription_idx" ON "Property"("suspendedBySubscription");
 
 -- CreateIndex
 CREATE INDEX "PropertyUnit_propertyId_idx" ON "PropertyUnit"("propertyId");
@@ -1387,6 +1575,9 @@ CREATE UNIQUE INDEX "ServiceSubscription_ownerId_key" ON "ServiceSubscription"("
 
 -- CreateIndex
 CREATE INDEX "ServiceSubscription_status_idx" ON "ServiceSubscription"("status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ServiceJob_payoutRef_key" ON "ServiceJob"("payoutRef");
 
 -- CreateIndex
 CREATE INDEX "ServiceJob_propertyId_status_idx" ON "ServiceJob"("propertyId", "status");
@@ -1689,6 +1880,9 @@ CREATE INDEX "SubscriptionInvoice_createdAt_idx" ON "SubscriptionInvoice"("creat
 CREATE UNIQUE INDEX "PropertySubscription_propertyId_key" ON "PropertySubscription"("propertyId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "PropertySubscription_pendingTxRef_key" ON "PropertySubscription"("pendingTxRef");
+
+-- CreateIndex
 CREATE INDEX "PropertySubscription_subscriptionId_idx" ON "PropertySubscription"("subscriptionId");
 
 -- CreateIndex
@@ -1705,6 +1899,84 @@ CREATE INDEX "FlutterwavePlan_planType_idx" ON "FlutterwavePlan"("planType");
 
 -- CreateIndex
 CREATE INDEX "FlutterwavePlan_flwPlanId_idx" ON "FlutterwavePlan"("flwPlanId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LedgerAccount_code_key" ON "LedgerAccount"("code");
+
+-- CreateIndex
+CREATE INDEX "LedgerAccount_userId_idx" ON "LedgerAccount"("userId");
+
+-- CreateIndex
+CREATE INDEX "LedgerAccount_kind_idx" ON "LedgerAccount"("kind");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "LedgerTransaction_idempotencyKey_key" ON "LedgerTransaction"("idempotencyKey");
+
+-- CreateIndex
+CREATE INDEX "LedgerTransaction_sourceType_sourceId_idx" ON "LedgerTransaction"("sourceType", "sourceId");
+
+-- CreateIndex
+CREATE INDEX "LedgerTransaction_type_createdAt_idx" ON "LedgerTransaction"("type", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "LedgerTransaction_paymentId_idx" ON "LedgerTransaction"("paymentId");
+
+-- CreateIndex
+CREATE INDEX "LedgerEntry_accountId_createdAt_idx" ON "LedgerEntry"("accountId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "LedgerEntry_transactionId_idx" ON "LedgerEntry"("transactionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "InboundTransfer_flwTransactionId_key" ON "InboundTransfer"("flwTransactionId");
+
+-- CreateIndex
+CREATE INDEX "InboundTransfer_status_createdAt_idx" ON "InboundTransfer"("status", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "InboundTransfer_reference_idx" ON "InboundTransfer"("reference");
+
+-- CreateIndex
+CREATE INDEX "ReferralLinkClick_referrerId_createdAt_idx" ON "ReferralLinkClick"("referrerId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "ReferralLinkClick_code_createdAt_idx" ON "ReferralLinkClick"("code", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "ReferralCohortMember_cohort_joinedAt_idx" ON "ReferralCohortMember"("cohort", "joinedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ReferralCohortMember_cohort_userId_key" ON "ReferralCohortMember"("cohort", "userId");
+
+-- CreateIndex
+CREATE INDEX "ReferralEvent_ruleId_createdAt_idx" ON "ReferralEvent"("ruleId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "ReferralEvent_referralId_idx" ON "ReferralEvent"("referralId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ReferralEvent_sourceType_sourceId_ruleId_referralId_key" ON "ReferralEvent"("sourceType", "sourceId", "ruleId", "referralId");
+
+-- CreateIndex
+CREATE INDEX "ReferralLedgerEntry_userId_status_expiresAt_idx" ON "ReferralLedgerEntry"("userId", "status", "expiresAt");
+
+-- CreateIndex
+CREATE INDEX "ReferralLedgerEntry_ruleId_createdAt_idx" ON "ReferralLedgerEntry"("ruleId", "createdAt");
+
+-- CreateIndex
+CREATE INDEX "ReferralLedgerEntry_referralId_idx" ON "ReferralLedgerEntry"("referralId");
+
+-- CreateIndex
+CREATE INDEX "ReferralLedgerEntry_status_availableAt_idx" ON "ReferralLedgerEntry"("status", "availableAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ReferralLedgerEntry_sourceType_sourceId_ruleId_userId_key" ON "ReferralLedgerEntry"("sourceType", "sourceId", "ruleId", "userId");
+
+-- CreateIndex
+CREATE INDEX "ReferralRedemption_invoiceId_idx" ON "ReferralRedemption"("invoiceId");
+
+-- CreateIndex
+CREATE INDEX "ReferralRedemption_ledgerEntryId_idx" ON "ReferralRedemption"("ledgerEntryId");
 
 -- AddForeignKey
 ALTER TABLE "AccountDeletionRequest" ADD CONSTRAINT "AccountDeletionRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -1948,3 +2220,15 @@ ALTER TABLE "PropertySubscription" ADD CONSTRAINT "PropertySubscription_subscrip
 
 -- AddForeignKey
 ALTER TABLE "PropertySubscription" ADD CONSTRAINT "PropertySubscription_propertyId_fkey" FOREIGN KEY ("propertyId") REFERENCES "Property"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LedgerAccount" ADD CONSTRAINT "LedgerAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "LedgerTransaction"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "LedgerAccount"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReferralRedemption" ADD CONSTRAINT "ReferralRedemption_ledgerEntryId_fkey" FOREIGN KEY ("ledgerEntryId") REFERENCES "ReferralLedgerEntry"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
