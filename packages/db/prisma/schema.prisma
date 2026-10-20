@@ -205,6 +205,10 @@ model User {
   disputeEvidences   DisputeEvidence[]
   paymentAttemptLogs PaymentAttemptLog[]
 
+  // ++ VENDORS
+  vendorProfile       Vendor?            @relation("VendorUser")
+  generatedVisitCodes ServiceVisitCode[] @relation("VisitCodeGenerator")
+
   @@index([email])
   @@index([phone])
   @@index([verificationStatus])
@@ -225,6 +229,7 @@ enum Role {
   AGENT
   RENTER
   ADMIN
+  VENDOR // ++ VENDORS — service providers; sign in to apps/vendors only
 }
 
 enum IdDocumentType {
@@ -523,6 +528,10 @@ model Property {
   shareLinks    ShareLink[]
   tenantInvites TenantInvite[]
   serviceJobs   ServiceJob[]
+
+  // ++ VENDORS
+  vendorAssignments VendorAssignment[]
+  serviceWindow     PropertyServiceWindow?
 
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -1137,23 +1146,50 @@ model OwnerAgentLink {
 model Vendor {
   id        String   @id @default(cuid())
   name      String
-  category  String // FUMIGATION | WASTE | INSPECTION | REPAIRS
+  category  String // primary service: FUMIGATION | WASTE_MANAGEMENT | INSPECTION (legacy: WASTE | REPAIRS)
   rating    Float    @default(0)
   phone     String?
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
-  // ++ MONEY CORE — payout destination, verified by Flutterwave name enquiry
-  // when an admin onboards the vendor. Vendors are paid from platform:revenue
-  // MONEY.vendors.releaseHours after a job completes without an issue.
+  // ++ MONEY CORE — payout destination, verified by Flutterwave name enquiry.
+  // ++ VENDORS — network jobs are paid from the property's service fund
+  // (fund:{propertyId}:{SERVICE}); legacy jobs still pay from platform:revenue.
   bankName      String?
   bankCode      String?
   accountNumber String?
   accountName   String?
 
+  // ++ VENDORS ------------------------------------------------------------------
+  /// The login. Vendors are Users with role VENDOR; one user = one vendor.
+  userId         String?   @unique
+  kind           String    @default("COMPANY") // COMPANY | INDIVIDUAL
+  providerType   String    @default("FUMIGATION_COMPANY") // VENDORS_PUBLIC.providerTypes key
+  services       String[] // every service it may be matched for (primary + addable)
+  contactName    String?
+  email          String?
+  cacNumber      String?
+  /// PENDING until admin verifies documents + bank. Only VERIFIED + isActive
+  /// vendors are matched or paid.
+  status         String    @default("PENDING") // PENDING | VERIFIED | SUSPENDED
+  verifiedAt     DateTime?
+  bankVerifiedAt DateTime?
+  capacityPerDay Int       @default(4)
+  maxClients     Int       @default(60)
+  releaseMode    String    @default("INSTANT") // INSTANT | END_OF_DAY
+  updatedAt      DateTime  @default(now()) @updatedAt
+
+  // DELETION: SetNull keeps the vendor's job + payout history when the login goes.
+  user          User?               @relation("VendorUser", fields: [userId], references: [id], onDelete: SetNull)
+  areas         VendorServiceArea[]
+  assignments   VendorAssignment[]
+  payoutBatches VendorPayoutBatch[]
+  // ++ ---------------------------------------------------------------------------
+
   jobs ServiceJob[]
 
   @@index([category, isActive])
+  @@index([status, isActive]) // ++ VENDORS
 }
 
 model ServicePlan {
@@ -1204,6 +1240,26 @@ model ServiceJob {
   payoutRef     String?   @unique
   paidOutAt     DateTime?
 
+  // ++ VENDORS ------------------------------------------------------------------
+  // Extra status values (String column): PAUSED (plan inactive — never
+  // dispatched or paid) · CANCELLED (replan/downgrade before the freeze
+  // window) · MISSED (day ended without a verified code) · LOCKED (too many
+  // wrong codes — admin review).
+  assignmentId  String?
+  planType      SubscriptionPlan? // plan that funded the visit
+  windowEnd     DateTime? // scheduledFor = window start
+  verifiedAt    DateTime?
+  verifiedVia   String? // CODE | QR | ADMIN
+  verifiedById  String? // who generated the matched code
+  codeAttempts  Int       @default(0)
+  payoutBatchId String?
+
+  assignment    VendorAssignment?     @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  payoutBatch   VendorPayoutBatch?    @relation(fields: [payoutBatchId], references: [id], onDelete: SetNull)
+  codes         ServiceVisitCode[]
+  reminderCalls ServiceReminderCall[]
+  // ++ ---------------------------------------------------------------------------
+
   // ++ DELETION — requestedBy Restrict: a vendor was dispatched and paid. An
   // OPEN service visit blocks the owner's deletion request outright — we
   // cannot send a technician to a property with no owner on record.
@@ -1218,6 +1274,132 @@ model ServiceJob {
   @@index([vendorId])
   @@index([scheduledFor])
   @@index([requestedById]) // ++ DELETION
+  @@index([assignmentId, status]) // ++ VENDORS
+  @@index([vendorId, scheduledFor]) // ++ VENDORS
+  @@index([payoutBatchId]) // ++ VENDORS
+}
+
+// ---------------------------------------------------------------------------
+// ++ VENDORS — vendor network (matching, scheduling, visit codes, reminders,
+// end-of-day payouts). See backend/vendor-service/VENDORS.md.
+// ---------------------------------------------------------------------------
+
+/// Where a vendor works. A property is eligible when it sits inside any of
+/// the vendor's area radii (haversine from the area centre).
+model VendorServiceArea {
+  id        String   @id @default(cuid())
+  vendorId  String
+  state     String
+  lga       String
+  area      String
+  lat       Float
+  lng       Float
+  radiusKm  Float
+  createdAt DateTime @default(now())
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId])
+  @@index([state, lga])
+}
+
+/// Which vendor serves which property, per service.
+/// activeKey = "{propertyId}:{serviceType}" while ACTIVE/PAUSED, NULL once
+/// ENDED. Its UNIQUE index makes it impossible for two vendors to hold the
+/// same property for the same service.
+model VendorAssignment {
+  id          String           @id @default(cuid())
+  propertyId  String
+  ownerId     String
+  vendorId    String
+  serviceType String // FUMIGATION | WASTE_MANAGEMENT | INSPECTION
+  /// Plan snapshot at the last (re)plan — a mismatch with the property's
+  /// PropertySubscription.planType is how upgrades/downgrades are detected.
+  planType    SubscriptionPlan
+  status      String           @default("ACTIVE") // ACTIVE | PAUSED | ENDED
+  activeKey   String?          @unique
+  distanceKm  Float?
+  assignedAt  DateTime         @default(now())
+  pausedAt    DateTime?
+  endedAt     DateTime?
+  endReason   String?
+
+  property Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  vendor   Vendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  jobs     ServiceJob[]
+
+  @@index([vendorId, status])
+  @@index([ownerId, serviceType, status])
+  @@index([propertyId])
+}
+
+/// The owner's availability for visits on one property. Always inside the
+/// service hours (Mon–Thu & Sat, 09:00–17:00); no row = the full hours.
+model PropertyServiceWindow {
+  propertyId  String   @id
+  days        Int[] // 1–4, 6 (0 = Sunday)
+  startMinute Int
+  endMinute   Int
+  updatedById String
+  updatedAt   DateTime @updatedAt
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+/// One-time visit codes. The raw code is never stored: HMAC(jobId:code).
+model ServiceVisitCode {
+  id            String    @id @default(cuid())
+  jobId         String
+  codeHash      String
+  generatedById String
+  generatedRole String // OWNER | LISTING_AGENT | TENANT
+  expiresAt     DateTime // end of service hours on the visit day
+  usedAt        DateTime?
+  createdAt     DateTime  @default(now())
+
+  job         ServiceJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  // Cascade — a code is useless once its creator's account is gone.
+  generatedBy User       @relation("VisitCodeGenerator", fields: [generatedById], references: [id], onDelete: Cascade)
+
+  @@index([jobId, usedAt])
+  @@index([generatedById])
+}
+
+/// Every reminder ring (fumigation + inspection), for audit and retries.
+model ServiceReminderCall {
+  id             String    @id @default(cuid())
+  jobId          String
+  dayOffset      Int // 2 = two days before, 0 = visit day
+  contactRole    String // TENANT | LISTING_AGENT | OWNER
+  userId         String?
+  phoneE164      String
+  attempt        Int       @default(1)
+  status         String    @default("RINGING") // RINGING | ANSWERED | NO_ANSWER | FAILED
+  provider       String
+  providerCallId String?   @unique
+  answeredAt     DateTime?
+  createdAt      DateTime  @default(now())
+
+  job ServiceJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId, dayOffset])
+}
+
+/// END_OF_DAY vendors get ONE transfer per day (one Flutterwave fee).
+model VendorPayoutBatch {
+  id         String    @id @default(cuid())
+  vendorId   String
+  reference  String    @unique // NC-VB-…
+  amountKobo BigInt
+  jobCount   Int
+  status     String    @default("SENT") // SENT | SETTLED | FAILED
+  createdAt  DateTime  @default(now())
+  settledAt  DateTime?
+
+  vendor Vendor       @relation(fields: [vendorId], references: [id], onDelete: Restrict)
+  jobs   ServiceJob[]
+
+  @@index([vendorId, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -2166,6 +2348,7 @@ enum LedgerAccountKind {
   SUSPENSE // inbound transfers we could not match to anything yet
   USER_AVAILABLE // withdrawable
   USER_PENDING // credited but locked (e.g. marking hold until owner confirms)
+  SERVICE_FUND // ++ VENDORS — fund:{propertyId}:{SERVICE}, vendor-cost share of a plan
 }
 
 model LedgerAccount {
@@ -2211,6 +2394,8 @@ enum LedgerTxnType {
   INBOUND_TRANSFER
   INBOUND_MATCHED
   ADJUSTMENT
+  SERVICE_FUND_ACCRUED // ++ VENDORS — revenue → service fund, per paid period
+  SERVICE_FUND_RETURNED // ++ VENDORS — service fund → revenue, downgrade/lapse leftover
 }
 
 model LedgerTransaction {
