@@ -1,226 +1,33 @@
-// apps/admin/src/app/(dashboard)/referrals/page.tsx
 "use client";
+// apps/admin/app/(dashboard)/referrals/page.tsx — referrer → referred, program, earnings; clear/void fraud holds.
+import { useState } from "react";
+import { A, type ReferralRow } from "@/lib/api/admin";
+import { useAction } from "@/hooks/useAdmin";
+import { Can, RequireScope } from "@/components/auth/Can";
+import { DataTable, Person, naira, when } from "@/components/ui/DataTable";
+import { Badge, Modal } from "@/components/ui/primitives";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import ReferralStatsCard from "@/components/referrals/ReferralStatsCard";
-import ReferralTable from "@/components/referrals/ReferralTable";
-import ReferralAnalyticsCharts from "@/components/referrals/ReferralAnalyticsCharts";
-import ReferralFilters from "@/components/referrals/ReferralFilters";
-import ReferralExport from "@/components/referrals/ReferralExport";
-import { referralAdminAPI } from "@/lib/api/referralAdmin";
-import { RefreshCw, TrendingUp, Users, Award, DollarSign } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-
-interface ReferralStats {
-  totalReferrals: number;
-  activeReferrals: number;
-  qualifiedReferrals: number;
-  pendingRewards: number;
-  totalRewardsPaid: number;
-  conversionRate: number;
-  avgRewardAmount: number;
-}
-
-export default function ReferralOverviewPage() {
-  const [stats, setStats] = useState<ReferralStats>({
-    totalReferrals: 0,
-    activeReferrals: 0,
-    qualifiedReferrals: 0,
-    pendingRewards: 0,
-    totalRewardsPaid: 0,
-    conversionRate: 0,
-    avgRewardAmount: 0,
-  });
-  const [referrals, setReferrals] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [filters, setFilters] = useState({
-    status: "",
-    type: "",
-    search: "",
-    startDate: "",
-    endDate: "",
-  });
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-  });
-  const { toast } = useToast();
-
-  useEffect(() => {
-    loadData();
-  }, [filters, pagination.page]);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [statsRes, referralsRes] = await Promise.all([
-        referralAdminAPI.getStats(),
-        referralAdminAPI.getReferrals({
-          page: pagination.page,
-          limit: pagination.limit,
-          ...filters,
-        }),
-      ]);
-
-      setStats(statsRes.data);
-      setReferrals(referralsRes.data.referrals);
-      setPagination((prev) => ({
-        ...prev,
-        total: referralsRes.data.total,
-      }));
-    } catch (error) {
-      console.error("Failed to load data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load referral data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-    toast({
-      title: "Success",
-      description: "Data refreshed successfully",
-    });
-  };
-
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(newFilters);
-    setPagination((prev) => ({ ...prev, page: 1 }));
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPagination((prev) => ({ ...prev, page: newPage }));
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Referral System</h1>
-          <p className="text-muted-foreground">
-            Manage and monitor the referral program
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <ReferralExport filters={filters} />
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={refreshing}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <ReferralStatsCard
-          title="Total Referrals"
-          value={stats.totalReferrals}
-          icon={<Users className="h-4 w-4" />}
-          description="All time referrals"
-          trend={"+12% from last month"}
-        />
-        <ReferralStatsCard
-          title="Active Referrals"
-          value={stats.activeReferrals}
-          icon={<TrendingUp className="h-4 w-4" />}
-          description="Currently active"
-          trend={"+8% from last month"}
-        />
-        <ReferralStatsCard
-          title="Conversion Rate"
-          value={`${stats.conversionRate.toFixed(1)}%`}
-          icon={<Award className="h-4 w-4" />}
-          description="Qualified referrals"
-        />
-        <ReferralStatsCard
-          title="Total Rewards Paid"
-          value={`₦${stats.totalRewardsPaid.toLocaleString()}`}
-          icon={<DollarSign className="h-4 w-4" />}
-          description={`Avg: ₦${stats.avgRewardAmount.toLocaleString()}`}
-        />
-      </div>
-
-      {/* Main Content */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="recent">Recent Activity</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-4">
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Filters</CardTitle>
-              <CardDescription>Filter referrals by various criteria</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ReferralFilters
-                filters={filters}
-                onFilterChange={handleFilterChange}
-              />
-            </CardContent>
-          </Card>
-
-          {/* Referrals Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle>All Referrals</CardTitle>
-              <CardDescription>
-                View and manage all referrals in the system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ReferralTable
-                referrals={referrals}
-                loading={loading}
-                pagination={pagination}
-                onPageChange={handlePageChange}
-                onRefresh={loadData}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <ReferralAnalyticsCharts />
-        </TabsContent>
-
-        <TabsContent value="recent" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest referral activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ReferralTable
-                referrals={referrals.slice(0, 10)}
-                loading={loading}
-                showPagination={false}
-                onRefresh={loadData}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+export default function Referrals() {
+  const [open, setOpen] = useState<ReferralRow | null>(null); const [voiding, setVoiding] = useState(false); const [reason, setReason] = useState("");
+  const decide = useAction((a: { id: string; action: "CLEAR" | "VOID"; reason?: string }) => A.decideReferral(a.id, a.action, a.reason), { pending: "Saving…", success: "Referral updated" }, ["referrals"]);
+  const close = () => { setOpen(null); setVoiding(false); setReason(""); };
+  return <RequireScope scope="referrals.read">
+    <div className="ph"><div><h1>Referrals</h1><p>Rewards are a share of margin already collected — never paid before the referred person’s payment settles.</p></div></div>
+    <DataTable<ReferralRow> name="referrals" fetcher={A.referrals} onRow={setOpen}
+      filters={[{ value: "all", label: "All" }, { value: "ACTIVE", label: "Active" }, { value: "PENDING", label: "Pending" }, { value: "hold", label: "On hold" }, { value: "VOID", label: "Void" }]}
+      cols={[{ label: "Referrer", cell: (r) => <Person name={r.referrer.name} sub={r.referrer.role.toLowerCase()} /> }, { label: "Referred", cell: (r) => <Person name={r.referred.name} sub={r.referred.role.toLowerCase()} /> }, { label: "Earned", cell: (r) => <span className="a-mono">{naira(r.referrerEarnedKobo)} / {naira(r.referredEarnedKobo)}</span> }, { label: "Since", cell: (r) => when(r.createdAt) },
+        { label: "Status", right: true, cell: (r) => <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}><Badge s={r.status} />{r.fraudHold && <span className="badge b-red">Hold</span>}</div> }]} />
+    {open && <Modal title={`${open.referrer.name} → ${open.referred.name}`} sub={`${open.source ? "via " + open.source.toLowerCase() + " · " : ""}${when(open.createdAt)}`} onClose={close}
+      footer={<Can scope="referrals.manage" fallback={<button className="btn btn-dark" onClick={close}>Close</button>}>
+        {voiding ? <><button className="btn btn-line" onClick={() => setVoiding(false)}>Back</button><button className="btn btn-danger" disabled={reason.trim().length < 8} onClick={() => decide.mutate({ id: open.id, action: "VOID", reason: reason.trim() }, { onSuccess: close })}>Void referral</button></>
+          : <>{open.status !== "VOID" && <button className="btn btn-line" onClick={() => setVoiding(true)}>Void…</button>}{open.fraudHold ? <button className="btn btn-dark" onClick={() => decide.mutate({ id: open.id, action: "CLEAR" }, { onSuccess: close })}>Clear hold</button> : <button className="btn btn-dark" onClick={close}>Close</button>}</>}
+      </Can>}>
+      <div className="kv"><span className="k">Status</span><span className="v"><Badge s={open.status} /></span></div>
+      <div className="kv"><span className="k">Referrer earned</span><span className="v a-mono">{naira(open.referrerEarnedKobo)}</span></div>
+      <div className="kv"><span className="k">Referred earned</span><span className="v a-mono">{naira(open.referredEarnedKobo)}</span></div>
+      {open.fraudHold && <div className="banner warn" style={{ marginTop: 12 }}>{open.fraudReason ?? "Flagged by the fraud checks"}</div>}
+      <p className="hint" style={{ marginTop: 10 }}>Clearing a hold replays the rewards skipped while it was held. Voiding cancels every unredeemed reward; already-redeemed credit is not clawed back automatically.</p>
+      {voiding && <div className="field" style={{ marginTop: 10 }}><label>Why are you voiding it?</label><textarea className="inp" value={reason} onChange={(e) => setReason(e.target.value)} /></div>}
+    </Modal>}
+  </RequireScope>;
 }

@@ -24,7 +24,7 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
-     "@newcondo/vendor-service": "workspace:*",
+    "@newcondo/vendor-service": "workspace:*",
     "@prisma/nextjs-monorepo-workaround-plugin": "^6.9.0",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",

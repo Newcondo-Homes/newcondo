@@ -1,408 +1,50 @@
-'use client';
+"use client";
+// apps/admin/app/(dashboard)/payments/page.tsx — Rent & splits · Ledger · Failed transfers.
+// No refund button: the only refund is upholding a rent dispute (Disputes page).
+// No "retry transfer": failed withdrawals are already reversed; failed vendor batches re-queue themselves.
+import { useState } from "react";
+import Link from "next/link";
+import { Check } from "lucide-react";
+import { A, type RentRow, type LedgerRow, type FailedTransfer } from "@/lib/api/admin";
+import { useAction } from "@/hooks/useAdmin";
+import { Can, RequireScope } from "@/components/auth/Can";
+import { DataTable, Person, naira, when } from "@/components/ui/DataTable";
+import { Badge, Modal, Tabs, usePersistedTab } from "@/components/ui/primitives";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { PaymentTable } from '@/components/payments/PaymentTable';
-import { TransactionMonitor } from '@/components/payments/TransactionMonitor';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  RefreshCw,
-  DollarSign,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
-import { getPayments, getPaymentStats } from '@/lib/api/payments';
-
-interface PaymentStats {
-  totalVolume: number;
-  totalTransactions: number;
-  successRate: number;
-  failedTransactions: number;
-  pendingTransactions: number;
-  refundedAmount: number;
+function RentDialog({ r, onClose }: { r: RentRow; onClose: () => void }) {
+  const [release, setRelease] = useState(false); const [reason, setReason] = useState(""); const [ack, setAck] = useState(false);
+  const act = useAction(() => A.releaseRent(r.id, reason.trim()), { pending: "Releasing…", success: "Rent released", sub: "Split posted; every party notified." }, ["rent"]);
+  return <Modal wide title={`${r.tenant}${r.unit ? " · " + r.unit : ""}`} sub={`${r.ref} · ${r.property} · paid ${when(r.paidAt)}`} onClose={onClose}
+    footer={release ? <><button className="btn btn-line" onClick={() => setRelease(false)}>Back</button><button className="btn btn-dark" disabled={!ack || reason.trim().length < 8 || act.isPending} onClick={() => act.mutate(undefined, { onSuccess: onClose })}>Release now</button></>
+      : <><button className="btn btn-line" onClick={onClose}>Close</button>
+        {r.status === "DISPUTED" && r.disputeId && <Link className="btn btn-dark" href="/disputes">Open dispute</Link>}
+        {r.status === "IN_ESCROW" && <Can scope="payouts.release"><button className="btn btn-dark" onClick={() => setRelease(true)}>Release early…</button></Can>}</>}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 14 }}><Badge s={r.status} /><span className="a-mono" style={{ fontSize: 22, fontWeight: 600 }}>{naira(r.amountKobo)}</span>{r.status === "IN_ESCROW" && r.escrowEndsAt && <span className="hint">auto-releases {when(r.escrowEndsAt)}</span>}</div>
+    {r.split ? <div className="a-split">{[["Owner", r.split.ownerKobo, r.parties.owner], ["Listing agent", r.split.listingAgentKobo, r.parties.listingAgent], ["Sub-agent", r.split.subAgentKobo, r.parties.subAgent], ["Newcondo", r.split.newcondoKobo, null]].map(([l, v, who]) => <div key={l} className={l === "Newcondo" ? "nc" : ""}><span>{l}</span><b>{naira(v as string)}</b>{who && <span>{who}</span>}</div>)}</div>
+      : <p className="hint">The split is posted from the ledger when escrow releases. Commission follows the property’s plan rate; the listing agent and sub-agent share the agents’ part.</p>}
+    {release && <div style={{ marginTop: 14 }}>
+      <div className="banner warn" style={{ marginBottom: 10 }}>Releasing before the 24-hour window ends removes the renter’s protection. Only do it when the renter has confirmed in writing.</div>
+      <div className="field"><label>Reason / reference</label><textarea className="inp" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Ticket #T-1088 — renter confirmed by email" /></div>
+      <label className="chk-row" onClick={() => setAck(!ack)}><span className={`chk${ack ? " on" : ""}`}>{ack && <Check size={12} strokeWidth={3} />}</span>The renter has confirmed the property in writing.</label>
+    </div>}
+  </Modal>;
 }
 
-interface PaymentFilters {
-  search: string;
-  status: string;
-  type: string;
-  dateRange: string;
+export default function Payments() {
+  const [tab, setTab] = usePersistedTab<"rent" | "ledger" | "failed">("adm.money", "rent");
+  const [open, setOpen] = useState<RentRow | null>(null);
+  return <RequireScope scope="payments.read">
+    <div className="ph"><div><h1>Payments</h1><p>All money moves through one account: <b className="a-mono">NEWCONDO LTD OPERATIONS FLW</b>. Every row ties back to a ledger entry.</p></div></div>
+    <div style={{ marginBottom: 14 }}><Tabs value={tab} onChange={setTab} items={[{ id: "rent", label: "Rent & splits" }, { id: "ledger", label: "Ledger" }, { id: "failed", label: "Failed transfers" }]} /></div>
+    {tab === "rent" && <DataTable<RentRow> name="rent" fetcher={A.rent} onRow={setOpen}
+      filters={[{ value: "all", label: "All" }, { value: "escrow", label: "In escrow" }, { value: "disputed", label: "Disputed" }, { value: "released", label: "Released" }, { value: "refunded", label: "Refunded" }, { value: "failed", label: "Failed" }]}
+      cols={[{ label: "Tenant", cell: (r) => <Person name={r.tenant} sub={`${r.property}${r.unit ? " · " + r.unit : ""}`} /> }, { label: "Paid", cell: (r) => when(r.paidAt) }, { label: "Amount", cell: (r) => <span className="amt-in">{naira(r.amountKobo)}</span> }, { label: "Newcondo", cell: (r) => r.split ? <span className="a-mono">{naira(r.split.newcondoKobo)}</span> : <span className="hint">—</span> }, { label: "Status", cell: (r) => <Badge s={r.status} /> }]} />}
+    {tab === "ledger" && <DataTable<LedgerRow> name="ledger" fetcher={A.ledger}
+      filters={[{ value: "all", label: "All" }, { value: "rent", label: "Rent" }, { value: "subscriptions", label: "Subscriptions" }, { value: "marking", label: "Marking" }, { value: "vendors", label: "Vendors" }, { value: "withdrawals", label: "Withdrawals" }, { value: "referrals", label: "Referrals" }, { value: "adjustments", label: "Adjustments" }]}
+      cols={[{ label: "Entry", cell: (l) => <div><div className="a-name">{l.type.toLowerCase().replace(/_/g, " ")}</div><div className="a-sub a-mono">{l.source}</div></div> }, { label: "Memo", cell: (l) => <span className="hint">{l.memo ?? ""}</span> }, { label: "Moved", cell: (l) => <span className="a-mono">{naira(l.amountKobo)}</span> }, { label: "Revenue", cell: (l) => Number(l.revenueKobo) !== 0 ? <span className="a-mono">{naira(l.revenueKobo)}</span> : <span className="hint">—</span> }, { label: "When", right: true, cell: (l) => when(l.createdAt) }]} />}
+    {tab === "failed" && <><p className="hint" style={{ margin: "0 0 12px" }}>Read-only, last 30 days. Nothing here needs a manual retry — retrying could pay twice.</p>
+      <DataTable<FailedTransfer> name="failed" fetcher={A.failedTransfers}
+        cols={[{ label: "Transfer", cell: (f) => <div><div className="a-name">{f.kind === "WITHDRAWAL" ? "Withdrawal" : "Vendor payout batch"}</div><div className="a-sub a-mono">{f.ref}</div></div> }, { label: "Party", cell: (f) => f.party ?? "—" }, { label: "Amount", cell: (f) => <span className="a-mono">{naira(f.amountKobo)}</span> }, { label: "What happens next", cell: (f) => <span className="hint">{f.reason ? `${f.reason} · ` : ""}{f.next}</span> }, { label: "When", right: true, cell: (f) => when(f.createdAt) }]} /></>}
+    {open && <RentDialog r={open} onClose={() => setOpen(null)} />}
+  </RequireScope>;
 }
-
-export default function PaymentsPage() {
-  const [payments, setPayments] = useState([]);
-  const [stats, setStats] = useState<PaymentStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [filters, setFilters] = useState<PaymentFilters>({
-    search: '',
-    status: 'all',
-    type: 'all',
-    dateRange: '7d'
-  });
-
-  const fetchPayments = async () => {
-    try {
-      setRefreshing(true);
-      const [paymentsData, statsData] = await Promise.all([
-        getPayments(filters),
-        getPaymentStats(filters.dateRange)
-      ]);
-      setPayments(paymentsData);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPayments();
-  }, [filters]);
-
-  const handleFilterChange = (key: keyof PaymentFilters, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleExportData = async () => {
-    try {
-      // Implement CSV export functionality
-      const response = await fetch('/api/admin/payments/export', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(filters)
-      });
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
-      a.click();
-    } catch (error) {
-      console.error('Export failed:', error);
-    }
-  };
-
-  if (loading && !refreshing) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Payment Monitoring</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage all platform payments and transactions
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchPayments}
-            disabled={refreshing}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportData}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      {stats && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Volume</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ₦{stats.totalVolume.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {stats.totalTransactions} transactions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.successRate}%</div>
-              <p className="text-xs text-muted-foreground">
-                Last {filters.dateRange}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Failed Payments</CardTitle>
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {stats.failedTransactions}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Requires attention
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {stats.pendingTransactions}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting confirmation
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search transactions..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="pl-8"
-              />
-            </div>
-
-            <Select
-              value={filters.status}
-              onValueChange={(value) => handleFilterChange('status', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Payment Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="SUCCESS">Success</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="FAILED">Failed</SelectItem>
-                <SelectItem value="REFUNDED">Refunded</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.type}
-              onValueChange={(value) => handleFilterChange('type', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Payment Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="RENT">Rent Payment</SelectItem>
-                <SelectItem value="DEPOSIT">Deposit</SelectItem>
-                <SelectItem value="PROPERTY_MARKING">Property Marking</SelectItem>
-                <SelectItem value="AGENT_COMMISSION">Commission</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={filters.dateRange}
-              onValueChange={(value) => handleFilterChange('dateRange', value)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Date Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1d">Last 24 hours</SelectItem>
-                <SelectItem value="7d">Last 7 days</SelectItem>
-                <SelectItem value="30d">Last 30 days</SelectItem>
-                <SelectItem value="90d">Last 90 days</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
-          <TabsTrigger value="monitoring">Real-time Monitor</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="transactions" className="space-y-4">
-          <PaymentTable 
-            payments={payments} 
-            loading={refreshing}
-            onRefresh={fetchPayments}
-          />
-        </TabsContent>
-
-        <TabsContent value="monitoring" className="space-y-4">
-          <TransactionMonitor />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// // apps/admin/src/app/(dashboard)/payments/page.tsx
-// import { Suspense } from 'react';
-// import { PaymentList } from '@/components/admin/payments/PaymentList';
-// import { PaymentFilters } from '@/components/admin/payments/PaymentFilters';
-// import { PaymentStats } from '@/components/admin/payments/PaymentStats';
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@newcondo/ui';
-
-// export const metadata = {
-//   title: 'Payments | Admin Dashboard',
-//   description: 'Monitor and manage all platform transactions',
-// };
-
-// export default function PaymentsPage({
-//   searchParams,
-// }: {
-//   searchParams: { 
-//     status?: string;
-//     type?: string;
-//     dateFrom?: string;
-//     dateTo?: string;
-//     search?: string;
-//     page?: string;
-//   };
-// }) {
-//   return (
-//     <div className="space-y-6">
-//       {/* Header */}
-//       <div>
-//         <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
-//         <p className="text-muted-foreground mt-2">
-//           Monitor transactions, process refunds, and manage payment confirmations
-//         </p>
-//       </div>
-
-//       {/* Stats Overview */}
-//       <Suspense fallback={<StatsLoading />}>
-//         <PaymentStats />
-//       </Suspense>
-
-//       {/* Filters */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle>Filter Payments</CardTitle>
-//           <CardDescription>
-//             Search and filter transactions by status, type, date range, and more
-//           </CardDescription>
-//         </CardHeader>
-//         <CardContent>
-//           <PaymentFilters />
-//         </CardContent>
-//       </Card>
-
-//       {/* Payment List */}
-//       <Card>
-//         <CardHeader>
-//           <CardTitle>All Transactions</CardTitle>
-//           <CardDescription>
-//             {searchParams.status && `Showing ${searchParams.status} payments`}
-//             {searchParams.type && ` • ${searchParams.type} transactions`}
-//           </CardDescription>
-//         </CardHeader>
-//         <CardContent>
-//           <Suspense fallback={<PaymentListLoading />}>
-//             <PaymentList searchParams={searchParams} />
-//           </Suspense>
-//         </CardContent>
-//       </Card>
-//     </div>
-//   );
-// }
-
-// function StatsLoading() {
-//   return (
-//     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-//       {[...Array(4)].map((_, i) => (
-//         <Card key={i}>
-//           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-//             <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-//             <div className="h-8 w-8 bg-muted animate-pulse rounded" />
-//           </CardHeader>
-//           <CardContent>
-//             <div className="h-8 w-32 bg-muted animate-pulse rounded mb-2" />
-//             <div className="h-3 w-24 bg-muted animate-pulse rounded" />
-//           </CardContent>
-//         </Card>
-//       ))}
-//     </div>
-//   );
-// }
-
-// function PaymentListLoading() {
-//   return (
-//     <div className="space-y-4">
-//       {[...Array(5)].map((_, i) => (
-//         <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg">
-//           <div className="h-10 w-10 bg-muted animate-pulse rounded-full" />
-//           <div className="flex-1 space-y-2">
-//             <div className="h-4 w-1/4 bg-muted animate-pulse rounded" />
-//             <div className="h-3 w-1/3 bg-muted animate-pulse rounded" />
-//           </div>
-//           <div className="h-6 w-20 bg-muted animate-pulse rounded" />
-//         </div>
-//       ))}
-//     </div>
-//   );
-// }

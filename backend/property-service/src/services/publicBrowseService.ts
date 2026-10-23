@@ -36,6 +36,9 @@ export async function browseProperties(f: BrowseFilters) {
     status: "PUBLISHED" as const,
     boundaryVerified: true,
     adminApprovalStatus: "APPROVED" as const,
+    // ++ ADMIN — staff-hidden listings and suspended/deleted owners never appear (keep in sync with admin-service PUBLIC_WHERE).
+    adminHiddenAt: null,
+    owner: { suspendedAt: null, deletedAt: null },
     ...(f.state && { state: f.state }),
     ...(f.city && { city: f.city }),
     ...(f.type && { propertyType: f.type as never }),

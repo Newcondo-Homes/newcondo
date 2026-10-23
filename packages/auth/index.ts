@@ -45,12 +45,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     ...fullCallbacks,
 
     async signIn({ account, profile }) {
-      // Facebook may return no email — that is NOT a failure, and refusing it
-      // stranded the user on /login with nothing they could do. auth.full.ts's
-      // profile() substitutes `fb_<id>@placeholder.newcondo`, getOnboardingState
-      // reports hasEmail: false for that address, and the onboarding details
-      // step collects the real one (which the verify step then OTPs).
-      // Every provider is allowed through; nothing is gated here any more.
+      if (account?.provider !== "credentials") {
+        // Facebook can omit email — phone-only accounts, or the user unticks
+        // email on the consent screen. Prisma's User.email is required, so
+        // without this guard sign-in throws a raw adapter error.
+        //
+        // This is still a refusal, but now it names the cause so /login can
+        // render something actionable ("Facebook didn't share an email address
+        // — sign up with your email instead, or allow email sharing and try
+        // again") rather than the generic "please sign in to access that page".
+        //
+        // UPGRADE PATH when Facebook signups justify it: accept the sign-in
+        // with a reserved placeholder (`fb_<providerAccountId>@placeholder.newcondo`),
+        // treat it as "no email" in getOnboardingState (hasEmail = !!email &&
+        // !email.endsWith("@placeholder.newcondo")), and let the details step
+        // collect the real address — which the verify step then OTPs. That
+        // touches every place assuming a real email, so it is not a same-day
+        // change.
+        if (account?.provider === "facebook" && !profile?.email) {
+          return "/login?error=FacebookNoEmail";
+        }
+        return true;
+      }
       return true;
     },
 
@@ -76,6 +92,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // the verify step while it is null, and the backend resolver reads the
           // same field.
           token.emailVerified = existingUser.emailVerified;
+          // ++ ADMIN — when this browser session began; compared with User.sessionsRevokedAt
+          // so "sign out everywhere" / suspend also kills the NextAuth cookie, not just the API token.
+          token.issuedAt = Date.now();
 
           // ── Mint the Express-compatible access token ──────────────────────
           // Signed with JWT_SECRET — the same secret Express authMiddleware
@@ -107,6 +126,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // can register or log in cleanly. Do NOT let a stale token survive:
         // the alternative is an account that can browse but never write.
         if (!fresh) return null;
+        // ++ ADMIN — suspended, deleted, or signed out everywhere after this session began → end it.
+        // Without this, update() would re-mint a fresh accessToken and walk around the revocation.
+        const f = fresh as typeof fresh & { suspendedAt?: Date | null; sessionsRevokedAt?: Date | null };
+        if (f.deletedAt || f.suspendedAt) return null;
+        if (f.sessionsRevokedAt && (Number(token.issuedAt) || 0) < f.sessionsRevokedAt.getTime()) return null;
 
         token.role = fresh.role;
         token.phone = fresh.phone;
@@ -128,7 +152,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         );
 
         // Caller-supplied values last, so update({ userType }) still wins.
-        if (session) token = { ...token, ...session };
+        // ++ ADMIN — whitelist: a client-side update() must never be able to overwrite
+        // role, id, accessToken or issuedAt in the session.
+        if (session && typeof session === "object") {
+          const SAFE = ["userType", "companyName", "name", "image"] as const;
+          for (const k of SAFE) if (k in session) (token as Record<string, unknown>)[k] = (session as Record<string, unknown>)[k];
+        }
       }
 
       return token;
@@ -177,3 +206,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 });
 
 export const getServerSession = auth;
+
+/* ============================================================
+   TYPES — packages/auth/src/types.d.ts
+
+   `emailVerified` is new on both, so add it or TS will reject the assignments:
+
+     declare module "next-auth" {
+       interface Session {
+         accessToken?: string;
+         user: {
+           // …existing fields
+           emailVerified?: Date | null;
+         } & DefaultSession["user"];
+       }
+     }
+
+     declare module "next-auth/jwt" {
+       interface JWT {
+         // …existing fields
+         emailVerified?: Date | null;
+         accessToken?: string;
+       }
+     }
+   ============================================================ */

@@ -17,5 +17,7 @@ export {
   type MarkingChargeResult,
   type ChargeFailureCode,
 } from "./services/markingTokenizedCharge.service";
+// ++ ADMIN — staff assignment (NEWCONDO field team), dispute resolution, re-mark unlock
+export { assignFieldMarker, resolveMarkingDispute, allowRemark } from "./services/markingAdmin.service";
 // ++ MONEY CORE — marking-fee ledger (hold / settle / lapse drip)
 export { dripLapsedMarkingPayouts, settleMarkingJob, holdMarkerPayout, bookMarkingFee } from "./services/markingLedger.service";

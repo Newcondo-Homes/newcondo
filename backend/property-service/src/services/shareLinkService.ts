@@ -126,8 +126,8 @@ export async function resolveShareLink(code: string): Promise<ResolvedShareLink>
         select: {
           id: true, title: true, description: true, address: true, city: true, state: true,
           price: true, propertyType: true, structure: true, isAvailable: true,
-          boundaryVerified: true, status: true,
-          owner: { select: { name: true } },
+          boundaryVerified: true, status: true, adminHiddenAt: true,
+          owner: { select: { name: true, suspendedAt: true, deletedAt: true } },
           agent: { select: { name: true } },
           units: { select: { unitNumber: true, status: true, price: true } },
           images: { orderBy: [{ isPrimary: "desc" }, { order: "asc" }], select: { url: true } },
@@ -136,6 +136,8 @@ export async function resolveShareLink(code: string): Promise<ResolvedShareLink>
     },
   });
   if (!link) throw notFound("This link is not valid");
+  // ++ ADMIN — a listing NewCondo hid, or whose owner is on hold, must not be reachable (or payable) through old links.
+  if (link.property.adminHiddenAt || link.property.owner.suspendedAt || link.property.owner.deletedAt) throw notFound("This property is no longer available");
 
   // fire-and-forget click count — never block the page render
   prisma.shareLink.update({ where: { code }, data: { clicks: { increment: 1 } } }).catch(() => {});

@@ -53,4 +53,6 @@ export * from "./notificationBus";
 export * from "./s3Upload";
 export * from "./s3Layout";
 
+export * from "./emailTemplates.vendors";
+export * from "./callReminder";
 export * from "./emailTemplates.referrals";

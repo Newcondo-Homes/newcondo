@@ -11,6 +11,7 @@ import { logger } from './utils/logger';
 import { config } from './config/environment';
 import { registerChargeHandler, startMoneyCron, type VerifiedPayment } from '@newcondo/payment-service';
 import { confirmMarkingFeePaid, dripLapsedMarkingPayouts, advanceExpiredSlots } from '@newcondo/marking-service';
+import { startVendorCron } from '@newcondo/vendor-service'; // ++ VENDORS
 
 // MONEY CORE — packages that settle their own payments register here, so
 // payment-service never imports them (that would make the graph circular).
@@ -60,6 +61,8 @@ app.listen(PORT, HOST, () => {
         { name: 'marking-slot-advance', schedule: '*/10 * * * *', run: () => advanceExpiredSlots() },
       ],
     });
+    // ++ VENDORS — fund accrual, matching, visit planning, missed visits, reminder calls
+    startVendorCron();
   }
 
   if (config.NODE_ENV === 'development') {

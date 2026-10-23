@@ -62,8 +62,12 @@ export type S3Namespace =
   | "service-reports"
   | "receipts";
 
-/** Private namespaces live in the private bucket; everything else is public. */
-const PRIVATE_NAMESPACES: S3Namespace[] = ["verification-docs", "receipts"];
+/** Private namespaces live in the private bucket; everything else is public.
+ *  ++ VENDORS — "service-reports" (fumigation/inspection/waste photos) is
+ *  private: they show the inside of people's homes. Read them ONLY through
+ *  presignDownload(key, ttl, PRIVATE_BUCKET) after an access check —
+ *  vendor-service visitPhotos() does exactly that. */
+const PRIVATE_NAMESPACES: S3Namespace[] = ["verification-docs", "receipts", "service-reports"];
 
 const ALLOWED_CONTENT_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10MB — matches the express body limit

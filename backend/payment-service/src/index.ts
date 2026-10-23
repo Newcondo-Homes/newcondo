@@ -55,5 +55,5 @@ export {
 } from "./services/propertyPlan.service";
 
 // ---- MONEY CORE: vendor payouts + scheduled jobs ----
-export { payVendorForJob, settleVendorPayout, payDueVendorJobs } from "./services/vendorPayout.service";
+export { payVendorForJob, settleVendorPayout, payDueVendorJobs, payEndOfDayBatches, settleVendorBatch } from "./services/vendorPayout.service";
 export { startMoneyCron } from "./jobs/moneyCron";

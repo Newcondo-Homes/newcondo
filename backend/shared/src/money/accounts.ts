@@ -28,6 +28,7 @@ export const ACC = {
   suspense: "suspense:inbound",
   userAvailable: (userId: string) => `user:${userId}:available`,
   userPending: (userId: string) => `user:${userId}:pending`,
+  serviceFund: (propertyId: string, service: string) => `fund:${propertyId}:${service}`,
 } as const;
 
 /** How cash reached us: card/Inline checkout settles from the world; a bank

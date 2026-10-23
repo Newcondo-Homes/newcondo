@@ -17,3 +17,5 @@ export {
 } from "./inbound";
 export { reconcileLedger, type ReconcileReport } from "./reconcile";
 export { collectionLegs, payoutSettleLegs, settledFromFlutterwave, estimateSettledKobo, type CollectionInput } from "./collect";
+// ++ VENDORS — property service funds (vendor cost share of each plan)
+export { accrueServiceFunds, fundBalanceKobo, returnFundToRevenue, type AccrualInput } from "./serviceFunds";

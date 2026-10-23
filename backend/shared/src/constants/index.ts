@@ -22,6 +22,8 @@ export * from './virtualAccount';
 export * from './subscriptionPlans'
 export * from './money'
 export * from './fees'
+export * from './vendors' // ++ VENDORS — service network, hours, codes, reminders, payouts
+export * from './adminScopes' // ++ ADMIN — staff roles, scopes, limits (apps/admin + admin-service)
 
 export {
   COMPANY,

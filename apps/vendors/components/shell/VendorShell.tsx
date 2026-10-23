@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Home, Briefcase, Clock, Building2, Wallet, Settings, Bell, Menu, LogOut, ShieldCheck, ChevronRight } from "lucide-react";
 import { signOut } from "@newcondo/auth/client";
 import api, { unwrap } from "@/lib/api/client";
-import { useMe, useOverview } from "@/hooks/useVendor";
+import { useMe, useOverview, qk } from "@/hooks/useVendor";
 import { useUI } from "@/store/ui";
 import { VENDORS } from "@/lib/constants";
 import { Badge } from "@/components/ui/primitives";
@@ -40,8 +40,8 @@ export function VendorShell({ children, user }: { children: ReactNode; user: { n
   const { openJob, verifyJob, setOpenJob, setVerifyJob } = useUI();
   const qc = useQueryClient();
   // Notifications: same endpoints as the platform (notification-service).
-  const { data: notis = [] } = useQuery({ queryKey: ["notifications"], queryFn: () => api.get("/notifications").then(unwrap<Noti[]>), refetchInterval: 30_000 });
-  const markAll = useMutation({ mutationFn: () => api.post("/notifications/mark-all-read"), onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }) });
+  const { data: notis = [] } = useQuery({ queryKey: qk.notifications, queryFn: () => api.get("/notifications").then(unwrap<Noti[]>), refetchInterval: 30_000 });
+  const markAll = useMutation({ mutationFn: () => api.post("/notifications/mark-all-read"), onSuccess: () => qc.invalidateQueries({ queryKey: qk.notifications }) });
   const unread = notis.filter((n) => !n.readAt).length;
 
   useEffect(() => { const id = params.get("open"); if (id) setOpenJob(id); }, [params, setOpenJob]); // deep links from notifications
@@ -68,7 +68,7 @@ export function VendorShell({ children, user }: { children: ReactNode; user: { n
       </div>)}
       <div className="sb-foot">
         <div className="v-hours"><b>Service hours</b><span>Mon – Thu & Sat · 9:00 – 17:00</span><span className="hint">No visits on Fridays or Sundays.</span></div>
-        <nav className="sb-nav"><Link href="/settings" className={`sb-item${path === "/settings" ? " on" : ""}`}><Settings size={17} />Business & Settings</Link></nav>
+        <nav className="sb-nav"><Link href="/settings" prefetch className={`sb-item${path === "/settings" ? " on" : ""}`}><Settings size={17} />Business & Settings</Link></nav>
       </div>
     </aside>
     <div className="main">
@@ -102,7 +102,9 @@ export function VendorShell({ children, user }: { children: ReactNode; user: { n
         </div>
       </div>
       {me && me.status !== "VERIFIED" && <div className="banner warn" style={{ margin: "14px clamp(18px,3.5vw,44px) 0" }}><span>Your account is <b>{me.status.toLowerCase()}</b>. Finish documents, bank and service areas in Settings — you&apos;ll start receiving clients once Newcondo verifies you.</span><Link className="btn btn-dark btn-sm" href="/settings">Finish setup</Link></div>}
-      <div className="content" key={path}>{children}</div>
+      {/* No key={path}: remounting replayed the entrance animation on every
+          click, which read as a reload. Pages now swap in place. */}
+      <div className="content">{children}</div>
     </div>
     {openJob && <JobSheet id={openJob} onClose={() => { setOpenJob(null); if (params.get("open")) router.replace(path); }} />}
     {verifyJob && <VerifyVisitSheet id={verifyJob} onClose={() => setVerifyJob(null)} />}

@@ -9,7 +9,7 @@ import { prisma } from "@newcondo/db";
 import { Referrals, reconcileLedger } from "@newcondo/backend-shared";
 import { releaseExpiredEscrows } from "../services/commissionSplit.service";
 import { runAutoPayouts } from "../services/wallet.service";
-import { payDueVendorJobs } from "../services/vendorPayout.service";
+import { payDueVendorJobs, payEndOfDayBatches, VENDOR_EOD_CRON } from "../services/vendorPayout.service";
 
 type Task = { name: string; schedule: string; run: () => Promise<unknown> };
 
@@ -21,6 +21,8 @@ const TASKS: Task[] = [
   { name: "auto-payout-weekly", schedule: "0 9 * * 5", run: () => runAutoPayouts("WEEKLY") },
   { name: "auto-payout-monthly", schedule: "0 9 * * *", run: async () => (isLastDayOfMonth() ? runAutoPayouts("MONTHLY") : "not-today") },
   { name: "vendor-payouts", schedule: "30 * * * *", run: () => payDueVendorJobs() },
+  // ++ VENDORS — END_OF_DAY vendors: one transfer per vendor at VENDORS.payout.endOfDayHour
+  { name: "vendor-eod-batches", schedule: VENDOR_EOD_CRON, run: () => payEndOfDayBatches() },
   { name: "referral-release", schedule: "5 * * * *", run: () => Referrals.releaseScheduledRewards() },
   { name: "referral-expiry", schedule: "0 2 * * *", run: () => Referrals.expireCredits() },
   {

@@ -1,16 +1,16 @@
 {
   "name": "@newcondo/vendor-service",
-  "version": "1.0.0",
-  "description": "Newcondo Vendor Service",
+  "version": "1.1.0",
+  "description": "Newcondo Vendor Service — vendor network, matching, scheduling, visit codes, reminder calls",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
     "./routes": "./dist/routes/index.js",
-    "./middleware": "./dist/middleware/index.js",
-    "./services": "./dist/services/index.js",
+    "./middleware": "./dist/middleware/requireVendor.js",
+    "./services": "./dist/services/vendorService.js",
     "./types": "./dist/types/index.js",
-    "./controllers": "./dist/controllers/index.js"
+    "./controllers": "./dist/controllers/vendorController.js"
   },
   "scripts": {
     "build": "tsc",
@@ -26,12 +26,18 @@
   "dependencies": {
     "@newcondo/backend-shared": "workspace:*",
     "@newcondo/db": "workspace:*",
+    "axios": "^1.10.0",
+    "bcryptjs": "^2.4.3",
     "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "node-cron": "^3.0.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
     "@types/express": "^4.17.17",
     "@types/node": "^20.11.0",
+    "@types/node-cron": "^3.0.11",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"

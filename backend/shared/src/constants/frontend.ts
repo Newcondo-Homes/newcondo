@@ -109,3 +109,22 @@ export {
 } from "./fees";
 
 export type { ChargeBreakdown, PayoutBreakdown, RentRefundBreakdown } from "./fees";
+
+
+// ++ VENDORS — client-safe vendor-network constants (apps/vendors, apps/platform)
+export {
+  VENDORS_PUBLIC,
+  VENDOR_SERVICE_TYPES,
+  providerServices,
+  isServiceDay,
+  normaliseWindow,
+  minuteLabel,
+} from "./vendorsPublic";
+
+export type {
+  VendorServiceType,
+  VendorKind,
+  VendorProviderType,
+  VendorReleaseMode,
+  ReminderContactRole,
+} from "./vendorsPublic";

@@ -6,22 +6,32 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "next lint"
   },
-  "dependencies": {
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "next": "15.5.2"
+ "dependencies": {
+    "@newcondo/auth": "workspace:*",
+    "@newcondo/backend-shared": "workspace:*",
+    "@newcondo/db": "workspace:*",
+    "@prisma/client": "^7.8.0",
+    "@tanstack/react-query": "^5.81.2",
+    "axios": "^1.10.0",
+    "lucide-react": "^0.513.0",
+    "next": "16.4.2",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "sonner": "^2.0.5"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@newcondo/admin-service": "workspace:*",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.9.0",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "15.5.2",
-    "@eslint/eslintrc": "^3"
+    "eslint-config-next": "16.4.2",
+    "prisma": "^7.8.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

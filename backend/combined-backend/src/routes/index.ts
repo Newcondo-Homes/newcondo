@@ -15,7 +15,9 @@ import { collabRouter } from "./collab";                        // share links, 
 import { markingRouter } from "./marking";                      // jobs, queue, photos, confirm
 import { referralRouter } from "./referrals";                   // stats, invite
 import { servicesRouter } from "./services";                    // vendor services
+import { vendorPortalRouter, serviceVisitsRouter } from "./vendors"; // ++ vendor network (apps/vendors + visit codes)
 import { accountDeletionRouter, metaDataDeletionRouter } from "./auth.account-deletion"; // delete account
+import { adminRouter, accountGuard } from "./admin";              // ++ ADMIN — apps/admin (staff + scopes)
 
 const router: ExpressRouter = Router();
 
@@ -33,6 +35,10 @@ const mountRoute = (path: string, routerInstance: Router, serviceName: string) =
   }
 };
 
+// ++ ADMIN — runs before every router: suspended accounts, "sign out everywhere",
+// support-session limits (no money/credential routes, every write logged), device tracking.
+router.use(accountGuard);
+
 mountRoute("/auth", authRouter, "Auth Service");
 mountRoute("/payments", paymentRouter, "Payment Service");
 mountRoute("/payments", paymentsDashboardRouter, "Payment Service (dashboard)");
@@ -46,6 +52,8 @@ mountRoute("/", collabRouter, "Collaboration (share/promote/invite)");
 mountRoute("/marking", markingRouter, "Marking Service");
 mountRoute("/referrals", referralRouter, "Referral Service");
 mountRoute("/services", servicesRouter, "Vendor Service");
+mountRoute("/services", serviceVisitsRouter, "Vendor Service (visits, codes, windows)");
+mountRoute("/vendors", vendorPortalRouter, "Vendor Portal (apps/vendors)");
 // Account deletion. Mounted under /auth so the paths are
 // /api/v1/auth/account/deletion* — matching lib/api/account-deletion.ts.
 mountRoute("/auth", accountDeletionRouter, "Account Deletion");
@@ -57,13 +65,13 @@ mountRoute("/", metaDataDeletionRouter, "Meta data-deletion callback");
 
 // Still to wire as their barrels fill out:
 // mountRoute('/bookings', bookingRouter, 'Booking Service');
-// mountRoute('/admin', adminRouter, 'Admin Service');
+mountRoute("/admin", adminRouter, "Admin Service (apps/admin)");
 // mountRoute('/analytics', analyticsRouter, 'Analytics Service');
 
 router.get("/status", (req, res) => {
   res.json({
     success: true,
-    services: { auth: "active", properties: "active", payments: "active", notifications: "active", bookings: "active", marking: "active", admin: "pending", referrals: "active", analytics: "pending" },
+    services: { auth: "active", properties: "active", payments: "active", notifications: "active", bookings: "active", marking: "active", admin: "active", referrals: "active", analytics: "pending" },
     timestamp: new Date().toISOString(),
   });
 });

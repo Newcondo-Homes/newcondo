@@ -1,5 +1,8 @@
 // ============================================================================
 // packages/db/prisma/schema.prisma — CANONICAL SCHEMA
+// ++ ADMIN (2026-10-23): staff, scopes, support sessions, devices, suspension, admin hide.
+//    Based on production (migrations 20261019090313_init + 20261020091854_init).
+//    Run: npx prisma migrate dev --name admin_staff   — additive only.
 // ============================================================================
 // Base: your merged schema (original + dashboard features).
 // This revision folds in ACCOUNT DELETION and makes every referential policy
@@ -209,6 +212,16 @@ model User {
   vendorProfile       Vendor?            @relation("VendorUser")
   generatedVisitCodes ServiceVisitCode[] @relation("VisitCodeGenerator")
 
+
+  // ++ ADMIN — suspension, "sign out everywhere", field team, staff + devices
+  suspendedAt          DateTime? // admin suspension — accountGuard rejects every request
+  suspendedReason      String?
+  sessionsRevokedAt    DateTime? // tokens issued before this instant are rejected
+  isFieldMarker        Boolean                @default(false) // salaried NewCondo field team — only they take NEWCONDO marking jobs
+  staffMember          StaffMember?
+  devices              UserDevice[] // NOT `sessions` — that name is the Auth.js Session[] relation
+  impersonatedSessions ImpersonationSession[] @relation("impersonationTarget")
+
   @@index([email])
   @@index([phone])
   @@index([verificationStatus])
@@ -222,6 +235,7 @@ model User {
   @@index([anonymizedAt])
   @@index([purgeAfter])
   @@index([role, deletedAt])
+  @@index([suspendedAt]) // ++ ADMIN
 }
 
 enum Role {
@@ -537,6 +551,12 @@ model Property {
   updatedAt          DateTime            @updatedAt
   paymentAttemptLogs PaymentAttemptLog[]
 
+
+  // ++ ADMIN — hidden from Browse by staff. Never changes `status` (a RENTED house stays RENTED).
+  adminHiddenAt     DateTime?
+  adminHiddenReason String?
+  adminHiddenBy     String?
+
   @@index([ownerId])
   @@index([agentId])
   @@index([status])
@@ -551,6 +571,7 @@ model Property {
   @@index([totalUnits])
   @@index([availableUnits])
   @@index([suspendedBySubscription])
+  @@index([adminHiddenAt]) // ++ ADMIN
 }
 
 model PropertyUnit {
@@ -1855,6 +1876,42 @@ enum AdminActionType {
   AGENT_SUSPENDED
   ACCOUNT_DELETION_BLOCKED // ++ DELETION
   ACCOUNT_ANONYMIZED // ++ DELETION
+  // ++ ADMIN — staff
+  STAFF_INVITED
+  STAFF_INVITE_REVOKED
+  STAFF_ACTIVATED
+  STAFF_FROZEN
+  STAFF_UNFROZEN
+  STAFF_SCOPES_CHANGED
+  // ++ ADMIN — support sessions
+  IMPERSONATION_STARTED
+  IMPERSONATION_ENDED
+  IMPERSONATED_ACTION
+  // ++ ADMIN — accounts
+  USER_UPDATED
+  USER_SUSPENDED
+  USER_RESTORED
+  SESSIONS_REVOKED
+  VERIFICATION_REVOKED
+  // ++ ADMIN — listings + marking
+  LISTING_HIDDEN
+  LISTING_PUBLISHED
+  MARKING_ASSIGNED
+  MARKING_QUEUE_ROTATED
+  MARKING_REMARK_ALLOWED
+  MARKING_DISPUTE_RESOLVED
+  // ++ ADMIN — vendors
+  VENDOR_APPROVED
+  VENDOR_SUSPENDED
+  VENDOR_PROPERTY_ASSIGNED
+  VENDOR_PROPERTY_REMOVED
+  VISIT_REBOOKED
+  VISIT_ISSUE_RESOLVED
+  // ++ ADMIN — money + referrals
+  RENT_RELEASED
+  DISPUTE_RESOLVED
+  REFERRAL_HOLD_CLEARED
+  REFERRAL_VOIDED
 }
 
 model Dispute {
@@ -2581,4 +2638,106 @@ model ReferralRedemption {
 
   @@index([invoiceId])
   @@index([ledgerEntryId])
+}
+
+// ============================================================================
+// ++ ADMIN — staff, permissions, support sessions, device tracking
+// ----------------------------------------------------------------------------
+// Staff sign in as User(role = ADMIN). StaffMember holds the admin role and
+// per-person scope overrides. Scope keys are validated against
+// backend-shared constants/adminScopes.ts on write and stored as strings, so a
+// new permission never needs a migration.
+// Migration: npx prisma migrate dev --name admin_staff   (additive only —
+// new tables, nullable/defaulted columns, new enum values; nothing dropped)
+// ============================================================================
+
+enum AdminRole {
+  SUPER_ADMIN
+  OPERATIONS
+  VERIFICATION
+  FINANCE
+  SUPPORT
+}
+
+enum StaffStatus {
+  ACTIVE
+  FROZEN
+}
+
+model StaffMember {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  adminRole     AdminRole
+  grantedScopes String[]    @default([])
+  revokedScopes String[]    @default([])
+  status        StaffStatus @default(ACTIVE)
+  invitedById   String? // StaffMember.id of the inviter (null for the bootstrap super admin)
+  frozenAt      DateTime?
+  lastActiveAt  DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  impersonations ImpersonationSession[]
+
+  @@index([status])
+  @@index([adminRole])
+}
+
+model StaffInvite {
+  id            String    @id @default(cuid())
+  email         String
+  tokenHash     String    @unique // sha256 of the URL token; the raw token only exists in the email
+  adminRole     AdminRole
+  grantedScopes String[]  @default([])
+  revokedScopes String[]  @default([])
+  invitedById   String // StaffMember.id, or "bootstrap" for the first super admin
+  expiresAt     DateTime
+  acceptedAt    DateTime?
+  revokedAt     DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model ImpersonationSession {
+  id           String    @id // generated by the app BEFORE signing, so the JWT can carry it
+  staffId      String
+  targetUserId String
+  reason       String
+  tokenHash    String    @unique
+  startedAt    DateTime  @default(now())
+  expiresAt    DateTime
+  endedAt      DateTime?
+  ipHash       String?
+
+  staff  StaffMember @relation(fields: [staffId], references: [id], onDelete: Restrict)
+  target User        @relation("impersonationTarget", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([staffId, endedAt])
+  @@index([targetUserId])
+}
+
+/// One row per (user, browser/app). Upserted by accountGuard at most every
+/// 5 minutes per device — "last seen", devices and usage in admin.
+/// Never stores the token or a raw IP.
+model UserDevice {
+  id          String    @id @default(cuid())
+  userId      String
+  deviceKey   String // sha256(userId + user-agent)
+  deviceLabel String? // "iPhone · Safari", "Android · Chrome"
+  userAgent   String?
+  ipHash      String?
+  city        String? // from edge geo headers when present
+  firstSeenAt DateTime  @default(now())
+  lastSeenAt  DateTime  @default(now())
+  activeDays  Int       @default(1) // distinct Lagos days seen
+  lastDay     String? // YYYY-MM-DD (Africa/Lagos) of the last counted day
+  revokedAt   DateTime? // display only — the real cut-off is User.sessionsRevokedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceKey])
+  @@index([userId, lastSeenAt])
 }

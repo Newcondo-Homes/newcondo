@@ -10,7 +10,7 @@
 //   route        charge.completed  → by tx_ref prefix (chargeHandlers.ts)
 //                                    or, for a bank transfer into the central
 //                                    account, record → match by narration ref
-//                transfer.completed → withdrawals (NC-WD-) / vendors (NC-VP-)
+//                transfer.completed → withdrawals (NC-WD-) / vendors (NC-VP-, NC-VB- batches)
 //   idempotent   every handler is; Flutterwave retries
 //   status       200 when handled or irrelevant (stop retrying);
 //                500 only on transient errors we WANT retried
@@ -28,7 +28,7 @@ import { verifyFlutterwaveTransaction } from "../services";
 import { confirmRentPaid } from "../services/rentCheckout.service";
 import { activatePropertyPlan } from "../services/propertyPlan.service";
 import { settleWithdrawal } from "../services/wallet.service";
-import { settleVendorPayout } from "../services/vendorPayout.service";
+import { settleVendorPayout, settleVendorBatch } from "../services/vendorPayout.service";
 import { handleSubscriptionCharge } from "./subscriptionCharge";
 import { registerChargeHandler, handlerFor, type VerifiedPayment } from "./chargeHandlers";
 
@@ -68,6 +68,8 @@ async function handleTransfer(body: Record<string, any>): Promise<string> {
   const ok = t.status === "SUCCESSFUL";
   if (t.reference.startsWith("NC-WD-")) { await settleWithdrawal(t.reference, ok, t.feeNaira); return "withdrawal-settled"; }
   if (t.reference.startsWith("NC-VP-")) { await settleVendorPayout(t.reference, ok, t.feeNaira); return "vendor-payout-settled"; }
+  // ++ VENDORS — END_OF_DAY batch: one transfer for a vendor's verified jobs
+  if (t.reference.startsWith("NC-VB-")) { await settleVendorBatch(t.reference, ok, t.feeNaira); return "vendor-batch-settled"; }
   return "transfer-ignored";
 }
 

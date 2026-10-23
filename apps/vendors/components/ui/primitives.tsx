@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X, ChevronDown, Check, FileText } from "lucide-react";
+import { useUI } from "@/store/ui";
 
 export function Modal({ title, sub, onClose, children, footer, wide }: { title?: ReactNode; sub?: ReactNode; onClose: () => void; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
   const [leaving, setLeaving] = useState(false);
@@ -73,9 +74,10 @@ export function Select({ value, onChange, options, placeholder = "Select…" }: 
   </div>;
 }
 
-/** sessionStorage-backed tab so a tab survives leaving and coming back. */
+/** Tab that survives switching pages (kept in the in-memory UI store, so
+ *  coming back shows the same tab instantly — no default-then-swap flicker). */
 export function usePersistedTab<T extends string>(key: string, def: T): [T, (v: T) => void] {
-  const [t, setT] = useState<T>(def);
-  useEffect(() => { const s = sessionStorage.getItem(key); if (s) setT(s as T); }, [key]);
-  return [t, (v: T) => { setT(v); sessionStorage.setItem(key, v); }];
+  const t = useUI((s) => s.tabs[key]) as T | undefined;
+  const setTab = useUI((s) => s.setTab);
+  return [t ?? def, (v: T) => setTab(key, v)];
 }

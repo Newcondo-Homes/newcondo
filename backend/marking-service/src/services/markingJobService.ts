@@ -136,7 +136,10 @@ export async function availableJobs(opts: {
   const jobs = await prisma.propertyMarkingJob.findMany({
     where: {
       status: OPEN_STATUS,
-      method: { in: ["BROADCAST", "NEWCONDO"] },
+      // NEWCONDO jobs are assigned by staff to the field team (markingAdmin.service) —
+      // listing them here had agents doing ₦25,000 jobs for ₦0 (paysMarker is BROADCAST-only).
+      method: "BROADCAST",
+      paymentStatus: "SUCCESS",
       ...(opts.city || opts.state
         ? { property: { ...(opts.city && { city: opts.city }), ...(opts.state && { state: opts.state }) } }
         : {}),
@@ -166,9 +169,11 @@ export async function availableJobs(opts: {
 export async function joinQueue(jobId: string, agentId: string): Promise<{ position: number; slotHours: number }> {
   const job = await prisma.propertyMarkingJob.findUnique({
     where: { id: jobId },
-    select: { id: true, status: true, _count: { select: { queueEntries: true } } },
+    select: { id: true, status: true, method: true, paymentStatus: true, requestedBy: true, _count: { select: { queueEntries: true } } },
   });
   if (!job || job.status !== OPEN_STATUS) throw notFound("Job is no longer open");
+  if (job.method !== "BROADCAST" || job.paymentStatus !== "SUCCESS") throw forbidden("This job isn’t open to the agent queue");
+  if (job.requestedBy === agentId) throw forbidden("You can’t take a marking job you requested");
 
   const dup = await prisma.markingQueueEntry.findFirst({ where: { jobId, agentId }, select: { id: true } });
   if (dup) throw conflict("You are already in this queue");
@@ -264,14 +269,22 @@ async function ownedSlot(jobId: string, agentId: string) {
   const job = await prisma.propertyMarkingJob.findUnique({
     where: { id: jobId },
     select: {
-      id: true, propertyId: true, status: true, assignedAgentId: true,
+      id: true, propertyId: true, status: true, assignedAgentId: true, method: true,
       property: { select: { state: true, city: true, ownerId: true, title: true } },
     },
   });
   if (!job) throw notFound("Job not found");
   const holder = await redis.get(`marking:slot:${jobId}`).catch(() => null);
   const owner = holder ?? job.assignedAgentId;
-  if (owner && owner !== agentId) throw forbidden("It is not your slot");
+  // No holder = nobody's slot. Previously `owner && …` let any agent submit on an unassigned job.
+  // KNOWN_PERSON jobs have no slot holder — the share-link token authorises the person on site.
+  if (job.method === "KNOWN_PERSON") {
+    if (owner && owner !== agentId) throw forbidden("It is not your slot");
+    if (!["QUEUED", "ASSIGNED", "IN_PROGRESS"].includes(job.status as string)) throw conflict("This job is not open for marking");
+    return job;
+  }
+  if (!owner || owner !== agentId) throw forbidden("It is not your slot");
+  if (!["ASSIGNED", "IN_PROGRESS"].includes(job.status as string)) throw conflict("This job is not open for marking");
   return job;
 }
 
@@ -400,13 +413,20 @@ export async function confirmMarking(jobId: string, ownerId: string): Promise<vo
 export async function disputeMarking(jobId: string, ownerId: string, reason: string): Promise<void> {
   const job = await prisma.propertyMarkingJob.findUnique({
     where: { id: jobId },
-    select: { id: true, property: { select: { ownerId: true } } },
+    select: { id: true, status: true, assignedAgentId: true, property: { select: { ownerId: true, title: true } } },
   });
   if (!job) throw notFound("Job not found");
   if (job.property.ownerId !== ownerId) throw forbidden("Not your property");
-  await prisma.propertyMarkingJob.update({
-    where: { id: jobId }, data: { status: "DISPUTED", disputeReason: reason },
+  if (job.status !== "AWAITING_CONFIRMATION") throw conflict("Only a marking awaiting your confirmation can be disputed");
+  if (!reason || reason.trim().length < 8) throw conflict("Tell us what is wrong with the marking (at least 8 characters)");
+  const { count } = await prisma.propertyMarkingJob.updateMany({
+    where: { id: jobId, status: "AWAITING_CONFIRMATION" }, data: { status: "DISPUTED", disputeReason: reason.trim().slice(0, 500) },
   });
+  if (!count) throw conflict("This marking was already confirmed");
+  // The drip cron only pays AWAITING_CONFIRMATION jobs, so the marker's money is frozen from here.
+  if (job.assignedAgentId && job.assignedAgentId !== ownerId) {
+    await publishNotification({ userId: job.assignedAgentId, kind: "marking", title: "Owner disputed your marking", body: `${job.property.title}: NewCondo will review it. Your payout is on hold until then.`, to: "/marking", entityType: "markingJob", entityId: jobId });
+  }
 }
 
 /* ---------- lists ---------- */
