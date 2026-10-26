@@ -61,7 +61,7 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
-  roles?: Array<'OWNER' | 'AGENT' | 'RENTER' | 'ADMIN'>;
+  roles?: Role[];
   requireVerification?: boolean;
 }
 

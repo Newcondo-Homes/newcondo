@@ -6,7 +6,7 @@
    property detail page (Services section). */
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@newcondo/ui";
 import { Card, CardH, DBtn } from "@/components/dashboard/primitives";
 import { cx } from "@/lib/cx";
 import { VENDORS_PUBLIC as VENDORS, minuteLabel } from "@newcondo/backend-shared/constants";

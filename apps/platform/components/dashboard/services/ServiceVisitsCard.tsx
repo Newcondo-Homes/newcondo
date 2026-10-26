@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "@newcondo/ui";
 import { Card, CardH, DBtn, EmptyState, SkeletonRows, StatusBadge } from "@/components/dashboard/primitives";
 import { Modal } from "@/components/dashboard/Modal";
 import { Icon } from "@/components/ui/icon";

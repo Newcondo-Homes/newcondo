@@ -8,6 +8,7 @@
   ],
   "pnpm": {
     "overrides": {
+      "next": "16.4.2",
       "react": "19.2.6",
       "react-dom": "19.2.6",
       "react-hook-form": "7.58.1",

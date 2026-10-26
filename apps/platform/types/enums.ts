@@ -9,6 +9,7 @@ export const Role = {
   AGENT: "AGENT",
   RENTER: "RENTER",
   ADMIN: "ADMIN",
+  VENDOR: "VENDOR"
 } as const;
 
 export const UserType = {

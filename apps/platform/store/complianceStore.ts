@@ -9,6 +9,7 @@ const RoleValues = {
   AGENT: 'AGENT',
   RENTER: 'RENTER',
   ADMIN: 'ADMIN',
+  VENDOR: 'VENDOR', // ++ vendor network (Role enum in schema.prisma)
 } as const;
 
 import {
@@ -373,6 +374,7 @@ export const useComplianceStore = create<ComplianceStore>()(
                     [RoleValues.AGENT]: roleStats(RoleValues.AGENT),
                     [RoleValues.RENTER]: roleStats(RoleValues.RENTER),
                     [RoleValues.ADMIN]: roleStats(RoleValues.ADMIN),
+                    [RoleValues.VENDOR]: roleStats(RoleValues.VENDOR),
                   },
                   trendData: [],
                   topIssues: [],
