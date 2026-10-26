@@ -22,7 +22,10 @@
 //   allowRemark         unlock a CONFIRMED (verified) mark so the owner can
 //                       request a new one — the house leaves Browse until re-marked.
 // ============================================================
-import { prisma, Prisma } from "@newcondo/db";
+// Json? columns are cleared with $executeRaw: `Prisma` is exported type-only from
+// @newcondo/db, so Prisma.DbNull isn't available as a value (TS1362) — same approach
+// as auth-service accountAnonymization.service.ts.
+import { prisma } from "@newcondo/db";
 import { ACC, postLedger, publishNotification, redis, badRequest, conflict, notFound } from "@newcondo/backend-shared";
 import { confirmMarking } from "./markingJobService";
 
@@ -81,11 +84,13 @@ export async function resolveMarkingDispute(jobId: string, outcome: "UPHOLD_MARK
       }
       await tx.markingQueueEntry.updateMany({ where: { jobId, agentId: marker }, data: { abandonedAt: new Date() } });
     }
-    await tx.property.update({ where: { id: job.propertyId }, data: { boundaryVerified: false, boundaryCoordinates: Prisma.DbNull, boundaryMarkedBy: null, boundaryMarkedAt: null, boundaryMaskImageKey: null, buildingFingerprint: null } });
+    await tx.property.update({ where: { id: job.propertyId }, data: { boundaryVerified: false, boundaryMarkedBy: null, boundaryMarkedAt: null, boundaryMaskImageKey: null, buildingFingerprint: null } });
+    await tx.$executeRaw`UPDATE "Property" SET "boundaryCoordinates" = NULL WHERE "id" = ${job.propertyId}`;
     await tx.propertyMarkingJob.update({ where: { id: jobId }, data: {
       status: "QUEUED", assignedAgentId: null, assignedAt: null, timeSlotExpiry: null, completedAt: null, confirmDeadline: null,
-      boundaryData: Prisma.DbNull, snapshotImageKey: null, maskImageKey: null, completionImages: [], completionNotes: note ? `Re-opened after dispute: ${note}` : "Re-opened after dispute",
+      snapshotImageKey: null, maskImageKey: null, completionImages: [], completionNotes: note ? `Re-opened after dispute: ${note}` : "Re-opened after dispute",
     } });
+    await tx.$executeRaw`UPDATE "PropertyMarkingJob" SET "boundaryData" = NULL WHERE "id" = ${jobId}`;
   });
   await redis.del(`marking:slot:${jobId}`).catch(() => {});
   await publishNotification({ userId: job.property.ownerId, kind: "marking", title: "We’ll mark your property again", body: `Your dispute on ${job.property.title} was upheld. ${job.method === "BROADCAST" ? "The job is back with nearby markers at no extra cost." : job.method === "NEWCONDO" ? "Our field team will be assigned shortly." : "You can submit the marking again."}`, to: "/marking", entityType: "markingJob", entityId: jobId });
@@ -97,7 +102,10 @@ export async function allowRemark(propertyId: string) {
   const p = await prisma.property.findUnique({ where: { id: propertyId }, select: { title: true, ownerId: true, boundaryVerified: true, markingJobs: { where: { status: { in: ["QUEUED", "ASSIGNED", "IN_PROGRESS", "AWAITING_CONFIRMATION", "DISPUTED"] } }, select: { id: true } } } });
   if (!p) throw notFound("Property not found");
   if (p.markingJobs.length) throw conflict("A marking job is still open for this property — resolve it first");
-  await prisma.property.update({ where: { id: propertyId }, data: { boundaryVerified: false, boundaryCoordinates: Prisma.DbNull, boundaryMarkedBy: null, boundaryMarkedAt: null, boundaryMaskImageKey: null, buildingFingerprint: null } });
+  await prisma.$transaction([
+    prisma.property.update({ where: { id: propertyId }, data: { boundaryVerified: false, boundaryMarkedBy: null, boundaryMarkedAt: null, boundaryMaskImageKey: null, buildingFingerprint: null } }),
+    prisma.$executeRaw`UPDATE "Property" SET "boundaryCoordinates" = NULL WHERE "id" = ${propertyId}`,
+  ]);
   await publishNotification({ userId: p.ownerId, kind: "marking", title: "Please mark your property again", body: `${p.title} is hidden from Browse until it is re-marked and confirmed.`, to: "/marking", entityType: "Property", entityId: propertyId });
   return { title: p.title };
 }

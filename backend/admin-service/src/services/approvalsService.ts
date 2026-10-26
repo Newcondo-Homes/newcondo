@@ -20,7 +20,8 @@
 // resolving them moves marker money, so they go through marking-service.
 // Document previews are presigned for 5 minutes; numbers are masked.
 import type { Request } from "express";
-import { prisma, Prisma } from "@newcondo/db";
+import { prisma } from "@newcondo/db";
+import type { Prisma } from "@newcondo/db";
 import { publishNotification, sendBrandedEmail, EmailTemplates, presignDownload, notFound, badRequest, conflict } from "@newcondo/backend-shared";
 import { audit } from "../utils/audit";
 import { page, skipTake, type ListQuery } from "../utils/paginate";
@@ -142,7 +143,10 @@ export async function decideListing(req: Request, id: string, approve: boolean, 
       ? { adminApprovalStatus: "APPROVED", status: "PUBLISHED", approvedAt: new Date(), approvedBy: req.staff!.userId, rejectionReason: null }
       // Back to DRAFT so the owner can fix and re-submit.
       : { adminApprovalStatus: "REJECTED", status: "DRAFT", rejectionReason: reason,
-          ...(allowRemark ? { boundaryVerified: false, boundaryCoordinates: Prisma.DbNull, boundaryMarkedBy: null, boundaryMarkedAt: null, boundaryMaskImageKey: null, buildingFingerprint: null } : {}) } });
+          ...(allowRemark ? { boundaryVerified: false, boundaryMarkedBy: null, boundaryMarkedAt: null, boundaryMaskImageKey: null, buildingFingerprint: null } : {}) } });
+    // Json? column: `Prisma` is type-only from @newcondo/db (no Prisma.DbNull value), so clear it raw —
+    // same approach as auth-service accountAnonymization.service.ts.
+    if (!approve && allowRemark) await tx.$executeRaw`UPDATE "Property" SET "boundaryCoordinates" = NULL WHERE "id" = ${id}`;
     await tx.document.updateMany({ where: { id: { in: p.documents.map((d) => d.id) } }, data: { status: approve ? "APPROVED" : "REJECTED", ...(approve ? {} : { verificationNotes: reason }) } });
     await audit(tx, req, { action: approve ? "PROPERTY_APPROVED" : "PROPERTY_REJECTED", targetType: "Property", targetId: id, description: approve ? p.title : `${p.title}: ${reason}`, metadata: { allowRemark: !!allowRemark } });
   });

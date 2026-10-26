@@ -30,8 +30,8 @@ export function Modal({ title, sub, onClose, children, footer, wide }: { title?:
     </div>, document.body);
 }
 
-export function Confirm({ title, body, confirmLabel = "Confirm", onConfirm, onClose }: { title: string; body: ReactNode; confirmLabel?: string; onConfirm: () => void; onClose: () => void }) {
-  return <Modal title={title} onClose={onClose} footer={<><button className="btn btn-line" onClick={onClose}>Cancel</button><button className="btn btn-dark" onClick={() => { onConfirm(); onClose(); }}>{confirmLabel}</button></>}>
+export function Confirm({ title, body, confirmLabel = "Confirm", danger = false, onConfirm, onClose }: { title: string; body: ReactNode; confirmLabel?: string; danger?: boolean; onConfirm: () => void; onClose: () => void }) {
+  return <Modal title={title} onClose={onClose} footer={<><button className="btn btn-line" onClick={onClose}>Cancel</button><button className={`btn ${danger ? "btn-danger" : "btn-dark"}`} onClick={() => { onConfirm(); onClose(); }}>{confirmLabel}</button></>}>
     <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: "var(--text-secondary)" }}>{body}</p>
   </Modal>;
 }

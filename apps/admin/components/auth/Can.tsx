@@ -6,7 +6,7 @@
 // UI only — admin-service enforces the same scope on the route.
 import { createContext, useContext, type ReactNode } from "react";
 import { Lock } from "lucide-react";
-import { ADMIN_MODULES, type AdminScope } from "@/lib/scopes";
+import { ADMIN_MODULES, type AdminScope, type AdminModuleDef, type AdminScopeDef } from "@/lib/scopes";
 import type { StaffMe } from "@/lib/api/admin";
 
 const StaffCtx = createContext<StaffMe | null>(null);
@@ -14,7 +14,7 @@ export const StaffProvider = ({ me, children }: { me: StaffMe; children: ReactNo
 export function useCan() {
   const me = useContext(StaffCtx);
   const scopes = me?.scopes ?? [];
-  return { me, can: (s: AdminScope | AdminScope[]) => (Array.isArray(s) ? s : [s]).every((x) => scopes.includes(x)), canAny: (s: AdminScope[]) => s.some((x) => scopes.includes(x)) };
+  return { me, can: (s: AdminScope | AdminScope[]) => (Array.isArray(s) ? s : [s]).every((x: AdminScope) => scopes.includes(x)), canAny: (s: AdminScope[]) => s.some((x: AdminScope) => scopes.includes(x)) };
 }
 
 export function Can({ scope, any, children, fallback = null }: { scope?: AdminScope | AdminScope[]; any?: AdminScope[]; children: ReactNode; fallback?: ReactNode }) {
@@ -24,7 +24,7 @@ export function Can({ scope, any, children, fallback = null }: { scope?: AdminSc
 }
 
 export function Locked({ scope }: { scope: AdminScope }) {
-  const s = ADMIN_MODULES.flatMap((m) => [...m.scopes]).find((x) => x.key === scope);
+  const s = ADMIN_MODULES.flatMap((m: AdminModuleDef) => [...m.scopes]).find((x: AdminScopeDef) => x.key === scope);
   return <div className="a-lock"><Lock size={22} /><b>You don’t have access to this</b><p style={{ margin: 0, fontSize: 13, maxWidth: "40ch", lineHeight: 1.5 }}>Needs <b className="a-mono">{scope}</b>{s ? ` (${s.label})` : ""}. Ask a super admin to grant it from Staff &amp; access.</p></div>;
 }
 

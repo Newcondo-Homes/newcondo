@@ -44,7 +44,13 @@ export const WARM: Warm[] = [
   { name: "audit", fetcher: A.audit as Fetcher, scope: "audit.read" },
 ];
 
-const idle = (fn: () => void) => (typeof window !== "undefined" && "requestIdleCallback" in window ? (window as Window & { requestIdleCallback: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback(fn, { timeout: 1500 }) : window.setTimeout(fn, 200));
+type IdleWindow = { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (h: number) => void };
+/** Run at idle priority; falls back to a short timeout (Safari has no requestIdleCallback). */
+const idle = (fn: () => void): (() => void) => {
+  const w = globalThis as unknown as IdleWindow;
+  if (typeof w.requestIdleCallback === "function") { const h = w.requestIdleCallback(fn, { timeout: 1500 }); return () => w.cancelIdleCallback?.(h); }
+  const t = globalThis.setTimeout(fn, 200); return () => globalThis.clearTimeout(t);
+};
 
 export async function warmAll(qc: QueryClient, can: (s: AdminScope) => boolean) {
   await qc.prefetchQuery({ queryKey: qk.overview, queryFn: A.overview });
@@ -62,8 +68,8 @@ export function Prefetcher() {
   useEffect(() => {
     if (!me) return;
     let cancelled = false;
-    const h = idle(() => { if (!cancelled) void warmAll(qc, can); });
-    return () => { cancelled = true; if (typeof window !== "undefined" && "cancelIdleCallback" in window) (window as Window & { cancelIdleCallback: (h: number) => void }).cancelIdleCallback(h as number); else clearTimeout(h as number); };
+    const cancel = idle(() => { if (!cancelled) void warmAll(qc, can); });
+    return () => { cancelled = true; cancel(); };
   }, [scopeKey]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }

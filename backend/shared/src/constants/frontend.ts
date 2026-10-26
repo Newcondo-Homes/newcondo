@@ -128,3 +128,18 @@ export type {
   VendorReleaseMode,
   ReminderContactRole,
 } from "./vendorsPublic";
+
+// ++ ADMIN — staff roles + permission scopes. adminScopes.ts imports nothing,
+// so it is safe in the client bundle. apps/admin reads it ONLY through this
+// door (apps/admin/lib/scopes.ts); admin-service reads it from the barrel.
+export {
+  ADMIN_MODULES,
+  ADMIN_ROLES,
+  ALL_ADMIN_SCOPES,
+  INVITABLE_ADMIN_ROLES,
+  ADMIN_LIMITS,
+  resolveAdminScopes,
+  hasAdminScope,
+} from "./adminScopes";
+
+export type { AdminScope, AdminRole } from "./adminScopes";

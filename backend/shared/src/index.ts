@@ -48,6 +48,7 @@ export * from './money/index';
 export * as Referrals from './referrals/index';
 export { ReferralEmailTemplates } from './utils/emailTemplates.referrals';
 
+export { AdminEmailTemplates } from './utils/emailTemplates.admin';
 // i18n exports
 export * from './i18n/index';
 

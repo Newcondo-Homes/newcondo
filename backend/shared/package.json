@@ -45,10 +45,6 @@
     "./constants/money": {
       "types": "./dist/constants/money.d.ts",
       "default": "./dist/constants/money.js"
-    },
-    "./admin-scopes": {
-      "types": "./dist/constants/adminScopes.d.ts",
-      "default": "./dist/constants/adminScopes.js"
     }
   },
   "scripts": {
