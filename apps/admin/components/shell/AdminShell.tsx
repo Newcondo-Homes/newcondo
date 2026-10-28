@@ -14,7 +14,8 @@ import { A } from "@/lib/api/admin";
 import { ADMIN_NAV, ADMIN_ROLES } from "@/lib/scopes";
 import { useStaffMe, useOverview } from "@/hooks/useAdmin";
 import { StaffProvider, useCan } from "@/components/auth/Can";
-import { SkeletonRows } from "@/components/ui/primitives";
+import { Boot, NoAccess } from "@/components/shell/NoAccess";
+import { API_URL, API_URL_PROBLEM, ApiError } from "@/lib/api/client";
 import { Prefetcher } from "@/components/providers/Prefetcher";
 import { clearViews } from "@/lib/viewState";
 
@@ -97,11 +98,15 @@ function Frame({ children, user }: { children: ReactNode; user: { name: string; 
 }
 
 export function AdminShell({ children, user }: { children: ReactNode; user: { name: string; email: string } }) {
-  const { data: me, isPending, error } = useStaffMe();
-  // Only block on the FIRST load. A failed background refresh keeps the dashboard up with cached data;
-  // a real loss of access (401/403) clears it.
-  const status = (error as { response?: { status?: number } } | null)?.response?.status;
-  if (isPending) return <div className="content"><SkeletonRows n={6} /></div>;
-  if (!me || status === 401 || status === 403) return <main className="auth-wrap"><div className="auth-card"><h1>No admin access</h1><p className="lead">{(error as Error)?.message ?? "Your staff account isn’t active."}</p><button className="btn btn-dark" onClick={() => { clearViews(); void signOut({ redirectTo: "/login" }); }}>Sign out</button></div></main>;
+  const { data: me, isPending, error, refetch, isFetching } = useStaffMe();
+  if (API_URL_PROBLEM) return <NoAccess title="The API isn’t configured" body="The dashboard can’t load any data until it knows where combined-backend is." detail={<><b>Fix:</b> {API_URL_PROBLEM}. Set NEXT_PUBLIC_API_URL=http://localhost:5000/api/v1 and restart <b>pnpm dev</b>.</>} />;
+  // Block only on the FIRST load. A failed background refresh keeps cached data on screen.
+  if (isPending && !me) return <Boot label={isFetching ? "Loading your dashboard…" : "Connecting…"} />;
+  if (!me) {
+    const e = error as ApiError | null;
+    if (e?.status === 403) return <NoAccess title="No admin access" body={e.message || "Your staff account isn’t active."} detail={<>Signed in as <b>{user.email}</b>. If you were just invited, open the invite link and set a password first.</>} />;
+    return <NoAccess title="Couldn’t load the dashboard" body={e?.message ?? "Something went wrong talking to the API."} onRetry={() => void refetch()}
+      detail={<><b>Checked:</b> {API_URL}/admin/me{e?.status ? ` → HTTP ${e.status}` : " → no response"}<br /><b>Make sure:</b> combined-backend is running, and JWT_SECRET / AUTH_SECRET match between it and this app.</>} />;
+  }
   return <StaffProvider me={me}><Prefetcher /><Frame user={user}>{children}</Frame></StaffProvider>;
 }

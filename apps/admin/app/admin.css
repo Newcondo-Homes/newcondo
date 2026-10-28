@@ -1,4 +1,25 @@
-/* Admin dashboard additions — layered on dashboard/dashboard.css */
+/* Admin dashboard additions — layered on globals.css (NewCondo tokens + dashboard components) */
+/* Geist via next/font (app/layout.tsx sets --font-geist-sans / --font-geist-mono on <html>) */
+:root{--font-sans:var(--font-geist-sans),-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--font-mono:var(--font-geist-mono),ui-monospace,"SF Mono",Menlo,monospace}
+body{font-family:var(--font-sans);font-feature-settings:"ss01","cv11"}
+/* Icon sizing/colour per context — Lucide, 1.75–2px stroke, inherits ink/cream */
+.sb-item svg.lucide{opacity:.85}.sb-item.on svg.lucide{opacity:1}
+.tb-icbtn svg.lucide,.btn svg.lucide{flex:none}
+.a-q-ic svg.lucide,.e-ic svg.lucide{stroke-width:1.75}
+.a-search svg.lucide{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-tertiary);pointer-events:none}
+.stat-t svg.lucide{color:var(--text-tertiary)}
+.banner svg.lucide{flex:none}
+.a-back svg.lucide{transition:transform .18s var(--ease-out)}.a-back:hover svg.lucide{transform:translateX(-3px)}
+.a-q svg.lucide:last-child{color:var(--text-tertiary);transition:transform .18s var(--ease-out)}.a-q:hover svg.lucide:last-child{transform:translateX(3px)}
+/* Full-page states (first load, no access, API unreachable) */
+.a-boot{min-height:100dvh;display:grid;place-items:center;background:var(--background);padding:24px}
+.a-boot-in{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;animation:fade .3s ease}
+.a-boot-mark{width:52px;height:52px;border-radius:16px;background:var(--ink);display:grid;place-items:center;animation:aBreath 1.6s var(--ease-out) infinite}
+.a-boot-mark img{width:28px;filter:invert(1)}
+.a-boot p{margin:0;font-size:13.5px;color:var(--text-tertiary)}
+@keyframes aBreath{0%,100%{transform:scale(1)}50%{transform:scale(.94)}}
+.a-diag{margin-top:14px;background:var(--surface-sunken);border-radius:14px;padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.6;color:var(--text-secondary);word-break:break-all;text-align:left}
+.a-diag b{font-family:var(--font-sans);color:var(--text-primary)}
 .a-tag{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;background:var(--ink);color:var(--cream);border-radius:999px;padding:3px 8px;margin-left:2px}
 .hint{font-size:12px;color:var(--text-tertiary);line-height:1.45}
 /* Silent background refresh — cached rows stay on screen, a 2px bar shows while fresh data loads */

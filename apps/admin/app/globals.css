@@ -4,6 +4,11 @@
    Generated from: assets/colors_and_type.css, dashboard/dashboard.css, vendor/vendor.css */
 @import "tailwindcss";
 
+/* Tailwind preflight makes every <svg> display:block, which knocks inline Lucide
+   icons onto their own line inside buttons, badges, hints and table cells. */
+svg.lucide{display:inline-block;flex:none;vertical-align:-0.18em;stroke-width:1.85}
+img{display:inline-block}
+
 /* ---------- tokens ---------- */
 /* ============================================================
    NewCondo — Colors & Type Foundations
@@ -13,8 +18,8 @@
      ink  #131313   cream #F9F9EF
    ============================================================ */
 
-/* ---- Webfont: Geist (Neue-Haas-Grotesk-style grotesque) ---- */
-/* Geist is one of the fonts named in DESIGN.md. Loaded from Google Fonts. */
+/* ---- Webfont: Geist — loaded by next/font in app/layout.tsx (self-hosted, no FOUT).
+   --font-sans / --font-mono are re-pointed at it in admin.css. ---- */
 
 
 :root {
@@ -291,7 +296,7 @@ button{font-family:inherit}
 .sb-item{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;text-align:left;font-size:14px;font-weight:500;color:var(--text-secondary);padding:9.5px 10px;border-radius:12px;cursor:pointer;transition:background .16s var(--ease-out),color .16s var(--ease-out)}
 .sb-item:hover{background:var(--surface-sunken);color:var(--ink)}
 .sb-item.on{background:var(--ink);color:var(--cream);font-weight:600}
-.sb-item .lic{flex:none;display:flex;color:currentColor;opacity:.85}
+.sb-item :is(.lic,.lucide){flex:none;display:flex;color:currentColor;opacity:.85}
 .sb-item .sb-pill{margin-left:auto;font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--green-wash);color:var(--green-dark)}
 .sb-item.on .sb-pill{background:var(--green-bright);color:var(--ink)}
 .sb-item .sb-count{margin-left:auto;font-size:11px;font-weight:700;min-width:19px;text-align:center;padding:2.5px 6px;border-radius:999px;background:var(--surface-sunken);color:var(--text-secondary)}
@@ -352,7 +357,7 @@ button{font-family:inherit}
 
 .stat{background:var(--surface);border:1px solid var(--border-hair);border-radius:20px;padding:18px 20px;box-shadow:var(--shadow-sm)}
 .stat-t{display:flex;align-items:center;justify-content:space-between;font-size:12.5px;font-weight:600;color:var(--text-tertiary)}
-.stat-t .lic{color:var(--text-tertiary)}
+.stat-t :is(.lic,.lucide){color:var(--text-tertiary)}
 .stat-v{font-size:26px;font-weight:700;letter-spacing:-.035em;margin-top:9px}
 .stat-v.mono{font-family:var(--font-mono);font-size:23px;letter-spacing:-.01em}
 .stat-s{font-size:12px;color:var(--text-tertiary);margin-top:5px;display:flex;align-items:center;gap:6px}
@@ -374,7 +379,7 @@ button{font-family:inherit}
 .btn-ghost{background:none;color:var(--text-secondary);border:0;padding:8px 12px}.btn-ghost:hover{color:var(--ink)}
 .btn-sm{padding:8.5px 15px;font-size:13px}
 .btn[disabled]{opacity:.55;cursor:default;pointer-events:none}
-.btn .lic{display:flex}
+.btn :is(.lic,.lucide){display:flex}
 .btn:hover .ar{transform:translateX(3px)}
 .ar{transition:transform .2s var(--ease-out)}
 
@@ -524,16 +529,16 @@ textarea.inp{resize:vertical;min-height:88px}
 /* custom dropdown (design-system styled) */
 .ncsel{position:relative;min-width:0}
 .ncsel-t{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;text-align:left}
-.ncsel-t .lic{transition:transform .2s var(--ease-out)}
+.ncsel-t :is(.lic,.lucide){transition:transform .2s var(--ease-out)}
 .ncsel-t.open{border-color:var(--ink);box-shadow:0 0 0 4px rgba(19,19,19,.06)}
-.ncsel-t.open .lic{transform:rotate(180deg)}
+.ncsel-t.open :is(.lic,.lucide){transform:rotate(180deg)}
 .ncsel-ph{color:var(--text-tertiary)}
 .ncsel.dis{opacity:.55;pointer-events:none}
 .ncsel-m{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:90;background:var(--surface);border:1px solid var(--border-hair);border-radius:16px;box-shadow:var(--shadow-pop);padding:6px;max-height:236px;overflow:auto;animation:pop .22s var(--ease-out)}
 .ncsel-o{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:0;background:none;text-align:left;font-size:14px;font-weight:500;font-family:inherit;color:var(--text-primary);padding:10px 12px;border-radius:11px;cursor:pointer;transition:background .14s}
 .ncsel-o:hover{background:var(--surface-sunken)}
 .ncsel-o.on{font-weight:600}
-.ncsel-o .lic{color:var(--green-dark)}
+.ncsel-o :is(.lic,.lucide){color:var(--green-dark)}
 /* mobile pass */
 @media(max-width:640px){
 .content{padding:18px 14px 90px}
@@ -622,7 +627,7 @@ textarea.inp{resize:vertical;min-height:88px}
 .v-daypick button.on b{color:var(--cream)}
 .v-daypick button:disabled{opacity:.4}
 .v-search{position:relative}
-.v-search .lic{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-tertiary)}
+.v-search :is(.lic,.lucide){position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-tertiary)}
 .v-search .inp{padding-left:40px;border-radius:999px}
 .v-days{display:flex;gap:6px;flex-wrap:wrap}
 .v-dchip{font-size:12.5px;font-weight:600;padding:7px 12px;border-radius:999px;background:var(--surface-sunken);color:var(--text-tertiary)}

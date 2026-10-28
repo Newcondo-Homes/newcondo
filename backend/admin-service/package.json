@@ -15,7 +15,8 @@
     "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/server.ts",
     "start": "node dist/server.js",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "create-super-admin": "node scripts/create-super-admin.cjs"
   },
   "license": "ISC",
   "dependencies": {

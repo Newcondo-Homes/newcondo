@@ -23,11 +23,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@newcondo/auth/middleware";
 
 const PUBLIC = ["/login", "/accept-invite"];
-const HOME = "/overview";
 
 const isPublic = (p: string) => PUBLIC.some((r) => p === r || p.startsWith(`${r}/`));
-/** Only same-app relative paths — never an open redirect to another host. */
-const safeCallback = (v: string | null) => (v && v.startsWith("/") && !v.startsWith("//") && !v.startsWith("/login") ? v : HOME);
 
 export default auth((req) => {
   const { nextUrl } = req;
@@ -36,9 +33,11 @@ export default auth((req) => {
 
   if (path.startsWith("/api/auth")) return NextResponse.next();
 
-  if (path === "/login" && signedIn) {
-    return NextResponse.redirect(new URL(safeCallback(nextUrl.searchParams.get("callbackUrl")), nextUrl));
-  }
+  // API calls never get a login redirect (a POST would follow it and fail confusingly).
+  if (path.startsWith("/api/")) return NextResponse.json({ success: false, message: "API calls go to NEXT_PUBLIC_API_URL, not the admin app" }, { status: 404 });
+  // NOTE: no "signed in → bounce /login to /overview" here. The Edge auth config has no
+  // role, so a signed-in NON-admin would loop /login → /overview → (no access) forever.
+  // The dashboard layout shows a clear "not a staff account" screen instead.
   if (isPublic(path)) return NextResponse.next();
 
   if (!signedIn) {

@@ -19,7 +19,9 @@ export const qk = {
   extra: (name: string, ...rest: (string | undefined)[]) => ["admin", name, "extra", ...rest] as const,
 };
 
-export const useStaffMe = () => useQuery({ queryKey: qk.me, queryFn: A.me, staleTime: 60_000, refetchInterval: 60_000 });
+// retry: never on 401/403 (not staff / signed out) — only on network blips, once.
+export const useStaffMe = () => useQuery({ queryKey: qk.me, queryFn: A.me, staleTime: 60_000, refetchInterval: 60_000,
+  retry: (n, e) => n < 1 && ![401, 403].includes((e as { status?: number | null }).status ?? 0) });
 export const useOverview = () => useQuery({ queryKey: qk.overview, queryFn: A.overview, staleTime: 60_000, refetchInterval: 60_000 });
 
 export function useList<T>(name: string, fn: (p: ListParams) => Promise<Page<T>>, p: ListParams) {

@@ -4,7 +4,7 @@ import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 
 const config: NextConfig = {
   transpilePackages: ["@newcondo/auth", "@newcondo/backend-shared"],
-  experimental: { optimizePackageImports: ["lucide-react"] },
+  // experimental: { optimizePackageImports: ["lucide-react"] },
   webpack: (cfg, { isServer }) => { if (isServer) cfg.plugins = [...cfg.plugins, new PrismaPlugin()]; return cfg; },
   async headers() {
     return [{
