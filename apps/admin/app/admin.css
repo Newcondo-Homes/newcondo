@@ -1,5 +1,8 @@
 /* Admin dashboard additions — layered on globals.css (NewCondo tokens + dashboard components) */
 /* Geist via next/font (app/layout.tsx sets --font-geist-sans / --font-geist-mono on <html>) */
+/* Admin UI scale — 1 = 100%. Try .9 (90%) or .85. */
+:root{--admin-scale:.8}
+body{zoom:var(--admin-scale)}
 :root{--font-sans:var(--font-geist-sans),-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;--font-mono:var(--font-geist-mono),ui-monospace,"SF Mono",Menlo,monospace}
 body{font-family:var(--font-sans);font-feature-settings:"ss01","cv11"}
 /* Icon sizing/colour per context — Lucide, 1.75–2px stroke, inherits ink/cream */
